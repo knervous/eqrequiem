@@ -1,0 +1,19 @@
+.app {
+  text-align: center;
+  width: 100vw;
+  height: 100vh;
+
+  background-repeat: unset;
+  overflow: hidden;
+  background: #123148;
+}
+
+#root,
+.dashboard-content,
+.main-content {
+  overflow: hidden;
+}
+html,
+body {
+  overflow: hidden;
+}

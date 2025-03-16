@@ -1,0 +1,53 @@
+[gd_scene load_steps=6 format=3 uid="uid://cwvt1wet87kxp"]
+
+[ext_resource type="Script" uid="uid://bj1am658vo5uc" path="res://_JS/Code/Zone/zone-manager.js" id="1_xyj1o"]
+[ext_resource type="PackedScene" uid="uid://bs2jm62cmkbrk" path="res://addons/instant-realistic-light/light_scene.tscn" id="2_1i4dq"]
+[ext_resource type="Script" uid="uid://8vyuhyx0xogt" path="res://addons/freecam_3D/freecam.gd" id="2_iubos"]
+[ext_resource type="Script" uid="uid://by6ny5cpgdbqr" path="res://_JS/Code/Debug/fps.js" id="4_iubos"]
+[ext_resource type="Script" uid="uid://q43i0gub1cx4" path="res://_JS/Code/Debug/zone-load.js" id="5_xyj1o"]
+
+[node name="Zone" type="Node3D"]
+script = ExtResource("1_xyj1o")
+zoneName = "crescent"
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0979272, 0)
+script = ExtResource("2_iubos")
+
+[node name="WorldEnvironment2" parent="." instance=ExtResource("2_1i4dq")]
+
+[node name="DebugUI" type="Node2D" parent="."]
+
+[node name="ZoneEntry" type="TextEdit" parent="DebugUI"]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_right = 135.0
+offset_bottom = 37.0
+grow_horizontal = 0
+text = "qeynos"
+metadata/_edit_use_anchors_ = true
+
+[node name="ZoneButton" type="Button" parent="DebugUI"]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_top = 40.0
+offset_right = 89.0
+offset_bottom = 71.0
+grow_horizontal = 0
+text = "Load Zone"
+script = ExtResource("5_xyj1o")
+metadata/_edit_use_anchors_ = true
+
+[node name="FPS" type="Label" parent="DebugUI"]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_top = 70.0
+offset_right = 141.0
+offset_bottom = 126.0
+grow_horizontal = 0
+vertical_alignment = 1
+script = ExtResource("4_iubos")
+metadata/_edit_use_anchors_ = true
