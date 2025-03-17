@@ -54,8 +54,8 @@ func _setup_nodes() -> void:
 	screen_overlay.add_theme_constant_override("Separation", 8)
 	self.add_child(screen_overlay)
 	#screen_overlay.add_child(_make_label("Debug Camera"))
-	#screen_overlay.add_spacer(false)
-	#
+		#screen_overlay.add_spacer(false)
+		#	
 	#screen_overlay.add_child(event_log)
 	#screen_overlay.visible = overlay_text
 

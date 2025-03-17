@@ -22,7 +22,34 @@ import "../Util/extensions";
 type AnimatedTextureMeta = {
   animationDelay: number;
   frames: string[];
+  eqShader: string;
 };
+
+export enum ShaderType {
+  Diffuse = 0,
+  Transparent25 = 1,
+  Transparent50 = 2,
+  Transparent75 = 3,
+  TransparentAdditive = 4,
+  TransparentAdditiveUnlit = 5,
+  TransparentMasked = 6,
+  DiffuseSkydome = 7,
+  TransparentSkydome = 8,
+  TransparentAdditiveUnlitSkydome = 9,
+  Invisible = 10,
+  Boundary = 11,
+}
+
+export const AlphaShaderMap: Partial<Record<ShaderType, number>> = {
+  [ShaderType.Transparent25]: 64,
+  [ShaderType.Transparent50]: 128,
+  [ShaderType.TransparentSkydome]: 128,
+  [ShaderType.Transparent75]: 192,
+  [ShaderType.TransparentAdditive]: 192,
+  [ShaderType.TransparentAdditiveUnlit]: 192,
+};
+
+
 
 export class BaseGltfModel {
   private model: string = "";
@@ -63,7 +90,7 @@ export class BaseGltfModel {
 
   public async instantiate(): Promise<Node | undefined> {
     const buffer = await FileSystem.getFileBytes(
-      `eqsage/${this.folder}/${this.model}.glb`
+      `eqrequiem/${this.folder}/${this.model}.glb`
     );
     if (!buffer) {
       console.log("Buffer not found!");
@@ -93,6 +120,10 @@ export class BaseGltfModel {
   private async parseMaterials(gltfState: GLTFState): Promise<void> {
     const materials = gltfState.materials;
     const animatedMaterials = [];
+    // let i = 0;
+    // while (i === 0) {
+    //   await new Promise((resolve) => setTimeout(resolve, 1000));
+    // }
     for (let i = 0; i < materials.size(); i++) {
       const material = materials.get(i);
       const meta = material
@@ -100,6 +131,50 @@ export class BaseGltfModel {
         ?.toObject() as AnimatedTextureMeta;
       if (meta?.animationDelay) {
         animatedMaterials.push(material);
+      }
+      material.eqShader = +meta?.eqShader as ShaderType;
+      const forceAlpha = AlphaShaderMap[material.eqShader];
+      if (forceAlpha !== undefined) {
+         // Convert from 0-255 to 0.0-1.0
+        const enforcedAlpha = forceAlpha / 255;
+        // Get the current albedo color
+        const currentColor = material.albedo_color;
+        // Set the alpha channel to the enforced value
+        currentColor.a = enforcedAlpha;
+        material.albedo_color = currentColor;
+
+        // Ensure the material renders as transparent
+        material.transparency = 1; //StandardMaterial3D.Transparency.TRANSPARENCY_ALPHA_SCISSOR;
+        // Optionally, you might need to adjust blend mode
+        // material.blend_mode = StandardMaterial3D.Transparency.TRANSPARENCY_DISABLED;
+      }
+      switch(meta?.eqShader) {
+        case "Transparent25":
+          material.alpha_scissor_threshold = 64;
+          break;
+        case "Transparent50":
+          material.alpha_scissor_threshold = 128;
+          break;
+        case "Transparent75":
+          material.alpha_scissor_threshold = 192;
+          break;
+        case "TransparentAdditive":
+          material.alpha_scissor_threshold = 192;
+          material.unshaded = true;
+          break;
+        case "TransparentAdditiveUnlit":
+          material.alpha_scissor_threshold = 192;
+          material.unshaded = true;
+          break;
+        case "TransparentMasked":
+          material.alpha_scissor_threshold = 1;
+          break;
+        case "DiffuseSkydome":
+          material.alpha_scissor_threshold = 0;
+          break;
+        case "TransparentSkydome":
+          material.alpha_scissor_threshold = 128;
+          break;
       }
     }
     if (animatedMaterials.length) {
@@ -222,7 +297,9 @@ export class BaseGltfModel {
         if (!meshInstance.get_surface_override_material(surfaceIdx)) {
           meshInstance.set_surface_override_material(surfaceIdx, material);
         }
-        material.uv1_scale = new Vector3(1, -1, 1);
+        if (newTexture.flip_y) {
+          material.uv1_scale = new Vector3(1, -1, 1);
+        }
       } else {
         console.log(
           "Material is not a StandardMaterial3D or missing texture. Skipping texture swap.",
@@ -241,18 +318,26 @@ export class BaseGltfModel {
     if (cached) {
       return cached;
     }
-    const buffer = await FileSystem.getFileBytes(`eqsage/textures/${name}.png`);
+    const buffer = await FileSystem.getFileBytes(`eqrequiem/textures/${name}.dds`);
     if (!buffer) {
       return null;
     }
     const image = new Image();
-    const err = image.load_png_from_buffer(buffer);
+    let err;
+    let needFlip = false;
+    if (new DataView(buffer).getUint16(0, true) === 0x4d42) { 
+      err = image.load_bmp_from_buffer(buffer);
+      needFlip = true;
+    } else {
+      err = image.load_dds_from_buffer(buffer);
+    }
     if (err !== 0) {
       console.error("Error loading image from buffer:", err);
       return null;
     }
-    const img = ImageTexture.create_from_image(image);
+    const img = ImageTexture.create_from_image(image) as unknown as Texture2D & { flip_y: boolean }; 
     TextureCache.set(name, img);
+    img.flip_y = needFlip;
     return img;
   }
 

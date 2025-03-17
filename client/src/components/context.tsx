@@ -39,14 +39,14 @@ export const MainProvider = (props: ReactProps) => {
         setLoadingTitle: () => {},
       }
     }
-    setGlobals({ gameController, GlobalStore });
+    setGlobals({ gameController, GlobalStore, root: 'eqrequiem' });
 
     window.getJsBytes = async (inputString: string) => {
       console.log('Asking for bytes for', inputString);
       const path = inputString.split('/');
       let data = null;
       switch(path[0]) {
-        case 'eqsage':
+        case 'eqrequiem':
           switch(path[1]) {
             case 'objects':
             case 'textures':
@@ -69,7 +69,10 @@ export const MainProvider = (props: ReactProps) => {
                   zoneName,
                   handles,
                   rootFileSystemHandle,
-                  {}
+                  {},
+                  {
+                    rawImageWrite: true,
+                  }
                 );
                 await obj.initialize();
                 await obj.process();

@@ -1,6 +1,322 @@
 // AUTO-GENERATED
 /// <reference no-default-lib="true"/>
 declare module "godot" {
+    namespace OpenXRInterface {
+        enum Hand {
+            /** Left hand. */
+            HAND_LEFT = 0,
+            
+            /** Right hand. */
+            HAND_RIGHT = 1,
+            
+            /** Maximum value for the hand enum. */
+            HAND_MAX = 2,
+        }
+        enum HandMotionRange {
+            /** Full hand range, if user closes their hands, we make a full fist. */
+            HAND_MOTION_RANGE_UNOBSTRUCTED = 0,
+            
+            /** Conform to controller, if user closes their hands, the tracked data conforms to the shape of the controller. */
+            HAND_MOTION_RANGE_CONFORM_TO_CONTROLLER = 1,
+            
+            /** Maximum value for the motion range enum. */
+            HAND_MOTION_RANGE_MAX = 2,
+        }
+        enum HandTrackedSource {
+            /** The source of hand tracking data is unknown (the extension is likely unsupported). */
+            HAND_TRACKED_SOURCE_UNKNOWN = 0,
+            
+            /** The source of hand tracking is unobstructed, this means that an accurate method of hand tracking is used, e.g. optical hand tracking, data gloves, etc. */
+            HAND_TRACKED_SOURCE_UNOBSTRUCTED = 1,
+            
+            /** The source of hand tracking is a controller, bone positions are inferred from controller inputs. */
+            HAND_TRACKED_SOURCE_CONTROLLER = 2,
+            
+            /** Maximum value for the hand tracked source enum. */
+            HAND_TRACKED_SOURCE_MAX = 3,
+        }
+        enum HandJoints {
+            /** Palm joint. */
+            HAND_JOINT_PALM = 0,
+            
+            /** Wrist joint. */
+            HAND_JOINT_WRIST = 1,
+            
+            /** Thumb metacarpal joint. */
+            HAND_JOINT_THUMB_METACARPAL = 2,
+            
+            /** Thumb proximal joint. */
+            HAND_JOINT_THUMB_PROXIMAL = 3,
+            
+            /** Thumb distal joint. */
+            HAND_JOINT_THUMB_DISTAL = 4,
+            
+            /** Thumb tip joint. */
+            HAND_JOINT_THUMB_TIP = 5,
+            
+            /** Index metacarpal joint. */
+            HAND_JOINT_INDEX_METACARPAL = 6,
+            
+            /** Index proximal joint. */
+            HAND_JOINT_INDEX_PROXIMAL = 7,
+            
+            /** Index intermediate joint. */
+            HAND_JOINT_INDEX_INTERMEDIATE = 8,
+            
+            /** Index distal joint. */
+            HAND_JOINT_INDEX_DISTAL = 9,
+            
+            /** Index tip joint. */
+            HAND_JOINT_INDEX_TIP = 10,
+            
+            /** Middle metacarpal joint. */
+            HAND_JOINT_MIDDLE_METACARPAL = 11,
+            
+            /** Middle proximal joint. */
+            HAND_JOINT_MIDDLE_PROXIMAL = 12,
+            
+            /** Middle intermediate joint. */
+            HAND_JOINT_MIDDLE_INTERMEDIATE = 13,
+            
+            /** Middle distal joint. */
+            HAND_JOINT_MIDDLE_DISTAL = 14,
+            
+            /** Middle tip joint. */
+            HAND_JOINT_MIDDLE_TIP = 15,
+            
+            /** Ring metacarpal joint. */
+            HAND_JOINT_RING_METACARPAL = 16,
+            
+            /** Ring proximal joint. */
+            HAND_JOINT_RING_PROXIMAL = 17,
+            
+            /** Ring intermediate joint. */
+            HAND_JOINT_RING_INTERMEDIATE = 18,
+            
+            /** Ring distal joint. */
+            HAND_JOINT_RING_DISTAL = 19,
+            
+            /** Ring tip joint. */
+            HAND_JOINT_RING_TIP = 20,
+            
+            /** Little metacarpal joint. */
+            HAND_JOINT_LITTLE_METACARPAL = 21,
+            
+            /** Little proximal joint. */
+            HAND_JOINT_LITTLE_PROXIMAL = 22,
+            
+            /** Little intermediate joint. */
+            HAND_JOINT_LITTLE_INTERMEDIATE = 23,
+            
+            /** Little distal joint. */
+            HAND_JOINT_LITTLE_DISTAL = 24,
+            
+            /** Little tip joint. */
+            HAND_JOINT_LITTLE_TIP = 25,
+            
+            /** Maximum value for the hand joint enum. */
+            HAND_JOINT_MAX = 26,
+        }
+        enum PerfSettingsLevel {
+            /** The application has entered a non-XR section (head-locked / static screen), during which power savings are to be prioritized. */
+            PERF_SETTINGS_LEVEL_POWER_SAVINGS = 0,
+            
+            /** The application has entered a low and stable complexity section, during which reducing power is more important than occasional late rendering frames. */
+            PERF_SETTINGS_LEVEL_SUSTAINED_LOW = 1,
+            
+            /** The application has entered a high or dynamic complexity section, during which the XR Runtime strives for consistent XR compositing and frame rendering within a thermally sustainable range. */
+            PERF_SETTINGS_LEVEL_SUSTAINED_HIGH = 2,
+            
+            /** The application has entered a section with very high complexity, during which the XR Runtime is allowed to step up beyond the thermally sustainable range. */
+            PERF_SETTINGS_LEVEL_BOOST = 3,
+        }
+        enum PerfSettingsSubDomain {
+            /** The compositing performance within the runtime has reached a new level. */
+            PERF_SETTINGS_SUB_DOMAIN_COMPOSITING = 0,
+            
+            /** The application rendering performance has reached a new level. */
+            PERF_SETTINGS_SUB_DOMAIN_RENDERING = 1,
+            
+            /** The temperature of the device has reached a new level. */
+            PERF_SETTINGS_SUB_DOMAIN_THERMAL = 2,
+        }
+        enum PerfSettingsNotificationLevel {
+            /** The sub-domain has reached a level where no further actions other than currently applied are necessary. */
+            PERF_SETTINGS_NOTIF_LEVEL_NORMAL = 0,
+            
+            /** The sub-domain has reached an early warning level where the application should start proactive mitigation actions. */
+            PERF_SETTINGS_NOTIF_LEVEL_WARNING = 1,
+            
+            /** The sub-domain has reached a critical level where the application should start drastic mitigation actions. */
+            PERF_SETTINGS_NOTIF_LEVEL_IMPAIRED = 2,
+        }
+        enum HandJointFlags {
+            /** No flags are set. */
+            HAND_JOINT_NONE = 0,
+            
+            /** If set, the orientation data is valid, otherwise, the orientation data is unreliable and should not be used. */
+            HAND_JOINT_ORIENTATION_VALID = 1,
+            
+            /** If set, the orientation data comes from tracking data, otherwise, the orientation data contains predicted data. */
+            HAND_JOINT_ORIENTATION_TRACKED = 2,
+            
+            /** If set, the positional data is valid, otherwise, the positional data is unreliable and should not be used. */
+            HAND_JOINT_POSITION_VALID = 4,
+            
+            /** If set, the positional data comes from tracking data, otherwise, the positional data contains predicted data. */
+            HAND_JOINT_POSITION_TRACKED = 8,
+            
+            /** If set, our linear velocity data is valid, otherwise, the linear velocity data is unreliable and should not be used. */
+            HAND_JOINT_LINEAR_VELOCITY_VALID = 16,
+            
+            /** If set, our angular velocity data is valid, otherwise, the angular velocity data is unreliable and should not be used. */
+            HAND_JOINT_ANGULAR_VELOCITY_VALID = 32,
+        }
+    }
+    /** Our OpenXR interface.  
+     *  	  
+     *  @link https://docs.godotengine.org/en/latest/classes/class_openxrinterface.html  
+     */
+    class OpenXRInterface extends XRInterface {
+        constructor(identifier?: any)
+        /** Returns `true` if OpenXR's foveation extension is supported, the interface must be initialized before this returns a valid value.  
+         *      
+         *  **Note:** This feature is only available on the compatibility renderer and currently only available on some stand alone headsets. For Vulkan set [member Viewport.vrs_mode] to `VRS_XR` on desktop.  
+         */
+        is_foveation_supported(): boolean
+        
+        /** Returns `true` if the given action set is active. */
+        is_action_set_active(name: string): boolean
+        
+        /** Sets the given action set as active or inactive. */
+        set_action_set_active(name: string, active: boolean): void
+        
+        /** Returns a list of action sets registered with Godot (loaded from the action map at runtime). */
+        get_action_sets(): GArray
+        
+        /** Returns display refresh rates supported by the current HMD. Only returned if this feature is supported by the OpenXR runtime and after the interface has been initialized. */
+        get_available_display_refresh_rates(): GArray
+        
+        /** If handtracking is enabled and motion range is supported, sets the currently configured motion range for [param hand] to [param motion_range]. */
+        set_motion_range(hand: OpenXRInterface.Hand, motion_range: OpenXRInterface.HandMotionRange): void
+        
+        /** If handtracking is enabled and motion range is supported, gets the currently configured motion range for [param hand]. */
+        get_motion_range(hand: OpenXRInterface.Hand): OpenXRInterface.HandMotionRange
+        
+        /** If handtracking is enabled and hand tracking source is supported, gets the source of the hand tracking data for [param hand]. */
+        get_hand_tracking_source(hand: OpenXRInterface.Hand): OpenXRInterface.HandTrackedSource
+        
+        /** If handtracking is enabled, returns flags that inform us of the validity of the tracking data. */
+        get_hand_joint_flags(hand: OpenXRInterface.Hand, joint: OpenXRInterface.HandJoints): OpenXRInterface.HandJointFlags
+        
+        /** If handtracking is enabled, returns the rotation of a joint ([param joint]) of a hand ([param hand]) as provided by OpenXR. */
+        get_hand_joint_rotation(hand: OpenXRInterface.Hand, joint: OpenXRInterface.HandJoints): Quaternion
+        
+        /** If handtracking is enabled, returns the position of a joint ([param joint]) of a hand ([param hand]) as provided by OpenXR. This is relative to [XROrigin3D] without worldscale applied! */
+        get_hand_joint_position(hand: OpenXRInterface.Hand, joint: OpenXRInterface.HandJoints): Vector3
+        
+        /** If handtracking is enabled, returns the radius of a joint ([param joint]) of a hand ([param hand]) as provided by OpenXR. This is without worldscale applied! */
+        get_hand_joint_radius(hand: OpenXRInterface.Hand, joint: OpenXRInterface.HandJoints): float64
+        
+        /** If handtracking is enabled, returns the linear velocity of a joint ([param joint]) of a hand ([param hand]) as provided by OpenXR. This is relative to [XROrigin3D] without worldscale applied! */
+        get_hand_joint_linear_velocity(hand: OpenXRInterface.Hand, joint: OpenXRInterface.HandJoints): Vector3
+        
+        /** If handtracking is enabled, returns the angular velocity of a joint ([param joint]) of a hand ([param hand]) as provided by OpenXR. This is relative to [XROrigin3D]! */
+        get_hand_joint_angular_velocity(hand: OpenXRInterface.Hand, joint: OpenXRInterface.HandJoints): Vector3
+        
+        /** Returns `true` if OpenXR's hand tracking is supported and enabled.  
+         *      
+         *  **Note:** This only returns a valid value after OpenXR has been initialized.  
+         */
+        is_hand_tracking_supported(): boolean
+        
+        /** Returns `true` if OpenXR's hand interaction profile is supported and enabled.  
+         *      
+         *  **Note:** This only returns a valid value after OpenXR has been initialized.  
+         */
+        is_hand_interaction_supported(): boolean
+        
+        /** Returns the capabilities of the eye gaze interaction extension.  
+         *      
+         *  **Note:** This only returns a valid value after OpenXR has been initialized.  
+         */
+        is_eye_gaze_interaction_supported(): boolean
+        
+        /** Sets the CPU performance level of the OpenXR device. */
+        set_cpu_level(level: OpenXRInterface.PerfSettingsLevel): void
+        
+        /** Sets the GPU performance level of the OpenXR device. */
+        set_gpu_level(level: OpenXRInterface.PerfSettingsLevel): void
+        
+        /** The display refresh rate for the current HMD. Only functional if this feature is supported by the OpenXR runtime and after the interface has been initialized. */
+        get display_refresh_rate(): float64
+        set display_refresh_rate(value: float64)
+        
+        /** The render size multiplier for the current HMD. Must be set before the interface has been initialized. */
+        get render_target_size_multiplier(): float64
+        set render_target_size_multiplier(value: float64)
+        
+        /** Set foveation level from 0 (off) to 3 (high), the interface must be initialized before this is accessible.  
+         *      
+         *  **Note:** Only works on compatibility renderer.  
+         */
+        get foveation_level(): int64
+        set foveation_level(value: int64)
+        
+        /** Enable dynamic foveation adjustment, the interface must be initialized before this is accessible. If enabled foveation will automatically adjusted between low and [member foveation_level].  
+         *      
+         *  **Note:** Only works on compatibility renderer.  
+         */
+        get foveation_dynamic(): boolean
+        set foveation_dynamic(value: boolean)
+        
+        /** The minimum radius around the focal point where full quality is guaranteed if VRS is used as a percentage of screen size.  
+         *      
+         *  **Note:** Mobile and Forward+ renderers only. Requires [member Viewport.vrs_mode] to be set to [constant Viewport.VRS_XR].  
+         */
+        get vrs_min_radius(): float64
+        set vrs_min_radius(value: float64)
+        
+        /** The strength used to calculate the VRS density map. The greater this value, the more noticeable VRS is. This improves performance at the cost of quality.  
+         *      
+         *  **Note:** Mobile and Forward+ renderers only. Requires [member Viewport.vrs_mode] to be set to [constant Viewport.VRS_XR].  
+         */
+        get vrs_strength(): float64
+        set vrs_strength(value: float64)
+        
+        /** Informs our OpenXR session has been started. */
+        readonly session_begun: Signal0
+        
+        /** Informs our OpenXR session is stopping. */
+        readonly session_stopping: Signal0
+        
+        /** Informs our OpenXR session now has focus. */
+        readonly session_focussed: Signal0
+        
+        /** Informs our OpenXR session is now visible (output is being sent to the HMD). */
+        readonly session_visible: Signal0
+        
+        /** Informs our OpenXR session is in the process of being lost. */
+        readonly session_loss_pending: Signal0
+        
+        /** Informs our OpenXR instance is exiting. */
+        readonly instance_exiting: Signal0
+        
+        /** Informs the user queued a recenter of the player position. */
+        readonly pose_recentered: Signal0
+        
+        /** Informs the user the HMD refresh rate has changed.  
+         *      
+         *  **Note:** Only emitted if XR runtime supports the refresh rate extension.  
+         */
+        readonly refresh_rate_changed: Signal1<float64>
+        
+        /** Informs the device CPU performance level has changed in the specified subdomain. */
+        readonly cpu_level_changed: Signal3<int64, int64, int64>
+        
+        /** Informs the device GPU performance level has changed in the specified subdomain. */
+        readonly gpu_level_changed: Signal3<int64, int64, int64>
+    }
     /** Draws a stereo correct visibility mask.  
      *  	  
      *  @link https://docs.godotengine.org/en/latest/classes/class_openxrvisibilitymask.html  

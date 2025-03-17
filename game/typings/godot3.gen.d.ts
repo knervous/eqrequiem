@@ -696,6 +696,9 @@ declare module "godot" {
     class EditorPerformanceProfiler<Map extends Record<string, Node> = Record<string, Node>> extends HSplitContainer<Map> {
         constructor(identifier?: any)
     }
+    class EditorPlainTextSyntaxHighlighter extends EditorSyntaxHighlighter {
+        constructor(identifier?: any)
+    }
     namespace EditorPlugin {
         enum CustomControlContainer {
             /** Main editor toolbar, next to play buttons. */
@@ -1780,6 +1783,9 @@ declare module "godot" {
         
         /** Emitted when the value form loses focus. */
         readonly value_focus_exited: Signal0
+    }
+    class EditorStandardSyntaxHighlighter extends EditorSyntaxHighlighter {
+        constructor(identifier?: any)
     }
     /** Base class for [SyntaxHighlighter] used by the [ScriptEditor].  
      *  	  
@@ -6655,7 +6661,7 @@ declare module "godot" {
         get_value_cached_string_names(): any
         get_value_persistent_objects(): any
         get_value_allocated_variants(): any
-        get_value_memory_used_size(): any
+        get_value_heap_size(): any
     }
     class GodotJSStatisticsViewer<Map extends Record<string, Node> = Record<string, Node>> extends VBoxContainer<Map> {
         constructor(identifier?: any)
@@ -6670,6 +6676,9 @@ declare module "godot" {
         constructor(identifier?: any)
     }
     class GodotPhysicsServer3D extends PhysicsServer3D {
+        constructor(identifier?: any)
+    }
+    class GotoLinePopup<Map extends Record<string, Node> = Record<string, Node>> extends PopupPanel<Map> {
         constructor(identifier?: any)
     }
     namespace Gradient {
@@ -8639,6 +8648,18 @@ declare module "godot" {
          */
         save_exr_to_buffer(grayscale: boolean = false): PackedByteArray
         
+        /** Saves the image as a DDS (DirectDraw Surface) file to [param path]. DDS is a container format that can store textures in various compression formats, such as DXT1, DXT5, or BC7. This function will return [constant ERR_UNAVAILABLE] if Godot was compiled without the DDS module.  
+         *      
+         *  **Note:** The DDS module may be disabled in certain builds, which means [method save_dds] will return [constant ERR_UNAVAILABLE] when it is called from an exported project.  
+         */
+        save_dds(path: string): GError
+        
+        /** Saves the image as a DDS (DirectDraw Surface) file to a byte array. DDS is a container format that can store textures in various compression formats, such as DXT1, DXT5, or BC7. This function will return an empty byte array if Godot was compiled without the DDS module.  
+         *      
+         *  **Note:** The DDS module may be disabled in certain builds, which means [method save_dds_to_buffer] will return an empty byte array when it is called from an exported project.  
+         */
+        save_dds_to_buffer(): PackedByteArray
+        
         /** Saves the image as a WebP (Web Picture) file to the file at [param path]. By default it will save lossless. If [param lossy] is `true`, the image will be saved lossy, using the [param quality] setting between `0.0` and `1.0` (inclusive). Lossless WebP offers more efficient compression than PNG.  
          *      
          *  **Note:** The WebP format is limited to a size of 16383×16383 pixels, while PNG can save larger images.  
@@ -8798,6 +8819,12 @@ declare module "godot" {
          *  **Note:** This method is only available in engine builds with the KTX module enabled. By default, the KTX module is enabled, but it can be disabled at build-time using the `module_ktx_enabled=no` SCons option.  
          */
         load_ktx_from_buffer(buffer: PackedByteArray | byte[] | ArrayBuffer): GError
+        
+        /** Loads an image from the binary contents of a DDS file.  
+         *      
+         *  **Note:** This method is only available in engine builds with the DDS module enabled. By default, the DDS module is enabled, but it can be disabled at build-time using the `module_dds_enabled=no` SCons option.  
+         */
+        load_dds_from_buffer(buffer: PackedByteArray | byte[] | ArrayBuffer): GError
         
         /** Loads an image from the UTF-8 binary contents of an **uncompressed** SVG file (**.svg**).  
          *      
@@ -9175,31 +9202,5 @@ declare module "godot" {
         /** The real event index in action this event corresponds to (from events defined for this action in the [InputMap]). If `-1`, a unique ID will be used and actions pressed with this ID will need to be released with another [InputEventAction]. */
         get event_index(): int64
         set event_index(value: int64)
-    }
-    class InputEventConfigurationDialog<Map extends Record<string, Node> = Record<string, Node>> extends ConfirmationDialog<Map> {
-        constructor(identifier?: any)
-    }
-    class InputEventEditorPlugin<Map extends Record<string, Node> = Record<string, Node>> extends EditorPlugin<Map> {
-        constructor(identifier?: any)
-    }
-    /** Abstract base class for [Viewport]-based input events.  
-     *  	  
-     *  @link https://docs.godotengine.org/en/latest/classes/class_inputeventfromwindow.html  
-     */
-    class InputEventFromWindow extends InputEvent {
-        constructor(identifier?: any)
-        /** The ID of a [Window] that received this event. */
-        get window_id(): int64
-        set window_id(value: int64)
-    }
-    /** Abstract base class for touch gestures.  
-     *  	  
-     *  @link https://docs.godotengine.org/en/latest/classes/class_inputeventgesture.html  
-     */
-    class InputEventGesture extends InputEventWithModifiers {
-        constructor(identifier?: any)
-        /** The local gesture position relative to the [Viewport]. If used in [method Control._gui_input], the position is relative to the current [Control] that received this gesture. */
-        get position(): Vector2
-        set position(value: Vector2)
     }
 }

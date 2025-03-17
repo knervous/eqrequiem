@@ -42,9 +42,16 @@ camera_attributes = SubResource("CameraAttributesPractical_qo5hu")
 [node name="Sun3" type="DirectionalLight3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 0.605197, 0.796076, 0, -0.796076, 0.605197, -4.86868, 8.33126, 2.18251)
 light_color = Color(0.956863, 0.588235, 0.207843, 1)
-light_energy = 0.618
-shadow_enabled = true
+light_energy = 0.15
+light_specular = 0.0
+shadow_bias = 3.282
+shadow_normal_bias = 1.838
+shadow_transmittance_bias = 0.69
+shadow_opacity = 0.83
+shadow_blur = 10.0
 
 [node name="ReflectionProbe" type="ReflectionProbe" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 49.8991, 25.834, -30.0061)
+intensity = 0.77
+blend_distance = 1.6
 size = Vector3(10000, 10000, 1000)

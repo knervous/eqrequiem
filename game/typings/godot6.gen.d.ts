@@ -1283,6 +1283,10 @@ declare module "godot" {
     class ScriptEditorPlugin<Map extends Record<string, Node> = Record<string, Node>> extends EditorPlugin<Map> {
         constructor(identifier?: any)
     }
+    class ScriptEditorQuickOpen<Map extends Record<string, Node> = Record<string, Node>> extends ConfirmationDialog<Map> {
+        constructor(identifier?: any)
+        readonly goto_line: Signal1<int64>
+    }
     /** @link https://docs.godotengine.org/en/latest/classes/class_scriptextension.html */
     class ScriptExtension extends Script {
         constructor(identifier?: any)
@@ -1449,6 +1453,9 @@ declare module "godot" {
         /* gdvirtual */ _frame(): void
         /* gdvirtual */ _handles_global_class_type(type: string): boolean
         /* gdvirtual */ _get_global_class_name(path: string): GDictionary
+    }
+    class ScriptTextEditor<Map extends Record<string, Node> = Record<string, Node>> extends ScriptEditorBase<Map> {
+        constructor(identifier?: any)
     }
     /** Abstract base class for scrollbars.  
      *  	  

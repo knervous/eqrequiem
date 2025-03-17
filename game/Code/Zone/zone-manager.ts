@@ -2,16 +2,27 @@ import { export_ } from "godot.annotations";
 import { Camera3D, Color, Node3D, OmniLight3D, Variant, Vector3 } from "godot";
 import { BaseGltfModel } from "../GLTF/base";
 import { FileSystem } from "../FileSystem/filesystem";
-
+import LightManager from "../Lights/light-manager";
 export default class ZoneManager extends Node3D {
   private currentZone: Node3D | null = null;
+  private lights: OmniLight3D[] = [];
+  private camera: Camera3D | null = null;
+  private cameraLight: OmniLight3D | null = null;
+  private updateInterval = 0.5;
+  private timeSinceLastUpdate = 0.0;
+  private maxLightDistance = 500.0;
+  private maxActiveLights = 8;
+
+  // Light manager
+  private lightManager: LightManager | null = null;
 
   @export_(Variant.Type.TYPE_STRING)
-  public zoneName = "gfaydark";
+  public zoneName = "qeynos2";
 
   _ready(): void {
-    const camera = this.get_node("Camera3D") as Camera3D;
-    camera.cull_mask = 0xfffff; // See all layers (default)
+    this.camera = this.get_node("Camera3D") as Camera3D;
+    this.camera.cull_mask = 0xfffff;
+
     this.loadZone(this.zoneName);
   }
 
@@ -21,6 +32,7 @@ export default class ZoneManager extends Node3D {
       this.remove_child(this.currentZone);
       this.currentZone.queue_free();
       this.currentZone = null;
+      this.lightManager = null;
     }
 
     this.zoneName = zoneName;
@@ -43,7 +55,7 @@ export default class ZoneManager extends Node3D {
       this.currentZone.add_child(rootNode);
     }
 
-    const metadataByte = await FileSystem.getFileBytes(`eqsage/zones/${this.zoneName}.json`);
+    const metadataByte = await FileSystem.getFileBytes(`eqrequiem/zones/${this.zoneName}.json`);
     if (metadataByte) {
       try {
         const str = new TextDecoder("utf-8").decode(metadataByte);
@@ -65,24 +77,18 @@ export default class ZoneManager extends Node3D {
             }
           }
         }
-
-        for (const light of metadata.lights) {
-          const lightNode = new OmniLight3D();
-          this.currentZone.add_child(lightNode);
-          lightNode.position = new Vector3(-light.x, light.y, light.z);
-          const r = light.r > 1 ? light.r / 255 : light.r;
-          const g = light.g > 1 ? light.g / 255 : light.g;
-          const b = light.b > 1 ? light.b / 255 : light.b;
-          lightNode.light_color = new Color(r, g, b, 1.0);
-          lightNode.light_energy = 2.0;
-          lightNode.omni_range = 150.0;
-          lightNode.layers = 1 << 0;
-        }
+        this.lightManager = new LightManager(this.currentZone, this.camera!, metadata.lights);
       } catch (e) {
         console.log("Error parsing zone metadata", e);
       }
     }
     this.set_process(true);
     this.set_physics_process(true);
+  }
+
+  _process(delta: number): void {
+    if (this.lightManager) {
+      this.lightManager.tick(delta);
+    }
   }
 }

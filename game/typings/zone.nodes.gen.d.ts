@@ -12,11 +12,11 @@ declare module "godot" {
                 {
                     ZoneEntry: TextEdit<
                         {
-                            "@HScrollBar@79272": HScrollBar<{}>,
-                            "@VScrollBar@79273": VScrollBar<{}>,
-                            "@Timer@79274": Timer<{}>,
-                            "@Timer@79275": Timer<{}>,
-                            "@Timer@79276": Timer<{}>,
+                            "@HScrollBar@31178": HScrollBar<{}>,
+                            "@VScrollBar@31179": VScrollBar<{}>,
+                            "@Timer@31180": Timer<{}>,
+                            "@Timer@31181": Timer<{}>,
+                            "@Timer@31182": Timer<{}>,
                         }
                     >,
                     ZoneButton: Button<{}>,

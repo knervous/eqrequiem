@@ -8,7 +8,6 @@
 
 [node name="Zone" type="Node3D"]
 script = ExtResource("1_xyj1o")
-zoneName = "crescent"
 
 [node name="Camera3D" type="Camera3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0979272, 0)
@@ -36,6 +35,7 @@ offset_top = 40.0
 offset_right = 89.0
 offset_bottom = 71.0
 grow_horizontal = 0
+focus_mode = 0
 text = "Load Zone"
 script = ExtResource("5_xyj1o")
 metadata/_edit_use_anchors_ = true
