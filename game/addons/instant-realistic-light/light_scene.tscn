@@ -42,7 +42,8 @@ camera_attributes = SubResource("CameraAttributesPractical_qo5hu")
 [node name="Sun3" type="DirectionalLight3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 0.605197, 0.796076, 0, -0.796076, 0.605197, -4.86868, 8.33126, 2.18251)
 light_color = Color(0.956863, 0.588235, 0.207843, 1)
-light_energy = 0.15
+light_energy = 0.207
+light_angular_distance = 13.82
 light_specular = 0.0
 shadow_bias = 3.282
 shadow_normal_bias = 1.838

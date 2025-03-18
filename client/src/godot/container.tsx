@@ -21,6 +21,7 @@ const GodotContainerComponent: React.FC = () => {
     requestPermissions,
     permissionStatus,
     onFolderSelected,
+    ready,
   } = useMainContext();
   return (
     <Box      sx={{
@@ -37,7 +38,7 @@ const GodotContainerComponent: React.FC = () => {
           onFolderSelected={onFolderSelected}
         />
       )}
-      {rootFileSystemHandle && <GodotPlayer />}
+      {ready && <GodotPlayer />}
     </Box>
   );
 };

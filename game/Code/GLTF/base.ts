@@ -14,6 +14,7 @@ import {
   Animation,
   Resource,
   Texture2D,
+  Color,
 } from "godot";
 import { FileSystem } from "../FileSystem/filesystem";
 import { TextureCache } from "../Util/texture-cache";
@@ -43,13 +44,12 @@ export enum ShaderType {
 export const AlphaShaderMap: Partial<Record<ShaderType, number>> = {
   [ShaderType.Transparent25]: 64,
   [ShaderType.Transparent50]: 128,
-  [ShaderType.TransparentSkydome]: 128,
+  [ShaderType.TransparentSkydome]: 64,
+  [ShaderType.DiffuseSkydome]: 128,
   [ShaderType.Transparent75]: 192,
   [ShaderType.TransparentAdditive]: 192,
   [ShaderType.TransparentAdditiveUnlit]: 192,
 };
-
-
 
 export class BaseGltfModel {
   private model: string = "";
@@ -88,7 +88,7 @@ export class BaseGltfModel {
     return traverseChildren(this.node);
   }
 
-  public async instantiate(): Promise<Node | undefined> {
+  public async instantiate(): Promise<Node3D | undefined> {
     const buffer = await FileSystem.getFileBytes(
       `eqrequiem/${this.folder}/${this.model}.glb`
     );
@@ -103,7 +103,7 @@ export class BaseGltfModel {
       // Print material extras if they exist
       this.parseMaterials(gltfState);
 
-      const rootNode = gltfDocument.generate_scene(gltfState);
+      const rootNode = gltfDocument.generate_scene(gltfState) as Node3D;
       if (rootNode) {
         this.traverseAndSwapTextures(rootNode as Node3D);
         this.node = rootNode as Node3D;
@@ -120,12 +120,9 @@ export class BaseGltfModel {
   private async parseMaterials(gltfState: GLTFState): Promise<void> {
     const materials = gltfState.materials;
     const animatedMaterials = [];
-    // let i = 0;
-    // while (i === 0) {
-    //   await new Promise((resolve) => setTimeout(resolve, 1000));
-    // }
+
     for (let i = 0; i < materials.size(); i++) {
-      const material = materials.get(i);
+      const material = materials.get(i) as StandardMaterial3D;
       const meta = material
         .get_meta("extras")
         ?.toObject() as AnimatedTextureMeta;
@@ -133,9 +130,9 @@ export class BaseGltfModel {
         animatedMaterials.push(material);
       }
       material.eqShader = +meta?.eqShader as ShaderType;
-      const forceAlpha = AlphaShaderMap[material.eqShader];
+      const forceAlpha = AlphaShaderMap[material.eqShader as ShaderType];
       if (forceAlpha !== undefined) {
-         // Convert from 0-255 to 0.0-1.0
+        // Convert from 0-255 to 0.0-1.0
         const enforcedAlpha = forceAlpha / 255;
         // Get the current albedo color
         const currentColor = material.albedo_color;
@@ -148,32 +145,36 @@ export class BaseGltfModel {
         // Optionally, you might need to adjust blend mode
         // material.blend_mode = StandardMaterial3D.Transparency.TRANSPARENCY_DISABLED;
       }
-      switch(meta?.eqShader) {
-        case "Transparent25":
+      switch (material.eqShader) {
+        case ShaderType.Transparent25:
           material.alpha_scissor_threshold = 64;
           break;
-        case "Transparent50":
+        case ShaderType.Transparent50:
           material.alpha_scissor_threshold = 128;
           break;
-        case "Transparent75":
+        case ShaderType.Transparent75:
           material.alpha_scissor_threshold = 192;
           break;
-        case "TransparentAdditive":
+        case ShaderType.TransparentAdditive:
           material.alpha_scissor_threshold = 192;
-          material.unshaded = true;
           break;
-        case "TransparentAdditiveUnlit":
+        case ShaderType.TransparentAdditiveUnlit:
           material.alpha_scissor_threshold = 192;
-          material.unshaded = true;
           break;
-        case "TransparentMasked":
+        case ShaderType.TransparentMasked:
           material.alpha_scissor_threshold = 1;
           break;
-        case "DiffuseSkydome":
-          material.alpha_scissor_threshold = 0;
-          break;
-        case "TransparentSkydome":
-          material.alpha_scissor_threshold = 128;
+        case ShaderType.DiffuseSkydome:
+        case ShaderType.TransparentSkydome:
+          material.shading_mode =
+            StandardMaterial3D.ShadingMode.SHADING_MODE_UNSHADED; // Already set, ensures no lighting
+          material.transparency = 1; // Ensure transparency is enabled
+          material.blend_mode = StandardMaterial3D.BlendMode.BLEND_MODE_MIX; // Ensure transparency is enabled
+          material.alpha_scissor_threshold = 128 / 255; // Consistent with your AlphaShaderMap
+          material.distance_fade_mode =
+            StandardMaterial3D.DistanceFadeMode.DISTANCE_FADE_DISABLED; // Disable distance fading
+          material.no_depth_test = true; // Render on top, ignoring depth (optional, for skydome visibility)
+          //material.albedo_color = new Color(1, 1, 1, 128 / 255); // Ensure full brightness with your desired alpha
           break;
       }
     }
@@ -294,6 +295,7 @@ export class BaseGltfModel {
         newTexture instanceof Texture2D
       ) {
         material.albedo_texture = newTexture;
+
         if (!meshInstance.get_surface_override_material(surfaceIdx)) {
           meshInstance.set_surface_override_material(surfaceIdx, material);
         }
@@ -318,24 +320,32 @@ export class BaseGltfModel {
     if (cached) {
       return cached;
     }
-    const buffer = await FileSystem.getFileBytes(`eqrequiem/textures/${name}.dds`);
+    const buffer = await FileSystem.getFileBytes(
+      `eqrequiem/textures/${name}.dds`
+    );
     if (!buffer) {
       return null;
     }
     const image = new Image();
     let err;
     let needFlip = false;
-    if (new DataView(buffer).getUint16(0, true) === 0x4d42) { 
+    if (new DataView(buffer).getUint16(0, true) === 0x4d42) {
+      console.log("Load name as bmp`", name);
+
       err = image.load_bmp_from_buffer(buffer);
       needFlip = true;
     } else {
+      console.log("Load name as dds`", name);
+
       err = image.load_dds_from_buffer(buffer);
     }
     if (err !== 0) {
       console.error("Error loading image from buffer:", err);
       return null;
     }
-    const img = ImageTexture.create_from_image(image) as unknown as Texture2D & { flip_y: boolean }; 
+    const img = ImageTexture.create_from_image(
+      image
+    ) as unknown as Texture2D & { flip_y: boolean };
     TextureCache.set(name, img);
     img.flip_y = needFlip;
     return img;

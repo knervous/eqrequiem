@@ -3,18 +3,13 @@ import { Camera3D, Color, Node3D, OmniLight3D, Variant, Vector3 } from "godot";
 import { BaseGltfModel } from "../GLTF/base";
 import { FileSystem } from "../FileSystem/filesystem";
 import LightManager from "../Lights/light-manager";
+import SkyManager from "../Sky/sky-manager";
 export default class ZoneManager extends Node3D {
   private currentZone: Node3D | null = null;
-  private lights: OmniLight3D[] = [];
   private camera: Camera3D | null = null;
-  private cameraLight: OmniLight3D | null = null;
-  private updateInterval = 0.5;
-  private timeSinceLastUpdate = 0.0;
-  private maxLightDistance = 500.0;
-  private maxActiveLights = 8;
-
   // Light manager
   private lightManager: LightManager | null = null;
+  private skyManager: SkyManager | null = null;
 
   @export_(Variant.Type.TYPE_STRING)
   public zoneName = "qeynos2";
@@ -78,6 +73,7 @@ export default class ZoneManager extends Node3D {
           }
         }
         this.lightManager = new LightManager(this.currentZone, this.camera!, metadata.lights);
+        this.skyManager = new SkyManager(this.currentZone, 'sky1', this.camera);
       } catch (e) {
         console.log("Error parsing zone metadata", e);
       }

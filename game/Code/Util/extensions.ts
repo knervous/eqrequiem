@@ -10,13 +10,28 @@ GDictionary.prototype.toObject = function() {
 }
 
 Vector3.prototype.subtract = function(other: Vector3): Vector3 {
-    return new Vector3(this.x - other.x, this.y - other.y, this.z - other.z);
+    this.x -= other.x;
+    this.y -= other.y;
+    this.z -= other.z;
+    return this;
 }
 
 Vector3.prototype.add = function(other: Vector3): Vector3 {
-    return new Vector3(this.x + other.x, this.y + other.y, this.z + other.z);
+    this.x += other.x;
+    this.y += other.y;
+    this.z += other.z;
+    return this;
 }
 
 Vector3.prototype.multiplyScalar = function(scalar: number): Vector3 {
-    return new Vector3(this.x * scalar, this.y * scalar, this.z * scalar);
+    this.x *= scalar;
+    this.y *= scalar;
+    this.z *= scalar;
+    return this;
+}
+
+Vector3.prototype.set = function(x: number, y: number, z: number): void {
+    this.x = x;
+    this.y = y;
+    this.z = z;
 }

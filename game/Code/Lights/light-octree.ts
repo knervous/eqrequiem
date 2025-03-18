@@ -21,48 +21,47 @@ export class OctreeNode {
 
   // Check if a point is within this node's axis-aligned bounding box.
   contains(point: Vector3): boolean {
-    const min = this.center.subtract(new Vector3(this.halfSize, this.halfSize, this.halfSize));
-    const max = this.center.add(new Vector3(this.halfSize, this.halfSize, this.halfSize));
+    const cx = this.center.x, cy = this.center.y, cz = this.center.z;
+    const hs = this.halfSize;
+    const minX = cx - hs, minY = cy - hs, minZ = cz - hs;
+    const maxX = cx + hs, maxY = cy + hs, maxZ = cz + hs;
     return (
-      point.x >= min.x && point.x <= max.x &&
-      point.y >= min.y && point.y <= max.y &&
-      point.z >= min.z && point.z <= max.z
+      point.x >= minX && point.x <= maxX &&
+      point.y >= minY && point.y <= maxY &&
+      point.z >= minZ && point.z <= maxZ
     );
   }
 
   // Check if a sphere (with a center and radius) intersects this node's bounding box.
   intersectsSphere(sphereCenter: Vector3, radius: number): boolean {
-    const min = this.center.subtract(new Vector3(this.halfSize, this.halfSize, this.halfSize));
-    const max = this.center.add(new Vector3(this.halfSize, this.halfSize, this.halfSize));
+    const cx = this.center.x, cy = this.center.y, cz = this.center.z;
+    const hs = this.halfSize;
+    const minX = cx - hs, minY = cy - hs, minZ = cz - hs;
+    const maxX = cx + hs, maxY = cy + hs, maxZ = cz + hs;
     let dmin = 0;
-    if (sphereCenter.x < min.x) dmin += (sphereCenter.x - min.x) ** 2;
-    else if (sphereCenter.x > max.x) dmin += (sphereCenter.x - max.x) ** 2;
-    if (sphereCenter.y < min.y) dmin += (sphereCenter.y - min.y) ** 2;
-    else if (sphereCenter.y > max.y) dmin += (sphereCenter.y - max.y) ** 2;
-    if (sphereCenter.z < min.z) dmin += (sphereCenter.z - min.z) ** 2;
-    else if (sphereCenter.z > max.z) dmin += (sphereCenter.z - max.z) ** 2;
-    return dmin <= radius ** 2;
+    if (sphereCenter.x < minX) dmin += (sphereCenter.x - minX) ** 2;
+    else if (sphereCenter.x > maxX) dmin += (sphereCenter.x - maxX) ** 2;
+    if (sphereCenter.y < minY) dmin += (sphereCenter.y - minY) ** 2;
+    else if (sphereCenter.y > maxY) dmin += (sphereCenter.y - maxY) ** 2;
+    if (sphereCenter.z < minZ) dmin += (sphereCenter.z - minZ) ** 2;
+    else if (sphereCenter.z > maxZ) dmin += (sphereCenter.z - maxZ) ** 2;
+    return dmin <= radius * radius;
   }
 
   // Subdivide this node into 8 children.
   subdivide() {
     this.children = [];
     const newHalf = this.halfSize / 2;
-    const offsets = [
-      new Vector3(-newHalf, -newHalf, -newHalf),
-      new Vector3(newHalf, -newHalf, -newHalf),
-      new Vector3(-newHalf, newHalf, -newHalf),
-      new Vector3(newHalf, newHalf, -newHalf),
-      new Vector3(-newHalf, -newHalf, newHalf),
-      new Vector3(newHalf, -newHalf, newHalf),
-      new Vector3(-newHalf, newHalf, newHalf),
-      new Vector3(newHalf, newHalf, newHalf),
-    ];
-    for (const offset of offsets) {
-      const childCenter = this.center.add(offset);
-      const child = new OctreeNode(childCenter, newHalf, this.capacity, this.depth + 1, this.maxDepth);
-      this.children.push(child);
-    }
+    const cx = this.center.x, cy = this.center.y, cz = this.center.z;
+    // Compute each child's center using arithmetic on the parent center.
+    this.children.push(new OctreeNode({ x: cx - newHalf, y: cy - newHalf, z: cz - newHalf }, newHalf, this.capacity, this.depth + 1, this.maxDepth));
+    this.children.push(new OctreeNode({ x: cx + newHalf, y: cy - newHalf, z: cz - newHalf }, newHalf, this.capacity, this.depth + 1, this.maxDepth));
+    this.children.push(new OctreeNode({ x: cx - newHalf, y: cy + newHalf, z: cz - newHalf }, newHalf, this.capacity, this.depth + 1, this.maxDepth));
+    this.children.push(new OctreeNode({ x: cx + newHalf, y: cy + newHalf, z: cz - newHalf }, newHalf, this.capacity, this.depth + 1, this.maxDepth));
+    this.children.push(new OctreeNode({ x: cx - newHalf, y: cy - newHalf, z: cz + newHalf }, newHalf, this.capacity, this.depth + 1, this.maxDepth));
+    this.children.push(new OctreeNode({ x: cx + newHalf, y: cy - newHalf, z: cz + newHalf }, newHalf, this.capacity, this.depth + 1, this.maxDepth));
+    this.children.push(new OctreeNode({ x: cx - newHalf, y: cy + newHalf, z: cz + newHalf }, newHalf, this.capacity, this.depth + 1, this.maxDepth));
+    this.children.push(new OctreeNode({ x: cx + newHalf, y: cy + newHalf, z: cz + newHalf }, newHalf, this.capacity, this.depth + 1, this.maxDepth));
   }
 
   // Insert a light into the octree. Returns true if insertion was successful.
@@ -94,8 +93,12 @@ export class OctreeNode {
       return found;
     }
     for (const light of this.lights) {
-      const lightPos = light.global_transform.origin;
-      if (lightPos.distance_to(sphereCenter) <= radius) {
+      const lightPos = light.lightData;
+      // Compute squared distance without allocating a new Vector3.
+      const dx = lightPos.x - sphereCenter.x;
+      const dy = lightPos.y - sphereCenter.y;
+      const dz = lightPos.z - sphereCenter.z;
+      if ((dx * dx + dy * dy + dz * dz) <= (radius * radius)) {
         found.push(light);
       }
     }

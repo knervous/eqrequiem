@@ -59,11 +59,12 @@ export default class LightManager {
       lightNode.light_specular = 0;
       lightNode.omni_range = 150.0;
       lightNode.distance_fade_enabled = true;
-      lightNode.distance_fade_begin = 500.0;
-      lightNode.distance_fade_length = 250.0;
+      lightNode.distance_fade_begin = 50.0;
+      lightNode.distance_fade_length = 150.0;
       lightNode.distance_fade_shadow = 50;
       lightNode.layers = 1 << 0;
       lightNode.visible = false;
+      lightNode.lightData = light;
       this.lights.push(lightNode);
     }
   }
