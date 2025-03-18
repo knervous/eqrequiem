@@ -142,23 +142,23 @@ export const MainProvider = (props: ReactProps) => {
       }
 
       // This is just hacked in for general support right away
-      if (!(await getEQFileExists("models", "bam.glb"))) {
-        const fh = await rootFileSystemHandle
-          .getFileHandle("global_chr.s3d")
-          ?.then((f) => f.getFile());
+      // if (!(await getEQFileExists("models", "bam.glb"))) {
+      //   const fh = await rootFileSystemHandle
+      //     .getFileHandle("global_chr.s3d")
+      //     ?.then((f) => f.getFile());
 
-        const obj = new EQFileHandle(
-          "global_chr",
-          [fh],
-          rootFileSystemHandle,
-          {},
-          {
-            rawImageWrite: true,
-          }
-        );
-        await obj.initialize();
-        await obj.process();
-      }
+      //   const obj = new EQFileHandle(
+      //     "global_chr",
+      //     [fh],
+      //     rootFileSystemHandle,
+      //     {},
+      //     {
+      //       rawImageWrite: true,
+      //     }
+      //   );
+      //   await obj.initialize();
+      //   await obj.process();
+      // }
       setReady(true);
     })();
   }, [rootFileSystemHandle, permissionStatus]);
