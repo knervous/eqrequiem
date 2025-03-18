@@ -58,9 +58,10 @@ export const MainProvider = (props: ReactProps) => {
       setGlobals({ gameController, GlobalStore, root: "eqrequiem" });
 
       /**
-       * 
-       * Window functions 
+       *
+       * Window functions
        */
+      const models = await fetch("/models.json").then((r) => r.json());
       window.getJsBytes = async (inputString: string) => {
         console.log("Asking for bytes for", inputString);
         const path = inputString.split("/");
@@ -70,8 +71,15 @@ export const MainProvider = (props: ReactProps) => {
             switch (path[1]) {
               case "objects":
               case "textures":
-                case "sky":
+              case "models":
+              case "sky":
                 data = await getEQFile(path[1], path[2]);
+
+                // Time to do a lookup
+                if (!data) {
+                  const match = models[path[2].replace('.glb', '')];
+                  console.log('Matches', match)
+                }
                 break;
               case "zones":
                 const zoneName = path[2].split(".")[0];
@@ -113,11 +121,34 @@ export const MainProvider = (props: ReactProps) => {
         }
         return data;
       };
+
+      // Going to split these out into dependencies and services in a class
       if (!(await getEQFileExists("sky", "sky1.glb"))) {
-        const fh = await rootFileSystemHandle.getFileHandle("sky.s3d")?.then(f => f.getFile());
+        const fh = await rootFileSystemHandle
+          .getFileHandle("sky.s3d")
+          ?.then((f) => f.getFile());
 
         const obj = new EQFileHandle(
           "sky",
+          [fh],
+          rootFileSystemHandle,
+          {},
+          {
+            rawImageWrite: true,
+          }
+        );
+        await obj.initialize();
+        await obj.process();
+      }
+
+      // This is just hacked in for general support right away
+      if (!(await getEQFileExists("models", "bam.glb"))) {
+        const fh = await rootFileSystemHandle
+          .getFileHandle("global_chr.s3d")
+          ?.then((f) => f.getFile());
+
+        const obj = new EQFileHandle(
+          "global_chr",
           [fh],
           rootFileSystemHandle,
           {},
@@ -142,7 +173,7 @@ export const MainProvider = (props: ReactProps) => {
         requestPermissions,
         permissionStatus,
         onFolderSelected,
-        ready
+        ready,
       }}
     >
       {props.children}

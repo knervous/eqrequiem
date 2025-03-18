@@ -1,5 +1,6 @@
 import { Camera3D, Color, Node3D, OmniLight3D, Vector3 } from "godot";
 import { OctreeNode } from "./light-octree";
+import { Extensions } from "../Util/extensions";
 
 export type LightData = {
   x: number;
@@ -21,7 +22,7 @@ export default class LightManager {
   private cameraLight: OmniLight3D | null = null;
   private updateInterval = 0.2;
   private timeSinceLastUpdate = 0.0;
-  private maxLightDistance = 500.0;
+  private maxLightDistance = 300.0;
   private maxActiveLights = 10;
   private octree: OctreeNode | null = null;
 
@@ -32,6 +33,17 @@ export default class LightManager {
     this.createLights(lights);
     // Build the octree only once since lights are static.
     this.octree = this.buildOctree();
+  }
+
+  public dispose() {
+    for (const light of this.lights) {
+      light.queue_free();
+    }
+    this.lights = [];
+    if (this.cameraLight) {
+      this.cameraLight.queue_free();
+      this.cameraLight = null;
+    }
   }
 
   private createCameraLight() {
@@ -47,6 +59,7 @@ export default class LightManager {
   }
 
   private createLights(lightData: LightData[]) {
+    let i = 0;
     for (const light of lightData) {
       const lightNode = new OmniLight3D();
       this.parent.add_child(lightNode);
@@ -62,9 +75,14 @@ export default class LightManager {
       lightNode.distance_fade_begin = 50.0;
       lightNode.distance_fade_length = 150.0;
       lightNode.distance_fade_shadow = 50;
+      lightNode.set_name("Light" + i++);
       lightNode.layers = 1 << 0;
       lightNode.visible = false;
-      lightNode.lightData = light;
+      lightNode.lightData = {
+        x: -light.x,
+        y: light.y,
+        z: light.z,
+      };
       this.lights.push(lightNode);
     }
   }
@@ -74,7 +92,7 @@ export default class LightManager {
     let min = new Vector3(Infinity, Infinity, Infinity);
     let max = new Vector3(-Infinity, -Infinity, -Infinity);
     for (const light of this.lights) {
-      const pos = light.global_transform.origin;
+      const pos = Extensions.GetPosition(light);
       min.x = Math.min(min.x, pos.x);
       min.y = Math.min(min.y, pos.y);
       min.z = Math.min(min.z, pos.z);
@@ -102,7 +120,7 @@ export default class LightManager {
     if (this.timeSinceLastUpdate < this.updateInterval) return;
 
     this.timeSinceLastUpdate = 0.0;
-    const cameraPos = this.camera.global_transform.origin;
+    const cameraPos = Extensions.GetPosition(this.camera);
 
     // Query the octree for nearby lights.
     const nearbyLights = this.octree.querySphere(
@@ -110,12 +128,11 @@ export default class LightManager {
       this.maxLightDistance
     );
     const lightsWithDistance = nearbyLights.map((light) => {
-      const distance = cameraPos.distance_to(light.global_transform.origin);
+      const distance = Extensions.GetDistance(cameraPos, light.lightData);
       return { light, distance };
     });
     lightsWithDistance.sort((a, b) => a.distance - b.distance);
 
-    // Identify lights that should be active.
     const activeLights = new Set<OmniLight3D>();
     for (let i = 0; i < lightsWithDistance.length; i++) {
       const { light, distance } = lightsWithDistance[i];
@@ -126,11 +143,10 @@ export default class LightManager {
 
     // Fade settings.
     const fullEnergy = 10.0;
-    const fadeSpeed = 5.0; // Adjust this value to control fade speeSd.
+    const fadeSpeed = 5.0;
 
     for (const light of this.lights) {
       if (activeLights.has(light)) {
-        // For lights in range, force them visible and fade toward full energy.
         light.visible = true;
         light.light_energy = lerp(
           light.light_energy,

@@ -12,27 +12,18 @@ declare module "godot" {
                 {
                     ZoneEntry: TextEdit<
                         {
-                            "@HScrollBar@33828": HScrollBar<{}>,
-                            "@VScrollBar@33829": VScrollBar<{}>,
-                            "@Timer@33830": Timer<{}>,
-                            "@Timer@33831": Timer<{}>,
-                            "@Timer@33832": Timer<{}>,
+                            "@HScrollBar@45244": HScrollBar<{}>,
+                            "@VScrollBar@45245": VScrollBar<{}>,
+                            "@Timer@45246": Timer<{}>,
+                            "@Timer@45247": Timer<{}>,
+                            "@Timer@45248": Timer<{}>,
                         }
                     >,
                     ZoneButton: Button<{}>,
                     FPS: Label<{}>,
                 }
             >,
-            Node3D: Node3D<
-                {
-                    sky1: Node3D<
-                        {
-                            Mesh: MeshInstance3D<{}>,
-                            Mesh2: MeshInstance3D<{}>,
-                        }
-                    >,
-                }
-            >,
+            GDBridge: Node<{}>,
         },
     }
 }

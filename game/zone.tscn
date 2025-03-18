@@ -5,7 +5,7 @@
 [ext_resource type="Script" uid="uid://8vyuhyx0xogt" path="res://addons/freecam_3D/freecam.gd" id="2_iubos"]
 [ext_resource type="Script" uid="uid://by6ny5cpgdbqr" path="res://_JS/Code/Debug/fps.js" id="4_iubos"]
 [ext_resource type="Script" uid="uid://q43i0gub1cx4" path="res://_JS/Code/Debug/zone-load.js" id="5_xyj1o"]
-[ext_resource type="PackedScene" uid="uid://twvno6ymebfb" path="res://sky1.glb" id="6_ftmw8"]
+[ext_resource type="Script" path="res://GDBridge.gd" id="6_ftmw8"]
 
 [node name="Zone" type="Node3D"]
 script = ExtResource("1_xyj1o")
@@ -53,7 +53,5 @@ vertical_alignment = 1
 script = ExtResource("4_iubos")
 metadata/_edit_use_anchors_ = true
 
-[node name="Node3D" type="Node3D" parent="."]
-
-[node name="sky1" parent="Node3D" instance=ExtResource("6_ftmw8")]
-transform = Transform3D(1000, 0, 0, 0, 1000, 0, 0, 0, 1000, 0, 0, 0)
+[node name="GDBridge" type="Node" parent="."]
+script = ExtResource("6_ftmw8")

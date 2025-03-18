@@ -4,7 +4,6 @@ import {
   MeshInstance3D,
   StandardMaterial3D,
   Vector2,
-  Material,
   BaseMaterial3D,
   Color,
   Shader,
@@ -12,10 +11,12 @@ import {
   Camera3D,
 } from "godot";
 import { BaseGltfModel } from "../GLTF/base";
+import { Extensions } from "../Util/extensions";
 export default class SkyManager {
   parent: Node3D;
   name = "";
-  scale = 3000;
+  scale = 5000;
+  interval = 0;
   camera: Camera3D | null = null;
   layer1Material: StandardMaterial3D | null = null;
   layer2Material: StandardMaterial3D | null = null;
@@ -33,7 +34,11 @@ export default class SkyManager {
     this.name = name;
     this.createSkyDome();
     this.camera = camera;
-    this.camOrigin = camera?.global_transform.origin;
+    this.camOrigin = camera?.global_position;
+  }
+
+  public dispose() {
+    clearInterval(this.interval);
   }
 
   private async createSkyDome() {
@@ -42,9 +47,7 @@ export default class SkyManager {
     if (rootNode) {
       this.parent.add_child(rootNode);
       rootNode.scale = new Vector3(this.scale, this.scale, this.scale);
-      rootNode.position = this.camOrigin;
       const materials = this.traverseForMaterials(rootNode);
-      console.log("MATERIALS", materials.length);
 
       if (materials.length >= 2) {
         this.layer1Material = materials[0] as StandardMaterial3D;
@@ -64,7 +67,9 @@ export default class SkyManager {
           0
         );
 
-        setInterval(() => {
+        this.interval = setInterval(() => {
+          rootNode.position = Extensions.GetPosition(this.camera!);
+
           if (this.layer1Material && this.layer2Material) {
             // Update offsets
             this.uvOffsetLayer1.x += 0.0001;
@@ -80,7 +85,7 @@ export default class SkyManager {
             this.layer1Material.uv1_offset = this.layer1OffsetVec;
             this.layer2Material.uv1_offset = this.layer2OffsetVec;
           }
-        }, 16);
+        }, 16) as unknown as number;
       }
     }
   }

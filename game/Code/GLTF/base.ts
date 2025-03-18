@@ -52,12 +52,12 @@ export const AlphaShaderMap: Partial<Record<ShaderType, number>> = {
 };
 
 export class BaseGltfModel {
-  private model: string = "";
-  private folder: string = "";
-  private node: Node3D | undefined;
-  private packedScene: PackedScene | undefined;
-  private animationPlayer: AnimationPlayer | undefined;
-  private animationIntervals: number[] = [];
+  protected model: string = "";
+  protected folder: string = "";
+  protected node: Node3D | undefined;
+  protected packedScene: PackedScene | undefined;
+  protected animationPlayer: AnimationPlayer | undefined;
+  protected animationIntervals: number[] = [];
 
   constructor(folder: string, model: string) {
     this.folder = folder;
@@ -108,6 +108,8 @@ export class BaseGltfModel {
         this.traverseAndSwapTextures(rootNode as Node3D);
         this.node = rootNode as Node3D;
         this.setupAnimations(rootNode as Node3D);
+        // Enable lifecycle methods
+
         return rootNode;
       } else {
         console.log("Error with rootNode");
@@ -330,13 +332,9 @@ export class BaseGltfModel {
     let err;
     let needFlip = false;
     if (new DataView(buffer).getUint16(0, true) === 0x4d42) {
-      console.log("Load name as bmp`", name);
-
       err = image.load_bmp_from_buffer(buffer);
       needFlip = true;
     } else {
-      console.log("Load name as dds`", name);
-
       err = image.load_dds_from_buffer(buffer);
     }
     if (err !== 0) {

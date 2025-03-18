@@ -66,7 +66,7 @@ export class OctreeNode {
 
   // Insert a light into the octree. Returns true if insertion was successful.
   insert(light: OmniLight3D): boolean {
-    const pos = light.global_transform.origin;
+    const pos = light.global_position;
     if (!this.contains(pos)) {
       return false;
     }
