@@ -3,10 +3,7 @@ import {
   PermissionStatusTypes,
   usePermissions,
 } from "sage-core/hooks/permissions";
-import { setGlobals } from "sage-core/globals";
 import {
-  getEQFile,
-  getFilesRecursively,
   getEQFileExists,
 } from "sage-core/util/fileHandler";
 import { EQFileHandle } from "sage-core/model/file-handle";

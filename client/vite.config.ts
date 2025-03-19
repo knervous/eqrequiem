@@ -27,7 +27,7 @@ export default defineConfig({
       target: "chrome90",
     },
   },
-  ...(process.env.NODE_ENV === "development" && {
+  ...(process.env.LOCAL_DEV === "true" && {
     resolve: {
       alias: {
         "sage-core": path.resolve(__dirname, "../../eqsage/sage/lib"),
