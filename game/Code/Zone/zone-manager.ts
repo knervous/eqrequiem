@@ -13,12 +13,14 @@ import SkyManager from "../Sky/sky-manager";
 import { Extensions } from "../Util/extensions";
 import { Scene } from "../Scene/scene";
 import Player from "../Player/player";
+import ZoneObjects from "./object-pool";
 export default class ZoneManager extends Node3D {
   private currentZone: Node3D | null = null;
   private camera: Camera3D | null = null;
   // Light manager
   private lightManager: LightManager | null = null;
   private skyManager: SkyManager | null = null;
+  private zoneObjects: ZoneObjects | null = null;
 
   private player: Player | null = null;
 
@@ -45,6 +47,11 @@ export default class ZoneManager extends Node3D {
       if (this.skyManager) {
         this.skyManager.dispose();
         this.skyManager = null;
+      }
+
+      if (this.zoneObjects) {
+        this.zoneObjects.dispose();
+        this.zoneObjects = null;
       }
       Extensions.Dispose();
     }
@@ -81,30 +88,8 @@ export default class ZoneManager extends Node3D {
         const metadata = JSON.parse(str);
         console.log("Got metadata", Object.keys(metadata));
         console.log("Version: ", metadata.version);
-
-        for (const [key, entries] of Object.entries(metadata.objects)) {
-          const objectModel = new BaseGltfModel("objects", key);
-          const packedScene = await objectModel.createPackedScene();
-          if (packedScene) {
-            for (const entry of entries) {
-              const instance =
-                (await objectModel.instancePackedScene()) as Node3D;
-              if (instance) {
-                this.currentZone.add_child(instance);
-                instance.position = new Vector3(-entry.x, entry.y, entry.z);
-                instance.scale = new Vector3(
-                  entry.scale,
-                  entry.scale,
-                  entry.scale
-                );
-
-                instance.rotate_x(deg_to_rad(entry.rotateX));
-                instance.rotate_y(-deg_to_rad(entry.rotateY));
-                instance.rotate_z(deg_to_rad(entry.rotateZ));
-              }
-            }
-          }
-        }
+     
+        this.zoneObjects = new ZoneObjects(this.currentZone, metadata.objects);
         this.lightManager = new LightManager(
           this.currentZone,
           this.camera!,

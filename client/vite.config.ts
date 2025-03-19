@@ -9,7 +9,7 @@ const agent = new https.Agent({
 });
 
 export default defineConfig({
-  base:'./',
+  base: "./",
   plugins: [
     react(),
     {
@@ -22,13 +22,24 @@ export default defineConfig({
       },
     },
   ],
-  // resolve: {
-  //   alias: ["ndarray", "ndarray-ops", "draco3dgltf", "buffer", "pako"].reduce(
-  //     (acc, name) => (
-  //       { ...acc, [name]: path.resolve(__dirname, `wrapper/${name}.js`) }
-  //     ), {}
-  //   ),
-  // },
+  optimizeDeps: {
+    esbuildOptions: {
+      target: "chrome90",
+    },
+  },
+  ...(process.env.NODE_ENV === "development" && {
+    resolve: {
+      alias: {
+        "sage-core": path.resolve(__dirname, "../../eqsage/sage/lib"),
+      },
+    },
+    optimizeDeps: {
+      exclude: ["sage-core"],
+      esbuildOptions: {
+        target: "chrome90",
+      },
+    },
+  }),
   build: {
     target: "chrome90",
     commonjsOptions: {
@@ -37,11 +48,7 @@ export default defineConfig({
       transformMixedEsModules: true,
     },
   },
-  optimizeDeps: {
-    esbuildOptions: {
-      target: "chrome90",
-    },
-  },
+
   // worker: {
   //   format: "es",
   // },

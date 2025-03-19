@@ -1,8 +1,5 @@
 extends Node
 
-# This node will cache the camera's global position.
-var cached_camera_pos: Vector3 = Vector3()
-
 func get_position_x(node: Node3D) -> float:
 	return node.global_position.x;
 

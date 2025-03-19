@@ -1,4 +1,4 @@
-import { JSON as GJSON, GDictionary, Vector3, Node3D } from "godot";
+import { JSON as GJSON, GDictionary, Vector3, Node3D, Node } from "godot";
 
 type V3 = {
     x: number;
@@ -8,13 +8,13 @@ type V3 = {
 
 export class Extensions {
     static cachedPosition: Vector3 = new Vector3(0, 0, 0);
-    static cachedPositionNode: Node3D | null;
+    static cachedPositionNode: Node | null;
     static Dispose() {
         Extensions.cachedPositionNode = null;
     }
     static GetPosition(node: Node3D): Vector3 {
         if (!Extensions.cachedPositionNode) {
-            Extensions.cachedPositionNode = node.get_node('/root/Zone/GDBridge') as Node3D;
+            Extensions.cachedPositionNode = node.get_node('/root/Zone/GDBridge') as Node;
         }
         this.cachedPosition.x = Extensions.cachedPositionNode?.call('get_position_x', node);
         this.cachedPosition.y = Extensions.cachedPositionNode?.call('get_position_y', node);

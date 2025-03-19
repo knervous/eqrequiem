@@ -10,6 +10,7 @@ import {
   getEQFileExists,
 } from "sage-core/util/fileHandler";
 import { EQFileHandle } from "sage-core/model/file-handle";
+import { godotBindings } from "../godot/bindings";
 
 const MainContext = React.createContext({});
 
@@ -30,6 +31,10 @@ export const MainProvider = (props: ReactProps) => {
   const [ready, setReady] = useState(false);
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
 
+  const [loading, setLoading] = useState(false);
+  const [loadingText, setLoadingText] = useState("");
+  const [loadingTitle, setLoadingTitle] = useState("");
+
   useEffect(() => {
     setStatusDialogOpen(permissionStatus !== PermissionStatusTypes.Ready);
   }, [permissionStatus]);
@@ -38,90 +43,13 @@ export const MainProvider = (props: ReactProps) => {
     if (permissionStatus !== PermissionStatusTypes.Ready) {
       return;
     }
-
     (async () => {
-      const gameController = {
+      await godotBindings.initialize({
         rootFileSystemHandle,
-      };
-      window.gameController = gameController;
-      const GlobalStore = {
-        actions: {
-          setLoading: () => {},
-          setLoadingText: () => {},
-          setLoadingTitle: () => {},
-        },
-      };
-
-      /**
-       * Globals
-       */
-      setGlobals({ gameController, GlobalStore, root: "eqrequiem" });
-
-      /**
-       *
-       * Window functions
-       */
-      const models = await fetch("/models.json").then((r) => r.json());
-      window.getJsBytes = async (inputString: string) => {
-        console.log("Asking for bytes for", inputString);
-        const path = inputString.split("/");
-        let data = null;
-        switch (path[0]) {
-          case "eqrequiem":
-            switch (path[1]) {
-              case "objects":
-              case "textures":
-              case "models":
-              case "sky":
-                data = await getEQFile(path[1], path[2]);
-
-                // Time to do a lookup
-                if (!data) {
-                  const match = models[path[2].replace('.glb', '')];
-                  console.log('Matches', match)
-                }
-                break;
-              case "zones":
-                const zoneName = path[2].split(".")[0];
-                data = await getEQFile(path[1], path[2]);
-                if (!data) {
-                  const handles = [];
-                  try {
-                    for await (const fileHandle of getFilesRecursively(
-                      rootFileSystemHandle,
-                      "",
-                      new RegExp(`^${zoneName}[_\\.].*`)
-                    )) {
-                      handles.push(await fileHandle.getFile());
-                    }
-                  } catch (e) {
-                    console.warn("Error", e, handles);
-                  }
-
-                  const obj = new EQFileHandle(
-                    zoneName,
-                    handles,
-                    rootFileSystemHandle,
-                    {},
-                    {
-                      rawImageWrite: true,
-                    }
-                  );
-                  await obj.initialize();
-                  await obj.process();
-                  data = await getEQFile(path[1], path[2]);
-                }
-                break;
-              default:
-                break;
-            }
-            break;
-          default:
-            break;
-        }
-        return data;
-      };
-
+        setLoading,
+        setLoadingText,
+        setLoadingTitle
+      });
       // Going to split these out into dependencies and services in a class
       if (!(await getEQFileExists("sky", "sky1.glb"))) {
         const fh = await rootFileSystemHandle
@@ -140,25 +68,6 @@ export const MainProvider = (props: ReactProps) => {
         await obj.initialize();
         await obj.process();
       }
-
-      // This is just hacked in for general support right away
-      // if (!(await getEQFileExists("models", "bam.glb"))) {
-      //   const fh = await rootFileSystemHandle
-      //     .getFileHandle("global_chr.s3d")
-      //     ?.then((f) => f.getFile());
-
-      //   const obj = new EQFileHandle(
-      //     "global_chr",
-      //     [fh],
-      //     rootFileSystemHandle,
-      //     {},
-      //     {
-      //       rawImageWrite: true,
-      //     }
-      //   );
-      //   await obj.initialize();
-      //   await obj.process();
-      // }
       setReady(true);
     })();
   }, [rootFileSystemHandle, permissionStatus]);
