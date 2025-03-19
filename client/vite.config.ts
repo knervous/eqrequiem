@@ -43,15 +43,10 @@ export default defineConfig({
   build: {
     target: "chrome90",
     commonjsOptions: {
-      // This option makes require() return a default property
       requireReturnsDefault: "preferred",
       transformMixedEsModules: true,
     },
   },
-
-  // worker: {
-  //   format: "es",
-  // },
   server: {
     https: {
       key: fs.readFileSync("localhost.key"),
