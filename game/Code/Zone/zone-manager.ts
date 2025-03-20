@@ -1,6 +1,9 @@
 import { export_ } from "godot.annotations";
 import {
   Camera3D,
+  InputEvent,
+  InputEventAction,
+  InputEventMouseButton,
   Node3D,
   Variant,
   Vector3,
@@ -28,6 +31,7 @@ export default class ZoneManager extends Node3D {
   public zoneName = "qeynos2";
 
   _ready(): void {
+    Extensions.SetRoot(this);
     this.camera = this.get_node("Camera3D") as Camera3D;
     this.camera.cull_mask = 0xfffff;
 
@@ -77,6 +81,7 @@ export default class ZoneManager extends Node3D {
     const rootNode = await zoneModel.instantiate();
     if (rootNode) {
       this.currentZone.add_child(rootNode);
+      rootNode.set_physics_process(true);
     }
 
     const metadataByte = await FileSystem.getFileBytes(
@@ -114,17 +119,33 @@ export default class ZoneManager extends Node3D {
     if (!this.currentZone) {
       return;
     }
-    // this.player = new Player('models', 'bam');
-    // const rootNode = await this.player.instantiate();
-    // if (rootNode) {
-    //   this.player.Load('');
-    //   this.currentZone.add_child(rootNode);
-    // }
+    this.player = new Player('models', 'bam', this.camera!);
+    const rootNode = await this.player.instantiate();
+    if (rootNode) {
+      this.player.Load('');
+      this.currentZone.add_child(rootNode);
+    }
   }
 
+  input(buttonIndex: number) {
+  if (this.player) {
+      this.player.input(buttonIndex);
+    }
+  }
+
+  input_pan(delta: number) {
+    if (this.player) {
+        this.player.input_pan(delta);
+      }
+    }
+  
   _process(delta: number): void {
     if (this.lightManager) {
       this.lightManager.tick(delta);
+    }
+
+    if (this.player) {
+      this.player.tick(delta);
     }
   }
 }

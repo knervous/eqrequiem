@@ -131,6 +131,14 @@ class GodotBindings {
   };
 
   enqueueFile = (candidates: number[]) => {
+    candidates = candidates.filter(i => {
+      // NO LUCLIN MODELS ALLOWED
+      if (/global[a-z]+_/.test(this.models.stringTable[i] as string)) {
+        return false;
+      }
+
+      return true;
+    });
     this.candidates.push(candidates);
     return new Promise((res) => {
       const exec = () => {
@@ -170,7 +178,7 @@ class GodotBindings {
           case "sky":
             data = await getEQFile(path[1], path[2]);
 
-            if ((!data && path[1] === "models") || path[1] === "objects") {
+            if (!data && (path[1] === "models") || path[1] === "objects") {
               if (isRetry) {
                 console.log("Failed to load after retry", path[2]);
               } else {

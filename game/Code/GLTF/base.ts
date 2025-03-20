@@ -15,6 +15,9 @@ import {
   Resource,
   Texture2D,
   Color,
+  CharacterBody3D,
+  CollisionShape3D,
+  CapsuleShape3D,
 } from "godot";
 import { FileSystem } from "../FileSystem/filesystem";
 import { TextureCache } from "../Util/texture-cache";
@@ -41,6 +44,10 @@ export enum ShaderType {
   Boundary = 11,
 }
 
+export type LoaderOptions = {
+  flipTextureY: boolean;
+}
+
 export const AlphaShaderMap: Partial<Record<ShaderType, number>> = {
   [ShaderType.Transparent25]: 64,
   [ShaderType.Transparent50]: 128,
@@ -50,18 +57,25 @@ export const AlphaShaderMap: Partial<Record<ShaderType, number>> = {
   [ShaderType.TransparentAdditive]: 192,
   [ShaderType.TransparentAdditiveUnlit]: 192,
 };
-
 export class BaseGltfModel {
   protected model: string = "";
   protected folder: string = "";
-  protected node: Node3D | undefined;
+  protected node: Node3D | undefined; // This will now be the CharacterBody3D root
+  protected gltfNode: Node3D | undefined; // The GLTF scene node
   protected packedScene: PackedScene | undefined;
   protected animationPlayer: AnimationPlayer | undefined;
   protected animationIntervals: number[] = [];
 
-  constructor(folder: string, model: string) {
+  protected LoaderOptions = {
+    flipTextureY: false,
+  } as LoaderOptions;
+
+  constructor(folder: string, model: string, usePhysics: boolean = false) {
     this.folder = folder;
     this.model = model;
+    if (usePhysics) {
+      this.node = new CharacterBody3D(); // Root is now a CharacterBody3D
+    }
   }
 
   public dispose() {
@@ -72,20 +86,20 @@ export class BaseGltfModel {
     return this.node;
   }
 
+  public getGltfNode() {
+    return this.gltfNode; // Access the GLTF visual node
+  }
+
   public getMesh(): MeshInstance3D | undefined {
-    if (!this.node) {
-      return;
-    }
+    if (!this.gltfNode) return;
     const traverseChildren = (rootNode: Node): MeshInstance3D | undefined => {
       for (const child of rootNode.get_children()) {
-        if (child instanceof MeshInstance3D) {
-          return child;
-        }
+        if (child instanceof MeshInstance3D) return child;
         const result = traverseChildren(child);
         if (result) return result;
       }
     };
-    return traverseChildren(this.node);
+    return traverseChildren(this.gltfNode);
   }
 
   public async instantiate(): Promise<Node3D | undefined> {
@@ -100,17 +114,28 @@ export class BaseGltfModel {
     const gltfDocument = new GLTFDocument();
     const result = gltfDocument.append_from_buffer(buffer, "/", gltfState);
     if (result === GError.OK) {
-      // Print material extras if they exist
       this.parseMaterials(gltfState);
-
       const rootNode = gltfDocument.generate_scene(gltfState) as Node3D;
       if (rootNode) {
-        this.traverseAndSwapTextures(rootNode as Node3D);
-        this.node = rootNode as Node3D;
-        this.setupAnimations(rootNode as Node3D);
-        // Enable lifecycle methods
-
-        return rootNode;
+        this.traverseAndSwapTextures(rootNode);
+        this.gltfNode = rootNode; // Store the GLTF node separately
+        if (this.node instanceof CharacterBody3D) {
+          // If using physics, add GLTF node as a child
+          this.node.add_child(this.gltfNode);
+          this.gltfNode.position = Vector3.ZERO; // Align with CharacterBody3D
+        } else {
+          this.node = rootNode; // No physics, use GLTF node as root
+        }
+        if (this.node instanceof CharacterBody3D) {
+          const collisionShape = new CollisionShape3D();
+          const capsule = new CapsuleShape3D();
+          capsule.height = 2.0; // Adjust to match your model
+          capsule.radius = 0.5;
+          collisionShape.shape = capsule;
+          this.node.add_child(collisionShape);
+        }
+        this.setupAnimations(rootNode);
+        return this.node;
       } else {
         console.log("Error with rootNode");
       }
@@ -134,18 +159,12 @@ export class BaseGltfModel {
       material.eqShader = +meta?.eqShader as ShaderType;
       const forceAlpha = AlphaShaderMap[material.eqShader as ShaderType];
       if (forceAlpha !== undefined) {
-        // Convert from 0-255 to 0.0-1.0
         const enforcedAlpha = forceAlpha / 255;
-        // Get the current albedo color
         const currentColor = material.albedo_color;
-        // Set the alpha channel to the enforced value
         currentColor.a = enforcedAlpha;
         material.albedo_color = currentColor;
 
-        // Ensure the material renders as transparent
-        material.transparency = 1; //StandardMaterial3D.Transparency.TRANSPARENCY_ALPHA_SCISSOR;
-        // Optionally, you might need to adjust blend mode
-        // material.blend_mode = StandardMaterial3D.Transparency.TRANSPARENCY_DISABLED;
+        material.transparency = 1; 
       }
       switch (material.eqShader) {
         case ShaderType.Transparent25:
@@ -346,6 +365,9 @@ export class BaseGltfModel {
     ) as unknown as Texture2D & { flip_y: boolean };
     TextureCache.set(name, img);
     img.flip_y = needFlip;
+    if (this.LoaderOptions.flipTextureY) {
+      img.flip_y = !img.flip_y;
+    }
     return img;
   }
 
@@ -355,7 +377,7 @@ export class BaseGltfModel {
     }
     if (this.node) {
       const ps = new PackedScene();
-      ps.pack(this.node);
+      ps.pack(this.node); // Pack the root (CharacterBody3D or GLTF Node3D)
       this.packedScene = ps;
       return ps;
     }
@@ -365,7 +387,14 @@ export class BaseGltfModel {
   public instancePackedScene(): Node | undefined {
     if (this.packedScene) {
       const instance = this.packedScene.instantiate();
-      this.setupAnimations(instance as Node3D);
+      if (instance instanceof CharacterBody3D) {
+        this.node = instance;
+        this.gltfNode = instance.get_children().get(0) as Node3D; // Assume first child is GLTF node
+      } else {
+        this.node = instance as Node3D;
+        this.gltfNode = this.node;
+      }
+      this.setupAnimations(this.gltfNode);
       return instance;
     } else {
       console.log("PackedScene not available. Call createPackedScene() first.");

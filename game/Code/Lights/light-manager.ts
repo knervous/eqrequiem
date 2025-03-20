@@ -19,7 +19,6 @@ export default class LightManager {
   private parent: Node3D;
   private lights: OmniLight3D[] = [];
   private camera: Camera3D;
-  private cameraLight: OmniLight3D | null = null;
   private updateInterval = 0.2;
   private timeSinceLastUpdate = 0.0;
   private maxLightDistance = 300.0;
@@ -29,7 +28,6 @@ export default class LightManager {
   public constructor(parent: Node3D, camera: Camera3D, lights: LightData[]) {
     this.parent = parent;
     this.camera = camera;
-    this.createCameraLight();
     this.createLights(lights);
     // Build the octree only once since lights are static.
     this.octree = this.buildOctree();
@@ -40,23 +38,8 @@ export default class LightManager {
       light.queue_free();
     }
     this.lights = [];
-    if (this.cameraLight) {
-      this.cameraLight.queue_free();
-      this.cameraLight = null;
-    }
   }
 
-  private createCameraLight() {
-    this.cameraLight = new OmniLight3D();
-    this.camera.add_child(this.cameraLight);
-    this.cameraLight.position = new Vector3(0, 0, 0);
-    this.cameraLight.light_color = new Color(1.0, 0.85, 0.6, 1.0);
-    this.cameraLight.light_energy = 2.0;
-    this.cameraLight.light_specular = 0.0;
-    this.cameraLight.omni_range = 150.0;
-    this.cameraLight.layers = 1 << 0;
-    this.cameraLight.shadow_enabled = true;
-  }
 
   private createLights(lightData: LightData[]) {
     let i = 0;

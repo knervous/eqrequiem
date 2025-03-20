@@ -1,18 +1,16 @@
-[gd_scene load_steps=7 format=3 uid="uid://cwvt1wet87kxp"]
+[gd_scene load_steps=6 format=3 uid="uid://cwvt1wet87kxp"]
 
 [ext_resource type="Script" uid="uid://bj1am658vo5uc" path="res://_JS/Code/Zone/zone-manager.js" id="1_xyj1o"]
 [ext_resource type="PackedScene" uid="uid://bs2jm62cmkbrk" path="res://addons/instant-realistic-light/light_scene.tscn" id="2_1i4dq"]
-[ext_resource type="Script" uid="uid://8vyuhyx0xogt" path="res://addons/freecam_3D/freecam.gd" id="2_iubos"]
 [ext_resource type="Script" uid="uid://by6ny5cpgdbqr" path="res://_JS/Code/Debug/fps.js" id="4_iubos"]
 [ext_resource type="Script" uid="uid://q43i0gub1cx4" path="res://_JS/Code/Debug/zone-load.js" id="5_xyj1o"]
-[ext_resource type="Script" path="res://GDBridge.gd" id="6_ftmw8"]
+[ext_resource type="Script" uid="uid://c1yocagafiah1" path="res://GDBridge.gd" id="6_ftmw8"]
 
 [node name="Zone" type="Node3D"]
 script = ExtResource("1_xyj1o")
 
 [node name="Camera3D" type="Camera3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0979272, 0)
-script = ExtResource("2_iubos")
+transform = Transform3D(0.999928, 0, -0.0120076, 0, 1, 0, 0.0120076, 0, 0.999928, 0, 0.0979272, 0)
 
 [node name="WorldEnvironment2" parent="." instance=ExtResource("2_1i4dq")]
 
@@ -52,6 +50,12 @@ grow_horizontal = 0
 vertical_alignment = 1
 script = ExtResource("4_iubos")
 metadata/_edit_use_anchors_ = true
+
+[node name="PlayerDetails" type="RichTextLabel" parent="DebugUI"]
+offset_left = 165.0
+offset_top = 2.0
+offset_right = 631.0
+offset_bottom = 186.0
 
 [node name="GDBridge" type="Node" parent="."]
 script = ExtResource("6_ftmw8")
