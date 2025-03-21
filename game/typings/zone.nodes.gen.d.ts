@@ -12,37 +12,37 @@ declare module "godot" {
                 {
                     ZoneEntry: TextEdit<
                         {
-                            "@HScrollBar@39265": HScrollBar<{}>,
-                            "@VScrollBar@39266": VScrollBar<{}>,
-                            "@Timer@39267": Timer<{}>,
-                            "@Timer@39268": Timer<{}>,
-                            "@Timer@39269": Timer<{}>,
+                            "@HScrollBar@41545": HScrollBar<{}>,
+                            "@VScrollBar@41546": VScrollBar<{}>,
+                            "@Timer@41547": Timer<{}>,
+                            "@Timer@41548": Timer<{}>,
+                            "@Timer@41549": Timer<{}>,
                         }
                     >,
                     ZoneButton: Button<{}>,
                     FPS: Label<{}>,
                     PlayerDetails: RichTextLabel<
                         {
-                            "@VScrollBar@39270": VScrollBar<{}>,
+                            "@VScrollBar@41550": VScrollBar<{}>,
                         }
                     >,
                     RaceChooser: OptionButton<
                         {
-                            "@PopupMenu@39276": PopupMenu<
+                            "@PopupMenu@41556": PopupMenu<
                                 {
-                                    "@PanelContainer@39271": PanelContainer<
+                                    "@PanelContainer@41551": PanelContainer<
                                         {
-                                            "@ScrollContainer@39272": ScrollContainer<
+                                            "@ScrollContainer@41552": ScrollContainer<
                                                 {
-                                                    "@Control@39273": Control<{}>,
+                                                    "@Control@41553": Control<{}>,
                                                     _h_scroll: HScrollBar<{}>,
                                                     _v_scroll: VScrollBar<{}>,
                                                 }
                                             >,
                                         }
                                     >,
-                                    "@Timer@39274": Timer<{}>,
-                                    "@Timer@39275": Timer<{}>,
+                                    "@Timer@41554": Timer<{}>,
+                                    "@Timer@41555": Timer<{}>,
                                 }
                             >,
                         }
