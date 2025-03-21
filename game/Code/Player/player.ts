@@ -54,7 +54,7 @@ export default class Player extends Actor {
       { name: "turn_left", key: Key.KEY_A },
       { name: "turn_right", key: Key.KEY_D },
       { name: "move_up", key: Key.KEY_SPACE }, // Space to move up
-      { name: "move_down", key: Key.KEY_X }, // Shift to move down
+      { name: "move_down", key: Key.KEY_CTRL }, // Shift to move down
       { name: "sprint", key: Key.KEY_SHIFT }, // Ctrl to sprint
     ];
 
@@ -98,6 +98,10 @@ export default class Player extends Actor {
     }
   }
   tick(delta: number) {
+    if (this.node?.get_viewport().gui_get_focus_owner()) {
+      // A UI element is active; skip processing player movement.
+      return;
+  }
     const node = this.getNode() as CharacterBody3D;
     if (!node) return;
 

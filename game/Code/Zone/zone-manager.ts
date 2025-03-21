@@ -17,6 +17,7 @@ import { Extensions } from "../Util/extensions";
 import { Scene } from "../Scene/scene";
 import Player from "../Player/player";
 import ZoneObjects from "./object-pool";
+import Actor from "../Actor/actor";
 export default class ZoneManager extends Node3D {
   private currentZone: Node3D | null = null;
   private camera: Camera3D | null = null;
@@ -93,7 +94,7 @@ export default class ZoneManager extends Node3D {
         const metadata = JSON.parse(str);
         console.log("Got metadata", Object.keys(metadata));
         console.log("Version: ", metadata.version);
-     
+
         this.zoneObjects = new ZoneObjects(this.currentZone, metadata.objects);
         this.lightManager = new LightManager(
           this.currentZone,
@@ -112,7 +113,23 @@ export default class ZoneManager extends Node3D {
     this.set_process(true);
     this.set_physics_process(true);
 
-    this.instantiatePlayer('bam');
+    this.instantiatePlayer("bam");
+  }
+
+  public async spawnModel(model: string) {
+    if (!this.currentZone) {
+      return;
+    }
+    const objectModel = new Actor("models", model);
+    const instance = await objectModel.instantiate();
+    if (instance && this.player?.getNode() !== undefined) {
+      this.currentZone.add_child(instance);
+      instance.position = this.player?.getNode().position!;
+      instance.scale = new Vector3(1, 1, 1);
+      instance.rotate_x(deg_to_rad(0));
+      instance.rotate_y(-deg_to_rad(0));
+      instance.rotate_z(deg_to_rad(0));
+    }
   }
 
   public async instantiatePlayer(model: string) {
@@ -122,16 +139,16 @@ export default class ZoneManager extends Node3D {
     if (this.player) {
       this.player.dispose();
     }
-    this.player = new Player('models', model, this.camera!);
+    this.player = new Player("models", model, this.camera!);
     const rootNode = await this.player.instantiate();
     if (rootNode) {
-      this.player.Load('');
+      this.player.Load("");
       this.currentZone.add_child(rootNode);
     }
   }
 
   input(buttonIndex: number) {
-  if (this.player) {
+    if (this.player) {
       this.player.input(buttonIndex);
     }
   }
@@ -144,10 +161,10 @@ export default class ZoneManager extends Node3D {
 
   input_pan(delta: number) {
     if (this.player) {
-        this.player.input_pan(delta);
-      }
+      this.player.input_pan(delta);
     }
-  
+  }
+
   _process(delta: number): void {
     if (this.lightManager) {
       this.lightManager.tick(delta);

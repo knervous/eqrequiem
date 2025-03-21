@@ -345,6 +345,9 @@ export class BaseGltfModel {
   }
 
   private setupAnimations(rootNode: Node3D): void {
+    if (!rootNode) {
+      return;
+    }
     const findAnimationPlayer = (node: Node): AnimationPlayer | undefined => {
       if (node instanceof AnimationPlayer) {
         return node;

@@ -10,46 +10,53 @@ declare module "godot" {
             >,
             DebugUI: Node2D<
                 {
-                    ZoneEntry: TextEdit<
-                        {
-                            "@HScrollBar@41545": HScrollBar<{}>,
-                            "@VScrollBar@41546": VScrollBar<{}>,
-                            "@Timer@41547": Timer<{}>,
-                            "@Timer@41548": Timer<{}>,
-                            "@Timer@41549": Timer<{}>,
-                        }
-                    >,
-                    ZoneButton: Button<{}>,
                     FPS: Label<{}>,
                     PlayerDetails: RichTextLabel<
                         {
-                            "@VScrollBar@41550": VScrollBar<{}>,
+                            "@VScrollBar@164254": VScrollBar<{}>,
                         }
                     >,
                     RaceChooser: OptionButton<
                         {
-                            "@PopupMenu@41556": PopupMenu<
+                            "@PopupMenu@164260": PopupMenu<
                                 {
-                                    "@PanelContainer@41551": PanelContainer<
+                                    "@PanelContainer@164255": PanelContainer<
                                         {
-                                            "@ScrollContainer@41552": ScrollContainer<
+                                            "@ScrollContainer@164256": ScrollContainer<
                                                 {
-                                                    "@Control@41553": Control<{}>,
+                                                    "@Control@164257": Control<{}>,
                                                     _h_scroll: HScrollBar<{}>,
                                                     _v_scroll: VScrollBar<{}>,
                                                 }
                                             >,
                                         }
                                     >,
-                                    "@Timer@41554": Timer<{}>,
-                                    "@Timer@41555": Timer<{}>,
+                                    "@Timer@164258": Timer<{}>,
+                                    "@Timer@164259": Timer<{}>,
                                 }
                             >,
+                        }
+                    >,
+                    ChatContainer: VBoxContainer<
+                        {
+                            ScrollContainer: ScrollContainer<
+                                {
+                                    Content: RichTextLabel<
+                                        {
+                                            "@VScrollBar@164261": VScrollBar<{}>,
+                                        }
+                                    >,
+                                    _h_scroll: HScrollBar<{}>,
+                                    _v_scroll: VScrollBar<{}>,
+                                }
+                            >,
+                            Edit: LineEdit<{}>,
                         }
                     >,
                 }
             >,
             GDBridge: Node<{}>,
+            JSBridge: Node<{}>,
         },
     }
 }
