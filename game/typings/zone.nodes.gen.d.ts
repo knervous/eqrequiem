@@ -12,18 +12,39 @@ declare module "godot" {
                 {
                     ZoneEntry: TextEdit<
                         {
-                            "@HScrollBar@46183": HScrollBar<{}>,
-                            "@VScrollBar@46184": VScrollBar<{}>,
-                            "@Timer@46185": Timer<{}>,
-                            "@Timer@46186": Timer<{}>,
-                            "@Timer@46187": Timer<{}>,
+                            "@HScrollBar@39265": HScrollBar<{}>,
+                            "@VScrollBar@39266": VScrollBar<{}>,
+                            "@Timer@39267": Timer<{}>,
+                            "@Timer@39268": Timer<{}>,
+                            "@Timer@39269": Timer<{}>,
                         }
                     >,
                     ZoneButton: Button<{}>,
                     FPS: Label<{}>,
                     PlayerDetails: RichTextLabel<
                         {
-                            "@VScrollBar@46188": VScrollBar<{}>,
+                            "@VScrollBar@39270": VScrollBar<{}>,
+                        }
+                    >,
+                    RaceChooser: OptionButton<
+                        {
+                            "@PopupMenu@39276": PopupMenu<
+                                {
+                                    "@PanelContainer@39271": PanelContainer<
+                                        {
+                                            "@ScrollContainer@39272": ScrollContainer<
+                                                {
+                                                    "@Control@39273": Control<{}>,
+                                                    _h_scroll: HScrollBar<{}>,
+                                                    _v_scroll: VScrollBar<{}>,
+                                                }
+                                            >,
+                                        }
+                                    >,
+                                    "@Timer@39274": Timer<{}>,
+                                    "@Timer@39275": Timer<{}>,
+                                }
+                            >,
                         }
                     >,
                 }

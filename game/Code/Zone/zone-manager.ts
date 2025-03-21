@@ -112,14 +112,17 @@ export default class ZoneManager extends Node3D {
     this.set_process(true);
     this.set_physics_process(true);
 
-    this.intantiatePlayer();
+    this.instantiatePlayer('bam');
   }
 
-  private async intantiatePlayer() {
+  public async instantiatePlayer(model: string) {
     if (!this.currentZone) {
       return;
     }
-    this.player = new Player('models', 'bam', this.camera!);
+    if (this.player) {
+      this.player.dispose();
+    }
+    this.player = new Player('models', model, this.camera!);
     const rootNode = await this.player.instantiate();
     if (rootNode) {
       this.player.Load('');
@@ -130,6 +133,12 @@ export default class ZoneManager extends Node3D {
   input(buttonIndex: number) {
   if (this.player) {
       this.player.input(buttonIndex);
+    }
+  }
+
+  input_mouse_motion(x: number, y: number) {
+    if (this.player) {
+      this.player.input_mouse_motion(x, y);
     }
   }
 

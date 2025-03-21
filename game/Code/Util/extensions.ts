@@ -1,4 +1,4 @@
-import { JSON as GJSON, GDictionary, Vector3, Node3D, Node } from "godot";
+import { JSON as GJSON, GDictionary, Vector3, Node3D, Node, PackedStringArray } from "godot";
 
 type V3 = {
     x: number;
@@ -112,6 +112,33 @@ Vector3.prototype.normalized = function(): Vector3 {
     return this;
 }
 
-// Node3D.prototype.doRotate = function(deg) {
-//     this.rotate_y(deg);
-// }
+Vector3.prototype.cross = function(other: Vector3): Vector3 {
+    const originalX = this.x;
+    const originalY = this.y;
+    const originalZ = this.z;
+  
+    this.x = (originalY * other.z) - (originalZ * other.y);
+    this.y = (originalZ * other.x) - (originalX * other.z);
+    this.z = (originalX * other.y) - (originalY * other.x);
+  
+    return this;
+  };
+
+PackedStringArray.prototype.toArray = function(): string[] {
+    return JSON.parse(GJSON.stringify(this));
+}
+
+
+
+Node.prototype.getNodesOfType = function<T>(
+    type: Constructor<T>
+): T[] { 
+    const nodes: T[] = [];
+    for (const child of this.get_children()) {
+        if (child instanceof type) {
+            nodes.push(child);
+        }
+        nodes.push(...child.getNodesOfType(type));
+    }
+    return nodes;
+}

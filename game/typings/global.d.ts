@@ -1,3 +1,6 @@
+
+type Constructor<T> = new (...args: any[]) => T;
+
 declare module "godot" {
     interface Vector3 {
       subtract(other: Vector3): Vector3;
@@ -17,6 +20,14 @@ declare module "godot" {
     
     interface Texture2D {
         flip_y: boolean;
+    }
+
+    interface PackedStringArray {
+        toArray(): string[];
+    }
+
+    interface Node {
+        getNodesOfType <T>(type: Constructor<T>): T[];
     }
   }
   

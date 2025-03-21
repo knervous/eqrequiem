@@ -18,6 +18,7 @@ import {
   CharacterBody3D,
   CollisionShape3D,
   CapsuleShape3D,
+  Skeleton3D,
 } from "godot";
 import { FileSystem } from "../FileSystem/filesystem";
 import { TextureCache } from "../Util/texture-cache";
@@ -46,7 +47,9 @@ export enum ShaderType {
 
 export type LoaderOptions = {
   flipTextureY: boolean;
-}
+  secondaryMeshIndex: number;
+  shadow: boolean;
+};
 
 export const AlphaShaderMap: Partial<Record<ShaderType, number>> = {
   [ShaderType.Transparent25]: 64,
@@ -68,6 +71,7 @@ export class BaseGltfModel {
 
   protected LoaderOptions = {
     flipTextureY: false,
+    secondaryMeshIndex: 0,
   } as LoaderOptions;
 
   constructor(folder: string, model: string, usePhysics: boolean = false) {
@@ -102,6 +106,83 @@ export class BaseGltfModel {
     return traverseChildren(this.gltfNode);
   }
 
+  public async instantiateSecondaryMesh(): Promise<void> {
+    if (!this.gltfNode) {
+      console.log("No gltfNode available for secondary mesh instantiation");
+      return;
+    }
+
+    const secondaryMeshes = (this.gltfNode
+      .get_child(0)
+      ?.get_meta("extras")
+      ?.toObject()?.secondaryMeshes ?? 0) as number;
+
+    if (secondaryMeshes <= 0) {
+      return;
+    }
+
+    const path = `eqrequiem/${this.folder}/${this.model.slice(0, 3)}he${(
+      this.LoaderOptions.secondaryMeshIndex ?? 0
+    )
+      .toString()
+      .padStart(2, "0")}.glb`;
+    console.log("Loading secondary mesh from", path);
+
+    const buffer = await FileSystem.getFileBytes(path);
+    if (!buffer) {
+      console.log("Failed to load buffer for", path);
+      return;
+    }
+
+    const gltfState = new GLTFState();
+    const gltfDocument = new GLTFDocument();
+    const result = gltfDocument.append_from_buffer(buffer, "/", gltfState);
+
+    if (result !== GError.OK) {
+      console.log("Error appending secondary GLTF buffer:", result);
+      return;
+    }
+
+    const secondaryRootNode = gltfDocument.generate_scene(gltfState) as Node3D;
+    if (!secondaryRootNode) {
+      console.log("Failed to generate secondary scene");
+      return;
+    }
+
+    this.traverseAndSwapTextures(secondaryRootNode);
+
+    const targetParent = this.gltfNode.getNodesOfType(Node3D)[0];
+    if (!targetParent) {
+      console.log("No target parent (first child) found in gltfNode");
+      secondaryRootNode.queue_free();
+      return;
+    }
+    const primarySkeleton = this.gltfNode.getNodesOfType(Skeleton3D)[0];
+    if (!primarySkeleton) {
+      console.log("No Skeleton3D found in primary model");
+      secondaryRootNode.queue_free();
+      return;
+    }
+    console.log(
+      "Primary skeleton found:",
+      primarySkeleton.get_path().get_concatenated_names()
+    );
+    const meshes = secondaryRootNode.getNodesOfType(MeshInstance3D);
+    if (meshes.length === 0) {
+      console.log("No MeshInstance3D nodes found in secondary model");
+    } else {
+      console.log(`Found ${meshes.length} meshes to reparent`);
+      for (const mesh of meshes) {
+        console.log(`Reparenting mesh: ${mesh.get_name()}`);
+        mesh.skeleton = '..';
+        mesh.reparent(primarySkeleton, false);
+        mesh.owner = primarySkeleton;
+      }
+    }
+
+    secondaryRootNode.queue_free();
+  }
+
   public async instantiate(): Promise<Node3D | undefined> {
     const buffer = await FileSystem.getFileBytes(
       `eqrequiem/${this.folder}/${this.model}.glb`
@@ -110,6 +191,7 @@ export class BaseGltfModel {
       console.log("Buffer not found!");
       return;
     }
+
     const gltfState = new GLTFState();
     const gltfDocument = new GLTFDocument();
     const result = gltfDocument.append_from_buffer(buffer, "/", gltfState);
@@ -118,23 +200,26 @@ export class BaseGltfModel {
       const rootNode = gltfDocument.generate_scene(gltfState) as Node3D;
       if (rootNode) {
         this.traverseAndSwapTextures(rootNode);
-        this.gltfNode = rootNode; // Store the GLTF node separately
+        this.gltfNode = rootNode;
+        await this.instantiateSecondaryMesh();
         if (this.node instanceof CharacterBody3D) {
-          // If using physics, add GLTF node as a child
           this.node.add_child(this.gltfNode);
-          this.gltfNode.position = Vector3.ZERO; // Align with CharacterBody3D
+          this.gltfNode.position = Vector3.ZERO;
         } else {
-          this.node = rootNode; // No physics, use GLTF node as root
+          this.node = rootNode;
         }
         if (this.node instanceof CharacterBody3D) {
           const collisionShape = new CollisionShape3D();
           const capsule = new CapsuleShape3D();
-          capsule.height = 2.0; // Adjust to match your model
+          capsule.height = 2.0;
           capsule.radius = 0.5;
           collisionShape.shape = capsule;
           this.node.add_child(collisionShape);
         }
         this.setupAnimations(rootNode);
+        // rootNode.getNodesOfType(MeshInstance3D).forEach((mesh) => {
+        //   mesh.cast_shadow = MeshInstance3D.ShadowCastingSetting.SHADOW_CASTING_SETTING_OFF;
+        // });
         return this.node;
       } else {
         console.log("Error with rootNode");
@@ -164,7 +249,7 @@ export class BaseGltfModel {
         currentColor.a = enforcedAlpha;
         material.albedo_color = currentColor;
 
-        material.transparency = 1; 
+        material.transparency = 1;
       }
       switch (material.eqShader) {
         case ShaderType.Transparent25:
@@ -198,6 +283,9 @@ export class BaseGltfModel {
           //material.albedo_color = new Color(1, 1, 1, 128 / 255); // Ensure full brightness with your desired alpha
           break;
       }
+
+      // material.shading_mode = StandardMaterial3D.ShadingMode.SHAD_;
+
     }
     if (animatedMaterials.length) {
       this.animateTextures(animatedMaterials);
