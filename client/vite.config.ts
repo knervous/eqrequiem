@@ -47,6 +47,9 @@ export default defineConfig({
       transformMixedEsModules: true,
     },
   },
+  worker: {
+    format: 'es'
+  },
   server: {
     https: {
       key: fs.readFileSync("localhost.key"),
