@@ -98,12 +98,12 @@ export default class Player extends Actor {
     }
   }
   tick(delta: number) {
-    if (this.node?.get_viewport().gui_get_focus_owner()) {
-      // A UI element is active; skip processing player movement.
-      return;
-  }
     const node = this.getNode() as CharacterBody3D;
     if (!node) return;
+    if (this.node?.get_viewport()?.gui_get_focus_owner()) {
+      // A UI element is active; skip processing player movement.
+      return;
+    }
 
     // Handle Turning
     const mouseCaptured =

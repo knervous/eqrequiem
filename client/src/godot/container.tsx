@@ -5,6 +5,7 @@ import { MainProvider, useMainContext } from "../components/context.tsx";
 import { StatusDialog } from "../components/dialogs/status-dialog.tsx";
 
 import GodotPlayer from "./player.tsx";
+import { SplashScreen } from "./splash.tsx";
 
 const bgMax = 1; //6;
 const prefix = "electronAPI" in window ? "./" : "/";
@@ -22,12 +23,15 @@ const GodotContainerComponent: React.FC = () => {
     permissionStatus,
     onFolderSelected,
     ready,
+    splash,
+    converting
   } = useMainContext();
   return (
     <Box      sx={{
         background: sessionBg,
         backgroundSize: "cover",
       }}>
+        {splash && <SplashScreen files={converting} />}
       {statusDialogOpen && (
         <StatusDialog
           fsHandle={rootFileSystemHandle}

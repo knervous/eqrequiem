@@ -30,4 +30,13 @@ declare module "godot" {
         getNodesOfType <T>(type: Constructor<T>): T[];
     }
   }
-  
+
+  declare global {
+    interface Window {
+      getJsBytes(name: string): Promise<Uint8Array | null>?;
+      setSplash(value: boolean): void?;
+    }
+  }
+  declare const window: Window;
+
+  export {}

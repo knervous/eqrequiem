@@ -30,7 +30,7 @@ func _input(event: InputEvent) -> void:
 			Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED if event.pressed else Input.MOUSE_MODE_VISIBLE)
 	elif event is InputEventPanGesture:
 		var node = get_node("/root/Zone")
-		node.call("input_pan", event.delta_y);
+		node.call("input_pan", event.delta.y);
 	elif event is InputEventMouseMotion:
 		var node = get_node("/root/Zone")
 		node.call("input_mouse_motion", event.relative.x, event.relative.y);

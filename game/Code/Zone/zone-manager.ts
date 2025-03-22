@@ -1,14 +1,5 @@
 import { export_ } from "godot.annotations";
-import {
-  Camera3D,
-  InputEvent,
-  InputEventAction,
-  InputEventMouseButton,
-  Node3D,
-  Variant,
-  Vector3,
-  deg_to_rad,
-} from "godot";
+import { Camera3D, Node3D, OS, Variant, Vector3, deg_to_rad } from "godot";
 import { BaseGltfModel } from "../GLTF/base";
 import { FileSystem } from "../FileSystem/filesystem";
 import LightManager from "../Lights/light-manager";
@@ -18,6 +9,9 @@ import { Scene } from "../Scene/scene";
 import Player from "../Player/player";
 import ZoneObjects from "./object-pool";
 import Actor from "../Actor/actor";
+
+declare const window: Window;
+
 export default class ZoneManager extends Node3D {
   private currentZone: Node3D | null = null;
   private camera: Camera3D | null = null;
@@ -37,6 +31,13 @@ export default class ZoneManager extends Node3D {
     this.camera.cull_mask = 0xfffff;
 
     this.loadZone(this.zoneName);
+  }
+
+  private setLoading(value: boolean) {
+    this.get_tree().paused = value;
+    if (!OS.has_feature("editor")) {
+      window.setSplash?.(value);
+    }
   }
 
   private dispose() {
@@ -76,8 +77,7 @@ export default class ZoneManager extends Node3D {
     if (!this.currentZone) {
       return;
     }
-    this.set_process(false);
-    this.set_physics_process(false);
+    this.setLoading(true);
     const zoneModel = new BaseGltfModel("zones", this.zoneName);
     const rootNode = await zoneModel.instantiate();
     if (rootNode) {
@@ -96,6 +96,7 @@ export default class ZoneManager extends Node3D {
         console.log("Version: ", metadata.version);
 
         this.zoneObjects = new ZoneObjects(this.currentZone, metadata.objects);
+        this.zoneObjects.Load();
         this.lightManager = new LightManager(
           this.currentZone,
           this.camera!,
@@ -110,10 +111,8 @@ export default class ZoneManager extends Node3D {
         console.log("Error parsing zone metadata", e);
       }
     }
-    this.set_process(true);
-    this.set_physics_process(true);
-
-    this.instantiatePlayer("bam");
+    await this.instantiatePlayer("bam");
+    this.setLoading(false);
   }
 
   public async spawnModel(model: string) {

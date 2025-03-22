@@ -71,6 +71,7 @@ if (OS.has_feature("editor")) {
     console.log("Error writing TextDecoder shim", e);
   }
 }
+declare const window: Window;
 
 export class FileSystem {
   static async getFileBytes(
@@ -91,13 +92,12 @@ export class FileSystem {
         console.log("Failed to open file:", fileName);
       }
     } else {
-      if (window.getJsBytes) {
-        const bytes = await window.getJsBytes(fileName).catch(() => null);
+        const bytes = await window.getJsBytes?.(fileName);
         if (bytes) {
           buffer = bytes;
         }
       }
-    }
+    
     return buffer;
   }
 }

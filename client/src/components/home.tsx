@@ -7,7 +7,7 @@ import { Button, CardContent, Stack, TextField } from "@mui/material";
 import styles from "./home.module.css";
 
 const PREFIX = "Home";
-export const textFieldClasses = {
+const textFieldClasses = {
   root: `${PREFIX}-root`,
 };
 const StyledBox = styled(Box)({

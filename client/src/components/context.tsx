@@ -31,6 +31,8 @@ export const MainProvider = (props: ReactProps) => {
   const [loading, setLoading] = useState(false);
   const [loadingText, setLoadingText] = useState("");
   const [loadingTitle, setLoadingTitle] = useState("");
+  const [splash, setSplash] = useState(false);
+  const [converting, setConverting] = useState<string[]>([]);
 
   useEffect(() => {
     setStatusDialogOpen(permissionStatus !== PermissionStatusTypes.Ready);
@@ -45,13 +47,15 @@ export const MainProvider = (props: ReactProps) => {
         rootFileSystemHandle,
         setLoading,
         setLoadingText,
-        setLoadingTitle
+        setLoadingTitle,
+        setSplash,
+        setConverting
       });
       // Going to split these out into dependencies and services in a class
       if (!(await getEQFileExists("sky", "sky1.glb"))) {
         const fh = await rootFileSystemHandle
           .getFileHandle("sky.s3d")
-          ?.then((f) => f.getFile());
+          ?.then((f: FileSystemFileHandle) => f.getFile());
 
         const obj = new EQFileHandle(
           "sky",
@@ -80,6 +84,8 @@ export const MainProvider = (props: ReactProps) => {
         permissionStatus,
         onFolderSelected,
         ready,
+        splash,
+        converting, setConverting
       }}
     >
       {props.children}

@@ -13,26 +13,26 @@ declare module "godot" {
                     FPS: Label<{}>,
                     PlayerDetails: RichTextLabel<
                         {
-                            "@VScrollBar@164254": VScrollBar<{}>,
+                            "@VScrollBar@25662": VScrollBar<{}>,
                         }
                     >,
                     RaceChooser: OptionButton<
                         {
-                            "@PopupMenu@164260": PopupMenu<
+                            "@PopupMenu@25668": PopupMenu<
                                 {
-                                    "@PanelContainer@164255": PanelContainer<
+                                    "@PanelContainer@25663": PanelContainer<
                                         {
-                                            "@ScrollContainer@164256": ScrollContainer<
+                                            "@ScrollContainer@25664": ScrollContainer<
                                                 {
-                                                    "@Control@164257": Control<{}>,
+                                                    "@Control@25665": Control<{}>,
                                                     _h_scroll: HScrollBar<{}>,
                                                     _v_scroll: VScrollBar<{}>,
                                                 }
                                             >,
                                         }
                                     >,
-                                    "@Timer@164258": Timer<{}>,
-                                    "@Timer@164259": Timer<{}>,
+                                    "@Timer@25666": Timer<{}>,
+                                    "@Timer@25667": Timer<{}>,
                                 }
                             >,
                         }
@@ -43,7 +43,7 @@ declare module "godot" {
                                 {
                                     Content: RichTextLabel<
                                         {
-                                            "@VScrollBar@164261": VScrollBar<{}>,
+                                            "@VScrollBar@25669": VScrollBar<{}>,
                                         }
                                     >,
                                     _h_scroll: HScrollBar<{}>,
