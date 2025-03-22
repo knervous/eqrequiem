@@ -33,7 +33,7 @@
         ]
       },
       {
-        "source": "/assets/worker-*.js",
+        "source": "/assets/worker-:hash([^/]+).js",
         "headers": [
           {
             "key": "Cross-Origin-Embedder-Policy",
