@@ -65,7 +65,7 @@ export const Home = () => {
               src="/brand/png/logo-no-background-white.png"
               width={400}
               alt="logo"
-            />
+            /> 
           </CardContent>
           <Stack sx={{ width: "185px", margin: "0 auto", a: {
             margin: '10px'
