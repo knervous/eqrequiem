@@ -30,6 +30,7 @@ export default defineConfig({
   ...(process.env.LOCAL_DEV === "true" && {
     resolve: {
       alias: {
+        'react/jsx-runtime': path.resolve(__dirname, './node_modules/react/jsx-runtime.js'),
         "sage-core": path.resolve(__dirname, "../../eqsage/sage/lib"),
         react: path.resolve(__dirname, './node_modules/react'),
         'react-dom': path.resolve(__dirname, './node_modules/react-dom')
