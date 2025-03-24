@@ -42,7 +42,7 @@ const GodotContainerComponent: React.FC = () => {
           onFolderSelected={onFolderSelected}
         />
       )}
-      {ready ? <GodotPlayer /> : <h1 style={{width: '100vw', height: '100vh'}}>LOADING, PLEASE WAIT... (Sorry this looks ugly for now)</h1>}
+      {ready ? <GodotPlayer splash={splash} /> : <h1 style={{width: '100vw', height: '100vh'}}>LOADING, PLEASE WAIT... (Sorry this looks ugly for now)</h1>}
     </Box>
   );
 };

@@ -1,17 +1,77 @@
-import { Node, RichTextLabel } from "godot";
+import { Node } from "godot";
 import ZoneManager from "../Zone/zone-manager";
+import { inEditor } from "../Util/constants";
+import { ChatUIHandler } from "./chat";
 
+declare const window: {
+  godotBridge: JSBridge;
+};
 export default class JSBridge extends Node {
+  listeners: { [key: string]: ((message: object | string) => void)[] } = {};
+  ChatUI!: ChatUIHandler;
+  public _ready(): void {
+    if (!inEditor) {
+      window.godotBridge = this;
+    }
+    const root = this.get_tree().root;
+    this.ChatUI = new ChatUIHandler(root, this.sendMessage.bind(this));
+
+    // motd later?
+    setTimeout(() => {
+      this.ChatUI.handler('Welcome to EQ Requiem!')
+      this.ChatUI.handler('Type /help to see available commands')
+    }, 2500);
+
+  }
+
+  public postMessage(message: object) {
+    this.handleMessage(message);
+  }
+
+  public addEventListener(event: string, cb: (message: object | string) => void) {
+    if (!this.listeners[event]) {
+      this.listeners[event] = [];
+    }
+    this.listeners[event].push(cb);
+  }
+
+  public removeEventListener(event: string, cb: (message: object | string) => void) {
+    if (this.listeners[event]) {
+      this.listeners[event] = this.listeners[event].filter(
+        (listener) => listener !== cb
+      );
+    }
+  }
+
+  public sendMessage(message: object) {
+    if (inEditor) {
+      this.get_node('/root/Zone/DebugUI/WebView').call('_post_message', JSON.stringify(message));
+    } else if (this.listeners["message"])
+      this.listeners["message"].forEach((listener) =>
+        listener(
+          inEditor ? JSON.stringify(message) : message
+        )
+      );
+  }
+
+  public handleMessage(message: string | object) {
+    try {
+      const data = typeof message === "string" ? JSON.parse(message) : message;
+      switch(data.type) {
+        case "chat":
+          this.ChatUI.handler(data.payload);
+          break;
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
   public async chatLine(message: string) {
     console.log("Got message", message);
     const root = this.get_tree().root;
-    const content = this.get_node(
-      "/root/Zone/DebugUI/ChatContainer/ScrollContainer/Content"
-    ) as RichTextLabel;
     const addChatLine = (line: string) => {
-      if (content) {
-        content?.add_text("\n" + line);
-      }
+      this.sendMessage({ type: "chat", payload: line });
     };
     const zoneManager = <ZoneManager>root.get_node("Zone");
 
@@ -48,11 +108,11 @@ export default class JSBridge extends Node {
           }
           break;
         case "controls":
-            addChatLine('Movement: W, A, S, D');
-            addChatLine('Jump (Up): Space');
-            addChatLine('Sprint: Shift');
-            addChatLine('Crouch (Down): Ctrl')
-            addChatLine('Look around: Mouse with Right Click = Mouse lock');
+          addChatLine("Movement: W, A, S, D");
+          addChatLine("Jump (Up): Space");
+          addChatLine("Sprint: Shift");
+          addChatLine("Crouch (Down): Ctrl");
+          addChatLine("Look around: Mouse with Right Click = Mouse lock");
           break;
         default:
           console.log("Unknown command");

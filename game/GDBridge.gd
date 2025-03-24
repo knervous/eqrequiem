@@ -21,8 +21,6 @@ func eval_plain(expr_str: String, node: Node3D) -> Variant:
 	return result
 
 func _input(event: InputEvent) -> void:
-	if get_viewport().gui_get_focus_owner():
-		return
 	if event is InputEventMouseButton:
 		var node = get_node("/root/Zone")
 		node.call("input", event.button_index);

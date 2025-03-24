@@ -1,6 +1,9 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from "react";
+import { Overlay } from "requiem-ui/components/overlay";
 
-export const GodotWrapper = () => {
+import "./ui.css";
+
+export const GodotWrapper = ({ splash }) => {
   const canvasRef = useRef(null);
   const statusOverlayRef = useRef(null);
   const statusProgressRef = useRef(null);
@@ -8,12 +11,12 @@ export const GodotWrapper = () => {
 
   useEffect(() => {
     // Dynamically load the Godot engine script (Test.js)
-    const script = document.createElement('script');
-    script.src = 'Test.js';
+    const script = document.createElement("script");
+    script.src = "Test.js";
     script.async = true;
     script.onload = () => {
-      if (typeof Engine === 'undefined') {
-        console.error('Engine is not defined after loading Test.js');
+      if (typeof Engine === "undefined") {
+        console.error("Engine is not defined after loading Test.js");
         return;
       }
 
@@ -23,7 +26,7 @@ export const GodotWrapper = () => {
         !statusProgressRef.current ||
         !statusNoticeRef.current
       ) {
-        console.error('Status overlay elements not found');
+        console.error("Status overlay elements not found");
         return;
       }
       const statusOverlay = statusOverlayRef.current;
@@ -31,18 +34,18 @@ export const GodotWrapper = () => {
       const statusNotice = statusNoticeRef.current;
 
       let initializing = true;
-      let statusMode = '';
+      let statusMode = "";
 
       function setStatusMode(mode) {
         if (statusMode === mode || !initializing) return;
-        if (mode === 'hidden') {
+        if (mode === "hidden") {
           statusOverlay.remove();
           initializing = false;
           return;
         }
-        statusOverlay.style.visibility = 'visible';
-        statusProgress.style.display = mode === 'progress' ? 'block' : 'none';
-        statusNotice.style.display = mode === 'notice' ? 'block' : 'none';
+        statusOverlay.style.visibility = "visible";
+        statusProgress.style.display = mode === "progress" ? "block" : "none";
+        statusNotice.style.display = mode === "notice" ? "block" : "none";
         statusMode = mode;
       }
 
@@ -50,10 +53,10 @@ export const GodotWrapper = () => {
         while (statusNotice.lastChild) {
           statusNotice.removeChild(statusNotice.lastChild);
         }
-        const lines = text.split('\n');
+        const lines = text.split("\n");
         lines.forEach((line) => {
           statusNotice.appendChild(document.createTextNode(line));
-          statusNotice.appendChild(document.createElement('br'));
+          statusNotice.appendChild(document.createElement("br"));
         });
       }
 
@@ -61,12 +64,12 @@ export const GodotWrapper = () => {
         console.error(err);
         if (err instanceof Error) {
           setStatusNotice(err.message);
-        } else if (typeof err === 'string') {
+        } else if (typeof err === "string") {
           setStatusNotice(err);
         } else {
-          setStatusNotice('An unknown error occurred.');
+          setStatusNotice("An unknown error occurred.");
         }
-        setStatusMode('notice');
+        setStatusMode("notice");
         initializing = false;
       }
 
@@ -74,31 +77,32 @@ export const GodotWrapper = () => {
         args: [],
         canvasResizePolicy: 2,
         ensureCrossOriginIsolationHeaders: true,
-        executable: 'Test',
+        executable: "Test",
         experimentalVK: false,
-        fileSizes: { 'Test.pck': 881488, 'Test.wasm': 44446287 },
+        fileSizes: { "Test.pck": 881488, "Test.wasm": 44446287 },
         focusCanvas: true,
-        gdextensionLibs: []
+        gdextensionLibs: [],
       };
       const GODOT_THREADS_ENABLED = true;
       const engine = new Engine(GODOT_CONFIG);
 
       const missing = Engine.getMissingFeatures({
-        threads: GODOT_THREADS_ENABLED
+        threads: GODOT_THREADS_ENABLED,
       });
 
       if (missing.length !== 0) {
         if (
-          GODOT_CONFIG['serviceWorker'] &&
-          GODOT_CONFIG['ensureCrossOriginIsolationHeaders'] &&
-          'serviceWorker' in navigator
+          GODOT_CONFIG["serviceWorker"] &&
+          GODOT_CONFIG["ensureCrossOriginIsolationHeaders"] &&
+          "serviceWorker" in navigator
         ) {
           let serviceWorkerRegistrationPromise;
           try {
-            serviceWorkerRegistrationPromise = navigator.serviceWorker.getRegistration();
+            serviceWorkerRegistrationPromise =
+              navigator.serviceWorker.getRegistration();
           } catch (err) {
             serviceWorkerRegistrationPromise = Promise.reject(
-              new Error('Service worker registration failed.')
+              new Error("Service worker registration failed.")
             );
           }
           // There's a chance that installing the service worker would fix the issue
@@ -107,7 +111,7 @@ export const GodotWrapper = () => {
               .then((registration) => {
                 if (registration != null) {
                   return Promise.reject(
-                    new Error('Service worker already exists.')
+                    new Error("Service worker already exists.")
                   );
                 }
                 return registration;
@@ -116,23 +120,23 @@ export const GodotWrapper = () => {
             // For some reason, getRegistration() can stall
             new Promise((resolve) => {
               setTimeout(() => resolve(), 2000);
-            })
+            }),
           ])
             .then(() => {
               // Reload if there was no error.
               window.location.reload();
             })
             .catch((err) => {
-              console.error('Error while registering service worker:', err);
+              console.error("Error while registering service worker:", err);
             });
         } else {
           // Display the message as usual
           const missingMsg =
-            'Error\nThe following features required to run Godot projects on the Web are missing:\n';
-          displayFailureNotice(missingMsg + missing.join('\n'));
+            "Error\nThe following features required to run Godot projects on the Web are missing:\n";
+          displayFailureNotice(missingMsg + missing.join("\n"));
         }
       } else {
-        setStatusMode('progress');
+        setStatusMode("progress");
         engine
           .startGame({
             onProgress: function (current, total) {
@@ -140,13 +144,13 @@ export const GodotWrapper = () => {
                 statusProgress.value = current;
                 statusProgress.max = total;
               } else {
-                statusProgress.removeAttribute('value');
-                statusProgress.removeAttribute('max');
+                statusProgress.removeAttribute("value");
+                statusProgress.removeAttribute("max");
               }
-            }
+            },
           })
           .then(() => {
-            setStatusMode('hidden');
+            setStatusMode("hidden");
           }, displayFailureNotice);
       }
     };
@@ -156,6 +160,57 @@ export const GodotWrapper = () => {
     // Cleanup script on component unmount
     return () => {
       document.body.removeChild(script);
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleEvent = (e) => {
+      // If the event target is within a UI component (e.g. a div with a specific class),
+      // then do nothing (or call e.stopPropagation() if needed)
+      if (
+        e.target instanceof HTMLElement &&
+        (e.target.closest(".ui-window") ||
+          ["input", "textarea", "button", "select"].includes(
+            e.target.tagName.toLowerCase()
+          ))
+      ) {
+        // Do not forward the event so that interactive UI elements can function normally.
+        return;
+      }
+      if (e.handled) {
+        return;
+      }
+      // Otherwise, forward the event to the canvas
+      if (canvasRef.current) {
+        // Create a new event of the same type and dispatch it on the canvas
+        const newEvent = new e.constructor(e.type, e);
+        newEvent.handled = true;
+        canvasRef.current.dispatchEvent(newEvent);
+        // Optionally prevent default behavior so the event isn't processed twice
+        e.preventDefault();
+      }
+    };
+
+    // List of events to forward
+    const events = [
+      "mousedown",
+      "mouseup",
+      "mousemove",
+      "wheel",
+      "keydown",
+      "keyup",
+      "contextmenu",
+    ];
+
+    events.forEach((eventName) => {
+      document.addEventListener(eventName, handleEvent);
+    });
+
+    // Cleanup on unmount
+    return () => {
+      events.forEach((eventName) => {
+        document.removeEventListener(eventName, handleEvent);
+      });
     };
   }, []);
 
@@ -234,11 +289,16 @@ export const GodotWrapper = () => {
           z-index: 1;
         }
       `}</style>
-      <canvas
-        id="canvas"
-        ref={canvasRef}
-        tabIndex={0}
-      >
+      {window.godotBridge && (
+        <Overlay
+          sx={{
+            width: "100vw",
+            height: "100vh",
+            display: splash ? "none" : "initial",
+          }}
+        />
+      )}
+      <canvas id="canvas" ref={canvasRef} tabIndex={0}>
         Your browser does not support the canvas tag.
       </canvas>
       <div id="status" ref={statusOverlayRef}>
