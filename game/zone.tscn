@@ -1,8 +1,7 @@
-[gd_scene load_steps=8 format=3 uid="uid://cwvt1wet87kxp"]
+[gd_scene load_steps=7 format=3 uid="uid://cwvt1wet87kxp"]
 
 [ext_resource type="Script" uid="uid://bj1am658vo5uc" path="res://_JS/Code/Zone/zone-manager.js" id="1_xyj1o"]
 [ext_resource type="PackedScene" uid="uid://bs2jm62cmkbrk" path="res://addons/instant-realistic-light/light_scene.tscn" id="2_1i4dq"]
-[ext_resource type="Script" uid="uid://da88c8nx56fe4" path="res://_JS/Code/Debug/debug-ui.js" id="3_ftmw8"]
 [ext_resource type="Script" uid="uid://by6ny5cpgdbqr" path="res://_JS/Code/Debug/fps.js" id="4_iubos"]
 [ext_resource type="Script" uid="uid://c1yocagafiah1" path="res://GDBridge.gd" id="6_ftmw8"]
 [ext_resource type="Script" uid="uid://58velwsp16v0" path="res://_JS/Code/JSBridge/bridge.js" id="9_6khxw"]
@@ -17,7 +16,6 @@ transform = Transform3D(0.999928, 0, -0.0120076, 0, 1, 0, 0.0120076, 0, 0.999928
 [node name="WorldEnvironment2" parent="." instance=ExtResource("2_1i4dq")]
 
 [node name="DebugUI" type="Node2D" parent="."]
-script = ExtResource("3_ftmw8")
 
 [node name="FPS" type="Label" parent="DebugUI"]
 anchors_preset = 1
