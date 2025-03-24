@@ -27,13 +27,24 @@ export default defineConfig({
       target: "chrome90",
     },
   },
+  resolve: {
+    alias: {
+      'react/jsx-runtime': path.resolve(__dirname, './node_modules/react/jsx-runtime.js'),
+      react: path.resolve(__dirname, './node_modules/react'),
+      'react-dom': path.resolve(__dirname, './node_modules/react-dom'),
+      '@mui/material': path.resolve(__dirname, './node_modules/@mui/material'),
+      'use-debounce': path.resolve(__dirname, './node_modules/use-debounce'),
+    },
+  },
   ...(process.env.LOCAL_DEV === "true" && {
     resolve: {
       alias: {
         'react/jsx-runtime': path.resolve(__dirname, './node_modules/react/jsx-runtime.js'),
         "sage-core": path.resolve(__dirname, "../../eqsage/sage/lib"),
         react: path.resolve(__dirname, './node_modules/react'),
-        'react-dom': path.resolve(__dirname, './node_modules/react-dom')
+        'react-dom': path.resolve(__dirname, './node_modules/react-dom'),
+        '@mui/material': path.resolve(__dirname, './node_modules/@mui/material'),
+        'use-debounce': path.resolve(__dirname, './node_modules/use-debounce'),
       },
     },
     optimizeDeps: {
