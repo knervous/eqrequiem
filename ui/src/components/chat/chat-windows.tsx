@@ -1,15 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { ChatWindow } from "../../state/initial-state";
-import { UiAction } from "../../state/reducer";
 import { ChatWindowComponent } from "./chat-window";
 import { ClientActionHandler } from "../../state/bridge";
+import { State, useDispatch, useUIContext } from "../context";
 
-type Props = {
-  chatWindows: ChatWindow[];
-  dispatcher: React.ActionDispatch<[action: UiAction]>;
-};
-export const ChatWindowsComponent: React.FC<Props> = (props: Props) => {
-  const { chatWindows, dispatcher } = props;
+const chatWindowSelector = (state: State) => state.ui.chatWindows;
+
+export const ChatWindowsComponent: React.FC = () => {
+  const chatWindows = useUIContext(chatWindowSelector);
+  const dispatcher = useDispatch();
   const [messageMap, setMessageMap] = useState<Array<string[]>>([]);
   useEffect(() => {
     ClientActionHandler["chat"] = (msg: { type: number, line: string }) => {
@@ -18,7 +16,6 @@ export const ChatWindowsComponent: React.FC<Props> = (props: Props) => {
       if (windowIdx === -1) {
         return;
       }
-      console.log('mesg', msg)
       setMessageMap((prev) => {
         const newMap = [...prev];
         newMap[windowIdx] = [...(newMap[windowIdx] || []), msg.line];

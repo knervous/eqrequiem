@@ -1,22 +1,23 @@
 import React, { useEffect, useState, useRef } from "react";
 import { UiWindow, UiState } from "../state/initial-state";
 import { Box } from "@mui/material";
-import { UiAction, actions } from "../state/reducer";
-import { useDebounce } from "use-debounce";
+import { actions } from "../state/reducer";
+import { useDebouncedCallback } from "use-debounce";
 
 import "./ui-window.css";
+import { useDispatch } from "../components/context";
 
 type Props = {
   state: UiWindow;
-  index: number;
+  index?: number;
   title?: string;
   windowName: keyof UiState;
-  dispatcher: React.Dispatch<UiAction>;
-  children: React.ReactNode;
+  children?: React.ReactNode;
 };
 
 export const UiWindowComponent: React.FC<Props> = (props: Props) => {
-  const { state, dispatcher, windowName, title, index, children } = props;
+  const dispatcher = useDispatch();
+  const { state, windowName, title, index, children } = props;
 
   // Local state for transform values
   const [x, setX] = useState(state.x);
@@ -33,7 +34,7 @@ export const UiWindowComponent: React.FC<Props> = (props: Props) => {
   const windowStartSize = useRef({ width, height });
   const windowStartY = useRef(y);
 
-  const [reducerUpdate] = useDebounce(() => {
+  const reducerUpdate = useDebouncedCallback(() => {
     dispatcher(
       actions.setWindowTransform(windowName, x, y, width, height, index)
     );
@@ -93,7 +94,7 @@ export const UiWindowComponent: React.FC<Props> = (props: Props) => {
     if (!resizingRef.current.type) return;
     const dx = e.clientX - resizeStartPos.current.x;
     const dy = e.clientY - resizeStartPos.current.y;
-    const minSize = 50;
+    const minSize = 25;
 
     switch (resizingRef.current.type) {
       case "right":
@@ -129,6 +130,7 @@ export const UiWindowComponent: React.FC<Props> = (props: Props) => {
         left: `${x}px`,
         width: `${width}px`,
         height: `${height}px`,
+        backgroundColor: "rgba(0, 0, 0, 0.7)",
       }}
       data-ui-window
     >
@@ -137,10 +139,10 @@ export const UiWindowComponent: React.FC<Props> = (props: Props) => {
         <Box
           sx={{
             position: "absolute",
-            top: 0,
+            top: '-5px',
             left: 0,
             width: "100%",
-            height: "20px",
+            height: "10px",
             cursor: "grab",
             zIndex: 10,
           }}

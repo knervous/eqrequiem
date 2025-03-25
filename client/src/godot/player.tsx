@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { Overlay } from "requiem-ui/components/overlay";
-
+import { getRootEQFile } from 'sage-core/util/fileHandler';
 import "./ui.css";
 
 export const GodotWrapper = ({ splash }) => {
@@ -291,6 +291,7 @@ export const GodotWrapper = ({ splash }) => {
       `}</style>
       {window.godotBridge && (
         <Overlay
+        getEQFile={getRootEQFile}
           sx={{
             width: "100vw",
             height: "100vh",

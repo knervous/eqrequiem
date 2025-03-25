@@ -19,7 +19,7 @@
     "react-dom": "^19.0.0",
     "react-router-dom": "^7.2.0",
     "requiem-ui": "file:../ui",
-    "sage-core": "^0.0.27",
+    "sage-core": "^0.0.28",
     "use-debounce": "^10.0.4"
   },
   "overrides": {

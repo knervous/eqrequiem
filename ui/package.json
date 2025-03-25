@@ -14,11 +14,11 @@
     "preview": "vite preview"
   },
   "peerDependencies": {
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
     "@mui/material": "^6.4.5",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
     "use-debounce": "^10.0.4"
   },
   "devDependencies": {
@@ -33,5 +33,9 @@
     "typescript": "~5.7.2",
     "typescript-eslint": "^8.24.1",
     "vite": "^6.2.0"
+  },
+  "dependencies": {
+    "tga-js": "^1.1.1",
+    "use-context-selector": "^2.0.0"
   }
 }

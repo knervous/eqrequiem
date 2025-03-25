@@ -1,3 +1,4 @@
+
 export interface UiWindow {
   visible: boolean;
   collapsed: boolean;
@@ -25,6 +26,10 @@ export interface ChatWindow extends UiWindow {
   filters: string[];
 };
 
+export interface ActionBarWindow extends UiWindow {
+  modifier?: string
+}
+
 export type UiState = {
   [key: string]: UiWindow | UiWindow[]; // allows both single windows and arrays of windows
 
@@ -32,7 +37,10 @@ export type UiState = {
   targetWindow: UiWindow;
   settingsWindow: UiWindow;
   spellsWindow: UiWindow;
-  chatWindows: (UiWindow & ChatWindow)[];
+  topBarWindow: UiWindow;
+  compassWindow: UiWindow;
+  chatWindows: ChatWindow[];
+  actionBarWindows: ActionBarWindow[];
 };
 
 export const initialUiState: UiState = {
@@ -54,6 +62,20 @@ export const initialUiState: UiState = {
     x: 200,
     y: 200,
   },
+  topBarWindow: {
+    ...defaultWindow,
+    x: 200,
+    y: 50,
+    width: 300,
+    height: 50
+  },
+  compassWindow: {
+    ...defaultWindow,
+    x: 200,
+    y: 150,
+    width: 200,
+    height: 50,
+  },
   chatWindows: [
     {
       ...defaultWindow,
@@ -63,4 +85,12 @@ export const initialUiState: UiState = {
       filters: [],
     },
   ],
+  actionBarWindows:
+  [
+    {
+      ...defaultWindow,
+      x: 100,
+      y: 500,
+    }
+  ]
 };

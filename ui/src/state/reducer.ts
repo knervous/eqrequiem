@@ -151,7 +151,6 @@ export const UiActionTypes = {
     state: UiState = initialUiState,
     action: UiAction
   ): UiState => {
-    console.log('ACTION', action)
     switch (action.type) {
       case UiActionTypes.SET_WINDOW:
         return updateWindow(

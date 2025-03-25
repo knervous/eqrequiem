@@ -108,7 +108,6 @@ export const ChatWindowComponent: React.FC<Props> = (props: Props) => {
       <Stack
         sx={{
           height: "calc(100% - 10px)",
-          bgcolor: "rgba(0, 0, 0, 0.7)",
           fontFamily: "Arial, sans-serif",
           paddingTop: "10px",
         }}
