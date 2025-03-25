@@ -34,6 +34,8 @@ export default defineConfig({
       'react-dom': path.resolve(__dirname, './node_modules/react-dom'),
       '@mui/material': path.resolve(__dirname, './node_modules/@mui/material'),
       'use-debounce': path.resolve(__dirname, './node_modules/use-debounce'),
+      'use-context-selector': path.resolve(__dirname, './node_modules/use-context-selector'),
+      'tga-js': path.resolve(__dirname, './node_modules/tga-js'),
     },
   },
   ...(process.env.LOCAL_DEV === "true" && {
@@ -45,6 +47,8 @@ export default defineConfig({
         'react-dom': path.resolve(__dirname, './node_modules/react-dom'),
         '@mui/material': path.resolve(__dirname, './node_modules/@mui/material'),
         'use-debounce': path.resolve(__dirname, './node_modules/use-debounce'),
+        'use-context-selector': path.resolve(__dirname, './node_modules/use-context-selector'),
+        'tga-js': path.resolve(__dirname, './node_modules/tga-js'),
       },
     },
     optimizeDeps: {
