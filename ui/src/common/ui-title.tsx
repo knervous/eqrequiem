@@ -10,6 +10,8 @@ type Props = {
   ) => void;
   minimized: boolean;
   toggleMinimize: () => void;
+  doClose?: () => void;
+  closable?: boolean;
 };
 
 export const UiTitleComponent: React.FC<Props> = (props: Props) => {
@@ -47,6 +49,17 @@ export const UiTitleComponent: React.FC<Props> = (props: Props) => {
             onClick={props.toggleMinimize}
           />
         </Box>
+        {props.closable && props.doClose && <Box
+          sx={{
+            position: "absolute",
+            right: '10px'
+          }}
+        >
+          <UiButtonComponent
+            buttonName={"A_CloseBtn"}
+            onClick={props.doClose}
+          />
+        </Box>}
         <UiImageComponent name={"A_WindowTitleLeft"} />
         <UiImageComponent
           crop

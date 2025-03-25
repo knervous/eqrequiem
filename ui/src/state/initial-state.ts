@@ -36,10 +36,12 @@ export type UiState = {
 
   inventoryWindow: UiWindow;
   targetWindow: UiWindow;
+  playerWindow: UiWindow;
   settingsWindow: UiWindow;
   spellsWindow: UiWindow;
   topBarWindow: UiWindow;
   compassWindow: UiWindow;
+  actionWindow: UiWindow;
   chatWindows: ChatWindow[];
   actionBarWindows: ActionBarWindow[];
 };
@@ -52,6 +54,11 @@ export const initialUiState: UiState = {
     ...defaultWindow,
     x: 300,
     y: 50,
+  },
+  playerWindow: {
+    ...defaultWindow,
+    x: 300,
+    y: 450,
   },
   settingsWindow: {
     ...defaultWindow,
@@ -74,6 +81,11 @@ export const initialUiState: UiState = {
     fixed: true,
     x: 200,
     y: 150,
+  },
+  actionWindow: {
+    ...defaultWindow,
+    x: 500,
+    y: 550,
   },
   chatWindows: [
     {

@@ -14,7 +14,10 @@ import { CompassWindowComponent } from "./topbar/compass-window";
 
 import "./overlay.css";
 import { Theme } from "./theme";
-
+import { ActionWindowComponent } from "./actions/actions-window";
+import { TargetWindowComponent } from "./target/target-window";
+import { PlayerWindowComponent } from "./player/player-window";
+import { SpellsWindowComponent } from "./spells/spells-window";
 
 type MessagePayload = object & {
   detail: string;
@@ -129,6 +132,10 @@ export const Overlay: React.FC<Props> = (props: Props) => {
         <ActionBarWindowsComponent />
         <TopBarWindowComponent />
         <CompassWindowComponent />
+        <ActionWindowComponent />
+        <TargetWindowComponent />
+        <PlayerWindowComponent />
+        <SpellsWindowComponent />
       </Box>
       </Theme>
     </UIContext.Provider>

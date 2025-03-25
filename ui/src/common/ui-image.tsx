@@ -7,12 +7,14 @@ type Props = {
   crop?: boolean;
   children?: React.ReactNode;
   sx?: SxProps;
+  onClick?: () => void;
 };
 
 export const UiImageComponent: React.FC<Props> = (props: Props) => {
   const imageEntry = useImage(props.name, props.crop);
   return (
     <Box
+      onClick={props.onClick}
       sx={{
         width: `${imageEntry.entry?.width}px`,
         height: `${imageEntry.entry?.height}px`,

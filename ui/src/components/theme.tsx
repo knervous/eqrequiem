@@ -14,8 +14,6 @@ export const Theme: React.FC<Props> = ({ children }) => {
   const resizeNWSECursor = useImage("A_CursorResizeNWSE", true);
   const dragCursor = useImage("A_CursorDrag", true);
   const caretCursor = useImage("A_CursorCaret", true);
-  console.log("Caret", caretCursor);
-  // Memoize the sx object to avoid recalculating on every render
   const sxStyles = useMemo(
     () => ({
       cursor: defaultCursor.image

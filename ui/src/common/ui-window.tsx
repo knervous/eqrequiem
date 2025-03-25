@@ -1,7 +1,7 @@
 // src/components/UiWindowComponent.tsx
 import React, { useEffect, useMemo, useState } from "react";
 import { UiWindow, UiState } from "../state/initial-state";
-import { Box } from "@mui/material";
+import { Box, useThemeProps } from "@mui/material";
 import { actions } from "../state/reducer";
 import { useDebouncedCallback } from "use-debounce";
 import { useDispatch } from "../components/context";
@@ -16,6 +16,8 @@ type Props = {
   title?: string;
   windowName: keyof UiState;
   children?: React.ReactNode;
+  closable?: boolean;
+  doClose?: () => void;
 };
 
 export const UiWindowComponent: React.FC<Props> = ({
@@ -24,6 +26,8 @@ export const UiWindowComponent: React.FC<Props> = ({
   title,
   index,
   children,
+  closable,
+  doClose
 }) => {
   const dispatcher = useDispatch();
   const { fixed, fixedWidth = 200, fixedHeight = 200 } = state;
@@ -89,6 +93,8 @@ export const UiWindowComponent: React.FC<Props> = ({
     <Box className="ui-window" style={windowStyles} data-ui-window>
       {title ? (
         <UiTitleComponent
+         closable={closable}
+          doClose={doClose}
           name={title}
           minimized={minimized}
           toggleMinimize={() => setMinimized((prev) => !prev)}

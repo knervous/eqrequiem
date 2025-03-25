@@ -1,4 +1,4 @@
-import { Box } from "@mui/material";
+import { Box, SxProps, Typography } from "@mui/material";
 import React, { useMemo, useState } from "react";
 import { useImage } from "../hooks/use-image";
 
@@ -19,6 +19,8 @@ type Props = {
   disabled?: AtlasEntry;
   isDisabled?: boolean;
   buttonName?: string;
+  sx?: SxProps;
+  text?: string;
 };
 
 export const UiButtonComponent: React.FC<Props> = (props: Props) => {
@@ -42,7 +44,7 @@ export const UiButtonComponent: React.FC<Props> = (props: Props) => {
     [props.isDisabled, isPressed, isHovered, normal, pressed, hover, disabled]
   );
 
-  return (
+  return !selectedEntry.entry ? null : (
     <Box
     className="cursor-default"
       sx={{
@@ -52,6 +54,7 @@ export const UiButtonComponent: React.FC<Props> = (props: Props) => {
         height: `${selectedEntry.entry?.height}px`,
         backgroundImage: `url(${selectedEntry.image})`,
         backgroundPosition: `-${selectedEntry.entry.left}px -${selectedEntry.entry?.top}px`,
+        ...(props.sx ?? {}),
       }}
       onMouseEnter={() => !props.isDisabled && setIsHovered(true)}
       onMouseLeave={() => {
@@ -63,6 +66,7 @@ export const UiButtonComponent: React.FC<Props> = (props: Props) => {
       onClick={() => !props.isDisabled && props.onClick()}
     >
       {props.children}
+      {props.text && <Typography sx={{fontSize: '12px', textAlign: 'center', color: props.isDisabled ? 'gray' : 'white'}}>{props.text}</Typography>}
     </Box>
   );
 };
