@@ -123,7 +123,7 @@ export default class ZoneManager extends Node3D {
     const instance = await objectModel.instantiate();
     if (instance && this.player?.getNode() !== undefined) {
       this.currentZone.add_child(instance);
-      instance.position = this.player?.getNode().position!;
+      instance.position = this.player?.getPlayerPosition()!;
       instance.scale = new Vector3(1, 1, 1);
       instance.rotate_x(deg_to_rad(0));
       instance.rotate_y(-deg_to_rad(0));

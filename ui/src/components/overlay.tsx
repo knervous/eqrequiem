@@ -9,11 +9,12 @@ import { UIContext } from "./context";
 import { SxProps } from "@mui/material";
 import { ActionBarWindowsComponent } from "./actionbar/action-bar-windows";
 import { ImageCache } from "../util/image-cache";
-import atlas from "../util/atlas";
-
-import "./overlay.css";
 import { TopBarWindowComponent } from "./topbar/topbar-window";
 import { CompassWindowComponent } from "./topbar/compass-window";
+
+import "./overlay.css";
+import { Theme } from "./theme";
+
 
 type MessagePayload = object & {
   detail: string;
@@ -67,8 +68,7 @@ export const Overlay: React.FC<Props> = (props: Props) => {
     uiReducer,
     storedState as UiState | null ?? initialUiState
   );
-  const [cursorUrl, setCursorUrl] = React.useState("");
-
+  
   useEffect(() => {
     try {
       localStorage.setItem(stateKey, JSON.stringify({...initialUiState, ...uiState}));
@@ -86,36 +86,6 @@ export const Overlay: React.FC<Props> = (props: Props) => {
       return;
     }
 
-    function cropImage(base64Url, cropX, cropY, cropWidth, cropHeight) {
-      return new Promise((resolve, reject) => {
-        const img = new Image();
-        img.onload = function () {
-          const canvas = document.createElement("canvas");
-          canvas.width = cropWidth;
-          canvas.height = cropHeight;
-          const ctx = canvas.getContext("2d");
-          ctx.drawImage(img, cropX, cropY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
-          const croppedDataUrl = canvas.toDataURL();
-          resolve(croppedDataUrl);
-        };
-        img.onerror = reject;
-        img.src = base64Url;
-      });
-    }
-    const cursor = atlas['A_DefaultCursor'];
-    ImageCache.getImageUrl('uifiles/default', cursor.texture).then((url) => {
-      if (url) {
-        // Crop out the portion defined in the atlas
-        cropImage(url, cursor.left, cursor.top, cursor.width, cursor.height)
-          .then((croppedUrl) => {
-            // Set the cursor using the cropped image
-            setCursorUrl(`url("${croppedUrl}") 0 0, auto`);
-            console.log('Updated cropped cursor url', croppedUrl);
-          })
-          .catch((err) => console.error("Error cropping image:", err));
-      }
-    });
-    console.log('cursor url', cursorUrl);
     MainInvoker.current = (action: object) => {
       try {
         // We also forward mouse/keyboard events so we need to differentiate for debug webview handler
@@ -145,13 +115,13 @@ export const Overlay: React.FC<Props> = (props: Props) => {
 
   return (
     <UIContext.Provider value={{ getEQFile: props.getEQFile, ui: uiState, dispatcher }}>
+      <Theme>
       <Box
         className="requiem-ui"
         id="requiem-ui"
         sx={{
           width: "100%",
           height: "100%",
-          cursor: cursorUrl,
           ...(props.sx ?? {}),
         }}
       >
@@ -160,6 +130,7 @@ export const Overlay: React.FC<Props> = (props: Props) => {
         <TopBarWindowComponent />
         <CompassWindowComponent />
       </Box>
+      </Theme>
     </UIContext.Provider>
   );
 };

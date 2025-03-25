@@ -1,8 +1,6 @@
 import { Box } from "@mui/material";
-import React, { useEffect, useMemo, useState } from "react";
-import { ImageCache } from "../util/image-cache";
-
-import atlas from "../util/atlas";
+import React, { useMemo, useState } from "react";
+import { useImage } from "../hooks/use-image";
 
 type AtlasEntry = {
   texture: string; // Path to the texture file (e.g., "uifiles/default/atlas.tga")
@@ -20,102 +18,40 @@ type Props = {
   hover?: AtlasEntry;
   disabled?: AtlasEntry;
   isDisabled?: boolean;
-  buttonName?: string
+  buttonName?: string;
 };
 
-
 export const UiButtonComponent: React.FC<Props> = (props: Props) => {
-  const { normal, pressed, hover, disabled } = useMemo(() => {
-    return {
-      normal: atlas[`${props.buttonName}Normal`],
-      pressed: atlas[`${props.buttonName}Pressed`],
-      hover: atlas[`${props.buttonName}Flyby`],
-      disabled: atlas[`${props.buttonName}Disabled`],
-    }
-  }, [props.buttonName]);
+  const normal = useImage(`${props.buttonName}Normal`);
+  const pressed = useImage(`${props.buttonName}Pressed`);
+  const hover = useImage(`${props.buttonName}Flyby`);
+  const disabled = useImage(`${props.buttonName}Disabled`);
 
-  // State for interaction
   const [isHovered, setIsHovered] = useState(false);
   const [isPressed, setIsPressed] = useState(false);
 
-  // Texture map for states
-  const [textureMap, setTextureMap] = useState<Map<string, string>>(new Map());
-  
-  // Determine current state
-  const currentState = props.isDisabled
-    ? "disabled"
-    : isPressed
-    ? "pressed"
-    : isHovered
-    ? "hover"
-    : "normal";
-
-
-  useEffect(() => {
-    const loadTextures = async () => {
-      const map = new Map<string, string>();
-
-      // Normal state: fallback to path if no atlas
-      if (normal) {
-        const url = await ImageCache.getImageUrl('uifiles/default', normal.texture);
-        map.set("normal", url);
-      }
-
-      // Pressed state: atlas or pressedPath
-      if (pressed) {
-        const url = await ImageCache.getImageUrl('uifiles/default', pressed.texture);
-        map.set("pressed", url);
-      }
-
-      // Hover state
-      if (hover) {
-        const url = await ImageCache.getImageUrl('uifiles/default', hover.texture);
-        map.set("hover", url);
-      }
-
-      // Disabled state
-      if (disabled) {
-        const url = await ImageCache.getImageUrl('uifiles/default', disabled.texture);
-        map.set("disabled", url);
-      }
-
-      setTextureMap(map);
-    };
-
-    loadTextures();
-  }, [normal, pressed, hover, disabled]);
-  // Compute background style based on atlas or full image
-  const getBackgroundStyle = () => {
-    const textureUrl = textureMap.get(currentState);
-    if (!textureUrl) {
-      return undefined;}
-
-    const atlasEntry = {
-      normal: normal,
-      pressed: pressed,
-      hover: hover,
-      disabled: disabled,
-    }[currentState];
-
-    if (atlasEntry) {
-      // Use atlas region with background-position and size
-      return {
-        width: `${atlasEntry.width}px`,
-        height: `${atlasEntry.height}px`,
-        backgroundImage: `url(${textureUrl})`,
-        backgroundPosition: `-${atlasEntry.left}px -${atlasEntry.top}px`,
-      };
-    }
-    // Full image fallback
-    return { backgroundImage: `url(${textureUrl})` };
-  };
+  const selectedEntry = useMemo(
+    () =>
+      props.isDisabled
+        ? disabled
+        : isPressed
+        ? pressed
+        : isHovered
+        ? hover
+        : normal,
+    [props.isDisabled, isPressed, isHovered, normal, pressed, hover, disabled]
+  );
 
   return (
     <Box
+    className="cursor-default"
       sx={{
         userSelect: "none",
         color: "white",
-        ...getBackgroundStyle(), // Dynamic background based on state
+        width: `${selectedEntry.entry?.width}px`,
+        height: `${selectedEntry.entry?.height}px`,
+        backgroundImage: `url(${selectedEntry.image})`,
+        backgroundPosition: `-${selectedEntry.entry.left}px -${selectedEntry.entry?.top}px`,
       }}
       onMouseEnter={() => !props.isDisabled && setIsHovered(true)}
       onMouseLeave={() => {

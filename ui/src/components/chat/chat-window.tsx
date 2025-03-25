@@ -1,15 +1,11 @@
-import React, {
-  useState,
-  useRef,
-  useEffect,
-  useCallback,
-  KeyboardEvent,
-} from "react";
+// src/components/ChatWindowComponent.tsx
+import React, { useEffect, useMemo, useCallback } from "react";
 import { Box, Stack, TextField } from "@mui/material";
 import { ChatWindow } from "../../state/initial-state";
 import { UiAction } from "../../state/reducer";
 import { UiWindowComponent } from "../../common/ui-window";
-import { MainInvoker } from "../../state/bridge";
+import { useChatInput } from "../../hooks/use-chat-input";
+import { useChatFocus } from "../../hooks/use-chat-focus";
 
 type Props = {
   state: ChatWindow;
@@ -19,72 +15,23 @@ type Props = {
   dispatcher: React.Dispatch<UiAction>;
 };
 
-export const ChatWindowComponent: React.FC<Props> = (props: Props) => {
-  const { state, dispatcher, messages, main } = props;
-  const [inputValue, setInputValue] = useState("");
-  const [historyStack, setHistoryStack] = useState<string[]>([]); // Stack for previous messages
-  const [historyIndex, setHistoryIndex] = useState<number>(-1); // Index in history, -1 means no history selected
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null); // Ref to focus the input
+export const ChatWindowComponent: React.FC<Props> = ({
+  state,
+  index,
+  messages,
+  main,
+}) => {
+  const {
+    inputValue,
+    inputRef,
+    messagesEndRef,
+    handleInputChange,
+    handleKeyDown,
+  } = useChatInput();
 
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === "Enter") {
-      event.preventDefault();
-      if (inputValue.trim()) {
-        // Only add non-empty messages to history
-        setHistoryStack((prev) => [inputValue, ...prev]); // Push new message to top of stack
-        setHistoryIndex(-1); // Reset index to no selection
-        MainInvoker.current?.({ type: "chat", payload: inputValue });
-        setInputValue("");
-        setTimeout(() => {
-          inputRef.current?.blur();
-        },10)
-      }
-    } else if (event.key === "Escape") {
-      event.preventDefault();
-      setInputValue("");
-      setHistoryIndex(-1); // Reset history navigation
-    } else if (event.key === "ArrowUp") {
-      event.preventDefault();
-      if (historyStack.length > 0 && historyIndex < historyStack.length - 1) {
-        const newIndex = historyIndex + 1;
-        setHistoryIndex(newIndex);
-        setInputValue(historyStack[newIndex]);
-      }
-    } else if (event.key === "ArrowDown") {
-      event.preventDefault();
-      if (historyIndex > -1) {
-        const newIndex = historyIndex - 1;
-        setHistoryIndex(newIndex);
-        setInputValue(newIndex === -1 ? "" : historyStack[newIndex]);
-      }
-    }
-  };
+  useChatFocus(main, inputRef, inputValue, handleInputChange);
 
-  useEffect(() => {
-    if (!main) {
-      return;
-    }
-    const cb = (e: KeyboardEvent) => {
-      if (e.key === "/" && inputRef.current !== document.activeElement) {
-        inputRef.current?.focus();
-        setInputValue("/");
-      }
-      if (e.key === "Enter" && inputRef.current !== document.activeElement) {
-        inputRef.current?.focus();
-      }
-    };
-
-    document.addEventListener("keydown", cb);
-    return () => {
-      document.removeEventListener("keydown", cb);
-    };
-  }, [main]);
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
-  }, [messages]);
-
+  // Notify webview focus state
   const handleFocus = useCallback(() => {
     window.ipc?.postMessage(
       JSON.stringify({ type: "webview_focus", payload: true })
@@ -97,76 +44,81 @@ export const ChatWindowComponent: React.FC<Props> = (props: Props) => {
     );
   }, []);
 
+  // Scroll to the latest message
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
+  }, [messages, messagesEndRef]);
+
+  // Memoized styles for performance
+  const chatStyles = useMemo(
+    () => ({
+      container: {
+        height: "calc(100% - 10px)",
+        fontFamily: "Arial, sans-serif",
+        paddingTop: "10px",
+      },
+      messages: {
+        userSelect: "none" as const,
+        flexGrow: 1,
+        overflowY: "auto" as const,
+        p: 1,
+        color: "#ddd",
+        fontSize: "14px",
+        lineHeight: "1.2",
+        "&::-webkit-scrollbar": { width: "4px" },
+        "&::-webkit-scrollbar-thumb": { backgroundColor: "#555" },
+      },
+      inputBox: { p: 0.5 },
+      textField: {
+        "& .MuiOutlinedInput-root": {
+          "& fieldset": { border: "none" },
+          "&:hover fieldset": { border: "none" },
+          "&.Mui-focused fieldset": { border: "none" },
+        },
+      },
+      inputProps: {
+        className: "cursor-caret",
+        style: {
+          border: "1px solid gray",
+          color: "#ffffff",
+          backgroundColor: "rgba(0, 0, 0, 0.5)",
+          fontSize: "14px",
+          height: "24px",
+        },
+      },
+    }),
+    []
+  );
+
   return (
     <UiWindowComponent
       state={state}
-      dispatcher={dispatcher}
-      index={props.index}
-      title={"Chat"}
+      index={index}
+      title="Chat"
       windowName="chatWindows"
     >
-      <Stack
-        sx={{
-          height: "calc(100% - 10px)",
-          fontFamily: "Arial, sans-serif",
-          paddingTop: "10px",
-        }}
-        direction="column"
-      >
-        <Box
-          sx={{
-            userSelect: "none",
-            flexGrow: 1,
-            overflowY: "auto",
-            p: 1,
-            cursor: "default",
-            color: "#ddd",
-            fontSize: "14px",
-            lineHeight: "1.2",
-            "&::-webkit-scrollbar": {
-              width: "4px",
-            },
-            "&::-webkit-scrollbar-thumb": {
-              backgroundColor: "#555",
-            },
-          }}
-        >
-          {messages?.map((message, index) => (
-            <Box key={index} sx={{ wordBreak: "break-word" }}>
+      <Stack sx={chatStyles.container} direction="column">
+        <Box sx={chatStyles.messages}>
+          {messages.map((message, idx) => (
+            <Box key={idx} sx={{ wordBreak: "break-word" }}>
               {message}
             </Box>
           ))}
           <div ref={messagesEndRef} />
         </Box>
-        <Box sx={{ p: 0.5 }}>
+        <Box sx={chatStyles.inputBox}>
           <TextField
+            autoComplete="off"
             fullWidth
-            inputRef={inputRef} // Attach ref to the input
-            sx={{
-              "& .MuiOutlinedInput-root": {
-                "& fieldset": { border: "none" },
-                "&:hover fieldset": { border: "none" },
-                "&.Mui-focused fieldset": { border: "none" },
-              },
-            }}
+            inputRef={inputRef}
+            sx={chatStyles.textField}
             size="small"
             variant="outlined"
-            InputProps={{
-              style: {
-                border: "1px solid gray",
-                color: "#ffffff",
-                backgroundColor: "rgba(0, 0, 0, 0.5)",
-                fontSize: "14px",
-                height: "24px",
-              },
-            }}
+            InputProps={chatStyles.inputProps} // Includes className="cursor-caret"
             value={inputValue}
             onFocus={handleFocus}
             onBlur={handleBlur}
-            onChange={(e) => {
-              setInputValue(e.target.value);
-              setHistoryIndex(-1); // Reset history when typing new content
-            }}
+            onChange={handleInputChange}
             onKeyDown={handleKeyDown}
             placeholder="Enter message..."
           />

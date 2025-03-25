@@ -1,60 +1,74 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { UiWindowComponent } from "../../common/ui-window";
 import { Box } from "@mui/material";
 import { useUIContext } from "../context";
-import atlas from "../../util/atlas.json";
-import { ImageCache } from "../../util/image-cache";
+import { useImage } from "../../hooks/use-image";
 
 // Atlas entries for the compass components
-const overlayData = atlas["A_CompassOverlay"];
-const stripData = atlas["A_CompassStrip"];
-
 export const CompassWindowComponent: React.FC = () => {
-  const state = useUIContext((state) => state.ui.topBarWindow);
-  const [overlayUrl, setOverlayUrl] = useState("");
-  const [stripUrl, setStripUrl] = useState("");
+  const state = useUIContext((state) => state.ui.compassWindow);
+  const overlay = useImage("A_CompassOverlay");
+  const strip = useImage("A_CompassStrip", true);
+  const [offset, setOffset] = useState(0);
+  const prevRotationRef = useRef(0); // Track previous rotation
+  const totalDegreesRef = useRef(0); // Accumulate total degrees for continuity
 
   useEffect(() => {
-    // Load the overlay image URL
-    ImageCache.getImageUrl("uifiles/default", overlayData.texture).then((url) => {
-      setOverlayUrl(url);
-    });
-    // Load the strip image URL
-    ImageCache.getImageUrl("uifiles/default", stripData.texture).then((url) => {
-      setStripUrl(url);
-    });
-  }, []);
+    if (!window.godotBridge) {
+      return;
+    }
 
-  // Build background style for the overlay using its atlas data
-  const getOverlayBackgroundStyle = () => {
-    if (!overlayUrl) return {};
-    return {
-      width: `${overlayData.width}px`,
-      height: `${overlayData.height}px`,
-      backgroundImage: `url(${overlayUrl})`,
-      backgroundPosition: `-${overlayData.left}px -${overlayData.top}px`,
-    };
-  };
+    const interval = setInterval(() => {
+      // Get player rotation in radians from Godot
+      const rotation =
+        window.godotBridge?.get_node("/root/Zone").player?.getPlayerRotation()
+          ?.y ?? 0
+      
+      // Convert current and previous rotations to degrees
+      const currentDegrees = (rotation * 180) / Math.PI;
+      const prevDegrees = (prevRotationRef.current * 180) / Math.PI;
 
-  // Build background style for the strip using its atlas data.
-  // Note: The container bounds are defined by the overlay.
-  const getStripBackgroundStyle = () => {
-    if (!stripUrl) return {};
-    return {
-      width: `${overlayData.width}px`,
-      height: `${overlayData.height}px`,
-      backgroundImage: `url(${stripUrl})`,
-      backgroundPosition: `-${stripData.left}px -${stripData.top}px`,
-    };
-  };
+      // Calculate the difference, accounting for wrap-around
+      let deltaDegrees = currentDegrees - prevDegrees;
+      if (deltaDegrees > 180) {
+        deltaDegrees -= 360; // Adjust for crossing from PI to -PI
+      } else if (deltaDegrees < -180) {
+        deltaDegrees += 360; // Adjust for crossing from -PI to PI
+      }
+
+      // Update total degrees for continuous rotation
+      totalDegreesRef.current += deltaDegrees;
+
+      // Update previous rotation
+      prevRotationRef.current = rotation;
+
+      // Calculate offset based on total degrees
+      const stripWidth = strip.entry.width; // Width of one instance of the strip image
+      const offsetPerDegree = stripWidth / 360; // Pixels per degree
+      const newOffset = (totalDegreesRef.current % 360) * offsetPerDegree * -1
+
+      setOffset(newOffset);
+    }, 10); // Update every 50ms for smoother movement (adjust as needed)
+
+    // Cleanup interval on unmount
+    return () => clearInterval(interval);
+  }, [strip.entry.width]);
 
   return (
-    <UiWindowComponent state={state} windowName="compassWindow">
+    <UiWindowComponent
+      state={{
+        ...state,
+        fixedWidth: overlay.entry.width,
+        fixedHeight: overlay.entry.height,
+        fixed: true,
+      }}
+      windowName="compassWindow"
+    >
       <Box
         sx={{
           position: "relative",
-          width: `${overlayData.width}px`, // Container size from overlay
-          height: `${overlayData.height}px`,
+          width: `${overlay.entry.width}px`,
+          height: `${overlay.entry.height}px`,
           overflow: "hidden",
         }}
       >
@@ -62,10 +76,12 @@ export const CompassWindowComponent: React.FC = () => {
         <Box
           sx={{
             position: "absolute",
-            left: 0,
-            top: 0,
             zIndex: 0,
-            ...getStripBackgroundStyle(),
+            width: `${strip.entry.width * 2}px`,
+            height: `${strip.entry.height}px`,
+            backgroundImage: `url(${strip.image})`,
+            backgroundPosition: `${-offset + strip.entry.width / 2}px 0px`,
+            backgroundRepeat: "repeat-x",
           }}
         />
         {/* Compass Overlay (on top) */}
@@ -75,7 +91,10 @@ export const CompassWindowComponent: React.FC = () => {
             left: 0,
             top: 0,
             zIndex: 1,
-            ...getOverlayBackgroundStyle(),
+            width: `${overlay.entry.width}px`,
+            height: `${overlay.entry.height}px`,
+            backgroundImage: `url(${overlay.image})`,
+            backgroundPosition: `-${overlay.entry.left}px -${overlay.entry.top}px`,
           }}
         />
       </Box>

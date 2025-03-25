@@ -2008,6 +2008,13 @@
         "width": 22,
         "height": 22
     },
+    "A_CursorCaret": {
+        "texture": "window_pieces01.tga",
+        "left": 10,
+        "top": 190,
+        "width": 22,
+        "height": 22
+    },
     "A_CursorResizeNS": {
         "texture": "window_pieces01.tga",
         "left": 70,

@@ -7,8 +7,9 @@ export interface UiWindow {
   y: number;
   width: number;
   height: number;
-  minWidth?: number;
-  minHeight?: number;
+  fixedWidth?: number;
+  fixedHeight?: number;
+  fixed?: boolean;
 };
 
 const defaultWindow: UiWindow = {
@@ -64,17 +65,15 @@ export const initialUiState: UiState = {
   },
   topBarWindow: {
     ...defaultWindow,
+    fixed: true,
     x: 200,
     y: 50,
-    width: 300,
-    height: 50
   },
   compassWindow: {
     ...defaultWindow,
+    fixed: true,
     x: 200,
     y: 150,
-    width: 200,
-    height: 50,
   },
   chatWindows: [
     {

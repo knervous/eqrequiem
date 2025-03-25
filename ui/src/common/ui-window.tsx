@@ -1,11 +1,14 @@
-import React, { useEffect, useState, useRef } from "react";
+// src/components/UiWindowComponent.tsx
+import React, { useEffect, useMemo, useState } from "react";
 import { UiWindow, UiState } from "../state/initial-state";
 import { Box } from "@mui/material";
 import { actions } from "../state/reducer";
 import { useDebouncedCallback } from "use-debounce";
-
-import "./ui-window.css";
 import { useDispatch } from "../components/context";
+import { useDrag } from "../hooks/use-drag";
+import { useResize } from "../hooks/use-resize";
+import { UiTitleComponent } from "./ui-title";
+import "./ui-window.css";
 
 type Props = {
   state: UiWindow;
@@ -15,230 +18,163 @@ type Props = {
   children?: React.ReactNode;
 };
 
-export const UiWindowComponent: React.FC<Props> = (props: Props) => {
+export const UiWindowComponent: React.FC<Props> = ({
+  state,
+  windowName,
+  title,
+  index,
+  children,
+}) => {
   const dispatcher = useDispatch();
-  const { state, windowName, title, index, children } = props;
+  const { fixed, fixedWidth = 200, fixedHeight = 200 } = state;
+  const [minimized, setMinimized] = useState(false);
 
-  // Local state for transform values
-  const [x, setX] = useState(state.x);
-  const [y, setY] = useState(state.y);
-  const [width, setWidth] = useState(state.width || 200);
-  const [height, setHeight] = useState(state.height || 200);
+  // Dragging is always enabled
+  const {
+    x,
+    y: dragY,
+    handleMouseDown: handleDragMouseDown,
+  } = useDrag(state.x, state.y);
 
-  // Refs for drag & resize tracking
-  const draggingRef = useRef(false);
-  const resizingRef = useRef<{ type: "right" | "bottom" | "bottomRight" | "topRight" | null }>({ type: null });
-  const dragStartPos = useRef({ x: 0, y: 0 });
-  const windowStartPos = useRef({ x: 0, y: 0 });
-  const resizeStartPos = useRef({ x: 0, y: 0 });
-  const windowStartSize = useRef({ width, height });
-  const windowStartY = useRef(y);
+  // Only use resizing if not fixed
+  const initialWidth = fixed && fixedWidth ? fixedWidth : state.width || 200;
+  const initialHeight =
+    fixed && fixedHeight ? fixedHeight : state.height || 200;
+  const resize = fixed
+    ? {
+        width: initialWidth,
+        height: initialHeight,
+        y: 0,
+        handleMouseDown: () => {},
+        isResizing: false,
+      }
+    : useResize(initialWidth, initialHeight, false);
 
+  const {
+    width,
+    height,
+    y: resizeY,
+    handleMouseDown: handleResizeMouseDown,
+  } = resize;
+
+  // Combine y from dragging and resizing
+  const y = dragY + resizeY;
+
+  // Debounced state update
   const reducerUpdate = useDebouncedCallback(() => {
     dispatcher(
       actions.setWindowTransform(windowName, x, y, width, height, index)
     );
   }, 200);
 
-  useEffect(reducerUpdate, [
-    dispatcher,
-    index,
-    windowName,
-    x,
-    y,
-    width,
-    height,
-  ]);
+  useEffect(() => {
+    reducerUpdate();
+  }, [x, y, width, height, dispatcher, index, windowName, reducerUpdate]);
 
-  /* ====================
-   * Dragging Handlers
-   * ==================== */
-  const handleDragMouseDown = (e: React.MouseEvent) => {
-    draggingRef.current = true;
-    dragStartPos.current = { x: e.clientX, y: e.clientY };
-    windowStartPos.current = { x, y };
-
-    document.addEventListener("mousemove", handleDragMouseMove);
-    document.addEventListener("mouseup", handleDragMouseUp);
-  };
-
-  const handleDragMouseMove = (e: MouseEvent) => {
-    if (!draggingRef.current) return;
-    const dx = e.clientX - dragStartPos.current.x;
-    const dy = e.clientY - dragStartPos.current.y;
-    setX(windowStartPos.current.x + dx);
-    setY(windowStartPos.current.y + dy);
-  };
-
-  const handleDragMouseUp = () => {
-    draggingRef.current = false;
-    document.removeEventListener("mousemove", handleDragMouseMove);
-    document.removeEventListener("mouseup", handleDragMouseUp);
-  };
-
-  /* ====================
-   * Resizing Handlers
-   * ==================== */
-  const handleResizeMouseDown = (e: React.MouseEvent, type: "right" | "bottom" | "bottomRight" | "topRight") => {
-    e.stopPropagation();
-    resizingRef.current = { type };
-    resizeStartPos.current = { x: e.clientX, y: e.clientY };
-    windowStartSize.current = { width, height };
-    windowStartY.current = y;
-
-    document.addEventListener("mousemove", handleResizeMouseMove);
-    document.addEventListener("mouseup", handleResizeMouseUp);
-  };
-
-  const handleResizeMouseMove = (e: MouseEvent) => {
-    if (!resizingRef.current.type) return;
-    const dx = e.clientX - resizeStartPos.current.x;
-    const dy = e.clientY - resizeStartPos.current.y;
-    const minSize = 25;
-
-    switch (resizingRef.current.type) {
-      case "right":
-        setWidth(Math.max(minSize, windowStartSize.current.width + dx));
-        break;
-      case "bottom":
-        setHeight(Math.max(minSize, windowStartSize.current.height + dy));
-        break;
-      case "bottomRight":
-        setWidth(Math.max(minSize, windowStartSize.current.width + dx));
-        setHeight(Math.max(minSize, windowStartSize.current.height + dy));
-        break;
-      case "topRight":
-        setWidth(Math.max(minSize, windowStartSize.current.width + dx));
-        setHeight(Math.max(minSize, windowStartSize.current.height - dy));
-        setY(windowStartY.current + dy);
-        break;
-    }
-  };
-
-  const handleResizeMouseUp = () => {
-    resizingRef.current = { type: null };
-    document.removeEventListener("mousemove", handleResizeMouseMove);
-    document.removeEventListener("mouseup", handleResizeMouseUp);
-  };
+  // Memoized window styles with minimize behavior
+  const windowStyles = useMemo(() => {
+    const baseHeight = minimized ? 0 : title ? 30 : 10; // Title bar height or drag handle height
+    return {
+      position: "fixed" as const,
+      top: `${y}px`,
+      left: `${x}px`,
+      width: `${width}px`,
+      height: minimized ? `${baseHeight}px` : `${height}px`,
+      backgroundColor: "rgba(0, 0, 0, 0.7)",
+      transition: resize.isResizing ? "" : "height 0.2s ease-in-out", // Smooth height transition
+    };
+  }, [x, y, width, height, minimized, title, resize]);
 
   return (
-    <Box
-      className="ui-window"
-      style={{
-        position: "fixed",
-        top: `${y}px`,
-        left: `${x}px`,
-        width: `${width}px`,
-        height: `${height}px`,
-        backgroundColor: "rgba(0, 0, 0, 0.7)",
-      }}
-      data-ui-window
-    >
-      {/* Drag Handle */}
-      {!title && (
+    <Box className="ui-window" style={windowStyles} data-ui-window>
+      {title ? (
+        <UiTitleComponent
+          name={title}
+          minimized={minimized}
+          toggleMinimize={() => setMinimized((prev) => !prev)}
+          handleDragMouseDown={handleDragMouseDown}
+        />
+      ) : (
         <Box
+          className="cursor-drag"
           sx={{
             position: "absolute",
-            top: '-5px',
+            top: "-5px",
             left: 0,
             width: "100%",
             height: "10px",
-            cursor: "grab",
             zIndex: 10,
           }}
           onMouseDown={handleDragMouseDown}
         />
       )}
 
-      {title && (
-        <Box
-          sx={{
-            cursor: "grab",
-            userSelect: "none",
-          }}
-          onMouseDown={handleDragMouseDown}
-          className="ui-window-title"
-        >
-          {title}
-        </Box>
+      {/* Resize Handles (only if not fixed and not minimized) */}
+      {!fixed && !minimized && (
+        <>
+          <Box
+            className="resize-ew"
+            sx={{
+              position: "absolute",
+              top: 0,
+              right: 0,
+              width: "5px",
+              height: "100%",
+              zIndex: 1000,
+              backgroundColor: "rgba(0, 0, 0, 0.1)",
+              "&:hover": { backgroundColor: "rgba(0, 0, 0, 0.3)" },
+            }}
+            onMouseDown={(e) => handleResizeMouseDown(e, "right")}
+          />
+          <Box
+            className="resize-ns"
+            sx={{
+              position: "absolute",
+              bottom: 0,
+              left: 0,
+              width: "100%",
+              height: "5px",
+              zIndex: 1000,
+              backgroundColor: "rgba(0, 0, 0, 0.1)",
+              "&:hover": { backgroundColor: "rgba(0, 0, 0, 0.3)" },
+            }}
+            onMouseDown={(e) => handleResizeMouseDown(e, "bottom")}
+          />
+          <Box
+            className="resize-nwse"
+            sx={{
+              position: "absolute",
+              bottom: -2,
+              right: -2,
+              width: "10px",
+              height: "10px",
+              zIndex: 1,
+              borderRight: "2px solid rgba(255, 255, 255, 0.2)",
+              borderBottom: "2px solid rgba(255, 255, 255, 0.2)",
+              "&:hover": { borderColor: "rgba(255, 255, 255, 0.5)" },
+            }}
+            onMouseDown={(e) => handleResizeMouseDown(e, "bottomRight")}
+          />
+          <Box
+            className="resize-nesw"
+            sx={{
+              position: "absolute",
+              top: -2,
+              right: -2,
+              width: "10px",
+              height: "10px",
+              zIndex: 1,
+              borderRight: "2px solid rgba(255, 255, 255, 0.2)",
+              borderTop: "2px solid rgba(255, 255, 255, 0.2)",
+              "&:hover": { borderColor: "rgba(255, 255, 255, 0.8)" },
+            }}
+            onMouseDown={(e) => handleResizeMouseDown(e, "topRight")}
+          />
+        </>
       )}
 
-      {/* Right Resize Handle */}
-      <Box
-        sx={{
-          position: "absolute",
-          top: 0,
-          right: 0,
-          width: "5px",
-          height: "100%",
-          cursor: "ew-resize",
-          zIndex: 1000,
-          backgroundColor: "rgba(0, 0, 0, 0.1)",
-          "&:hover": {
-            backgroundColor: "rgba(0, 0, 0, 0.3)",
-          },
-        }}
-        onMouseDown={(e) => handleResizeMouseDown(e, "right")}
-      />
-
-      {/* Bottom Resize Handle */}
-      <Box
-        sx={{
-          position: "absolute",
-          bottom: 0,
-          left: 0,
-          width: "100%",
-          height: "5px",
-          cursor: "ns-resize",
-          zIndex: 1000,
-          backgroundColor: "rgba(0, 0, 0, 0.1)",
-          "&:hover": {
-            backgroundColor: "rgba(0, 0, 0, 0.3)",
-          },
-        }}
-        onMouseDown={(e) => handleResizeMouseDown(e, "bottom")}
-      />
-
-      {/* Bottom-Right Resize Handle (Minimal L Shape) */}
-      <Box
-        sx={{
-          position: "absolute",
-          bottom: -2,
-          right: -2,
-          width: "10px",
-          height: "10px",
-          cursor: "nwse-resize",
-          zIndex: 1,
-          borderRight: "2px solid rgba(255, 255, 255, 0.2)", // Vertical part of L
-          borderBottom: "2px solid rgba(255, 255, 255, 0.2)", // Horizontal part of L
-          "&:hover": {
-            borderColor: "rgba(255, 255, 255, 0.5)", // Darker on hover
-          },
-        }}
-        onMouseDown={(e) => handleResizeMouseDown(e, "bottomRight")}
-      />
-
-      {/* Top-Right Resize Handle (Minimal L Shape) */}
-      <Box
-        sx={{
-          position: "absolute",
-          top: -2,
-          right: -2,
-          width: "10px",
-          height: "10px",
-          cursor: "nesw-resize",
-          zIndex: 1,
-          borderRight: "2px solid rgba(255, 255, 255, 0.2)", // Vertical part of L
-          borderTop: "2px solid rgba(255, 255, 255, 0.2)", // Horizontal part of L
-          "&:hover": {
-            borderColor: "rgba(255, 255, 255, 0.8)", // Darker on hover
-          },
-        }}
-        onMouseDown={(e) => handleResizeMouseDown(e, "topRight")}
-      />
-
-      {/* Content */}
-      {children}
+      {/* Content (hidden when minimized) */}
+      {!minimized && children}
     </Box>
   );
 };

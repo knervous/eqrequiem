@@ -68,6 +68,14 @@ export default class Player extends Actor {
     });
   }
 
+  public getPlayerRotation() {
+    return Extensions.GetRotation(this.getNode() as CharacterBody3D);
+  }
+
+  public getPlayerPosition() {
+    return Extensions.GetPosition(this.getNode() as CharacterBody3D);
+  }
+
   private createCameraLight() {
     this.cameraLight = new OmniLight3D();
     this.camera.add_child(this.cameraLight);
