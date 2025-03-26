@@ -2,9 +2,11 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import jwt from 'jsonwebtoken';
 
 // Discord OAuth2 configuration
-const CLIENT_ID = process.env.CLIENT_ID; // Add your Discord Client ID to Vercel env vars
-const CLIENT_SECRET = process.env.CLIENT_SECRET; // Your secret from Vercel env vars
-const REDIRECT_URI = process.env.REDIRECT_URI || 'https://localhost:3000/api/auth/callback'; // Add redirect URI to Vercel env vars
+const CLIENT_ID = process.env.CLIENT_ID;
+const CLIENT_SECRET = process.env.CLIENT_SECRET;
+const REDIRECT_URI = process.env.REDIRECT_URI || 'https://localhost:3000/api/auth/callback';
+
+const COOKIE_NAME = 'auth_token';
 
 async function exchangeCodeForToken(code: string) {
   if (!CLIENT_ID?.length || !CLIENT_SECRET?.length) {
@@ -16,7 +18,7 @@ async function exchangeCodeForToken(code: string) {
     grant_type: 'authorization_code',
     code,
     redirect_uri: REDIRECT_URI,
-    scope: 'identify', // Adjust scopes as needed
+    scope: 'identify',
   });
 
   const authHeader = 'Basic ' + Buffer.from(`${CLIENT_ID}:${CLIENT_SECRET}`).toString('base64');
@@ -30,7 +32,7 @@ async function exchangeCodeForToken(code: string) {
   });
 
   if (!response.ok) {
-    throw new Error('Failed to exchange code for token ');
+    throw new Error('Failed to exchange code for token');
   }
 
   return response.json();
@@ -68,20 +70,24 @@ export default async function handler(
       userId: user.id,
       username: user.username,
       discriminator: user.discriminator,
-      iat: Math.floor(Date.now() / 1000), // Issued at
-      exp: Math.floor(Date.now() / 1000) + 60 * 60, // Expires in 1 hour
+      iat: Math.floor(Date.now() / 1000),
+      exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 30, // 30 days
     };
 
     const token = jwt.sign(payload, CLIENT_SECRET, { algorithm: 'HS256' });
 
-    response.status(200).json({
-      token,
-      user: {
-        id: user.id,
-        username: user.username,
-        discriminator: user.discriminator,
-      },
-    });
+    const cookieOptions = {
+      secure: process.env.NODE_ENV === 'production',
+      path: '/',
+      maxAge: 60 * 60,
+    };
+
+    response.setHeader('Set-Cookie', `${COOKIE_NAME}=${token}; ${Object.entries(cookieOptions)
+      .map(([key, value]) => `${key}=${value}`)
+      .join('; ')}`);
+
+    return response.redirect(302, '/auth');
+
   } catch (error) {
     console.error('Error in auth handler:', error);
     response.status(500).json({ error: 'Internal server error' });
