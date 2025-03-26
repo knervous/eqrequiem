@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 
 // Discord OAuth2 configuration
 const CLIENT_ID = process.env.CLIENT_ID; // Add your Discord Client ID to Vercel env vars
-const CLIENT_SECRET = process.env.CLIENT_KEY; // Your secret from Vercel env vars
+const CLIENT_SECRET = process.env.CLIENT_SECRET; // Your secret from Vercel env vars
 const REDIRECT_URI = process.env.REDIRECT_URI || 'https://localhost:3000/api/auth/callback'; // Add redirect URI to Vercel env vars
 
 async function exchangeCodeForToken(code: string) {
