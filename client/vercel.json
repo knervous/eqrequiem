@@ -1,16 +1,18 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "devCommand": "npm run dev",
   "functions": {
     "api/login.ts": {
       "memory": 1000,
       "maxDuration": 5
-    },
-    "api/endpoint.ts": {
-      "memory": 1000,
-      "maxDuration": 5
     }
   },
-
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ],
   "headers": [
     {
       "source": "/",
