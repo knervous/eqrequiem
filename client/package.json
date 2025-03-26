@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "LOCAL_DEV=true vite",
+    "v": "vercel dev",
     "start": "LOCAL_DEV=true vite",
     "build": "cd ../ui && npm i && cd ../client && vite build",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
@@ -15,9 +16,11 @@
     "@emotion/styled": "^11.14.0",
     "@mui/material": "^6.4.5",
     "comlink": "^4.4.2",
+    "jsonwebtoken": "^9.0.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-router-dom": "^7.2.0",
+    "react-social-login-buttons": "^4.1.1",
     "requiem-ui": "file:../ui",
     "sage-core": "^0.0.28",
     "tga-js": "^1.1.1",
@@ -32,17 +35,22 @@
     "@eslint/js": "^9.21.0",
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",
+    "@vercel/node": "^5.1.14",
     "@vitejs/plugin-react-swc": "^3.8.1",
     "eslint": "^9.21.0",
     "eslint-plugin-react-hooks": "^5.0.0",
     "eslint-plugin-react-refresh": "^0.4.19",
+    "express": "^4.21.2",
     "globals": "^15.15.0",
     "http-server": "^14.1.1",
     "rollup": "^4.37.0",
     "serve-static": "^1.16.2",
     "typescript": "~5.7.2",
     "typescript-eslint": "^8.24.1",
+    "vercel": "^41.4.1",
     "vite": "^6.2.3",
-    "vite-plugin-static-copy": "^2.2.0"
+    "vite-plugin-ssr": "^0.4.142",
+    "vite-plugin-static-copy": "^2.2.0",
+    "vite-plugin-vercel": "^9.0.5"
   }
 }

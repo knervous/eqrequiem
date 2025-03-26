@@ -5,6 +5,7 @@ import Card from "@mui/material/Card";
 import { Button, CardContent, Stack, TextField } from "@mui/material";
 
 import styles from "./home.module.css";
+import DiscordLoginButton from "./login";
 
 const PREFIX = "Home";
 const textFieldClasses = {
@@ -67,16 +68,11 @@ export const Home = () => {
               alt="logo"
             /> 
           </CardContent>
-          <Stack sx={{ width: "185px", margin: "0 auto", a: {
-            margin: '10px'
-          } }}>
-            <Button variant="contained" size="large" href="/play">
-              Play
+          <Stack sx={{ width: "285px", margin: "0 auto"}} spacing={1}>
+            <Button variant="contained" color={'primary'} sx={{margin: 0}} href="/play">
+              Play Demo
             </Button>
-
-            <Button variant="contained" size="large" href="/signup">
-              Sign Up
-            </Button>
+            <DiscordLoginButton />
           </Stack>
 
           <footer

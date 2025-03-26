@@ -13,5 +13,14 @@
             ],
             "type": "node"
         },
+        {
+            "type": "node",
+            "request": "attach",
+            "name": "Attach to Vite",
+            "port": 9229,
+            "restart": true,
+            "sourceMaps": true,
+            "skipFiles": ["<node_internals>/**"]
+          }
     ]
 }
