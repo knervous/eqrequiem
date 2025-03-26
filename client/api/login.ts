@@ -7,6 +7,9 @@ const CLIENT_SECRET = process.env.CLIENT_KEY; // Your secret from Vercel env var
 const REDIRECT_URI = process.env.REDIRECT_URI || 'https://localhost:3000/api/auth/callback'; // Add redirect URI to Vercel env vars
 
 async function exchangeCodeForToken(code: string) {
+  if (!CLIENT_ID?.length || !CLIENT_SECRET?.length) {
+    throw new Error('Discord client ID or secret is not set');
+  }
   const params = new URLSearchParams({
     client_id: CLIENT_ID,
     client_secret: CLIENT_SECRET,
@@ -16,14 +19,18 @@ async function exchangeCodeForToken(code: string) {
     scope: 'identify', // Adjust scopes as needed
   });
 
+  const authHeader = 'Basic ' + Buffer.from(`${CLIENT_ID}:${CLIENT_SECRET}`).toString('base64');
   const response = await fetch('https://discord.com/api/oauth2/token', {
     method: 'POST',
     body: params,
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'Authorization': authHeader,
+    },
   });
 
   if (!response.ok) {
-    throw new Error('Failed to exchange code for token');
+    throw new Error('Failed to exchange code for token ');
   }
 
   return response.json();
