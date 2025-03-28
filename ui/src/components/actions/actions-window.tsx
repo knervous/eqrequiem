@@ -25,7 +25,7 @@ export const ActionWindowComponent: React.FC = () => {
         outline: "1px dashed gold",
       },
     }),
-    []
+    [],
   );
   const content = useMemo(() => {
     switch(activeTab) {
@@ -42,28 +42,28 @@ export const ActionWindowComponent: React.FC = () => {
             isDisabled
             onClick={() => {}} 
           />
-           <UiButtonComponent
+          <UiButtonComponent
             buttonName="A_BigBtn"
             text={'Camp'}
             onClick={() => {}} 
           />
-           <UiButtonComponent
+          <UiButtonComponent
             buttonName="A_BigBtn"
             text={'Sit'}
             onClick={() => {}} 
           />
-           <UiButtonComponent
+          <UiButtonComponent
             buttonName="A_BigBtn"
             text={'Walk'}
             onClick={() => {}}
           />
-        </Stack>
+        </Stack>;
       case ActionTabs.Combat:
-        return <Box>Combat</Box>
+        return <Box>Combat</Box>;
       case ActionTabs.Socials:
-        return <Box>Socials</Box>
+        return <Box>Socials</Box>;
       case ActionTabs.Abilities:
-        return <Box>Abilities</Box>
+        return <Box>Abilities</Box>;
     }
   }, [activeTab]);
   return (

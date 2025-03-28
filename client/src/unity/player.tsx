@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from "react";
 import classnames from "classnames";
 import { Box } from "@mui/material";
 
-import './unityBridge'
+import './unityBridge';
 
 export const UnityPlayer: React.FC = () => {
   // Create refs for elements that need to be manipulated.

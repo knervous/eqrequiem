@@ -37,16 +37,16 @@ export const UiButtonComponent: React.FC<Props> = (props: Props) => {
       props.isDisabled
         ? disabled
         : isPressed
-        ? pressed
-        : isHovered
-        ? hover
-        : normal,
-    [props.isDisabled, isPressed, isHovered, normal, pressed, hover, disabled]
+          ? pressed
+          : isHovered
+            ? hover
+            : normal,
+    [props.isDisabled, isPressed, isHovered, normal, pressed, hover, disabled],
   );
 
   return !selectedEntry.entry ? null : (
     <Box
-    className="cursor-default"
+      className="cursor-default"
       sx={{
         userSelect: "none",
         color: "white",
@@ -66,7 +66,7 @@ export const UiButtonComponent: React.FC<Props> = (props: Props) => {
       onClick={() => !props.isDisabled && props.onClick()}
     >
       {props.children}
-      {props.text && <Typography sx={{fontSize: '12px', textAlign: 'center', color: props.isDisabled ? 'gray' : 'white'}}>{props.text}</Typography>}
+      {props.text && <Typography sx={{ fontSize: '12px', textAlign: 'center', color: props.isDisabled ? 'gray' : 'white' }}>{props.text}</Typography>}
     </Box>
   );
 };

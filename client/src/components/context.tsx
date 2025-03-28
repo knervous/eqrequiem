@@ -49,7 +49,7 @@ export const MainProvider = (props: ReactProps) => {
         setLoadingText,
         setLoadingTitle,
         setSplash,
-        setConverting
+        setConverting,
       });
       // Going to split these out into dependencies and services in a class
       if (!(await getEQFileExists("sky", "sky1.glb"))) {
@@ -64,7 +64,7 @@ export const MainProvider = (props: ReactProps) => {
           {},
           {
             rawImageWrite: true,
-          }
+          },
         );
         await obj.initialize();
         await obj.process();
@@ -85,7 +85,7 @@ export const MainProvider = (props: ReactProps) => {
         onFolderSelected,
         ready,
         splash,
-        converting, setConverting
+        converting, setConverting,
       }}
     >
       {props.children}

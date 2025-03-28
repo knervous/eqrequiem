@@ -13,13 +13,13 @@ export const PlayerWindowComponent: React.FC = () => {
  
   return (
     <UiWindowComponent
-      state={{...state, fixed: true, fixedWidth: 150, fixedHeight: 200}}
+      state={{ ...state, fixed: true, fixedWidth: 150, fixedHeight: 200 }}
       //title="Target"
       windowName="playerWindow"
       closable
       doClose={doClose}
     >
-      <Typography sx={{textAlign: 'center'}}>Soandso</Typography>
+      <Typography sx={{ textAlign: 'center' }}>Soandso</Typography>
       <Stack direction="column" sx={{ width: '100%', padding: "10px 20px", textAlign: 'center', overflow: "hidden", alignContent: 'center'  }}>
     
         <br/>

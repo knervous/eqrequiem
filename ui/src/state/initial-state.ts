@@ -102,6 +102,6 @@ export const initialUiState: UiState = {
       ...defaultWindow,
       x: 100,
       y: 500,
-    }
-  ]
+    },
+  ],
 };

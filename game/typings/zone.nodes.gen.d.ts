@@ -16,6 +16,7 @@ declare module "godot" {
             >,
             GDBridge: Node<{}>,
             JSBridge: Node<{}>,
+            CEFBridge: Node<{}>,
         },
     }
 }

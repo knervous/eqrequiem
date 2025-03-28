@@ -18,7 +18,7 @@ export const StatusDialog = ({
   requestPermissions,
   onDrop,
   fsHandle,
-  onFolderSelected
+  onFolderSelected,
 }) => {
 
   return (
@@ -116,8 +116,8 @@ export const StatusDialog = ({
                 direction={'column'}
                 sx={{
                   justifyContent: 'center !important',
-                  alignItems    : 'center',
-                  alignContent  : 'center',
+                  alignItems: 'center',
+                  alignContent: 'center',
                 }}
               >
                 <Typography

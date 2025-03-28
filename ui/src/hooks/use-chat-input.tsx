@@ -45,7 +45,7 @@ export const useChatInput = () => {
         }
       }
     },
-    [inputValue, historyStack, historyIndex]
+    [inputValue, historyStack, historyIndex],
   );
 
   return {

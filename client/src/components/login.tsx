@@ -19,10 +19,10 @@ if (token) {
 const DiscordLoginButton = () => {
   const handleLogin = () => {
     if (decoded) {
-      console.log('Wanted to log in')
+      console.log('Wanted to log in');
       return;
     }
-    const discordAuthUrl = `https://discord.com/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&response_type=${RESPONSE_TYPE}&redirect_uri=${REDIRECT_URI}&scope=${SCOPE}`
+    const discordAuthUrl = `https://discord.com/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&response_type=${RESPONSE_TYPE}&redirect_uri=${REDIRECT_URI}&scope=${SCOPE}`;
     window.location.href = discordAuthUrl;
   };
 

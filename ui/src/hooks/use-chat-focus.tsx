@@ -5,7 +5,7 @@ export const useChatFocus = (
   main: boolean,
   inputRef: React.RefObject<HTMLInputElement>,
   inputValue: string,
-  setInputValue: (value: string) => void
+  setInputValue: (value: string) => void,
 ) => {
   useEffect(() => {
     if (!main) return;

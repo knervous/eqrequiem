@@ -1,4 +1,4 @@
-declare module globalThis {
+declare namespace globalThis {
 
 	function sendJSBuffer(packet: ArrayBuffer) : void;
 	function callUnityMethod(type: number, payload: string) : string;
@@ -43,7 +43,7 @@ declare module globalThis {
 
 		/** Log JavaScript Objects as JSON format */
 		LOG_OBJECT_TO_JSON: boolean;
-	}
+	};
 
 	/**
 	 * A worker is an object created using a constructor of `Worker` that runs a named JavaScript file â this file contains the code that will run in the worker thread;
@@ -60,28 +60,28 @@ declare module globalThis {
 	 */
 	class Worker {
 
-		/**
+	  /**
 		 * Creates a dedicated worker thread that executes the script at the specified file
 		 */
-		constructor(script: string);
+	  constructor(script: string);
 
-		/**
+	  /**
 		 * The `onmessage` property of the Worker interface represents an event handler, that is a function to be called when the message event occurs.
 		 * It will be called when the worker's parent receives a message from the worker context by `postMessage` method.
 		 */
-		onmessage(message: Event): void;
+	  onmessage(message: Event): void;
 
-		/**
+	  /**
 		 * Sends a message to the worker's inner scope. This accepts a single parameter, which is the data to send to the worker.
 		 * @param message The object to deliver to the worker; this will be in the data field in the event delivered to the `onmessage` handler.
 		 * @note The data cannot be instance of `godot.Object` or any other JavaScript object contains functions.
 		 */
-		postMessage(message: Event): void;
+	  postMessage(message: Event): void;
 
-		/**
+	  /**
 		 * Stop the worker thread
 		 */
-		terminate(): void;
+	  terminate(): void;
 	}
 
 	/** **Worker context only**

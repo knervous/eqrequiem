@@ -1,4 +1,4 @@
-import { Node } from "godot";
+import { GDictionary, Node } from "godot";
 import ZoneManager from "../Zone/zone-manager";
 import { inEditor } from "../Util/constants";
 import { ChatUIHandler } from "./chat";
@@ -12,14 +12,15 @@ export default class JSBridge extends Node {
   public _ready(): void {
     if (!inEditor) {
       window.godotBridge = this;
+      window.newProp = { ok: 'some new prop' };
     }
     const root = this.get_tree().root;
     this.ChatUI = new ChatUIHandler(root, this.sendMessage.bind(this));
 
     // motd later?
     setTimeout(() => {
-      this.ChatUI.handler('Welcome to EQ Requiem!')
-      this.ChatUI.handler('Type /help to see available commands')
+      this.ChatUI.handler('Welcome to EQ Requiem!');
+      this.ChatUI.handler('Type /help to see available commands');
     }, 2500);
 
   }
@@ -38,25 +39,25 @@ export default class JSBridge extends Node {
   public removeEventListener(event: string, cb: (message: object | string) => void) {
     if (this.listeners[event]) {
       this.listeners[event] = this.listeners[event].filter(
-        (listener) => listener !== cb
+        (listener) => listener !== cb,
       );
     }
   }
 
   public sendMessage(message: object) {
     if (inEditor) {
-      this.get_node('/root/Zone/DebugUI/WebView').call('_post_message', JSON.stringify(message));
+      this.get_node('/root/Zone/CEFBridge').call('_invoke_js_callback', JSON.stringify(message));
     } else if (this.listeners["message"])
       this.listeners["message"].forEach((listener) =>
         listener(
-          inEditor ? JSON.stringify(message) : message
-        )
+          inEditor ? JSON.stringify(message) : message,
+        ),
       );
   }
 
-  public handleMessage(message: string | object) {
+  public handleMessage(message: GDictionary & object) {
     try {
-      const data = typeof message === "string" ? JSON.parse(message) : message;
+      const data = typeof message?.toObject === 'function' ? message.toObject() : message;
       switch(data.type) {
         case "chat":
           this.ChatUI.handler(data.payload);

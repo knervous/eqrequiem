@@ -165,7 +165,7 @@ export class BaseGltfModel {
     }
     console.log(
       "Primary skeleton found:",
-      primarySkeleton.get_path().get_concatenated_names()
+      primarySkeleton.get_path().get_concatenated_names(),
     );
     const meshes = secondaryRootNode.getNodesOfType(MeshInstance3D);
     if (meshes.length === 0) {
@@ -185,7 +185,7 @@ export class BaseGltfModel {
 
   public async instantiate(): Promise<Node3D | undefined> {
     const buffer = await FileSystem.getFileBytes(
-      `eqrequiem/${this.folder}/${this.model}.glb`
+      `eqrequiem/${this.folder}/${this.model}.glb`,
     );
     if (!buffer) {
       console.log("Buffer not found!");
@@ -293,7 +293,7 @@ export class BaseGltfModel {
   }
 
   private async animateTextures(
-    materials: StandardMaterial3D[]
+    materials: StandardMaterial3D[],
   ): Promise<void> {
     interface AnimationMaterial {
       frames: string[];
@@ -328,7 +328,7 @@ export class BaseGltfModel {
         setInterval(async () => {
           for (const animatedMaterial of entry.animatedMaterials) {
             const newTexture = await this.loadNewTexture(
-              animatedMaterial.frames[animatedMaterial.currentFrame]
+              animatedMaterial.frames[animatedMaterial.currentFrame],
             );
             if (newTexture instanceof Texture2D) {
               animatedMaterial.material.albedo_texture = newTexture;
@@ -339,7 +339,7 @@ export class BaseGltfModel {
                 ? 0
                 : animatedMaterial.currentFrame + 1;
           }
-        }, +delay * 2) as unknown as number
+        }, +delay * 2) as unknown as number,
       );
     }
   }
@@ -378,7 +378,7 @@ export class BaseGltfModel {
       if (mesh) {
         const surfaceCount = mesh.get_surface_count();
         for (let i = 0; i < surfaceCount; i++) {
-          let material =
+          const material =
             node.get_surface_override_material(i) ||
             mesh.surface_get_material(i);
           if (material) {
@@ -398,7 +398,7 @@ export class BaseGltfModel {
   private async swapTextureForMaterial(
     material: any,
     meshInstance: MeshInstance3D,
-    surfaceIdx: number
+    surfaceIdx: number,
   ): Promise<void> {
     try {
       const newTexture = await this.loadNewTexture(material.resource_name);
@@ -417,7 +417,7 @@ export class BaseGltfModel {
       } else {
         console.log(
           "Material is not a StandardMaterial3D or missing texture. Skipping texture swap.",
-          material.resource_name
+          material.resource_name,
         );
       }
     } catch (err) {
@@ -426,14 +426,14 @@ export class BaseGltfModel {
   }
 
   private async loadNewTexture(
-    name: string
+    name: string,
   ): Promise<Resource | undefined | null> {
     const cached = TextureCache.get(name);
     if (cached) {
       return cached;
     }
     const buffer = await FileSystem.getFileBytes(
-      `eqrequiem/textures/${name}.dds`
+      `eqrequiem/textures/${name}.dds`,
     );
     if (!buffer) {
       return null;
@@ -452,7 +452,7 @@ export class BaseGltfModel {
       return null;
     }
     const img = ImageTexture.create_from_image(
-      image
+      image,
     ) as unknown as Texture2D & { flip_y: boolean };
     TextureCache.set(name, img);
     img.flip_y = needFlip;

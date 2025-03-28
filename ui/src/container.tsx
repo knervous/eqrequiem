@@ -32,10 +32,11 @@ export const EditorContainer: React.FC = () => {
       window.ipc.postMessage(JSON.stringify(payload));
     }
   };
-  const getEQFile = async (path: string): Promise<ArrayBuffer | null> => {
-    const result = await fetch(`/file?path=${path}`).then(a => a.arrayBuffer()).catch(() => null);
+  const getEQFile = async (path: string, file: string): Promise<ArrayBuffer | null> => {
+    const result = await fetch(`/file?path=${encodeURIComponent(path)}&file=${encodeURIComponent(file)}`).then((a) => a.arrayBuffer()).catch(() => null);
+    console.log('Res', result);
     return result;
-  }
+  };
   return (
     <Box
       onMouseDown={(e) =>
@@ -59,6 +60,9 @@ export const EditorContainer: React.FC = () => {
         width: "100vw",
         height: "100vh",
         backgroundColor: "rgba(0,0,0,0.0)",
+        '*': {
+          color: 'white !important',
+        },
       }}
     >
       <Overlay getEQFile={getEQFile} />

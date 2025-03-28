@@ -38,7 +38,7 @@ export default defineConfig({
     alias: {
       "react/jsx-runtime": path.resolve(
         __dirname,
-        "./node_modules/react/jsx-runtime.js"
+        "./node_modules/react/jsx-runtime.js",
       ),
       react: path.resolve(__dirname, "./node_modules/react"),
       "react-dom": path.resolve(__dirname, "./node_modules/react-dom"),
@@ -46,7 +46,7 @@ export default defineConfig({
       "use-debounce": path.resolve(__dirname, "./node_modules/use-debounce"),
       "use-context-selector": path.resolve(
         __dirname,
-        "./node_modules/use-context-selector"
+        "./node_modules/use-context-selector",
       ),
       "tga-js": path.resolve(__dirname, "./node_modules/tga-js"),
     },
@@ -56,19 +56,19 @@ export default defineConfig({
       alias: {
         "react/jsx-runtime": path.resolve(
           __dirname,
-          "./node_modules/react/jsx-runtime.js"
+          "./node_modules/react/jsx-runtime.js",
         ),
         "sage-core": path.resolve(__dirname, "../../eqsage/sage/lib"),
         react: path.resolve(__dirname, "./node_modules/react"),
         "react-dom": path.resolve(__dirname, "./node_modules/react-dom"),
         "@mui/material": path.resolve(
           __dirname,
-          "./node_modules/@mui/material"
+          "./node_modules/@mui/material",
         ),
         "use-debounce": path.resolve(__dirname, "./node_modules/use-debounce"),
         "use-context-selector": path.resolve(
           __dirname,
-          "./node_modules/use-context-selector"
+          "./node_modules/use-context-selector",
         ),
         "tga-js": path.resolve(__dirname, "./node_modules/tga-js"),
       },

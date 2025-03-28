@@ -17,7 +17,7 @@ export const isr = {
 };
 
 export default async function handler() {
-    console.log('Hit the handler')
+  console.log('Hit the handler');
   return new Response('Edge Function: OK', {
     status: 200,
   });

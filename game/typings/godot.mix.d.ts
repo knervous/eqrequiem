@@ -21,7 +21,7 @@ declare module "godot" {
         is_valid(): boolean
 
         /** Returns the object on which this [Callable] is called. */
-        get_object(): Object
+        get_object(): object
 
         /** Returns the ID of this [Callable]'s object (see [method Object.get_instance_id]). */
         get_object_id(): int64
@@ -84,7 +84,7 @@ declare module "godot" {
         is_null(): boolean
 
         /** Returns the object emitting this signal. */
-        get_object(): Object
+        get_object(): object
 
         /** Returns the ID of the object emitting this signal (see [method Object.get_instance_id]). */
         get_object_id(): int64
@@ -208,34 +208,34 @@ declare module "godot" {
      * JavaScript array with [...g_array.proxy()].
      */
     class GArrayProxy<T> {
-        [Symbol.iterator](): IteratorObject<GProxyValueWrap<T>>;
-        /**
+      [Symbol.iterator](): IteratorObject<GProxyValueWrap<T>>;
+      /**
          * Gets the length of the array. This is a number one higher than the highest index in the array.
          */
-        get length(): number;
-        /**
+      get length(): number;
+      /**
          * Removes the last element from an array and returns it.
          * If the array is empty, undefined is returned and the array is not modified.
          */
-        pop(): T | undefined;
-        /**
+      pop(): T | undefined;
+      /**
          * Appends new elements to the end of an array, and returns the new length of the array.
          * @param items New elements to add to the array.
          */
-        push(...items: Array<T | GProxyValueWrap<T>>): number;
-        /**
+      push(...items: Array<T | GProxyValueWrap<T>>): number;
+      /**
          * Returns the index of the first occurrence of a value in an array, or -1 if it is not present.
          * @param searchElement The value to locate in the array.
          * @param fromIndex The array index at which to begin the search. If fromIndex is omitted, the search starts at index 0.
          */
-        indexOf(searchElement: T, fromIndex?: number): number;
-        /**
+      indexOf(searchElement: T, fromIndex?: number): number;
+      /**
          * Determines whether an array includes a certain element, returning true or false as appropriate.
          * @param searchElement The element to search for.
          */
-        includes(searchElement: T): boolean;
-        toJSON(key?: any): any;
-        toString(): string;
+      includes(searchElement: T): boolean;
+      toJSON(key?: any): any;
+      toString(): string;
         [n: number]: T | GProxyValueWrap<T>; // More accurate get type blocked by https://github.com/microsoft/TypeScript/issues/43826
     }
 

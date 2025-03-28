@@ -1,3 +1,13 @@
 {
-    "godotTools.editorPath.godot4": "/Users/Paul/source/godot/bin/godot_macos_editor.app"
+    "godotTools.editorPath.godot4": "/Users/Paul/source/godot/bin/godot_macos_editor.app",
+    "editor.codeActionsOnSave": {
+        "source.fixAll.eslint":"always"
+      },
+      "eslint.validate": [
+        "javascript",
+        "javascriptreact",
+        "typescript",
+        "typescriptreact"
+      ],
+      "eslint.run": "onSave"
 }

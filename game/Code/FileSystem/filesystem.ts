@@ -9,31 +9,31 @@ if (OS.has_feature("editor")) {
       let result = "";
       let i = 0;
       while (i < uint8.length) {
-        let byte1 = uint8[i++];
+        const byte1 = uint8[i++];
         if (byte1 < 0x80) {
           result += String.fromCharCode(byte1);
         } else if ((byte1 & 0xe0) === 0xc0) {
-          let byte2 = uint8[i++];
-          let codePoint = ((byte1 & 0x1f) << 6) | (byte2 & 0x3f);
+          const byte2 = uint8[i++];
+          const codePoint = ((byte1 & 0x1f) << 6) | (byte2 & 0x3f);
           result += String.fromCharCode(codePoint);
         } else if ((byte1 & 0xf0) === 0xe0) {
-          let byte2 = uint8[i++];
-          let byte3 = uint8[i++];
-          let codePoint =
+          const byte2 = uint8[i++];
+          const byte3 = uint8[i++];
+          const codePoint =
             ((byte1 & 0x0f) << 12) | ((byte2 & 0x3f) << 6) | (byte3 & 0x3f);
           result += String.fromCharCode(codePoint);
         } else if ((byte1 & 0xf8) === 0xf0) {
-          let byte2 = uint8[i++];
-          let byte3 = uint8[i++];
-          let byte4 = uint8[i++];
+          const byte2 = uint8[i++];
+          const byte3 = uint8[i++];
+          const byte4 = uint8[i++];
           let codePoint =
             ((byte1 & 0x07) << 18) |
             ((byte2 & 0x3f) << 12) |
             ((byte3 & 0x3f) << 6) |
             (byte4 & 0x3f);
           codePoint -= 0x10000;
-          let highSurrogate = (codePoint >> 10) + 0xd800;
-          let lowSurrogate = (codePoint & 0x3ff) + 0xdc00;
+          const highSurrogate = (codePoint >> 10) + 0xd800;
+          const lowSurrogate = (codePoint & 0x3ff) + 0xdc00;
           result += String.fromCharCode(highSurrogate, lowSurrogate);
         }
       }
@@ -47,7 +47,7 @@ if (OS.has_feature("editor")) {
         constructor(encoding = "utf-8") {
           if (encoding.toLowerCase() !== "utf-8") {
             throw new Error(
-              "This TextDecoder shim only supports UTF-8 encoding."
+              "This TextDecoder shim only supports UTF-8 encoding.",
             );
           }
           this.encoding = encoding;
@@ -58,7 +58,7 @@ if (OS.has_feature("editor")) {
             // If it's a Uint8Array, extract the underlying buffer slice.
             buffer = buffer.buffer.slice(
               buffer.byteOffset,
-              buffer.byteOffset + buffer.byteLength
+              buffer.byteOffset + buffer.byteLength,
             );
           }
           return decodeUTF8(buffer);
@@ -75,13 +75,13 @@ declare const window: Window;
 
 export class FileSystem {
   static async getFileBytes(
-    fileName: string
+    fileName: string,
   ): Promise<ArrayBuffer | undefined> {
     let buffer: ArrayBuffer | undefined;
     if (OS.has_feature("editor")) {
       const file = FileAccess.open(
         `${localPrefix}${fileName}`,
-        FileAccess.ModeFlags.READ
+        FileAccess.ModeFlags.READ,
       );
       if (file) {
         const size = file.get_length();
@@ -92,11 +92,11 @@ export class FileSystem {
         console.log("Failed to open file:", fileName);
       }
     } else {
-        const bytes = await window.getJsBytes?.(fileName);
-        if (bytes) {
-          buffer = bytes;
-        }
+      const bytes = await window.getJsBytes?.(fileName);
+      if (bytes) {
+        buffer = bytes;
       }
+    }
     
     return buffer;
   }

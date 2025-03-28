@@ -27,7 +27,7 @@ export const UiWindowComponent: React.FC<Props> = ({
   index,
   children,
   closable,
-  doClose
+  doClose,
 }) => {
   const dispatcher = useDispatch();
   const { fixed, fixedWidth = 200, fixedHeight = 200 } = state;
@@ -46,12 +46,12 @@ export const UiWindowComponent: React.FC<Props> = ({
     fixed && fixedHeight ? fixedHeight : state.height || 200;
   const resize = fixed
     ? {
-        width: initialWidth,
-        height: initialHeight,
-        y: 0,
-        handleMouseDown: () => {},
-        isResizing: false,
-      }
+      width: initialWidth,
+      height: initialHeight,
+      y: 0,
+      handleMouseDown: () => {},
+      isResizing: false,
+    }
     : useResize(initialWidth, initialHeight, false);
 
   const {
@@ -67,7 +67,7 @@ export const UiWindowComponent: React.FC<Props> = ({
   // Debounced state update
   const reducerUpdate = useDebouncedCallback(() => {
     dispatcher(
-      actions.setWindowTransform(windowName, x, y, width, height, index)
+      actions.setWindowTransform(windowName, x, y, width, height, index),
     );
   }, 200);
 
@@ -93,7 +93,7 @@ export const UiWindowComponent: React.FC<Props> = ({
     <Box className="ui-window" style={windowStyles} data-ui-window>
       {title ? (
         <UiTitleComponent
-         closable={closable}
+          closable={closable}
           doClose={doClose}
           name={title}
           minimized={minimized}

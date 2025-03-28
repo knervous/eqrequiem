@@ -1,6 +1,6 @@
 // src/components/ChatWindowComponent.tsx
-import React, { useEffect, useMemo, useCallback } from "react";
-import { Box, Stack, Typography } from "@mui/material";
+import React from "react";
+import { Box, Typography } from "@mui/material";
 
 import { UiWindowComponent } from "../../common/ui-window";
 import { useUIContext } from "../context";
@@ -13,15 +13,14 @@ export const TargetWindowComponent: React.FC = () => {
  
   return (
     <UiWindowComponent
-      state={{...state, fixed: true, fixedWidth: 150, fixedHeight: 80}}
-      //title="Target"
+      state={{ ...state, fixed: true, fixedWidth: 150, fixedHeight: 80 }}
       windowName="targetWindow"
       closable
       doClose={doClose}
     >
       <Typography sx={{ textAlign: 'center' }}>Target</Typography>
       <Box sx={{ padding: " 10px 20px", textAlign: 'center', overflow: "hidden" }}>
-      <UiBarComponent />
+        <UiBarComponent />
       </Box>
     </UiWindowComponent>
   );

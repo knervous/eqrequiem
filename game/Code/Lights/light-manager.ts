@@ -72,8 +72,8 @@ export default class LightManager {
 
   // Build an octree covering all light positions.
   private buildOctree(): OctreeNode {
-    let min = new Vector3(Infinity, Infinity, Infinity);
-    let max = new Vector3(-Infinity, -Infinity, -Infinity);
+    const min = new Vector3(Infinity, Infinity, Infinity);
+    const max = new Vector3(-Infinity, -Infinity, -Infinity);
     for (const light of this.lights) {
       const pos = Extensions.GetPosition(light);
       min.x = Math.min(min.x, pos.x);
@@ -87,7 +87,7 @@ export default class LightManager {
     const halfSize = Math.max(
       max.x - center.x,
       max.y - center.y,
-      max.z - center.z
+      max.z - center.z,
     );
     const octree = new OctreeNode(center, halfSize);
     for (const light of this.lights) {
@@ -108,7 +108,7 @@ export default class LightManager {
     // Query the octree for nearby lights.
     const nearbyLights = this.octree.querySphere(
       cameraPos,
-      this.maxLightDistance
+      this.maxLightDistance,
     );
     const lightsWithDistance = nearbyLights.map((light) => {
       const distance = Extensions.GetDistance(cameraPos, light.lightData);
@@ -134,7 +134,7 @@ export default class LightManager {
         light.light_energy = lerp(
           light.light_energy,
           fullEnergy,
-          fadeSpeed * delta
+          fadeSpeed * delta,
         );
       } else {
         light.light_energy = lerp(light.light_energy, 0, fadeSpeed * delta);

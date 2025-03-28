@@ -3,7 +3,7 @@ import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Home } from "./components/home";
 import GodotContainer from "./godot/container";
-import './App.css'
+import './App.css';
 
 export function App() {
   return (

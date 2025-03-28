@@ -14,7 +14,7 @@ export const CompassWindowComponent: React.FC = () => {
   const totalDegreesRef = useRef(0); // Accumulate total degrees for continuity
 
   useEffect(() => {
-    if (!window.godotBridge) {
+    if (!window.godotBridge?.get_node) {
       return;
     }
 
@@ -22,7 +22,7 @@ export const CompassWindowComponent: React.FC = () => {
       // Get player rotation in radians from Godot
       const rotation =
         window.godotBridge?.get_node("/root/Zone").player?.getPlayerRotation()
-          ?.y ?? 0
+          ?.y ?? 0;
       
       // Convert current and previous rotations to degrees
       const currentDegrees = (rotation * 180) / Math.PI;
@@ -45,7 +45,7 @@ export const CompassWindowComponent: React.FC = () => {
       // Calculate offset based on total degrees
       const stripWidth = strip.entry.width; // Width of one instance of the strip image
       const offsetPerDegree = stripWidth / 360; // Pixels per degree
-      const newOffset = (totalDegreesRef.current % 360) * offsetPerDegree * -1
+      const newOffset = (totalDegreesRef.current % 360) * offsetPerDegree * -1;
 
       setOffset(newOffset);
     }, 10); // Update every 50ms for smoother movement (adjust as needed)

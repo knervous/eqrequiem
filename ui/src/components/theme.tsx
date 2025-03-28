@@ -64,7 +64,7 @@ export const Theme: React.FC<Props> = ({ children }) => {
       resizeNWSECursor.image,
       dragCursor.image,
       caretCursor.image,
-    ]
+    ],
   );
 
   return <Box sx={sxStyles}>{children}</Box>;

@@ -13,18 +13,18 @@ export default class AnimationCache {
   static Cache: Record<string, AnimationPlayer> = {};
 
   static async getOrCreateAnimation(
-    name: string
+    name: string,
   ): Promise<AnimationPlayer | undefined> {
     // let i = 0;
     // while (i === 0) {
     //   await new Promise(res => setTimeout(res, 500))
     // }
-    await new Promise(res => setTimeout(res, 2500))
+    await new Promise((res) => setTimeout(res, 2500));
     if (this.Cache[name]) {
       return this.Cache[name];
     }
     const animBuffer = await FileSystem.getFileBytes(
-      `eqrequiem/animations/${name}.glb`
+      `eqrequiem/animations/${name}.glb`,
     );
     if (animBuffer) {
       const gltfState = new GLTFState();
@@ -32,7 +32,7 @@ export default class AnimationCache {
       const result = gltfDocument.append_from_buffer(
         animBuffer,
         "/",
-        gltfState
+        gltfState,
       );
       if (result !== GError.OK) {
         return;

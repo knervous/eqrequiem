@@ -37,6 +37,6 @@ declare module "godot" {
       setSplash(value: boolean): void?;
     }
   }
-  declare const window: Window;
+declare const window: Window;
 
-  export {}
+export {};

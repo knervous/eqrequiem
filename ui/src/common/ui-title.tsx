@@ -41,7 +41,7 @@ export const UiTitleComponent: React.FC<Props> = (props: Props) => {
         <Box
           sx={{
             position: "absolute",
-            left: '10px'
+            left: '10px',
           }}
         >
           <UiButtonComponent
@@ -52,7 +52,7 @@ export const UiTitleComponent: React.FC<Props> = (props: Props) => {
         {props.closable && props.doClose && <Box
           sx={{
             position: "absolute",
-            right: '10px'
+            right: '10px',
           }}
         >
           <UiButtonComponent

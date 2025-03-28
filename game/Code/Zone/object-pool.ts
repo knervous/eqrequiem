@@ -30,17 +30,17 @@ export default class ZoneObjects {
                   instance.scale = new Vector3(
                     entry.scale,
                     entry.scale,
-                    entry.scale
+                    entry.scale,
                   );
 
                   instance.rotate_x(deg_to_rad(entry.rotateX));
                   instance.rotate_y(-deg_to_rad(entry.rotateY));
                   instance.rotate_z(deg_to_rad(entry.rotateZ));
                 }
-              })
+              }),
             );
           }
-        }
+        },
       );
       // Wait for all keys to finish processing.
       await Promise.all(keyPromises);

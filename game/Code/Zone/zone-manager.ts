@@ -86,7 +86,7 @@ export default class ZoneManager extends Node3D {
     }
 
     const metadataByte = await FileSystem.getFileBytes(
-      `eqrequiem/zones/${this.zoneName}.json`
+      `eqrequiem/zones/${this.zoneName}.json`,
     );
     if (metadataByte) {
       try {
@@ -100,12 +100,12 @@ export default class ZoneManager extends Node3D {
         this.lightManager = new LightManager(
           this.currentZone,
           this.camera!,
-          metadata.lights
+          metadata.lights,
         );
         this.skyManager = new SkyManager(
           this.currentZone,
           "sky1",
-          this.camera!
+          this.camera!,
         );
       } catch (e) {
         console.log("Error parsing zone metadata", e);

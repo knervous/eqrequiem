@@ -21,7 +21,7 @@ export const ChatWindowsComponent: React.FC = () => {
         newMap[windowIdx] = [...(newMap[windowIdx] || []), msg.line];
         return newMap;
       });
-    }
+    };
   }, [chatWindows]);
   return chatWindows.map((chatWindow, index) => (
     <ChatWindowComponent

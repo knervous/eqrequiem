@@ -10,7 +10,7 @@ import { SplashScreen } from "./splash.tsx";
 const bgMax = 1; //6;
 const prefix = "electronAPI" in window ? "./" : "/";
 const sessionBg = `center no-repeat url('requiem/bg${Math.ceil(
-  Math.random() * bgMax
+  Math.random() * bgMax,
 )}.png')`;
 
 
@@ -24,14 +24,14 @@ const GodotContainerComponent: React.FC = () => {
     onFolderSelected,
     ready,
     splash,
-    converting
+    converting,
   } = useMainContext();
   return (
     <Box      sx={{
-        background: sessionBg,
-        backgroundSize: "cover",
-      }}>
-        {splash && <SplashScreen files={converting} />}
+      background: sessionBg,
+      backgroundSize: "cover",
+    }}>
+      {splash && <SplashScreen files={converting} />}
       {statusDialogOpen && (
         <StatusDialog
           fsHandle={rootFileSystemHandle}
@@ -42,13 +42,13 @@ const GodotContainerComponent: React.FC = () => {
           onFolderSelected={onFolderSelected}
         />
       )}
-      {ready ? <GodotPlayer splash={splash} /> : <h1 style={{width: '100vw', height: '100vh'}}>LOADING, PLEASE WAIT... (Sorry this looks ugly for now)</h1>}
+      {ready ? <GodotPlayer splash={splash} /> : <h1 style={{ width: '100vw', height: '100vh' }}>LOADING, PLEASE WAIT... (Sorry this looks ugly for now)</h1>}
     </Box>
   );
 };
 
 export const GodotContainer = () => {
- return  <MainProvider>
+  return  <MainProvider>
     <GodotContainerComponent />
   </MainProvider>;
 };

@@ -18,7 +18,7 @@ export default class Actor extends BaseGltfModel {
   protected playAnimation(
     animationName: string,
     loop_mode: Animation.LoopMode = Animation.LoopMode.LOOP_LINEAR,
-    playToEnd: boolean = false
+    playToEnd: boolean = false,
   ) {
     if (
       !this.animationPlayer ||
@@ -42,7 +42,7 @@ export default class Actor extends BaseGltfModel {
       if (this.currentPlayToEnd) {
         this.animationPlayer.connect(
           "animation_finished",
-          Callable.create(event => {
+          Callable.create((event) => {
             this.currentPlayToEnd = false;
           }),
         );
@@ -68,7 +68,7 @@ export default class Actor extends BaseGltfModel {
   protected playShuffle() {
     this.playAnimation(
       AnimationDefinitions.ShuffleRotate,
-      Animation.LoopMode.LOOP_NONE
+      Animation.LoopMode.LOOP_NONE,
     );
   }
 

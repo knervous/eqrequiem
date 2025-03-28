@@ -33,7 +33,7 @@ export const CssTextField = TextField;
 const bgMax = 1; //6;
 const prefix = "electronAPI" in window ? "./" : "/";
 const sessionBg = `center no-repeat url('requiem/bg${Math.ceil(
-  Math.random() * bgMax
+  Math.random() * bgMax,
 )}.png')`;
 
 export const Home = () => {
@@ -61,15 +61,15 @@ export const Home = () => {
             backgroundSize: "cover",
           }}
         >
-          <CardContent sx={{marginTop: '50px', marginBottom: '50px'}}>
+          <CardContent sx={{ marginTop: '50px', marginBottom: '50px' }}>
             <img
               src="/brand/png/logo-no-background-white.png"
               width={400}
               alt="logo"
             /> 
           </CardContent>
-          <Stack sx={{ width: "285px", margin: "0 auto"}} spacing={1}>
-            <Button variant="contained" color={'primary'} sx={{margin: 0}} href="/play">
+          <Stack sx={{ width: "285px", margin: "0 auto" }} spacing={1}>
+            <Button variant="contained" color={'primary'} sx={{ margin: 0 }} href="/play">
               Play Demo
             </Button>
             <DiscordLoginButton />

@@ -59,12 +59,12 @@ export default class SkyManager {
         this.layer1OffsetVec.set(
           this.uvOffsetLayer1.x,
           this.uvOffsetLayer1.y,
-          0
+          0,
         );
         this.layer2OffsetVec.set(
           this.uvOffsetLayer2.x,
           this.uvOffsetLayer2.y,
-          0
+          0,
         );
 
         this.interval = setInterval(() => {
@@ -91,7 +91,7 @@ export default class SkyManager {
   }
   private createGradientMaterial(
     alpha: number,
-    renderPriority: number
+    renderPriority: number,
   ): ShaderMaterial {
     const material = new ShaderMaterial();
 
@@ -102,7 +102,7 @@ export default class SkyManager {
     material.set_shader_parameter("top_color", new Color(1.0, 0.5, 0.2, alpha)); // Orange at top
     material.set_shader_parameter(
       "bottom_color",
-      new Color(0.2, 0.5, 1.0, alpha)
+      new Color(0.2, 0.5, 1.0, alpha),
     ); // Blue at bottom
     material.set_shader_parameter("uv_offset", new Vector3(0, 0, 0));
 
@@ -134,7 +134,7 @@ export default class SkyManager {
   private configureMaterial(
     material: StandardMaterial3D,
     alpha = 0.5,
-    renderPriority = 1
+    renderPriority = 1,
   ) {
     // Set transparency mode to alpha
     material.transparency = BaseMaterial3D.Transparency.TRANSPARENCY_ALPHA;
@@ -162,7 +162,7 @@ export default class SkyManager {
       if (mesh) {
         const surfaceCount = mesh.get_surface_count();
         for (let i = 0; i < surfaceCount; i++) {
-          let material =
+          const material =
             node.get_surface_override_material(i) ||
             mesh.surface_get_material(i);
           if (material) {

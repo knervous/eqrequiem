@@ -3,8 +3,8 @@
 type MainInvoke = (msg: object) => void;
 
 export const MainInvoker: { current: MainInvoke | null } = {
-    current: null,
-}
+  current: null,
+};
 export type ActionType = "chat" | "inventory";
 
 export type ClientUIMessage = (msg: any) => void;

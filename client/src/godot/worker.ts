@@ -27,7 +27,7 @@ const process = async (
   });
   console.log("Did call process", name);
   const fileHandles = await Promise.all(
-    handles.map((handle) => handle.getFile())
+    handles.map((handle) => handle.getFile()),
   );
   console.log("Process", rootFileHandle, handles);
   const obj = new EQFileHandle(
@@ -40,7 +40,7 @@ const process = async (
     {
       rawImageWrite: true,
       skipSubload: true,
-    }
+    },
   );
   try {
     await obj.initialize();

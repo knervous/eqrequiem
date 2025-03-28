@@ -102,7 +102,7 @@ export const GodotWrapper = ({ splash }) => {
               navigator.serviceWorker.getRegistration();
           } catch (err) {
             serviceWorkerRegistrationPromise = Promise.reject(
-              new Error("Service worker registration failed.")
+              new Error("Service worker registration failed."),
             );
           }
           // There's a chance that installing the service worker would fix the issue
@@ -111,7 +111,7 @@ export const GodotWrapper = ({ splash }) => {
               .then((registration) => {
                 if (registration != null) {
                   return Promise.reject(
-                    new Error("Service worker already exists.")
+                    new Error("Service worker already exists."),
                   );
                 }
                 return registration;
@@ -171,7 +171,7 @@ export const GodotWrapper = ({ splash }) => {
         e.target instanceof HTMLElement &&
         (e.target.closest(".ui-window") ||
           ["input", "textarea", "button", "select"].includes(
-            e.target.tagName.toLowerCase()
+            e.target.tagName.toLowerCase(),
           ))
       ) {
         // Do not forward the event so that interactive UI elements can function normally.
@@ -291,7 +291,7 @@ export const GodotWrapper = ({ splash }) => {
       `}</style>
       {window.godotBridge && (
         <Overlay
-        getEQFile={getRootEQFile}
+          getEQFile={getRootEQFile}
           sx={{
             width: "100vw",
             height: "100vh",
@@ -305,8 +305,9 @@ export const GodotWrapper = ({ splash }) => {
       <div id="status" ref={statusOverlayRef}>
         <img
           id="status-splash"
+          style={{ width: '50vw', height: '50vh' }}
           className="show-image--true fullsize--true use-filter--true"
-          src="Test.png"
+          src="/brand/png/logo-no-background-white.png"
           alt=""
         />
         <progress id="status-progress" ref={statusProgressRef}></progress>

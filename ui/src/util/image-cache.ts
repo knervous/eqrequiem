@@ -37,7 +37,7 @@ export class ImageCache {
     cropX?: number,
     cropY?: number,
     cropWidth?: number,
-    cropHeight?: number
+    cropHeight?: number,
   ): Promise<string> {
     const cacheKey = `${folder}${path}${crop ? `_${cropX}_${cropY}_${cropWidth}_${cropHeight}` : ''}`;
     
@@ -46,7 +46,6 @@ export class ImageCache {
         throw new Error("getEQFile is not set");
       }
       const data = await this.getEQFile(folder, path);
-      console.log('Folder', folder, path, data);
       if (data instanceof ArrayBuffer) {
         tga.load(new Uint8Array(data));
         let imageUrl = tga.getDataURL('image/png');

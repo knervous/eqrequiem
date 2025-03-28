@@ -70,6 +70,8 @@ func _on_web_view_ipc_message(message):
 				webview_instance.release_focus()
 		"data":
 			var node = get_node("/root/Zone/JSBridge")
+			if node == null:
+				return
 			node.call("postMessage", json_parser.stringify(data.get("action")));
 		_:
 			print("Unhandled event type: ", event_type)
@@ -77,8 +79,8 @@ func _on_web_view_ipc_message(message):
 	if input_event:
 		Input.parse_input_event(input_event)
 
-func _post_message(msg):
-	webview_instance.post_message(msg)
+#func _post_message(msg):
+	#webview_instance.post_message(msg)
 		
-func _ready():
-	instantiate_webview()
+#func _ready():
+	#instantiate_webview()

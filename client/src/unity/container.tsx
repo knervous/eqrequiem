@@ -4,13 +4,13 @@ import { Box } from "@mui/material";
 import { MainProvider, useMainContext } from "../components/context.tsx";
 import { StatusDialog } from "../components/dialogs/status-dialog.tsx";
 
-import styles from './container.module.css'
+import styles from './container.module.css';
 import UnityPlayer from "./player.tsx";
 
 const bgMax = 1; //6;
 const prefix = "electronAPI" in window ? "./" : "/";
 const sessionBg = `center no-repeat url('requiem/bg${Math.ceil(
-  Math.random() * bgMax
+  Math.random() * bgMax,
 )}.png')`;
 
 
@@ -25,9 +25,9 @@ const UnityContainerComponent: React.FC = () => {
   } = useMainContext();
   return (
     <Box className={styles.app}      sx={{
-        background: sessionBg,
-        backgroundSize: "cover",
-      }}>
+      background: sessionBg,
+      backgroundSize: "cover",
+    }}>
       {statusDialogOpen && (
         <StatusDialog
           fsHandle={rootFileSystemHandle}
@@ -44,7 +44,7 @@ const UnityContainerComponent: React.FC = () => {
 };
 
 export const UnityContainer = () => {
- return  <MainProvider>
+  return  <MainProvider>
     <UnityContainerComponent />
   </MainProvider>;
 };

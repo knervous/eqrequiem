@@ -146,5 +146,5 @@ export const AnimationDefinitions = {
   Cast3: 't06',
   FlyingKick: 't07',
   TigerStrike: 't08',
-  DragonPunch: 't09'
+  DragonPunch: 't09',
 };

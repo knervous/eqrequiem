@@ -34,13 +34,13 @@ export const ChatWindowComponent: React.FC<Props> = ({
   // Notify webview focus state
   const handleFocus = useCallback(() => {
     window.ipc?.postMessage(
-      JSON.stringify({ type: "webview_focus", payload: true })
+      JSON.stringify({ type: "webview_focus", payload: true }),
     );
   }, []);
 
   const handleBlur = useCallback(() => {
     window.ipc?.postMessage(
-      JSON.stringify({ type: "webview_focus", payload: false })
+      JSON.stringify({ type: "webview_focus", payload: false }),
     );
   }, []);
 
@@ -87,7 +87,7 @@ export const ChatWindowComponent: React.FC<Props> = ({
         },
       },
     }),
-    []
+    [],
   );
 
   return (

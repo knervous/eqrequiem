@@ -11,7 +11,7 @@ export class ChatUIHandler extends ClientHandler {
     if (message.startsWith("/")) {
       const [command, ...args] = message
         .substring(1)
-        .split(" ")
+        .split(" ") 
         .filter(Boolean);
       console.log("Got command", command);
       switch (command) {
@@ -46,6 +46,9 @@ export class ChatUIHandler extends ClientHandler {
           addChatLine("Sprint: Shift");
           addChatLine("Crouch (Down): Ctrl");
           addChatLine("Look around: Mouse with Right Click = Mouse lock");
+          break;
+        case "test":
+          addChatLine("Test command");
           break;
         default:
           console.log("Unknown command");

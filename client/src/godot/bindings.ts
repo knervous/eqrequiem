@@ -50,7 +50,7 @@ function selectMinimalFiles(candidateArrays: number[][]): number[] {
     selected.add(bestCandidate);
 
     remaining = remaining.filter(
-      (candidateArray) => !candidateArray.includes(bestCandidate)
+      (candidateArray) => !candidateArray.includes(bestCandidate),
     );
   }
 
@@ -124,23 +124,23 @@ class GodotBindings {
     }
 
     const handles = await Promise.all(
-      await getRootFiles((name: string) => minimalFiles.includes(name))
+      await getRootFiles((name: string) => minimalFiles.includes(name)),
     );
     console.log(
       "Try to do process",
       minimalFiles[0].replace(".s3d", "").replace(".eqg", ""),
       this.rootFileSystemHandle,
-      ...handles
+      ...handles,
     );
     this.setConverting?.(
-      handles.map((h: FileSystemFileHandle) => ({ name: h.name }))
+      handles.map((h: FileSystemFileHandle) => ({ name: h.name })),
     );
     await new Promise((res) => setTimeout(res, 10));
     try {
       await this.wrappedWorker?.process(
         minimalFiles[0].replace(".s3d", "").replace(".eqg", ""),
         this.rootFileSystemHandle,
-        ...handles
+        ...handles,
       );
     } catch (e) {
       console.log("Error processing", e);
@@ -185,10 +185,9 @@ class GodotBindings {
 
   getJsBytes = async (
     inputString: string,
-    isRetry = false
+    isRetry = false,
   ): Promise<ArrayBuffer | null> => {
     try {
-      console.log("Asking for bytes for", inputString);
       const path = inputString.split("/");
       let data = null;
       switch (path[0]) {
@@ -237,7 +236,7 @@ class GodotBindings {
                     });
                   }
                   this.setConverting?.(
-                    handles.map((h: FileSystemFileHandle) => ({ name: h.name }))
+                    handles.map((h: FileSystemFileHandle) => ({ name: h.name })),
                   );
 
                   const obj = new EQFileHandle(
@@ -248,7 +247,7 @@ class GodotBindings {
                     {
                       rawImageWrite: true,
                       skipSubload: true,
-                    }
+                    },
                   );
                   await obj.initialize();
                   await obj.process();

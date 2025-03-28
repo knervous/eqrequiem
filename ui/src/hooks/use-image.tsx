@@ -30,7 +30,7 @@ export const useImage = (path: string, crop: boolean = false): ImageEntry => {
       entry.left,
       entry.top,
       entry.width,
-      entry.height
+      entry.height,
     ).then(setImage);
   }, [entry, crop]);
   return {

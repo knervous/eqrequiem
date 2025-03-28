@@ -100,7 +100,7 @@ export default class Player extends Actor {
       const maxPitch = Math.PI / 3;
       this.cameraPitch = Math.max(
         minPitch,
-        Math.min(maxPitch, this.cameraPitch)
+        Math.min(maxPitch, this.cameraPitch),
       );
       this.updateCameraPosition(node);
     }
@@ -215,7 +215,7 @@ export default class Player extends Actor {
     const rightLength = Math.sqrt(
       this.rightXZ.x * this.rightXZ.x +
         this.rightXZ.y * this.rightXZ.y +
-        this.rightXZ.z * this.rightXZ.z
+        this.rightXZ.z * this.rightXZ.z,
     );
     if (rightLength > 0) {
       this.rightXZ.x /= rightLength;
@@ -270,7 +270,7 @@ export default class Player extends Actor {
       this.cameraPosition.set(
         playerPos.x + offsetX,
         playerPos.y + this.cameraHeight + verticalDistance,
-        playerPos.z + offsetZ
+        playerPos.z + offsetZ,
       );
       this.camera.position = this.cameraPosition;
       this.camera.look_at(playerPos.add(this.lookatOffset), Vector3.UP);
@@ -282,7 +282,7 @@ export default class Player extends Actor {
 
     this.cameraDistance = Math.max(
       this.minCameraDistance,
-      Math.min(this.maxCameraDistance, this.cameraDistance + delta)
+      Math.min(this.maxCameraDistance, this.cameraDistance + delta),
     );
     this.isFirstPerson = this.cameraDistance <= this.minCameraDistance;
     this.updateCameraPosition(node as CharacterBody3D);
