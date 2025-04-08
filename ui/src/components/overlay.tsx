@@ -1,55 +1,19 @@
-import React, { useEffect, useReducer } from "react";
+import React, { useEffect, useMemo, useReducer, useRef } from "react";
 import Box from "@mui/material/Box";
 import { UiState, initialUiState } from "../state/initial-state";
 import { uiReducer } from "../state/reducer";
-import { ChatWindowsComponent } from "./chat/chat-windows";
 import { ClientActionHandler, MainInvoker } from "../state/bridge";
 import { UIContext } from "./context";
 import { SxProps } from "@mui/material";
-import { ActionBarWindowsComponent } from "./actionbar/action-bar-windows";
 import { ImageCache } from "../util/image-cache";
-import { TopBarWindowComponent } from "./topbar/topbar-window";
-import { CompassWindowComponent } from "./topbar/compass-window";
-
 import { Theme } from "./theme";
-import { ActionWindowComponent } from "./actions/actions-window";
-import { TargetWindowComponent } from "./target/target-window";
-import { PlayerWindowComponent } from "./player/player-window";
-import { SpellsWindowComponent } from "./spells/spells-window";
+import { MessagePayload, stateKey } from "./overlay-types";
 
 import "./overlay.css";
-
-
-type MessagePayload = object & {
-  type: string;
-  payload: object;
-};
-
-// Create an interface for our custom message handler.
-interface IMessageHandler {
-  postMessage(message: object | string): void;
-}
-
-interface IMessageTarget {
-  addEventListener(
-    event: string,
-    callback: (message: MessagePayload) => void
-  ): void;
-  removeEventListener(
-    event: string,
-    callback: (message: MessagePayload) => void
-  ): void;
-}
-
-// Extend the Window type to include our handlers.
-declare global {
-  interface Window {
-    godotBridge?: IMessageHandler & IMessageTarget;
-    ipc?: IMessageHandler;
-  }
-}
-
-const stateKey = "uiState";
+import { LoginUIComponent } from "./login";
+import { GameUIComponent } from "./game";
+import { CharacterSelectUIComponent } from "./character-select";
+import { StringTable } from "../util/string-table";
 
 let storedState: UiState | string | null = localStorage.getItem(stateKey);
 if (storedState) {
@@ -68,38 +32,34 @@ type Props = {
 
 export const Overlay: React.FC<Props> = (props: Props) => {
   ImageCache.getEQFile = props.getEQFile;
-
+  const [mode, setMode] = React.useState<string>("login");
+  const token = useRef<string | null>("");
   const [uiState, dispatcher] = useReducer(
     uiReducer,
-    storedState as UiState | null ?? initialUiState,
+    (storedState as UiState | null) ?? initialUiState,
   );
-  
+
   useEffect(() => {
     try {
-      localStorage.setItem(stateKey, JSON.stringify({ ...initialUiState, ...uiState }));
+      localStorage.setItem(
+        stateKey,
+        JSON.stringify({ ...initialUiState, ...uiState }),
+      );
     } catch (e) {
       console.error("Failed to save state", e);
     }
   }, [uiState]);
-  console.log('Hi render', window.godotBridge);
+
   useEffect(() => {
-
-    if (!window.godotBridge) {
-      console.error("No handler found");
-      return;
-    }
-
-    MainInvoker.current = (action: object) => {
+    StringTable.initialize(props.getEQFile);
+    const clientCallback = (message: MessagePayload) => {
       try {
-        window.godotBridge!.postMessage(action);
-      } catch (e) {
-        console.error(e);
-      }
-    };
-    const cb = (message: MessagePayload) => {
-      try {
-        if (typeof message === 'string') {
+        if (typeof message === "string") {
           message = JSON.parse(message);
+        }
+        if (message.type === 'camp') {
+          setMode('character-select');
+          return;
         }
         if (ClientActionHandler[message.type as string]) {
           ClientActionHandler[message.type as string](message.payload);
@@ -108,14 +68,57 @@ export const Overlay: React.FC<Props> = (props: Props) => {
         console.error(e);
       }
     };
-    window.godotBridge!.addEventListener("message", cb);
+
+    window.onGodotBridgeRegistered = () => {
+      window.godotBridge!.addEventListener("message", clientCallback);
+    };
+    /**
+     *
+     * This is what the UI layer can call globally to send messages to Godot
+     */
+    console.log("Setting current");
+    MainInvoker.current = (action: object) => {
+      try {
+        window.godotBridge!.postMessage(action);
+        console.log("Invoking godot bridge", action);
+      } catch (e) {
+        console.log("Error in main invoker", e);
+        console.error(e);
+      }
+    };
+    /**
+     *
+     * This is when Godot client sends us a message to the UI layer
+     */
+
     return () => {
-      window.godotBridge!.removeEventListener("message", cb);
+      window.godotBridge?.removeEventListener("message", clientCallback);
     };
   }, []);
 
+  const component = useMemo(() => {
+    switch (mode) {
+      case "character-select":
+        return <CharacterSelectUIComponent />;
+      case "game":
+        return <GameUIComponent />;
+      default:
+      case "login":
+        console.log('am i here');
+        return <LoginUIComponent />;
+    }
+  }, [mode]);
   return (
-    <UIContext.Provider value={{ getEQFile: props.getEQFile, ui: uiState, dispatcher }}>
+    <UIContext.Provider
+      value={{
+        getEQFile: props.getEQFile,
+        ui: uiState,
+        dispatcher,
+        mode,
+        setMode,
+        token,
+      }}
+    >
       <Theme>
         <Box
           className="requiem-ui"
@@ -126,14 +129,7 @@ export const Overlay: React.FC<Props> = (props: Props) => {
             ...(props.sx ?? {}),
           }}
         >
-          <ChatWindowsComponent />
-          <ActionBarWindowsComponent />
-          <TopBarWindowComponent />
-          <CompassWindowComponent />
-          <ActionWindowComponent />
-          <TargetWindowComponent />
-          <PlayerWindowComponent />
-          <SpellsWindowComponent />
+          {component}
         </Box>
       </Theme>
     </UIContext.Provider>

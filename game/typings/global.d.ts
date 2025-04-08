@@ -16,6 +16,7 @@ declare module "godot" {
 
     interface StandardMaterial3D {
         eqShader: number;
+        eqFile: string;
     }
     
     interface Texture2D {
@@ -33,7 +34,7 @@ declare module "godot" {
 
   declare global {
     interface Window {
-      getJsBytes(name: string): Promise<Uint8Array | null>?;
+      getJsBytes(name: string, innerFile: string): Promise<Uint8Array | null>?;
       setSplash(value: boolean): void?;
     }
   }

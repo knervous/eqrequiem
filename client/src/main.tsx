@@ -3,7 +3,7 @@ import { App } from "./App.tsx";
 
 const originalConsoleLog = console.log;
 console.log = function(...args: any[]) {
-  if (args[0]?.startsWith('[jsbb]')) {
+  if (typeof args[0] === 'string' && args[0]?.startsWith('[jsbb]')) {
     return;
   }
   originalConsoleLog(...args);

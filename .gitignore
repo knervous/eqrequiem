@@ -7,6 +7,8 @@ node_modules/
 export.cfg
 export_presets.cfg
 
+keys/
+
 # Imported translations (automatically generated from CSV files)
 *.translation
 

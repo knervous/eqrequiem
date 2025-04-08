@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   PermissionStatusTypes,
   usePermissions,
@@ -28,15 +28,24 @@ export const MainProvider = (props: ReactProps) => {
   const [ready, setReady] = useState(false);
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
 
-  const [loading, setLoading] = useState(false);
-  const [loadingText, setLoadingText] = useState("");
-  const [loadingTitle, setLoadingTitle] = useState("");
-  const [splash, setSplash] = useState(false);
+  const [_loading, setLoading] = useState(false);
+  const [_loadingText, setLoadingText] = useState("");
+  const [_loadingTitle, setLoadingTitle] = useState("");
+  const [splash, setSplashValue] = useState(false);
+  const [splashCounter, setSplashCounter] = useState(0);
   const [converting, setConverting] = useState<string[]>([]);
-
   useEffect(() => {
     setStatusDialogOpen(permissionStatus !== PermissionStatusTypes.Ready);
   }, [permissionStatus]);
+
+  const setSplash = useCallback((val: boolean) => {
+    if (val) {
+      setSplashCounter((prev) => prev + 1);
+    } else {
+      setSplashCounter((prev) => Math.max(0, prev - 1));
+    }
+    setSplashValue(val);
+  }, []);
 
   useEffect(() => {
     if (permissionStatus !== PermissionStatusTypes.Ready) {
@@ -71,8 +80,8 @@ export const MainProvider = (props: ReactProps) => {
       }
       setReady(true);
     })();
-  }, [rootFileSystemHandle, permissionStatus]);
-
+  }, [rootFileSystemHandle, permissionStatus, setSplash, setConverting]);
+  console.log(`%c SPLASH COUNTER: ${splashCounter}`, "color: #00FF00");
   return (
     <MainContext.Provider
       value={{
@@ -84,7 +93,8 @@ export const MainProvider = (props: ReactProps) => {
         permissionStatus,
         onFolderSelected,
         ready,
-        splash,
+        splash: splashCounter > 0,
+        setSplash,
         converting, setConverting,
       }}
     >

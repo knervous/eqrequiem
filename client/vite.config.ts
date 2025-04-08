@@ -5,10 +5,6 @@ import react from "@vitejs/plugin-react-swc";
 import https from "https";
 
 const isLocalDev = process.env.LOCAL_DEV === "true";
-const agent = new https.Agent({
-  rejectUnauthorized: false,
-});
-
 
 export default defineConfig({
   base: "./",
@@ -16,11 +12,15 @@ export default defineConfig({
     react(),
     {
       configureServer: ({ middlewares }) => {
-        middlewares.use((req, res, next) => {
-          // if (req.url?.startsWith("/api/login")) {
-            
-          //   return;
-          // }
+        middlewares.use(async (req, res, next) => {
+          if (req.url?.startsWith("/api/hash")) {
+            const params = new URLSearchParams(req.url?.split("?")[1]);
+            const port = params.get("port");
+            const ip = params.get("ip");
+            const hash = await fetch(`http://${ip}:${port}/hash`).then(r => r.text()).catch(_ => '');
+            res.end(hash);
+            return;
+          }
           res.setHeader("Cross-Origin-Embedder-Policy", "require-corp");
           res.setHeader("Cross-Origin-Opener-Policy", "same-origin");
 

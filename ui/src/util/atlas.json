@@ -2946,6 +2946,41 @@
         "width": 48,
         "height": 24
     },
+    "A_EQLS_LargeBtnNormal": {
+        "texture": "EQLS_window_pieces_01.tga",
+        "left": 0,
+        "top": 34,
+        "width": 244,
+        "height": 31
+    },
+    "A_EQLS_LargeBtnPressed": {
+        "texture": "EQLS_window_pieces_01.tga",
+        "left": 0,
+        "top": 96,
+        "width": 244,
+        "height": 31
+    },
+    "A_EQLS_LargeBtnFlyby": {
+        "texture": "EQLS_window_pieces_01.tga",
+        "left": 0,
+        "top": 65,
+        "width": 244,
+        "height": 31
+    },
+    "A_EQLS_LargeBtnPressedFlyby": {
+        "texture": "EQLS_window_pieces_01.tga",
+        "left": 0,
+        "top": 158,
+        "width": 244,
+        "height": 31
+    },
+    "A_EQLS_LargeBtnDisabled": {
+        "texture": "EQLS_window_pieces_01.tga",
+        "left": 0,
+        "top": 158,
+        "width": 244,
+        "height": 31
+    },
     "A_BigBtnNormal": {
         "texture": "window_pieces03.tga",
         "left": 100,

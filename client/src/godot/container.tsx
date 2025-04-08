@@ -13,7 +13,6 @@ const sessionBg = `center no-repeat url('requiem/bg${Math.ceil(
   Math.random() * bgMax,
 )}.png')`;
 
-
 const GodotContainerComponent: React.FC = () => {
   const {
     statusDialogOpen,
@@ -31,7 +30,7 @@ const GodotContainerComponent: React.FC = () => {
       background: sessionBg,
       backgroundSize: "cover",
     }}>
-      {splash && <SplashScreen files={converting} />}
+      {(splash || !ready) && <SplashScreen files={converting} />}
       {statusDialogOpen && (
         <StatusDialog
           fsHandle={rootFileSystemHandle}
@@ -42,7 +41,7 @@ const GodotContainerComponent: React.FC = () => {
           onFolderSelected={onFolderSelected}
         />
       )}
-      {ready ? <GodotPlayer splash={splash} /> : <h1 style={{ width: '100vw', height: '100vh' }}>LOADING, PLEASE WAIT... (Sorry this looks ugly for now)</h1>}
+      {ready ? <GodotPlayer splash={splash} /> : null}
     </Box>
   );
 };

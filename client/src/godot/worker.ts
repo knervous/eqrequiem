@@ -25,11 +25,10 @@ const process = async (
     },
     root: "eqrequiem",
   });
-  console.log("Did call process", name);
   const fileHandles = await Promise.all(
     handles.map((handle) => handle.getFile()),
   );
-  console.log("Process", rootFileHandle, handles);
+  let data = {} as Record<string, ArrayBuffer>;
   const obj = new EQFileHandle(
     name,
     fileHandles,
@@ -40,14 +39,21 @@ const process = async (
     {
       rawImageWrite: true,
       skipSubload: true,
+      deferWrite: true,
     },
   );
   try {
     await obj.initialize();
-    await obj.process();
+    data = await obj.process();
   } catch (e) {
     console.log("Error processing EQFileHandle", e);
   }
+  return Object.entries(data).reduce((acc, [key, value]: [string, ArrayBuffer]) => {
+    return {
+      ...acc,
+      [key]: Comlink.transfer(value, [value]),
+    };
+  }, {});
 };
 
 Comlink.expose({

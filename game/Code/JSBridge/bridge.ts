@@ -2,6 +2,7 @@ import { GDictionary, Node } from "godot";
 import ZoneManager from "../Zone/zone-manager";
 import { inEditor } from "../Util/constants";
 import { ChatUIHandler } from "./chat";
+import { supportedZones } from "../Constants/supportedZones";
 
 declare const window: {
   godotBridge: JSBridge;
@@ -12,6 +13,7 @@ export default class JSBridge extends Node {
   public _ready(): void {
     if (!inEditor) {
       window.godotBridge = this;
+      window.onGodotBridgeRegistered?.();
       window.newProp = { ok: 'some new prop' };
     }
     const root = this.get_tree().root;
@@ -58,7 +60,24 @@ export default class JSBridge extends Node {
   public handleMessage(message: GDictionary & object) {
     try {
       const data = typeof message?.toObject === 'function' ? message.toObject() : message;
+      const zoneManager = <ZoneManager>this.get_node("/root/Zone");
+      console.log('Got message', message);
       switch(data.type) {
+        case "dispose":
+          zoneManager.dispose();
+          break;
+        case "loadCharacterSelect":
+          zoneManager.loadCharacterSelect();
+          break;
+        case "loadPlayer":
+          zoneManager.instantiatePlayer(data.payload);
+          break;
+        case "characterSelectPlayer":
+          zoneManager.CharacterSelect?.loadModel(data.payload.player);
+          break;
+        case "loadZone":
+          zoneManager.loadZone(supportedZones[data.payload?.toString()].shortName);
+          break;
         case "chat":
           this.ChatUI.handler(data.payload);
           break;

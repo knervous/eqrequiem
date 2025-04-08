@@ -252,7 +252,7 @@ export default class Player extends Actor {
     this.updateCameraPosition(node);
   }
   // Updated camera position computation using cameraPitch for vertical rotation
-  private updateCameraPosition(node: CharacterBody3D) {
+  public updateCameraPosition(node: CharacterBody3D) {
     const playerPos = Extensions.GetPosition(node);
     const playerRot = Extensions.GetRotation(node);
     if (this.isFirstPerson) {
@@ -304,7 +304,6 @@ export default class Player extends Actor {
     await super.Load(name);
     const node = this.getNode() as CharacterBody3D;
     if (!node) return;
-    this.playIdle();
     node.set_process(true);
     node.set_physics_process(true);
     node.set_process_input(true);

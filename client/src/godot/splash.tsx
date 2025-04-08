@@ -1,22 +1,34 @@
 import {
   Box,
-  CardContent,
   CircularProgress,
   Stack,
   Typography,
 } from "@mui/material";
-import React, { useEffect } from "react";
+import React from "react";
+import { getSplashImage } from "requiem-ui/common/splash.js";
+
+let splashImage = getSplashImage();
+setInterval(() => {
+  if (splashImage !== getSplashImage()) {
+    splashImage = getSplashImage();
+  }
+}, 5000);
 
 export const SplashScreen: React.FC = ({ files = [] }) => {
   return (
     <Box
+      className="splash-screen"
       sx={{
-        position: "absolute",
+        position: "fixed",
         top: 0,
         left: 0,
         width: "100vw",
         height: "100vh",
-        background: "rgba(0, 0, 0, 0.6)",
+        background: `
+        radial-gradient(circle at center, rgba(0, 0, 0, 0) 30%, rgba(0, 0, 0, 0.9) 100%),
+        url(${splashImage}) center / auto 100% no-repeat
+        `, // Vignette overlay + background image
+        backgroundColor: "#1a1a1a", // Very dark gray base color
         zIndex: 1000,
         display: "flex",
         justifyContent: "center",

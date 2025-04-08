@@ -23,6 +23,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",
+    "@protobuf-ts/runtime": "^2.9.6",
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",
     "@vitejs/plugin-react-swc": "^3.8.0",
@@ -35,6 +36,8 @@
     "vite": "^6.2.0"
   },
   "dependencies": {
+    "classnames": "^2.5.1",
+    "fantasy-name-generator": "^2.0.0",
     "tga-js": "^1.1.1",
     "use-context-selector": "^2.0.0"
   }

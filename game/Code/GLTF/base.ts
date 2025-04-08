@@ -28,6 +28,7 @@ type AnimatedTextureMeta = {
   animationDelay: number;
   frames: string[];
   eqShader: string;
+  file: string;
 };
 
 export enum ShaderType {
@@ -83,6 +84,8 @@ export class BaseGltfModel {
   }
 
   public dispose() {
+    this.node?.queue_free();
+    this.gltfNode?.queue_free();
     this.animationIntervals.forEach(clearInterval);
   }
 
@@ -174,7 +177,7 @@ export class BaseGltfModel {
       console.log(`Found ${meshes.length} meshes to reparent`);
       for (const mesh of meshes) {
         console.log(`Reparenting mesh: ${mesh.get_name()}`);
-        mesh.skeleton = '..';
+        mesh.skeleton = "..";
         mesh.reparent(primarySkeleton, false);
         mesh.owner = primarySkeleton;
       }
@@ -242,6 +245,7 @@ export class BaseGltfModel {
         animatedMaterials.push(material);
       }
       material.eqShader = +meta?.eqShader as ShaderType;
+      material.eqFile = meta?.file as string;
       const forceAlpha = AlphaShaderMap[material.eqShader as ShaderType];
       if (forceAlpha !== undefined) {
         const enforcedAlpha = forceAlpha / 255;
@@ -285,7 +289,6 @@ export class BaseGltfModel {
       }
 
       // material.shading_mode = StandardMaterial3D.ShadingMode.SHAD_;
-
     }
     if (animatedMaterials.length) {
       this.animateTextures(animatedMaterials);
@@ -299,6 +302,7 @@ export class BaseGltfModel {
       frames: string[];
       currentFrame: number;
       material: StandardMaterial3D;
+      file: string;
     }
 
     interface AnimationTimerEntry {
@@ -321,6 +325,7 @@ export class BaseGltfModel {
         frames: meta.frames,
         currentFrame: 0,
         material,
+        file: meta.file,
       });
     }
     for (const [delay, entry] of Object.entries(animationTimerMap)) {
@@ -328,6 +333,7 @@ export class BaseGltfModel {
         setInterval(async () => {
           for (const animatedMaterial of entry.animatedMaterials) {
             const newTexture = await this.loadNewTexture(
+              animatedMaterial.file,
               animatedMaterial.frames[animatedMaterial.currentFrame],
             );
             if (newTexture instanceof Texture2D) {
@@ -401,7 +407,13 @@ export class BaseGltfModel {
     surfaceIdx: number,
   ): Promise<void> {
     try {
-      const newTexture = await this.loadNewTexture(material.resource_name);
+      const meta = material
+        .get_meta("extras")
+        ?.toObject() as AnimatedTextureMeta;
+      const newTexture = await this.loadNewTexture(
+        meta.file,
+        material.resource_name,
+      );
       if (
         material instanceof StandardMaterial3D &&
         newTexture instanceof Texture2D
@@ -426,18 +438,19 @@ export class BaseGltfModel {
   }
 
   private async loadNewTexture(
+    file: string,
     name: string,
   ): Promise<Resource | undefined | null> {
-    const cached = TextureCache.get(name);
+    const cached = TextureCache.get(file + name);
     if (cached) {
       return cached;
     }
-    const buffer = await FileSystem.getFileBytes(
-      `eqrequiem/textures/${name}.dds`,
-    );
+    let buffer = await FileSystem.getFileBytes(file, name);
     if (!buffer) {
+      console.log('DID NOT GET BYTES', file, name);
       return null;
     }
+    buffer = buffer instanceof Uint8Array ? buffer.buffer : buffer;
     const image = new Image();
     let err;
     let needFlip = false;
@@ -454,7 +467,11 @@ export class BaseGltfModel {
     const img = ImageTexture.create_from_image(
       image,
     ) as unknown as Texture2D & { flip_y: boolean };
-    TextureCache.set(name, img);
+    if (!img) {
+      console.error("Error creating ImageTexture from image");
+      return null;
+    }
+    TextureCache.set(file + name, img);
     img.flip_y = needFlip;
     if (this.LoaderOptions.flipTextureY) {
       img.flip_y = !img.flip_y;

@@ -289,16 +289,16 @@ export const GodotWrapper = ({ splash }) => {
           z-index: 1;
         }
       `}</style>
-      {window.godotBridge && (
-        <Overlay
-          getEQFile={getRootEQFile}
-          sx={{
-            width: "100vw",
-            height: "100vh",
-            display: splash ? "none" : "initial",
-          }}
-        />
-      )}
+
+      <Overlay
+        getEQFile={getRootEQFile}
+        sx={{
+          width: "100vw",
+          height: "100vh",
+          display: splash ? "none" : "initial",
+        }}
+      />
+
       <canvas id="canvas" ref={canvasRef} tabIndex={0}>
         Your browser does not support the canvas tag.
       </canvas>

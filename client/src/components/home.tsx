@@ -1,4 +1,4 @@
-import React, { ReactNode } from "react";
+import React, { ReactNode, useEffect } from "react";
 import { styled } from "@mui/material/styles";
 import Box from "@mui/material/Box";
 import Card from "@mui/material/Card";
@@ -6,6 +6,8 @@ import { Button, CardContent, Stack, TextField } from "@mui/material";
 
 import styles from "./home.module.css";
 import DiscordLoginButton from "./login";
+import { DISCORD_CLIENT_ID, REDIRECT_URI } from "requiem-ui/components/login/util.js";
+import { useNavigate } from "react-router-dom";
 
 const PREFIX = "Home";
 const textFieldClasses = {
@@ -37,6 +39,39 @@ const sessionBg = `center no-repeat url('requiem/bg${Math.ceil(
 )}.png')`;
 
 export const Home = () => {
+  const navigate = useNavigate();
+  useEffect(() => {
+    const queryParamCode = new URLSearchParams(window.location.search).get("code");
+    if (queryParamCode) {
+      const url = new URL(window.location.href);
+      url.searchParams.delete("code");
+      window.history.replaceState({}, document.title, url.toString());
+      (async () => {
+        const { user, token } = await fetch("https://eqrequiem.ddns.net/code", {
+          method: "POST",
+          body: JSON.stringify({
+            code: queryParamCode,
+            client_id: DISCORD_CLIENT_ID,
+            redirect_uri: decodeURIComponent(REDIRECT_URI),
+          }),
+        })
+          .then((r) => r.json())
+          .catch((e) => { 
+            console.log('Error:', e);
+            return {};
+          });
+        if (!user || !token) {
+          navigate('/');
+          return;
+        }
+        localStorage.setItem('requiem', JSON.stringify({ user, token }));
+        // Will extend this to other server shortnames eventually
+        sessionStorage.setItem('worldLogin', 'requiem');
+        navigate('/play');
+      })();
+    }
+
+  }, [navigate]);
   return (
     <Box
       sx={{
@@ -70,9 +105,8 @@ export const Home = () => {
           </CardContent>
           <Stack sx={{ width: "285px", margin: "0 auto" }} spacing={1}>
             <Button variant="contained" color={'primary'} sx={{ margin: 0 }} href="/play">
-              Play Demo
+              Play
             </Button>
-            <DiscordLoginButton />
           </Stack>
 
           <footer

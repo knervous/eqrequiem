@@ -33,9 +33,9 @@ export interface ActionBarWindow extends UiWindow {
 
 export type UiState = {
   [key: string]: UiWindow | UiWindow[]; // allows both single windows and arrays of windows
-
   inventoryWindow: UiWindow;
   targetWindow: UiWindow;
+  loginWindow: UiWindow;
   playerWindow: UiWindow;
   settingsWindow: UiWindow;
   spellsWindow: UiWindow;
@@ -48,6 +48,9 @@ export type UiState = {
 
 export const initialUiState: UiState = {
   inventoryWindow: {
+    ...defaultWindow,
+  },
+  loginWindow: {
     ...defaultWindow,
   },
   targetWindow: {
@@ -97,11 +100,11 @@ export const initialUiState: UiState = {
     },
   ],
   actionBarWindows:
-  [
-    {
-      ...defaultWindow,
-      x: 100,
-      y: 500,
-    },
-  ],
+    [
+      {
+        ...defaultWindow,
+        x: 100,
+        y: 500,
+      },
+    ],
 };

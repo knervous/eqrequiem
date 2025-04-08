@@ -1,5 +1,9 @@
 {
   "files": [],
+  "include": [
+    "src/**/*",
+    "../Game/**/*.ts"
+  ],
   "references": [
     { "path": "./tsconfig.app.json" },
     { "path": "./tsconfig.node.json" }

@@ -76,6 +76,7 @@ declare const window: Window;
 export class FileSystem {
   static async getFileBytes(
     fileName: string,
+    innerFile?: string,
   ): Promise<ArrayBuffer | undefined> {
     let buffer: ArrayBuffer | undefined;
     if (OS.has_feature("editor")) {
@@ -92,7 +93,7 @@ export class FileSystem {
         console.log("Failed to open file:", fileName);
       }
     } else {
-      const bytes = await window.getJsBytes?.(fileName);
+      const bytes = await window.getJsBytes?.(fileName, innerFile);
       if (bytes) {
         buffer = bytes;
       }

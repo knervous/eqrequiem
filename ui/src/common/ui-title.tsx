@@ -2,6 +2,7 @@ import { Box, Stack } from "@mui/material";
 import React from "react";
 import { UiImageComponent } from "./ui-image";
 import { UiButtonComponent } from "./ui-button";
+import classNames from "classnames";
 
 type Props = {
   name: string;
@@ -12,12 +13,13 @@ type Props = {
   toggleMinimize: () => void;
   doClose?: () => void;
   closable?: boolean;
+  draggable?: boolean;
 };
 
 export const UiTitleComponent: React.FC<Props> = (props: Props) => {
   return (
     <Box
-      className="cursor-drag"
+      className={classNames({ "cursor-drag": props.draggable })}
       sx={{
         userSelect: "none",
         position: "absolute",
@@ -25,7 +27,7 @@ export const UiTitleComponent: React.FC<Props> = (props: Props) => {
         marginTop: "-7px",
         zIndex: 10,
       }}
-      onMouseDown={props.handleDragMouseDown}
+      onMouseDown={props.draggable ? props.handleDragMouseDown : undefined}
     >
       <Stack direction="row">
         <Box

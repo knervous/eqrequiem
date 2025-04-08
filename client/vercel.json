@@ -2,7 +2,7 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "devCommand": "npm run dev",
   "functions": {
-    "api/login.ts": {
+    "api/hash.ts": {
       "memory": 1000,
       "maxDuration": 5
     }

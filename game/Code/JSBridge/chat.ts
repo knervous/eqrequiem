@@ -26,10 +26,16 @@ export class ChatUIHandler extends ClientHandler {
           if (zone) {
             addChatLine(`LOADING, PLEASE WAIT...`);
             await zoneManager.loadZone(zone);
+            await zoneManager.instantiatePlayer();
             addChatLine(`You have entered ${zone}`);
           } else {
             addChatLine("No zone entered");
           }
+          break;
+        case "camp":
+          addChatLine("Camping...");
+          this.sendMessage({ type: "camp" });
+          zoneManager.dispose();
           break;
         case "spawn":
           const spawn = args[0];

@@ -1,4 +1,4 @@
-import { Animation, Callable, PackedByteArray } from "godot";
+import { Animation, Callable, PackedByteArray, Label3D, Vector3, Color } from "godot";
 import { BaseGltfModel, LoaderOptions } from "../GLTF/base";
 import { AnimationDefinitions } from "../Animation/animation-constants";
 
@@ -10,9 +10,30 @@ export default class Actor extends BaseGltfModel {
     flipTextureY: true,
     shadow: false,
   };
+
+  // Nameplate node (a Label3D) and its backing string.
+  private nameplate: Label3D | null = null;
+  
   constructor(folder: string, model: string) {
     super(folder, model, true);
     this.LoaderOptions = Actor.actorOptions;
+  }
+
+  // Public setter to update the nameplate text.
+  public setNameplate(text: string): void {
+    if (!this.nameplate) {
+      // Create the Label3D node for the nameplate if it doesn't exist.
+      this.nameplate = new Label3D();
+      this.nameplate.billboard = 1;
+      this.getNode().add_child(this.nameplate);
+      // Position the nameplate above the actor (adjust offset as needed).
+      this.nameplate.position = new Vector3(0, 4, 0);
+      this.nameplate.font_size = 50.5; // Set the font size for the nameplate.
+      this.nameplate.modulate = new Color(0.5, 0.5, 1, 1);
+
+      // Optionally, configure additional Label3D properties (font size, color, etc.)
+    }
+    this.nameplate.text = text;
   }
 
   protected playAnimation(
@@ -38,7 +59,6 @@ export default class Actor extends BaseGltfModel {
       this.animationPlayer.stop();
       this.animationPlayer.play(animationName);
       this.currentAnimation = animationName;
-      //animation.time
       if (this.currentPlayToEnd) {
         this.animationPlayer.connect(
           "animation_finished",
@@ -71,12 +91,12 @@ export default class Actor extends BaseGltfModel {
       Animation.LoopMode.LOOP_NONE,
     );
   }
-
   protected playIdle() {
     this.playAnimation(AnimationDefinitions.Idle2);
   }
   public Load(name: string) {
     this.animations =
       this.animationPlayer?.get_animation_list().toArray() ?? [];
+    this.playIdle();
   }
 }

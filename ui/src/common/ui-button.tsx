@@ -1,6 +1,7 @@
 import { Box, SxProps, Typography } from "@mui/material";
 import React, { useMemo, useState } from "react";
 import { useImage } from "../hooks/use-image";
+import classNames from "classnames";
 
 type AtlasEntry = {
   texture: string; // Path to the texture file (e.g., "uifiles/default/atlas.tga")
@@ -13,6 +14,8 @@ type AtlasEntry = {
 type Props = {
   onClick: () => void;
   children?: React.ReactNode;
+  className?: string;
+  icon?: React.ReactNode;
   normal?: AtlasEntry;
   pressed?: AtlasEntry;
   hover?: AtlasEntry;
@@ -21,13 +24,17 @@ type Props = {
   buttonName?: string;
   sx?: SxProps;
   text?: string;
+  scale?: number;
+  textFontSize?: string;
+  selected?: boolean;
 };
 
 export const UiButtonComponent: React.FC<Props> = (props: Props) => {
-  const normal = useImage(`${props.buttonName}Normal`);
-  const pressed = useImage(`${props.buttonName}Pressed`);
-  const hover = useImage(`${props.buttonName}Flyby`);
-  const disabled = useImage(`${props.buttonName}Disabled`);
+  const buttonName = props.buttonName ?? "A_BigBtn";
+  const normal = useImage(`${buttonName}Normal`);
+  const pressed = useImage(`${buttonName}Pressed`);
+  const hover = useImage(`${buttonName}Flyby`);
+  const disabled = useImage(`${buttonName}Disabled`);
 
   const [isHovered, setIsHovered] = useState(false);
   const [isPressed, setIsPressed] = useState(false);
@@ -36,24 +43,38 @@ export const UiButtonComponent: React.FC<Props> = (props: Props) => {
     () =>
       props.isDisabled
         ? disabled
-        : isPressed
+        : isPressed || props.selected
           ? pressed
           : isHovered
             ? hover
             : normal,
-    [props.isDisabled, isPressed, isHovered, normal, pressed, hover, disabled],
+    [
+      props.isDisabled,
+      props.selected,
+      isPressed,
+      isHovered,
+      normal,
+      pressed,
+      hover,
+      disabled,
+    ],
   );
 
   return !selectedEntry.entry ? null : (
     <Box
-      className="cursor-default"
+      className={classNames("cursor-default", props.className)}
       sx={{
         userSelect: "none",
         color: "white",
         width: `${selectedEntry.entry?.width}px`,
         height: `${selectedEntry.entry?.height}px`,
         backgroundImage: `url(${selectedEntry.image})`,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        alignContent: "center",
         backgroundPosition: `-${selectedEntry.entry.left}px -${selectedEntry.entry?.top}px`,
+        ...(props.scale ? { transform: `scale(${props.scale})` } : {}),
         ...(props.sx ?? {}),
       }}
       onMouseEnter={() => !props.isDisabled && setIsHovered(true)}
@@ -66,7 +87,19 @@ export const UiButtonComponent: React.FC<Props> = (props: Props) => {
       onClick={() => !props.isDisabled && props.onClick()}
     >
       {props.children}
-      {props.text && <Typography sx={{ fontSize: '12px', textAlign: 'center', color: props.isDisabled ? 'gray' : 'white' }}>{props.text}</Typography>}
+      {props.icon}
+      {props.text && (
+        <Typography
+          sx={{
+            display: "inline-block",
+            fontSize: props.textFontSize ?? "12px",
+            textAlign: "center",
+            color: props.isDisabled ? "gray" : "white",
+          }}
+        >
+          {props.text}
+        </Typography>
+      )}
     </Box>
   );
 };

@@ -16,6 +16,7 @@ type Props = {
   title?: string;
   windowName: keyof UiState;
   children?: React.ReactNode;
+  draggable?: boolean;
   closable?: boolean;
   doClose?: () => void;
 };
@@ -28,6 +29,7 @@ export const UiWindowComponent: React.FC<Props> = ({
   children,
   closable,
   doClose,
+  draggable = true,
 }) => {
   const dispatcher = useDispatch();
   const { fixed, fixedWidth = 200, fixedHeight = 200 } = state;
@@ -97,6 +99,7 @@ export const UiWindowComponent: React.FC<Props> = ({
           doClose={doClose}
           name={title}
           minimized={minimized}
+          draggable={draggable}
           toggleMinimize={() => setMinimized((prev) => !prev)}
           handleDragMouseDown={handleDragMouseDown}
         />
