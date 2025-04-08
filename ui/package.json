@@ -38,6 +38,7 @@
   "dependencies": {
     "classnames": "^2.5.1",
     "fantasy-name-generator": "^2.0.0",
+    "react-router-dom": "^7.5.0",
     "tga-js": "^1.1.1",
     "use-context-selector": "^2.0.0"
   }
