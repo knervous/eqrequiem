@@ -1,6 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "devCommand": "npm run dev",
+  "installCommand": "npm install",
   "functions": {
     "api/hash.ts": {
       "memory": 1000,
