@@ -104,7 +104,6 @@ export const Overlay: React.FC<Props> = (props: Props) => {
         return <GameUIComponent />;
       default:
       case "login":
-        console.log('am i here');
         return <LoginUIComponent />;
     }
   }, [mode]);

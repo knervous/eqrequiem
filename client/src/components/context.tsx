@@ -81,7 +81,6 @@ export const MainProvider = (props: ReactProps) => {
       setReady(true);
     })();
   }, [rootFileSystemHandle, permissionStatus, setSplash, setConverting]);
-  console.log(`%c SPLASH COUNTER: ${splashCounter}`, "color: #00FF00");
   return (
     <MainContext.Provider
       value={{
