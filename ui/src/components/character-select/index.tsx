@@ -63,11 +63,15 @@ export const CharacterSelectUIComponent: React.FC = () => {
 
   useEffect(() => {
     if (!gotCharInfo || view === VIEWS.CHAR_CREATE) {
+      MainInvoker.current?.({
+        type: "characterSelectPlayer",
+        payload: { player: { race: 0, charClass: 0 } },
+      });
       return;
     }
     MainInvoker.current?.({
       type: "characterSelectPlayer",
-      payload: { player: selectedChar },
+      payload: { player: selectedChar ?? { race: 0, charClass: 0, name: 'Soandso', level: 0 } },
     });
   }, [selectedChar, gotCharInfo, view]);
 
@@ -152,11 +156,14 @@ export const CharacterSelectUIComponent: React.FC = () => {
             <UiButtonComponent
               buttonName="A_BigBtn"
               text={"Enter World"}
-              disabled={!selectedChar}
+              isDisabled={!selectedChar}
               scale={1.5}
               textFontSize="9px"
               sx={{ margin: "12px" }}
               onClick={() => {
+                if (!selectedChar) {
+                  return;
+                }
                 setMode("game");
                 MainInvoker.current?.({
                   type: "loadZone",
