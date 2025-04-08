@@ -2,7 +2,7 @@
   "files": [],
   "include": [
     "src/**/*",
-    "../Game/**/*.ts"
+    "../game/**/*.ts"
   ],
   "references": [
     { "path": "./tsconfig.app.json" },

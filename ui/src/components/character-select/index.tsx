@@ -1,15 +1,15 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useUIContext } from "../context";
-import * as EQMessage from "../../../../Game/Code/Net/message/EQMessage";
+import * as EQMessage from "../../../../game/Code/Net/message/EQMessage";
 import { WorldSocket } from "../../net/instances";
 import { Box, Stack } from "@mui/material";
 import { MainInvoker } from "../../state/bridge";
 import { UiWindowComponent } from "../../common/ui-window";
 import { UiButtonComponent } from "../../common/ui-button";
 import { VIEWS } from "../../../../game/Code/Constants/constants";
+import { CharacterCreate } from "./char-create";
 
 import "./component.css";
-import { CharacterCreate } from "./char-create";
 
 let splashed = false;
 

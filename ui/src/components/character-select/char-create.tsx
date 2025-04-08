@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { nameByRace } from "fantasy-name-generator";
-import * as EQMessage from "../../../../Game/Code/Net/message/EQMessage";
+import * as EQMessage from "../../../../game/Code/Net/message/EQMessage";
 
 import {
   Divider,
