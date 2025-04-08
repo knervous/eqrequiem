@@ -17,7 +17,7 @@ export default defineConfig({
             const params = new URLSearchParams(req.url?.split("?")[1]);
             const port = params.get("port");
             const ip = params.get("ip");
-            const hash = await fetch(`http://${ip}:${port}/hash`).then(r => r.text()).catch(_ => '');
+            const hash = await fetch(`http://${ip}:${port}/hash`).then((r) => r.text()).catch((_) => '');
             res.end(hash);
             return;
           }
@@ -36,6 +36,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
+      '@protobuf-ts/runtime': path.resolve(__dirname, '../ui/node_modules/@protobuf-ts/runtime'),
       "react/jsx-runtime": path.resolve(
         __dirname,
         "./node_modules/react/jsx-runtime.js",
@@ -54,6 +55,7 @@ export default defineConfig({
   ...(isLocalDev && {
     resolve: {
       alias: {
+        '@protobuf-ts/runtime': path.resolve(__dirname, '../ui/node_modules/@protobuf-ts/runtime'),
         "react/jsx-runtime": path.resolve(
           __dirname,
           "./node_modules/react/jsx-runtime.js",
