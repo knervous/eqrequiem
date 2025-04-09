@@ -42,6 +42,37 @@ export const CharacterSelectUIComponent: React.FC = () => {
     [setSplash],
   );
 
+  const enterWorld = useCallback(() => {
+    if (!selectedChar) {
+      return;
+    }
+    setMode("game");
+    MainInvoker.current?.({
+      type: "loadZone",
+      payload: selectedChar?.zone,
+    });
+    MainInvoker.current?.({
+      type: "loadPlayer",
+      payload: selectedChar,
+    });
+  }, [setMode, selectedChar]);
+
+  useEffect(() => {
+    const keyHandler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setMode("login");
+        MainInvoker.current?.({ type: "dispose" });
+        WorldSocket.close();
+      } else if (e.key === 'Enter') {
+        enterWorld();
+      }
+    };
+    document.addEventListener("keydown", keyHandler);
+    return () => {
+      document.removeEventListener("keydown", keyHandler);
+    };
+  }, [selectedChar, setMode, view, enterWorld]);
+
   useEffect(() => {
     if (!token?.current) {
       return;
@@ -160,20 +191,7 @@ export const CharacterSelectUIComponent: React.FC = () => {
               scale={1.5}
               textFontSize="9px"
               sx={{ margin: "12px" }}
-              onClick={() => {
-                if (!selectedChar) {
-                  return;
-                }
-                setMode("game");
-                MainInvoker.current?.({
-                  type: "loadZone",
-                  payload: selectedChar?.zone,
-                });
-                MainInvoker.current?.({
-                  type: "loadPlayer",
-                  payload: selectedChar,
-                });
-              }}
+              onClick={enterWorld}
             />
           </Stack>
         </UiWindowComponent>

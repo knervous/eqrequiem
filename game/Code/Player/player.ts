@@ -11,8 +11,12 @@ import {
   OmniLight3D,
   Color,
   DisplayServer,
+  Node3D,
+  MeshInstance3D,
 } from "godot";
 import { Extensions } from "../Util/extensions";
+
+
 
 export default class Player extends Actor {
   move_speed: number = 20;
@@ -35,16 +39,20 @@ export default class Player extends Actor {
   private cameraPitch: number = 0;
   private rightXZ = new Vector3(0, 0, 0);
 
+  static instance: Player | null = null;
+
+
   constructor(folder: string, model: string, camera: Camera3D) {
     super(folder, model);
     this.camera = camera;
-    this.createCameraLight();
 
     this.bindKeys();
+    Player.instance = this;
   }
 
   public dispose() {
-    this.cameraLight?.queue_free();
+    //this.cameraLight?.queue_free();
+    //Player.instance = null;
   }
 
   bindKeys() {
@@ -76,15 +84,16 @@ export default class Player extends Actor {
     return Extensions.GetPosition(this.getNode() as CharacterBody3D);
   }
 
-  private createCameraLight() {
+  private createCameraLight(node: Node3D | null = null) {
     this.cameraLight = new OmniLight3D();
-    this.camera.add_child(this.cameraLight);
-    this.cameraLight.position = new Vector3(0, 0, -3);
+    this.cameraLight.position = new Vector3(0, 5, 2);
     this.cameraLight.light_color = new Color(1.0, 0.85, 0.6, 1.0);
-    this.cameraLight.light_energy = 2.0;
+    this.cameraLight.light_energy = 4.0;
     this.cameraLight.light_specular = 0.0;
-    this.cameraLight.omni_range = 150.0;
+    this.cameraLight.omni_range = 250.0;
     this.cameraLight.layers = 1 << 0;
+    node?.add_child(this.cameraLight);
+
     //this.cameraLight.shadow_enabled = true;
   }
 
@@ -307,9 +316,18 @@ export default class Player extends Actor {
     node.set_process(true);
     node.set_physics_process(true);
     node.set_process_input(true);
-
+    const setMeshLayers = (currentNode: Node3D) => {
+      if (currentNode instanceof MeshInstance3D) {
+        currentNode.layers = 1 << 1;
+      }
+      for (const child of currentNode.get_children()) {
+        setMeshLayers(child as Node3D);
+      }
+    };
+    setMeshLayers(node);
     node.scale = new Vector3(1.5, 1.5, 1.5);
     node.position = new Vector3(0, 5, 0);
+    this.createCameraLight(node);
     this.updateCameraPosition(node);
   }
 }

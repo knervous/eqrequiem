@@ -47,11 +47,13 @@ export default class ZoneManager extends Node3D {
     return this.camera;
   }
 
+  public instance: ZoneManager | null = null;
+
   _ready(): void {
     Extensions.SetRoot(this);
     this.camera = this.get_node("Camera3D") as Camera3D;
     this.camera.cull_mask = 0xfffff;
-
+    this.instance = this;
     // this.loadZone(this.zoneName);
   }
 
@@ -111,6 +113,7 @@ export default class ZoneManager extends Node3D {
     }
     this.setLoading(true);
     const zoneModel = new BaseGltfModel("zones", this.zoneName);
+    zoneModel.LoaderOptions.doCull = false;
     const rootNode = await zoneModel.instantiate();
     if (rootNode) {
       this.currentZone.add_child(rootNode);
@@ -224,15 +227,7 @@ export default class ZoneManager extends Node3D {
         region.minVertex[1] + size.y / 2,
         region.minVertex[2] + size.z / 2,
       );
-
-      // Create visible box
-      const boxMesh = new BoxMesh();
-      boxMesh.size = size;
-      
-      const meshInstance = new MeshInstance3D();
-      meshInstance.mesh = boxMesh;
       position.x *= -1;
-      meshInstance.position = position;
       
       // Create Area3D for collision detection
       const area = new Area3D();
@@ -244,19 +239,6 @@ export default class ZoneManager extends Node3D {
       area.add_child(collisionShape);
       area.position = position;
       
-      // Add region type as metadata
-      // area.set_meta("regionType", region.regionType);
-      // if (region.zoneLineInfo) {
-      //   area.set_meta("zoneLineInfo", region.zoneLineInfo);
-      // }
-
-      // Make it semi-transparent for visibility
-      const material = new StandardMaterial3D();
-      material.albedo_color = new Color(1, 0, 0, 0.3); // Red with 30% opacity
-      material.transparency = BaseMaterial3D.Transparency.TRANSPARENCY_ALPHA;
-      meshInstance.set_surface_override_material(0, material);
-
-      this.currentZone.add_child(meshInstance);
       this.currentZone.add_child(area);
       this.regionAreas.set(index, area);
 

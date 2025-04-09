@@ -36,6 +36,7 @@ export default class ZoneObjects {
                   instance.rotate_x(deg_to_rad(entry.rotateX));
                   instance.rotate_y(-deg_to_rad(entry.rotateY));
                   instance.rotate_z(deg_to_rad(entry.rotateZ));
+
                 }
               }),
             );

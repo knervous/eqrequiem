@@ -19,6 +19,7 @@ import {
   CollisionShape3D,
   CapsuleShape3D,
   Skeleton3D,
+  GeometryInstance3D,
 } from "godot";
 import { FileSystem } from "../FileSystem/filesystem";
 import { TextureCache } from "../Util/texture-cache";
@@ -50,6 +51,8 @@ export type LoaderOptions = {
   flipTextureY: boolean;
   secondaryMeshIndex: number;
   shadow: boolean;
+  cullRange: number;
+  doCull: boolean;
 };
 
 export const AlphaShaderMap: Partial<Record<ShaderType, number>> = {
@@ -70,9 +73,12 @@ export class BaseGltfModel {
   protected animationPlayer: AnimationPlayer | undefined;
   protected animationIntervals: number[] = [];
 
-  protected LoaderOptions = {
+  public LoaderOptions = {
     flipTextureY: false,
     secondaryMeshIndex: 0,
+    shadow: false,
+    cullRange: 750,
+    doCull: true,
   } as LoaderOptions;
 
   constructor(folder: string, model: string, usePhysics: boolean = false) {
@@ -107,6 +113,24 @@ export class BaseGltfModel {
       }
     };
     return traverseChildren(this.gltfNode);
+  }
+
+  // New method to apply visibility range to all MeshInstance3D nodes
+  private applyVisibilityRange(node: Node3D): void {
+    if (node instanceof MeshInstance3D && this.LoaderOptions.doCull) {
+      node.visibility_range_end = this.LoaderOptions.cullRange; // Cull beyond this distance
+      node.visibility_range_end_margin = 25.0; // Optional: buffer for smoother culling
+      // Optional: Add fade-out effect
+      node.visibility_range_fade_mode = GeometryInstance3D.VisibilityRangeFadeMode.VISIBILITY_RANGE_FADE_SELF;
+      node.visibility_range_begin = 25.0; // Start fading 10m before end
+      node.visibility_range_begin_margin = 20.0; // Start fading 10m before end
+    }
+
+    for (const child of node.get_children()) {
+      if (child instanceof Node3D) {
+        this.applyVisibilityRange(child);
+      }
+    }
   }
 
   public async instantiateSecondaryMesh(): Promise<void> {
@@ -223,6 +247,7 @@ export class BaseGltfModel {
         // rootNode.getNodesOfType(MeshInstance3D).forEach((mesh) => {
         //   mesh.cast_shadow = MeshInstance3D.ShadowCastingSetting.SHADOW_CASTING_SETTING_OFF;
         // });
+        this.applyVisibilityRange(rootNode);
         return this.node;
       } else {
         console.log("Error with rootNode");
@@ -255,6 +280,7 @@ export class BaseGltfModel {
 
         material.transparency = 1;
       }
+      material.shading_mode = StandardMaterial3D.ShadingMode.SHADING_MODE_PER_PIXEL;
       switch (material.eqShader) {
         case ShaderType.Transparent25:
           material.alpha_scissor_threshold = 64;

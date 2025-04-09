@@ -92,6 +92,13 @@ Vector3.prototype.multiplyScalar = function(scalar: number): Vector3 {
   return this;
 };
 
+Vector3.prototype.negated = function(): Vector3 {
+  this.x = -this.x;
+  this.y = -this.y;
+  this.z = -this.z;
+  return this;
+}
+
 Vector3.prototype.set = function(x: number, y: number, z: number): void {
   this.x = x;
   this.y = y;

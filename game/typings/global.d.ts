@@ -8,6 +8,7 @@ declare module "godot" {
       multiplyScalar(scalar: number): Vector3;
       set(x: number, y: number, z: number): void;
       normalized(): Vector3;
+      negated(): Vector3;
     }
 
     interface GDictionary {

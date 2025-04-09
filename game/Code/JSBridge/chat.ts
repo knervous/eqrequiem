@@ -1,11 +1,14 @@
 import ZoneManager from "../Zone/zone-manager";
+import { devCommands } from "./dev";
 import { ClientHandler } from "./handler";
 
 export class ChatUIHandler extends ClientHandler {
+  public static addChatLine: (line: string) => void;
   public async handler(message: string) {
     const addChatLine = (line: string) => {
       this.sendMessage({ type: "chat", payload: { type: 0, line, color: '#DDD' } });
     };
+    ChatUIHandler.addChatLine = addChatLine;
     const zoneManager = <ZoneManager>this.root.get_node("Zone");
 
     if (message.startsWith("/")) {
@@ -14,6 +17,9 @@ export class ChatUIHandler extends ClientHandler {
         .split(" ") 
         .filter(Boolean);
       console.log("Got command", command);
+      if (devCommands(command, args)) {
+        return;
+      }
       switch (command) {
         case "help":
           addChatLine("----- Available commands -----");

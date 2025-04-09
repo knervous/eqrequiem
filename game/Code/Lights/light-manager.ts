@@ -51,13 +51,13 @@ export default class LightManager {
       const g = light.g > 1 ? light.g / 255 : light.g;
       const b = light.b > 1 ? light.b / 255 : light.b;
       lightNode.light_color = new Color(r, g, b, 1.0);
-      lightNode.light_energy = 10.0;
+      lightNode.light_energy = 5.0;
       lightNode.light_specular = 0;
-      lightNode.omni_range = 150.0;
+      lightNode.omni_range = 50.0;
       lightNode.distance_fade_enabled = true;
-      lightNode.distance_fade_begin = 50.0;
-      lightNode.distance_fade_length = 150.0;
-      lightNode.distance_fade_shadow = 50;
+      lightNode.distance_fade_begin = 20.0;
+      lightNode.distance_fade_length = 50.0;
+      lightNode.distance_fade_shadow = 20;
       lightNode.set_name("Light" + i++);
       lightNode.layers = 1 << 0;
       lightNode.visible = false;
