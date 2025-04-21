@@ -1,0 +1,16 @@
+{
+    "compilerOptions": {
+      "baseUrl": ".", // Base directory for resolving non-relative module names
+      "target": "ESNext",
+      "module": "ESNext",
+      "strict": true,
+      "noEmit": true, // Root doesn't emit, sub-projects will
+      "composite": true, // Enable project references
+      "declaration": true,
+      "declarationMap": true
+    },
+    "references": [
+      { "path": "./client" },
+      { "path": "./game" }
+    ]
+  }

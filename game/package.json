@@ -5,7 +5,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "tsc": "npx tsc --watch",
-    "export": "~/source/godot/bin/godot_macos_editor.app/Contents/MacOS/Godot --headless --export-release \"Web\" ../client/public/Test.html",
+    "export": "~/source/godot/bin/godot.macos.editor.arm64 --headless --export-release \"Web\" ../client/public/Test.html",
     "watch:js": "nodemon --verbose  --watch ./_JS --ext js --exec npm run export",
     "dev": "concurrently \"npm run tsc\" \"npm run watch:js\"",
     "proto": "npx protoc --ts_out Code/Net/message --proto_path Code/Net/message Code/Net/message/EQMessage.proto"

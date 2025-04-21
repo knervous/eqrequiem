@@ -3,10 +3,6 @@ import {
   PermissionStatusTypes,
   usePermissions,
 } from "sage-core/hooks/permissions";
-import {
-  getEQFileExists,
-} from "sage-core/util/fileHandler";
-import { EQFileHandle } from "sage-core/model/file-handle";
 import { godotBindings } from "../godot/bindings";
 
 const MainContext = React.createContext({});
@@ -48,36 +44,30 @@ export const MainProvider = (props: ReactProps) => {
   }, []);
 
   useEffect(() => {
-    if (permissionStatus !== PermissionStatusTypes.Ready) {
-      return;
-    }
+    let fsHandle;
+    if (import.meta.env.VITE_USE_SAGE === "true") {
+      if (permissionStatus !== PermissionStatusTypes.Ready) {
+        return;
+      }
+      fsHandle = rootFileSystemHandle;
+    } 
     (async () => {
+      if (!fsHandle) {
+        fsHandle = await navigator.storage.getDirectory();
+      }
+      if (!fsHandle) {
+        console.error("No file system handle");
+        alert('No file system available, please use a compatible browser');
+        return;
+      }
       await godotBindings.initialize({
-        rootFileSystemHandle,
+        rootFileSystemHandle: fsHandle,
         setLoading,
         setLoadingText,
         setLoadingTitle,
         setSplash,
         setConverting,
       });
-      // Going to split these out into dependencies and services in a class
-      if (!(await getEQFileExists("sky", "sky1.glb"))) {
-        const fh = await rootFileSystemHandle
-          .getFileHandle("sky.s3d")
-          ?.then((f: FileSystemFileHandle) => f.getFile());
-
-        const obj = new EQFileHandle(
-          "sky",
-          [fh],
-          rootFileSystemHandle,
-          {},
-          {
-            rawImageWrite: true,
-          },
-        );
-        await obj.initialize();
-        await obj.process();
-      }
       setReady(true);
     })();
   }, [rootFileSystemHandle, permissionStatus, setSplash, setConverting]);

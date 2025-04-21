@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import { Overlay } from "requiem-ui/components/overlay";
+//import { Overlay } from "requiem-ui/components/overlay";
 import { getRootEQFile } from 'sage-core/util/fileHandler';
 import "./ui.css";
 
@@ -8,7 +8,21 @@ export const GodotWrapper = ({ splash }) => {
   const statusOverlayRef = useRef(null);
   const statusProgressRef = useRef(null);
   const statusNoticeRef = useRef(null);
+  const [loaded, setLoaded] = React.useState(false);
+  const [Overlay, setOverlay] = React.useState({ Component: null });
+  useEffect(() => {
+    window.onLoadGame = (node) => {
+      console.log('Called on load game');
+      import('../Game/root').then(async ({ initializeGame }) => {
+        // window.loadGame();
+        initializeGame(node);
+        const overlay = await import('../UI/components/overlay');
+        setOverlay({ Component: overlay.Overlay });
+        setLoaded(true);
 
+      });
+    };
+  }, []);
   useEffect(() => {
     // Dynamically load the Godot engine script (Test.js)
     const script = document.createElement("script");
@@ -170,7 +184,7 @@ export const GodotWrapper = ({ splash }) => {
       if (
         e.target instanceof HTMLElement &&
         (e.target.closest(".ui-window") ||
-          ["input", "textarea", "button", "select"].includes(
+          ["input", "textarea", "button", "select", "li"].includes(
             e.target.tagName.toLowerCase(),
           ))
       ) {
@@ -289,16 +303,15 @@ export const GodotWrapper = ({ splash }) => {
           z-index: 1;
         }
       `}</style>
-
-      <Overlay
-        getEQFile={getRootEQFile}
+      {loaded && <Overlay.Component
         sx={{
           width: "100vw",
           height: "100vh",
           display: splash ? "none" : "initial",
         }}
       />
-
+      }
+     
       <canvas id="canvas" ref={canvasRef} tabIndex={0}>
         Your browser does not support the canvas tag.
       </canvas>

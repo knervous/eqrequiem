@@ -17,7 +17,9 @@ export default defineConfig({
             const params = new URLSearchParams(req.url?.split("?")[1]);
             const port = params.get("port");
             const ip = params.get("ip");
-            const hash = await fetch(`http://${ip}:${port}/hash`).then((r) => r.text()).catch((_) => '');
+            const hash = await fetch(`http://${ip}:${port}/hash`)
+              .then((r) => r.text())
+              .catch((_) => "");
             res.end(hash);
             return;
           }
@@ -36,12 +38,15 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@protobuf-ts/runtime': path.resolve(__dirname, '../ui/node_modules/@protobuf-ts/runtime'),
+      //'@protobuf-ts/runtime': path.resolve(__dirname, '../ui/node_modules/@protobuf-ts/runtime'),
       "react/jsx-runtime": path.resolve(
         __dirname,
         "./node_modules/react/jsx-runtime.js",
       ),
-      'react-router-dom': path.resolve(__dirname, './node_modules/react-router-dom'),
+      "react-router-dom": path.resolve(
+        __dirname,
+        "./node_modules/react-router-dom",
+      ),
       react: path.resolve(__dirname, "./node_modules/react"),
       "react-dom": path.resolve(__dirname, "./node_modules/react-dom"),
       "@mui/material": path.resolve(__dirname, "./node_modules/@mui/material"),
@@ -51,17 +56,24 @@ export default defineConfig({
         "./node_modules/use-context-selector",
       ),
       "tga-js": path.resolve(__dirname, "./node_modules/tga-js"),
+      godot: path.resolve(__dirname, "./src/godot-module.ts"),
+      "@game": path.resolve(__dirname, "src/Game"),
+      "@ui": path.resolve(__dirname, "src/UI"),
+      "@": path.resolve(__dirname, "src"),
     },
   },
   ...(isLocalDev && {
     resolve: {
       alias: {
-        '@protobuf-ts/runtime': path.resolve(__dirname, '../ui/node_modules/@protobuf-ts/runtime'),
+        //'@protobuf-ts/runtime': path.resolve(__dirname, '../ui/node_modules/@protobuf-ts/runtime'),
         "react/jsx-runtime": path.resolve(
           __dirname,
           "./node_modules/react/jsx-runtime.js",
         ),
-        'react-router-dom': path.resolve(__dirname, './node_modules/react-router-dom'),
+        "react-router-dom": path.resolve(
+          __dirname,
+          "./node_modules/react-router-dom",
+        ),
         "sage-core": path.resolve(__dirname, "../../eqsage/sage/lib"),
         react: path.resolve(__dirname, "./node_modules/react"),
         "react-dom": path.resolve(__dirname, "./node_modules/react-dom"),
@@ -75,6 +87,11 @@ export default defineConfig({
           "./node_modules/use-context-selector",
         ),
         "tga-js": path.resolve(__dirname, "./node_modules/tga-js"),
+        godot: path.resolve(__dirname, "./src/godot-module.ts"),
+        classnames: path.resolve(__dirname, "./classnames.js"),
+        "@game": path.resolve(__dirname, "src/Game"),
+        "@ui": path.resolve(__dirname, "src/UI"),
+        "@": path.resolve(__dirname, "src"),
       },
     },
     optimizeDeps: {

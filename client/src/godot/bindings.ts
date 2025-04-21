@@ -1,13 +1,16 @@
 import { Dispatch } from "react";
 import { setGlobals } from "sage-core/globals";
 import { EQFileHandle } from "sage-core/model/file-handle";
-import { PFSArchive } from "sage-core/pfs/pfs";
 import {
   getEQFile,
   getEQFileExists,
   getRootFiles,
+  getRootEQFile,
+  writeRootEQFile,
 } from "sage-core/util/fileHandler";
 import * as Comlink from "comlink";
+import { USE_SAGE } from "@game/Constants/constants";
+import JSZip from "jszip";
 
 type Models = {
   [key: string]: number[] | string[];
@@ -22,11 +25,13 @@ type Options = {
   setSplash: Dispatch<React.SetStateAction<boolean>>;
 };
 
-
 type CacheEntry = {
   value: ArrayBuffer;
   lastAccess: number;
 };
+
+const baseUrl = "https://eqrequiem.blob.core.windows.net/game";
+const zippedPrefixes = ["eqrequiem/textures"];
 
 function selectMinimalFiles(candidateArrays: number[][]): number[] {
   let remaining = candidateArrays.slice();
@@ -66,20 +71,29 @@ function selectMinimalFiles(candidateArrays: number[][]): number[] {
 class GodotBindings {
   private debounceTimeout: number | null = null;
   private debounceDelay = 200;
-  private pendingTasks: Map<string, {
-    candidates: number[];
-    promises: { resolve: (value: any) => void; reject: (reason?: any) => void }[];
-  }> = new Map();
+  private pendingTasks: Map<
+    string,
+    {
+      candidates: number[];
+      promises: {
+        resolve: (value: any) => void;
+        reject: (reason?: any) => void;
+      }[];
+    }
+  > = new Map();
   private processedResults: Map<string, CacheEntry> = new Map(); // Cache for processed data
+  private fetchPromises: Map<string, Promise<Uint8Array | null>> = new Map(); // Cache for pending fetch promises
+  private unzipPromises: Map<string, Promise<void>> = new Map(); // New: Track ongoing unzip operations
   private models: Models = {};
   private rootFileSystemHandle: FileSystemHandle | null = null;
   private queue: number[] = [];
   private candidates: number[][] = [];
   private wrappedWorker: Comlink.Remote<unknown> | null = null;
-  private setConverting: Dispatch<React.SetStateAction<{ name: string }[]>> | null =
-    null;
+  private setConverting: Dispatch<
+    React.SetStateAction<{ name: string }[]>
+  > | null = null;
 
-  private updateProcessedResults = (data: {[key: string]: ArrayBuffer}) => {
+  private updateProcessedResults = (data: { [key: string]: ArrayBuffer }) => {
     if (!data) return;
     for (const [key, value] of Object.entries(data)) {
       this.processedResults.set(key, { value, lastAccess: Date.now() });
@@ -126,28 +140,63 @@ class GodotBindings {
         setLoadingTitle,
       },
     };
-    window.getJsBytes = this.getJsBytes;
     window.setSplash = setSplash;
     /**
      * Globals
      */
     setGlobals({ gameController, GlobalStore, root: "eqrequiem" });
-    this.models = await fetch("/models.json").then((r) => r.json());
-    const worker = new Worker(new URL("./worker.ts", import.meta.url), {
-      type: "module",
-    });
-    const wrappedWorker = Comlink.wrap(worker);
-    this.wrappedWorker = wrappedWorker;
+    this.models = await fetch(`models.json`, { mode: 'cors' })
+      .then((r) => {
+        if (!r.ok) throw new Error(`Failed to fetch models.json: ${r.status}`);
+        return r.json();
+      })
+      .catch((e) => {
+        console.error("Error fetching models.json:", e);
+        throw e;
+      });
+    if (USE_SAGE) {
+      console.log("Using Sage Worker");
+      const worker = new Worker(new URL("./worker.ts", import.meta.url), {
+        type: "module",
+      });
+      const wrappedWorker = Comlink.wrap(worker);
+      this.wrappedWorker = wrappedWorker;
+    }
+
     setInterval(() => {
       this.cleanUpProcessedResults();
     }, 60000);
   }
+  processFiles = async (rootName: string, files: string[]) => {
+    const handles = await Promise.all(
+      await getRootFiles((name: string) => files.includes(name)),
+    );
+    const handleNames = handles.map((h: FileSystemFileHandle) => ({
+      name: h.name,
+    }));
+
+    this.setConverting?.(handleNames);
+    console.log("--- Processing Handles ---", handleNames);
+    try {
+      const data = await this.wrappedWorker?.process(
+        rootName,
+        this.rootFileSystemHandle,
+        ...handles,
+      );
+
+      return data;
+    } catch (e) {
+      console.log("Error processing", e);
+      throw e;
+    }
+  };
+
   flushQueue = async () => {
     if (!this.candidates.length) return;
 
     const currentCandidates = [...this.candidates];
     this.candidates = [];
-    
+
     this.queue = selectMinimalFiles(currentCandidates);
 
     const minimalFiles = this.queue
@@ -158,10 +207,12 @@ class GodotBindings {
       console.log("No minimal files to load");
       return;
     }
-    if (this.queue.includes(this.models.stringTable.indexOf('global_chr.s3d'))) {
+    if (
+      this.queue.includes(this.models.stringTable.indexOf("global_chr.s3d"))
+    ) {
       console.log("Adding global3_chr to queue");
-      minimalFiles.push('global3_chr.s3d');
-      minimalFiles.push('global4_chr.s3d');
+      minimalFiles.push("global3_chr.s3d");
+      minimalFiles.push("global4_chr.s3d");
     }
     const handles = await Promise.all(
       await getRootFiles((name: string) => minimalFiles.includes(name)),
@@ -169,7 +220,7 @@ class GodotBindings {
     const handleNames = handles.map((h: FileSystemFileHandle) => ({
       name: h.name,
     }));
-    
+
     this.setConverting?.(handleNames);
     console.log("--- Processing Handles ---", handleNames);
 
@@ -191,14 +242,13 @@ class GodotBindings {
 
   private checkPendingTasks = () => {
     for (const [path, task] of this.pendingTasks) {
-      const pathParts = path.split('/');
+      const pathParts = path.split("/");
       const fileName = pathParts[pathParts.length - 1];
       if (this.processedResults.has(fileName)) {
         const data = this.getProcessedResult(fileName);
         task.promises.forEach(({ resolve }) => resolve(data));
         this.pendingTasks.delete(path);
       }
-      // If no data matches, task remains pending
     }
   };
 
@@ -210,7 +260,6 @@ class GodotBindings {
   };
 
   enqueueFile = (path: string, candidates: number[]) => {
-    // Filter candidates
     candidates = candidates.filter((i) => {
       if (/global[a-z]+_/.test(this.models.stringTable[i] as string)) {
         return false;
@@ -222,8 +271,7 @@ class GodotBindings {
       return Promise.resolve(null);
     }
 
-    // Check if we already have the result
-    const pathParts = path.split('/');
+    const pathParts = path.split("/");
     const fileName = pathParts[pathParts.length - 1];
     if (this.processedResults.has(fileName)) {
       return Promise.resolve(this.getProcessedResult(fileName));
@@ -232,7 +280,6 @@ class GodotBindings {
     this.candidates.push(candidates);
 
     return new Promise((resolve, reject) => {
-      // Add to existing task or create new one based on path
       if (this.pendingTasks.has(path)) {
         this.pendingTasks.get(path)!.promises.push({ resolve, reject });
       } else {
@@ -242,12 +289,10 @@ class GodotBindings {
         });
       }
 
-      // Clear existing timeout
       if (this.debounceTimeout !== null) {
         clearTimeout(this.debounceTimeout);
       }
 
-      // Set new debounced execution
       this.debounceTimeout = setTimeout(async () => {
         try {
           await this.flushQueue();
@@ -259,110 +304,289 @@ class GodotBindings {
     });
   };
 
-  private pfsArchives: { [key: string]: PFSArchive } = {};
-  private pfsArchivePromises: { [key: string]: Promise<void> } = {};
+  // New: Unzip a zip file to OPFS
+  private async unzipToFilesystem(zipBuffer: ArrayBuffer, folderPath: string) {
+    const zip = await JSZip.loadAsync(zipBuffer);
+    const writePromises: Promise<void>[] = [];
 
-  getJsBytes = async (
-    inputString: string,
-    innerFile: string,
+    for (const [relativePath, zipEntry] of Object.entries(zip.files)) {
+      if (zipEntry.dir) continue; // Skip directories
+
+      const fileName = relativePath.split("/").pop()!;
+      const buffer = await zipEntry.async("arraybuffer");
+
+      // Write to OPFS
+      writePromises.push(
+        writeRootEQFile(folderPath, fileName, buffer).catch((e) => {
+          console.error(`Error writing ${fileName} to OPFS:`, e);
+          throw e;
+        }),
+      );
+    }
+
+    await Promise.all(writePromises);
+  }
+
+  async getOrFetch(folderPath: string, fileName: string): Promise<ArrayBuffer | null> {
+    folderPath = folderPath.toLowerCase();
+    fileName = fileName.toLowerCase();
+  
+    // Check if the file exists in OPFS
+    const data = await getRootEQFile(folderPath, fileName);
+    if (data) {
+      return data;
+    }
+  
+    // Non-zipped file handling
+    if (USE_SAGE) {
+      return null;
+    }
+  
+    // Check if the path matches a zipped prefix (e.g., eqrequiem/textures)
+    const isZippedPrefix = zippedPrefixes.some((prefix) =>
+      folderPath.startsWith(prefix),
+    );
+  
+    if (isZippedPrefix) {
+      // Extract the subfolder (e.g., qeynos2 from eqrequiem/textures/qeynos2)
+      const pathParts = folderPath.split("/");
+      const zipFolder = pathParts[pathParts.length - 1]; // e.g., qeynos2
+      const zipPath = `${baseUrl}/${pathParts.slice(0, -1).join("/")}/${zipFolder}.zip`;
+      const zipKey = zipPath.toLowerCase();
+  
+      // Check if there's an ongoing unzip operation for this zip
+      if (this.unzipPromises.has(zipKey)) {
+        await this.unzipPromises.get(zipKey)!;
+        // Retry fetching the file from OPFS
+        const retryData = await getRootEQFile(folderPath, fileName);
+        return retryData || null;
+      }
+  
+      // Check if there's an ongoing fetch for the zip
+      if (this.fetchPromises.has(zipKey)) {
+        const zipBuffer = await this.fetchPromises.get(zipKey)!;
+        if (!zipBuffer) {
+          console.error(`Failed to fetch ${zipKey}`);
+          return null;
+        }
+      } else {
+        // Create a new fetch and unzip promise
+        const fetchPromise = (async () => {
+          try {
+            const response = await fetch(zipPath, { mode: "cors" });
+            if (response.status === 404) {
+              console.warn(`Zip file not found: ${zipPath}`);
+              return null; // Explicitly handle 404
+            }
+            if (!response.ok) {
+              throw new Error(`HTTP error fetching ${zipPath}: ${response.status}`);
+            }
+            const buffer = new Uint8Array(await response.arrayBuffer());
+            return buffer;
+          } catch (e) {
+            console.error(`Error fetching zip ${zipPath}:`, e);
+            return null;
+          } finally {
+            this.fetchPromises.delete(zipKey);
+          }
+        })();
+  
+        this.fetchPromises.set(zipKey, fetchPromise);
+  
+        const unzipPromise = (async () => {
+          try {
+            const zipBuffer = await fetchPromise;
+            if (!zipBuffer) {
+              throw new Error(`Failed to fetch zip ${zipPath}`);
+            }
+            await this.unzipToFilesystem(zipBuffer, folderPath);
+          } catch (e) {
+            console.error(`Error unzipping ${zipPath}:`, e);
+            throw e;
+          } finally {
+            this.unzipPromises.delete(zipKey);
+          }
+        })();
+  
+        this.unzipPromises.set(zipKey, unzipPromise);
+        await unzipPromise;
+      }
+  
+      // Try to fetch the file from OPFS again
+      const finalData = await getRootEQFile(folderPath, fileName);
+      return finalData || null;
+    }
+  
+    // Non-zipped file fetch
+    let normalizedPath = `${baseUrl}/${folderPath}/${fileName}`
+      .replace(/\/+/g, "/")
+      .replace(/^https:\/+/, "https://")
+      .toLowerCase();
+    if (normalizedPath.endsWith("/")) {
+      normalizedPath = normalizedPath.slice(0, -1);
+    }
+    if (normalizedPath.endsWith(".glb")) {
+      fileName = fileName.toLowerCase();
+      normalizedPath = normalizedPath.replace(".glb", ".glb.gz").toLowerCase();
+    }
+  
+    if (this.fetchPromises.has(normalizedPath)) {
+      return this.fetchPromises.get(normalizedPath)!;
+    }
+  
+    const fetchPromise = (async () => {
+      try {
+        const response = await fetch(normalizedPath, { mode: "cors" });
+        if (response.status === 404) {
+          console.warn(`File not found: ${normalizedPath}`);
+          return null; // Explicitly handle 404
+        }
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const buffer = new Uint8Array(await response.arrayBuffer());
+        await writeRootEQFile(folderPath, fileName, buffer);
+        return buffer.buffer;
+      } catch (e) {
+        console.error(`Error fetching file from ${normalizedPath}:`, e);
+        return null;
+      } finally {
+        this.fetchPromises.delete(normalizedPath);
+      }
+    })();
+  
+    this.fetchPromises.set(normalizedPath, fetchPromise);
+    return fetchPromise;
+  }
+
+  getFile = async (
+    folderPath: string,
+    fileName: string,
   ): Promise<ArrayBuffer | null> => {
     try {
-      if (!inputString) {
-        console.log("No input string");
-        return null;
+      const path = folderPath.split("/");
+      let data = await this.getOrFetch(folderPath, fileName);
+      if (!USE_SAGE) {
+        return data;
       }
-      const path = inputString.split("/");
-      let data = null;
-      if (inputString.endsWith(".s3d") || inputString.endsWith(".eqg")) {
-        if (!this.pfsArchives[inputString]) {
-          this.pfsArchives[inputString] = new PFSArchive();
-          this.pfsArchivePromises[inputString] = new Promise(async (res) => {
-            this.pfsArchives[inputString].openFromFile(
-              await getEQFile("root", inputString),
-            );
-            res();
-          });
-        }
-        await this.pfsArchivePromises[inputString];
-        for (const [key] of this.pfsArchives[inputString].files.entries()) {
-          if (key.split(".")[0].toLowerCase() === innerFile.toLowerCase()) {
-            return this.pfsArchives[inputString].getFile(key);
+      if (path[0] !== "eqrequiem") {
+        data = await this.getOrFetch(folderPath, fileName);
+      } else {
+        switch (path[1]) {
+          case "textures": {
+            data = await this.getOrFetch(folderPath, fileName);
+            break;
           }
-        }
-      }
-      switch (path[0]) {
-        case "eqrequiem":
-          switch (path[1]) {
-            case "objects":
-            case "textures":
-            case "models":
-            case "sky":
-              data = this.getProcessedResult(path[2]) || await getEQFile(path[1], path[2]);
-              if (!data && (path[1] === "models" || path[1] === "objects")) {
-                const matches = this.models[path[2].replace(".glb", "")];
-                if (matches.length) {
-                  let didSet = false;
-                  if (matches.some((m) => this.models.stringTable[m].includes('global'))) {
-                    didSet = true;
-                    window?.setSplash(true);
-                  }
-                  const data = await this.enqueueFile(inputString, matches as number[]);
-                  if (didSet) {
-                    window?.setSplash(false);
-                  }
-                  return data ? data : null;
-                }
-              }
-              break;
-            case "zones": {
-              const zoneName = path[2].split(".")[0];
-              data = await getEQFile(path[1], path[2]);
-              if (!data) {
-                const handles = [];
-                if (await getEQFileExists("root", `${zoneName}.s3d`)) {
-                  handles.push({
-                    name: `${zoneName}.s3d`,
-                    arrayBuffer() {
-                      return getEQFile("root", `${zoneName}.s3d`);
-                    },
-                  });
-                }
-                if (await getEQFileExists("root", `${zoneName}.eqg`)) {
-                  handles.push({
-                    name: `${zoneName}.eqg`,
-                    arrayBuffer() {
-                      return getEQFile("root", `${zoneName}.eqg`);
-                    },
-                  });
-                }
-                this.setConverting?.(
-                  handles.map((h: FileSystemFileHandle) => ({
-                    name: h.name,
-                  })),
-                );
-                const obj = new EQFileHandle(
-                  zoneName,
-                  handles,
-                  this.rootFileSystemHandle,
-                  {},
-                  {
-                    rawImageWrite: true,
-                    skipSubload: true,
+          case "sky": {
+            data =
+              this.getProcessedResult(fileName) ||
+              (await getEQFile(path[1], fileName));
+            if (!data && (path[1] === "models" || path[1] === "sky")) {
+              const handles = [
+                {
+                  name: `sky.s3d`,
+                  arrayBuffer() {
+                    return getEQFile("root", `sky.s3d`);
                   },
-                );
-                await obj.initialize();
-                await obj.process();
-                data = await getEQFile(path[1], path[2]);
-              }
-              break;
+                },
+              ];
+              this.setConverting?.(
+                handles.map((h: FileSystemFileHandle) => ({
+                  name: h.name,
+                })),
+              );
+              const obj = new EQFileHandle(
+                "sky",
+                handles,
+                this.rootFileSystemHandle,
+                {},
+                {
+                  rawImageWrite: true,
+                  skipSubload: true,
+                },
+              );
+              await obj.initialize();
+              await obj.process();
+              data = await getEQFile(path[1], fileName);
             }
-            default:
-              break;
+            break;
           }
-          break;
-        default:
-          break;
+          case "objects":
+          case "models":
+            data =
+              this.getProcessedResult(fileName) ||
+              (await getEQFile(path[1], fileName));
+            if (!data && (path[1] === "models" || path[1] === "objects")) {
+              const matches =
+                this.models[fileName.replace(".glb", "").toLowerCase()];
+              if (matches.length) {
+                let didSet = false;
+                if (
+                  matches.some((m) =>
+                    this.models.stringTable[m].includes("global"),
+                  )
+                ) {
+                  didSet = true;
+                  window?.setSplash(true);
+                }
+                const data = await this.enqueueFile(
+                  folderPath,
+                  matches as number[],
+                );
+                if (didSet) {
+                  window?.setSplash(false);
+                }
+                return data ? data : null;
+              }
+            }
+            break;
+          case "zones": {
+            const zoneName = fileName.split(".")[0];
+            data = await getEQFile(path[1], fileName);
+            if (!data) {
+              const handles = [];
+              if (await getEQFileExists("root", `${zoneName}.s3d`)) {
+                handles.push({
+                  name: `${zoneName}.s3d`,
+                  arrayBuffer() {
+                    return getEQFile("root", `${zoneName}.s3d`);
+                  },
+                });
+              }
+              if (await getEQFileExists("root", `${zoneName}.eqg`)) {
+                handles.push({
+                  name: `${zoneName}.eqg`,
+                  arrayBuffer() {
+                    return getEQFile("root", `${zoneName}.eqg`);
+                  },
+                });
+              }
+              this.setConverting?.(
+                handles.map((h: FileSystemFileHandle) => ({
+                  name: h.name,
+                })),
+              );
+              const obj = new EQFileHandle(
+                zoneName,
+                handles,
+                this.rootFileSystemHandle,
+                {},
+                {
+                  rawImageWrite: true,
+                  skipSubload: true,
+                },
+              );
+              await obj.initialize();
+              await obj.process();
+              data = await getEQFile(path[1], fileName);
+            }
+            break;
+          }
+          default:
+            break;
+        }
       }
+
       return data;
     } catch (e) {
       console.log("Error getting bytes", e);

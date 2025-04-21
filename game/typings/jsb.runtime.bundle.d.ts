@@ -7,7 +7,7 @@ declare module "godot.annotations" {
     }
     export function EnumType(type: any): EnumPlaceholder;
     export function TypePair(key: ClassDescriptor, value: ClassDescriptor): TypePairPlaceholder;
-    export type ClassDescriptor = Function | symbol | EnumPlaceholder | TypePairPlaceholder;
+    export type ClassDescriptor = Function | Symbol | EnumPlaceholder | TypePairPlaceholder;
     /**
      *
      */

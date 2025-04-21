@@ -11,9 +11,13 @@ config_version=5
 [application]
 
 config/name="Test"
-run/main_scene="res://zone.tscn"
+run/main_scene="res://game.tscn"
 config/features=PackedStringArray("4.5", "GL Compatibility")
 config/icon="res://favicon.png"
+
+[editor_plugins]
+
+enabled=PackedStringArray()
 
 [rendering]
 

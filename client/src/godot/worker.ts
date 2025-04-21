@@ -48,12 +48,12 @@ const process = async (
   } catch (e) {
     console.log("Error processing EQFileHandle", e);
   }
-  return Object.entries(data).reduce((acc, [key, value]: [string, ArrayBuffer]) => {
+  return data ? Object.entries(data).reduce((acc, [key, value]: [string, ArrayBuffer]) => {
     return {
       ...acc,
       [key]: Comlink.transfer(value, [value]),
     };
-  }, {});
+  }, {}) : null;
 };
 
 Comlink.expose({

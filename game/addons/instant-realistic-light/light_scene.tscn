@@ -45,6 +45,7 @@ light_color = Color(0.956863, 0.588235, 0.207843, 1)
 light_energy = 0.207
 light_angular_distance = 13.82
 light_specular = 0.0
+shadow_enabled = true
 shadow_bias = 3.282
 shadow_normal_bias = 1.838
 shadow_transmittance_bias = 0.69

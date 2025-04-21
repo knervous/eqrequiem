@@ -1,4 +1,5 @@
 {
+  "extends": "../tsconfig.json",
   "compilerOptions": {
     "inlineSourceMap": true,
     "inlineSources": true,
@@ -12,6 +13,9 @@
       "DOM.Iterable"
     ],
     "module": "ESNext",
+    "typeRoots": [                                       /* Specify multiple folders that act like './node_modules/@types'. */
+      "./node_modules/@types","../game/typings"
+    ],
     "skipLibCheck": true,
     /* Bundler mode */
     "moduleResolution": "bundler",
@@ -22,11 +26,24 @@
     "jsx": "react-jsx",
     /* Linting */
     "strict": true,
+    "noImplicitAny": false,        // …but allow implicit `any` everywhere
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+    "baseUrl": ".",
+    "paths": {
+      "@game/*": ["src/Game/*"], // Map @game/* to src/Game/*
+      "@ui/*": ["src/UI/*"], // Map @game/* to src/Game/*
+      "@/*": ["src/*"], // Map @game/* to src/Game/*
+      "sage-core/*": ["../../eqsage/sage/lib/*"] // Map sage core*
+    }
   },
   "include": [
-    "src"
+    "src",
+    "../game/typings",
+    "../../eqsage/sage/lib",
+  ],
+  "references": [
+    { "path": "../game" },
   ]
 }

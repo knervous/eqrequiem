@@ -5,8 +5,7 @@ import {
   Typography,
 } from "@mui/material";
 import React from "react";
-import { getSplashImage } from "requiem-ui/common/splash.js";
-
+import { getSplashImage } from "../UI/common/splash";
 let splashImage = getSplashImage();
 setInterval(() => {
   if (splashImage !== getSplashImage()) {
