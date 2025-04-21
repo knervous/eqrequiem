@@ -7,7 +7,7 @@
     "dev": "cross-env VITE_USE_SAGE=true LOCAL_DEV=true vite",
     "v": "vercel dev",
     "start": "cross-env VITE_USE_SAGE=false LOCAL_DEV=true vite",
-    "build": "cd ../ui && npm i && cd ../client && vite build",
+    "build": "vite build",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview"
   },
