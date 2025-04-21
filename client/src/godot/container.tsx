@@ -6,6 +6,7 @@ import { StatusDialog } from "../components/dialogs/status-dialog.tsx";
 
 import GodotPlayer from "./player.tsx";
 import { SplashScreen } from "./splash.tsx";
+import { USE_SAGE } from "@game/Constants/constants.ts";
 
 const bgMax = 1; //6;
 const prefix = "electronAPI" in window ? "./" : "/";
@@ -31,7 +32,7 @@ const GodotContainerComponent: React.FC = () => {
       backgroundSize: "cover",
     }}>
       {(splash || !ready) && <SplashScreen files={converting} />}
-      {statusDialogOpen && (
+      {statusDialogOpen && USE_SAGE && (
         <StatusDialog
           fsHandle={rootFileSystemHandle}
           onDrop={onDrop}

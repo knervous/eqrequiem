@@ -4,6 +4,7 @@ import {
   usePermissions,
 } from "sage-core/hooks/permissions";
 import { godotBindings } from "../godot/bindings";
+import { USE_SAGE } from "@game/Constants/constants";
 
 const MainContext = React.createContext({});
 
@@ -20,7 +21,7 @@ export const MainProvider = (props: ReactProps) => {
     requestPermissions,
     rootFileSystemHandle,
     onFolderSelected,
-  ] = usePermissions();
+  ] = USE_SAGE ? usePermissions() : [];
   const [ready, setReady] = useState(false);
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
 
