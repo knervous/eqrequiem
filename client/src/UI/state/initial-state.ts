@@ -1,3 +1,4 @@
+/// <reference lib="dom" />
 
 export interface UiWindow {
   visible: boolean;
@@ -11,6 +12,7 @@ export interface UiWindow {
   fixedHeight?: number;
   fixed?: boolean;
 };
+
 
 const defaultWindow: UiWindow = {
   visible: false,
@@ -47,6 +49,7 @@ export type UiState = {
   actionBarWindows: ActionBarWindow[];
 };
 
+
 export const initialUiState: UiState = {
   inventoryWindow: {
     ...defaultWindow,
@@ -56,16 +59,27 @@ export const initialUiState: UiState = {
   },
   devWindow: {
     ...defaultWindow,
+    x: 5,
+    y: 5,
+    collapsed: true,
+    width: 300,
+    height: 200,
+    //x: window.
   },
   targetWindow: {
     ...defaultWindow,
-    x: 300,
-    y: 50,
+    width: 200,
+    height: 100,
+    x: (window.innerWidth / 2) - 75,
+    y: window.innerHeight - 310,
+    
   },
   playerWindow: {
     ...defaultWindow,
-    x: 300,
-    y: 450,
+    x: window.innerWidth - 310,
+    y: window.innerHeight - 220,
+    width: 150,
+    height: 215,
   },
   settingsWindow: {
     ...defaultWindow,
@@ -74,31 +88,41 @@ export const initialUiState: UiState = {
   },
   spellsWindow: {
     ...defaultWindow,
-    x: 200,
-    y: 200,
+    width: 85,
+    height: 235,
+    x: 5,
+    y: 205,
   },
   topBarWindow: {
     ...defaultWindow,
     fixed: true,
-    x: 200,
-    y: 50,
+    fixedHeight: 25,
+    fixedWidth: 250,
+    x: (window.innerWidth / 2) - 125,
+    y: 5,
   },
   compassWindow: {
     ...defaultWindow,
     fixed: true,
-    x: 200,
-    y: 150,
+    fixedHeight: 24,
+    fixedWidth: 98,
+    x: (window.innerWidth / 2) - 49,
+    y: 50,
   },
   actionWindow: {
     ...defaultWindow,
-    x: 500,
-    y: 550,
+    x: window.innerWidth - 155,
+    y: window.innerHeight - 220,
+    width: 150,
+    height: 215,
   },
   chatWindows: [
     {
       ...defaultWindow,
-      x: 300,
-      y: 300,
+      width: 400,
+      height: 200,
+      x: (window.innerWidth / 2) - 200,
+      y: window.innerHeight - 210,
       name: "General",
       filters: [],
     },
@@ -107,8 +131,10 @@ export const initialUiState: UiState = {
     [
       {
         ...defaultWindow,
-        x: 100,
-        y: 500,
+        width: 100,
+        height: 200,
+        x: 5,
+        y: window.innerHeight - 205,
       },
     ],
 };

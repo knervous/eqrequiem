@@ -52,15 +52,9 @@ export const CompassWindowComponent: React.FC = () => {
     // Cleanup interval on unmount
     return () => clearInterval(interval);
   }, [strip.entry.width]);
-
   return (
     <UiWindowComponent
-      state={{
-        ...state,
-        fixedWidth: overlay.entry.width,
-        fixedHeight: overlay.entry.height,
-        fixed: true,
-      }}
+      state={state}
       windowName="compassWindow"
     >
       <Box

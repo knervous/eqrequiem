@@ -1,5 +1,4 @@
 {
-  "extends": "../tsconfig.json",
   "compilerOptions": {
     "inlineSourceMap": true,
     "inlineSources": true,
@@ -9,8 +8,8 @@
     "useDefineForClassFields": true,
     "lib": [
       "ES2020",
-      "DOM",
-      "DOM.Iterable"
+      "dom",
+      "dom.iterable"
     ],
     "module": "ESNext",
     "typeRoots": [                                       /* Specify multiple folders that act like './node_modules/@types'. */

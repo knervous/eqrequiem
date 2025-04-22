@@ -33,7 +33,7 @@ export const UiWindowComponent: React.FC<Props> = ({
 }) => {
   const dispatcher = useDispatch();
   const { fixed, fixedWidth = 200, fixedHeight = 200 } = state;
-  const [minimized, setMinimized] = useState(false);
+  const [minimized, setMinimized] = useState(state.collapsed || false);
 
   // Dragging is always enabled
   const {
@@ -77,6 +77,9 @@ export const UiWindowComponent: React.FC<Props> = ({
     reducerUpdate();
   }, [x, y, width, height, dispatcher, index, windowName, reducerUpdate]);
 
+  useEffect(() => {
+    dispatcher(actions.setWindowCollapsed(windowName, minimized, index));
+  }, [minimized, dispatcher, windowName, index]);
   // Memoized window styles with minimize behavior
   const windowStyles = useMemo(() => {
     const baseHeight = minimized ? 0 : title ? 30 : 10; // Title bar height or drag handle height

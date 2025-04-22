@@ -46,6 +46,7 @@ const chatCommandHandler = async (message: string) => {
       {
         addChatLine("Camping...");
         GameManager.instance.dispose();
+        setMode
         break;
       }
       case "spawn":

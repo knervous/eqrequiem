@@ -4,7 +4,7 @@ import type * as godotNS from "godot";
 type GodotModule = typeof godotNS;
 
 declare global {
-  interface Window {
+  interface Window extends Global {
     require: (module: string) => GodotModule;
   }
 }

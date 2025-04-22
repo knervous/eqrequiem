@@ -89,7 +89,7 @@ export default class GameManager extends Node3D {
     this.regionAreas = new Map();
     // Add a property to track active regions
     this.activeRegions = new Set();
-    this.loadZone(this.zoneName);
+    //this.loadZone(this.zoneName);
   }
 
   private setLoading(value: boolean) {

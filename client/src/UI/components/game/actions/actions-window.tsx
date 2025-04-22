@@ -68,7 +68,7 @@ export const ActionWindowComponent: React.FC = () => {
       case ActionTabs.Abilities:
         return <Box>Abilities</Box>;
     }
-  }, [activeTab]);
+  }, [activeTab, setMode]);
   return (
     <UiWindowComponent
       state={state}

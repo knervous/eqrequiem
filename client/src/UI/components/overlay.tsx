@@ -4,16 +4,17 @@ import { UiState, initialUiState } from "../state/initial-state";
 import { uiReducer } from "../state/reducer";
 import { UIContext } from "./context";
 import { SxProps } from "@mui/material";
-import { ImageCache } from "../util/image-cache";
 import { Theme } from "./theme";
 import {  stateKey } from "./overlay-types";
 import { LoginUIComponent } from "./login";
 import { GameUIComponent } from "./game";
 import { CharacterSelectUIComponent } from "./character-select";
 import { StringTable } from "../util/string-table";
+import { godotBindings } from "@/godot/bindings";
+import { UIEvents } from "@ui/events/ui-events";
 
 import "./overlay.css";
-import { godotBindings } from "@/godot/bindings";
+
 
 let storedState: UiState | string | null = localStorage.getItem(stateKey);
 if (storedState) {
@@ -24,6 +25,8 @@ if (storedState) {
     console.error("Failed to parse stored state", e);
     storedState = null;
   }
+
+  storedState = initialUiState;
 }
 type Props = {
   sx?: SxProps;
@@ -37,6 +40,14 @@ export const Overlay: React.FC<Props> = (props: Props) => {
     (storedState as UiState | null) ?? initialUiState,
   );
 
+  useEffect(() => {
+    if (mode === 'game') {
+      UIEvents.emit("chat", { type: 0, line: 'Welcome to EQ Requiem!', color: '#ddd' });
+      UIEvents.emit("chat", { type: 0, line: 'This is currently a demo sandbox with development features.', color: '#ddd' });
+      UIEvents.emit("chat", { type: 0, line: 'Type /help to get started.', color: '#ddd' });
+    }
+
+  }, [mode]);
 
   useEffect(() => {
     try {

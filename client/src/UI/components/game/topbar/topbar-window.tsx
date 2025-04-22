@@ -8,8 +8,7 @@ import { useUIContext } from "../../context";
 
 export const TopBarWindowComponent: React.FC = () => {
   const state = useUIContext((state) => state.ui.topBarWindow);
-  state.fixedWidth = 10 * 25;
-  state.fixedHeight = 25;
+
   return (
     <UiWindowComponent
       state={state}
