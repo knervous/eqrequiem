@@ -292,17 +292,17 @@ export const zoneData = [
   {
     zone: 60,
     shortName: "kaladima",
-    longName: "Kaladim (A)",
+    longName: "South Kaladim",
   },
   {
     zone: 61,
     shortName: "felwithea",
-    longName: "Felwithe (A)",
+    longName: "North Felwithe",
   },
   {
     zone: 62,
     shortName: "felwitheb",
-    longName: "Felwithe (B)",
+    longName: "South Felwithe",
   },
   {
     zone: 63,
@@ -327,7 +327,7 @@ export const zoneData = [
   {
     zone: 67,
     shortName: "kaladimb",
-    longName: "Kaladim (B)",
+    longName: "North Kaladim",
   },
   {
     zone: 68,

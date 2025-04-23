@@ -2582,7 +2582,7 @@ export const supportedZones = {
     },
   },
   "60": {
-    longName: "Kaladim (A)",
+    longName: "South Kaladim",
     shortName: "kaladima",
     safe_x: -2,
     safe_y: -18,

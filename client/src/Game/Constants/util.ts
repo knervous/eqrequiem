@@ -39,6 +39,7 @@ const {
   Veeshan,
 } = Deity;
 
+
 const {
   SouthQeynos,
   NorthQeynos,

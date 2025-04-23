@@ -114,10 +114,10 @@ export default class GameManager extends Node3D {
         this.environmentManager = null;
       }
 
-      // if (this.skyManager) {
-      //   this.skyManager?.dispose();
-      //   this.skyManager = null;
-      // }
+      if (this.skyManager) {
+        this.skyManager?.dispose?.();
+        this.skyManager = null;
+      }
 
       if (this.zoneObjects) {
         this.zoneObjects.dispose();

@@ -26,13 +26,14 @@ export const CharacterSelectUIComponent: React.FC = () => {
 
   const charSelectHandler = useCallback(
     (charInfo: EQMessage.CharacterSelect) => {
+      GameManager.instance.loadCharacterSelect();
       setGotCharInfo(true);
       setCharInfo(charInfo);
       setSelectedChar(charInfo?.characters[0] ?? null);
       if (!splashed) {
         setSplash?.(true);
-
         setTimeout(() => {
+          setSplash?.(false);
           setSplash?.(false);
         }, 1000);
         splashed = true;
@@ -72,7 +73,10 @@ export const CharacterSelectUIComponent: React.FC = () => {
     if (!token?.current) {
       return;
     }
-    GameManager.instance.loadCharacterSelect();
+    setSplash?.(true);
+    setTimeout(() => {
+      setSplash?.(false);
+    }, 1000);
     WorldSocket.registerOpCodeHandler<EQMessage.CharacterSelect>(
       EQMessage.OpCodes.OP_SendCharInfo,
       EQMessage.CharacterSelect,
@@ -168,7 +172,7 @@ export const CharacterSelectUIComponent: React.FC = () => {
               <UiButtonComponent
                 buttonName="A_SmallBtn"
                 text={"Delete"}
-                disabled={!selectedChar}
+                isDisabled={!selectedChar}
                 scale={1.3}
                 textFontSize="11px"
                 sx={{ margin: "12px" }}

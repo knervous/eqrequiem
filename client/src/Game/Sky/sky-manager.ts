@@ -129,6 +129,18 @@ export default class DayNightSkyManager {
     this._updateSunAndSky();
   }
 
+  dispose() {
+    if (this.domeRoot) {
+      this.domeRoot.queue_free();
+    }
+    if (this.worldEnv) {
+      this.worldEnv.queue_free();
+    }
+    if (this.sun) {
+      this.sun.queue_free();
+    }
+  }
+
   tick(delta: number): void {
     if (!this.domeRoot) {
       return;

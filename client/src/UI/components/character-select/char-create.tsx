@@ -88,46 +88,36 @@ export const CharacterCreate = ({ setView, charInfo }) => {
         deity: selectedDeity,
       },
     );
+    
     const char = {
       gender,
       face,
       tutorial: 0,
+      ...character,
       race: +selectedRace,
       charClass: selectedClass,
       startZone: selectedCity,
       deity: selectedDeity,
-      ...character,
     };
-    WorldSocket.registerOpCodeHandler(EQMessage.OpCodes.OP_SendMaxCharacters, EQMessage.Int, (data) => {
-      setView(VIEWS.CHAR_SELECT);
-    });
+    console.log('Send character', char);
     WorldSocket.registerOpCodeHandler(
       EQMessage.OpCodes.OP_ApproveName_Server,
       EQMessage.Int,
       (data) => {
         console.log("Got data", data);
-        if (data) {
+        if (data.value === 1) {
           WorldSocket.sendMessage(
             EQMessage.OpCodes.OP_CharacterCreate,
             EQMessage.CharCreate,
             char,
           );
+          setView(VIEWS.CHAR_SELECT);
         } else {
-          WorldSocket.sendMessage(
-            EQMessage.OpCodes.OP_DeleteCharacter,
-            EQMessage.String$,
-            { value: name },
-          );
+          alert('Invalid name');
         }
       },
     );
 
-    console.log("Sending char", char);
-    // WorldSocket.sendMessage(
-    //   EQMessage.OpCodes.OP_CharacterCreateRequest,
-    //   EQMessage.CharCreate,
-    //   char,
-    // );
   }, [
     name,
     gender,
@@ -154,7 +144,7 @@ export const CharacterCreate = ({ setView, charInfo }) => {
     setDeities(deities);
     setSelectedDeity(deities[0][0]);
   }, [selectedRace, selectedClass]);
-
+  console.log('Selected deity', selectedDeity);
   useEffect(() => {
     const deity = deities.find(([val]) => val === selectedDeity);
     const availableCities =
