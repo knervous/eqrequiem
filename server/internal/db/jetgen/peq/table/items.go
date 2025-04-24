@@ -58,8 +58,7 @@ type itemsTable struct {
 	Bardvalue           mysql.ColumnInteger
 	Book                mysql.ColumnInteger
 	Casttime            mysql.ColumnInteger
-	Charmfile           mysql.ColumnString
-	Charmfileid         mysql.ColumnString
+	Casttime2           mysql.ColumnInteger
 	Classes             mysql.ColumnInteger
 	Color               mysql.ColumnInteger
 	Combateffects       mysql.ColumnString
@@ -87,7 +86,6 @@ type itemsTable struct {
 	Factionmod2         mysql.ColumnInteger
 	Factionmod3         mysql.ColumnInteger
 	Factionmod4         mysql.ColumnInteger
-	Filename            mysql.ColumnString
 	Focuseffect         mysql.ColumnInteger
 	Fr                  mysql.ColumnInteger
 	Fvnodrop            mysql.ColumnInteger
@@ -99,9 +97,6 @@ type itemsTable struct {
 	Idfile              mysql.ColumnString
 	Itemclass           mysql.ColumnInteger
 	Itemtype            mysql.ColumnInteger
-	Ldonprice           mysql.ColumnInteger
-	Ldontheme           mysql.ColumnInteger
-	Ldonsold            mysql.ColumnInteger
 	Light               mysql.ColumnInteger
 	Lore                mysql.ColumnString
 	Loregroup           mysql.ColumnInteger
@@ -137,131 +132,49 @@ type itemsTable struct {
 	Tradeskills         mysql.ColumnInteger
 	Favor               mysql.ColumnInteger
 	Weight              mysql.ColumnInteger
-	Unk012              mysql.ColumnInteger
-	Unk013              mysql.ColumnInteger
 	Benefitflag         mysql.ColumnInteger
-	Unk054              mysql.ColumnInteger
-	Unk059              mysql.ColumnInteger
 	Booktype            mysql.ColumnInteger
 	Recastdelay         mysql.ColumnInteger
 	Recasttype          mysql.ColumnInteger
 	Guildfavor          mysql.ColumnInteger
-	Unk123              mysql.ColumnInteger
-	Unk124              mysql.ColumnInteger
 	Attuneable          mysql.ColumnInteger
 	Nopet               mysql.ColumnInteger
 	Updated             mysql.ColumnTimestamp
-	Comment             mysql.ColumnString
-	Unk127              mysql.ColumnInteger
 	Pointtype           mysql.ColumnInteger
 	Potionbelt          mysql.ColumnInteger
 	Potionbeltslots     mysql.ColumnInteger
 	Stacksize           mysql.ColumnInteger
 	Notransfer          mysql.ColumnInteger
 	Stackable           mysql.ColumnInteger
-	Unk134              mysql.ColumnString
-	Unk137              mysql.ColumnInteger
 	Proceffect          mysql.ColumnInteger
 	Proctype            mysql.ColumnInteger
 	Proclevel2          mysql.ColumnInteger
 	Proclevel           mysql.ColumnInteger
-	Unk142              mysql.ColumnInteger
 	Worneffect          mysql.ColumnInteger
 	Worntype            mysql.ColumnInteger
 	Wornlevel2          mysql.ColumnInteger
 	Wornlevel           mysql.ColumnInteger
-	Unk147              mysql.ColumnInteger
 	Focustype           mysql.ColumnInteger
 	Focuslevel2         mysql.ColumnInteger
 	Focuslevel          mysql.ColumnInteger
-	Unk152              mysql.ColumnInteger
 	Scrolleffect        mysql.ColumnInteger
 	Scrolltype          mysql.ColumnInteger
 	Scrolllevel2        mysql.ColumnInteger
 	Scrolllevel         mysql.ColumnInteger
-	Unk157              mysql.ColumnInteger
-	Serialized          mysql.ColumnTimestamp
-	Verified            mysql.ColumnTimestamp
-	Serialization       mysql.ColumnString
-	Source              mysql.ColumnString
-	Unk033              mysql.ColumnInteger
-	Lorefile            mysql.ColumnString
-	Unk014              mysql.ColumnInteger
 	Svcorruption        mysql.ColumnInteger
 	Skillmodmax         mysql.ColumnInteger
-	Unk060              mysql.ColumnInteger
-	Augslot1unk2        mysql.ColumnInteger
-	Augslot2unk2        mysql.ColumnInteger
-	Augslot3unk2        mysql.ColumnInteger
-	Augslot4unk2        mysql.ColumnInteger
-	Augslot5unk2        mysql.ColumnInteger
-	Augslot6unk2        mysql.ColumnInteger
-	Unk120              mysql.ColumnInteger
-	Unk121              mysql.ColumnInteger
 	Questitemflag       mysql.ColumnInteger
-	Unk132              mysql.ColumnString
-	Clickunk5           mysql.ColumnInteger
-	Clickunk6           mysql.ColumnString
-	Clickunk7           mysql.ColumnInteger
-	Procunk1            mysql.ColumnInteger
-	Procunk2            mysql.ColumnInteger
-	Procunk3            mysql.ColumnInteger
-	Procunk4            mysql.ColumnInteger
-	Procunk6            mysql.ColumnString
-	Procunk7            mysql.ColumnInteger
-	Wornunk1            mysql.ColumnInteger
-	Wornunk2            mysql.ColumnInteger
-	Wornunk3            mysql.ColumnInteger
-	Wornunk4            mysql.ColumnInteger
-	Wornunk5            mysql.ColumnInteger
-	Wornunk6            mysql.ColumnString
-	Wornunk7            mysql.ColumnInteger
-	Focusunk1           mysql.ColumnInteger
-	Focusunk2           mysql.ColumnInteger
-	Focusunk3           mysql.ColumnInteger
-	Focusunk4           mysql.ColumnInteger
-	Focusunk5           mysql.ColumnInteger
-	Focusunk6           mysql.ColumnString
-	Focusunk7           mysql.ColumnInteger
-	Scrollunk1          mysql.ColumnInteger
-	Scrollunk2          mysql.ColumnInteger
-	Scrollunk3          mysql.ColumnInteger
-	Scrollunk4          mysql.ColumnInteger
-	Scrollunk5          mysql.ColumnInteger
-	Scrollunk6          mysql.ColumnString
-	Scrollunk7          mysql.ColumnInteger
-	Unk193              mysql.ColumnInteger
 	Purity              mysql.ColumnInteger
 	Evoitem             mysql.ColumnInteger
 	Evoid               mysql.ColumnInteger
 	Evolvinglevel       mysql.ColumnInteger
 	Evomax              mysql.ColumnInteger
-	Clickname           mysql.ColumnString
-	Procname            mysql.ColumnString
-	Wornname            mysql.ColumnString
-	Focusname           mysql.ColumnString
-	Scrollname          mysql.ColumnString
 	Dsmitigation        mysql.ColumnInteger
-	HeroicStr           mysql.ColumnInteger
-	HeroicInt           mysql.ColumnInteger
-	HeroicWis           mysql.ColumnInteger
-	HeroicAgi           mysql.ColumnInteger
-	HeroicDex           mysql.ColumnInteger
-	HeroicSta           mysql.ColumnInteger
-	HeroicCha           mysql.ColumnInteger
-	HeroicPr            mysql.ColumnInteger
-	HeroicDr            mysql.ColumnInteger
-	HeroicFr            mysql.ColumnInteger
-	HeroicCr            mysql.ColumnInteger
-	HeroicMr            mysql.ColumnInteger
-	HeroicSvcorrup      mysql.ColumnInteger
 	Healamt             mysql.ColumnInteger
 	Spelldmg            mysql.ColumnInteger
 	Clairvoyance        mysql.ColumnInteger
 	Backstabdmg         mysql.ColumnInteger
-	Created             mysql.ColumnString
 	Elitematerial       mysql.ColumnInteger
-	Ldonsellbackrate    mysql.ColumnInteger
 	Scriptfileid        mysql.ColumnInteger
 	Expendablearrow     mysql.ColumnInteger
 	Powersourcecapacity mysql.ColumnInteger
@@ -269,37 +182,9 @@ type itemsTable struct {
 	Bardeffecttype      mysql.ColumnInteger
 	Bardlevel2          mysql.ColumnInteger
 	Bardlevel           mysql.ColumnInteger
-	Bardunk1            mysql.ColumnInteger
-	Bardunk2            mysql.ColumnInteger
-	Bardunk3            mysql.ColumnInteger
-	Bardunk4            mysql.ColumnInteger
-	Bardunk5            mysql.ColumnInteger
-	Bardname            mysql.ColumnString
-	Bardunk7            mysql.ColumnInteger
-	Unk214              mysql.ColumnInteger
 	Subtype             mysql.ColumnInteger
-	Unk220              mysql.ColumnInteger
-	Unk221              mysql.ColumnInteger
 	Heirloom            mysql.ColumnInteger
-	Unk223              mysql.ColumnInteger
-	Unk224              mysql.ColumnInteger
-	Unk225              mysql.ColumnInteger
-	Unk226              mysql.ColumnInteger
-	Unk227              mysql.ColumnInteger
-	Unk228              mysql.ColumnInteger
-	Unk229              mysql.ColumnInteger
-	Unk230              mysql.ColumnInteger
-	Unk231              mysql.ColumnInteger
-	Unk232              mysql.ColumnInteger
-	Unk233              mysql.ColumnInteger
-	Unk234              mysql.ColumnInteger
 	Placeable           mysql.ColumnInteger
-	Unk236              mysql.ColumnInteger
-	Unk237              mysql.ColumnInteger
-	Unk238              mysql.ColumnInteger
-	Unk239              mysql.ColumnInteger
-	Unk240              mysql.ColumnInteger
-	Unk241              mysql.ColumnInteger
 	Epicitem            mysql.ColumnInteger
 
 	AllColumns     mysql.ColumnList
@@ -383,8 +268,7 @@ func newItemsTableImpl(schemaName, tableName, alias string) itemsTable {
 		BardvalueColumn           = mysql.IntegerColumn("bardvalue")
 		BookColumn                = mysql.IntegerColumn("book")
 		CasttimeColumn            = mysql.IntegerColumn("casttime")
-		CharmfileColumn           = mysql.StringColumn("charmfile")
-		CharmfileidColumn         = mysql.StringColumn("charmfileid")
+		Casttime2Column           = mysql.IntegerColumn("casttime2")
 		ClassesColumn             = mysql.IntegerColumn("classes")
 		ColorColumn               = mysql.IntegerColumn("color")
 		CombateffectsColumn       = mysql.StringColumn("combateffects")
@@ -412,7 +296,6 @@ func newItemsTableImpl(schemaName, tableName, alias string) itemsTable {
 		Factionmod2Column         = mysql.IntegerColumn("factionmod2")
 		Factionmod3Column         = mysql.IntegerColumn("factionmod3")
 		Factionmod4Column         = mysql.IntegerColumn("factionmod4")
-		FilenameColumn            = mysql.StringColumn("filename")
 		FocuseffectColumn         = mysql.IntegerColumn("focuseffect")
 		FrColumn                  = mysql.IntegerColumn("fr")
 		FvnodropColumn            = mysql.IntegerColumn("fvnodrop")
@@ -424,9 +307,6 @@ func newItemsTableImpl(schemaName, tableName, alias string) itemsTable {
 		IdfileColumn              = mysql.StringColumn("idfile")
 		ItemclassColumn           = mysql.IntegerColumn("itemclass")
 		ItemtypeColumn            = mysql.IntegerColumn("itemtype")
-		LdonpriceColumn           = mysql.IntegerColumn("ldonprice")
-		LdonthemeColumn           = mysql.IntegerColumn("ldontheme")
-		LdonsoldColumn            = mysql.IntegerColumn("ldonsold")
 		LightColumn               = mysql.IntegerColumn("light")
 		LoreColumn                = mysql.StringColumn("lore")
 		LoregroupColumn           = mysql.IntegerColumn("loregroup")
@@ -462,131 +342,49 @@ func newItemsTableImpl(schemaName, tableName, alias string) itemsTable {
 		TradeskillsColumn         = mysql.IntegerColumn("tradeskills")
 		FavorColumn               = mysql.IntegerColumn("favor")
 		WeightColumn              = mysql.IntegerColumn("weight")
-		Unk012Column              = mysql.IntegerColumn("UNK012")
-		Unk013Column              = mysql.IntegerColumn("UNK013")
 		BenefitflagColumn         = mysql.IntegerColumn("benefitflag")
-		Unk054Column              = mysql.IntegerColumn("UNK054")
-		Unk059Column              = mysql.IntegerColumn("UNK059")
 		BooktypeColumn            = mysql.IntegerColumn("booktype")
 		RecastdelayColumn         = mysql.IntegerColumn("recastdelay")
 		RecasttypeColumn          = mysql.IntegerColumn("recasttype")
 		GuildfavorColumn          = mysql.IntegerColumn("guildfavor")
-		Unk123Column              = mysql.IntegerColumn("UNK123")
-		Unk124Column              = mysql.IntegerColumn("UNK124")
 		AttuneableColumn          = mysql.IntegerColumn("attuneable")
 		NopetColumn               = mysql.IntegerColumn("nopet")
 		UpdatedColumn             = mysql.TimestampColumn("updated")
-		CommentColumn             = mysql.StringColumn("comment")
-		Unk127Column              = mysql.IntegerColumn("UNK127")
 		PointtypeColumn           = mysql.IntegerColumn("pointtype")
 		PotionbeltColumn          = mysql.IntegerColumn("potionbelt")
 		PotionbeltslotsColumn     = mysql.IntegerColumn("potionbeltslots")
 		StacksizeColumn           = mysql.IntegerColumn("stacksize")
 		NotransferColumn          = mysql.IntegerColumn("notransfer")
 		StackableColumn           = mysql.IntegerColumn("stackable")
-		Unk134Column              = mysql.StringColumn("UNK134")
-		Unk137Column              = mysql.IntegerColumn("UNK137")
 		ProceffectColumn          = mysql.IntegerColumn("proceffect")
 		ProctypeColumn            = mysql.IntegerColumn("proctype")
 		Proclevel2Column          = mysql.IntegerColumn("proclevel2")
 		ProclevelColumn           = mysql.IntegerColumn("proclevel")
-		Unk142Column              = mysql.IntegerColumn("UNK142")
 		WorneffectColumn          = mysql.IntegerColumn("worneffect")
 		WorntypeColumn            = mysql.IntegerColumn("worntype")
 		Wornlevel2Column          = mysql.IntegerColumn("wornlevel2")
 		WornlevelColumn           = mysql.IntegerColumn("wornlevel")
-		Unk147Column              = mysql.IntegerColumn("UNK147")
 		FocustypeColumn           = mysql.IntegerColumn("focustype")
 		Focuslevel2Column         = mysql.IntegerColumn("focuslevel2")
 		FocuslevelColumn          = mysql.IntegerColumn("focuslevel")
-		Unk152Column              = mysql.IntegerColumn("UNK152")
 		ScrolleffectColumn        = mysql.IntegerColumn("scrolleffect")
 		ScrolltypeColumn          = mysql.IntegerColumn("scrolltype")
 		Scrolllevel2Column        = mysql.IntegerColumn("scrolllevel2")
 		ScrolllevelColumn         = mysql.IntegerColumn("scrolllevel")
-		Unk157Column              = mysql.IntegerColumn("UNK157")
-		SerializedColumn          = mysql.TimestampColumn("serialized")
-		VerifiedColumn            = mysql.TimestampColumn("verified")
-		SerializationColumn       = mysql.StringColumn("serialization")
-		SourceColumn              = mysql.StringColumn("source")
-		Unk033Column              = mysql.IntegerColumn("UNK033")
-		LorefileColumn            = mysql.StringColumn("lorefile")
-		Unk014Column              = mysql.IntegerColumn("UNK014")
 		SvcorruptionColumn        = mysql.IntegerColumn("svcorruption")
 		SkillmodmaxColumn         = mysql.IntegerColumn("skillmodmax")
-		Unk060Column              = mysql.IntegerColumn("UNK060")
-		Augslot1unk2Column        = mysql.IntegerColumn("augslot1unk2")
-		Augslot2unk2Column        = mysql.IntegerColumn("augslot2unk2")
-		Augslot3unk2Column        = mysql.IntegerColumn("augslot3unk2")
-		Augslot4unk2Column        = mysql.IntegerColumn("augslot4unk2")
-		Augslot5unk2Column        = mysql.IntegerColumn("augslot5unk2")
-		Augslot6unk2Column        = mysql.IntegerColumn("augslot6unk2")
-		Unk120Column              = mysql.IntegerColumn("UNK120")
-		Unk121Column              = mysql.IntegerColumn("UNK121")
 		QuestitemflagColumn       = mysql.IntegerColumn("questitemflag")
-		Unk132Column              = mysql.StringColumn("UNK132")
-		Clickunk5Column           = mysql.IntegerColumn("clickunk5")
-		Clickunk6Column           = mysql.StringColumn("clickunk6")
-		Clickunk7Column           = mysql.IntegerColumn("clickunk7")
-		Procunk1Column            = mysql.IntegerColumn("procunk1")
-		Procunk2Column            = mysql.IntegerColumn("procunk2")
-		Procunk3Column            = mysql.IntegerColumn("procunk3")
-		Procunk4Column            = mysql.IntegerColumn("procunk4")
-		Procunk6Column            = mysql.StringColumn("procunk6")
-		Procunk7Column            = mysql.IntegerColumn("procunk7")
-		Wornunk1Column            = mysql.IntegerColumn("wornunk1")
-		Wornunk2Column            = mysql.IntegerColumn("wornunk2")
-		Wornunk3Column            = mysql.IntegerColumn("wornunk3")
-		Wornunk4Column            = mysql.IntegerColumn("wornunk4")
-		Wornunk5Column            = mysql.IntegerColumn("wornunk5")
-		Wornunk6Column            = mysql.StringColumn("wornunk6")
-		Wornunk7Column            = mysql.IntegerColumn("wornunk7")
-		Focusunk1Column           = mysql.IntegerColumn("focusunk1")
-		Focusunk2Column           = mysql.IntegerColumn("focusunk2")
-		Focusunk3Column           = mysql.IntegerColumn("focusunk3")
-		Focusunk4Column           = mysql.IntegerColumn("focusunk4")
-		Focusunk5Column           = mysql.IntegerColumn("focusunk5")
-		Focusunk6Column           = mysql.StringColumn("focusunk6")
-		Focusunk7Column           = mysql.IntegerColumn("focusunk7")
-		Scrollunk1Column          = mysql.IntegerColumn("scrollunk1")
-		Scrollunk2Column          = mysql.IntegerColumn("scrollunk2")
-		Scrollunk3Column          = mysql.IntegerColumn("scrollunk3")
-		Scrollunk4Column          = mysql.IntegerColumn("scrollunk4")
-		Scrollunk5Column          = mysql.IntegerColumn("scrollunk5")
-		Scrollunk6Column          = mysql.StringColumn("scrollunk6")
-		Scrollunk7Column          = mysql.IntegerColumn("scrollunk7")
-		Unk193Column              = mysql.IntegerColumn("UNK193")
 		PurityColumn              = mysql.IntegerColumn("purity")
 		EvoitemColumn             = mysql.IntegerColumn("evoitem")
 		EvoidColumn               = mysql.IntegerColumn("evoid")
 		EvolvinglevelColumn       = mysql.IntegerColumn("evolvinglevel")
 		EvomaxColumn              = mysql.IntegerColumn("evomax")
-		ClicknameColumn           = mysql.StringColumn("clickname")
-		ProcnameColumn            = mysql.StringColumn("procname")
-		WornnameColumn            = mysql.StringColumn("wornname")
-		FocusnameColumn           = mysql.StringColumn("focusname")
-		ScrollnameColumn          = mysql.StringColumn("scrollname")
 		DsmitigationColumn        = mysql.IntegerColumn("dsmitigation")
-		HeroicStrColumn           = mysql.IntegerColumn("heroic_str")
-		HeroicIntColumn           = mysql.IntegerColumn("heroic_int")
-		HeroicWisColumn           = mysql.IntegerColumn("heroic_wis")
-		HeroicAgiColumn           = mysql.IntegerColumn("heroic_agi")
-		HeroicDexColumn           = mysql.IntegerColumn("heroic_dex")
-		HeroicStaColumn           = mysql.IntegerColumn("heroic_sta")
-		HeroicChaColumn           = mysql.IntegerColumn("heroic_cha")
-		HeroicPrColumn            = mysql.IntegerColumn("heroic_pr")
-		HeroicDrColumn            = mysql.IntegerColumn("heroic_dr")
-		HeroicFrColumn            = mysql.IntegerColumn("heroic_fr")
-		HeroicCrColumn            = mysql.IntegerColumn("heroic_cr")
-		HeroicMrColumn            = mysql.IntegerColumn("heroic_mr")
-		HeroicSvcorrupColumn      = mysql.IntegerColumn("heroic_svcorrup")
 		HealamtColumn             = mysql.IntegerColumn("healamt")
 		SpelldmgColumn            = mysql.IntegerColumn("spelldmg")
 		ClairvoyanceColumn        = mysql.IntegerColumn("clairvoyance")
 		BackstabdmgColumn         = mysql.IntegerColumn("backstabdmg")
-		CreatedColumn             = mysql.StringColumn("created")
 		ElitematerialColumn       = mysql.IntegerColumn("elitematerial")
-		LdonsellbackrateColumn    = mysql.IntegerColumn("ldonsellbackrate")
 		ScriptfileidColumn        = mysql.IntegerColumn("scriptfileid")
 		ExpendablearrowColumn     = mysql.IntegerColumn("expendablearrow")
 		PowersourcecapacityColumn = mysql.IntegerColumn("powersourcecapacity")
@@ -594,41 +392,13 @@ func newItemsTableImpl(schemaName, tableName, alias string) itemsTable {
 		BardeffecttypeColumn      = mysql.IntegerColumn("bardeffecttype")
 		Bardlevel2Column          = mysql.IntegerColumn("bardlevel2")
 		BardlevelColumn           = mysql.IntegerColumn("bardlevel")
-		Bardunk1Column            = mysql.IntegerColumn("bardunk1")
-		Bardunk2Column            = mysql.IntegerColumn("bardunk2")
-		Bardunk3Column            = mysql.IntegerColumn("bardunk3")
-		Bardunk4Column            = mysql.IntegerColumn("bardunk4")
-		Bardunk5Column            = mysql.IntegerColumn("bardunk5")
-		BardnameColumn            = mysql.StringColumn("bardname")
-		Bardunk7Column            = mysql.IntegerColumn("bardunk7")
-		Unk214Column              = mysql.IntegerColumn("UNK214")
 		SubtypeColumn             = mysql.IntegerColumn("subtype")
-		Unk220Column              = mysql.IntegerColumn("UNK220")
-		Unk221Column              = mysql.IntegerColumn("UNK221")
 		HeirloomColumn            = mysql.IntegerColumn("heirloom")
-		Unk223Column              = mysql.IntegerColumn("UNK223")
-		Unk224Column              = mysql.IntegerColumn("UNK224")
-		Unk225Column              = mysql.IntegerColumn("UNK225")
-		Unk226Column              = mysql.IntegerColumn("UNK226")
-		Unk227Column              = mysql.IntegerColumn("UNK227")
-		Unk228Column              = mysql.IntegerColumn("UNK228")
-		Unk229Column              = mysql.IntegerColumn("UNK229")
-		Unk230Column              = mysql.IntegerColumn("UNK230")
-		Unk231Column              = mysql.IntegerColumn("UNK231")
-		Unk232Column              = mysql.IntegerColumn("UNK232")
-		Unk233Column              = mysql.IntegerColumn("UNK233")
-		Unk234Column              = mysql.IntegerColumn("UNK234")
 		PlaceableColumn           = mysql.IntegerColumn("placeable")
-		Unk236Column              = mysql.IntegerColumn("UNK236")
-		Unk237Column              = mysql.IntegerColumn("UNK237")
-		Unk238Column              = mysql.IntegerColumn("UNK238")
-		Unk239Column              = mysql.IntegerColumn("UNK239")
-		Unk240Column              = mysql.IntegerColumn("UNK240")
-		Unk241Column              = mysql.IntegerColumn("UNK241")
 		EpicitemColumn            = mysql.IntegerColumn("epicitem")
-		allColumns                = mysql.ColumnList{IDColumn, MinstatusColumn, NameColumn, AagiColumn, AcColumn, AccuracyColumn, AchaColumn, AdexColumn, AintColumn, ArtifactflagColumn, AstaColumn, AstrColumn, AttackColumn, AugrestrictColumn, Augslot1typeColumn, Augslot1visibleColumn, Augslot2typeColumn, Augslot2visibleColumn, Augslot3typeColumn, Augslot3visibleColumn, Augslot4typeColumn, Augslot4visibleColumn, Augslot5typeColumn, Augslot5visibleColumn, Augslot6typeColumn, Augslot6visibleColumn, AugtypeColumn, AvoidanceColumn, AwisColumn, BagsizeColumn, BagslotsColumn, BagtypeColumn, BagwrColumn, BanedmgamtColumn, BanedmgraceamtColumn, BanedmgbodyColumn, BanedmgraceColumn, BardtypeColumn, BardvalueColumn, BookColumn, CasttimeColumn, CasttimeColumn, CharmfileColumn, CharmfileidColumn, ClassesColumn, ColorColumn, CombateffectsColumn, ExtradmgskillColumn, ExtradmgamtColumn, PriceColumn, CrColumn, DamageColumn, DamageshieldColumn, DeityColumn, DelayColumn, AugdistillerColumn, DotshieldingColumn, DrColumn, ClicktypeColumn, Clicklevel2Column, ElemdmgtypeColumn, ElemdmgamtColumn, EndurColumn, Factionamt1Column, Factionamt2Column, Factionamt3Column, Factionamt4Column, Factionmod1Column, Factionmod2Column, Factionmod3Column, Factionmod4Column, FilenameColumn, FocuseffectColumn, FrColumn, FvnodropColumn, HasteColumn, ClicklevelColumn, HpColumn, RegenColumn, IconColumn, IdfileColumn, ItemclassColumn, ItemtypeColumn, LdonpriceColumn, LdonthemeColumn, LdonsoldColumn, LightColumn, LoreColumn, LoregroupColumn, MagicColumn, ManaColumn, ManaregenColumn, EnduranceregenColumn, MaterialColumn, HerosforgemodelColumn, MaxchargesColumn, MrColumn, NodropColumn, NorentColumn, PendingloreflagColumn, PrColumn, ProcrateColumn, RacesColumn, RangeColumn, ReclevelColumn, RecskillColumn, ReqlevelColumn, SellrateColumn, ShieldingColumn, SizeColumn, SkillmodtypeColumn, SkillmodvalueColumn, SlotsColumn, ClickeffectColumn, SpellshieldColumn, StrikethroughColumn, StunresistColumn, SummonedflagColumn, TradeskillsColumn, FavorColumn, WeightColumn, Unk012Column, Unk013Column, BenefitflagColumn, Unk054Column, Unk059Column, BooktypeColumn, RecastdelayColumn, RecasttypeColumn, GuildfavorColumn, Unk123Column, Unk124Column, AttuneableColumn, NopetColumn, UpdatedColumn, CommentColumn, Unk127Column, PointtypeColumn, PotionbeltColumn, PotionbeltslotsColumn, StacksizeColumn, NotransferColumn, StackableColumn, Unk134Column, Unk137Column, ProceffectColumn, ProctypeColumn, Proclevel2Column, ProclevelColumn, Unk142Column, WorneffectColumn, WorntypeColumn, Wornlevel2Column, WornlevelColumn, Unk147Column, FocustypeColumn, Focuslevel2Column, FocuslevelColumn, Unk152Column, ScrolleffectColumn, ScrolltypeColumn, Scrolllevel2Column, ScrolllevelColumn, Unk157Column, SerializedColumn, VerifiedColumn, SerializationColumn, SourceColumn, Unk033Column, LorefileColumn, Unk014Column, SvcorruptionColumn, SkillmodmaxColumn, Unk060Column, Augslot1unk2Column, Augslot2unk2Column, Augslot3unk2Column, Augslot4unk2Column, Augslot5unk2Column, Augslot6unk2Column, Unk120Column, Unk121Column, QuestitemflagColumn, Unk132Column, Clickunk5Column, Clickunk6Column, Clickunk7Column, Procunk1Column, Procunk2Column, Procunk3Column, Procunk4Column, Procunk6Column, Procunk7Column, Wornunk1Column, Wornunk2Column, Wornunk3Column, Wornunk4Column, Wornunk5Column, Wornunk6Column, Wornunk7Column, Focusunk1Column, Focusunk2Column, Focusunk3Column, Focusunk4Column, Focusunk5Column, Focusunk6Column, Focusunk7Column, Scrollunk1Column, Scrollunk2Column, Scrollunk3Column, Scrollunk4Column, Scrollunk5Column, Scrollunk6Column, Scrollunk7Column, Unk193Column, PurityColumn, EvoitemColumn, EvoidColumn, EvolvinglevelColumn, EvomaxColumn, ClicknameColumn, ProcnameColumn, WornnameColumn, FocusnameColumn, ScrollnameColumn, DsmitigationColumn, HeroicStrColumn, HeroicIntColumn, HeroicWisColumn, HeroicAgiColumn, HeroicDexColumn, HeroicStaColumn, HeroicChaColumn, HeroicPrColumn, HeroicDrColumn, HeroicFrColumn, HeroicCrColumn, HeroicMrColumn, HeroicSvcorrupColumn, HealamtColumn, SpelldmgColumn, ClairvoyanceColumn, BackstabdmgColumn, CreatedColumn, ElitematerialColumn, LdonsellbackrateColumn, ScriptfileidColumn, ExpendablearrowColumn, PowersourcecapacityColumn, BardeffectColumn, BardeffecttypeColumn, Bardlevel2Column, BardlevelColumn, Bardunk1Column, Bardunk2Column, Bardunk3Column, Bardunk4Column, Bardunk5Column, BardnameColumn, Bardunk7Column, Unk214Column, SubtypeColumn, Unk220Column, Unk221Column, HeirloomColumn, Unk223Column, Unk224Column, Unk225Column, Unk226Column, Unk227Column, Unk228Column, Unk229Column, Unk230Column, Unk231Column, Unk232Column, Unk233Column, Unk234Column, PlaceableColumn, Unk236Column, Unk237Column, Unk238Column, Unk239Column, Unk240Column, Unk241Column, EpicitemColumn}
-		mutableColumns            = mysql.ColumnList{IDColumn, MinstatusColumn, NameColumn, AagiColumn, AcColumn, AccuracyColumn, AchaColumn, AdexColumn, AintColumn, ArtifactflagColumn, AstaColumn, AstrColumn, AttackColumn, AugrestrictColumn, Augslot1typeColumn, Augslot1visibleColumn, Augslot2typeColumn, Augslot2visibleColumn, Augslot3typeColumn, Augslot3visibleColumn, Augslot4typeColumn, Augslot4visibleColumn, Augslot5typeColumn, Augslot5visibleColumn, Augslot6typeColumn, Augslot6visibleColumn, AugtypeColumn, AvoidanceColumn, AwisColumn, BagsizeColumn, BagslotsColumn, BagtypeColumn, BagwrColumn, BanedmgamtColumn, BanedmgraceamtColumn, BanedmgbodyColumn, BanedmgraceColumn, BardtypeColumn, BardvalueColumn, BookColumn, CasttimeColumn, CasttimeColumn, CharmfileColumn, CharmfileidColumn, ClassesColumn, ColorColumn, CombateffectsColumn, ExtradmgskillColumn, ExtradmgamtColumn, PriceColumn, CrColumn, DamageColumn, DamageshieldColumn, DeityColumn, DelayColumn, AugdistillerColumn, DotshieldingColumn, DrColumn, ClicktypeColumn, Clicklevel2Column, ElemdmgtypeColumn, ElemdmgamtColumn, EndurColumn, Factionamt1Column, Factionamt2Column, Factionamt3Column, Factionamt4Column, Factionmod1Column, Factionmod2Column, Factionmod3Column, Factionmod4Column, FilenameColumn, FocuseffectColumn, FrColumn, FvnodropColumn, HasteColumn, ClicklevelColumn, HpColumn, RegenColumn, IconColumn, IdfileColumn, ItemclassColumn, ItemtypeColumn, LdonpriceColumn, LdonthemeColumn, LdonsoldColumn, LightColumn, LoreColumn, LoregroupColumn, MagicColumn, ManaColumn, ManaregenColumn, EnduranceregenColumn, MaterialColumn, HerosforgemodelColumn, MaxchargesColumn, MrColumn, NodropColumn, NorentColumn, PendingloreflagColumn, PrColumn, ProcrateColumn, RacesColumn, RangeColumn, ReclevelColumn, RecskillColumn, ReqlevelColumn, SellrateColumn, ShieldingColumn, SizeColumn, SkillmodtypeColumn, SkillmodvalueColumn, SlotsColumn, ClickeffectColumn, SpellshieldColumn, StrikethroughColumn, StunresistColumn, SummonedflagColumn, TradeskillsColumn, FavorColumn, WeightColumn, Unk012Column, Unk013Column, BenefitflagColumn, Unk054Column, Unk059Column, BooktypeColumn, RecastdelayColumn, RecasttypeColumn, GuildfavorColumn, Unk123Column, Unk124Column, AttuneableColumn, NopetColumn, UpdatedColumn, CommentColumn, Unk127Column, PointtypeColumn, PotionbeltColumn, PotionbeltslotsColumn, StacksizeColumn, NotransferColumn, StackableColumn, Unk134Column, Unk137Column, ProceffectColumn, ProctypeColumn, Proclevel2Column, ProclevelColumn, Unk142Column, WorneffectColumn, WorntypeColumn, Wornlevel2Column, WornlevelColumn, Unk147Column, FocustypeColumn, Focuslevel2Column, FocuslevelColumn, Unk152Column, ScrolleffectColumn, ScrolltypeColumn, Scrolllevel2Column, ScrolllevelColumn, Unk157Column, SerializedColumn, VerifiedColumn, SerializationColumn, SourceColumn, Unk033Column, LorefileColumn, Unk014Column, SvcorruptionColumn, SkillmodmaxColumn, Unk060Column, Augslot1unk2Column, Augslot2unk2Column, Augslot3unk2Column, Augslot4unk2Column, Augslot5unk2Column, Augslot6unk2Column, Unk120Column, Unk121Column, QuestitemflagColumn, Unk132Column, Clickunk5Column, Clickunk6Column, Clickunk7Column, Procunk1Column, Procunk2Column, Procunk3Column, Procunk4Column, Procunk6Column, Procunk7Column, Wornunk1Column, Wornunk2Column, Wornunk3Column, Wornunk4Column, Wornunk5Column, Wornunk6Column, Wornunk7Column, Focusunk1Column, Focusunk2Column, Focusunk3Column, Focusunk4Column, Focusunk5Column, Focusunk6Column, Focusunk7Column, Scrollunk1Column, Scrollunk2Column, Scrollunk3Column, Scrollunk4Column, Scrollunk5Column, Scrollunk6Column, Scrollunk7Column, Unk193Column, PurityColumn, EvoitemColumn, EvoidColumn, EvolvinglevelColumn, EvomaxColumn, ClicknameColumn, ProcnameColumn, WornnameColumn, FocusnameColumn, ScrollnameColumn, DsmitigationColumn, HeroicStrColumn, HeroicIntColumn, HeroicWisColumn, HeroicAgiColumn, HeroicDexColumn, HeroicStaColumn, HeroicChaColumn, HeroicPrColumn, HeroicDrColumn, HeroicFrColumn, HeroicCrColumn, HeroicMrColumn, HeroicSvcorrupColumn, HealamtColumn, SpelldmgColumn, ClairvoyanceColumn, BackstabdmgColumn, CreatedColumn, ElitematerialColumn, LdonsellbackrateColumn, ScriptfileidColumn, ExpendablearrowColumn, PowersourcecapacityColumn, BardeffectColumn, BardeffecttypeColumn, Bardlevel2Column, BardlevelColumn, Bardunk1Column, Bardunk2Column, Bardunk3Column, Bardunk4Column, Bardunk5Column, BardnameColumn, Bardunk7Column, Unk214Column, SubtypeColumn, Unk220Column, Unk221Column, HeirloomColumn, Unk223Column, Unk224Column, Unk225Column, Unk226Column, Unk227Column, Unk228Column, Unk229Column, Unk230Column, Unk231Column, Unk232Column, Unk233Column, Unk234Column, PlaceableColumn, Unk236Column, Unk237Column, Unk238Column, Unk239Column, Unk240Column, Unk241Column, EpicitemColumn}
-		defaultColumns            = mysql.ColumnList{IDColumn, MinstatusColumn, NameColumn, AagiColumn, AcColumn, AccuracyColumn, AchaColumn, AdexColumn, AintColumn, ArtifactflagColumn, AstaColumn, AstrColumn, AttackColumn, AugrestrictColumn, Augslot1typeColumn, Augslot1visibleColumn, Augslot2typeColumn, Augslot2visibleColumn, Augslot3typeColumn, Augslot3visibleColumn, Augslot4typeColumn, Augslot4visibleColumn, Augslot5typeColumn, Augslot5visibleColumn, Augslot6typeColumn, Augslot6visibleColumn, AugtypeColumn, AvoidanceColumn, AwisColumn, BagsizeColumn, BagslotsColumn, BagtypeColumn, BagwrColumn, BanedmgamtColumn, BanedmgraceamtColumn, BanedmgbodyColumn, BanedmgraceColumn, BardtypeColumn, BardvalueColumn, BookColumn, CasttimeColumn, CasttimeColumn, CharmfileColumn, CharmfileidColumn, ClassesColumn, ColorColumn, CombateffectsColumn, ExtradmgskillColumn, ExtradmgamtColumn, PriceColumn, CrColumn, DamageColumn, DamageshieldColumn, DeityColumn, DelayColumn, AugdistillerColumn, DotshieldingColumn, DrColumn, ClicktypeColumn, Clicklevel2Column, ElemdmgtypeColumn, ElemdmgamtColumn, EndurColumn, Factionamt1Column, Factionamt2Column, Factionamt3Column, Factionamt4Column, Factionmod1Column, Factionmod2Column, Factionmod3Column, Factionmod4Column, FilenameColumn, FocuseffectColumn, FrColumn, FvnodropColumn, HasteColumn, ClicklevelColumn, HpColumn, RegenColumn, IconColumn, IdfileColumn, ItemclassColumn, ItemtypeColumn, LdonpriceColumn, LdonthemeColumn, LdonsoldColumn, LightColumn, LoreColumn, LoregroupColumn, MagicColumn, ManaColumn, ManaregenColumn, EnduranceregenColumn, MaterialColumn, HerosforgemodelColumn, MaxchargesColumn, MrColumn, NodropColumn, NorentColumn, PendingloreflagColumn, PrColumn, ProcrateColumn, RacesColumn, RangeColumn, ReclevelColumn, RecskillColumn, ReqlevelColumn, SellrateColumn, ShieldingColumn, SizeColumn, SkillmodtypeColumn, SkillmodvalueColumn, SlotsColumn, ClickeffectColumn, SpellshieldColumn, StrikethroughColumn, StunresistColumn, SummonedflagColumn, TradeskillsColumn, FavorColumn, WeightColumn, Unk012Column, Unk013Column, BenefitflagColumn, Unk054Column, Unk059Column, BooktypeColumn, RecastdelayColumn, RecasttypeColumn, GuildfavorColumn, Unk123Column, Unk124Column, AttuneableColumn, NopetColumn, CommentColumn, Unk127Column, PointtypeColumn, PotionbeltColumn, PotionbeltslotsColumn, StacksizeColumn, NotransferColumn, StackableColumn, Unk134Column, Unk137Column, ProceffectColumn, ProctypeColumn, Proclevel2Column, ProclevelColumn, Unk142Column, WorneffectColumn, WorntypeColumn, Wornlevel2Column, WornlevelColumn, Unk147Column, FocustypeColumn, Focuslevel2Column, FocuslevelColumn, Unk152Column, ScrolleffectColumn, ScrolltypeColumn, Scrolllevel2Column, ScrolllevelColumn, Unk157Column, SourceColumn, Unk033Column, LorefileColumn, Unk014Column, SvcorruptionColumn, SkillmodmaxColumn, Unk060Column, Augslot1unk2Column, Augslot2unk2Column, Augslot3unk2Column, Augslot4unk2Column, Augslot5unk2Column, Augslot6unk2Column, Unk120Column, Unk121Column, QuestitemflagColumn, Clickunk5Column, Clickunk6Column, Clickunk7Column, Procunk1Column, Procunk2Column, Procunk3Column, Procunk4Column, Procunk6Column, Procunk7Column, Wornunk1Column, Wornunk2Column, Wornunk3Column, Wornunk4Column, Wornunk5Column, Wornunk6Column, Wornunk7Column, Focusunk1Column, Focusunk2Column, Focusunk3Column, Focusunk4Column, Focusunk5Column, Focusunk6Column, Focusunk7Column, Scrollunk1Column, Scrollunk2Column, Scrollunk3Column, Scrollunk4Column, Scrollunk5Column, Scrollunk6Column, Scrollunk7Column, Unk193Column, PurityColumn, EvoitemColumn, EvoidColumn, EvolvinglevelColumn, EvomaxColumn, ClicknameColumn, ProcnameColumn, WornnameColumn, FocusnameColumn, ScrollnameColumn, DsmitigationColumn, HeroicStrColumn, HeroicIntColumn, HeroicWisColumn, HeroicAgiColumn, HeroicDexColumn, HeroicStaColumn, HeroicChaColumn, HeroicPrColumn, HeroicDrColumn, HeroicFrColumn, HeroicCrColumn, HeroicMrColumn, HeroicSvcorrupColumn, HealamtColumn, SpelldmgColumn, ClairvoyanceColumn, BackstabdmgColumn, CreatedColumn, ElitematerialColumn, LdonsellbackrateColumn, ScriptfileidColumn, ExpendablearrowColumn, PowersourcecapacityColumn, BardeffectColumn, BardeffecttypeColumn, Bardlevel2Column, BardlevelColumn, Bardunk1Column, Bardunk2Column, Bardunk3Column, Bardunk4Column, Bardunk5Column, BardnameColumn, Bardunk7Column, Unk214Column, SubtypeColumn, Unk220Column, Unk221Column, HeirloomColumn, Unk223Column, Unk224Column, Unk225Column, Unk226Column, Unk227Column, Unk228Column, Unk229Column, Unk230Column, Unk231Column, Unk232Column, Unk233Column, Unk234Column, PlaceableColumn, Unk236Column, Unk237Column, Unk238Column, Unk239Column, Unk240Column, Unk241Column, EpicitemColumn}
+		allColumns                = mysql.ColumnList{IDColumn, MinstatusColumn, NameColumn, AagiColumn, AcColumn, AccuracyColumn, AchaColumn, AdexColumn, AintColumn, ArtifactflagColumn, AstaColumn, AstrColumn, AttackColumn, AugrestrictColumn, Augslot1typeColumn, Augslot1visibleColumn, Augslot2typeColumn, Augslot2visibleColumn, Augslot3typeColumn, Augslot3visibleColumn, Augslot4typeColumn, Augslot4visibleColumn, Augslot5typeColumn, Augslot5visibleColumn, Augslot6typeColumn, Augslot6visibleColumn, AugtypeColumn, AvoidanceColumn, AwisColumn, BagsizeColumn, BagslotsColumn, BagtypeColumn, BagwrColumn, BanedmgamtColumn, BanedmgraceamtColumn, BanedmgbodyColumn, BanedmgraceColumn, BardtypeColumn, BardvalueColumn, BookColumn, CasttimeColumn, Casttime2Column, ClassesColumn, ColorColumn, CombateffectsColumn, ExtradmgskillColumn, ExtradmgamtColumn, PriceColumn, CrColumn, DamageColumn, DamageshieldColumn, DeityColumn, DelayColumn, AugdistillerColumn, DotshieldingColumn, DrColumn, ClicktypeColumn, Clicklevel2Column, ElemdmgtypeColumn, ElemdmgamtColumn, EndurColumn, Factionamt1Column, Factionamt2Column, Factionamt3Column, Factionamt4Column, Factionmod1Column, Factionmod2Column, Factionmod3Column, Factionmod4Column, FocuseffectColumn, FrColumn, FvnodropColumn, HasteColumn, ClicklevelColumn, HpColumn, RegenColumn, IconColumn, IdfileColumn, ItemclassColumn, ItemtypeColumn, LightColumn, LoreColumn, LoregroupColumn, MagicColumn, ManaColumn, ManaregenColumn, EnduranceregenColumn, MaterialColumn, HerosforgemodelColumn, MaxchargesColumn, MrColumn, NodropColumn, NorentColumn, PendingloreflagColumn, PrColumn, ProcrateColumn, RacesColumn, RangeColumn, ReclevelColumn, RecskillColumn, ReqlevelColumn, SellrateColumn, ShieldingColumn, SizeColumn, SkillmodtypeColumn, SkillmodvalueColumn, SlotsColumn, ClickeffectColumn, SpellshieldColumn, StrikethroughColumn, StunresistColumn, SummonedflagColumn, TradeskillsColumn, FavorColumn, WeightColumn, BenefitflagColumn, BooktypeColumn, RecastdelayColumn, RecasttypeColumn, GuildfavorColumn, AttuneableColumn, NopetColumn, UpdatedColumn, PointtypeColumn, PotionbeltColumn, PotionbeltslotsColumn, StacksizeColumn, NotransferColumn, StackableColumn, ProceffectColumn, ProctypeColumn, Proclevel2Column, ProclevelColumn, WorneffectColumn, WorntypeColumn, Wornlevel2Column, WornlevelColumn, FocustypeColumn, Focuslevel2Column, FocuslevelColumn, ScrolleffectColumn, ScrolltypeColumn, Scrolllevel2Column, ScrolllevelColumn, SvcorruptionColumn, SkillmodmaxColumn, QuestitemflagColumn, PurityColumn, EvoitemColumn, EvoidColumn, EvolvinglevelColumn, EvomaxColumn, DsmitigationColumn, HealamtColumn, SpelldmgColumn, ClairvoyanceColumn, BackstabdmgColumn, ElitematerialColumn, ScriptfileidColumn, ExpendablearrowColumn, PowersourcecapacityColumn, BardeffectColumn, BardeffecttypeColumn, Bardlevel2Column, BardlevelColumn, SubtypeColumn, HeirloomColumn, PlaceableColumn, EpicitemColumn}
+		mutableColumns            = mysql.ColumnList{IDColumn, MinstatusColumn, NameColumn, AagiColumn, AcColumn, AccuracyColumn, AchaColumn, AdexColumn, AintColumn, ArtifactflagColumn, AstaColumn, AstrColumn, AttackColumn, AugrestrictColumn, Augslot1typeColumn, Augslot1visibleColumn, Augslot2typeColumn, Augslot2visibleColumn, Augslot3typeColumn, Augslot3visibleColumn, Augslot4typeColumn, Augslot4visibleColumn, Augslot5typeColumn, Augslot5visibleColumn, Augslot6typeColumn, Augslot6visibleColumn, AugtypeColumn, AvoidanceColumn, AwisColumn, BagsizeColumn, BagslotsColumn, BagtypeColumn, BagwrColumn, BanedmgamtColumn, BanedmgraceamtColumn, BanedmgbodyColumn, BanedmgraceColumn, BardtypeColumn, BardvalueColumn, BookColumn, CasttimeColumn, Casttime2Column, ClassesColumn, ColorColumn, CombateffectsColumn, ExtradmgskillColumn, ExtradmgamtColumn, PriceColumn, CrColumn, DamageColumn, DamageshieldColumn, DeityColumn, DelayColumn, AugdistillerColumn, DotshieldingColumn, DrColumn, ClicktypeColumn, Clicklevel2Column, ElemdmgtypeColumn, ElemdmgamtColumn, EndurColumn, Factionamt1Column, Factionamt2Column, Factionamt3Column, Factionamt4Column, Factionmod1Column, Factionmod2Column, Factionmod3Column, Factionmod4Column, FocuseffectColumn, FrColumn, FvnodropColumn, HasteColumn, ClicklevelColumn, HpColumn, RegenColumn, IconColumn, IdfileColumn, ItemclassColumn, ItemtypeColumn, LightColumn, LoreColumn, LoregroupColumn, MagicColumn, ManaColumn, ManaregenColumn, EnduranceregenColumn, MaterialColumn, HerosforgemodelColumn, MaxchargesColumn, MrColumn, NodropColumn, NorentColumn, PendingloreflagColumn, PrColumn, ProcrateColumn, RacesColumn, RangeColumn, ReclevelColumn, RecskillColumn, ReqlevelColumn, SellrateColumn, ShieldingColumn, SizeColumn, SkillmodtypeColumn, SkillmodvalueColumn, SlotsColumn, ClickeffectColumn, SpellshieldColumn, StrikethroughColumn, StunresistColumn, SummonedflagColumn, TradeskillsColumn, FavorColumn, WeightColumn, BenefitflagColumn, BooktypeColumn, RecastdelayColumn, RecasttypeColumn, GuildfavorColumn, AttuneableColumn, NopetColumn, UpdatedColumn, PointtypeColumn, PotionbeltColumn, PotionbeltslotsColumn, StacksizeColumn, NotransferColumn, StackableColumn, ProceffectColumn, ProctypeColumn, Proclevel2Column, ProclevelColumn, WorneffectColumn, WorntypeColumn, Wornlevel2Column, WornlevelColumn, FocustypeColumn, Focuslevel2Column, FocuslevelColumn, ScrolleffectColumn, ScrolltypeColumn, Scrolllevel2Column, ScrolllevelColumn, SvcorruptionColumn, SkillmodmaxColumn, QuestitemflagColumn, PurityColumn, EvoitemColumn, EvoidColumn, EvolvinglevelColumn, EvomaxColumn, DsmitigationColumn, HealamtColumn, SpelldmgColumn, ClairvoyanceColumn, BackstabdmgColumn, ElitematerialColumn, ScriptfileidColumn, ExpendablearrowColumn, PowersourcecapacityColumn, BardeffectColumn, BardeffecttypeColumn, Bardlevel2Column, BardlevelColumn, SubtypeColumn, HeirloomColumn, PlaceableColumn, EpicitemColumn}
+		defaultColumns            = mysql.ColumnList{IDColumn, MinstatusColumn, NameColumn, AagiColumn, AcColumn, AccuracyColumn, AchaColumn, AdexColumn, AintColumn, ArtifactflagColumn, AstaColumn, AstrColumn, AttackColumn, AugrestrictColumn, Augslot1typeColumn, Augslot1visibleColumn, Augslot2typeColumn, Augslot2visibleColumn, Augslot3typeColumn, Augslot3visibleColumn, Augslot4typeColumn, Augslot4visibleColumn, Augslot5typeColumn, Augslot5visibleColumn, Augslot6typeColumn, Augslot6visibleColumn, AugtypeColumn, AvoidanceColumn, AwisColumn, BagsizeColumn, BagslotsColumn, BagtypeColumn, BagwrColumn, BanedmgamtColumn, BanedmgraceamtColumn, BanedmgbodyColumn, BanedmgraceColumn, BardtypeColumn, BardvalueColumn, BookColumn, CasttimeColumn, Casttime2Column, ClassesColumn, ColorColumn, CombateffectsColumn, ExtradmgskillColumn, ExtradmgamtColumn, PriceColumn, CrColumn, DamageColumn, DamageshieldColumn, DeityColumn, DelayColumn, AugdistillerColumn, DotshieldingColumn, DrColumn, ClicktypeColumn, Clicklevel2Column, ElemdmgtypeColumn, ElemdmgamtColumn, EndurColumn, Factionamt1Column, Factionamt2Column, Factionamt3Column, Factionamt4Column, Factionmod1Column, Factionmod2Column, Factionmod3Column, Factionmod4Column, FocuseffectColumn, FrColumn, FvnodropColumn, HasteColumn, ClicklevelColumn, HpColumn, RegenColumn, IconColumn, IdfileColumn, ItemclassColumn, ItemtypeColumn, LightColumn, LoreColumn, LoregroupColumn, MagicColumn, ManaColumn, ManaregenColumn, EnduranceregenColumn, MaterialColumn, HerosforgemodelColumn, MaxchargesColumn, MrColumn, NodropColumn, NorentColumn, PendingloreflagColumn, PrColumn, ProcrateColumn, RacesColumn, RangeColumn, ReclevelColumn, RecskillColumn, ReqlevelColumn, SellrateColumn, ShieldingColumn, SizeColumn, SkillmodtypeColumn, SkillmodvalueColumn, SlotsColumn, ClickeffectColumn, SpellshieldColumn, StrikethroughColumn, StunresistColumn, SummonedflagColumn, TradeskillsColumn, FavorColumn, WeightColumn, BenefitflagColumn, BooktypeColumn, RecastdelayColumn, RecasttypeColumn, GuildfavorColumn, AttuneableColumn, NopetColumn, PointtypeColumn, PotionbeltColumn, PotionbeltslotsColumn, StacksizeColumn, NotransferColumn, StackableColumn, ProceffectColumn, ProctypeColumn, Proclevel2Column, ProclevelColumn, WorneffectColumn, WorntypeColumn, Wornlevel2Column, WornlevelColumn, FocustypeColumn, Focuslevel2Column, FocuslevelColumn, ScrolleffectColumn, ScrolltypeColumn, Scrolllevel2Column, ScrolllevelColumn, SvcorruptionColumn, SkillmodmaxColumn, QuestitemflagColumn, PurityColumn, EvoitemColumn, EvoidColumn, EvolvinglevelColumn, EvomaxColumn, DsmitigationColumn, HealamtColumn, SpelldmgColumn, ClairvoyanceColumn, BackstabdmgColumn, ElitematerialColumn, ScriptfileidColumn, ExpendablearrowColumn, PowersourcecapacityColumn, BardeffectColumn, BardeffecttypeColumn, Bardlevel2Column, BardlevelColumn, SubtypeColumn, HeirloomColumn, PlaceableColumn, EpicitemColumn}
 	)
 
 	return itemsTable{
@@ -676,8 +446,7 @@ func newItemsTableImpl(schemaName, tableName, alias string) itemsTable {
 		Bardvalue:           BardvalueColumn,
 		Book:                BookColumn,
 		Casttime:            CasttimeColumn,
-		Charmfile:           CharmfileColumn,
-		Charmfileid:         CharmfileidColumn,
+		Casttime2:           Casttime2Column,
 		Classes:             ClassesColumn,
 		Color:               ColorColumn,
 		Combateffects:       CombateffectsColumn,
@@ -705,7 +474,6 @@ func newItemsTableImpl(schemaName, tableName, alias string) itemsTable {
 		Factionmod2:         Factionmod2Column,
 		Factionmod3:         Factionmod3Column,
 		Factionmod4:         Factionmod4Column,
-		Filename:            FilenameColumn,
 		Focuseffect:         FocuseffectColumn,
 		Fr:                  FrColumn,
 		Fvnodrop:            FvnodropColumn,
@@ -717,9 +485,6 @@ func newItemsTableImpl(schemaName, tableName, alias string) itemsTable {
 		Idfile:              IdfileColumn,
 		Itemclass:           ItemclassColumn,
 		Itemtype:            ItemtypeColumn,
-		Ldonprice:           LdonpriceColumn,
-		Ldontheme:           LdonthemeColumn,
-		Ldonsold:            LdonsoldColumn,
 		Light:               LightColumn,
 		Lore:                LoreColumn,
 		Loregroup:           LoregroupColumn,
@@ -755,131 +520,49 @@ func newItemsTableImpl(schemaName, tableName, alias string) itemsTable {
 		Tradeskills:         TradeskillsColumn,
 		Favor:               FavorColumn,
 		Weight:              WeightColumn,
-		Unk012:              Unk012Column,
-		Unk013:              Unk013Column,
 		Benefitflag:         BenefitflagColumn,
-		Unk054:              Unk054Column,
-		Unk059:              Unk059Column,
 		Booktype:            BooktypeColumn,
 		Recastdelay:         RecastdelayColumn,
 		Recasttype:          RecasttypeColumn,
 		Guildfavor:          GuildfavorColumn,
-		Unk123:              Unk123Column,
-		Unk124:              Unk124Column,
 		Attuneable:          AttuneableColumn,
 		Nopet:               NopetColumn,
 		Updated:             UpdatedColumn,
-		Comment:             CommentColumn,
-		Unk127:              Unk127Column,
 		Pointtype:           PointtypeColumn,
 		Potionbelt:          PotionbeltColumn,
 		Potionbeltslots:     PotionbeltslotsColumn,
 		Stacksize:           StacksizeColumn,
 		Notransfer:          NotransferColumn,
 		Stackable:           StackableColumn,
-		Unk134:              Unk134Column,
-		Unk137:              Unk137Column,
 		Proceffect:          ProceffectColumn,
 		Proctype:            ProctypeColumn,
 		Proclevel2:          Proclevel2Column,
 		Proclevel:           ProclevelColumn,
-		Unk142:              Unk142Column,
 		Worneffect:          WorneffectColumn,
 		Worntype:            WorntypeColumn,
 		Wornlevel2:          Wornlevel2Column,
 		Wornlevel:           WornlevelColumn,
-		Unk147:              Unk147Column,
 		Focustype:           FocustypeColumn,
 		Focuslevel2:         Focuslevel2Column,
 		Focuslevel:          FocuslevelColumn,
-		Unk152:              Unk152Column,
 		Scrolleffect:        ScrolleffectColumn,
 		Scrolltype:          ScrolltypeColumn,
 		Scrolllevel2:        Scrolllevel2Column,
 		Scrolllevel:         ScrolllevelColumn,
-		Unk157:              Unk157Column,
-		Serialized:          SerializedColumn,
-		Verified:            VerifiedColumn,
-		Serialization:       SerializationColumn,
-		Source:              SourceColumn,
-		Unk033:              Unk033Column,
-		Lorefile:            LorefileColumn,
-		Unk014:              Unk014Column,
 		Svcorruption:        SvcorruptionColumn,
 		Skillmodmax:         SkillmodmaxColumn,
-		Unk060:              Unk060Column,
-		Augslot1unk2:        Augslot1unk2Column,
-		Augslot2unk2:        Augslot2unk2Column,
-		Augslot3unk2:        Augslot3unk2Column,
-		Augslot4unk2:        Augslot4unk2Column,
-		Augslot5unk2:        Augslot5unk2Column,
-		Augslot6unk2:        Augslot6unk2Column,
-		Unk120:              Unk120Column,
-		Unk121:              Unk121Column,
 		Questitemflag:       QuestitemflagColumn,
-		Unk132:              Unk132Column,
-		Clickunk5:           Clickunk5Column,
-		Clickunk6:           Clickunk6Column,
-		Clickunk7:           Clickunk7Column,
-		Procunk1:            Procunk1Column,
-		Procunk2:            Procunk2Column,
-		Procunk3:            Procunk3Column,
-		Procunk4:            Procunk4Column,
-		Procunk6:            Procunk6Column,
-		Procunk7:            Procunk7Column,
-		Wornunk1:            Wornunk1Column,
-		Wornunk2:            Wornunk2Column,
-		Wornunk3:            Wornunk3Column,
-		Wornunk4:            Wornunk4Column,
-		Wornunk5:            Wornunk5Column,
-		Wornunk6:            Wornunk6Column,
-		Wornunk7:            Wornunk7Column,
-		Focusunk1:           Focusunk1Column,
-		Focusunk2:           Focusunk2Column,
-		Focusunk3:           Focusunk3Column,
-		Focusunk4:           Focusunk4Column,
-		Focusunk5:           Focusunk5Column,
-		Focusunk6:           Focusunk6Column,
-		Focusunk7:           Focusunk7Column,
-		Scrollunk1:          Scrollunk1Column,
-		Scrollunk2:          Scrollunk2Column,
-		Scrollunk3:          Scrollunk3Column,
-		Scrollunk4:          Scrollunk4Column,
-		Scrollunk5:          Scrollunk5Column,
-		Scrollunk6:          Scrollunk6Column,
-		Scrollunk7:          Scrollunk7Column,
-		Unk193:              Unk193Column,
 		Purity:              PurityColumn,
 		Evoitem:             EvoitemColumn,
 		Evoid:               EvoidColumn,
 		Evolvinglevel:       EvolvinglevelColumn,
 		Evomax:              EvomaxColumn,
-		Clickname:           ClicknameColumn,
-		Procname:            ProcnameColumn,
-		Wornname:            WornnameColumn,
-		Focusname:           FocusnameColumn,
-		Scrollname:          ScrollnameColumn,
 		Dsmitigation:        DsmitigationColumn,
-		HeroicStr:           HeroicStrColumn,
-		HeroicInt:           HeroicIntColumn,
-		HeroicWis:           HeroicWisColumn,
-		HeroicAgi:           HeroicAgiColumn,
-		HeroicDex:           HeroicDexColumn,
-		HeroicSta:           HeroicStaColumn,
-		HeroicCha:           HeroicChaColumn,
-		HeroicPr:            HeroicPrColumn,
-		HeroicDr:            HeroicDrColumn,
-		HeroicFr:            HeroicFrColumn,
-		HeroicCr:            HeroicCrColumn,
-		HeroicMr:            HeroicMrColumn,
-		HeroicSvcorrup:      HeroicSvcorrupColumn,
 		Healamt:             HealamtColumn,
 		Spelldmg:            SpelldmgColumn,
 		Clairvoyance:        ClairvoyanceColumn,
 		Backstabdmg:         BackstabdmgColumn,
-		Created:             CreatedColumn,
 		Elitematerial:       ElitematerialColumn,
-		Ldonsellbackrate:    LdonsellbackrateColumn,
 		Scriptfileid:        ScriptfileidColumn,
 		Expendablearrow:     ExpendablearrowColumn,
 		Powersourcecapacity: PowersourcecapacityColumn,
@@ -887,37 +570,9 @@ func newItemsTableImpl(schemaName, tableName, alias string) itemsTable {
 		Bardeffecttype:      BardeffecttypeColumn,
 		Bardlevel2:          Bardlevel2Column,
 		Bardlevel:           BardlevelColumn,
-		Bardunk1:            Bardunk1Column,
-		Bardunk2:            Bardunk2Column,
-		Bardunk3:            Bardunk3Column,
-		Bardunk4:            Bardunk4Column,
-		Bardunk5:            Bardunk5Column,
-		Bardname:            BardnameColumn,
-		Bardunk7:            Bardunk7Column,
-		Unk214:              Unk214Column,
 		Subtype:             SubtypeColumn,
-		Unk220:              Unk220Column,
-		Unk221:              Unk221Column,
 		Heirloom:            HeirloomColumn,
-		Unk223:              Unk223Column,
-		Unk224:              Unk224Column,
-		Unk225:              Unk225Column,
-		Unk226:              Unk226Column,
-		Unk227:              Unk227Column,
-		Unk228:              Unk228Column,
-		Unk229:              Unk229Column,
-		Unk230:              Unk230Column,
-		Unk231:              Unk231Column,
-		Unk232:              Unk232Column,
-		Unk233:              Unk233Column,
-		Unk234:              Unk234Column,
 		Placeable:           PlaceableColumn,
-		Unk236:              Unk236Column,
-		Unk237:              Unk237Column,
-		Unk238:              Unk238Column,
-		Unk239:              Unk239Column,
-		Unk240:              Unk240Column,
-		Unk241:              Unk241Column,
 		Epicitem:            EpicitemColumn,
 
 		AllColumns:     allColumns,

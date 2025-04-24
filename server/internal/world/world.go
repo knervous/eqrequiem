@@ -13,6 +13,7 @@ import (
 // ClientMessenger defines how to send messages back to the client.
 type ClientMessenger interface {
 	SendDatagram(sessionID int, opcode uint16, msg proto.Message) error
+	SendStream(sessionID int, opcode uint16, msg proto.Message) error
 }
 
 // ZoneMessage represents a message from a client to a zone.
@@ -80,7 +81,7 @@ type ZoneInstance struct {
 // NewZoneInstance creates a new zone instance with a HandlerRegistry.
 func NewZoneInstance(zoneID int, registry *HandlerRegistry) *ZoneInstance {
 	// Create a new registry for the zone, potentially customized
-	zoneRegistry := NewZoneOpCodeRegistry(GetWorldDB(), zoneID)
+	zoneRegistry := NewZoneOpCodeRegistry(zoneID)
 	z := &ZoneInstance{
 		ID:       zoneID,
 		Inbox:    make(chan ZoneMessage, 128),

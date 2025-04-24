@@ -12,14 +12,13 @@ import (
 )
 
 func sendCharInfo(msg ZoneMessage, accountId int64) {
-	wdb := GetWorldDB()
 	ctx := context.Background()
-	charInfo, err := wdb.GetCharSelectInfo(ctx, accountId)
+	charInfo, err := GetCharSelectInfo(ctx, accountId)
 	if err != nil {
 		log.Printf("failed to get character select info for accountID %d: %v", accountId, err)
 		return
 	}
-	msg.Messenger.SendDatagram(msg.SessionID, uint16(eqpb.OpCodes_OP_SendCharInfo), charInfo)
+	msg.Messenger.SendStream(msg.SessionID, uint16(eqpb.OpCodes_OP_SendCharInfo), charInfo)
 }
 
 func sendMaxCharacters(msg ZoneMessage) {
@@ -27,7 +26,6 @@ func sendMaxCharacters(msg ZoneMessage) {
 }
 
 func HandleJWTLogin(msg ZoneMessage, payload []byte) {
-	wdb := GetWorldDB()
 	ctx := context.Background()
 
 	req := &eqpb.JWTLogin{}
@@ -41,7 +39,7 @@ func HandleJWTLogin(msg ZoneMessage, payload []byte) {
 		return
 	}
 
-	accountID, err := wdb.GetOrCreateAccount(ctx, discordID)
+	accountID, err := GetOrCreateAccount(ctx, discordID)
 	if err != nil {
 		log.Printf("failed to get or create account for discordID %q: %v", discordID, err)
 		resp := &eqpb.JWTResponse{Status: 1}
@@ -63,13 +61,12 @@ func HandleJWTLogin(msg ZoneMessage, payload []byte) {
 		log.Printf("failed to send JWTResponse for session %d: %v", msg.SessionID, err)
 	}
 	sendCharInfo(msg, accountID)
-	wdb.LoginIP(ctx, accountID, msg.IP)
+	LoginIP(ctx, accountID, msg.IP)
 }
 
 func HandleCharacterCreate(msg ZoneMessage, payload []byte) {
-	wdb := GetWorldDB()
 	session, found := GetSessionManager().GetSession(msg.SessionID)
-	if found == false {
+	if !found {
 		log.Printf("failed to get session for sessionID %d: %v", msg.SessionID)
 		return
 	}
@@ -79,7 +76,7 @@ func HandleCharacterCreate(msg ZoneMessage, payload []byte) {
 		return
 	}
 
-	if !CharacterCreate(session.CharacterName, session.AccountID, wdb, req) {
+	if !CharacterCreate(session.CharacterName, session.AccountID, req) {
 		return
 	}
 
@@ -87,7 +84,6 @@ func HandleCharacterCreate(msg ZoneMessage, payload []byte) {
 }
 
 func HandleCharacterDelete(msg ZoneMessage, payload []byte) {
-	wdb := GetWorldDB()
 	session, found := GetSessionManager().GetSession(msg.SessionID)
 	if !found {
 		log.Printf("failed to get session for sessionID %d", msg.SessionID)
@@ -99,7 +95,7 @@ func HandleCharacterDelete(msg ZoneMessage, payload []byte) {
 		return
 	}
 	ctx := context.Background()
-	if err := wdb.DeleteCharacter(ctx, session.AccountID, req.Value); err != nil {
+	if err := DeleteCharacter(ctx, session.AccountID, req.Value); err != nil {
 		return
 	}
 
@@ -107,7 +103,6 @@ func HandleCharacterDelete(msg ZoneMessage, payload []byte) {
 }
 
 func HandleApproveName(msg ZoneMessage, payload []byte) {
-	wdb := GetWorldDB()
 	ctx := context.Background()
 	session, found := GetSessionManager().GetSession(msg.SessionID)
 	if !found {
@@ -125,7 +120,7 @@ func HandleApproveName(msg ZoneMessage, payload []byte) {
 		isValid = false
 	} else if !unicode.IsUpper(rune(req.Name[0])) {
 		isValid = false
-	} else if !wdb.CheckNameFilter(ctx, req.Name) {
+	} else if !CheckNameFilter(ctx, req.Name) {
 		isValid = false
 	} else {
 		for idx, char := range req.Name {

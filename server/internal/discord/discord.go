@@ -1,11 +1,11 @@
 package discord
 
 import (
-	"embed"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
+	"knervous/eqgo/internal/config"
 	"log"
 	"net/http"
 	"net/url"
@@ -14,19 +14,6 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 )
-
-//go:embed keys/discord.txt
-var discordKeyData embed.FS
-
-// getDiscordKey reads the key from the embedded file.
-func getDiscordKey() (string, error) {
-	data, err := discordKeyData.ReadFile("keys/discord.txt")
-	if err != nil {
-		return "", fmt.Errorf("failed to read embedded discord key: %w", err)
-	}
-	key := strings.TrimSpace(string(data))
-	return key, nil
-}
 
 // AuthRequest represents the expected JSON payload.
 type AuthRequest struct {
@@ -64,7 +51,7 @@ func DiscordAuthHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get the Discord secret key from the embedded file.
-	clientSecret, err := getDiscordKey()
+	clientSecret, err := config.GetDiscordKey()
 	if err != nil {
 		http.Error(w, "Server configuration error: discord key not set", http.StatusInternalServerError)
 		log.Println("Error getting discord key:", err)
@@ -200,7 +187,7 @@ func DiscordAuthHandler(w http.ResponseWriter, r *http.Request) {
 // ValidateJWT takes in a JWT token string and returns the userId from its claims if the token is valid.
 // It uses the embedded Discord secret (from keys/discord.txt) to verify the token.
 func ValidateJWT(tokenStr string) (string, error) {
-	clientSecret, err := getDiscordKey()
+	clientSecret, err := config.GetDiscordKey()
 	if err != nil {
 		return "", fmt.Errorf("failed to get discord key: %w", err)
 	}

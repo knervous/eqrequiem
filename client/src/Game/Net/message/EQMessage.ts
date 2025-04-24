@@ -241,9 +241,9 @@ export interface CharacterSelectEntry {
      */
     face: number;
     /**
-     * @generated from protobuf field: repeated eq.CharSelectEquip equip = 9;
+     * @generated from protobuf field: repeated eq.ItemInstance items = 9;
      */
-    equip: CharSelectEquip[];
+    items: ItemInstance[];
     /**
      * @generated from protobuf field: int32 deity = 10;
      */
@@ -1648,6 +1648,728 @@ export interface PVPStatsEntry {
     points: number;
 }
 /**
+ * @generated from protobuf message eq.ItemInstance
+ */
+export interface ItemInstance {
+    /**
+     * @generated from protobuf field: int32 id = 1;
+     */
+    id: number;
+    /**
+     * @generated from protobuf field: int32 item_id = 2;
+     */
+    itemId: number;
+    /**
+     * @generated from protobuf field: string mods = 3;
+     */
+    mods: string; // JSON string
+    /**
+     * @generated from protobuf field: uint32 charges = 4;
+     */
+    charges: number;
+    /**
+     * @generated from protobuf field: uint32 quantity = 5;
+     */
+    quantity: number;
+    /**
+     * @generated from protobuf field: optional uint32 owner_id = 6;
+     */
+    ownerId?: number;
+    /**
+     * @generated from protobuf field: int32 owner_type = 7;
+     */
+    ownerType: number;
+    /**
+     * @generated from protobuf field: int32 slot = 8;
+     */
+    slot: number;
+    /**
+     * @generated from protobuf field: eq.Items item = 9;
+     */
+    item?: Items;
+}
+/**
+ * @generated from protobuf message eq.Items
+ */
+export interface Items {
+    /**
+     * @generated from protobuf field: int32 id = 1;
+     */
+    id: number;
+    /**
+     * @generated from protobuf field: int32 minstatus = 2;
+     */
+    minstatus: number;
+    /**
+     * @generated from protobuf field: string name = 3;
+     */
+    name: string;
+    /**
+     * @generated from protobuf field: int32 aagi = 4;
+     */
+    aagi: number;
+    /**
+     * @generated from protobuf field: int32 ac = 5;
+     */
+    ac: number;
+    /**
+     * @generated from protobuf field: int32 accuracy = 6;
+     */
+    accuracy: number;
+    /**
+     * @generated from protobuf field: int32 acha = 7;
+     */
+    acha: number;
+    /**
+     * @generated from protobuf field: int32 adex = 8;
+     */
+    adex: number;
+    /**
+     * @generated from protobuf field: int32 aint = 9;
+     */
+    aint: number;
+    /**
+     * @generated from protobuf field: uint32 artifactflag = 10;
+     */
+    artifactflag: number;
+    /**
+     * @generated from protobuf field: int32 asta = 11;
+     */
+    asta: number;
+    /**
+     * @generated from protobuf field: int32 astr = 12;
+     */
+    astr: number;
+    /**
+     * @generated from protobuf field: int32 attack = 13;
+     */
+    attack: number;
+    /**
+     * @generated from protobuf field: int32 augrestrict = 14;
+     */
+    augrestrict: number;
+    /**
+     * @generated from protobuf field: int32 augslot1type = 15 [json_name = "augslot1type"];
+     */
+    augslot1Type: number;
+    /**
+     * @generated from protobuf field: int32 augslot1visible = 16 [json_name = "augslot1visible"];
+     */
+    augslot1Visible: number;
+    /**
+     * @generated from protobuf field: int32 augslot2type = 17 [json_name = "augslot2type"];
+     */
+    augslot2Type: number;
+    /**
+     * @generated from protobuf field: int32 augslot2visible = 18 [json_name = "augslot2visible"];
+     */
+    augslot2Visible: number;
+    /**
+     * @generated from protobuf field: int32 augslot3type = 19 [json_name = "augslot3type"];
+     */
+    augslot3Type: number;
+    /**
+     * @generated from protobuf field: int32 augslot3visible = 20 [json_name = "augslot3visible"];
+     */
+    augslot3Visible: number;
+    /**
+     * @generated from protobuf field: int32 augslot4type = 21 [json_name = "augslot4type"];
+     */
+    augslot4Type: number;
+    /**
+     * @generated from protobuf field: int32 augslot4visible = 22 [json_name = "augslot4visible"];
+     */
+    augslot4Visible: number;
+    /**
+     * @generated from protobuf field: int32 augslot5type = 23 [json_name = "augslot5type"];
+     */
+    augslot5Type: number;
+    /**
+     * @generated from protobuf field: int32 augslot5visible = 24 [json_name = "augslot5visible"];
+     */
+    augslot5Visible: number;
+    /**
+     * @generated from protobuf field: int32 augslot6type = 25 [json_name = "augslot6type"];
+     */
+    augslot6Type: number;
+    /**
+     * @generated from protobuf field: int32 augslot6visible = 26 [json_name = "augslot6visible"];
+     */
+    augslot6Visible: number;
+    /**
+     * @generated from protobuf field: int32 augtype = 27;
+     */
+    augtype: number;
+    /**
+     * @generated from protobuf field: int32 avoidance = 28;
+     */
+    avoidance: number;
+    /**
+     * @generated from protobuf field: int32 awis = 29;
+     */
+    awis: number;
+    /**
+     * @generated from protobuf field: int32 bagsize = 30;
+     */
+    bagsize: number;
+    /**
+     * @generated from protobuf field: int32 bagslots = 31;
+     */
+    bagslots: number;
+    /**
+     * @generated from protobuf field: int32 bagtype = 32;
+     */
+    bagtype: number;
+    /**
+     * @generated from protobuf field: int32 bagwr = 33;
+     */
+    bagwr: number;
+    /**
+     * @generated from protobuf field: int32 banedmgamt = 34;
+     */
+    banedmgamt: number;
+    /**
+     * @generated from protobuf field: int32 banedmgraceamt = 35;
+     */
+    banedmgraceamt: number;
+    /**
+     * @generated from protobuf field: int32 banedmgbody = 36;
+     */
+    banedmgbody: number;
+    /**
+     * @generated from protobuf field: int32 banedmgrace = 37;
+     */
+    banedmgrace: number;
+    /**
+     * @generated from protobuf field: int32 bardtype = 38;
+     */
+    bardtype: number;
+    /**
+     * @generated from protobuf field: int32 bardvalue = 39;
+     */
+    bardvalue: number;
+    /**
+     * @generated from protobuf field: int32 book = 40;
+     */
+    book: number;
+    /**
+     * @generated from protobuf field: int32 casttime = 41;
+     */
+    casttime: number;
+    /**
+     * @generated from protobuf field: int32 casttime2 = 42;
+     */
+    casttime2: number;
+    /**
+     * @generated from protobuf field: int32 classes = 43;
+     */
+    classes: number;
+    /**
+     * @generated from protobuf field: uint32 color = 44;
+     */
+    color: number;
+    /**
+     * @generated from protobuf field: string combateffects = 45;
+     */
+    combateffects: string;
+    /**
+     * @generated from protobuf field: int32 extradmgskill = 46;
+     */
+    extradmgskill: number;
+    /**
+     * @generated from protobuf field: int32 extradmgamt = 47;
+     */
+    extradmgamt: number;
+    /**
+     * @generated from protobuf field: int32 price = 48;
+     */
+    price: number;
+    /**
+     * @generated from protobuf field: int32 cr = 49;
+     */
+    cr: number;
+    /**
+     * @generated from protobuf field: int32 damage = 50;
+     */
+    damage: number;
+    /**
+     * @generated from protobuf field: int32 damageshield = 51;
+     */
+    damageshield: number;
+    /**
+     * @generated from protobuf field: int32 deity = 52;
+     */
+    deity: number;
+    /**
+     * @generated from protobuf field: int32 delay = 53;
+     */
+    delay: number;
+    /**
+     * @generated from protobuf field: uint32 augdistiller = 54;
+     */
+    augdistiller: number;
+    /**
+     * @generated from protobuf field: int32 dotshielding = 55;
+     */
+    dotshielding: number;
+    /**
+     * @generated from protobuf field: int32 dr = 56;
+     */
+    dr: number;
+    /**
+     * @generated from protobuf field: int32 clicktype = 57;
+     */
+    clicktype: number;
+    /**
+     * @generated from protobuf field: int32 clicklevel2 = 58;
+     */
+    clicklevel2: number;
+    /**
+     * @generated from protobuf field: int32 elemdmgtype = 59;
+     */
+    elemdmgtype: number;
+    /**
+     * @generated from protobuf field: int32 elemdmgamt = 60;
+     */
+    elemdmgamt: number;
+    /**
+     * @generated from protobuf field: int32 endur = 61;
+     */
+    endur: number;
+    /**
+     * @generated from protobuf field: int32 factionamt1 = 62;
+     */
+    factionamt1: number;
+    /**
+     * @generated from protobuf field: int32 factionamt2 = 63;
+     */
+    factionamt2: number;
+    /**
+     * @generated from protobuf field: int32 factionamt3 = 64;
+     */
+    factionamt3: number;
+    /**
+     * @generated from protobuf field: int32 factionamt4 = 65;
+     */
+    factionamt4: number;
+    /**
+     * @generated from protobuf field: int32 factionmod1 = 66;
+     */
+    factionmod1: number;
+    /**
+     * @generated from protobuf field: int32 factionmod2 = 67;
+     */
+    factionmod2: number;
+    /**
+     * @generated from protobuf field: int32 factionmod3 = 68;
+     */
+    factionmod3: number;
+    /**
+     * @generated from protobuf field: int32 factionmod4 = 69;
+     */
+    factionmod4: number;
+    /**
+     * @generated from protobuf field: int32 focuseffect = 70;
+     */
+    focuseffect: number;
+    /**
+     * @generated from protobuf field: int32 fr = 71;
+     */
+    fr: number;
+    /**
+     * @generated from protobuf field: int32 fvnodrop = 72;
+     */
+    fvnodrop: number;
+    /**
+     * @generated from protobuf field: int32 haste = 73;
+     */
+    haste: number;
+    /**
+     * @generated from protobuf field: int32 clicklevel = 74;
+     */
+    clicklevel: number;
+    /**
+     * @generated from protobuf field: int32 hp = 75;
+     */
+    hp: number;
+    /**
+     * @generated from protobuf field: int32 regen = 76;
+     */
+    regen: number;
+    /**
+     * @generated from protobuf field: int32 icon = 77;
+     */
+    icon: number;
+    /**
+     * @generated from protobuf field: string idfile = 78;
+     */
+    idfile: string;
+    /**
+     * @generated from protobuf field: int32 itemclass = 79;
+     */
+    itemclass: number;
+    /**
+     * @generated from protobuf field: int32 itemtype = 80;
+     */
+    itemtype: number;
+    /**
+     * @generated from protobuf field: int32 light = 81;
+     */
+    light: number;
+    /**
+     * @generated from protobuf field: string lore = 82;
+     */
+    lore: string;
+    /**
+     * @generated from protobuf field: int32 loregroup = 83;
+     */
+    loregroup: number;
+    /**
+     * @generated from protobuf field: int32 magic = 84;
+     */
+    magic: number;
+    /**
+     * @generated from protobuf field: int32 mana = 85;
+     */
+    mana: number;
+    /**
+     * @generated from protobuf field: int32 manaregen = 86;
+     */
+    manaregen: number;
+    /**
+     * @generated from protobuf field: int32 enduranceregen = 87;
+     */
+    enduranceregen: number;
+    /**
+     * @generated from protobuf field: int32 material = 88;
+     */
+    material: number;
+    /**
+     * @generated from protobuf field: int32 herosforgemodel = 89;
+     */
+    herosforgemodel: number;
+    /**
+     * @generated from protobuf field: int32 maxcharges = 90;
+     */
+    maxcharges: number;
+    /**
+     * @generated from protobuf field: int32 mr = 91;
+     */
+    mr: number;
+    /**
+     * @generated from protobuf field: int32 nodrop = 92;
+     */
+    nodrop: number;
+    /**
+     * @generated from protobuf field: int32 norent = 93;
+     */
+    norent: number;
+    /**
+     * @generated from protobuf field: uint32 pendingloreflag = 94;
+     */
+    pendingloreflag: number;
+    /**
+     * @generated from protobuf field: int32 pr = 95;
+     */
+    pr: number;
+    /**
+     * @generated from protobuf field: int32 procrate = 96;
+     */
+    procrate: number;
+    /**
+     * @generated from protobuf field: int32 races = 97;
+     */
+    races: number;
+    /**
+     * @generated from protobuf field: int32 range = 98;
+     */
+    range: number;
+    /**
+     * @generated from protobuf field: int32 reclevel = 99;
+     */
+    reclevel: number;
+    /**
+     * @generated from protobuf field: int32 recskill = 100;
+     */
+    recskill: number;
+    /**
+     * @generated from protobuf field: int32 reqlevel = 101;
+     */
+    reqlevel: number;
+    /**
+     * @generated from protobuf field: double sellrate = 102;
+     */
+    sellrate: number;
+    /**
+     * @generated from protobuf field: int32 shielding = 103;
+     */
+    shielding: number;
+    /**
+     * @generated from protobuf field: int32 size = 104;
+     */
+    size: number;
+    /**
+     * @generated from protobuf field: int32 skillmodtype = 105;
+     */
+    skillmodtype: number;
+    /**
+     * @generated from protobuf field: int32 skillmodvalue = 106;
+     */
+    skillmodvalue: number;
+    /**
+     * @generated from protobuf field: int32 slots = 107;
+     */
+    slots: number;
+    /**
+     * @generated from protobuf field: int32 clickeffect = 108;
+     */
+    clickeffect: number;
+    /**
+     * @generated from protobuf field: int32 spellshield = 109;
+     */
+    spellshield: number;
+    /**
+     * @generated from protobuf field: int32 strikethrough = 110;
+     */
+    strikethrough: number;
+    /**
+     * @generated from protobuf field: int32 stunresist = 111;
+     */
+    stunresist: number;
+    /**
+     * @generated from protobuf field: uint32 summonedflag = 112;
+     */
+    summonedflag: number;
+    /**
+     * @generated from protobuf field: int32 tradeskills = 113;
+     */
+    tradeskills: number;
+    /**
+     * @generated from protobuf field: int32 favor = 114;
+     */
+    favor: number;
+    /**
+     * @generated from protobuf field: int32 weight = 115;
+     */
+    weight: number;
+    /**
+     * @generated from protobuf field: int32 benefitflag = 116;
+     */
+    benefitflag: number;
+    /**
+     * @generated from protobuf field: int32 booktype = 117;
+     */
+    booktype: number;
+    /**
+     * @generated from protobuf field: int32 recastdelay = 118;
+     */
+    recastdelay: number;
+    /**
+     * @generated from protobuf field: int32 recasttype = 119;
+     */
+    recasttype: number;
+    /**
+     * @generated from protobuf field: int32 guildfavor = 120;
+     */
+    guildfavor: number;
+    /**
+     * @generated from protobuf field: int32 attuneable = 121;
+     */
+    attuneable: number;
+    /**
+     * @generated from protobuf field: int32 nopet = 122;
+     */
+    nopet: number;
+    /**
+     * @generated from protobuf field: string updated = 123;
+     */
+    updated: string; // ISO 8601 string for time.Time
+    /**
+     * @generated from protobuf field: int32 pointtype = 124;
+     */
+    pointtype: number;
+    /**
+     * @generated from protobuf field: int32 potionbelt = 125;
+     */
+    potionbelt: number;
+    /**
+     * @generated from protobuf field: int32 potionbeltslots = 126;
+     */
+    potionbeltslots: number;
+    /**
+     * @generated from protobuf field: int32 stacksize = 127;
+     */
+    stacksize: number;
+    /**
+     * @generated from protobuf field: int32 notransfer = 128;
+     */
+    notransfer: number;
+    /**
+     * @generated from protobuf field: int32 stackable = 129;
+     */
+    stackable: number;
+    /**
+     * @generated from protobuf field: int32 proceffect = 130;
+     */
+    proceffect: number;
+    /**
+     * @generated from protobuf field: int32 proctype = 131;
+     */
+    proctype: number;
+    /**
+     * @generated from protobuf field: int32 proclevel2 = 132;
+     */
+    proclevel2: number;
+    /**
+     * @generated from protobuf field: int32 proclevel = 133;
+     */
+    proclevel: number;
+    /**
+     * @generated from protobuf field: int32 worneffect = 134;
+     */
+    worneffect: number;
+    /**
+     * @generated from protobuf field: int32 worntype = 135;
+     */
+    worntype: number;
+    /**
+     * @generated from protobuf field: int32 wornlevel2 = 136;
+     */
+    wornlevel2: number;
+    /**
+     * @generated from protobuf field: int32 wornlevel = 137;
+     */
+    wornlevel: number;
+    /**
+     * @generated from protobuf field: int32 focustype = 138;
+     */
+    focustype: number;
+    /**
+     * @generated from protobuf field: int32 focuslevel2 = 139;
+     */
+    focuslevel2: number;
+    /**
+     * @generated from protobuf field: int32 focuslevel = 140;
+     */
+    focuslevel: number;
+    /**
+     * @generated from protobuf field: int32 scrolleffect = 141;
+     */
+    scrolleffect: number;
+    /**
+     * @generated from protobuf field: int32 scrolltype = 142;
+     */
+    scrolltype: number;
+    /**
+     * @generated from protobuf field: int32 scrolllevel2 = 143;
+     */
+    scrolllevel2: number;
+    /**
+     * @generated from protobuf field: int32 scrolllevel = 144;
+     */
+    scrolllevel: number;
+    /**
+     * @generated from protobuf field: int32 svcorruption = 145;
+     */
+    svcorruption: number;
+    /**
+     * @generated from protobuf field: int32 skillmodmax = 146;
+     */
+    skillmodmax: number;
+    /**
+     * @generated from protobuf field: int32 questitemflag = 147;
+     */
+    questitemflag: number;
+    /**
+     * @generated from protobuf field: int32 purity = 148;
+     */
+    purity: number;
+    /**
+     * @generated from protobuf field: int32 evoitem = 149;
+     */
+    evoitem: number;
+    /**
+     * @generated from protobuf field: int32 evoid = 150;
+     */
+    evoid: number;
+    /**
+     * @generated from protobuf field: int32 evolvinglevel = 151;
+     */
+    evolvinglevel: number;
+    /**
+     * @generated from protobuf field: int32 evomax = 152;
+     */
+    evomax: number;
+    /**
+     * @generated from protobuf field: int32 dsmitigation = 153;
+     */
+    dsmitigation: number;
+    /**
+     * @generated from protobuf field: int32 healamt = 154;
+     */
+    healamt: number;
+    /**
+     * @generated from protobuf field: int32 spelldmg = 155;
+     */
+    spelldmg: number;
+    /**
+     * @generated from protobuf field: int32 clairvoyance = 156;
+     */
+    clairvoyance: number;
+    /**
+     * @generated from protobuf field: int32 backstabdmg = 157;
+     */
+    backstabdmg: number;
+    /**
+     * @generated from protobuf field: int32 elitematerial = 158;
+     */
+    elitematerial: number;
+    /**
+     * @generated from protobuf field: int32 scriptfileid = 159;
+     */
+    scriptfileid: number;
+    /**
+     * @generated from protobuf field: int32 expendablearrow = 160;
+     */
+    expendablearrow: number;
+    /**
+     * @generated from protobuf field: int32 powersourcecapacity = 161;
+     */
+    powersourcecapacity: number;
+    /**
+     * @generated from protobuf field: int32 bardeffect = 162;
+     */
+    bardeffect: number;
+    /**
+     * @generated from protobuf field: int32 bardeffecttype = 163;
+     */
+    bardeffecttype: number;
+    /**
+     * @generated from protobuf field: int32 bardlevel2 = 164;
+     */
+    bardlevel2: number;
+    /**
+     * @generated from protobuf field: int32 bardlevel = 165;
+     */
+    bardlevel: number;
+    /**
+     * @generated from protobuf field: int32 subtype = 166;
+     */
+    subtype: number;
+    /**
+     * @generated from protobuf field: int32 heirloom = 167;
+     */
+    heirloom: number;
+    /**
+     * @generated from protobuf field: int32 placeable = 168;
+     */
+    placeable: number;
+    /**
+     * @generated from protobuf field: int32 epicitem = 169;
+     */
+    epicitem: number;
+}
+/**
  * @generated from protobuf message eq.PlayerProfile
  */
 export interface PlayerProfile {
@@ -2147,6 +2869,10 @@ export interface PlayerProfile {
      * @generated from protobuf field: int32 showhelm = 124;
      */
     showhelm: number;
+    /**
+     * @generated from protobuf field: repeated eq.ItemInstance inventory_items = 126;
+     */
+    inventoryItems: ItemInstance[];
 }
 /**
  * @generated from protobuf message eq.ClientTarget
@@ -10911,7 +11637,7 @@ class CharacterSelectEntry$Type extends MessageType<CharacterSelectEntry> {
             { no: 6, name: "instance", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
             { no: 7, name: "gender", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
             { no: 8, name: "face", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
-            { no: 9, name: "equip", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => CharSelectEquip },
+            { no: 9, name: "items", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => ItemInstance },
             { no: 10, name: "deity", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
             { no: 11, name: "primary_id_file", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
             { no: 12, name: "secondary_id_file", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
@@ -10930,7 +11656,7 @@ class CharacterSelectEntry$Type extends MessageType<CharacterSelectEntry> {
         message.instance = 0;
         message.gender = 0;
         message.face = 0;
-        message.equip = [];
+        message.items = [];
         message.deity = 0;
         message.primaryIdFile = 0;
         message.secondaryIdFile = 0;
@@ -10970,8 +11696,8 @@ class CharacterSelectEntry$Type extends MessageType<CharacterSelectEntry> {
                 case /* int32 face */ 8:
                     message.face = reader.int32();
                     break;
-                case /* repeated eq.CharSelectEquip equip */ 9:
-                    message.equip.push(CharSelectEquip.internalBinaryRead(reader, reader.uint32(), options));
+                case /* repeated eq.ItemInstance items */ 9:
+                    message.items.push(ItemInstance.internalBinaryRead(reader, reader.uint32(), options));
                     break;
                 case /* int32 deity */ 10:
                     message.deity = reader.int32();
@@ -11027,9 +11753,9 @@ class CharacterSelectEntry$Type extends MessageType<CharacterSelectEntry> {
         /* int32 face = 8; */
         if (message.face !== 0)
             writer.tag(8, WireType.Varint).int32(message.face);
-        /* repeated eq.CharSelectEquip equip = 9; */
-        for (let i = 0; i < message.equip.length; i++)
-            CharSelectEquip.internalBinaryWrite(message.equip[i], writer.tag(9, WireType.LengthDelimited).fork(), options).join();
+        /* repeated eq.ItemInstance items = 9; */
+        for (let i = 0; i < message.items.length; i++)
+            ItemInstance.internalBinaryWrite(message.items[i], writer.tag(9, WireType.LengthDelimited).fork(), options).join();
         /* int32 deity = 10; */
         if (message.deity !== 0)
             writer.tag(10, WireType.Varint).int32(message.deity);
@@ -15354,6 +16080,1506 @@ class PVPStatsEntry$Type extends MessageType<PVPStatsEntry> {
  */
 export const PVPStatsEntry = new PVPStatsEntry$Type();
 // @generated message type with reflection information, may provide speed optimized methods
+class ItemInstance$Type extends MessageType<ItemInstance> {
+    constructor() {
+        super("eq.ItemInstance", [
+            { no: 1, name: "id", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 2, name: "item_id", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 3, name: "mods", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 4, name: "charges", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },
+            { no: 5, name: "quantity", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },
+            { no: 6, name: "owner_id", kind: "scalar", opt: true, T: 13 /*ScalarType.UINT32*/ },
+            { no: 7, name: "owner_type", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 8, name: "slot", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 9, name: "item", kind: "message", T: () => Items }
+        ]);
+    }
+    create(value?: PartialMessage<ItemInstance>): ItemInstance {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.id = 0;
+        message.itemId = 0;
+        message.mods = "";
+        message.charges = 0;
+        message.quantity = 0;
+        message.ownerType = 0;
+        message.slot = 0;
+        if (value !== undefined)
+            reflectionMergePartial<ItemInstance>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: ItemInstance): ItemInstance {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* int32 id */ 1:
+                    message.id = reader.int32();
+                    break;
+                case /* int32 item_id */ 2:
+                    message.itemId = reader.int32();
+                    break;
+                case /* string mods */ 3:
+                    message.mods = reader.string();
+                    break;
+                case /* uint32 charges */ 4:
+                    message.charges = reader.uint32();
+                    break;
+                case /* uint32 quantity */ 5:
+                    message.quantity = reader.uint32();
+                    break;
+                case /* optional uint32 owner_id */ 6:
+                    message.ownerId = reader.uint32();
+                    break;
+                case /* int32 owner_type */ 7:
+                    message.ownerType = reader.int32();
+                    break;
+                case /* int32 slot */ 8:
+                    message.slot = reader.int32();
+                    break;
+                case /* eq.Items item */ 9:
+                    message.item = Items.internalBinaryRead(reader, reader.uint32(), options, message.item);
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: ItemInstance, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* int32 id = 1; */
+        if (message.id !== 0)
+            writer.tag(1, WireType.Varint).int32(message.id);
+        /* int32 item_id = 2; */
+        if (message.itemId !== 0)
+            writer.tag(2, WireType.Varint).int32(message.itemId);
+        /* string mods = 3; */
+        if (message.mods !== "")
+            writer.tag(3, WireType.LengthDelimited).string(message.mods);
+        /* uint32 charges = 4; */
+        if (message.charges !== 0)
+            writer.tag(4, WireType.Varint).uint32(message.charges);
+        /* uint32 quantity = 5; */
+        if (message.quantity !== 0)
+            writer.tag(5, WireType.Varint).uint32(message.quantity);
+        /* optional uint32 owner_id = 6; */
+        if (message.ownerId !== undefined)
+            writer.tag(6, WireType.Varint).uint32(message.ownerId);
+        /* int32 owner_type = 7; */
+        if (message.ownerType !== 0)
+            writer.tag(7, WireType.Varint).int32(message.ownerType);
+        /* int32 slot = 8; */
+        if (message.slot !== 0)
+            writer.tag(8, WireType.Varint).int32(message.slot);
+        /* eq.Items item = 9; */
+        if (message.item)
+            Items.internalBinaryWrite(message.item, writer.tag(9, WireType.LengthDelimited).fork(), options).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message eq.ItemInstance
+ */
+export const ItemInstance = new ItemInstance$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Items$Type extends MessageType<Items> {
+    constructor() {
+        super("eq.Items", [
+            { no: 1, name: "id", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 2, name: "minstatus", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 3, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 4, name: "aagi", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 5, name: "ac", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 6, name: "accuracy", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 7, name: "acha", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 8, name: "adex", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 9, name: "aint", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 10, name: "artifactflag", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },
+            { no: 11, name: "asta", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 12, name: "astr", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 13, name: "attack", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 14, name: "augrestrict", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 15, name: "augslot1type", kind: "scalar", jsonName: "augslot1type", T: 5 /*ScalarType.INT32*/ },
+            { no: 16, name: "augslot1visible", kind: "scalar", jsonName: "augslot1visible", T: 5 /*ScalarType.INT32*/ },
+            { no: 17, name: "augslot2type", kind: "scalar", jsonName: "augslot2type", T: 5 /*ScalarType.INT32*/ },
+            { no: 18, name: "augslot2visible", kind: "scalar", jsonName: "augslot2visible", T: 5 /*ScalarType.INT32*/ },
+            { no: 19, name: "augslot3type", kind: "scalar", jsonName: "augslot3type", T: 5 /*ScalarType.INT32*/ },
+            { no: 20, name: "augslot3visible", kind: "scalar", jsonName: "augslot3visible", T: 5 /*ScalarType.INT32*/ },
+            { no: 21, name: "augslot4type", kind: "scalar", jsonName: "augslot4type", T: 5 /*ScalarType.INT32*/ },
+            { no: 22, name: "augslot4visible", kind: "scalar", jsonName: "augslot4visible", T: 5 /*ScalarType.INT32*/ },
+            { no: 23, name: "augslot5type", kind: "scalar", jsonName: "augslot5type", T: 5 /*ScalarType.INT32*/ },
+            { no: 24, name: "augslot5visible", kind: "scalar", jsonName: "augslot5visible", T: 5 /*ScalarType.INT32*/ },
+            { no: 25, name: "augslot6type", kind: "scalar", jsonName: "augslot6type", T: 5 /*ScalarType.INT32*/ },
+            { no: 26, name: "augslot6visible", kind: "scalar", jsonName: "augslot6visible", T: 5 /*ScalarType.INT32*/ },
+            { no: 27, name: "augtype", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 28, name: "avoidance", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 29, name: "awis", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 30, name: "bagsize", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 31, name: "bagslots", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 32, name: "bagtype", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 33, name: "bagwr", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 34, name: "banedmgamt", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 35, name: "banedmgraceamt", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 36, name: "banedmgbody", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 37, name: "banedmgrace", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 38, name: "bardtype", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 39, name: "bardvalue", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 40, name: "book", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 41, name: "casttime", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 42, name: "casttime2", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 43, name: "classes", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 44, name: "color", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },
+            { no: 45, name: "combateffects", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 46, name: "extradmgskill", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 47, name: "extradmgamt", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 48, name: "price", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 49, name: "cr", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 50, name: "damage", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 51, name: "damageshield", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 52, name: "deity", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 53, name: "delay", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 54, name: "augdistiller", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },
+            { no: 55, name: "dotshielding", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 56, name: "dr", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 57, name: "clicktype", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 58, name: "clicklevel2", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 59, name: "elemdmgtype", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 60, name: "elemdmgamt", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 61, name: "endur", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 62, name: "factionamt1", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 63, name: "factionamt2", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 64, name: "factionamt3", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 65, name: "factionamt4", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 66, name: "factionmod1", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 67, name: "factionmod2", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 68, name: "factionmod3", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 69, name: "factionmod4", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 70, name: "focuseffect", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 71, name: "fr", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 72, name: "fvnodrop", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 73, name: "haste", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 74, name: "clicklevel", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 75, name: "hp", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 76, name: "regen", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 77, name: "icon", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 78, name: "idfile", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 79, name: "itemclass", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 80, name: "itemtype", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 81, name: "light", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 82, name: "lore", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 83, name: "loregroup", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 84, name: "magic", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 85, name: "mana", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 86, name: "manaregen", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 87, name: "enduranceregen", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 88, name: "material", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 89, name: "herosforgemodel", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 90, name: "maxcharges", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 91, name: "mr", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 92, name: "nodrop", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 93, name: "norent", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 94, name: "pendingloreflag", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },
+            { no: 95, name: "pr", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 96, name: "procrate", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 97, name: "races", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 98, name: "range", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 99, name: "reclevel", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 100, name: "recskill", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 101, name: "reqlevel", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 102, name: "sellrate", kind: "scalar", T: 1 /*ScalarType.DOUBLE*/ },
+            { no: 103, name: "shielding", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 104, name: "size", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 105, name: "skillmodtype", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 106, name: "skillmodvalue", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 107, name: "slots", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 108, name: "clickeffect", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 109, name: "spellshield", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 110, name: "strikethrough", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 111, name: "stunresist", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 112, name: "summonedflag", kind: "scalar", T: 13 /*ScalarType.UINT32*/ },
+            { no: 113, name: "tradeskills", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 114, name: "favor", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 115, name: "weight", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 116, name: "benefitflag", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 117, name: "booktype", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 118, name: "recastdelay", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 119, name: "recasttype", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 120, name: "guildfavor", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 121, name: "attuneable", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 122, name: "nopet", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 123, name: "updated", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 124, name: "pointtype", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 125, name: "potionbelt", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 126, name: "potionbeltslots", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 127, name: "stacksize", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 128, name: "notransfer", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 129, name: "stackable", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 130, name: "proceffect", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 131, name: "proctype", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 132, name: "proclevel2", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 133, name: "proclevel", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 134, name: "worneffect", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 135, name: "worntype", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 136, name: "wornlevel2", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 137, name: "wornlevel", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 138, name: "focustype", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 139, name: "focuslevel2", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 140, name: "focuslevel", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 141, name: "scrolleffect", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 142, name: "scrolltype", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 143, name: "scrolllevel2", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 144, name: "scrolllevel", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 145, name: "svcorruption", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 146, name: "skillmodmax", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 147, name: "questitemflag", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 148, name: "purity", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 149, name: "evoitem", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 150, name: "evoid", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 151, name: "evolvinglevel", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 152, name: "evomax", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 153, name: "dsmitigation", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 154, name: "healamt", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 155, name: "spelldmg", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 156, name: "clairvoyance", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 157, name: "backstabdmg", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 158, name: "elitematerial", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 159, name: "scriptfileid", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 160, name: "expendablearrow", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 161, name: "powersourcecapacity", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 162, name: "bardeffect", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 163, name: "bardeffecttype", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 164, name: "bardlevel2", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 165, name: "bardlevel", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 166, name: "subtype", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 167, name: "heirloom", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 168, name: "placeable", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 169, name: "epicitem", kind: "scalar", T: 5 /*ScalarType.INT32*/ }
+        ]);
+    }
+    create(value?: PartialMessage<Items>): Items {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.id = 0;
+        message.minstatus = 0;
+        message.name = "";
+        message.aagi = 0;
+        message.ac = 0;
+        message.accuracy = 0;
+        message.acha = 0;
+        message.adex = 0;
+        message.aint = 0;
+        message.artifactflag = 0;
+        message.asta = 0;
+        message.astr = 0;
+        message.attack = 0;
+        message.augrestrict = 0;
+        message.augslot1Type = 0;
+        message.augslot1Visible = 0;
+        message.augslot2Type = 0;
+        message.augslot2Visible = 0;
+        message.augslot3Type = 0;
+        message.augslot3Visible = 0;
+        message.augslot4Type = 0;
+        message.augslot4Visible = 0;
+        message.augslot5Type = 0;
+        message.augslot5Visible = 0;
+        message.augslot6Type = 0;
+        message.augslot6Visible = 0;
+        message.augtype = 0;
+        message.avoidance = 0;
+        message.awis = 0;
+        message.bagsize = 0;
+        message.bagslots = 0;
+        message.bagtype = 0;
+        message.bagwr = 0;
+        message.banedmgamt = 0;
+        message.banedmgraceamt = 0;
+        message.banedmgbody = 0;
+        message.banedmgrace = 0;
+        message.bardtype = 0;
+        message.bardvalue = 0;
+        message.book = 0;
+        message.casttime = 0;
+        message.casttime2 = 0;
+        message.classes = 0;
+        message.color = 0;
+        message.combateffects = "";
+        message.extradmgskill = 0;
+        message.extradmgamt = 0;
+        message.price = 0;
+        message.cr = 0;
+        message.damage = 0;
+        message.damageshield = 0;
+        message.deity = 0;
+        message.delay = 0;
+        message.augdistiller = 0;
+        message.dotshielding = 0;
+        message.dr = 0;
+        message.clicktype = 0;
+        message.clicklevel2 = 0;
+        message.elemdmgtype = 0;
+        message.elemdmgamt = 0;
+        message.endur = 0;
+        message.factionamt1 = 0;
+        message.factionamt2 = 0;
+        message.factionamt3 = 0;
+        message.factionamt4 = 0;
+        message.factionmod1 = 0;
+        message.factionmod2 = 0;
+        message.factionmod3 = 0;
+        message.factionmod4 = 0;
+        message.focuseffect = 0;
+        message.fr = 0;
+        message.fvnodrop = 0;
+        message.haste = 0;
+        message.clicklevel = 0;
+        message.hp = 0;
+        message.regen = 0;
+        message.icon = 0;
+        message.idfile = "";
+        message.itemclass = 0;
+        message.itemtype = 0;
+        message.light = 0;
+        message.lore = "";
+        message.loregroup = 0;
+        message.magic = 0;
+        message.mana = 0;
+        message.manaregen = 0;
+        message.enduranceregen = 0;
+        message.material = 0;
+        message.herosforgemodel = 0;
+        message.maxcharges = 0;
+        message.mr = 0;
+        message.nodrop = 0;
+        message.norent = 0;
+        message.pendingloreflag = 0;
+        message.pr = 0;
+        message.procrate = 0;
+        message.races = 0;
+        message.range = 0;
+        message.reclevel = 0;
+        message.recskill = 0;
+        message.reqlevel = 0;
+        message.sellrate = 0;
+        message.shielding = 0;
+        message.size = 0;
+        message.skillmodtype = 0;
+        message.skillmodvalue = 0;
+        message.slots = 0;
+        message.clickeffect = 0;
+        message.spellshield = 0;
+        message.strikethrough = 0;
+        message.stunresist = 0;
+        message.summonedflag = 0;
+        message.tradeskills = 0;
+        message.favor = 0;
+        message.weight = 0;
+        message.benefitflag = 0;
+        message.booktype = 0;
+        message.recastdelay = 0;
+        message.recasttype = 0;
+        message.guildfavor = 0;
+        message.attuneable = 0;
+        message.nopet = 0;
+        message.updated = "";
+        message.pointtype = 0;
+        message.potionbelt = 0;
+        message.potionbeltslots = 0;
+        message.stacksize = 0;
+        message.notransfer = 0;
+        message.stackable = 0;
+        message.proceffect = 0;
+        message.proctype = 0;
+        message.proclevel2 = 0;
+        message.proclevel = 0;
+        message.worneffect = 0;
+        message.worntype = 0;
+        message.wornlevel2 = 0;
+        message.wornlevel = 0;
+        message.focustype = 0;
+        message.focuslevel2 = 0;
+        message.focuslevel = 0;
+        message.scrolleffect = 0;
+        message.scrolltype = 0;
+        message.scrolllevel2 = 0;
+        message.scrolllevel = 0;
+        message.svcorruption = 0;
+        message.skillmodmax = 0;
+        message.questitemflag = 0;
+        message.purity = 0;
+        message.evoitem = 0;
+        message.evoid = 0;
+        message.evolvinglevel = 0;
+        message.evomax = 0;
+        message.dsmitigation = 0;
+        message.healamt = 0;
+        message.spelldmg = 0;
+        message.clairvoyance = 0;
+        message.backstabdmg = 0;
+        message.elitematerial = 0;
+        message.scriptfileid = 0;
+        message.expendablearrow = 0;
+        message.powersourcecapacity = 0;
+        message.bardeffect = 0;
+        message.bardeffecttype = 0;
+        message.bardlevel2 = 0;
+        message.bardlevel = 0;
+        message.subtype = 0;
+        message.heirloom = 0;
+        message.placeable = 0;
+        message.epicitem = 0;
+        if (value !== undefined)
+            reflectionMergePartial<Items>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: Items): Items {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* int32 id */ 1:
+                    message.id = reader.int32();
+                    break;
+                case /* int32 minstatus */ 2:
+                    message.minstatus = reader.int32();
+                    break;
+                case /* string name */ 3:
+                    message.name = reader.string();
+                    break;
+                case /* int32 aagi */ 4:
+                    message.aagi = reader.int32();
+                    break;
+                case /* int32 ac */ 5:
+                    message.ac = reader.int32();
+                    break;
+                case /* int32 accuracy */ 6:
+                    message.accuracy = reader.int32();
+                    break;
+                case /* int32 acha */ 7:
+                    message.acha = reader.int32();
+                    break;
+                case /* int32 adex */ 8:
+                    message.adex = reader.int32();
+                    break;
+                case /* int32 aint */ 9:
+                    message.aint = reader.int32();
+                    break;
+                case /* uint32 artifactflag */ 10:
+                    message.artifactflag = reader.uint32();
+                    break;
+                case /* int32 asta */ 11:
+                    message.asta = reader.int32();
+                    break;
+                case /* int32 astr */ 12:
+                    message.astr = reader.int32();
+                    break;
+                case /* int32 attack */ 13:
+                    message.attack = reader.int32();
+                    break;
+                case /* int32 augrestrict */ 14:
+                    message.augrestrict = reader.int32();
+                    break;
+                case /* int32 augslot1type = 15 [json_name = "augslot1type"];*/ 15:
+                    message.augslot1Type = reader.int32();
+                    break;
+                case /* int32 augslot1visible = 16 [json_name = "augslot1visible"];*/ 16:
+                    message.augslot1Visible = reader.int32();
+                    break;
+                case /* int32 augslot2type = 17 [json_name = "augslot2type"];*/ 17:
+                    message.augslot2Type = reader.int32();
+                    break;
+                case /* int32 augslot2visible = 18 [json_name = "augslot2visible"];*/ 18:
+                    message.augslot2Visible = reader.int32();
+                    break;
+                case /* int32 augslot3type = 19 [json_name = "augslot3type"];*/ 19:
+                    message.augslot3Type = reader.int32();
+                    break;
+                case /* int32 augslot3visible = 20 [json_name = "augslot3visible"];*/ 20:
+                    message.augslot3Visible = reader.int32();
+                    break;
+                case /* int32 augslot4type = 21 [json_name = "augslot4type"];*/ 21:
+                    message.augslot4Type = reader.int32();
+                    break;
+                case /* int32 augslot4visible = 22 [json_name = "augslot4visible"];*/ 22:
+                    message.augslot4Visible = reader.int32();
+                    break;
+                case /* int32 augslot5type = 23 [json_name = "augslot5type"];*/ 23:
+                    message.augslot5Type = reader.int32();
+                    break;
+                case /* int32 augslot5visible = 24 [json_name = "augslot5visible"];*/ 24:
+                    message.augslot5Visible = reader.int32();
+                    break;
+                case /* int32 augslot6type = 25 [json_name = "augslot6type"];*/ 25:
+                    message.augslot6Type = reader.int32();
+                    break;
+                case /* int32 augslot6visible = 26 [json_name = "augslot6visible"];*/ 26:
+                    message.augslot6Visible = reader.int32();
+                    break;
+                case /* int32 augtype */ 27:
+                    message.augtype = reader.int32();
+                    break;
+                case /* int32 avoidance */ 28:
+                    message.avoidance = reader.int32();
+                    break;
+                case /* int32 awis */ 29:
+                    message.awis = reader.int32();
+                    break;
+                case /* int32 bagsize */ 30:
+                    message.bagsize = reader.int32();
+                    break;
+                case /* int32 bagslots */ 31:
+                    message.bagslots = reader.int32();
+                    break;
+                case /* int32 bagtype */ 32:
+                    message.bagtype = reader.int32();
+                    break;
+                case /* int32 bagwr */ 33:
+                    message.bagwr = reader.int32();
+                    break;
+                case /* int32 banedmgamt */ 34:
+                    message.banedmgamt = reader.int32();
+                    break;
+                case /* int32 banedmgraceamt */ 35:
+                    message.banedmgraceamt = reader.int32();
+                    break;
+                case /* int32 banedmgbody */ 36:
+                    message.banedmgbody = reader.int32();
+                    break;
+                case /* int32 banedmgrace */ 37:
+                    message.banedmgrace = reader.int32();
+                    break;
+                case /* int32 bardtype */ 38:
+                    message.bardtype = reader.int32();
+                    break;
+                case /* int32 bardvalue */ 39:
+                    message.bardvalue = reader.int32();
+                    break;
+                case /* int32 book */ 40:
+                    message.book = reader.int32();
+                    break;
+                case /* int32 casttime */ 41:
+                    message.casttime = reader.int32();
+                    break;
+                case /* int32 casttime2 */ 42:
+                    message.casttime2 = reader.int32();
+                    break;
+                case /* int32 classes */ 43:
+                    message.classes = reader.int32();
+                    break;
+                case /* uint32 color */ 44:
+                    message.color = reader.uint32();
+                    break;
+                case /* string combateffects */ 45:
+                    message.combateffects = reader.string();
+                    break;
+                case /* int32 extradmgskill */ 46:
+                    message.extradmgskill = reader.int32();
+                    break;
+                case /* int32 extradmgamt */ 47:
+                    message.extradmgamt = reader.int32();
+                    break;
+                case /* int32 price */ 48:
+                    message.price = reader.int32();
+                    break;
+                case /* int32 cr */ 49:
+                    message.cr = reader.int32();
+                    break;
+                case /* int32 damage */ 50:
+                    message.damage = reader.int32();
+                    break;
+                case /* int32 damageshield */ 51:
+                    message.damageshield = reader.int32();
+                    break;
+                case /* int32 deity */ 52:
+                    message.deity = reader.int32();
+                    break;
+                case /* int32 delay */ 53:
+                    message.delay = reader.int32();
+                    break;
+                case /* uint32 augdistiller */ 54:
+                    message.augdistiller = reader.uint32();
+                    break;
+                case /* int32 dotshielding */ 55:
+                    message.dotshielding = reader.int32();
+                    break;
+                case /* int32 dr */ 56:
+                    message.dr = reader.int32();
+                    break;
+                case /* int32 clicktype */ 57:
+                    message.clicktype = reader.int32();
+                    break;
+                case /* int32 clicklevel2 */ 58:
+                    message.clicklevel2 = reader.int32();
+                    break;
+                case /* int32 elemdmgtype */ 59:
+                    message.elemdmgtype = reader.int32();
+                    break;
+                case /* int32 elemdmgamt */ 60:
+                    message.elemdmgamt = reader.int32();
+                    break;
+                case /* int32 endur */ 61:
+                    message.endur = reader.int32();
+                    break;
+                case /* int32 factionamt1 */ 62:
+                    message.factionamt1 = reader.int32();
+                    break;
+                case /* int32 factionamt2 */ 63:
+                    message.factionamt2 = reader.int32();
+                    break;
+                case /* int32 factionamt3 */ 64:
+                    message.factionamt3 = reader.int32();
+                    break;
+                case /* int32 factionamt4 */ 65:
+                    message.factionamt4 = reader.int32();
+                    break;
+                case /* int32 factionmod1 */ 66:
+                    message.factionmod1 = reader.int32();
+                    break;
+                case /* int32 factionmod2 */ 67:
+                    message.factionmod2 = reader.int32();
+                    break;
+                case /* int32 factionmod3 */ 68:
+                    message.factionmod3 = reader.int32();
+                    break;
+                case /* int32 factionmod4 */ 69:
+                    message.factionmod4 = reader.int32();
+                    break;
+                case /* int32 focuseffect */ 70:
+                    message.focuseffect = reader.int32();
+                    break;
+                case /* int32 fr */ 71:
+                    message.fr = reader.int32();
+                    break;
+                case /* int32 fvnodrop */ 72:
+                    message.fvnodrop = reader.int32();
+                    break;
+                case /* int32 haste */ 73:
+                    message.haste = reader.int32();
+                    break;
+                case /* int32 clicklevel */ 74:
+                    message.clicklevel = reader.int32();
+                    break;
+                case /* int32 hp */ 75:
+                    message.hp = reader.int32();
+                    break;
+                case /* int32 regen */ 76:
+                    message.regen = reader.int32();
+                    break;
+                case /* int32 icon */ 77:
+                    message.icon = reader.int32();
+                    break;
+                case /* string idfile */ 78:
+                    message.idfile = reader.string();
+                    break;
+                case /* int32 itemclass */ 79:
+                    message.itemclass = reader.int32();
+                    break;
+                case /* int32 itemtype */ 80:
+                    message.itemtype = reader.int32();
+                    break;
+                case /* int32 light */ 81:
+                    message.light = reader.int32();
+                    break;
+                case /* string lore */ 82:
+                    message.lore = reader.string();
+                    break;
+                case /* int32 loregroup */ 83:
+                    message.loregroup = reader.int32();
+                    break;
+                case /* int32 magic */ 84:
+                    message.magic = reader.int32();
+                    break;
+                case /* int32 mana */ 85:
+                    message.mana = reader.int32();
+                    break;
+                case /* int32 manaregen */ 86:
+                    message.manaregen = reader.int32();
+                    break;
+                case /* int32 enduranceregen */ 87:
+                    message.enduranceregen = reader.int32();
+                    break;
+                case /* int32 material */ 88:
+                    message.material = reader.int32();
+                    break;
+                case /* int32 herosforgemodel */ 89:
+                    message.herosforgemodel = reader.int32();
+                    break;
+                case /* int32 maxcharges */ 90:
+                    message.maxcharges = reader.int32();
+                    break;
+                case /* int32 mr */ 91:
+                    message.mr = reader.int32();
+                    break;
+                case /* int32 nodrop */ 92:
+                    message.nodrop = reader.int32();
+                    break;
+                case /* int32 norent */ 93:
+                    message.norent = reader.int32();
+                    break;
+                case /* uint32 pendingloreflag */ 94:
+                    message.pendingloreflag = reader.uint32();
+                    break;
+                case /* int32 pr */ 95:
+                    message.pr = reader.int32();
+                    break;
+                case /* int32 procrate */ 96:
+                    message.procrate = reader.int32();
+                    break;
+                case /* int32 races */ 97:
+                    message.races = reader.int32();
+                    break;
+                case /* int32 range */ 98:
+                    message.range = reader.int32();
+                    break;
+                case /* int32 reclevel */ 99:
+                    message.reclevel = reader.int32();
+                    break;
+                case /* int32 recskill */ 100:
+                    message.recskill = reader.int32();
+                    break;
+                case /* int32 reqlevel */ 101:
+                    message.reqlevel = reader.int32();
+                    break;
+                case /* double sellrate */ 102:
+                    message.sellrate = reader.double();
+                    break;
+                case /* int32 shielding */ 103:
+                    message.shielding = reader.int32();
+                    break;
+                case /* int32 size */ 104:
+                    message.size = reader.int32();
+                    break;
+                case /* int32 skillmodtype */ 105:
+                    message.skillmodtype = reader.int32();
+                    break;
+                case /* int32 skillmodvalue */ 106:
+                    message.skillmodvalue = reader.int32();
+                    break;
+                case /* int32 slots */ 107:
+                    message.slots = reader.int32();
+                    break;
+                case /* int32 clickeffect */ 108:
+                    message.clickeffect = reader.int32();
+                    break;
+                case /* int32 spellshield */ 109:
+                    message.spellshield = reader.int32();
+                    break;
+                case /* int32 strikethrough */ 110:
+                    message.strikethrough = reader.int32();
+                    break;
+                case /* int32 stunresist */ 111:
+                    message.stunresist = reader.int32();
+                    break;
+                case /* uint32 summonedflag */ 112:
+                    message.summonedflag = reader.uint32();
+                    break;
+                case /* int32 tradeskills */ 113:
+                    message.tradeskills = reader.int32();
+                    break;
+                case /* int32 favor */ 114:
+                    message.favor = reader.int32();
+                    break;
+                case /* int32 weight */ 115:
+                    message.weight = reader.int32();
+                    break;
+                case /* int32 benefitflag */ 116:
+                    message.benefitflag = reader.int32();
+                    break;
+                case /* int32 booktype */ 117:
+                    message.booktype = reader.int32();
+                    break;
+                case /* int32 recastdelay */ 118:
+                    message.recastdelay = reader.int32();
+                    break;
+                case /* int32 recasttype */ 119:
+                    message.recasttype = reader.int32();
+                    break;
+                case /* int32 guildfavor */ 120:
+                    message.guildfavor = reader.int32();
+                    break;
+                case /* int32 attuneable */ 121:
+                    message.attuneable = reader.int32();
+                    break;
+                case /* int32 nopet */ 122:
+                    message.nopet = reader.int32();
+                    break;
+                case /* string updated */ 123:
+                    message.updated = reader.string();
+                    break;
+                case /* int32 pointtype */ 124:
+                    message.pointtype = reader.int32();
+                    break;
+                case /* int32 potionbelt */ 125:
+                    message.potionbelt = reader.int32();
+                    break;
+                case /* int32 potionbeltslots */ 126:
+                    message.potionbeltslots = reader.int32();
+                    break;
+                case /* int32 stacksize */ 127:
+                    message.stacksize = reader.int32();
+                    break;
+                case /* int32 notransfer */ 128:
+                    message.notransfer = reader.int32();
+                    break;
+                case /* int32 stackable */ 129:
+                    message.stackable = reader.int32();
+                    break;
+                case /* int32 proceffect */ 130:
+                    message.proceffect = reader.int32();
+                    break;
+                case /* int32 proctype */ 131:
+                    message.proctype = reader.int32();
+                    break;
+                case /* int32 proclevel2 */ 132:
+                    message.proclevel2 = reader.int32();
+                    break;
+                case /* int32 proclevel */ 133:
+                    message.proclevel = reader.int32();
+                    break;
+                case /* int32 worneffect */ 134:
+                    message.worneffect = reader.int32();
+                    break;
+                case /* int32 worntype */ 135:
+                    message.worntype = reader.int32();
+                    break;
+                case /* int32 wornlevel2 */ 136:
+                    message.wornlevel2 = reader.int32();
+                    break;
+                case /* int32 wornlevel */ 137:
+                    message.wornlevel = reader.int32();
+                    break;
+                case /* int32 focustype */ 138:
+                    message.focustype = reader.int32();
+                    break;
+                case /* int32 focuslevel2 */ 139:
+                    message.focuslevel2 = reader.int32();
+                    break;
+                case /* int32 focuslevel */ 140:
+                    message.focuslevel = reader.int32();
+                    break;
+                case /* int32 scrolleffect */ 141:
+                    message.scrolleffect = reader.int32();
+                    break;
+                case /* int32 scrolltype */ 142:
+                    message.scrolltype = reader.int32();
+                    break;
+                case /* int32 scrolllevel2 */ 143:
+                    message.scrolllevel2 = reader.int32();
+                    break;
+                case /* int32 scrolllevel */ 144:
+                    message.scrolllevel = reader.int32();
+                    break;
+                case /* int32 svcorruption */ 145:
+                    message.svcorruption = reader.int32();
+                    break;
+                case /* int32 skillmodmax */ 146:
+                    message.skillmodmax = reader.int32();
+                    break;
+                case /* int32 questitemflag */ 147:
+                    message.questitemflag = reader.int32();
+                    break;
+                case /* int32 purity */ 148:
+                    message.purity = reader.int32();
+                    break;
+                case /* int32 evoitem */ 149:
+                    message.evoitem = reader.int32();
+                    break;
+                case /* int32 evoid */ 150:
+                    message.evoid = reader.int32();
+                    break;
+                case /* int32 evolvinglevel */ 151:
+                    message.evolvinglevel = reader.int32();
+                    break;
+                case /* int32 evomax */ 152:
+                    message.evomax = reader.int32();
+                    break;
+                case /* int32 dsmitigation */ 153:
+                    message.dsmitigation = reader.int32();
+                    break;
+                case /* int32 healamt */ 154:
+                    message.healamt = reader.int32();
+                    break;
+                case /* int32 spelldmg */ 155:
+                    message.spelldmg = reader.int32();
+                    break;
+                case /* int32 clairvoyance */ 156:
+                    message.clairvoyance = reader.int32();
+                    break;
+                case /* int32 backstabdmg */ 157:
+                    message.backstabdmg = reader.int32();
+                    break;
+                case /* int32 elitematerial */ 158:
+                    message.elitematerial = reader.int32();
+                    break;
+                case /* int32 scriptfileid */ 159:
+                    message.scriptfileid = reader.int32();
+                    break;
+                case /* int32 expendablearrow */ 160:
+                    message.expendablearrow = reader.int32();
+                    break;
+                case /* int32 powersourcecapacity */ 161:
+                    message.powersourcecapacity = reader.int32();
+                    break;
+                case /* int32 bardeffect */ 162:
+                    message.bardeffect = reader.int32();
+                    break;
+                case /* int32 bardeffecttype */ 163:
+                    message.bardeffecttype = reader.int32();
+                    break;
+                case /* int32 bardlevel2 */ 164:
+                    message.bardlevel2 = reader.int32();
+                    break;
+                case /* int32 bardlevel */ 165:
+                    message.bardlevel = reader.int32();
+                    break;
+                case /* int32 subtype */ 166:
+                    message.subtype = reader.int32();
+                    break;
+                case /* int32 heirloom */ 167:
+                    message.heirloom = reader.int32();
+                    break;
+                case /* int32 placeable */ 168:
+                    message.placeable = reader.int32();
+                    break;
+                case /* int32 epicitem */ 169:
+                    message.epicitem = reader.int32();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: Items, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* int32 id = 1; */
+        if (message.id !== 0)
+            writer.tag(1, WireType.Varint).int32(message.id);
+        /* int32 minstatus = 2; */
+        if (message.minstatus !== 0)
+            writer.tag(2, WireType.Varint).int32(message.minstatus);
+        /* string name = 3; */
+        if (message.name !== "")
+            writer.tag(3, WireType.LengthDelimited).string(message.name);
+        /* int32 aagi = 4; */
+        if (message.aagi !== 0)
+            writer.tag(4, WireType.Varint).int32(message.aagi);
+        /* int32 ac = 5; */
+        if (message.ac !== 0)
+            writer.tag(5, WireType.Varint).int32(message.ac);
+        /* int32 accuracy = 6; */
+        if (message.accuracy !== 0)
+            writer.tag(6, WireType.Varint).int32(message.accuracy);
+        /* int32 acha = 7; */
+        if (message.acha !== 0)
+            writer.tag(7, WireType.Varint).int32(message.acha);
+        /* int32 adex = 8; */
+        if (message.adex !== 0)
+            writer.tag(8, WireType.Varint).int32(message.adex);
+        /* int32 aint = 9; */
+        if (message.aint !== 0)
+            writer.tag(9, WireType.Varint).int32(message.aint);
+        /* uint32 artifactflag = 10; */
+        if (message.artifactflag !== 0)
+            writer.tag(10, WireType.Varint).uint32(message.artifactflag);
+        /* int32 asta = 11; */
+        if (message.asta !== 0)
+            writer.tag(11, WireType.Varint).int32(message.asta);
+        /* int32 astr = 12; */
+        if (message.astr !== 0)
+            writer.tag(12, WireType.Varint).int32(message.astr);
+        /* int32 attack = 13; */
+        if (message.attack !== 0)
+            writer.tag(13, WireType.Varint).int32(message.attack);
+        /* int32 augrestrict = 14; */
+        if (message.augrestrict !== 0)
+            writer.tag(14, WireType.Varint).int32(message.augrestrict);
+        /* int32 augslot1type = 15 [json_name = "augslot1type"]; */
+        if (message.augslot1Type !== 0)
+            writer.tag(15, WireType.Varint).int32(message.augslot1Type);
+        /* int32 augslot1visible = 16 [json_name = "augslot1visible"]; */
+        if (message.augslot1Visible !== 0)
+            writer.tag(16, WireType.Varint).int32(message.augslot1Visible);
+        /* int32 augslot2type = 17 [json_name = "augslot2type"]; */
+        if (message.augslot2Type !== 0)
+            writer.tag(17, WireType.Varint).int32(message.augslot2Type);
+        /* int32 augslot2visible = 18 [json_name = "augslot2visible"]; */
+        if (message.augslot2Visible !== 0)
+            writer.tag(18, WireType.Varint).int32(message.augslot2Visible);
+        /* int32 augslot3type = 19 [json_name = "augslot3type"]; */
+        if (message.augslot3Type !== 0)
+            writer.tag(19, WireType.Varint).int32(message.augslot3Type);
+        /* int32 augslot3visible = 20 [json_name = "augslot3visible"]; */
+        if (message.augslot3Visible !== 0)
+            writer.tag(20, WireType.Varint).int32(message.augslot3Visible);
+        /* int32 augslot4type = 21 [json_name = "augslot4type"]; */
+        if (message.augslot4Type !== 0)
+            writer.tag(21, WireType.Varint).int32(message.augslot4Type);
+        /* int32 augslot4visible = 22 [json_name = "augslot4visible"]; */
+        if (message.augslot4Visible !== 0)
+            writer.tag(22, WireType.Varint).int32(message.augslot4Visible);
+        /* int32 augslot5type = 23 [json_name = "augslot5type"]; */
+        if (message.augslot5Type !== 0)
+            writer.tag(23, WireType.Varint).int32(message.augslot5Type);
+        /* int32 augslot5visible = 24 [json_name = "augslot5visible"]; */
+        if (message.augslot5Visible !== 0)
+            writer.tag(24, WireType.Varint).int32(message.augslot5Visible);
+        /* int32 augslot6type = 25 [json_name = "augslot6type"]; */
+        if (message.augslot6Type !== 0)
+            writer.tag(25, WireType.Varint).int32(message.augslot6Type);
+        /* int32 augslot6visible = 26 [json_name = "augslot6visible"]; */
+        if (message.augslot6Visible !== 0)
+            writer.tag(26, WireType.Varint).int32(message.augslot6Visible);
+        /* int32 augtype = 27; */
+        if (message.augtype !== 0)
+            writer.tag(27, WireType.Varint).int32(message.augtype);
+        /* int32 avoidance = 28; */
+        if (message.avoidance !== 0)
+            writer.tag(28, WireType.Varint).int32(message.avoidance);
+        /* int32 awis = 29; */
+        if (message.awis !== 0)
+            writer.tag(29, WireType.Varint).int32(message.awis);
+        /* int32 bagsize = 30; */
+        if (message.bagsize !== 0)
+            writer.tag(30, WireType.Varint).int32(message.bagsize);
+        /* int32 bagslots = 31; */
+        if (message.bagslots !== 0)
+            writer.tag(31, WireType.Varint).int32(message.bagslots);
+        /* int32 bagtype = 32; */
+        if (message.bagtype !== 0)
+            writer.tag(32, WireType.Varint).int32(message.bagtype);
+        /* int32 bagwr = 33; */
+        if (message.bagwr !== 0)
+            writer.tag(33, WireType.Varint).int32(message.bagwr);
+        /* int32 banedmgamt = 34; */
+        if (message.banedmgamt !== 0)
+            writer.tag(34, WireType.Varint).int32(message.banedmgamt);
+        /* int32 banedmgraceamt = 35; */
+        if (message.banedmgraceamt !== 0)
+            writer.tag(35, WireType.Varint).int32(message.banedmgraceamt);
+        /* int32 banedmgbody = 36; */
+        if (message.banedmgbody !== 0)
+            writer.tag(36, WireType.Varint).int32(message.banedmgbody);
+        /* int32 banedmgrace = 37; */
+        if (message.banedmgrace !== 0)
+            writer.tag(37, WireType.Varint).int32(message.banedmgrace);
+        /* int32 bardtype = 38; */
+        if (message.bardtype !== 0)
+            writer.tag(38, WireType.Varint).int32(message.bardtype);
+        /* int32 bardvalue = 39; */
+        if (message.bardvalue !== 0)
+            writer.tag(39, WireType.Varint).int32(message.bardvalue);
+        /* int32 book = 40; */
+        if (message.book !== 0)
+            writer.tag(40, WireType.Varint).int32(message.book);
+        /* int32 casttime = 41; */
+        if (message.casttime !== 0)
+            writer.tag(41, WireType.Varint).int32(message.casttime);
+        /* int32 casttime2 = 42; */
+        if (message.casttime2 !== 0)
+            writer.tag(42, WireType.Varint).int32(message.casttime2);
+        /* int32 classes = 43; */
+        if (message.classes !== 0)
+            writer.tag(43, WireType.Varint).int32(message.classes);
+        /* uint32 color = 44; */
+        if (message.color !== 0)
+            writer.tag(44, WireType.Varint).uint32(message.color);
+        /* string combateffects = 45; */
+        if (message.combateffects !== "")
+            writer.tag(45, WireType.LengthDelimited).string(message.combateffects);
+        /* int32 extradmgskill = 46; */
+        if (message.extradmgskill !== 0)
+            writer.tag(46, WireType.Varint).int32(message.extradmgskill);
+        /* int32 extradmgamt = 47; */
+        if (message.extradmgamt !== 0)
+            writer.tag(47, WireType.Varint).int32(message.extradmgamt);
+        /* int32 price = 48; */
+        if (message.price !== 0)
+            writer.tag(48, WireType.Varint).int32(message.price);
+        /* int32 cr = 49; */
+        if (message.cr !== 0)
+            writer.tag(49, WireType.Varint).int32(message.cr);
+        /* int32 damage = 50; */
+        if (message.damage !== 0)
+            writer.tag(50, WireType.Varint).int32(message.damage);
+        /* int32 damageshield = 51; */
+        if (message.damageshield !== 0)
+            writer.tag(51, WireType.Varint).int32(message.damageshield);
+        /* int32 deity = 52; */
+        if (message.deity !== 0)
+            writer.tag(52, WireType.Varint).int32(message.deity);
+        /* int32 delay = 53; */
+        if (message.delay !== 0)
+            writer.tag(53, WireType.Varint).int32(message.delay);
+        /* uint32 augdistiller = 54; */
+        if (message.augdistiller !== 0)
+            writer.tag(54, WireType.Varint).uint32(message.augdistiller);
+        /* int32 dotshielding = 55; */
+        if (message.dotshielding !== 0)
+            writer.tag(55, WireType.Varint).int32(message.dotshielding);
+        /* int32 dr = 56; */
+        if (message.dr !== 0)
+            writer.tag(56, WireType.Varint).int32(message.dr);
+        /* int32 clicktype = 57; */
+        if (message.clicktype !== 0)
+            writer.tag(57, WireType.Varint).int32(message.clicktype);
+        /* int32 clicklevel2 = 58; */
+        if (message.clicklevel2 !== 0)
+            writer.tag(58, WireType.Varint).int32(message.clicklevel2);
+        /* int32 elemdmgtype = 59; */
+        if (message.elemdmgtype !== 0)
+            writer.tag(59, WireType.Varint).int32(message.elemdmgtype);
+        /* int32 elemdmgamt = 60; */
+        if (message.elemdmgamt !== 0)
+            writer.tag(60, WireType.Varint).int32(message.elemdmgamt);
+        /* int32 endur = 61; */
+        if (message.endur !== 0)
+            writer.tag(61, WireType.Varint).int32(message.endur);
+        /* int32 factionamt1 = 62; */
+        if (message.factionamt1 !== 0)
+            writer.tag(62, WireType.Varint).int32(message.factionamt1);
+        /* int32 factionamt2 = 63; */
+        if (message.factionamt2 !== 0)
+            writer.tag(63, WireType.Varint).int32(message.factionamt2);
+        /* int32 factionamt3 = 64; */
+        if (message.factionamt3 !== 0)
+            writer.tag(64, WireType.Varint).int32(message.factionamt3);
+        /* int32 factionamt4 = 65; */
+        if (message.factionamt4 !== 0)
+            writer.tag(65, WireType.Varint).int32(message.factionamt4);
+        /* int32 factionmod1 = 66; */
+        if (message.factionmod1 !== 0)
+            writer.tag(66, WireType.Varint).int32(message.factionmod1);
+        /* int32 factionmod2 = 67; */
+        if (message.factionmod2 !== 0)
+            writer.tag(67, WireType.Varint).int32(message.factionmod2);
+        /* int32 factionmod3 = 68; */
+        if (message.factionmod3 !== 0)
+            writer.tag(68, WireType.Varint).int32(message.factionmod3);
+        /* int32 factionmod4 = 69; */
+        if (message.factionmod4 !== 0)
+            writer.tag(69, WireType.Varint).int32(message.factionmod4);
+        /* int32 focuseffect = 70; */
+        if (message.focuseffect !== 0)
+            writer.tag(70, WireType.Varint).int32(message.focuseffect);
+        /* int32 fr = 71; */
+        if (message.fr !== 0)
+            writer.tag(71, WireType.Varint).int32(message.fr);
+        /* int32 fvnodrop = 72; */
+        if (message.fvnodrop !== 0)
+            writer.tag(72, WireType.Varint).int32(message.fvnodrop);
+        /* int32 haste = 73; */
+        if (message.haste !== 0)
+            writer.tag(73, WireType.Varint).int32(message.haste);
+        /* int32 clicklevel = 74; */
+        if (message.clicklevel !== 0)
+            writer.tag(74, WireType.Varint).int32(message.clicklevel);
+        /* int32 hp = 75; */
+        if (message.hp !== 0)
+            writer.tag(75, WireType.Varint).int32(message.hp);
+        /* int32 regen = 76; */
+        if (message.regen !== 0)
+            writer.tag(76, WireType.Varint).int32(message.regen);
+        /* int32 icon = 77; */
+        if (message.icon !== 0)
+            writer.tag(77, WireType.Varint).int32(message.icon);
+        /* string idfile = 78; */
+        if (message.idfile !== "")
+            writer.tag(78, WireType.LengthDelimited).string(message.idfile);
+        /* int32 itemclass = 79; */
+        if (message.itemclass !== 0)
+            writer.tag(79, WireType.Varint).int32(message.itemclass);
+        /* int32 itemtype = 80; */
+        if (message.itemtype !== 0)
+            writer.tag(80, WireType.Varint).int32(message.itemtype);
+        /* int32 light = 81; */
+        if (message.light !== 0)
+            writer.tag(81, WireType.Varint).int32(message.light);
+        /* string lore = 82; */
+        if (message.lore !== "")
+            writer.tag(82, WireType.LengthDelimited).string(message.lore);
+        /* int32 loregroup = 83; */
+        if (message.loregroup !== 0)
+            writer.tag(83, WireType.Varint).int32(message.loregroup);
+        /* int32 magic = 84; */
+        if (message.magic !== 0)
+            writer.tag(84, WireType.Varint).int32(message.magic);
+        /* int32 mana = 85; */
+        if (message.mana !== 0)
+            writer.tag(85, WireType.Varint).int32(message.mana);
+        /* int32 manaregen = 86; */
+        if (message.manaregen !== 0)
+            writer.tag(86, WireType.Varint).int32(message.manaregen);
+        /* int32 enduranceregen = 87; */
+        if (message.enduranceregen !== 0)
+            writer.tag(87, WireType.Varint).int32(message.enduranceregen);
+        /* int32 material = 88; */
+        if (message.material !== 0)
+            writer.tag(88, WireType.Varint).int32(message.material);
+        /* int32 herosforgemodel = 89; */
+        if (message.herosforgemodel !== 0)
+            writer.tag(89, WireType.Varint).int32(message.herosforgemodel);
+        /* int32 maxcharges = 90; */
+        if (message.maxcharges !== 0)
+            writer.tag(90, WireType.Varint).int32(message.maxcharges);
+        /* int32 mr = 91; */
+        if (message.mr !== 0)
+            writer.tag(91, WireType.Varint).int32(message.mr);
+        /* int32 nodrop = 92; */
+        if (message.nodrop !== 0)
+            writer.tag(92, WireType.Varint).int32(message.nodrop);
+        /* int32 norent = 93; */
+        if (message.norent !== 0)
+            writer.tag(93, WireType.Varint).int32(message.norent);
+        /* uint32 pendingloreflag = 94; */
+        if (message.pendingloreflag !== 0)
+            writer.tag(94, WireType.Varint).uint32(message.pendingloreflag);
+        /* int32 pr = 95; */
+        if (message.pr !== 0)
+            writer.tag(95, WireType.Varint).int32(message.pr);
+        /* int32 procrate = 96; */
+        if (message.procrate !== 0)
+            writer.tag(96, WireType.Varint).int32(message.procrate);
+        /* int32 races = 97; */
+        if (message.races !== 0)
+            writer.tag(97, WireType.Varint).int32(message.races);
+        /* int32 range = 98; */
+        if (message.range !== 0)
+            writer.tag(98, WireType.Varint).int32(message.range);
+        /* int32 reclevel = 99; */
+        if (message.reclevel !== 0)
+            writer.tag(99, WireType.Varint).int32(message.reclevel);
+        /* int32 recskill = 100; */
+        if (message.recskill !== 0)
+            writer.tag(100, WireType.Varint).int32(message.recskill);
+        /* int32 reqlevel = 101; */
+        if (message.reqlevel !== 0)
+            writer.tag(101, WireType.Varint).int32(message.reqlevel);
+        /* double sellrate = 102; */
+        if (message.sellrate !== 0)
+            writer.tag(102, WireType.Bit64).double(message.sellrate);
+        /* int32 shielding = 103; */
+        if (message.shielding !== 0)
+            writer.tag(103, WireType.Varint).int32(message.shielding);
+        /* int32 size = 104; */
+        if (message.size !== 0)
+            writer.tag(104, WireType.Varint).int32(message.size);
+        /* int32 skillmodtype = 105; */
+        if (message.skillmodtype !== 0)
+            writer.tag(105, WireType.Varint).int32(message.skillmodtype);
+        /* int32 skillmodvalue = 106; */
+        if (message.skillmodvalue !== 0)
+            writer.tag(106, WireType.Varint).int32(message.skillmodvalue);
+        /* int32 slots = 107; */
+        if (message.slots !== 0)
+            writer.tag(107, WireType.Varint).int32(message.slots);
+        /* int32 clickeffect = 108; */
+        if (message.clickeffect !== 0)
+            writer.tag(108, WireType.Varint).int32(message.clickeffect);
+        /* int32 spellshield = 109; */
+        if (message.spellshield !== 0)
+            writer.tag(109, WireType.Varint).int32(message.spellshield);
+        /* int32 strikethrough = 110; */
+        if (message.strikethrough !== 0)
+            writer.tag(110, WireType.Varint).int32(message.strikethrough);
+        /* int32 stunresist = 111; */
+        if (message.stunresist !== 0)
+            writer.tag(111, WireType.Varint).int32(message.stunresist);
+        /* uint32 summonedflag = 112; */
+        if (message.summonedflag !== 0)
+            writer.tag(112, WireType.Varint).uint32(message.summonedflag);
+        /* int32 tradeskills = 113; */
+        if (message.tradeskills !== 0)
+            writer.tag(113, WireType.Varint).int32(message.tradeskills);
+        /* int32 favor = 114; */
+        if (message.favor !== 0)
+            writer.tag(114, WireType.Varint).int32(message.favor);
+        /* int32 weight = 115; */
+        if (message.weight !== 0)
+            writer.tag(115, WireType.Varint).int32(message.weight);
+        /* int32 benefitflag = 116; */
+        if (message.benefitflag !== 0)
+            writer.tag(116, WireType.Varint).int32(message.benefitflag);
+        /* int32 booktype = 117; */
+        if (message.booktype !== 0)
+            writer.tag(117, WireType.Varint).int32(message.booktype);
+        /* int32 recastdelay = 118; */
+        if (message.recastdelay !== 0)
+            writer.tag(118, WireType.Varint).int32(message.recastdelay);
+        /* int32 recasttype = 119; */
+        if (message.recasttype !== 0)
+            writer.tag(119, WireType.Varint).int32(message.recasttype);
+        /* int32 guildfavor = 120; */
+        if (message.guildfavor !== 0)
+            writer.tag(120, WireType.Varint).int32(message.guildfavor);
+        /* int32 attuneable = 121; */
+        if (message.attuneable !== 0)
+            writer.tag(121, WireType.Varint).int32(message.attuneable);
+        /* int32 nopet = 122; */
+        if (message.nopet !== 0)
+            writer.tag(122, WireType.Varint).int32(message.nopet);
+        /* string updated = 123; */
+        if (message.updated !== "")
+            writer.tag(123, WireType.LengthDelimited).string(message.updated);
+        /* int32 pointtype = 124; */
+        if (message.pointtype !== 0)
+            writer.tag(124, WireType.Varint).int32(message.pointtype);
+        /* int32 potionbelt = 125; */
+        if (message.potionbelt !== 0)
+            writer.tag(125, WireType.Varint).int32(message.potionbelt);
+        /* int32 potionbeltslots = 126; */
+        if (message.potionbeltslots !== 0)
+            writer.tag(126, WireType.Varint).int32(message.potionbeltslots);
+        /* int32 stacksize = 127; */
+        if (message.stacksize !== 0)
+            writer.tag(127, WireType.Varint).int32(message.stacksize);
+        /* int32 notransfer = 128; */
+        if (message.notransfer !== 0)
+            writer.tag(128, WireType.Varint).int32(message.notransfer);
+        /* int32 stackable = 129; */
+        if (message.stackable !== 0)
+            writer.tag(129, WireType.Varint).int32(message.stackable);
+        /* int32 proceffect = 130; */
+        if (message.proceffect !== 0)
+            writer.tag(130, WireType.Varint).int32(message.proceffect);
+        /* int32 proctype = 131; */
+        if (message.proctype !== 0)
+            writer.tag(131, WireType.Varint).int32(message.proctype);
+        /* int32 proclevel2 = 132; */
+        if (message.proclevel2 !== 0)
+            writer.tag(132, WireType.Varint).int32(message.proclevel2);
+        /* int32 proclevel = 133; */
+        if (message.proclevel !== 0)
+            writer.tag(133, WireType.Varint).int32(message.proclevel);
+        /* int32 worneffect = 134; */
+        if (message.worneffect !== 0)
+            writer.tag(134, WireType.Varint).int32(message.worneffect);
+        /* int32 worntype = 135; */
+        if (message.worntype !== 0)
+            writer.tag(135, WireType.Varint).int32(message.worntype);
+        /* int32 wornlevel2 = 136; */
+        if (message.wornlevel2 !== 0)
+            writer.tag(136, WireType.Varint).int32(message.wornlevel2);
+        /* int32 wornlevel = 137; */
+        if (message.wornlevel !== 0)
+            writer.tag(137, WireType.Varint).int32(message.wornlevel);
+        /* int32 focustype = 138; */
+        if (message.focustype !== 0)
+            writer.tag(138, WireType.Varint).int32(message.focustype);
+        /* int32 focuslevel2 = 139; */
+        if (message.focuslevel2 !== 0)
+            writer.tag(139, WireType.Varint).int32(message.focuslevel2);
+        /* int32 focuslevel = 140; */
+        if (message.focuslevel !== 0)
+            writer.tag(140, WireType.Varint).int32(message.focuslevel);
+        /* int32 scrolleffect = 141; */
+        if (message.scrolleffect !== 0)
+            writer.tag(141, WireType.Varint).int32(message.scrolleffect);
+        /* int32 scrolltype = 142; */
+        if (message.scrolltype !== 0)
+            writer.tag(142, WireType.Varint).int32(message.scrolltype);
+        /* int32 scrolllevel2 = 143; */
+        if (message.scrolllevel2 !== 0)
+            writer.tag(143, WireType.Varint).int32(message.scrolllevel2);
+        /* int32 scrolllevel = 144; */
+        if (message.scrolllevel !== 0)
+            writer.tag(144, WireType.Varint).int32(message.scrolllevel);
+        /* int32 svcorruption = 145; */
+        if (message.svcorruption !== 0)
+            writer.tag(145, WireType.Varint).int32(message.svcorruption);
+        /* int32 skillmodmax = 146; */
+        if (message.skillmodmax !== 0)
+            writer.tag(146, WireType.Varint).int32(message.skillmodmax);
+        /* int32 questitemflag = 147; */
+        if (message.questitemflag !== 0)
+            writer.tag(147, WireType.Varint).int32(message.questitemflag);
+        /* int32 purity = 148; */
+        if (message.purity !== 0)
+            writer.tag(148, WireType.Varint).int32(message.purity);
+        /* int32 evoitem = 149; */
+        if (message.evoitem !== 0)
+            writer.tag(149, WireType.Varint).int32(message.evoitem);
+        /* int32 evoid = 150; */
+        if (message.evoid !== 0)
+            writer.tag(150, WireType.Varint).int32(message.evoid);
+        /* int32 evolvinglevel = 151; */
+        if (message.evolvinglevel !== 0)
+            writer.tag(151, WireType.Varint).int32(message.evolvinglevel);
+        /* int32 evomax = 152; */
+        if (message.evomax !== 0)
+            writer.tag(152, WireType.Varint).int32(message.evomax);
+        /* int32 dsmitigation = 153; */
+        if (message.dsmitigation !== 0)
+            writer.tag(153, WireType.Varint).int32(message.dsmitigation);
+        /* int32 healamt = 154; */
+        if (message.healamt !== 0)
+            writer.tag(154, WireType.Varint).int32(message.healamt);
+        /* int32 spelldmg = 155; */
+        if (message.spelldmg !== 0)
+            writer.tag(155, WireType.Varint).int32(message.spelldmg);
+        /* int32 clairvoyance = 156; */
+        if (message.clairvoyance !== 0)
+            writer.tag(156, WireType.Varint).int32(message.clairvoyance);
+        /* int32 backstabdmg = 157; */
+        if (message.backstabdmg !== 0)
+            writer.tag(157, WireType.Varint).int32(message.backstabdmg);
+        /* int32 elitematerial = 158; */
+        if (message.elitematerial !== 0)
+            writer.tag(158, WireType.Varint).int32(message.elitematerial);
+        /* int32 scriptfileid = 159; */
+        if (message.scriptfileid !== 0)
+            writer.tag(159, WireType.Varint).int32(message.scriptfileid);
+        /* int32 expendablearrow = 160; */
+        if (message.expendablearrow !== 0)
+            writer.tag(160, WireType.Varint).int32(message.expendablearrow);
+        /* int32 powersourcecapacity = 161; */
+        if (message.powersourcecapacity !== 0)
+            writer.tag(161, WireType.Varint).int32(message.powersourcecapacity);
+        /* int32 bardeffect = 162; */
+        if (message.bardeffect !== 0)
+            writer.tag(162, WireType.Varint).int32(message.bardeffect);
+        /* int32 bardeffecttype = 163; */
+        if (message.bardeffecttype !== 0)
+            writer.tag(163, WireType.Varint).int32(message.bardeffecttype);
+        /* int32 bardlevel2 = 164; */
+        if (message.bardlevel2 !== 0)
+            writer.tag(164, WireType.Varint).int32(message.bardlevel2);
+        /* int32 bardlevel = 165; */
+        if (message.bardlevel !== 0)
+            writer.tag(165, WireType.Varint).int32(message.bardlevel);
+        /* int32 subtype = 166; */
+        if (message.subtype !== 0)
+            writer.tag(166, WireType.Varint).int32(message.subtype);
+        /* int32 heirloom = 167; */
+        if (message.heirloom !== 0)
+            writer.tag(167, WireType.Varint).int32(message.heirloom);
+        /* int32 placeable = 168; */
+        if (message.placeable !== 0)
+            writer.tag(168, WireType.Varint).int32(message.placeable);
+        /* int32 epicitem = 169; */
+        if (message.epicitem !== 0)
+            writer.tag(169, WireType.Varint).int32(message.epicitem);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message eq.Items
+ */
+export const Items = new Items$Type();
+// @generated message type with reflection information, may provide speed optimized methods
 class PlayerProfile$Type extends MessageType<PlayerProfile> {
     constructor() {
         super("eq.PlayerProfile", [
@@ -15480,7 +17706,8 @@ class PlayerProfile$Type extends MessageType<PlayerProfile> {
             { no: 121, name: "raid_autoconsent", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
             { no: 122, name: "guild_autoconsent", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
             { no: 123, name: "level3", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
-            { no: 124, name: "showhelm", kind: "scalar", T: 5 /*ScalarType.INT32*/ }
+            { no: 124, name: "showhelm", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 126, name: "inventory_items", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => ItemInstance }
         ]);
     }
     create(value?: PartialMessage<PlayerProfile>): PlayerProfile {
@@ -15603,6 +17830,7 @@ class PlayerProfile$Type extends MessageType<PlayerProfile> {
         message.guildAutoconsent = 0;
         message.level3 = 0;
         message.showhelm = 0;
+        message.inventoryItems = [];
         if (value !== undefined)
             reflectionMergePartial<PlayerProfile>(this, message, value);
         return message;
@@ -16011,6 +18239,9 @@ class PlayerProfile$Type extends MessageType<PlayerProfile> {
                     break;
                 case /* int32 showhelm */ 124:
                     message.showhelm = reader.int32();
+                    break;
+                case /* repeated eq.ItemInstance inventory_items */ 126:
+                    message.inventoryItems.push(ItemInstance.internalBinaryRead(reader, reader.uint32(), options));
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -16424,6 +18655,9 @@ class PlayerProfile$Type extends MessageType<PlayerProfile> {
         /* int32 showhelm = 124; */
         if (message.showhelm !== 0)
             writer.tag(124, WireType.Varint).int32(message.showhelm);
+        /* repeated eq.ItemInstance inventory_items = 126; */
+        for (let i = 0; i < message.inventoryItems.length; i++)
+            ItemInstance.internalBinaryWrite(message.inventoryItems[i], writer.tag(126, WireType.LengthDelimited).fork(), options).join();
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);

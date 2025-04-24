@@ -41,6 +41,7 @@ export const CharacterSelectUIComponent: React.FC = () => {
     },
     [setSplash],
   );
+  console.log('Sel char', selectedChar);
 
   const enterWorld = useCallback(() => {
     if (!selectedChar) {

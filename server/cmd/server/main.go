@@ -1,29 +1,33 @@
 package main
 
 import (
-	"embed"
 	"fmt"
+	"knervous/eqgo/internal/config"
+	"knervous/eqgo/internal/db"
+	items "knervous/eqgo/internal/db/items"
 	"knervous/eqgo/internal/server"
-	"knervous/eqgo/internal/world"
 	"log"
 	"os"
 	"os/signal"
-	"strings"
 	"syscall"
 
 	_ "github.com/go-sql-driver/mysql" // Import MySQL driver
 )
 
-//go:embed keys/connection.txt
-var connectionString embed.FS
-
 func getConnectionString() (string, error) {
-	data, err := connectionString.ReadFile("keys/connection.txt")
+	serverConfig, err := config.NewConfig()
 	if err != nil {
-		return "", fmt.Errorf("failed to read embedded discord key: %w", err)
+		return "", fmt.Errorf("failed to read config: %v", err)
 	}
-	connString := strings.TrimSpace(string(data))
-	return connString, nil
+	host := serverConfig.GetString("db_host", "")
+	user := serverConfig.GetString("db_user", "")
+	pass := serverConfig.GetString("db_pass", "")
+
+	if host == "" || user == "" || pass == "" {
+		return "", fmt.Errorf("database connection string is not set")
+	}
+	return fmt.Sprintf("%s:%s@tcp(%s)/peq?parseTime=true", user, pass, host), nil
+
 }
 
 func main() {
@@ -31,10 +35,13 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to read connection string: %v", err)
 	}
-	if err := world.InitWorldDB(dsn); err != nil {
-		log.Fatalf("failed to initialize WorldDB: %v", err)
+	if err := db.InitWorldDB(dsn); err != nil {
+		log.Fatalf("failed to initialize db.WorldDB: %v", err)
 	}
 
+	items.InitializeItemsMMF()
+	item, _ := items.GetItemTemplateByID(1003)
+	fmt.Println(item)
 	srv, err := server.NewServer(dsn)
 	if err != nil {
 		log.Fatalf("failed to create server: %v", err)

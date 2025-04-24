@@ -2,13 +2,15 @@ package world
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	eqpb "knervous/eqgo/internal/api/proto"
 	"knervous/eqgo/internal/cache"
+	"knervous/eqgo/internal/character"
+	"knervous/eqgo/internal/db"
 	"log"
 	"strings"
 
+	"knervous/eqgo/internal/db/items"
 	"knervous/eqgo/internal/db/jetgen/peq/model"
 	"knervous/eqgo/internal/db/jetgen/peq/table"
 
@@ -17,35 +19,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type WorldDB struct {
-	DB *sql.DB
-}
-
-var globalWorldDB *WorldDB
-
-func InitWorldDB(dsn string) error {
-	db, err := sql.Open("mysql", dsn)
-	if err != nil {
-		return fmt.Errorf("failed to open database: %w", err)
-	}
-	if err := db.Ping(); err != nil {
-		_ = db.Close()
-		return fmt.Errorf("failed to ping database: %w", err)
-	}
-
-	fmt.Println("Connected to database successfully")
-	globalWorldDB = &WorldDB{DB: db}
-	return nil
-}
-
-func GetWorldDB() *WorldDB {
-	if globalWorldDB == nil {
-		panic("WorldDB not initialized")
-	}
-	return globalWorldDB
-}
-
-func (w *WorldDB) LoginIP(ctx context.Context, accountID int64, ip string) error {
+func LoginIP(ctx context.Context, accountID int64, ip string) error {
 	stmt := table.AccountIP.
 		INSERT(
 			table.AccountIP.Accid,
@@ -64,13 +38,13 @@ func (w *WorldDB) LoginIP(ctx context.Context, accountID int64, ip string) error
 			table.AccountIP.Lastused.SET(mysql.NOW()),
 		)
 
-	if _, err := stmt.ExecContext(ctx, w.DB); err != nil {
+	if _, err := stmt.ExecContext(ctx, db.GlobalWorldDB.DB); err != nil {
 		return fmt.Errorf("log account IP (accid=%d, ip=%s): %w", accountID, ip, err)
 	}
 	return nil
 }
 
-func (w *WorldDB) GetVariable(ctx context.Context, name string) (model.Variables, error) {
+func GetVariable(ctx context.Context, name string) (model.Variables, error) {
 	cacheKey := fmt.Sprintf("variables:%s", name)
 	if val, found, err := cache.GetCache().Get(cacheKey); err == nil && found {
 		if variable, ok := val.(model.Variables); ok {
@@ -82,7 +56,7 @@ func (w *WorldDB) GetVariable(ctx context.Context, name string) (model.Variables
 		SELECT(table.Variables.Value).
 		FROM(table.Variables).
 		WHERE(table.Variables.Varname.EQ(mysql.String(name))).
-		QueryContext(ctx, w.DB, &variable)
+		QueryContext(ctx, db.GlobalWorldDB.DB, &variable)
 
 	if err == nil {
 		cache.GetCache().Set(cacheKey, variable.ID)
@@ -91,7 +65,7 @@ func (w *WorldDB) GetVariable(ctx context.Context, name string) (model.Variables
 	return model.Variables{}, fmt.Errorf("GetVariable err: %w", err)
 }
 
-func (w *WorldDB) GetOrCreateAccount(ctx context.Context, discordID string) (int64, error) {
+func GetOrCreateAccount(ctx context.Context, discordID string) (int64, error) {
 	cacheKey := fmt.Sprintf("account:discord:%s", discordID)
 	if val, found, err := cache.GetCache().Get(cacheKey); err == nil && found {
 		if accountID, ok := val.(int32); ok {
@@ -104,7 +78,7 @@ func (w *WorldDB) GetOrCreateAccount(ctx context.Context, discordID string) (int
 		SELECT(table.Account.ID).
 		FROM(table.Account).
 		WHERE(table.Account.DiscordID.EQ(mysql.String(discordID))).
-		QueryContext(ctx, w.DB, &acc)
+		QueryContext(ctx, db.GlobalWorldDB.DB, &acc)
 
 	if err == nil {
 		cache.GetCache().Set(cacheKey, acc.ID)
@@ -126,7 +100,7 @@ func (w *WorldDB) GetOrCreateAccount(ctx context.Context, discordID string) (int
 			mysql.String(discordID),
 			mysql.Int8(1),
 		).
-		ExecContext(ctx, w.DB)
+		ExecContext(ctx, db.GlobalWorldDB.DB)
 	if err != nil {
 		return 0, fmt.Errorf("insert account: %w", err)
 	}
@@ -139,7 +113,7 @@ func (w *WorldDB) GetOrCreateAccount(ctx context.Context, discordID string) (int
 	return id, nil
 }
 
-func (w *WorldDB) GetCharSelectInfo(ctx context.Context, accountID int64) (*eqpb.CharacterSelect, error) {
+func GetCharSelectInfo(ctx context.Context, accountID int64) (*eqpb.CharacterSelect, error) {
 	cacheKey := fmt.Sprintf("account:characters:%d", accountID)
 	if val, found, err := cache.GetCache().Get(cacheKey); err == nil && found {
 		if characters, ok := val.(*eqpb.CharacterSelect); ok {
@@ -152,18 +126,7 @@ func (w *WorldDB) GetCharSelectInfo(ctx context.Context, accountID int64) (*eqpb
 	var chars []model.CharacterData
 	if err := table.CharacterData.
 		SELECT(
-			table.CharacterData.ID,
-			table.CharacterData.Name,
-			table.CharacterData.Gender,
-			table.CharacterData.Race,
-			table.CharacterData.Class,
-			table.CharacterData.Level,
-			table.CharacterData.Deity,
-			table.CharacterData.LastLogin,
-			table.CharacterData.TimePlayed,
-			table.CharacterData.Beard,
-			table.CharacterData.Face,
-			table.CharacterData.ZoneID,
+			table.CharacterData.AllColumns,
 		).
 		FROM(table.CharacterData).
 		WHERE(
@@ -172,7 +135,7 @@ func (w *WorldDB) GetCharSelectInfo(ctx context.Context, accountID int64) (*eqpb
 		).
 		ORDER_BY(table.CharacterData.Name.ASC()).
 		LIMIT(limit).
-		QueryContext(ctx, w.DB, &chars); err != nil {
+		QueryContext(ctx, db.GlobalWorldDB.DB, &chars); err != nil {
 		return nil, fmt.Errorf("query character_data: %w", err)
 	}
 
@@ -183,6 +146,7 @@ func (w *WorldDB) GetCharSelectInfo(ctx context.Context, accountID int64) (*eqpb
 	for i, c := range chars {
 		info.Characters[i] = &eqpb.CharacterSelectEntry{
 			Name:      c.Name,
+			Items:     make([]*eqpb.ItemInstance, 0),
 			Gender:    int32(c.Gender),
 			Race:      int32(c.Race),
 			CharClass: int32(c.Class),
@@ -193,12 +157,53 @@ func (w *WorldDB) GetCharSelectInfo(ctx context.Context, accountID int64) (*eqpb
 			Zone:      int32(c.ZoneID),
 			Enabled:   1,
 		}
+		var charItems []items.ItemWithSlot
+		stmt := table.ItemInstances.
+			SELECT(
+				table.ItemInstances.AllColumns,
+				table.CharacterInventory.AllColumns,
+			).
+			FROM(table.ItemInstances.LEFT_JOIN(
+				table.CharacterInventory,
+				table.CharacterInventory.ItemInstanceID.
+					EQ(table.ItemInstances.ID),
+			)).
+			WHERE(
+				table.ItemInstances.OwnerID.EQ(mysql.Int(int64(c.ID))),
+			)
+
+		// Print the SQL query for debugging
+		sqlStr := stmt.DebugSql()
+
+		log.Printf("Generated SQL: %s", sqlStr)
+
+		if err := stmt.QueryContext(ctx, db.GlobalWorldDB.DB, &charItems); err != nil {
+			return nil, fmt.Errorf("query character_data items: %w", err)
+		}
+		for _, item := range charItems {
+			itemTemplate, err := items.GetItemTemplateByID(item.ItemID)
+			if err != nil {
+				log.Printf("failed to get item template for itemID %d: %v", item.ItemID, err)
+				continue
+			}
+
+			info.Characters[i].Items = append(info.Characters[i].Items, &eqpb.ItemInstance{
+				ItemId:   item.ItemID,
+				Charges:  uint32(item.Charges),
+				Quantity: uint32(item.Quantity),
+				Mods:     *item.Mods,
+				OwnerId:  item.OwnerID,
+				Slot:     int32(item.Slot),
+				Item:     items.ConvertItemTemplateToPb(&itemTemplate),
+			})
+		}
 	}
+
 	cache.GetCache().Set(cacheKey, info)
 	return info, nil
 }
 
-func (w *WorldDB) GetCharacterBinds(ctx context.Context, characterID int64) ([]model.CharacterBind, error) {
+func GetCharacterBinds(ctx context.Context, characterID int64) ([]model.CharacterBind, error) {
 	var binds []model.CharacterBind
 	if err := table.CharacterBind.
 		SELECT(
@@ -213,13 +218,13 @@ func (w *WorldDB) GetCharacterBinds(ctx context.Context, characterID int64) ([]m
 		FROM(table.CharacterBind).
 		WHERE(table.CharacterBind.ID.EQ(mysql.Int64(characterID))).
 		LIMIT(5).
-		QueryContext(ctx, w.DB, &binds); err != nil {
+		QueryContext(ctx, db.GlobalWorldDB.DB, &binds); err != nil {
 		return nil, err
 	}
 	return binds, nil
 }
 
-func (w *WorldDB) CheckNameFilter(ctx context.Context, name string) bool {
+func CheckNameFilter(ctx context.Context, name string) bool {
 	cacheKey := "namefilter"
 
 	// Try to get name filters from cache
@@ -234,7 +239,7 @@ func (w *WorldDB) CheckNameFilter(ctx context.Context, name string) bool {
 		if err := table.NameFilter.
 			SELECT(table.NameFilter.Name).
 			FROM(table.NameFilter).
-			QueryContext(ctx, w.DB, &nameFilters); err != nil {
+			QueryContext(ctx, db.GlobalWorldDB.DB, &nameFilters); err != nil {
 			fmt.Printf("failed to query name filter: %v\n", err)
 			return true
 		}
@@ -253,7 +258,7 @@ func (w *WorldDB) CheckNameFilter(ctx context.Context, name string) bool {
 	return true
 }
 
-func (w *WorldDB) GetStartZone(ctx context.Context, class uint8, deity uint32, race uint32) (model.CharacterBind, error) {
+func GetStartZone(ctx context.Context, class uint8, deity uint32, race uint32) (model.CharacterBind, error) {
 	var sz model.StartZones
 	if err := table.StartZones.
 		SELECT(
@@ -271,7 +276,7 @@ func (w *WorldDB) GetStartZone(ctx context.Context, class uint8, deity uint32, r
 				AND(table.StartZones.PlayerRace.EQ(mysql.Uint32(race))),
 		).
 		LIMIT(1).
-		QueryContext(ctx, w.DB, &sz); err != nil {
+		QueryContext(ctx, db.GlobalWorldDB.DB, &sz); err != nil {
 		return model.CharacterBind{}, err
 	}
 
@@ -289,7 +294,7 @@ func (w *WorldDB) GetStartZone(ctx context.Context, class uint8, deity uint32, r
 	}, nil
 }
 
-func (w *WorldDB) InsertBind(ctx context.Context, characterID int64, bind model.CharacterBind, slot int) error {
+func InsertBind(ctx context.Context, characterID int64, bind model.CharacterBind, slot int) error {
 	_, err := table.CharacterBind.
 		INSERT(
 			table.CharacterBind.ID,
@@ -319,11 +324,11 @@ func (w *WorldDB) InsertBind(ctx context.Context, characterID int64, bind model.
 			table.CharacterBind.Z.SET(mysql.Float(bind.Z)),
 			table.CharacterBind.Heading.SET(mysql.Float(bind.Heading)),
 		).
-		ExecContext(ctx, w.DB)
+		ExecContext(ctx, db.GlobalWorldDB.DB)
 	return err
 }
 
-func (w *WorldDB) GetOrCreateCharacterID(ctx context.Context, accountId int64, pp *eqpb.PlayerProfile) (int64, error) {
+func GetOrCreateCharacterID(ctx context.Context, accountId int64, pp *eqpb.PlayerProfile) (int64, error) {
 	cacheKey := fmt.Sprintf("account:character:%d", accountId)
 	if val, found, err := cache.GetCache().Get(cacheKey); err == nil && found {
 		if characterId, ok := val.(int32); ok {
@@ -336,7 +341,7 @@ func (w *WorldDB) GetOrCreateCharacterID(ctx context.Context, accountId int64, p
 		SELECT(table.CharacterData.ID).
 		FROM(table.CharacterData).
 		WHERE(table.CharacterData.ID.EQ(mysql.Int(accountId))).
-		QueryContext(ctx, w.DB, &acc)
+		QueryContext(ctx, db.GlobalWorldDB.DB, &acc)
 
 	if err == nil {
 		cache.GetCache().Set(cacheKey, acc.ID)
@@ -352,7 +357,7 @@ func (w *WorldDB) GetOrCreateCharacterID(ctx context.Context, accountId int64, p
 			mysql.Int(accountId),
 			mysql.String(pp.Name),
 		).
-		ExecContext(ctx, w.DB)
+		ExecContext(ctx, db.GlobalWorldDB.DB)
 	if err != nil {
 		return 0, fmt.Errorf("insert account: %w", err)
 	}
@@ -366,16 +371,16 @@ func (w *WorldDB) GetOrCreateCharacterID(ctx context.Context, accountId int64, p
 }
 
 // SaveCharacterCreate saves the character creation data to the database
-func (w *WorldDB) SaveCharacterCreate(ctx context.Context, accountID int64, pp *eqpb.PlayerProfile) bool {
+func SaveCharacterCreate(ctx context.Context, accountID int64, pp *eqpb.PlayerProfile) bool {
 	// Get or create character ID
-	charID, err := w.GetOrCreateCharacterID(ctx, accountID, pp)
+	charID, err := GetOrCreateCharacterID(ctx, accountID, pp)
 	if err != nil {
 		log.Printf("Failed to get or create character ID for %s: %v", pp.Name, err)
 		return false
 	}
 
 	// Start a transaction
-	tx, err := w.DB.BeginTx(ctx, nil)
+	tx, err := db.GlobalWorldDB.DB.BeginTx(ctx, nil)
 	if err != nil {
 		log.Printf("Failed to start transaction: %v", err)
 		return false
@@ -544,12 +549,24 @@ func (w *WorldDB) SaveCharacterCreate(ctx context.Context, accountID int64, pp *
 		}
 	}
 
-	// Save inventory later
-
 	// Commit transaction
 	if err := tx.Commit(); err != nil {
 		log.Printf("Failed to commit transaction for %s: %v", pp.Name, err)
 		return false
+	}
+
+	// Save inventory later
+	startingItems, err := character.InstantiateStartingItems(pp.Race, pp.CharClass, pp.Deity, pp.ZoneId)
+	if err != nil {
+		log.Printf("Failed to instantiate starting items for %s: %v", pp.Name, err)
+		return false
+	}
+	for _, item := range startingItems {
+		_, err = items.AddItemToPlayerInventoryFreeSlot(item, int32(charID))
+		if err != nil {
+			log.Printf("Failed to add item to inventory for %s: %v", pp.Name, err)
+			return false
+		}
 	}
 
 	// Invalidate character select cache
@@ -562,11 +579,11 @@ func (w *WorldDB) SaveCharacterCreate(ctx context.Context, accountID int64, pp *
 
 // DeleteCharacter soft-deletes a character by setting the deleted_at timestamp
 // and appending -DELETED-<uuid> to the character's name.
-func (w *WorldDB) DeleteCharacter(ctx context.Context, accountID int64, characterName string) error {
+func DeleteCharacter(ctx context.Context, accountID int64, characterName string) error {
 	uuidStr := uuid.New().String()
 	newNameSuffix := fmt.Sprintf("-DELETED-%s", uuidStr)
 
-	tx, err := w.DB.BeginTx(ctx, nil)
+	tx, err := db.GlobalWorldDB.DB.BeginTx(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("failed to start transaction: %w", err)
 	}
@@ -634,14 +651,14 @@ func (w *WorldDB) DeleteCharacter(ctx context.Context, accountID int64, characte
 	return nil
 }
 
-func (w *WorldDB) GetZone(ctx context.Context, zoneID int32) (model.Zone, error) {
+func GetZone(ctx context.Context, zoneID int32) (model.Zone, error) {
 
 	var zone model.Zone
 	err := table.Zone.
 		SELECT(table.Zone.AllColumns).
 		FROM(table.Zone).
 		WHERE(table.Zone.Zoneidnumber.EQ(mysql.Int32(zoneID))).
-		QueryContext(ctx, w.DB, &zone)
+		QueryContext(ctx, db.GlobalWorldDB.DB, &zone)
 	if err != nil {
 		return model.Zone{}, fmt.Errorf("failed to get zone (id=%d): %w", zoneID, err)
 	}

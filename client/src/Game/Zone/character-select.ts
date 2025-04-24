@@ -5,6 +5,7 @@ import * as EQMessage from "../Net/message/EQMessage";
 import { RACE_DATA } from "../Constants/race-data";
 import { CLASS_DATA_NAMES } from "../Constants/class-data";
 import { zoneData } from "../Constants/zone-data";
+
 const CLASS_DATA_ENUM = {
   "Warrior": 1,
   "Cleric": 2,

@@ -131,18 +131,12 @@ export interface FileDescriptorProto {
      * The supported values are "proto2", "proto3", and "editions".
      *
      * If `edition` is present, this value must be "editions".
-     * WARNING: This field should only be used by protobuf plugins or special
-     * cases like the proto compiler. Other uses are discouraged and
-     * developers should rely on the protoreflect APIs for their client language.
      *
      * @generated from protobuf field: optional string syntax = 12;
      */
     syntax?: string;
     /**
      * The edition of the proto file.
-     * WARNING: This field should only be used by protobuf plugins or special
-     * cases like the proto compiler. Other uses are discouraged and
-     * developers should rely on the protoreflect APIs for their client language.
      *
      * @generated from protobuf field: optional google.protobuf.Edition edition = 14;
      */
@@ -893,9 +887,6 @@ export interface FileOptions {
     rubyPackage?: string;
     /**
      * Any features defined in the specific edition.
-     * WARNING: This field should only be used by protobuf plugins or special
-     * cases like the proto compiler. Other uses are discouraged and
-     * developers should rely on the protoreflect APIs for their client language.
      *
      * @generated from protobuf field: optional google.protobuf.FeatureSet features = 50;
      */
@@ -1027,9 +1018,6 @@ export interface MessageOptions {
     deprecatedLegacyJsonFieldConflicts?: boolean;
     /**
      * Any features defined in the specific edition.
-     * WARNING: This field should only be used by protobuf plugins or special
-     * cases like the proto compiler. Other uses are discouraged and
-     * developers should rely on the protoreflect APIs for their client language.
      *
      * @generated from protobuf field: optional google.protobuf.FeatureSet features = 12;
      */
@@ -1156,9 +1144,6 @@ export interface FieldOptions {
     editionDefaults: FieldOptions_EditionDefault[];
     /**
      * Any features defined in the specific edition.
-     * WARNING: This field should only be used by protobuf plugins or special
-     * cases like the proto compiler. Other uses are discouraged and
-     * developers should rely on the protoreflect APIs for their client language.
      *
      * @generated from protobuf field: optional google.protobuf.FeatureSet features = 21;
      */
@@ -1347,9 +1332,6 @@ export enum FieldOptions_OptionTargetType {
 export interface OneofOptions {
     /**
      * Any features defined in the specific edition.
-     * WARNING: This field should only be used by protobuf plugins or special
-     * cases like the proto compiler. Other uses are discouraged and
-     * developers should rely on the protoreflect APIs for their client language.
      *
      * @generated from protobuf field: optional google.protobuf.FeatureSet features = 1;
      */
@@ -1395,9 +1377,6 @@ export interface EnumOptions {
     deprecatedLegacyJsonFieldConflicts?: boolean;
     /**
      * Any features defined in the specific edition.
-     * WARNING: This field should only be used by protobuf plugins or special
-     * cases like the proto compiler. Other uses are discouraged and
-     * developers should rely on the protoreflect APIs for their client language.
      *
      * @generated from protobuf field: optional google.protobuf.FeatureSet features = 7;
      */
@@ -1424,9 +1403,6 @@ export interface EnumValueOptions {
     deprecated?: boolean;
     /**
      * Any features defined in the specific edition.
-     * WARNING: This field should only be used by protobuf plugins or special
-     * cases like the proto compiler. Other uses are discouraged and
-     * developers should rely on the protoreflect APIs for their client language.
      *
      * @generated from protobuf field: optional google.protobuf.FeatureSet features = 2;
      */
@@ -1458,9 +1434,6 @@ export interface EnumValueOptions {
 export interface ServiceOptions {
     /**
      * Any features defined in the specific edition.
-     * WARNING: This field should only be used by protobuf plugins or special
-     * cases like the proto compiler. Other uses are discouraged and
-     * developers should rely on the protoreflect APIs for their client language.
      *
      * @generated from protobuf field: optional google.protobuf.FeatureSet features = 34;
      */
@@ -1510,9 +1483,6 @@ export interface MethodOptions {
     idempotencyLevel?: MethodOptions_IdempotencyLevel;
     /**
      * Any features defined in the specific edition.
-     * WARNING: This field should only be used by protobuf plugins or special
-     * cases like the proto compiler. Other uses are discouraged and
-     * developers should rely on the protoreflect APIs for their client language.
      *
      * @generated from protobuf field: optional google.protobuf.FeatureSet features = 35;
      */
@@ -1649,10 +1619,6 @@ export interface FeatureSet {
      * @generated from protobuf field: optional google.protobuf.FeatureSet.JsonFormat json_format = 6;
      */
     jsonFormat?: FeatureSet_JsonFormat;
-    /**
-     * @generated from protobuf field: optional google.protobuf.FeatureSet.EnforceNamingStyle enforce_naming_style = 7;
-     */
-    enforceNamingStyle?: FeatureSet_EnforceNamingStyle;
 }
 /**
  * @generated from protobuf enum google.protobuf.FeatureSet.FieldPresence
@@ -1759,23 +1725,6 @@ export enum FeatureSet_JsonFormat {
      * @generated from protobuf enum value: LEGACY_BEST_EFFORT = 2;
      */
     LEGACY_BEST_EFFORT = 2
-}
-/**
- * @generated from protobuf enum google.protobuf.FeatureSet.EnforceNamingStyle
- */
-export enum FeatureSet_EnforceNamingStyle {
-    /**
-     * @generated from protobuf enum value: ENFORCE_NAMING_STYLE_UNKNOWN = 0;
-     */
-    ENFORCE_NAMING_STYLE_UNKNOWN = 0,
-    /**
-     * @generated from protobuf enum value: STYLE2024 = 1;
-     */
-    STYLE2024 = 1,
-    /**
-     * @generated from protobuf enum value: STYLE_LEGACY = 2;
-     */
-    STYLE_LEGACY = 2
 }
 /**
  * A compiled specification for the defaults of a set of features.  These
@@ -4240,8 +4189,7 @@ class FeatureSet$Type extends MessageType<FeatureSet> {
             { no: 3, name: "repeated_field_encoding", kind: "enum", opt: true, T: () => ["google.protobuf.FeatureSet.RepeatedFieldEncoding", FeatureSet_RepeatedFieldEncoding] },
             { no: 4, name: "utf8_validation", kind: "enum", opt: true, T: () => ["google.protobuf.FeatureSet.Utf8Validation", FeatureSet_Utf8Validation] },
             { no: 5, name: "message_encoding", kind: "enum", opt: true, T: () => ["google.protobuf.FeatureSet.MessageEncoding", FeatureSet_MessageEncoding] },
-            { no: 6, name: "json_format", kind: "enum", opt: true, T: () => ["google.protobuf.FeatureSet.JsonFormat", FeatureSet_JsonFormat] },
-            { no: 7, name: "enforce_naming_style", kind: "enum", opt: true, T: () => ["google.protobuf.FeatureSet.EnforceNamingStyle", FeatureSet_EnforceNamingStyle] }
+            { no: 6, name: "json_format", kind: "enum", opt: true, T: () => ["google.protobuf.FeatureSet.JsonFormat", FeatureSet_JsonFormat] }
         ]);
     }
     create(value?: PartialMessage<FeatureSet>): FeatureSet {
@@ -4273,9 +4221,6 @@ class FeatureSet$Type extends MessageType<FeatureSet> {
                 case /* optional google.protobuf.FeatureSet.JsonFormat json_format */ 6:
                     message.jsonFormat = reader.int32();
                     break;
-                case /* optional google.protobuf.FeatureSet.EnforceNamingStyle enforce_naming_style */ 7:
-                    message.enforceNamingStyle = reader.int32();
-                    break;
                 default:
                     let u = options.readUnknownField;
                     if (u === "throw")
@@ -4306,9 +4251,6 @@ class FeatureSet$Type extends MessageType<FeatureSet> {
         /* optional google.protobuf.FeatureSet.JsonFormat json_format = 6; */
         if (message.jsonFormat !== undefined)
             writer.tag(6, WireType.Varint).int32(message.jsonFormat);
-        /* optional google.protobuf.FeatureSet.EnforceNamingStyle enforce_naming_style = 7; */
-        if (message.enforceNamingStyle !== undefined)
-            writer.tag(7, WireType.Varint).int32(message.enforceNamingStyle);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);

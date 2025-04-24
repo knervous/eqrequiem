@@ -8,12 +8,12 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"crypto/x509/pkix"
-	"embed"
 	_ "embed"
 	b64 "encoding/base64"
 	"encoding/binary"
 	"encoding/pem"
 	"fmt"
+	"knervous/eqgo/internal/config"
 	"log"
 	"math/big"
 	"net/http"
@@ -22,9 +22,6 @@ import (
 
 	"github.com/quic-go/quic-go/http3"
 )
-
-//go:embed keys/key.pem
-var keyPEMData embed.FS
 
 // GenerateCertAndStartServer generates a certificate and starts an HTTP server with the hash
 func GenerateCertAndStartServer() ([]byte, []byte) {
@@ -67,6 +64,9 @@ func GenerateTLSConfig(certPEM, keyPEM []byte) (*tls.Config, error) {
 func LoadTLSConfig() (*tls.Config, error) {
 	// Try embedded key.pem first
 	tlsConf, err := loadEmbeddedTLSConfig()
+	if err != nil {
+		return nil, nil
+	}
 
 	// Fallback to dynamic generation
 	certPEM, keyPEM := GenerateCertAndStartServer()
@@ -80,11 +80,11 @@ func LoadTLSConfig() (*tls.Config, error) {
 // loadEmbeddedTLSConfig loads TLS config from embedded key.pem, supporting both single cert and PEM chain
 func loadEmbeddedTLSConfig() (*tls.Config, error) {
 	// Read the embedded file
-	pemData, err := keyPEMData.ReadFile("keys/key.pem")
+	pemDataString, err := config.GetCert()
 	if err != nil {
 		return nil, fmt.Errorf("failed to read embedded key.pem: %v", err)
 	}
-
+	pemData := []byte(pemDataString)
 	// Parse all PEM blocks
 	var certPEM, keyPEM []byte
 	var certCount int

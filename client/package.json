@@ -6,10 +6,11 @@
   "scripts": {
     "dev": "cross-env VITE_USE_SAGE=true LOCAL_DEV=true vite",
     "v": "vercel dev",
-    "start": "cross-env VITE_USE_SAGE=false LOCAL_DEV=true vite",
+    "start": "cross-env VITE_LOCAL_WT=true VITE_USE_SAGE=false LOCAL_DEV=true vite",
     "build": "vite build",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "proto": "npx protoc --ts_out src/Game/Net/message --proto_path ../server/internal/api/proto ../server/internal/api/proto/EQMessage.proto"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -42,6 +43,7 @@
     "react-dom": "$react-dom"
   },
   "devDependencies": {
+    "@protobuf-ts/plugin": "^2.9.5",
     "@azure/identity": "^4.9.0",
     "@azure/storage-blob": "^12.27.0",
     "@eslint/js": "^9.21.0",

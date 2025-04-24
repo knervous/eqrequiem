@@ -8,7 +8,7 @@ extend google.protobuf.EnumValueOptions {
   optional string repeatedField = 4501;
 }
 
-// option go_package = "./main";
+option go_package = "./eqpb";
 
 message JWTLogin {
   string token = 1;
@@ -91,7 +91,7 @@ message CharacterSelectEntry
   int32 instance = 6;
   int32 gender = 7;
   int32 face = 8;
-  repeated CharSelectEquip equip = 9;
+  repeated ItemInstance items = 9;
   int32 deity = 10;
   int32 primary_id_file = 11;
   int32 secondary_id_file = 12;
@@ -534,6 +534,191 @@ message PVPStatsEntry {
   int32 points = 7;
 }
 
+
+message ItemInstance {
+  int32 id = 1;
+  int32 item_id = 2;
+  string mods = 3; // JSON string
+  uint32 charges = 4;
+  uint32 quantity = 5;
+  optional uint32 owner_id = 6;
+  int32 owner_type = 7;
+  int32 slot = 8;
+  Items item = 9;
+}
+
+message Items {
+  int32 id = 1;
+  int32 minstatus = 2;
+  string name = 3;
+  int32 aagi = 4;
+  int32 ac = 5;
+  int32 accuracy = 6;
+  int32 acha = 7;
+  int32 adex = 8;
+  int32 aint = 9;
+  uint32 artifactflag = 10;
+  int32 asta = 11;
+  int32 astr = 12;
+  int32 attack = 13;
+  int32 augrestrict = 14;
+  int32 augslot1type = 15;
+  int32 augslot1visible = 16;
+  int32 augslot2type = 17;
+  int32 augslot2visible = 18;
+  int32 augslot3type = 19;
+  int32 augslot3visible = 20;
+  int32 augslot4type = 21;
+  int32 augslot4visible = 22;
+  int32 augslot5type = 23;
+  int32 augslot5visible = 24;
+  int32 augslot6type = 25;
+  int32 augslot6visible = 26;
+  int32 augtype = 27;
+  int32 avoidance = 28;
+  int32 awis = 29;
+  int32 bagsize = 30;
+  int32 bagslots = 31;
+  int32 bagtype = 32;
+  int32 bagwr = 33;
+  int32 banedmgamt = 34;
+  int32 banedmgraceamt = 35;
+  int32 banedmgbody = 36;
+  int32 banedmgrace = 37;
+  int32 bardtype = 38;
+  int32 bardvalue = 39;
+  int32 book = 40;
+  int32 casttime = 41;
+  int32 casttime2 = 42;
+  int32 classes = 43;
+  uint32 color = 44;
+  string combateffects = 45;
+  int32 extradmgskill = 46;
+  int32 extradmgamt = 47;
+  int32 price = 48;
+  int32 cr = 49;
+  int32 damage = 50;
+  int32 damageshield = 51;
+  int32 deity = 52;
+  int32 delay = 53;
+  uint32 augdistiller = 54;
+  int32 dotshielding = 55;
+  int32 dr = 56;
+  int32 clicktype = 57;
+  int32 clicklevel2 = 58;
+  int32 elemdmgtype = 59;
+  int32 elemdmgamt = 60;
+  int32 endur = 61;
+  int32 factionamt1 = 62;
+  int32 factionamt2 = 63;
+  int32 factionamt3 = 64;
+  int32 factionamt4 = 65;
+  int32 factionmod1 = 66;
+  int32 factionmod2 = 67;
+  int32 factionmod3 = 68;
+  int32 factionmod4 = 69;
+  int32 focuseffect = 70;
+  int32 fr = 71;
+  int32 fvnodrop = 72;
+  int32 haste = 73;
+  int32 clicklevel = 74;
+  int32 hp = 75;
+  int32 regen = 76;
+  int32 icon = 77;
+  string idfile = 78;
+  int32 itemclass = 79;
+  int32 itemtype = 80;
+  int32 light = 81;
+  string lore = 82;
+  int32 loregroup = 83;
+  int32 magic = 84;
+  int32 mana = 85;
+  int32 manaregen = 86;
+  int32 enduranceregen = 87;
+  int32 material = 88;
+  int32 herosforgemodel = 89;
+  int32 maxcharges = 90;
+  int32 mr = 91;
+  int32 nodrop = 92;
+  int32 norent = 93;
+  uint32 pendingloreflag = 94;
+  int32 pr = 95;
+  int32 procrate = 96;
+  int32 races = 97;
+  int32 range = 98;
+  int32 reclevel = 99;
+  int32 recskill = 100;
+  int32 reqlevel = 101;
+  double sellrate = 102;
+  int32 shielding = 103;
+  int32 size = 104;
+  int32 skillmodtype = 105;
+  int32 skillmodvalue = 106;
+  int32 slots = 107;
+  int32 clickeffect = 108;
+  int32 spellshield = 109;
+  int32 strikethrough = 110;
+  int32 stunresist = 111;
+  uint32 summonedflag = 112;
+  int32 tradeskills = 113;
+  int32 favor = 114;
+  int32 weight = 115;
+  int32 benefitflag = 116;
+  int32 booktype = 117;
+  int32 recastdelay = 118;
+  int32 recasttype = 119;
+  int32 guildfavor = 120;
+  int32 attuneable = 121;
+  int32 nopet = 122;
+  string updated = 123; // ISO 8601 string for time.Time
+  int32 pointtype = 124;
+  int32 potionbelt = 125;
+  int32 potionbeltslots = 126;
+  int32 stacksize = 127;
+  int32 notransfer = 128;
+  int32 stackable = 129;
+  int32 proceffect = 130;
+  int32 proctype = 131;
+  int32 proclevel2 = 132;
+  int32 proclevel = 133;
+  int32 worneffect = 134;
+  int32 worntype = 135;
+  int32 wornlevel2 = 136;
+  int32 wornlevel = 137;
+  int32 focustype = 138;
+  int32 focuslevel2 = 139;
+  int32 focuslevel = 140;
+  int32 scrolleffect = 141;
+  int32 scrolltype = 142;
+  int32 scrolllevel2 = 143;
+  int32 scrolllevel = 144;
+  int32 svcorruption = 145;
+  int32 skillmodmax = 146;
+  int32 questitemflag = 147;
+  int32 purity = 148;
+  int32 evoitem = 149;
+  int32 evoid = 150;
+  int32 evolvinglevel = 151;
+  int32 evomax = 152;
+  int32 dsmitigation = 153;
+  int32 healamt = 154;
+  int32 spelldmg = 155;
+  int32 clairvoyance = 156;
+  int32 backstabdmg = 157;
+  int32 elitematerial = 158;
+  int32 scriptfileid = 159;
+  int32 expendablearrow = 160;
+  int32 powersourcecapacity = 161;
+  int32 bardeffect = 162;
+  int32 bardeffecttype = 163;
+  int32 bardlevel2 = 164;
+  int32 bardlevel = 165;
+  int32 subtype = 166;
+  int32 heirloom = 167;
+  int32 placeable = 168;
+  int32 epicitem = 169;
+}
+
 message PlayerProfile {
   int32 checksum = 1;
   int32 gender = 2;
@@ -659,6 +844,7 @@ message PlayerProfile {
   int32 guild_autoconsent = 122;
   int32 level3 = 123;
   int32 showhelm = 124;
+  repeated ItemInstance inventory_items = 126;
 }
 
 message ClientTarget {

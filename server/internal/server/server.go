@@ -13,6 +13,7 @@ import (
 
 	"knervous/eqgo/internal/cache"
 	"knervous/eqgo/internal/cert"
+	"knervous/eqgo/internal/db"
 	"knervous/eqgo/internal/discord"
 	"knervous/eqgo/internal/world"
 
@@ -32,7 +33,7 @@ type Server struct {
 
 // NewServer creates a new server with the given DSN.
 func NewServer(dsn string) (*Server, error) {
-	// Create HandlerRegistry with WorldDB
+	// Create HandlerRegistry with db.WorldDB
 	registry := world.NewWorldOpCodeRegistry()
 
 	// Create ZoneManager with HandlerRegistry
@@ -57,6 +58,27 @@ func NewServer(dsn string) (*Server, error) {
 	}, nil
 }
 
+func (s *Server) SendStream(sessionID int, opcode uint16, msg proto.Message) error {
+	sess, ok := s.sessions[sessionID]
+	if !ok {
+		return fmt.Errorf("session %d not found", sessionID)
+	}
+	stream, err := sess.OpenStream()
+	if err != nil {
+		return fmt.Errorf("open stream: %w", err)
+	}
+	defer stream.Close()
+	data, err := proto.Marshal(msg)
+	if err != nil {
+		return fmt.Errorf("marshal %T: %w", msg, err)
+	}
+	buf := make([]byte, 2+len(data))
+	binary.LittleEndian.PutUint16(buf[:2], opcode)
+	copy(buf[2:], data)
+	_, err = stream.Write(buf)
+	return err
+}
+
 // Implement world.ClientMessenger
 func (s *Server) SendDatagram(sessionID int, opcode uint16, msg proto.Message) error {
 	sess, ok := s.sessions[sessionID]
@@ -70,7 +92,12 @@ func (s *Server) SendDatagram(sessionID int, opcode uint16, msg proto.Message) e
 	buf := make([]byte, 2+len(data))
 	binary.LittleEndian.PutUint16(buf[:2], opcode)
 	copy(buf[2:], data)
-	return sess.SendDatagram(buf)
+	err = sess.SendDatagram(buf)
+	if err != nil {
+		log.Printf("failed to send datagram: %v", err)
+		return fmt.Errorf("send datagram: %w", err)
+	}
+	return nil
 }
 
 // StartServer starts the WebTransport and HTTPS servers.
@@ -111,7 +138,6 @@ func (s *Server) StartServer() {
 	}()
 }
 
-// listenUDP resolves and listens on the given port.
 func listenUDP(port int) (*net.UDPConn, int, error) {
 	addr := fmt.Sprintf(":%d", port)
 	udpAddr, err := net.ResolveUDPAddr("udp", addr)
@@ -122,6 +148,9 @@ func listenUDP(port int) (*net.UDPConn, int, error) {
 	if err != nil {
 		return nil, 0, fmt.Errorf("listen UDP %s: %w", addr, err)
 	}
+	// Increase buffer sizes
+	conn.SetReadBuffer(1024 * 1024)  // 1MB
+	conn.SetWriteBuffer(1024 * 1024) // 1MB
 	return conn, conn.LocalAddr().(*net.UDPAddr).Port, nil
 }
 
@@ -234,7 +263,7 @@ func (s *Server) StopServer() {
 		s.udpConn.Close()
 	}
 	s.zoneManager.Shutdown()
-	if world.GetWorldDB() != nil {
-		world.GetWorldDB().DB.Close()
+	if db.GlobalWorldDB != nil {
+		db.GlobalWorldDB.DB.Close()
 	}
 }

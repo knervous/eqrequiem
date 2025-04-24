@@ -1,6 +1,7 @@
 # Godot 4+ specific ignores
 .godot/
 node_modules/
+.DS_Store
 
 # Godot-specific ignores
 .import/
@@ -8,6 +9,8 @@ export.cfg
 export_presets.cfg
 
 keys/
+serverconfig/
+items.dat
 
 # Imported translations (automatically generated from CSV files)
 *.translation

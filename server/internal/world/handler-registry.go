@@ -61,7 +61,7 @@ func (r *HandlerRegistry) HandleDatagram(msg ZoneMessage, validSession bool) {
 	}
 }
 
-func NewZoneOpCodeRegistry(db *WorldDB, zoneID int) *HandlerRegistry {
+func NewZoneOpCodeRegistry(zoneID int) *HandlerRegistry {
 	registry := &HandlerRegistry{
 		handlers:      map[eqpb.OpCodes]DatagramHandler{},
 		globalOpcodes: map[eqpb.OpCodes]bool{},

@@ -53,8 +53,7 @@ type Items struct {
 	Bardvalue           int32
 	Book                int32
 	Casttime            int32
-	Charmfile           string
-	Charmfileid         string
+	Casttime2           int32
 	Classes             int32
 	Color               uint32
 	Combateffects       string
@@ -82,7 +81,6 @@ type Items struct {
 	Factionmod2         int32
 	Factionmod3         int32
 	Factionmod4         int32
-	Filename            string
 	Focuseffect         int32
 	Fr                  int32
 	Fvnodrop            int32
@@ -94,9 +92,6 @@ type Items struct {
 	Idfile              string
 	Itemclass           int32
 	Itemtype            int32
-	Ldonprice           int32
-	Ldontheme           int32
-	Ldonsold            int32
 	Light               int32
 	Lore                string
 	Loregroup           int32
@@ -132,131 +127,49 @@ type Items struct {
 	Tradeskills         int32
 	Favor               int32
 	Weight              int32
-	Unk012              int32
-	Unk013              int32
 	Benefitflag         int32
-	Unk054              int32
-	Unk059              int32
 	Booktype            int32
 	Recastdelay         int32
 	Recasttype          int32
 	Guildfavor          int32
-	Unk123              int32
-	Unk124              int32
 	Attuneable          int32
 	Nopet               int32
 	Updated             *time.Time
-	Comment             string
-	Unk127              int32
 	Pointtype           int32
 	Potionbelt          int32
 	Potionbeltslots     int32
 	Stacksize           int32
 	Notransfer          int32
 	Stackable           int32
-	Unk134              string
-	Unk137              int32
 	Proceffect          int32
 	Proctype            int32
 	Proclevel2          int32
 	Proclevel           int32
-	Unk142              int32
 	Worneffect          int32
 	Worntype            int32
 	Wornlevel2          int32
 	Wornlevel           int32
-	Unk147              int32
 	Focustype           int32
 	Focuslevel2         int32
 	Focuslevel          int32
-	Unk152              int32
 	Scrolleffect        int32
 	Scrolltype          int32
 	Scrolllevel2        int32
 	Scrolllevel         int32
-	Unk157              int32
-	Serialized          *time.Time
-	Verified            *time.Time
-	Serialization       *string
-	Source              string
-	Unk033              int32
-	Lorefile            string
-	Unk014              int32
 	Svcorruption        int32
 	Skillmodmax         int32
-	Unk060              int32
-	Augslot1unk2        int32
-	Augslot2unk2        int32
-	Augslot3unk2        int32
-	Augslot4unk2        int32
-	Augslot5unk2        int32
-	Augslot6unk2        int32
-	Unk120              int32
-	Unk121              int32
 	Questitemflag       int32
-	Unk132              *string
-	Clickunk5           int32
-	Clickunk6           string
-	Clickunk7           int32
-	Procunk1            int32
-	Procunk2            int32
-	Procunk3            int32
-	Procunk4            int32
-	Procunk6            string
-	Procunk7            int32
-	Wornunk1            int32
-	Wornunk2            int32
-	Wornunk3            int32
-	Wornunk4            int32
-	Wornunk5            int32
-	Wornunk6            string
-	Wornunk7            int32
-	Focusunk1           int32
-	Focusunk2           int32
-	Focusunk3           int32
-	Focusunk4           int32
-	Focusunk5           int32
-	Focusunk6           string
-	Focusunk7           int32
-	Scrollunk1          uint32
-	Scrollunk2          int32
-	Scrollunk3          int32
-	Scrollunk4          int32
-	Scrollunk5          int32
-	Scrollunk6          string
-	Scrollunk7          int32
-	Unk193              int32
 	Purity              int32
 	Evoitem             int32
 	Evoid               int32
 	Evolvinglevel       int32
 	Evomax              int32
-	Clickname           string
-	Procname            string
-	Wornname            string
-	Focusname           string
-	Scrollname          string
 	Dsmitigation        int16
-	HeroicStr           int16
-	HeroicInt           int16
-	HeroicWis           int16
-	HeroicAgi           int16
-	HeroicDex           int16
-	HeroicSta           int16
-	HeroicCha           int16
-	HeroicPr            int16
-	HeroicDr            int16
-	HeroicFr            int16
-	HeroicCr            int16
-	HeroicMr            int16
-	HeroicSvcorrup      int16
 	Healamt             int16
 	Spelldmg            int16
 	Clairvoyance        int16
 	Backstabdmg         int16
-	Created             string
 	Elitematerial       int16
-	Ldonsellbackrate    int16
 	Scriptfileid        int32
 	Expendablearrow     int16
 	Powersourcecapacity int32
@@ -264,36 +177,8 @@ type Items struct {
 	Bardeffecttype      int16
 	Bardlevel2          int16
 	Bardlevel           int16
-	Bardunk1            int16
-	Bardunk2            int16
-	Bardunk3            int16
-	Bardunk4            int16
-	Bardunk5            int16
-	Bardname            string
-	Bardunk7            int16
-	Unk214              int16
 	Subtype             int32
-	Unk220              int32
-	Unk221              int32
 	Heirloom            int32
-	Unk223              int32
-	Unk224              int32
-	Unk225              int32
-	Unk226              int32
-	Unk227              int32
-	Unk228              int32
-	Unk229              int32
-	Unk230              int32
-	Unk231              int32
-	Unk232              int32
-	Unk233              int32
-	Unk234              int32
 	Placeable           int32
-	Unk236              int32
-	Unk237              int32
-	Unk238              int32
-	Unk239              int32
-	Unk240              int32
-	Unk241              int32
 	Epicitem            int32
 }

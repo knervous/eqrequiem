@@ -122,7 +122,7 @@ var ClassRaceLookupTable = [16][16]bool{
 }
 
 // OPCharCreate creates the character in the database
-func CharacterCreate(name string, accountId int64, wdb *WorldDB, cc *eqpb.CharCreate) bool {
+func CharacterCreate(name string, accountId int64, cc *eqpb.CharCreate) bool {
 	ctx := context.Background()
 	if !CheckCharCreateInfo(cc) {
 		log.Println("CheckCharCreateInfo failed")
@@ -171,13 +171,13 @@ func CharacterCreate(name string, accountId int64, wdb *WorldDB, cc *eqpb.CharCr
 	// Set starting zone
 	pp.ZoneId = 2 // Qeynos as default
 
-	startZone, err := wdb.GetStartZone(ctx, uint8(pp.CharClass), uint32(pp.Deity), uint32(pp.Race))
+	startZone, err := GetStartZone(ctx, uint8(pp.CharClass), uint32(pp.Deity), uint32(pp.Race))
 	if err == nil {
 		pp.ZoneId = int32(startZone.ZoneID)
 		cc.StartZone = int32(pp.ZoneId)
 	}
 
-	zone, err := wdb.GetZone(ctx, pp.ZoneId)
+	zone, err := GetZone(ctx, pp.ZoneId)
 	if err != nil {
 		pp.X = float32(zone.SafeX)
 		pp.Y = float32(zone.SafeY)
@@ -200,7 +200,7 @@ func CharacterCreate(name string, accountId int64, wdb *WorldDB, cc *eqpb.CharCr
 	}
 
 	// Store character
-	return StoreCharacter(wdb, accountId, &pp)
+	return StoreCharacter(accountId, &pp)
 }
 
 func CheckCharCreateInfo(cc *eqpb.CharCreate) bool {
@@ -457,8 +457,8 @@ func SetStartingItems(pp *eqpb.PlayerProfile, race, class, deity, zoneID uint32,
 }
 
 // StoreCharacter saves the character to the database
-func StoreCharacter(wdb *WorldDB, accountID int64, pp *eqpb.PlayerProfile) bool {
+func StoreCharacter(accountID int64, pp *eqpb.PlayerProfile) bool {
 	// Get character ID
 	ctx := context.Background()
-	return wdb.SaveCharacterCreate(ctx, accountID, pp)
+	return SaveCharacterCreate(ctx, accountID, pp)
 }
