@@ -9,7 +9,11 @@ import { UiButtonComponent } from "../../common/ui-button";
 import { DISCORD_CLIENT_ID, REDIRECT_URI, RESPONSE_TYPE, SCOPE } from "./util";
 import GameManager from "@game/Manager/game-manager";
 import { USE_SAGE } from "@game/Constants/constants";
-import { getRootFiles, getEQFileExists } from "sage-core/util/fileHandler";
+import {
+  getRootFiles,
+  getEQFileExists,
+  getFilesRecursively,
+} from "sage-core/util/fileHandler";
 import { supportedZones } from "@game/Constants/supportedZones";
 import { godotBindings } from "@/godot/bindings";
 
@@ -302,8 +306,6 @@ export const LoginWindowComponent: React.FC = () => {
           <Button
             variant="contained"
             onClick={async () => {
-              const files = await getRootFiles((f) => f.endsWith(".s3d"), true);
-              const effFiles = await getRootFiles((f) => f.endsWith(".eff"), true);
               for (const zone of Object.values(supportedZones)) {
                 const name = zone.shortName;
                 const associatedFiles: string[] = [];
@@ -317,24 +319,22 @@ export const LoginWindowComponent: React.FC = () => {
                   continue;
                 }
                 console.log("Process", name);
-                if (files.some((f: string) => f.startsWith(name))) {
-                  for (const file of files) {
-                    if (file.startsWith(name)) {
-                      associatedFiles.push(file);
-                    }
-                  }
-                  if (effFiles.some((f: string) => f.startsWith(name))) {
-                    for (const file of effFiles) {
-                      if (file.startsWith(name)) {
-                        associatedFiles.push(file);
-                      }
-                    }
-                  }
-                  console.log(`Found ${name}`, associatedFiles);
-                  if (associatedFiles.length > 0) {
-                    await godotBindings.processFiles(name, associatedFiles);
-                  }
+                for await (const fileHandle of getFilesRecursively(
+                  godotBindings.rootFileSystemHandle,
+                  "",
+                  new RegExp(`^${name}[_\\.].*`),
+                  false,
+                )) {
+                  // if (onlyChr && !(fileHandle.name.includes('_chr') || fileHandle.name.includes('_obj'))) {
+                  //   continue;
+                  // }
+                  associatedFiles.push(fileHandle.name);
                 }
+                console.log(`Found ${name}`, associatedFiles);
+                if (associatedFiles.length > 0) {
+                  await godotBindings.processFiles(name, associatedFiles);
+                }
+                
               }
               console.log("Done");
             }}

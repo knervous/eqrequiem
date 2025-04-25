@@ -22,11 +22,12 @@ func getConnectionString() (string, error) {
 	host := serverConfig.GetString("db_host", "")
 	user := serverConfig.GetString("db_user", "")
 	pass := serverConfig.GetString("db_pass", "")
+	port := serverConfig.GetInt("db_port", 3307)
 
 	if host == "" || user == "" || pass == "" {
 		return "", fmt.Errorf("database connection string is not set")
 	}
-	return fmt.Sprintf("%s:%s@tcp(%s)/eqgo?parseTime=true", user, pass, host), nil
+	return fmt.Sprintf("%s:%s@tcp(%s:%d)/eqgo?parseTime=true", user, pass, host, port), nil
 
 }
 
