@@ -27,7 +27,7 @@ import Actor from "../Actor/actor";
 import CharacterSelect from "../Zone/character-select";
 import * as EQMessage from "../Net/message/EQMessage";
 import { supportedZones } from "../Constants/supportedZones";
-import EnvironmentManager from "../Environment/environment-manager";
+import MusicManager from "@game/Music/music-manager";
 
 declare const window: Window;
 
@@ -41,14 +41,16 @@ export default class GameManager extends Node3D {
     return this.lightManager;
   }
   private lightManager: LightManager | null = null;
-  public get EnvironmentManager(): EnvironmentManager | null {
-    return this.environmentManager;
-  }
-  private environmentManager: EnvironmentManager | null = null;
+
   get SkyManager(): SkyManager | null {
     return this.skyManager;
   }
   private skyManager: SkyManager | null = null;
+
+  get MusicManager(): MusicManager | null {
+    return this.musicManager;
+  }
+  private musicManager: MusicManager | null = null;
 
   private worldTickInterval: number = -1;
   private zoneObjects: ZoneObjects | null = null;
@@ -109,9 +111,9 @@ export default class GameManager extends Node3D {
         this.lightManager.dispose();
         this.lightManager = null;
       }
-      if (this.environmentManager) {
-        this.environmentManager.dispose();
-        this.environmentManager = null;
+      if (this.musicManager) {
+        this.musicManager.dispose();
+        this.musicManager = null;
       }
 
       if (this.skyManager) {
@@ -138,6 +140,8 @@ export default class GameManager extends Node3D {
 
   public async loadZoneId(zoneId: number): Promise<void> {
     const zoneName = supportedZones[zoneId?.toString()]?.shortName;
+    console.log('Loading zone: ', zoneId, zoneName);
+
     if (zoneName) {
       await this.loadZone(zoneName);
     } else {
@@ -168,7 +172,7 @@ export default class GameManager extends Node3D {
       this.currentZone.add_child(rootNode);
       rootNode.set_physics_process(true);
     }
-
+    console.log('Zone name', this.zoneName);
     const metadataByte = await FileSystem.getFileBytes(
       `eqrequiem/zones`, `${this.zoneName}.json`,
     );
@@ -176,7 +180,7 @@ export default class GameManager extends Node3D {
       try {
         const str = new TextDecoder("utf-8").decode(metadataByte);
         const metadata = JSON.parse(str);
-        console.log("Got metadata", Object.keys(metadata));
+        console.log("Got metadata", metadata);
         this.metadata = metadata;
         console.log("Version: ", metadata.version);
         this.instantiateRegions(metadata.regions);
@@ -189,6 +193,11 @@ export default class GameManager extends Node3D {
           this.camera!,
           metadata.lights,
         );
+
+        // this.musicManager = new MusicManager(
+        //   this,
+        //   metadata.sounds,
+        // );
 
         this.skyManager = new SkyManager(
           this.currentZone,
@@ -294,9 +303,7 @@ export default class GameManager extends Node3D {
       area.position = position;
 
       this.areaContainer?.add_child(area);
-      if (!this.regionAreas) {
-        this.regionAreas = new Map();
-      }
+
       this.regionAreas.set(index, area);
 
       // Connect signals for intersection detection

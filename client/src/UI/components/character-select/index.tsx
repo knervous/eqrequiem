@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { use, useCallback, useEffect, useMemo, useState } from "react";
 import { useUIContext } from "../context";
 import * as EQMessage from "../../../Game/Net/message/EQMessage";
 import { WorldSocket } from "../../net/instances";
@@ -10,6 +10,7 @@ import { CharacterCreate } from "./char-create";
 
 import "./component.css";
 import GameManager from "@game/Manager/game-manager";
+import { MusicPlayer } from "@game/Music/music-player";
 
 let splashed = false;
 
@@ -31,6 +32,7 @@ export const CharacterSelectUIComponent: React.FC = () => {
       setCharInfo(charInfo);
       setSelectedChar(charInfo?.characters[0] ?? null);
       if (!splashed) {
+       
         setSplash?.(true);
         setTimeout(() => {
           setSplash?.(false);
@@ -41,13 +43,17 @@ export const CharacterSelectUIComponent: React.FC = () => {
     },
     [setSplash],
   );
-  console.log('Sel char', selectedChar);
+
+  useEffect(() => { 
+    MusicPlayer.play("character-select");
+  }, []);
 
   const enterWorld = useCallback(() => {
     if (!selectedChar) {
       return;
     }
     setMode("game");
+    MusicPlayer.stop();
     GameManager.instance.loadZoneId(selectedChar.zone);
     GameManager.instance.instantiatePlayer(
       selectedChar as EQMessage.PlayerProfile,
@@ -109,7 +115,7 @@ export const CharacterSelectUIComponent: React.FC = () => {
           level: 1,
         } as EQMessage.CharacterSelectEntry),
     );
-  }, [selectedChar, gotCharInfo, view]);
+  }, [selectedChar?.name, gotCharInfo, view]); // eslint-disable-line
 
   return !gotCharInfo ? null : (
     <Box className="char-select">

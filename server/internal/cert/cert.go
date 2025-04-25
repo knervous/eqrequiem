@@ -62,13 +62,21 @@ func GenerateTLSConfig(certPEM, keyPEM []byte) (*tls.Config, error) {
 
 // LoadTLSConfig loads TLS config, preferring embedded key.pem if available, falling back to dynamic generation
 func LoadTLSConfig() (*tls.Config, error) {
-	// Try embedded key.pem first
-	tlsConf, err := loadEmbeddedTLSConfig()
-	if err == nil {
-		fmt.Println("Using embedded certificate")
-		return tlsConf, nil
+	serverConfig, err := config.NewConfig()
+	if err != nil {
+		return nil, fmt.Errorf("failed to read config: %v", err)
 	}
-	fmt.Printf("Failed to load embedded certificate: %v\n", err)
+	var tlsConf *tls.Config
+	local := serverConfig.GetBool("local", false)
+	if !local {
+		// Try embedded key.pem first
+		tlsConf, err := loadEmbeddedTLSConfig()
+		if err == nil {
+			fmt.Println("Using embedded certificate")
+			return tlsConf, nil
+		}
+		fmt.Printf("Failed to load embedded certificate: %v\n", err)
+	}
 
 	// Fallback to dynamic generation
 	fmt.Println("Generating dynamic certificate")

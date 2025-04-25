@@ -72,6 +72,8 @@ export const {
   GradientTexture2D,
   Gradient,
   PackedColorArray,
+  SphereShape3D,
+  SphereMesh,
 } = godot;
 
 export default godot;

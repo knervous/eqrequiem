@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "cross-env VITE_USE_SAGE=true LOCAL_DEV=true vite",
     "v": "vercel dev",
+    "upload": "node scripts/upload.js ~/documents/everquest_rof2",
     "start": "cross-env VITE_LOCAL_WT=true VITE_USE_SAGE=false LOCAL_DEV=true vite",
     "start:prod": "cross-env VITE_USE_SAGE=false LOCAL_DEV=true vite",
     "build": "vite build",

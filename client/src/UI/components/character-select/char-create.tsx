@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { nameByRace } from "fantasy-name-generator";
 import * as EQMessage from "../../../Game/Net/message/EQMessage";
 import {
@@ -9,7 +9,6 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { RACE_DATA } from "../../../Game/Constants/race-data";
 import { CLASS_DATA_NAMES } from "../../../Game/Constants/class-data";
 import {
   getAvailableDeities,
@@ -18,7 +17,6 @@ import {
 
 import {
   CharClassStrings,
-  CharRaceStrings,
   Races,
   VIEWS,
   baseClassStats,
@@ -33,7 +31,9 @@ import { UiWindowComponent } from "../../common/ui-window";
 import { StringTable } from "../../util/string-table";
 import { WorldSocket } from "../../net/instances";
 import GameManager from "@game/Manager/game-manager";
-
+import { StatRow } from "./stat-row";
+import { SupportedRaces } from "./races";
+import { SupportedClasses } from "./classes";
 
 const selectProps = {
   size: "small",
@@ -62,6 +62,19 @@ const selectSx = {
   width: "200px",
 };
 
+const statsList = [
+  ["Strength", "str"],
+  ["Stamina", "sta"],
+  ["Agility", "agi"],
+  ["Dexterity", "dex"],
+  ["Wisdom", "wis"],
+  ["Intelligence", "intel"],
+  ["Charisma", "cha"],
+];
+
+
+
+
 export const CharacterCreate = ({ setView, charInfo }) => {
   const [selectedRace, setSelectedRace] = useState("1");
   const [selectedClass, setSelectedClass] = useState(1);
@@ -88,7 +101,7 @@ export const CharacterCreate = ({ setView, charInfo }) => {
         deity: selectedDeity,
       },
     );
-    
+
     const char = {
       gender,
       face,
@@ -99,7 +112,7 @@ export const CharacterCreate = ({ setView, charInfo }) => {
       startZone: selectedCity,
       deity: selectedDeity,
     };
-    console.log('Send character', char);
+    console.log("Send character", char);
     WorldSocket.registerOpCodeHandler(
       EQMessage.OpCodes.OP_ApproveName_Server,
       EQMessage.Int,
@@ -113,11 +126,10 @@ export const CharacterCreate = ({ setView, charInfo }) => {
           );
           setView(VIEWS.CHAR_SELECT);
         } else {
-          alert('Invalid name');
+          alert("Invalid name");
         }
       },
     );
-
   }, [
     name,
     gender,
@@ -131,12 +143,6 @@ export const CharacterCreate = ({ setView, charInfo }) => {
   ]);
 
   useEffect(() => {
-    if (initialLength !== charInfo?.characters?.length) {
-      //setView(VIEWS.CHAR_SELECT);
-    }
-  }, [charInfo?.characters?.length, setView, initialLength]);
-
-  useEffect(() => {
     const deities = getAvailableDeities(+selectedRace, selectedClass);
     if (!deities.length) {
       return;
@@ -144,7 +150,7 @@ export const CharacterCreate = ({ setView, charInfo }) => {
     setDeities(deities);
     setSelectedDeity(deities[0][0]);
   }, [selectedRace, selectedClass]);
-  console.log('Selected deity', selectedDeity);
+
   useEffect(() => {
     const deity = deities.find(([val]) => val === selectedDeity);
     const availableCities =
@@ -196,6 +202,64 @@ export const CharacterCreate = ({ setView, charInfo }) => {
     setBaseCharacter(char);
   }, [selectedRace, selectedClass, gender, face]);
 
+
+  const updateStat = useCallback((stat, delta) => {
+    setCharacter((char) => ({
+      ...char,
+      [stat]: char[stat] + delta,
+      statPoints: char.statPoints - delta,
+    }));
+  }, []);
+
+  const preferredStatSet = useMemo(
+    () => new Set(preferredStats[selectedClass]),
+    [selectedClass],
+  );
+
+  const descriptionValue = useMemo(
+    () => StringTable.getString(description),
+    [description],
+  );
+  const statDecrement = useCallback(
+    (key) => {
+      updateStat(key, -1);
+    },
+    [updateStat],
+  );
+  const statIncrement = useCallback(
+    (key) => {
+      updateStat(key, 1);
+    },
+    [updateStat],
+  );
+
+  const generateName = useCallback(() => {
+    const nameMap = {
+      [Races.HUMAN]: "human",
+      [Races.BARBARIAN]: "cavePerson",
+      [Races.ERUDITE]: "drow",
+      [Races.WOODELF]: "elf",
+      [Races.HIGHELF]: "highelf",
+      [Races.DARKELF]: "darkelf",
+      [Races.HALFELF]: "human",
+      [Races.DWARF]: "dwarf",
+      [Races.TROLL]: "ogre",
+      [Races.OGRE]: "ogre",
+      [Races.HALFLING]: "halfling",
+      [Races.GNOME]: "gnome",
+    };
+
+    let name = nameByRace(nameMap[selectedRace], {
+      gender: gender === 0 ? "male" : "female",
+    }) as string;
+
+    name = name.replaceAll("-", "");
+    name = name.toLowerCase();
+    name = name[0].toUpperCase() + name.slice(1);
+    name = name.split(" ")[0];
+    setName(name);
+  }, [selectedRace, gender]);
+  
   return (
     <>
       <UiWindowComponent
@@ -258,67 +322,20 @@ export const CharacterCreate = ({ setView, charInfo }) => {
           direction={"row"}
         >
           {/** Races */}
-          <Stack
-            sx={{ marginTop: "5px" }}
-            alignContent={"center"}
-            direction={"column"}
-          >
-            {Object.entries(RACE_DATA)
-              .slice(0, 12)
-              .sort(([key, race], [key2, race2]) =>
-                race.name > race2.name ? 1 : -1,
-              )
-              .map(([key, race]) => (
-                <UiButtonComponent
-                  buttonName="A_BigBtn"
-                  sx={{
-                    margin: "10px",
-                  }}
-                  scale={1.3}
-                  selected={selectedRace === key}
-                  key={`char-select-race-${key}`}
-                  className={classNames({
-                    "btn-selected": key === selectedRace,
-                  })}
-                  onClick={() => {
-                    setDescription(CharRaceStrings[key]);
-                    setSelectedRace(key);
-                  }}
-                  text={race.name}
-                />
-              ))}
-          </Stack>
+          <SupportedRaces
+            key={selectedRace}
+            selectedRace={selectedRace}
+            setDescription={setDescription}
+            setSelectedRace={setSelectedRace}
+          />
 
           {/** Classes */}
-          <Stack
-            sx={{ marginTop: "5px", marginLeft: "15px" }}
-            justifyContent={"center"}
-            alignContent={"center"}
-            direction={"column"}
-          >
-            {Object.entries(CLASS_DATA_NAMES)
-              .slice(0, 14)
-              .sort(([, name], [, name2]) => (name > name2 ? 1 : -1))
-              .map(([id, name]) => (
-                <UiButtonComponent
-                  buttonName="A_BigBtn"
-                  selected={selectedClass === +id}
-                  text={name}
-                  sx={{
-                    margin: "10px",
-                  }}
-                  scale={1.2}
-                  isDisabled={!classLookupTable[id - 1][selectedRace - 1]}
-                  className={classNames({
-                    "btn-selected": +id === selectedClass,
-                  })}
-                  onClick={() => {
-                    setDescription(CharClassStrings[+id]);
-                    setSelectedClass(+id);
-                  }}
-                />
-              ))}
-          </Stack>
+          <SupportedClasses
+            selectedClass={selectedClass}
+            selectedRace={selectedRace}
+            setDescription={setDescription}
+            setSelectedClass={setSelectedClass}
+          />
         </Stack>
         <Stack sx={{ width: "100%" }} direction="row" justifyContent="center">
           <UiButtonComponent
@@ -352,81 +369,18 @@ export const CharacterCreate = ({ setView, charInfo }) => {
           <Typography sx={{ fontSize: "15px" }} noWrap component="div">
             Points Remaining: {character.statPoints}
           </Typography>
-          {[
-            ["Strength", "str"],
-            ["Stamina", "sta"],
-            ["Agility", "agi"],
-            ["Dexterity", "dex"],
-            ["Wisdom", "wis"],
-            ["Intelligence", "intel"],
-            ["Charisma", "cha"],
-          ].map(([label, stat]) => (
-            <Stack
-              key={`stat-${stat}`}
-              sx={{ marginTop: "0px" }}
-              direction={"row"}
-            >
-              <Stack
-                key={`stat-inner-${stat}`}
-                minWidth={200}
-                sx={{ marginTop: "15px" }}
-                justifyContent={"center"}
-                direction={"column"}
-              >
-                <Typography
-                  textAlign={"left"}
-                  paddingLeft={3}
-                  fontSize={"15px"}
-                  noWrap
-                  component="div"
-                >
-                  {label}:{" "}
-                  <Typography
-                    sx={{
-                      color: preferredStats[selectedClass].includes(stat)
-                        ? "lightgreen"
-                        : "white",
-                    }}
-                    variant="p"
-                  >
-                    {character[stat]}
-                  </Typography>
-                </Typography>
-              </Stack>
-
-              <Stack
-                key={`stat-${stat}`}
-                sx={{ marginTop: "15px" }}
-                width={"40px"}
-                justifyContent={"space-between"}
-                direction={"row"}
-              >
-                <UiButtonComponent
-                  scale={1.5}
-                  buttonName="A_MinusBtn"
-                  isDisabled={character[stat] === baseCharacter[stat]}
-                  onClick={() =>
-                    setCharacter((char) => ({
-                      ...char,
-                      [stat]: char[stat] - 1,
-                      statPoints: char.statPoints + 1,
-                    }))
-                  }
-                />
-                <UiButtonComponent
-                  scale={1.5}
-                  buttonName="A_PlusBtn"
-                  isDisabled={character.statPoints === 0}
-                  onClick={() => {
-                    setCharacter((char) => ({
-                      ...char,
-                      [stat]: char[stat] + 1,
-                      statPoints: char.statPoints - 1,
-                    }));
-                  }}
-                />
-              </Stack>
-            </Stack>
+          {statsList.map(([label, key]) => (
+            <StatRow
+              key={key}
+              label={label}
+              stat={key}
+              value={character[key]}
+              baseValue={baseCharacter[key]}
+              isDisabled={character.statPoints === 0}
+              isPreferred={preferredStatSet.has(key)}
+              onDecrement={statDecrement}
+              onIncrement={statIncrement}
+            />
           ))}
           <Typography
             sx={{ marginTop: "15px", fontSize: "15px" }}
@@ -529,36 +483,11 @@ export const CharacterCreate = ({ setView, charInfo }) => {
             sx={{
               marginRight: "50px",
             }}
-            onClick={() => {
-              const nameMap = {
-                [Races.HUMAN]: "human",
-                [Races.BARBARIAN]: "cavePerson",
-                [Races.ERUDITE]: "drow",
-                [Races.WOODELF]: "elf",
-                [Races.HIGHELF]: "highelf",
-                [Races.DARKELF]: "darkelf",
-                [Races.HALFELF]: "human",
-                [Races.DWARF]: "dwarf",
-                [Races.TROLL]: "ogre",
-                [Races.OGRE]: "ogre",
-                [Races.HALFLING]: "halfling",
-                [Races.GNOME]: "gnome",
-              };
-
-              let name = nameByRace(nameMap[selectedRace], {
-                gender: gender === 0 ? "male" : "female",
-              }) as string;
-
-              name = name.replaceAll("-", "");
-              name = name.toLowerCase();
-              name = name[0].toUpperCase() + name.slice(1);
-              name = name.split(" ")[0];
-              setName(name);
-            }}
+            onClick={generateName}
           ></UiButtonComponent>
         </Stack>
         <textarea
-          value={StringTable.getString(description)}
+          value={descriptionValue}
           readOnly
           style={{
             color: "white",

@@ -303,6 +303,7 @@ export const LoginWindowComponent: React.FC = () => {
             variant="contained"
             onClick={async () => {
               const files = await getRootFiles((f) => f.endsWith(".s3d"), true);
+              const effFiles = await getRootFiles((f) => f.endsWith(".eff"), true);
               for (const zone of Object.values(supportedZones)) {
                 const name = zone.shortName;
                 const associatedFiles: string[] = [];
@@ -320,6 +321,13 @@ export const LoginWindowComponent: React.FC = () => {
                   for (const file of files) {
                     if (file.startsWith(name)) {
                       associatedFiles.push(file);
+                    }
+                  }
+                  if (effFiles.some((f: string) => f.startsWith(name))) {
+                    for (const file of effFiles) {
+                      if (file.startsWith(name)) {
+                        associatedFiles.push(file);
+                      }
                     }
                   }
                   console.log(`Found ${name}`, associatedFiles);
