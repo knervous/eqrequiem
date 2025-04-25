@@ -26,7 +26,7 @@ func getConnectionString() (string, error) {
 	if host == "" || user == "" || pass == "" {
 		return "", fmt.Errorf("database connection string is not set")
 	}
-	return fmt.Sprintf("%s:%s@tcp(%s)/peq?parseTime=true", user, pass, host), nil
+	return fmt.Sprintf("%s:%s@tcp(%s)/eqgo?parseTime=true", user, pass, host), nil
 
 }
 

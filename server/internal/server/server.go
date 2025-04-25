@@ -17,6 +17,7 @@ import (
 	"knervous/eqgo/internal/discord"
 	"knervous/eqgo/internal/world"
 
+	"github.com/quic-go/quic-go"
 	"github.com/quic-go/quic-go/http3"
 	"github.com/quic-go/webtransport-go"
 	"google.golang.org/protobuf/proto"
@@ -68,13 +69,19 @@ func (s *Server) SendStream(sessionID int, opcode uint16, msg proto.Message) err
 		return fmt.Errorf("open stream: %w", err)
 	}
 	defer stream.Close()
+
 	data, err := proto.Marshal(msg)
 	if err != nil {
 		return fmt.Errorf("marshal %T: %w", msg, err)
 	}
-	buf := make([]byte, 2+len(data))
-	binary.LittleEndian.PutUint16(buf[:2], opcode)
-	copy(buf[2:], data)
+
+	// Create buffer: 4-byte length + 2-byte opcode + data
+	length := uint32(2 + len(data))
+	buf := make([]byte, 4+2+len(data))
+	binary.LittleEndian.PutUint32(buf[:4], length) // Length prefix
+	binary.LittleEndian.PutUint16(buf[4:6], opcode)
+	copy(buf[6:], data)
+
 	_, err = stream.Write(buf)
 	return err
 }
@@ -116,10 +123,18 @@ func (s *Server) StartServer() {
 	s.udpConn = udpConn
 	log.Printf("Server bound to UDP port: %d", port)
 
+	// Custom QUIC configuration for larger buffers
+	quicConf := &quic.Config{
+		MaxStreamReceiveWindow:     4 * 1024 * 1024,  // 4MB per stream
+		MaxConnectionReceiveWindow: 16 * 1024 * 1024, // 16MB per connection
+		MaxIncomingStreams:         1000,             // Adjust based on your needs
+	}
+
 	s.wtServer = &webtransport.Server{
 		H3: http3.Server{
 			TLSConfig:       tlsConf,
 			EnableDatagrams: true,
+			QUICConfig:      quicConf,
 		},
 		CheckOrigin: func(_ *http.Request) bool { return true },
 	}
@@ -149,8 +164,8 @@ func listenUDP(port int) (*net.UDPConn, int, error) {
 		return nil, 0, fmt.Errorf("listen UDP %s: %w", addr, err)
 	}
 	// Increase buffer sizes
-	conn.SetReadBuffer(1024 * 1024)  // 1MB
-	conn.SetWriteBuffer(1024 * 1024) // 1MB
+	conn.SetReadBuffer(4 * 1024 * 1024)  // 4MB
+	conn.SetWriteBuffer(4 * 1024 * 1024) // 4MB
 	return conn, conn.LocalAddr().(*net.UDPAddr).Port, nil
 }
 

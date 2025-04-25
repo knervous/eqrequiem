@@ -172,11 +172,6 @@ func GetCharSelectInfo(ctx context.Context, accountID int64) (*eqpb.CharacterSel
 				table.ItemInstances.OwnerID.EQ(mysql.Int(int64(c.ID))),
 			)
 
-		// Print the SQL query for debugging
-		sqlStr := stmt.DebugSql()
-
-		log.Printf("Generated SQL: %s", sqlStr)
-
 		if err := stmt.QueryContext(ctx, db.GlobalWorldDB.DB, &charItems); err != nil {
 			return nil, fmt.Errorf("query character_data items: %w", err)
 		}

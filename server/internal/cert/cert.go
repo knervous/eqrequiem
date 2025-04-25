@@ -64,11 +64,14 @@ func GenerateTLSConfig(certPEM, keyPEM []byte) (*tls.Config, error) {
 func LoadTLSConfig() (*tls.Config, error) {
 	// Try embedded key.pem first
 	tlsConf, err := loadEmbeddedTLSConfig()
-	if err != nil {
-		return nil, nil
+	if err == nil {
+		fmt.Println("Using embedded certificate")
+		return tlsConf, nil
 	}
+	fmt.Printf("Failed to load embedded certificate: %v\n", err)
 
 	// Fallback to dynamic generation
+	fmt.Println("Generating dynamic certificate")
 	certPEM, keyPEM := GenerateCertAndStartServer()
 	tlsConf, err = GenerateTLSConfig(certPEM, keyPEM)
 	if err != nil {
