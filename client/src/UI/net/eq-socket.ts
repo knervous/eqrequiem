@@ -205,6 +205,7 @@ export class EqSocket {
       while (true) {
         const { value, done } = await reader.read();
         if (done) {
+          console.log('Done loop');
           this.close();
           onClose();
           break;
@@ -236,6 +237,7 @@ export class EqSocket {
       while (true) {
         const { value: stream, done } = await streamReader.read();
         if (done) {
+          console.log('Done stream loop');
           this.close();
           onClose();
           break;
@@ -262,35 +264,40 @@ export class EqSocket {
   ): Promise<void> {
     const reader = readable.getReader();
     let buffer = new Uint8Array(0);
-
+  
     try {
       while (true) {
         const { value, done } = await reader.read();
         if (done) break;
         if (value) {
-          // Append new data to buffer
+          console.log('Got value', value);
           const newBuffer = new Uint8Array(buffer.length + value.length);
           newBuffer.set(buffer, 0);
           newBuffer.set(value, buffer.length);
           buffer = newBuffer;
-
-          // Process complete messages (assuming opcode + payload)
-          while (buffer.length >= 2) {
-            const opcode = new Uint16Array(buffer.buffer.slice(0, 2))[0];
-            // Assume the rest is the payload (no length prefix for simplicity)
-            // If your server sends a length prefix, adjust accordingly
-            const payload = buffer.slice(2);
+  
+          // Process messages while we have enough data
+          while (buffer.length >= 4) {
+            // Read 4-byte length prefix
+            const length = new DataView(buffer.buffer).getUint32(0, true); // Little-endian
+            if (buffer.length < 4 + length) {
+              break; // Wait for more data
+            }
+  
+            // Extract message (opcode + payload)
+            const message = buffer.slice(4, 4 + length);
+            const opcode = new Uint16Array(message.buffer.slice(0, 2))[0];
+            const payload = message.slice(2);
+  
             if (this.opCodeHandlers[opcode]) {
               this.opCodeHandlers[opcode](payload);
             } else {
               console.log(`No handler for stream opcode ${opcode}`, payload);
             }
-            // For simplicity, assume one message per stream
-            // If multiple messages are sent, add length prefix and loop
-            break;
+  
+            // Remove processed message from buffer
+            buffer = buffer.slice(4 + length);
           }
-          // Clear buffer if processed
-          buffer = new Uint8Array(0);
         }
       }
     } catch (e) {
@@ -298,7 +305,6 @@ export class EqSocket {
       throw e;
     } finally {
       reader.releaseLock();
-      // Close the writable side if not needed
       const writer = writable.getWriter();
       await writer.close();
     }
