@@ -11,8 +11,8 @@ import (
 	"strings"
 
 	"knervous/eqgo/internal/db/items"
-	"knervous/eqgo/internal/db/jetgen/peq/model"
-	"knervous/eqgo/internal/db/jetgen/peq/table"
+	"knervous/eqgo/internal/db/jetgen/eqgo/model"
+	"knervous/eqgo/internal/db/jetgen/eqgo/table"
 
 	"github.com/go-jet/jet/v2/mysql"
 	_ "github.com/go-sql-driver/mysql"

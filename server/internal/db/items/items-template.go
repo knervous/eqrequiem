@@ -10,7 +10,7 @@ import (
 
 	"github.com/jinzhu/copier"
 
-	"knervous/eqgo/internal/db/jetgen/peq/model"
+	"knervous/eqgo/internal/db/jetgen/eqgo/model"
 )
 
 func ConvertItemTemplateToPb(item *model.Items) *eqpb.Items {

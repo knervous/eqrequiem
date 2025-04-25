@@ -3,8 +3,8 @@ package character
 import (
 	db "knervous/eqgo/internal/db"
 	"knervous/eqgo/internal/db/items"
-	"knervous/eqgo/internal/db/jetgen/peq/model"
-	"knervous/eqgo/internal/db/jetgen/peq/table"
+	"knervous/eqgo/internal/db/jetgen/eqgo/model"
+	"knervous/eqgo/internal/db/jetgen/eqgo/table"
 	"slices"
 	"strconv"
 	"strings"

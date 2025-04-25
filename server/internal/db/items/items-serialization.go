@@ -3,7 +3,7 @@ package items
 import (
 	"bytes"
 	"encoding/binary"
-	"knervous/eqgo/internal/db/jetgen/peq/model"
+	"knervous/eqgo/internal/db/jetgen/eqgo/model"
 	"os"
 	"time"
 )

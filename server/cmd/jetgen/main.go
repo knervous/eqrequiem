@@ -29,7 +29,7 @@ func getConnection() (mysql.DBConnection, error) {
 		User:     user,
 		Password: pass,
 		Params:   "parseTime=true",
-		DBName:   "peq",
+		DBName:   "eqgo",
 	}, nil
 }
 
