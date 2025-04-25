@@ -83,6 +83,10 @@
         {
           "key": "Cross-Origin-Opener-Policy",
           "value": "same-origin"
+        },
+        {
+          "key": "Content-Encoding",
+          "value": "br"
         }
       ]
     },
