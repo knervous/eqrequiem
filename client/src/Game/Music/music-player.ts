@@ -3,7 +3,7 @@ const baseUrl = "https://eqrequiem.blob.core.windows.net/assets/music";
 
 export class MusicPlayer {
   private static audio: HTMLAudioElement | null = null;
-  private static volume: number = 1.0; // Volume range: 0.0 to 1.0
+  private static volume: number = 0.25; // Volume range: 0.0 to 1.0
   private static isPlaying: boolean = false;
 
   // Initialize the audio element
