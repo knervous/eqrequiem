@@ -26,9 +26,6 @@ export default defineConfig({
           if (req.url.includes('Test.wasm')) {
             res.setHeader("Content-Encoding", "br");
           }
-          if (req.url.includes('Test.pck')) {
-            res.setHeader("Content-Encoding", "br");
-          }
           res.setHeader("Cross-Origin-Embedder-Policy", "require-corp");
           res.setHeader("Cross-Origin-Opener-Policy", "same-origin");
 
