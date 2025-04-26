@@ -78,6 +78,8 @@ export const LoginWindowComponent: React.FC = () => {
         );
       }),
     ).then(setImageTiles);
+    document.title = "EQ: Requiem";
+
     if (doEnterSandbox) {
       setTimeout(() => {
         enterSandbox();

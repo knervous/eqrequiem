@@ -44,7 +44,8 @@ export const CharacterSelectUIComponent: React.FC = () => {
     [setSplash],
   );
 
-  useEffect(() => { 
+  useEffect(() => {
+    document.title = "EQ: Requiem";
     MusicPlayer.play("character-select");
   }, []);
 
