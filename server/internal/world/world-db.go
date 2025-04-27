@@ -335,7 +335,7 @@ func GetOrCreateCharacterID(ctx context.Context, accountId int64, pp *eqpb.Playe
 	err := table.CharacterData.
 		SELECT(table.CharacterData.ID).
 		FROM(table.CharacterData).
-		WHERE(table.CharacterData.ID.EQ(mysql.Int(accountId))).
+		WHERE(table.CharacterData.ID.EQ(mysql.Int(accountId)).AND(table.CharacterData.Name.EQ(mysql.String(pp.Name)))).
 		QueryContext(ctx, db.GlobalWorldDB.DB, &acc)
 
 	if err == nil {
