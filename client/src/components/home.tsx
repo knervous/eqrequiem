@@ -8,7 +8,9 @@ import styles from "./home.module.css";
 import { useNavigate } from "react-router-dom";
 import { DISCORD_CLIENT_ID, REDIRECT_URI } from "../UI/components/login/util";
 import { USE_SAGE } from "@game/Constants/constants";
+import DiscordIcon from "@ui/components/login/discord";
 
+const REQUIEM_DISCORD_URL = "https://discord.gg/ptJxyejwXt";
 const PREFIX = "Home";
 const textFieldClasses = {
   root: `${PREFIX}-root`,
@@ -105,7 +107,13 @@ export const Home = () => {
           </CardContent>
           <Stack sx={{ width: "285px", margin: "0 auto" }} spacing={1}>
             <Button variant="contained" color={'primary'} sx={{ margin: 0 }} href="/play">
+              <img src="/requiem.png" width={'20px'} style={{ position: 'absolute', left: '5px' }} />
               Play
+            </Button>
+            <Button onClick={() => {
+              window.open(REQUIEM_DISCORD_URL, "_blank");
+            }} variant="contained" color={'primary'} sx={{ margin: 0, background: 'rgb(88, 101, 242)' }}>
+              <DiscordIcon style={{ position: 'absolute', left: '5px'  }} size={20} color="white" />     Join Discord
             </Button>
           </Stack>
 
