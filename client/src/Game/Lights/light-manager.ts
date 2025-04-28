@@ -1,6 +1,7 @@
 import { Camera3D, Color, Node3D, OmniLight3D, Vector3 } from "godot";
 import { OctreeNode } from "./light-octree";
 import { Extensions } from "../Util/extensions";
+import type { ZoneManager } from "@game/Zone/zone-manager";
 
 
 export type LightData = {
@@ -17,7 +18,7 @@ function lerp(a: number, b: number, t: number): number {
 }
 
 export default class LightManager {
-  private parent: Node3D;
+  private zoneManager: ZoneManager;
   private lights: OmniLight3D[] = [];
   private camera: Camera3D;
   private updateInterval = 0.2;
@@ -27,14 +28,16 @@ export default class LightManager {
   private octree: OctreeNode | null = null;
   private lightContainer: Node3D | null = null;
 
-  public constructor(parent: Node3D, camera: Camera3D, lights: LightData[]) {
-    this.parent = parent;
+  public constructor(parent: ZoneManager) {
+    this.zoneManager = parent;
+  }
+
+  public instantiateLights(lights: LightData[]) {
     this.lightContainer = new Node3D();
     this.lightContainer.set_name("LightContainer");
-    this.parent.add_child(this.lightContainer);
-    this.camera = camera;
+    this.zoneManager.ZoneContainer!.add_child(this.lightContainer);
+    this.camera = this.zoneManager.GameManager.Camera!;
     this.createLights(lights);
-    // Build the octree only once since lights are static.
     this.octree = this.buildOctree();
   }
 

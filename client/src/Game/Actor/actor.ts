@@ -27,9 +27,8 @@ export default class Actor extends BaseGltfModel {
   // Nameplate node (a Label3D) and its backing string.
   private nameplate: Label3D | null = null;
   
-  constructor(folder: string, model: string) {
-    super(folder, model, true);
-    this.LoaderOptions = Actor.actorOptions;
+  constructor(folder: string, model: string, options: LoaderOptions = Actor.actorOptions) {
+    super(folder, model, options);
   }
 
   public swapFace(index: number) {

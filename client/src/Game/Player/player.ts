@@ -13,10 +13,12 @@ import {
   DisplayServer,
   Node3D,
   MeshInstance3D,
+  CollisionShape3D,
 } from "godot";
 import { Extensions } from "../Util/extensions";
 import * as EQMessage from "../Net/message/EQMessage";
 import RACE_DATA from "../Constants/race-data";
+import { LoaderOptions } from "@game/GLTF/base";
 
 // Simple position object for comparison
 type SimpleVector3 = {
@@ -56,11 +58,18 @@ export default class Player extends Actor {
 
   static instance: Player | null = null;
 
+  static playerOptions: LoaderOptions = {
+    flipTextureY: true,
+    shadow: false, 
+    useCapsulePhysics: true,
+  };
+
+
   constructor(player: EQMessage.PlayerProfile, camera: Camera3D) {
     const race = player?.race ?? 1;
     const raceDataEntry = RACE_DATA[race];
     const model = raceDataEntry[player?.gender ?? 0] || raceDataEntry[2];
-    super("models", model);
+    super("models", model, Player.playerOptions);
     this.camera = camera;
     this.player = player;
     this.bindKeys();
@@ -69,7 +78,7 @@ export default class Player extends Actor {
 
   public dispose() {
     //this.cameraLight?.queue_free();
-    //Player.instance = null;
+    super.dispose();
   }
 
   bindKeys() {
@@ -358,6 +367,20 @@ export default class Player extends Actor {
 
   public input_pan(delta: number) {
     this.adjustCameraDistance(delta < 0 ? -1 : 1);
+  }
+
+  public useCollision(val: boolean) {
+    console.log('Set collision', val);
+    const node = this.getNode() as CharacterBody3D;
+    if (!node) return;
+  
+    // Find the CollisionShape3D child
+    const collisionShape = node.getNodesOfType(CollisionShape3D);
+    if (collisionShape.length) {
+      collisionShape.forEach((a) => a.disabled = !val); // Disable if val is false, enable if val is true
+    } else {
+      console.warn("No CollisionShape3D found!");
+    }
   }
 
   public async Load(name: string) {

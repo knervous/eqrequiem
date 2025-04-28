@@ -1,5 +1,5 @@
-import { Node, Node3D, Vector3, deg_to_rad } from "godot";
-import { BaseGltfModel } from "../GLTF/base";
+import { Node3D, Vector3, deg_to_rad } from "godot";
+import ObjectMesh from "@game/Object/object-geometry";
 export default class ZoneObjects {
   parent: Node3D;
   objects: any;
@@ -18,16 +18,15 @@ export default class ZoneObjects {
       // Process each key in parallel.
       const keyPromises = Object.entries(this.objects).map(
         async ([key, entries]) => {
-          const objectModel = new BaseGltfModel("objects", key);
+          const objectModel = new ObjectMesh("objects", key);
           const packedScene = await objectModel.createPackedScene();
           if (packedScene) {
             // Process each entry in parallel.
             await Promise.all(
               (entries as any[]).map(async (entry) => {
                 const instance =
-                  (await objectModel.instancePackedScene()) as Node3D;
+                  (await objectModel.instancePackedScene(objectPool)) as Node3D;
                 if (instance) {
-                  objectPool.add_child(instance);
                   instance.position = new Vector3(-entry.x, entry.y, entry.z);
                   instance.scale = new Vector3(
                     entry.scale,

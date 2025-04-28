@@ -46,7 +46,7 @@ export const ActionWindowComponent: React.FC = () => {
           <UiButtonComponent
             buttonName="A_BigBtn"
             text={'Camp'}
-            onClick={() => { 
+            onClick={() => {
               setMode('character-select');
             }}
           />

@@ -74,6 +74,11 @@ export const {
   PackedColorArray,
   SphereShape3D,
   SphereMesh,
+  StaticBody3D,
+  ConcavePolygonShape3D,
+  Mesh,
+  PackedVector3Array,
+  ArrayMesh,
 } = godot;
 
 export default godot;

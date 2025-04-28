@@ -40,8 +40,8 @@ export const DevWindowComponent: React.FC = () => {
   const [tabValue, setTabValue] = useState(0);
   const [timeOfDay, setTimeOfDay] = useState(12);
   useEffect(() => {
-    if (GameManager.instance?.SkyManager) {
-      GameManager.instance.SkyManager.setTimeOfDay(timeOfDay);
+    if (GameManager.instance?.ZoneManager?.SkyManager) {
+      GameManager.instance.ZoneManager?.SkyManager.setTimeOfDay(timeOfDay);
     }
   }, [timeOfDay]);
 

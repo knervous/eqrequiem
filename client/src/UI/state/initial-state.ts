@@ -61,7 +61,7 @@ export const initialUiState: UiState = {
     ...defaultWindow,
     x: 5,
     y: 5,
-    collapsed: true,
+    collapsed: false,
     width: 300,
     height: 200,
     //x: window.
@@ -91,7 +91,7 @@ export const initialUiState: UiState = {
     width: 85,
     height: 235,
     x: 5,
-    y: 205,
+    y: 225,
   },
   topBarWindow: {
     ...defaultWindow,

@@ -37,6 +37,7 @@ export const DevPlayer: React.FC = () => {
   const handleCollisionChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const enabled = event.target.checked;
     setCollisionEnabled(enabled);
+    Player.instance?.useCollision(enabled);
     // Add your Godot collision toggle logic here
     // For example: playerData.setCollisionEnabled(enabled);
   };
@@ -55,6 +56,31 @@ export const DevPlayer: React.FC = () => {
         color: 'white !important',
       },
     }}>
+
+      {/* Collision and Gravity Checkboxes */}
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={collisionEnabled}
+              onChange={handleCollisionChange}
+              color="primary"
+            />
+          }
+          label="Enable Collision"
+        />
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={gravityEnabled}
+              onChange={handleGravityChange}
+              color="primary"
+            />
+          }
+          label="Enable Gravity"
+        />
+      </Box>
+      
       <Typography gutterBottom>
         {playerData.player.name} - Level {playerData.player.level}
       </Typography>
@@ -100,29 +126,7 @@ export const DevPlayer: React.FC = () => {
         </Button>
       </Box>
   
-      {/* Collision and Gravity Checkboxes */}
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-        <FormControlLabel
-          control={
-            <Checkbox
-              checked={collisionEnabled}
-              onChange={handleCollisionChange}
-              color="primary"
-            />
-          }
-          label="Enable Collision"
-        />
-        <FormControlLabel
-          control={
-            <Checkbox
-              checked={gravityEnabled}
-              onChange={handleGravityChange}
-              color="primary"
-            />
-          }
-          label="Enable Gravity"
-        />
-      </Box>
+
     </Box>
   );
 };

@@ -13,10 +13,9 @@ import {
   DirectionalLight3D,
   RenderingServer,
   Camera3D,
-  GradientTexture2D,
-  Gradient,
 } from "godot";
 import { BaseGltfModel } from "../GLTF/base";
+import type { ZoneManager } from "@game/Zone/zone-manager";
 
 export default class DayNightSkyManager {
   // ─── Configurable Fields ──────────────────────────
@@ -52,8 +51,9 @@ export default class DayNightSkyManager {
     /* 22 */ { low: new Color(0/255,  0/255, 82/255), mid: new Color(0/255,  0/255, 51/255), high: new Color(0/255,  0/255, 66/255) },
     /* 23 */ { low: new Color(0/255,  0/255, 82/255), mid: new Color(0/255,  0/255, 51/255), high: new Color(0/255,  0/255, 66/255) },
   ];
-  
 
+  // Parent
+  private zoneManager: ZoneManager | null;
 
   // ─── Sky‑dome (two layers) ────────────────────────
   private domeRoot: Node3D;
@@ -76,21 +76,21 @@ export default class DayNightSkyManager {
   private cam: Camera3D;
   private camStartPos = new Vector3();
 
-  constructor(parent: Node3D, name: string, camera: Camera3D) {
-    this.name = "DayNightSkyManager";
-    this.cam = camera;
-    this.camStartPos = camera.global_position;
+  constructor(parent: ZoneManager) {
+    this.cam = parent.GameManager.Camera!;
+    this.camStartPos = this.cam.global_position;
+    this.zoneManager = parent;
+   
+  }
 
-    // 1) setup sky dome
+  createSky(name: string) {
     this._createSkyDome(name).then((root) => {
       this.domeRoot = root;
-      parent.add_child(this.domeRoot);
+      this.zoneManager!.ZoneContainer!.add_child(this.domeRoot);
     });
-   
 
-    // 2) setup world environment + procedural sky
+
     this.worldEnv = new WorldEnvironment();
-    //parent.add_child(this.worldEnv);
 
     const env = new Environment();
     env.background_mode = RenderingServer.EnvironmentBG.ENV_BG_SKY;
@@ -111,11 +111,12 @@ export default class DayNightSkyManager {
 
     // 3) setup sun
     this.sun = new DirectionalLight3D();
-    parent.add_child(this.sun);
+    this.zoneManager!.ZoneContainer!.add_child(this.sun);
+
     //this.sun.shadow_enabled = true; // Shadows on
     this.sun.shadow_bias = 0.05; // Helps reduce acne
     this.sun.shadow_normal_bias = 0.8; // Smooths edges
-    
+
     // Add these for softer shadows
     this.sun.directional_shadow_mode = DirectionalLight3D.ShadowMode.SHADOW_ORTHOGONAL; // Use PCSS for soft shadows
     //this.sun.directional_shadow_softness = 2.0; // Increase softness (adjust 1.0–5.0 for effect)
@@ -262,6 +263,9 @@ export default class DayNightSkyManager {
   }
 
   private _updateSunAndSky(): void {
+    if (!this.sun) {
+      return;
+    }
     const t = this.timeOfDay / 24.0;  // 0…1
     // elevation: -90°..90°
     const elev = Math.sin(t * Math.PI * 2 - Math.PI/2) * Math.PI/2;
