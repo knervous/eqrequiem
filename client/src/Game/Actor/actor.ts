@@ -2,6 +2,19 @@ import { Animation, Callable, Label3D, Vector3, Color } from "godot";
 import { BaseGltfModel, LoaderOptions } from "../GLTF/base";
 import { AnimationDefinitions } from "../Animation/animation-constants";
 
+
+const prefixes = {
+  Face: 'he',
+  Chest: 'ch',
+  Arms: 'ua',
+  Wrists: 'fa',
+  Legs: 'lg',
+  Hands: 'hn',
+  Feet: 'ft',
+  Helm: 'he',
+};
+
+
 export default class Actor extends BaseGltfModel {
   public animations: string[] = [];
   public currentAnimation: string = ""; 
@@ -17,6 +30,13 @@ export default class Actor extends BaseGltfModel {
   constructor(folder: string, model: string) {
     super(folder, model, true);
     this.LoaderOptions = Actor.actorOptions;
+  }
+
+  public swapFace(index: number) {
+    const mats = this.getMaterialsByName(/he00/);
+    mats.forEach((m) => {
+      this.swapTextureForMaterial(m, m.resource_name.replace(/he00\d{1}/, `${prefixes.Face}00${index}`));
+    });
   }
 
   // Public setter to update the nameplate text.

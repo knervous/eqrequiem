@@ -19,6 +19,7 @@ import {
   Skeleton3D,
   GeometryInstance3D,
   BaseMaterial3D,
+  Material,
 } from "godot";
 import { FileSystem } from "../FileSystem/filesystem";
 import { TextureCache } from "../Util/texture-cache";
@@ -73,6 +74,14 @@ export class BaseGltfModel {
   protected animationPlayer: AnimationPlayer | undefined;
   protected animationIntervals: number[] = [];
 
+
+  private static textureMaps ={
+    dwfhe0001: "dwfhe0011",
+    dwfhe0002: "dwfhe0012",
+    hufhe0001: "hufhe0011",
+    hufhe0002: "hufhe0012",
+  }; 
+
   public LoaderOptions = {
     flipTextureY: false,
     secondaryMeshIndex: 0,
@@ -93,6 +102,10 @@ export class BaseGltfModel {
     this.node?.queue_free();
     this.gltfNode?.queue_free();
     this.animationIntervals.forEach(clearInterval);
+  }
+
+  public getHead() {
+    return this.secondaryNode;
   }
 
   public getNode() {
@@ -187,7 +200,6 @@ export class BaseGltfModel {
       console.log("Failed to generate secondary scene");
       return;
     }
-    this.secondaryNode = secondaryRootNode;
     await this.traverseAndSwapTextures(secondaryRootNode);
 
     const targetParent = this.gltfNode.getNodesOfType(Node3D)[0];
@@ -210,8 +222,8 @@ export class BaseGltfModel {
     if (meshes.length === 0) {
       console.log("No MeshInstance3D nodes found in secondary model");
     } else {
-      console.log(`Found ${meshes.length} meshes to reparent`);
       for (const mesh of meshes) {
+        this.secondaryNode = this.secondaryNode || mesh;
         mesh.skeleton = "..";
         mesh.reparent(primarySkeleton, false);
         mesh.owner = primarySkeleton;
@@ -410,6 +422,36 @@ export class BaseGltfModel {
     }
   }
 
+  getMaterialsByName(regex: RegExp) {
+    return this.getMaterialsByNameImpl(this.node as MeshInstance3D, regex);
+  }
+
+  private getMaterialsByNameImpl(node: MeshInstance3D, regex: RegExp): StandardMaterial3D[] {
+    const mats: StandardMaterial3D[] = [];
+    if (node === undefined) {  
+      return mats;
+    }
+    const mesh = node.mesh;
+    if (mesh) {
+      const surfaceCount = mesh.get_surface_count();
+      for (let i = 0; i < surfaceCount; i++) {
+        const material =
+            node.get_surface_override_material(i) ||
+            mesh.surface_get_material(i);
+        if (regex.test(material.resource_name)) {
+          mats.push(material as StandardMaterial3D);
+        }
+      }
+    }
+    for (const child of node.get_children()) {
+      if (child instanceof Node3D) {
+        mats.push(...this.getMaterialsByNameImpl(child as MeshInstance3D, regex));
+      }
+    }
+
+    return mats;
+  }
+
   private async traverseAndSwapTextures(node: Node3D): Promise<void> {
     if (node instanceof MeshInstance3D) {
       const mesh = node.mesh;
@@ -420,7 +462,7 @@ export class BaseGltfModel {
             node.get_surface_override_material(i) ||
             mesh.surface_get_material(i);
           if (material) {
-            await this.swapTextureForMaterial(material, node, i);
+            await this.swapTextureForMaterial(material);
           }
         }
       }
@@ -432,16 +474,15 @@ export class BaseGltfModel {
     }
   }
 
-  private async swapTextureForMaterial(
+  public async swapTextureForMaterial(
     material: any,
-    meshInstance: MeshInstance3D,
-    surfaceIdx: number,
+    file: string = "",
   ): Promise<void> {
     try {
       const meta = this.getExtras(material) as AnimatedTextureMeta;
       const newTexture = await this.loadNewTexture(
         meta.file,
-        material.resource_name,
+        file || material.resource_name,
       );
       if (
         material instanceof StandardMaterial3D &&
@@ -449,9 +490,6 @@ export class BaseGltfModel {
       ) {
         material.albedo_texture = newTexture;
 
-        if (!meshInstance.get_surface_override_material(surfaceIdx)) {
-          meshInstance.set_surface_override_material(surfaceIdx, material);
-        }
         if (newTexture.flip_y) {
           material.uv1_scale = new Vector3(1, -1, 1);
         }
@@ -470,6 +508,9 @@ export class BaseGltfModel {
     file: string,
     name: string,
   ): Promise<Resource | undefined | null> {
+    if (name in BaseGltfModel.textureMaps) {
+      name = BaseGltfModel.textureMaps[name];
+    }
     const cached = TextureCache.get(file + name);
     if (cached) {
       return cached;

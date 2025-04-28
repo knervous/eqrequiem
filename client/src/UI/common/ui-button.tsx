@@ -1,4 +1,4 @@
-import { Box, SxProps, Typography } from "@mui/material";
+import { Box, BoxProps, SxProps, Typography } from "@mui/material";
 import React, { useMemo, useState } from "react";
 import { useImage } from "../hooks/use-image";
 import classNames from "classnames";
@@ -27,7 +27,7 @@ type Props = {
   scale?: number;
   textFontSize?: string;
   selected?: boolean;
-};
+} & BoxProps
 
 export const UiButtonComponent: React.FC<Props> = (props: Props) => {
   const buttonName = props.buttonName ?? "A_BigBtn";
@@ -85,6 +85,9 @@ export const UiButtonComponent: React.FC<Props> = (props: Props) => {
       onMouseDown={() => !props.isDisabled && setIsPressed(true)}
       onMouseUp={() => setIsPressed(false)}
       onClick={() => !props.isDisabled && props.onClick()}
+      onFocus={props.onFocus}
+      onBlur={props.onBlur}
+      tabIndex={0}
     >
       {props.children}
       {props.icon}

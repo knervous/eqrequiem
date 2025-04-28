@@ -51,9 +51,11 @@ export default class CharacterSelect {
     [CLASS_DATA_ENUM.Enchanter]: { x: 885, y: 156.5, z: 685 },
     [CLASS_DATA_ENUM.Beastlord]: { x: 0, y: -728, z: -260 },
   };
-  private character: Actor | null = null;
+  public character: Actor | null = null;
   private camera: Camera3D | null = null;
   private orbitIntervalId: number | undefined;
+
+  public faceCam = false;
 
   constructor(gameManager: GameManager) {
     this.gameManager = gameManager;
@@ -94,13 +96,33 @@ export default class CharacterSelect {
       const delta = interval / 3000; // Convert milliseconds to seconds
       this.orbitAngle += this.rotationSpeed * delta;
       try {
-        this.updateCameraPosition(node);
+        if (this.faceCam) {
+          const secondaryNode = this.character?.getHead();
+          if (secondaryNode) {
+            node = secondaryNode; // Use head mesh for faceCam
+          } else {
+            console.warn("Head mesh not found, using primary node for faceCam");
+          }
+          // Position camera to the right of the head (90 degrees from forward)
+          this.cameraPosition = node.global_position
+            .add(new Vector3(-5, 3, 0)); // Move to the right of the head
+
+          if (this.camera !== null) {
+            this.camera.position = this.cameraPosition;
+            // Look at the head's position with a slight offset for framing
+            this.camera.look_at(node.global_position.add(this.lookatOffset), Vector3.UP);
+          }
+        } else {
+          this.updateCameraPosition(node);
+
+        }
 
       } catch (e) {
         console.error("Error in orbiting:", e);
       }
     }, interval);
   }
+
 
   public async loadModel(player: EQMessage.CharacterSelectEntry | null) {
     if (this.character) {
@@ -117,7 +139,7 @@ export default class CharacterSelect {
     clearInterval(this.orbitIntervalId);
     this.character = new Actor("models", model.toLowerCase());
     const rootNode = await this.character.instantiate();
-    if (rootNode) {
+    if (rootNode && player) {
       this.character.Load("");
       this.gameManager.add_child(rootNode);
       const location = this.locations[player?.charClass ?? CLASS_DATA_ENUM.Shaman];
@@ -125,9 +147,10 @@ export default class CharacterSelect {
       console.log('PLAYER', player);
       this.character.setNameplate(player.name ? `${player.name} - Level ${player.level} ${CLASS_DATA_NAMES[player.charClass]}\n ${zoneData.find((z) => z.zone === player?.zone)?.longName ?? 'Unknown Zone'}` : 'Soandso');
       
+      this.character.swapFace(player?.face ?? 0);
       // Add OmniLight3D for character illumination, positioned 1 meter in front
       const light = new OmniLight3D();
-      light.name = "CharacterLight";
+      light.set_name("CharacterLight");
       light.omni_range = 10; // Range of the light
       light.light_energy = 1.5; // Intensity of the light
       light.light_color = new Color(1, 0.95, 0.9); // Warm, soft white

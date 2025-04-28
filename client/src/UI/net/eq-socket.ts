@@ -270,7 +270,6 @@ export class EqSocket {
         const { value, done } = await reader.read();
         if (done) break;
         if (value) {
-          console.log('Got value', value);
           const newBuffer = new Uint8Array(buffer.length + value.length);
           newBuffer.set(buffer, 0);
           newBuffer.set(value, buffer.length);

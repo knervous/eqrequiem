@@ -9,7 +9,6 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { CLASS_DATA_NAMES } from "../../../Game/Constants/class-data";
 import {
   getAvailableDeities,
   startingCityMap,
@@ -71,9 +70,6 @@ const statsList = [
   ["Intelligence", "intel"],
   ["Charisma", "cha"],
 ];
-
-
-
 
 export const CharacterCreate = ({ setView, charInfo }) => {
   const [selectedRace, setSelectedRace] = useState("1");
@@ -143,6 +139,7 @@ export const CharacterCreate = ({ setView, charInfo }) => {
   ]);
 
   useEffect(() => {
+    setFace(0);
     const deities = getAvailableDeities(+selectedRace, selectedClass);
     if (!deities.length) {
       return;
@@ -150,6 +147,10 @@ export const CharacterCreate = ({ setView, charInfo }) => {
     setDeities(deities);
     setSelectedDeity(deities[0][0]);
   }, [selectedRace, selectedClass]);
+
+  useEffect(() => {
+    setFace(0);
+  }, [gender]);
 
   useEffect(() => {
     const deity = deities.find(([val]) => val === selectedDeity);
@@ -200,8 +201,7 @@ export const CharacterCreate = ({ setView, charInfo }) => {
     };
     setCharacter(char);
     setBaseCharacter(char);
-  }, [selectedRace, selectedClass, gender, face]);
-
+  }, [selectedRace, selectedClass, gender]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const updateStat = useCallback((stat, delta) => {
     setCharacter((char) => ({
@@ -259,7 +259,27 @@ export const CharacterCreate = ({ setView, charInfo }) => {
     name = name.split(" ")[0];
     setName(name);
   }, [selectedRace, gender]);
-  
+
+  const toggleFaceIdx = useCallback((val) => () => {
+    setFace((prev) => (prev + val < 0 ? 0 : prev + val > 7 ? 7 : prev + val));
+    if (GameManager.instance?.CharacterSelect) {
+      GameManager.instance.CharacterSelect.character?.swapFace(
+        face + val,
+      );
+    }
+  }, [face]);
+
+  const faceBtnFocus = useCallback(() => {
+    if (GameManager.instance?.CharacterSelect) {
+      GameManager.instance.CharacterSelect.faceCam = true;
+    }
+  },[]);
+  const faceBtnBlur = useCallback(() => {
+    if (GameManager.instance?.CharacterSelect) {
+      GameManager.instance.CharacterSelect.faceCam = false;
+    }
+  },[]);
+
   return (
     <>
       <UiWindowComponent
@@ -297,22 +317,37 @@ export const CharacterCreate = ({ setView, charInfo }) => {
             }}
           />
         </Stack>
-        <Stack alignContent={"center"} direction={"row"}>
-          <Select
-            value={face}
-            sx={{
-              position: "fixed",
-              top: "10px",
-              left: "calc(50vw - 100px)",
-              ...selectSx,
-            }}
-            {...selectProps}
-            onChange={(e) => setFace(e.target.value)}
-          >
-            {Array.from({ length: 8 }).map((_, idx) => (
-              <MenuItem value={idx}>Face {idx + 1}</MenuItem>
-            ))}
-          </Select>
+        <Stack
+          sx={{ position: "fixed", top: "10px", left: "calc(50vw - 100px)", width: '200px' }}
+          alignContent={"center"}
+          direction={"row"}
+          alignItems={"center"}
+          justifyContent={"space-between"}
+        >
+          <UiButtonComponent
+            onClick={toggleFaceIdx(-1)}
+            onFocus={faceBtnFocus}
+            onBlur={faceBtnBlur}
+            buttonName="A_LeftArrowBtn"
+            isDisabled={face === 0}
+          />
+          <Typography sx={{
+            fontSize: "15px",
+            color: "white",
+            textAlign: "center",
+          
+          }}>
+          Face {face + 1}
+
+          </Typography>
+          <UiButtonComponent
+            className="face-button"
+            onClick={toggleFaceIdx(1)}
+            onFocus={faceBtnFocus}
+            onBlur={faceBtnBlur}
+            buttonName="A_RightArrowBtn"
+            isDisabled={face >= 6}
+          />
         </Stack>
 
         <Stack

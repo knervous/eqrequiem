@@ -255,6 +255,7 @@ export default class GameManager extends Node3D {
       }, 0);
 
       console.log("Setting position", position);
+      this.player.swapFace(player.face);
       rootNode.scale = new Vector3(1.5, 1.5, 1.5);
       rootNode.rotate_x(deg_to_rad(0));
       rootNode.rotate_y(-deg_to_rad(0));
