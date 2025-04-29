@@ -620,6 +620,8 @@ export class BaseGltfModel {
       needFlip = true;
     } else {
       err = image.load_dds_from_buffer(buffer);
+      image.decompress();
+      image.generate_mipmaps(false);
     }
     if (err !== 0) {
       console.error("Error loading image from buffer:", err);
