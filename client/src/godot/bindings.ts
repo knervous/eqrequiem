@@ -7,6 +7,7 @@ import {
   getRootFiles,
   getRootEQFile,
   writeRootEQFile,
+  deleteEqFileOrFolder,
 } from "sage-core/util/fileHandler";
 import * as Comlink from "comlink";
 import { USE_SAGE } from "@game/Constants/constants";
@@ -32,6 +33,7 @@ type CacheEntry = {
 
 const baseUrl = "https://eqrequiem.blob.core.windows.net/game";
 const zippedPrefixes = ["eqrequiem/textures"];
+const REQUIEM_FILE_VERSION = '1.0';
 
 function selectMinimalFiles(candidateArrays: number[][]): number[] {
   let remaining = candidateArrays.slice();
@@ -141,6 +143,14 @@ class GodotBindings {
       },
     };
     window.setSplash = setSplash;
+    const requiemFileVersion = (await getRootEQFile('eqrequiem', 'requiem_version.txt')) ?? new ArrayBuffer(0);
+    // this was an arraybuffer i want to decode and read it to string
+    const stringFileVersion = new TextDecoder('utf-8').decode(requiemFileVersion);
+    console.log('Str', stringFileVersion);
+    if (stringFileVersion !== REQUIEM_FILE_VERSION) {
+      await deleteEqFileOrFolder('root', 'eqrequiem');
+      await writeRootEQFile('eqrequiem', 'requiem_version.txt', new TextEncoder().encode(REQUIEM_FILE_VERSION));
+    }
     /**
      * Globals
      */

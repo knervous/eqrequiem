@@ -648,46 +648,6 @@ export class BaseGltfModel {
     return ps;
   }
 
-  private static createWireframeMeshFromShape(shape: ConcavePolygonShape3D): MeshInstance3D {
-    const arrayMesh = new ArrayMesh();
-    const arrays = new GArray(); // Using GArray for Godot array types
-    arrays.resize(Mesh.ArrayType.ARRAY_MAX);
-  
-    // Extract vertices from the concave shape
-    const vertices = shape.data;
-    const indices = new PackedInt32Array();  
-    // Create indices for wireframe (lines between triangle vertices)
-    for (let i = 0; i < vertices.size(); i += 3) {
-      const idx = i / 3;
-      indices.append(idx * 3);
-      indices.append(idx * 3 + 1);
-      indices.append(idx * 3 + 1);
-      indices.append(idx * 3 + 2);
-      indices.append(idx * 3 + 2);
-      indices.append(idx * 3);
-    }
-  
-    // Set up mesh arrays
-    arrays.set(Mesh.ArrayType.ARRAY_VERTEX, vertices);
-    arrays.set(Mesh.ArrayType.ARRAY_INDEX, indices);
-  
-    // Add surface to mesh with PrimitiveType.LINES for wireframe
-    arrayMesh.add_surface_from_arrays(Mesh.PrimitiveType.PRIMITIVE_LINES, arrays);
-  
-    // Create a wireframe material
-    const material = new StandardMaterial3D();
-    material.albedo_color = new Color(0, 1, 0, 1); // Green wireframe, adjust as needed
-    material.shading_mode = StandardMaterial3D.ShadingMode.SHADING_MODE_UNSHADED; // Unshaded for visibility
-    arrayMesh.surface_set_material(0, material);
-  
-    // Create MeshInstance3D
-    const meshInstance = new MeshInstance3D();
-    meshInstance.mesh = arrayMesh;
-    meshInstance.set_name("WireframeCollisionMesh");
-  
-    return meshInstance;
-  }
-
   public static createStaticCollision(instance: Node3D) {
     const meshInstances = instance.getNodesOfType(MeshInstance3D);
     const concaveShape = this.createConcaveShapeFromMeshes(meshInstances);
