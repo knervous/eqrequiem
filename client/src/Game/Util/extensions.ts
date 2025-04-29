@@ -83,10 +83,11 @@ Vector3.prototype.negated = function(): Vector3 {
   return this;
 };
 
-Vector3.prototype.set = function(x: number, y: number, z: number): void {
+Vector3.prototype.set = function(x: number, y: number, z: number): Vector3 {
   this.x = x;
   this.y = y;
   this.z = z;
+  return this;
 };
 
 Vector3.prototype.normalized = function(): Vector3 {

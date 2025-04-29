@@ -30,6 +30,8 @@ type SimpleVector3 = {
 export default class Player extends Actor {
   public move_speed: number = 20;
   public turn_speed: number = 1.5;
+  public gravity: boolean = true;
+  public gravity_value: number = 9.84;
 
   public player: EQMessage.PlayerProfile | null = null;
 
@@ -273,7 +275,7 @@ export default class Player extends Actor {
     }
 
 
-    const { x: basisX, z: basisZ } = this.camera.transform.basis.z;
+    const { x: basisX, z: basisZ } = this.getNode()!.transform.basis.x;
 
     this.forwardXZ.set(basisX, 0, basisZ);
     this.forwardXZ.normalized();
@@ -313,7 +315,27 @@ export default class Player extends Actor {
       velocityXZ.normalized().multiplyScalar(this.move_speed * speedMod);
     }
 
-    this.velocity = velocityXZ.add(velocityY);
+    if (this.gravity) {
+      const horizontal = velocityXZ; // already a Vector3 with x/z, y=0
+    
+      let newVy = this.velocity.y;
+      if (node.is_on_floor()) {
+        if (didJump) {
+          newVy = 4.5;
+        } else {
+          newVy = 0;
+        }
+      } else {
+        newVy -= this.gravity_value * delta;
+      }
+    
+      this.velocity.set(horizontal.x, newVy, horizontal.z);
+    } else {
+      const movementYScaled = this.movement.y * this.move_speed * speedMod;
+      this.velocity.y = movementYScaled;
+      this.velocity = velocityXZ.add(velocityY);
+    }
+
     node.velocity = this.velocity;
     node.move_and_slide();
 

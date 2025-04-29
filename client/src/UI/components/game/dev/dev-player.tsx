@@ -44,6 +44,7 @@ export const DevPlayer: React.FC = () => {
   
   const handleGravityChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const enabled = event.target.checked;
+    Player.instance!.gravity = enabled;
     setGravityEnabled(enabled);
     // Add your Godot gravity toggle logic here
     // For example: playerData.setGravityEnabled(enabled);

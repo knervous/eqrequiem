@@ -6,7 +6,7 @@ declare module "godot" {
       subtract(other: Vector3): Vector3;
       add(other: Vector3): Vector3;
       multiplyScalar(scalar: number): Vector3;
-      set(x: number, y: number, z: number): void;
+      set(x: number, y: number, z: number): Vector3;
       normalized(): Vector3;
       negated(): Vector3;
     }

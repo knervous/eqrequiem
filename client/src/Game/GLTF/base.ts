@@ -22,11 +22,16 @@ import {
   ConcavePolygonShape3D,
   StaticBody3D,
   PackedVector3Array,
+  Mesh,
+  Color,
+  ArrayMesh,
+  PackedInt32Array,
 } from "godot";
 import { FileSystem } from "../FileSystem/filesystem";
 import { TextureCache } from "../Util/texture-cache";
 import "../Util/extensions";
 import { GArray } from "@/godot-module";
+import { getMeshAABB } from "./mesh-utilities";
 
 type AnimatedTextureMeta = {
   animationDelay: number;
@@ -193,6 +198,27 @@ export class BaseGltfModel {
     concaveShape.data = flipped;
     return concaveShape;
   }
+
+  private static createConcaveShapeFromMeshes(meshInstances: MeshInstance3D[]): ConcavePolygonShape3D | null {
+    const concaveShape = new ConcavePolygonShape3D();
+    const flipped = new PackedVector3Array();
+    for (const mesh of meshInstances.map((m) => m.mesh).filter(Boolean)) {
+      const src = mesh.get_faces();
+      for (let i = 0; i < src.size(); i += 3) {
+        const a = src.get(i);     a.x *= -1;
+        const b = src.get(i+1);   b.x *= -1;
+        const c = src.get(i+2);   c.x *= -1;
+    
+        // swap b & c to reverse the winding order
+        flipped.append(a);
+        flipped.append(c);
+        flipped.append(b);
+      }
+    }
+    concaveShape.data = flipped;
+    return concaveShape;
+  }
+  
   
   public async instantiateSecondaryMesh(): Promise<void> {
     if (!this.gltfNode) {
@@ -269,7 +295,7 @@ export class BaseGltfModel {
   }
 
   
-  public async instantiate(skipStaticPack: boolean = false): Promise<Node3D | undefined> {
+  public async instantiate(): Promise<Node3D | undefined> {
     const buffer = await FileSystem.getFileBytes(
       `eqrequiem/${this.folder}`, `${this.model.toLowerCase()}.glb`,
     );
@@ -294,29 +320,36 @@ export class BaseGltfModel {
         } else if (this.node instanceof StaticBody3D) {
           this.node.add_child(this.gltfNode);
           this.gltfNode.position = Vector3.ZERO;
-          if (!skipStaticPack) {
-            // Find all MeshInstance3D nodes to generate collision shapes
-            const meshInstances = this.gltfNode.getNodesOfType(MeshInstance3D);
-            for (const meshInstance of meshInstances) {
-              const concaveShape = this.createConcaveShapeFromMesh(meshInstance);
-              if (concaveShape) {
-                const collisionShape = new CollisionShape3D();
-                collisionShape.shape = concaveShape;
-                // Apply the mesh instance's transform to the collision shape
-                this.node.add_child(collisionShape);
-              // collisionShape.global_transform = meshInstance.global_transform;
-              }
+          // Find all MeshInstance3D nodes to generate collision shapes
+          const meshInstances = this.gltfNode.getNodesOfType(MeshInstance3D);
+          for (const meshInstance of meshInstances) {
+            const concaveShape = this.createConcaveShapeFromMesh(meshInstance);
+            if (concaveShape) {
+              const collisionShape = new CollisionShape3D();
+              collisionShape.shape = concaveShape;
+              this.node.add_child(collisionShape);
             }
           }
-         
         } else {
           this.node = rootNode;
         }
         if (this.node instanceof CharacterBody3D) {
+          const aabb = getMeshAABB(this.gltfNode);
           const collisionShape = new CollisionShape3D();
           const capsule = new CapsuleShape3D();
-          capsule.height = 2.0;
-          capsule.radius = 0.5;
+
+          if (aabb) {
+            const size = aabb.size;
+            capsule.height = size.y;
+            capsule.radius = Math.max(size.x, size.z) / 2;
+            const aabbCenter = aabb.position.add(aabb.size.multiplyScalar(0.5));
+            collisionShape.position = new Vector3(0, aabbCenter.y - 1, 0);
+          } else {
+          // Fallback to default values if AABB calculation fails
+            capsule.height = 3.0;
+            capsule.radius = 0.5;
+            console.log("Failed to compute AABB, using default capsule dimensions");
+          }
           collisionShape.shape = capsule;
           this.node.add_child(collisionShape);
           this.node.set_physics_process(true);
@@ -608,50 +641,73 @@ export class BaseGltfModel {
   }
 
   public async createPackedScene(): Promise<PackedScene | undefined> {
-
-    await this.instantiate(true);
+    await this.instantiate();
     const ps = new PackedScene();
-    ps.pack(this.node!); // Pack the root (CharacterBody3D or GLTF Node3D)
+    ps.pack(this.gltfNode!); // Pack the root (CharacterBody3D or GLTF Node3D)
     this.packedScene = ps;
     return ps;
-    
-    return undefined;
+  }
+
+  private static createWireframeMeshFromShape(shape: ConcavePolygonShape3D): MeshInstance3D {
+    const arrayMesh = new ArrayMesh();
+    const arrays = new GArray(); // Using GArray for Godot array types
+    arrays.resize(Mesh.ArrayType.ARRAY_MAX);
+  
+    // Extract vertices from the concave shape
+    const vertices = shape.data;
+    const indices = new PackedInt32Array();  
+    // Create indices for wireframe (lines between triangle vertices)
+    for (let i = 0; i < vertices.size(); i += 3) {
+      const idx = i / 3;
+      indices.append(idx * 3);
+      indices.append(idx * 3 + 1);
+      indices.append(idx * 3 + 1);
+      indices.append(idx * 3 + 2);
+      indices.append(idx * 3 + 2);
+      indices.append(idx * 3);
+    }
+  
+    // Set up mesh arrays
+    arrays.set(Mesh.ArrayType.ARRAY_VERTEX, vertices);
+    arrays.set(Mesh.ArrayType.ARRAY_INDEX, indices);
+  
+    // Add surface to mesh with PrimitiveType.LINES for wireframe
+    arrayMesh.add_surface_from_arrays(Mesh.PrimitiveType.PRIMITIVE_LINES, arrays);
+  
+    // Create a wireframe material
+    const material = new StandardMaterial3D();
+    material.albedo_color = new Color(0, 1, 0, 1); // Green wireframe, adjust as needed
+    material.shading_mode = StandardMaterial3D.ShadingMode.SHADING_MODE_UNSHADED; // Unshaded for visibility
+    arrayMesh.surface_set_material(0, material);
+  
+    // Create MeshInstance3D
+    const meshInstance = new MeshInstance3D();
+    meshInstance.mesh = arrayMesh;
+    meshInstance.set_name("WireframeCollisionMesh");
+  
+    return meshInstance;
+  }
+
+  public static createStaticCollision(instance: Node3D) {
+    const meshInstances = instance.getNodesOfType(MeshInstance3D);
+    const concaveShape = this.createConcaveShapeFromMeshes(meshInstances);
+    if (!concaveShape) return;
+    const collisionShape = new CollisionShape3D();
+    collisionShape.shape = concaveShape;
+
+    instance.get_parent().add_child(collisionShape);
+    collisionShape.global_transform = instance.global_transform;
+    collisionShape.global_position = instance.global_position;
   }
 
   public instancePackedScene(rootNode: Node3D): Node | undefined {
     if (this.packedScene) {
-      const instance = this.packedScene.instantiate();
-      rootNode.add_child(instance);
+      const staticBody = new StaticBody3D();
+      rootNode.add_child(staticBody);
 
-      if (instance instanceof CharacterBody3D) {
-        console.log('was char');
-        this.node = instance;
-        this.gltfNode = instance.get_children().get(0) as Node3D; // Assume first child is GLTF node
-      } else if (instance instanceof StaticBody3D) {
-        // 1. Re‐root node & pull out the visual subnode:
-        this.node = instance as Node3D;
-        this.gltfNode = this.node;
-        // 2. Re‐build your concave collision shapes:
-        const meshInstances = this.gltfNode!.getNodesOfType(MeshInstance3D);
-        for (const meshInstance of meshInstances) {
-          const concaveShape = this.createConcaveShapeFromMesh(meshInstance);
-          if (!concaveShape) continue;
-    
-          const collisionShape = new CollisionShape3D();
-          collisionShape.shape = concaveShape;
-    
-          // *** HERE’S THE KEY ***  
-          // copy *exactly* the meshInstance’s world transform onto the shape:
-          collisionShape.global_transform = meshInstance.global_transform;
-    
-          this.node.add_child(collisionShape);
-          collisionShape.owner = this.node;
-        }
-      }  else {
-        this.node = instance as Node3D;
-        this.gltfNode = this.node;
-      }
-      this.setupAnimations(this.gltfNode);
+      const instance = this.packedScene.instantiate().get_child(0);
+      instance.reparent(staticBody, false);
+      this.setupAnimations(instance);
       return instance;
     } else {
       console.log("PackedScene not available. Call createPackedScene() first.");

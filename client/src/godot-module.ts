@@ -79,6 +79,9 @@ export const {
   Mesh,
   PackedVector3Array,
   ArrayMesh,
+  PackedInt32Array,
+  ConvexPolygonShape3D,
+  AABB
 } = godot;
 
 export default godot;

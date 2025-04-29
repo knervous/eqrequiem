@@ -1,5 +1,6 @@
-import { Node3D, Vector3, deg_to_rad } from "godot";
+import { Node3D, StaticBody3D, Vector3, deg_to_rad } from "godot";
 import ObjectMesh from "@game/Object/object-geometry";
+import { BaseGltfModel } from "@game/GLTF/base";
 export default class ZoneObjects {
   parent: Node3D;
   objects: any;
@@ -23,21 +24,22 @@ export default class ZoneObjects {
           if (packedScene) {
             // Process each entry in parallel.
             await Promise.all(
-              (entries as any[]).map(async (entry) => {
+              (entries as any[]).map(async (entry, idx) => {
                 const instance =
                   (await objectModel.instancePackedScene(objectPool)) as Node3D;
                 if (instance) {
+                  instance.set_name(`${key}-${idx}`);
                   instance.position = new Vector3(-entry.x, entry.y, entry.z);
                   instance.scale = new Vector3(
                     entry.scale,
                     entry.scale,
                     entry.scale,
                   );
-
                   instance.rotate_x(deg_to_rad(entry.rotateX));
                   instance.rotate_y(-deg_to_rad(entry.rotateY));
                   instance.rotate_z(deg_to_rad(entry.rotateZ));
-
+                  BaseGltfModel.createStaticCollision(instance);
+                  
                 }
               }),
             );
