@@ -4,10 +4,13 @@
     "inlineSources": true,
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
     "composite": true,
-    "target": "ES2022",
+    "target": "ESNext",
+    
     "useDefineForClassFields": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": false,
     "lib": [
-      "ES2020",
+      "ESNext",
       "dom",
       "dom.iterable"
     ],

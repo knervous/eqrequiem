@@ -13,7 +13,9 @@
     "tsBuildInfoFile": ".godot/.tsbuildinfo",              /* Specify the path to .tsbuildinfo incremental compilation file. */
     /* Language and Environment */
     "target": "es2016",                                  /* Set the JavaScript language version for emitted JavaScript and include compatible library declarations. */
-    "experimentalDecorators": true,                   /* Enable experimental support for legacy experimental decorators. */
+    "experimentalDecorators": true,
+    // ← don’t emit decorator metadata (not supported by SWC)
+    "emitDecoratorMetadata": false,
     "module": "CommonJS",                                /* Specify what module code is generated. */
     "rootDir": "./",                                  /* Specify the root folder within your source files. */
     "typeRoots": [                                       /* Specify multiple folders that act like './node_modules/@types'. */

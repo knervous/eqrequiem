@@ -2,14 +2,32 @@ import fs from "node:fs";
 import path from "node:path";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
-import https from "https";
 
 const isLocalDev = process.env.LOCAL_DEV === "true";
 
 export default defineConfig({
   base: "./",
   plugins: [
-    react(),
+    react({
+      // pass SWC options directly
+      tsDecorators: true,
+      swcOptions: {
+        jsc: {
+          parser: {
+            syntax: "typescript",
+            tsx: true,
+            // ← turn on decorator parsing
+            decorators: true,
+          },
+          transform: {
+            // ← compile legacy decorators
+            legacyDecorator: true,
+            // ← (we already disabled emitDecoratorMetadata above)
+            decoratorMetadata: false,
+          },
+        },
+      },
+    }),
     {
       configureServer: ({ middlewares }) => {
         middlewares.use(async (req, res, next) => {
@@ -23,7 +41,7 @@ export default defineConfig({
             res.end(hash);
             return;
           }
-          if (req.url.includes('Test.wasm')) {
+          if (req.url.includes("Test.wasm")) {
             res.setHeader("Content-Encoding", "br");
           }
           res.setHeader("Cross-Origin-Embedder-Policy", "require-corp");
