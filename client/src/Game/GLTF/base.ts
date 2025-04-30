@@ -1,8 +1,6 @@
 import {
   GLTFDocument,
   GLTFState,
-  Image,
-  ImageTexture,
   MeshInstance3D,
   Node,
   Node3D,
@@ -11,7 +9,6 @@ import {
   Vector3,
   AnimationPlayer,
   Animation,
-  Resource,
   Texture2D,
   CharacterBody3D,
   CollisionShape3D,
@@ -19,19 +16,16 @@ import {
   Skeleton3D,
   GeometryInstance3D,
   BaseMaterial3D,
-  ConcavePolygonShape3D,
   StaticBody3D,
-  PackedVector3Array,
-  Mesh,
-  Color,
-  ArrayMesh,
-  PackedInt32Array,
 } from "godot";
 import { FileSystem } from "../FileSystem/filesystem";
-import { TextureCache } from "../Util/texture-cache";
+import {
+  createConcaveShapeFromMesh,
+  createConcaveShapeFromMeshes,
+  getMeshAABB,
+} from "./gltf-utilities";
+import { getMaterialsByName, loadNewTexture } from "./image-utilities";
 import "../Util/extensions";
-import { GArray } from "@/godot-module";
-import { getMeshAABB } from "./mesh-utilities";
 
 type AnimatedTextureMeta = {
   animationDelay: number;
@@ -84,14 +78,6 @@ export class BaseGltfModel {
   protected animationPlayer: AnimationPlayer | undefined;
   protected animationIntervals: number[] = [];
 
-
-  private static textureMaps ={
-    dwfhe0001: "dwfhe0011",
-    dwfhe0002: "dwfhe0012",
-    hufhe0001: "hufhe0011",
-    hufhe0002: "hufhe0012",
-  }; 
-
   public LoaderOptions = {
     flipTextureY: false,
     secondaryMeshIndex: 0,
@@ -100,9 +86,13 @@ export class BaseGltfModel {
     doCull: true,
     useStaticPhysics: false,
     useCapsulePhysics: false,
-  } as LoaderOptions;
+  } as Partial<LoaderOptions>;
 
-  constructor(folder: string, model: string, options: LoaderOptions | undefined) {
+  constructor(
+    folder: string,
+    model: string,
+    options: Partial<LoaderOptions> | undefined,
+  ) {
     this.folder = folder;
     this.model = model;
     if (options) {
@@ -110,7 +100,7 @@ export class BaseGltfModel {
     }
     if (this.LoaderOptions.useStaticPhysics) {
       this.node = new StaticBody3D();
-    }else if (this.LoaderOptions.useCapsulePhysics) {
+    } else if (this.LoaderOptions.useCapsulePhysics) {
       this.node = new CharacterBody3D(); // Root is now a CharacterBody3D
     }
   }
@@ -176,50 +166,6 @@ export class BaseGltfModel {
     }
   }
 
-  private createConcaveShapeFromMesh(meshInstance: MeshInstance3D): ConcavePolygonShape3D | null {
-    const mesh = meshInstance.mesh;
-    if (!mesh) return null;
-  
-    const concaveShape = new ConcavePolygonShape3D();
-    const src = mesh.get_faces();
-    const flipped = new PackedVector3Array();
-  
-    for (let i = 0; i < src.size(); i += 3) {
-      const a = src.get(i);     a.x *= -1;
-      const b = src.get(i+1);   b.x *= -1;
-      const c = src.get(i+2);   c.x *= -1;
-  
-      // swap b & c to reverse the winding order
-      flipped.append(a);
-      flipped.append(c);
-      flipped.append(b);
-    }
-  
-    concaveShape.data = flipped;
-    return concaveShape;
-  }
-
-  private static createConcaveShapeFromMeshes(meshInstances: MeshInstance3D[]): ConcavePolygonShape3D | null {
-    const concaveShape = new ConcavePolygonShape3D();
-    const flipped = new PackedVector3Array();
-    for (const mesh of meshInstances.map((m) => m.mesh).filter(Boolean)) {
-      const src = mesh.get_faces();
-      for (let i = 0; i < src.size(); i += 3) {
-        const a = src.get(i);     a.x *= -1;
-        const b = src.get(i+1);   b.x *= -1;
-        const c = src.get(i+2);   c.x *= -1;
-    
-        // swap b & c to reverse the winding order
-        flipped.append(a);
-        flipped.append(c);
-        flipped.append(b);
-      }
-    }
-    concaveShape.data = flipped;
-    return concaveShape;
-  }
-  
-  
   public async instantiateSecondaryMesh(): Promise<void> {
     if (!this.gltfNode) {
       console.log("No gltfNode available for secondary mesh instantiation");
@@ -294,10 +240,10 @@ export class BaseGltfModel {
     secondaryRootNode.queue_free();
   }
 
-  
   public async instantiate(): Promise<Node3D | undefined> {
     const buffer = await FileSystem.getFileBytes(
-      `eqrequiem/${this.folder}`, `${this.model.toLowerCase()}.glb`,
+      `eqrequiem/${this.folder}`,
+      `${this.model.toLowerCase()}.glb`,
     );
     if (!buffer) {
       console.log("Buffer not found!");
@@ -323,7 +269,7 @@ export class BaseGltfModel {
           // Find all MeshInstance3D nodes to generate collision shapes
           const meshInstances = this.gltfNode.getNodesOfType(MeshInstance3D);
           for (const meshInstance of meshInstances) {
-            const concaveShape = this.createConcaveShapeFromMesh(meshInstance);
+            const concaveShape = createConcaveShapeFromMesh(meshInstance);
             if (concaveShape) {
               const collisionShape = new CollisionShape3D();
               collisionShape.shape = concaveShape;
@@ -345,10 +291,12 @@ export class BaseGltfModel {
             const aabbCenter = aabb.position.add(aabb.size.multiplyScalar(0.5));
             collisionShape.position = new Vector3(0, aabbCenter.y - 1, 0);
           } else {
-          // Fallback to default values if AABB calculation fails
+            // Fallback to default values if AABB calculation fails
             capsule.height = 3.0;
             capsule.radius = 0.5;
-            console.log("Failed to compute AABB, using default capsule dimensions");
+            console.log(
+              "Failed to compute AABB, using default capsule dimensions",
+            );
           }
           collisionShape.shape = capsule;
           this.node.add_child(collisionShape);
@@ -370,7 +318,7 @@ export class BaseGltfModel {
 
   private async parseMaterials(gltfState: GLTFState): Promise<void> {
     const materials = gltfState.materials;
-    const animatedMaterials = [];
+    const animatedMaterials: StandardMaterial3D[] = [];
 
     for (let i = 0; i < materials.size(); i++) {
       const material = materials.get(i) as StandardMaterial3D;
@@ -464,9 +412,10 @@ export class BaseGltfModel {
       this.animationIntervals.push(
         setInterval(async () => {
           for (const animatedMaterial of entry.animatedMaterials) {
-            const newTexture = await this.loadNewTexture(
+            const newTexture = await loadNewTexture(
               animatedMaterial.file,
               animatedMaterial.frames[animatedMaterial.currentFrame],
+              this.LoaderOptions.flipTextureY,
             );
             if (newTexture instanceof Texture2D) {
               animatedMaterial.material.albedo_texture = newTexture;
@@ -511,33 +460,7 @@ export class BaseGltfModel {
   }
 
   getMaterialsByName(regex: RegExp) {
-    return this.getMaterialsByNameImpl(this.node as MeshInstance3D, regex);
-  }
-
-  private getMaterialsByNameImpl(node: MeshInstance3D, regex: RegExp): StandardMaterial3D[] {
-    const mats: StandardMaterial3D[] = [];
-    if (node === undefined) {  
-      return mats;
-    }
-    const mesh = node.mesh;
-    if (mesh) {
-      const surfaceCount = mesh.get_surface_count();
-      for (let i = 0; i < surfaceCount; i++) {
-        const material =
-            node.get_surface_override_material(i) ||
-            mesh.surface_get_material(i);
-        if (regex.test(material.resource_name)) {
-          mats.push(material as StandardMaterial3D);
-        }
-      }
-    }
-    for (const child of node.get_children()) {
-      if (child instanceof Node3D) {
-        mats.push(...this.getMaterialsByNameImpl(child as MeshInstance3D, regex));
-      }
-    }
-
-    return mats;
+    return getMaterialsByName(this.node as MeshInstance3D, regex);
   }
 
   private async traverseAndSwapTextures(node: Node3D): Promise<void> {
@@ -568,9 +491,10 @@ export class BaseGltfModel {
   ): Promise<void> {
     try {
       const meta = this.getExtras(material) as AnimatedTextureMeta;
-      const newTexture = await this.loadNewTexture(
+      const newTexture = await loadNewTexture(
         meta.file,
         file || material.resource_name,
+        this.LoaderOptions.flipTextureY,
       );
       if (
         material instanceof StandardMaterial3D &&
@@ -592,56 +516,6 @@ export class BaseGltfModel {
     }
   }
 
-  private async loadNewTexture(
-    file: string,
-    name: string,
-  ): Promise<Resource | undefined | null> {
-    if (name in BaseGltfModel.textureMaps) {
-      name = BaseGltfModel.textureMaps[name];
-    }
-    const cached = TextureCache.get(file + name);
-    if (cached) {
-      return cached;
-    }
-    let buffer = await FileSystem.getFileBytes(
-      "eqrequiem/textures/" + file,
-      name + ".dds",
-    );
-    if (!buffer) {
-      console.log("Missing Buffer", file, name);
-      return null;
-    }
-    buffer = buffer instanceof Uint8Array ? buffer.buffer : buffer;
-    const image = new Image();
-    let err;
-    let needFlip = false;
-    if (new DataView(buffer).getUint16(0, true) === 0x4d42) {
-      err = image.load_bmp_from_buffer(buffer);
-      needFlip = true;
-    } else {
-      err = image.load_dds_from_buffer(buffer);
-      image.decompress();
-      image.generate_mipmaps(false);
-    }
-    if (err !== 0) {
-      console.error("Error loading image from buffer:", err);
-      return null;
-    }
-    const img = ImageTexture.create_from_image(
-      image,
-    ) as unknown as Texture2D & { flip_y: boolean };
-    if (!img) {
-      console.error("Error creating ImageTexture from image");
-      return null;
-    }
-    TextureCache.set(file + name, img);
-    img.flip_y = needFlip;
-    if (this.LoaderOptions.flipTextureY) {
-      img.flip_y = !img.flip_y;
-    }
-    return img;
-  }
-
   public async createPackedScene(): Promise<PackedScene | undefined> {
     await this.instantiate();
     const ps = new PackedScene();
@@ -650,24 +524,12 @@ export class BaseGltfModel {
     return ps;
   }
 
-  public static createStaticCollision(instance: Node3D) {
-    const meshInstances = instance.getNodesOfType(MeshInstance3D);
-    const concaveShape = this.createConcaveShapeFromMeshes(meshInstances);
-    if (!concaveShape) return;
-    const collisionShape = new CollisionShape3D();
-    collisionShape.shape = concaveShape;
-
-    instance.get_parent().add_child(collisionShape);
-    collisionShape.global_transform = instance.global_transform;
-    collisionShape.global_position = instance.global_position;
-  }
-
   public instancePackedScene(rootNode: Node3D): Node | undefined {
     if (this.packedScene) {
       const staticBody = new StaticBody3D();
       rootNode.add_child(staticBody);
 
-      const instance = this.packedScene.instantiate().get_child(0);
+      const instance = this.packedScene.instantiate().get_child(0) as Node3D;
       instance.reparent(staticBody, false);
       this.setupAnimations(instance);
       return instance;

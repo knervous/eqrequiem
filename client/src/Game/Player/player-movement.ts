@@ -1,60 +1,103 @@
 import {
+  InputMap,
+  InputEventKey,
   Input,
   Vector3,
+  Key,
   CharacterBody3D,
   DisplayServer,
 } from "godot";
-import Player from "./player";
-  
-export default class PlayerMovement {
+import type Player from "./player";
+
+type SimpleVector3 = {
+  x: number;
+  y: number;
+  z: number;
+};
+export class PlayerMovement {
   private player: Player;
-  private move_speed: number = 20;
-  private turn_speed: number = 1.5;
-  private sprint_multiplier: number = 2.0;
+  public moveSpeed: number = 20;
+  public turnSpeed: number = 1.5;
+  public gravity: boolean = true;
+  public gravityCoefficient: number = 14.76;
+  private sprintMultiplier: number = 2.0;
+
   private velocity = new Vector3(0, 0, 0);
   private movement = new Vector3(0, 0, 0);
   private vectorUp = new Vector3(0, 1, 0);
   private forwardXZ = new Vector3(0, 0, 0);
   private rightXZ = new Vector3(0, 0, 0);
-  private isOnFloor: boolean = true; // Track if player is on the floor for jumping
-  
+  private lastPlayerPosition: SimpleVector3 = { x: 0, y: 0, z: 0 };
+
   constructor(player: Player) {
     this.player = player;
+    this.bindKeys();
   }
-  
-  private getNode(): CharacterBody3D | null {
-    return this.player.getNode() as CharacterBody3D;
+
+  bindKeys() {
+    const actions = [
+      { name: "move_forward", key: Key.KEY_W },
+      { name: "move_backward", key: Key.KEY_S },
+      { name: "turn_left", key: Key.KEY_A },
+      { name: "turn_right", key: Key.KEY_D },
+      { name: "move_up", key: Key.KEY_SPACE },
+      { name: "move_down", key: Key.KEY_CTRL },
+      { name: "sprint", key: Key.KEY_SHIFT },
+    ];
+
+    actions.forEach(({ name, key }) => {
+      if (!InputMap.has_action(name)) {
+        InputMap.add_action(name);
+        const keyEvent = new InputEventKey();
+        keyEvent.keycode = key;
+        InputMap.action_add_event(name, keyEvent);
+      }
+    });
   }
-  
-  public tick(delta: number) {
-    const node = this.getNode();
-    if (!node || this.player.getNode()?.get_viewport()?.gui_get_focus_owner()) return;
-  
-    // Check if player is on the floor for jumping logic
-    this.isOnFloor = node.is_on_floor();
-  
+
+  public movementTick(delta: number) {
+    const node = this.player.getNode() as CharacterBody3D;
+    if (!node) return;
+    if (this.player.getNode()?.get_viewport()?.gui_get_focus_owner()) {
+      return;
+    }
+
+    const currentPos = this.player.getPlayerPosition();
+    if (!currentPos) {
+      return;
+    }
+    this.player.isPlayerMoving =
+      currentPos.x !== this.lastPlayerPosition.x ||
+      currentPos.y !== this.lastPlayerPosition.y ||
+      currentPos.z !== this.lastPlayerPosition.z;
+    this.lastPlayerPosition = {
+      x: currentPos.x,
+      y: currentPos.y,
+      z: currentPos.z,
+    };
+
     const mouseCaptured =
-        DisplayServer.mouse_get_mode() === Input.MouseMode.MOUSE_MODE_CAPTURED;
+      DisplayServer.mouse_get_mode() === Input.MouseMode.MOUSE_MODE_CAPTURED;
     let didTurn = false;
+
+    this.movement.set(0, 0, 0);
     let playWalk = false;
     let didJump = false;
     let didCrouch = false;
-  
-    this.movement.set(0, 0, 0);
-  
+    const onFloor = node.is_on_floor();
     if (!mouseCaptured) {
       const rotation = node.rotation;
       if (Input.is_action_pressed("turn_left")) {
         didTurn = true;
-        node.rotate_y(this.turn_speed * delta);
-        // Sync camera yaw with player rotation
-        this.player.getNode()?.get_viewport()?.get_camera_3d()?.get_parent()?.syncCameraYaw?.(rotation.y);
+        node.rotate_y(this.turnSpeed * delta);
+        // Sync camera yaw with player rotation during turn
+        this.player.playerCamera.cameraYaw = rotation.y + Math.PI / 2;
       }
       if (Input.is_action_pressed("turn_right")) {
         didTurn = true;
-        node.rotate_y(-this.turn_speed * delta);
-        // Sync camera yaw with player rotation
-        this.player.getNode()?.get_viewport()?.get_camera_3d()?.get_parent()?.syncCameraYaw?.(rotation.y);
+        node.rotate_y(-this.turnSpeed * delta);
+        // Sync camera yaw with player rotation during turn
+        this.player.playerCamera.cameraYaw = rotation.y + Math.PI / 2;
       }
     } else {
       if (Input.is_action_pressed("turn_left")) {
@@ -66,7 +109,7 @@ export default class PlayerMovement {
         this.movement.x = -1;
       }
     }
-  
+
     if (Input.is_action_pressed("move_forward")) {
       this.movement.z = -1;
       playWalk = true;
@@ -75,21 +118,17 @@ export default class PlayerMovement {
       this.movement.z = 1;
       playWalk = true;
     }
-  
-    // Handle jump (move_up) and crouch (move_down)
-    if (Input.is_action_just_pressed("move_up") && this.isOnFloor) {
-      this.movement.y = 1; // Trigger jump
+
+    if (Input.is_action_pressed("move_up")) {
+      this.movement.y = 1;
       didJump = true;
-      this.velocity.y = this.move_speed; // Apply immediate upward velocity for jump
     }
     if (Input.is_action_pressed("move_down")) {
-      this.movement.y = -1; // Trigger crouch
+      this.movement.y = -1;
       didCrouch = true;
-    } else if (!didJump) {
-      this.movement.y = 0; // Reset Y movement if not jumping or crouching
     }
-  
-    // Animation logic
+
+    // Rest of the animation logic remains unchanged
     if (playWalk) {
       if (didJump) {
         this.player.playJump();
@@ -107,39 +146,34 @@ export default class PlayerMovement {
     } else {
       this.player.playIdle();
     }
-  
-    // Early exit if no movement
+
     if (
       this.movement.x === 0 &&
-        this.movement.z === 0 &&
-        this.movement.y === 0 &&
-        !didTurn &&
-        this.velocity.y === 0
+      this.movement.y === 0 &&
+      this.movement.z === 0 &&
+      !didTurn
     ) {
       this.velocity.set(0, 0, 0);
       node.velocity = this.velocity;
       node.move_and_slide();
       return;
     }
-  
-    const camera = this.player.getNode()?.get_viewport()?.get_camera_3d();
-    if (!camera) return;
-  
-    // Calculate movement vectors
-    const { x: basisX, z: basisZ } = camera.transform.basis.z;
+
+    const { x: basisX, z: basisZ } = this.player.getNode()!.transform.basis.x;
+
     this.forwardXZ.set(basisX, 0, basisZ);
     this.forwardXZ.normalized();
-  
+
     this.rightXZ.x =
-        this.forwardXZ.y * this.vectorUp.z - this.forwardXZ.z * this.vectorUp.y;
+      this.forwardXZ.y * this.vectorUp.z - this.forwardXZ.z * this.vectorUp.y;
     this.rightXZ.y =
-        this.forwardXZ.z * this.vectorUp.x - this.forwardXZ.x * this.vectorUp.z;
+      this.forwardXZ.z * this.vectorUp.x - this.forwardXZ.x * this.vectorUp.z;
     this.rightXZ.z =
-        this.forwardXZ.x * this.vectorUp.y - this.forwardXZ.y * this.vectorUp.x;
+      this.forwardXZ.x * this.vectorUp.y - this.forwardXZ.y * this.vectorUp.x;
     const rightLength = Math.sqrt(
       this.rightXZ.x * this.rightXZ.x +
-          this.rightXZ.y * this.rightXZ.y +
-          this.rightXZ.z * this.rightXZ.z,
+        this.rightXZ.y * this.rightXZ.y +
+        this.rightXZ.z * this.rightXZ.z,
     );
     if (rightLength > 0) {
       this.rightXZ.x /= rightLength;
@@ -148,41 +182,46 @@ export default class PlayerMovement {
     } else {
       this.rightXZ.set(0, 0, 0);
     }
-  
+
     const speedMod = Input.is_action_pressed("sprint")
-      ? this.sprint_multiplier
+      ? this.sprintMultiplier
       : 1.0;
-    const movementZScaled = this.movement.z * this.move_speed * speedMod;
-    const movementXScaled = this.movement.x * this.move_speed * speedMod;
-    const movementYScaled = this.movement.y * this.move_speed * speedMod;
-  
-    // Apply gravity if not on floor
-    if (!this.isOnFloor) {
-      //   this.velocity.y -= 9.8 * delta * 2; // Apply gravity (tuned for Godot)
-    } else if (!didJump && !didCrouch) {
-      this.velocity.y = 0; // Reset vertical velocity when on floor
-    }
-  
-    // Calculate velocity
+    const movementZScaled = this.movement.z * this.moveSpeed * speedMod;
+    const movementXScaled = this.movement.x * this.moveSpeed * speedMod;
+    const movementYScaled = this.movement.y * this.moveSpeed * speedMod;
+
     const velocityForward = this.forwardXZ.multiplyScalar(movementZScaled);
     const velocityStrafe = this.rightXZ.multiplyScalar(movementXScaled);
     const velocityY = this.vectorUp.multiplyScalar(movementYScaled);
-  
+
     const velocityXZ = velocityForward.add(velocityStrafe);
     if (velocityXZ.length() > 0) {
-      velocityXZ.normalized().multiplyScalar(this.move_speed * speedMod);
+      velocityXZ.normalized().multiplyScalar(this.moveSpeed * speedMod);
     }
-  
-    // Combine horizontal and vertical velocity
-    this.velocity.x = velocityXZ.x;
-    this.velocity.z = velocityXZ.z;
-    if (didJump || didCrouch || !this.isOnFloor) {
-      this.velocity.y = this.velocity.y; // Preserve existing Y velocity for jump/gravity
+
+    if (this.gravity) {
+      const horizontal = velocityXZ;
+      let newVy = this.velocity.y;
+      if (onFloor) {
+        if (didJump) {
+          newVy = 9.0;
+        } else {
+          newVy = 0;
+        }
+      } else {
+        newVy -= this.gravityCoefficient * delta;
+      }
+      this.velocity.set(horizontal.x, newVy, horizontal.z);
     } else {
-      this.velocity.y = velocityY.y; // Apply crouch velocity if applicable
+      const movementYScaled = this.movement.y * this.moveSpeed * speedMod;
+      this.velocity.y = movementYScaled;
+      this.velocity = velocityXZ.add(velocityY);
     }
-  
+
     node.velocity = this.velocity;
     node.move_and_slide();
+
+    this.vectorUp.set(0, 1, 0);
+    this.player.playerCamera.updateCameraPosition(node);
   }
 }

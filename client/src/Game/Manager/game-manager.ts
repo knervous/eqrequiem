@@ -162,7 +162,7 @@ export default class GameManager extends Node3D {
         break;
       }
       case event instanceof InputEventMouseMotion: {
-        this.player.input_mouse_motion(event.relative.x, event.relative.y);
+        this.player.inputMouseMotion(event.relative.x, event.relative.y);
         break;
       }
       case event instanceof InputEventPanGesture: {

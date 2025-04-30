@@ -1,4 +1,62 @@
-import { AABB, MeshInstance3D, Node3D, Vector3 } from "godot";
+import { CollisionShape3D, PackedVector3Array } from "@/godot-module";
+import { AABB, ConcavePolygonShape3D, MeshInstance3D, Node3D, Vector3 } from "godot";
+
+
+export const createConcaveShapeFromMesh = (meshInstance: MeshInstance3D): ConcavePolygonShape3D | null => {
+  const mesh = meshInstance.mesh;
+  if (!mesh) return null;
+
+  const concaveShape = new ConcavePolygonShape3D();
+  const src = mesh.get_faces();
+  const flipped = new PackedVector3Array();
+
+  for (let i = 0; i < src.size(); i += 3) {
+    const a = src.get(i);     a.x *= -1;
+    const b = src.get(i+1);   b.x *= -1;
+    const c = src.get(i+2);   c.x *= -1;
+
+    // swap b & c to reverse the winding order
+    flipped.append(a);
+    flipped.append(c);
+    flipped.append(b);
+  }
+
+  concaveShape.data = flipped;
+  return concaveShape;
+};
+
+export const createConcaveShapeFromMeshes = (meshInstances: MeshInstance3D[]): ConcavePolygonShape3D | null => {
+  const concaveShape = new ConcavePolygonShape3D();
+  const flipped = new PackedVector3Array();
+  for (const mesh of meshInstances.map((m) => m.mesh).filter(Boolean)) {
+    const src = mesh.get_faces();
+    for (let i = 0; i < src.size(); i += 3) {
+      const a = src.get(i);     a.x *= -1;
+      const b = src.get(i+1);   b.x *= -1;
+      const c = src.get(i+2);   c.x *= -1;
+  
+      // swap b & c to reverse the winding order
+      flipped.append(a);
+      flipped.append(c);
+      flipped.append(b);
+    }
+  }
+  concaveShape.data = flipped;
+  return concaveShape;
+};
+
+export const  createStaticCollision = (instance: Node3D) => {
+  const meshInstances = instance.getNodesOfType(MeshInstance3D);
+  const concaveShape = createConcaveShapeFromMeshes(meshInstances);
+  if (!concaveShape) return;
+  const collisionShape = new CollisionShape3D();
+  collisionShape.shape = concaveShape;
+
+  instance.get_parent().add_child(collisionShape);
+  collisionShape.global_transform = instance.global_transform;
+  collisionShape.global_position = instance.global_position;
+};
+
 
 export const getMeshAABB = (node: Node3D): AABB | null => {
   let combinedAABB: AABB | null = null;

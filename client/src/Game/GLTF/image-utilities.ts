@@ -1,19 +1,58 @@
-import { BaseMaterial3D, Node3D, MeshInstance3D, Image, ImageTexture, Texture2D, Resource  } from "godot";
-import { TextureCache } from "./texture-cache";
+import { BaseMaterial3D, Node3D, MeshInstance3D, Image, ImageTexture, Texture2D, Resource, StandardMaterial3D  } from "godot";
 import { FileSystem } from "../FileSystem/filesystem";
+import { TextureCache } from "@game/Util/texture-cache";
+
+const textureMaps ={
+  dwfhe0001: "dwfhe0011",
+  dwfhe0002: "dwfhe0012",
+  hufhe0001: "hufhe0011",
+  hufhe0002: "hufhe0012",
+}; 
+
+export const getMaterialsByName = (node: MeshInstance3D, regex: RegExp): StandardMaterial3D[] => {
+  const mats: StandardMaterial3D[] = [];
+  if (node === undefined) {  
+    return mats;
+  }
+  const mesh = node.mesh;
+  if (mesh) {
+    const surfaceCount = mesh.get_surface_count();
+    for (let i = 0; i < surfaceCount; i++) {
+      const material =
+          node.get_surface_override_material(i) ||
+          mesh.surface_get_material(i);
+      if (regex.test(material.resource_name)) {
+        mats.push(material as StandardMaterial3D);
+      }
+    }
+  }
+  for (const child of node.get_children()) {
+    if (child instanceof Node3D) {
+      mats.push(...getMaterialsByName(child as MeshInstance3D, regex));
+    }
+  }
+
+  return mats;
+};
 
 export const loadNewTexture = async (
   file: string,
   name: string,
   flipY: boolean = false,
 ): Promise<Texture2D | undefined | null> => {
+  if (name in textureMaps) {
+    name = textureMaps[name];
+  }
   const cached = TextureCache.get(file + name);
   if (cached) {
     return cached;
   }
-  let buffer = await FileSystem.getFileBytes(file, name);
+  let buffer = await FileSystem.getFileBytes(
+    "eqrequiem/textures/" + file,
+    name + ".dds",
+  );
   if (!buffer) {
-    console.log('Missing Buffer', file, name);
+    console.log("Missing Buffer", file, name);
     return null;
   }
   buffer = buffer instanceof Uint8Array ? buffer.buffer : buffer;
@@ -25,6 +64,8 @@ export const loadNewTexture = async (
     needFlip = true;
   } else {
     err = image.load_dds_from_buffer(buffer);
+    image.decompress();
+    image.generate_mipmaps(false);
   }
   if (err !== 0) {
     console.error("Error loading image from buffer:", err);

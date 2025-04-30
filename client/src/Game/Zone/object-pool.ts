@@ -1,6 +1,7 @@
 import { Node3D, StaticBody3D, Vector3, deg_to_rad } from "godot";
 import ObjectMesh from "@game/Object/object-geometry";
 import { BaseGltfModel } from "@game/GLTF/base";
+import { createStaticCollision } from "@game/GLTF/gltf-utilities";
 export default class ZoneObjects {
   parent: Node3D;
   objects: any;
@@ -38,7 +39,7 @@ export default class ZoneObjects {
                   instance.rotate_x(deg_to_rad(entry.rotateX));
                   instance.rotate_y(-deg_to_rad(entry.rotateY));
                   instance.rotate_z(deg_to_rad(entry.rotateZ));
-                  BaseGltfModel.createStaticCollision(instance);
+                  createStaticCollision(instance);
                   
                 }
               }),

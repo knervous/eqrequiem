@@ -19,7 +19,7 @@ export default class Actor extends BaseGltfModel {
   public animations: string[] = [];
   public currentAnimation: string = ""; 
   public currentPlayToEnd: boolean = false;
-  static actorOptions: LoaderOptions = {
+  static actorOptions: Partial<LoaderOptions> = {
     flipTextureY: true,
     shadow: false, 
   };
@@ -27,7 +27,7 @@ export default class Actor extends BaseGltfModel {
   // Nameplate node (a Label3D) and its backing string.
   private nameplate: Label3D | null = null;
   
-  constructor(folder: string, model: string, options: LoaderOptions = Actor.actorOptions) {
+  constructor(folder: string, model: string, options: Partial<LoaderOptions> = Actor.actorOptions) {
     super(folder, model, options);
   }
 
@@ -44,7 +44,7 @@ export default class Actor extends BaseGltfModel {
       // Create the Label3D node for the nameplate if it doesn't exist.
       this.nameplate = new Label3D();
       this.nameplate.billboard = 1;
-      this.getNode().add_child(this.nameplate);
+      this.getNode()?.add_child(this.nameplate);
       // Position the nameplate above the actor (adjust offset as needed).
       this.nameplate.position = new Vector3(0, 4, 0);
       this.nameplate.font_size = 50.5; // Set the font size for the nameplate.
@@ -88,28 +88,28 @@ export default class Actor extends BaseGltfModel {
     }
   }
 
-  protected playStationaryJump() {
+  public playStationaryJump() {
     this.playAnimation(AnimationDefinitions.StationaryJump, Animation.LoopMode.LOOP_NONE, true);
   }
-  protected playJump() {
+  public playJump() {
     this.playAnimation(AnimationDefinitions.RunningJump, Animation.LoopMode.LOOP_NONE, true);
   }
-  protected playWalk() {
+  public playWalk() {
     this.playAnimation(AnimationDefinitions.Walking);
   }
-  protected playRun() {
+  public playRun() {
     this.playAnimation(AnimationDefinitions.Running);
   }
-  protected playDuckWalk() {
+  public playDuckWalk() {
     this.playAnimation(AnimationDefinitions.DuckWalking, Animation.LoopMode.LOOP_NONE);
   }
-  protected playShuffle() {
+  public playShuffle() {
     this.playAnimation(
       AnimationDefinitions.ShuffleRotate,
       Animation.LoopMode.LOOP_NONE,
     );
   }
-  protected playIdle() {
+  public playIdle() {
     this.playAnimation(AnimationDefinitions.Idle2);
   }
   public Load(name: string) {
