@@ -53,14 +53,14 @@ export class PlayerCamera {
 
   public mouseInputButton(buttonIndex: number) {
     if (buttonIndex === MouseButton.MOUSE_BUTTON_LEFT) {
-      this.isCameraRotating = Input.is_mouse_button_pressed(
+      this.isCameraRotating = !this.isFirstPerson && Input.is_mouse_button_pressed(
         MouseButton.MOUSE_BUTTON_LEFT,
       );
     }
 
     // In first-person, always capture mouse for free look
     if (this.isFirstPerson) {
-      DisplayServer.mouse_set_mode(Input.MouseMode.MOUSE_MODE_CAPTURED);
+      // DisplayServer.mouse_set_mode(Input.MouseMode.MOUSE_MODE_CAPTURED);
     } else {
       if (this.isCameraRotating) {
         DisplayServer.mouse_set_mode(Input.MouseMode.MOUSE_MODE_CAPTURED);

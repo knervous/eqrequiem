@@ -5,17 +5,15 @@ import Player from "@game/Player/player";
 import GameManager from "@game/Manager/game-manager";
 
 const chatCommandHandler = async (message: string) => {
-  const addChatLine = (line: string) => UIEvents.emit("chat", { type: 0, line, color: '#ddd' });
+  const addChatLine = (line: string) =>
+    UIEvents.emit("chat", { type: 0, line, color: "#ddd" });
   if (message.startsWith("/")) {
-    const [command, ...args] = message
-      .substring(1)
-      .split(" ") 
-      .filter(Boolean);
+    const [command, ...args] = message.substring(1).split(" ").filter(Boolean);
     console.log("Got command", command);
 
     switch (command) {
-      case 'speed':
-        if (+args[0] > 0 && Player.instance) { 
+      case "speed":
+        if (+args[0] > 0 && Player.instance) {
           Player.instance.move_speed = +args[0];
           addChatLine(`Speed set to ${args[0]}`);
         } else {
@@ -27,9 +25,15 @@ const chatCommandHandler = async (message: string) => {
         addChatLine("/zone {shortname} - Example /zone qeynos2");
         addChatLine("/spawn {model} - Example /spawn hum");
         addChatLine("/controls - Displays controls");
+        addChatLine("----- Keyboard Hotkeys -----");
+        addChatLine("Space: Jump");
+        addChatLine("Shift: Sprint");
+        addChatLine("Ctrl: Crouch");
+        addChatLine("WASD: Movement");
+        addChatLine("Mouse: Look around");
+        addChatLine("U: Toggle UI");
         break;
-      case "zone":
-      {
+      case "zone": {
         const zone = args[0];
         if (zone) {
           addChatLine(`LOADING, PLEASE WAIT...`);
@@ -41,16 +45,14 @@ const chatCommandHandler = async (message: string) => {
         }
         break;
       }
-        
-      case "camp":
-      {
+
+      case "camp": {
         addChatLine("Camping...");
         GameManager.instance.dispose();
-        setMode
+        setMode;
         break;
       }
-      case "spawn":
-      {
+      case "spawn": {
         const spawn = args[0];
         if (spawn) {
           addChatLine(`Spawning ${spawn}`);
@@ -58,7 +60,7 @@ const chatCommandHandler = async (message: string) => {
         } else {
           addChatLine("No model entered");
         }
-        
+
         break;
       }
       case "controls":
@@ -86,10 +88,13 @@ export const useChatInput = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setInputValue(e.target?.value ?? '');
-    setHistoryIndex(-1); // Reset history when typing
-  }, []);
+  const handleInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setInputValue(e.target?.value ?? "");
+      setHistoryIndex(-1); // Reset history when typing
+    },
+    [],
+  );
 
   const handleKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -98,7 +103,7 @@ export const useChatInput = () => {
         if (inputValue.trim()) {
           setHistoryStack((prev) => [inputValue, ...prev]);
           setHistoryIndex(-1);
-        
+
           chatCommandHandler(inputValue);
           setInputValue("");
           setTimeout(() => inputRef.current?.blur(), 10);
