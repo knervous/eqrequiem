@@ -29,8 +29,10 @@ export class Trie {
   searchExact(command: string): CommandEntry | null {
     let node = this.root;
     for (const ch of command) {
+      if (!node.children.has(ch)) {
+        return null;
+      }
       node = node.children.get(ch)!;
-      if (!node) return null;
     }
     return node.entry;
   }

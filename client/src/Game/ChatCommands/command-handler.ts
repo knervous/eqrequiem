@@ -31,7 +31,6 @@ export class CommandHandler {
     const ctor = (this as any).constructor;
     this.commandRegistry = ctor.commandRegistry ?? new Map();
 
-    // Bulk‐insert into the trie
     for (const [cmd, methodName] of this.commandRegistry) {
       this.trie.insert(cmd, methodName, this);
     }
@@ -41,21 +40,14 @@ export class CommandHandler {
     const [raw, ...args] = input.trim().split(/\s+/);
     const cmd = raw.toLowerCase();
 
-    // 1) exact
     let entry = this.trie.searchExact(cmd);
 
-    // 2) prefix
     if (!entry) {
       const matches = this.trie.searchPrefix(cmd);
       if (matches.length === 1) {
         entry = matches[0].entry;
       } else if (matches.length > 1) {
-        console.warn(
-          `Ambiguous command "${cmd}". I found: ${matches
-            .map((m) => m.command)
-            .join(', ')}`,
-        );
-        return;
+        entry = matches[0].entry;
       }
     }
 
