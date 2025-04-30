@@ -38,16 +38,12 @@ export const DevPlayer: React.FC = () => {
     const enabled = event.target.checked;
     setCollisionEnabled(enabled);
     Player.instance?.setUseCollision(enabled);
-    // Add your Godot collision toggle logic here
-    // For example: playerData.setCollisionEnabled(enabled);
   };
   
   const handleGravityChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const enabled = event.target.checked;
     Player.instance!.playerMovement.gravity = enabled;
     setGravityEnabled(enabled);
-    // Add your Godot gravity toggle logic here
-    // For example: playerData.setGravityEnabled(enabled);
   };
     
   return (

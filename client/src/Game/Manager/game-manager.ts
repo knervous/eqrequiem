@@ -102,6 +102,9 @@ export default class GameManager extends Node3D {
   public async loadZone(zoneName: string): Promise<void> {
     this.dispose();
     this.zoneManager?.loadZone(zoneName);
+    this.worldTickInterval = setInterval(() => { 
+      this.zoneManager?.SkyManager.worldTick();
+    }, 100);
   }
 
   public async spawnModel(model: string) {

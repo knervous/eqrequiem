@@ -96,7 +96,6 @@ export default class Player extends Actor {
     setMeshLayers(node);
     node.scale = new Vector3(1.5, 1.5, 1.5);
     node.position = new Vector3(0, 5, 0);
-    this.playerCamera.createCameraLight(node);
     this.playerCamera.updateCameraPosition(node);
   }
 }

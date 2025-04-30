@@ -1,4 +1,4 @@
-import { BaseMaterial3D, Node3D, MeshInstance3D, Image, ImageTexture, Texture2D, Resource, StandardMaterial3D  } from "godot";
+import { BaseMaterial3D, Node3D, MeshInstance3D, Image, ImageTexture, Texture2D, StandardMaterial3D  } from "godot";
 import { FileSystem } from "../FileSystem/filesystem";
 import { TextureCache } from "@game/Util/texture-cache";
 
