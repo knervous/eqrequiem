@@ -1,8 +1,6 @@
 module knervous/eqgo
 
-go 1.23.0
-
-toolchain go1.23.4
+go 1.24.2
 
 require (
 	github.com/dgraph-io/ristretto/v2 v2.2.0
@@ -11,8 +9,10 @@ require (
 	github.com/go-sql-driver/mysql v1.9.2
 	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/google/uuid v1.6.0
+	github.com/jinzhu/copier v0.4.0
 	github.com/quic-go/quic-go v0.43.0
 	github.com/quic-go/webtransport-go v0.8.0
+	github.com/sevlyar/go-daemon v0.1.6
 	google.golang.org/protobuf v1.36.6
 )
 
@@ -25,13 +25,11 @@ require (
 	github.com/google/pprof v0.0.0-20230821062121-407c9e7a662f // indirect
 	github.com/jackc/pgio v1.0.0 // indirect
 	github.com/jackc/pgtype v1.14.4 // indirect
-	github.com/jinzhu/copier v0.4.0 // indirect
 	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/onsi/ginkgo/v2 v2.12.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/quic-go/qpack v0.4.0 // indirect
-	github.com/sevlyar/go-daemon v0.1.6 // indirect
 	github.com/stretchr/testify v1.10.0 // indirect
 	go.uber.org/mock v0.4.0 // indirect
 	golang.org/x/crypto v0.31.0 // indirect

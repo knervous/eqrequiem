@@ -1,13 +1,10 @@
-import { UIEvents } from '@ui/events/ui-events';
-import { Trie } from './trie';
-import Player from '@game/Player/player';
-import GameManager from '@game/Manager/game-manager';
+import { UIEvents } from "@ui/events/ui-events";
+import { Trie } from "./trie";
+import Player from "@game/Player/player";
+import GameManager from "@game/Manager/game-manager";
 
 export function command(name: string): MethodDecorator {
-  return ( 
-    target: object, 
-    propertyKey: string | symbol, 
-  ) => {
+  return (target: object, propertyKey: string | symbol) => {
     const ctor = target.constructor as any;
     if (!ctor.commandRegistry) {
       ctor.commandRegistry = new Map<string, string>();
@@ -16,18 +13,20 @@ export function command(name: string): MethodDecorator {
   };
 }
 
-const  addChatLine = (line: string, options: object = {}) => {
+const addChatLine = (line: string, options: object = {}) => {
   UIEvents.emit("chat", { type: 0, line, color: "#ddd", ...options });
 };
 
+const addChatLines = (lines: string | string[], options: object = {}) => {
+  const lineArray = Array.isArray(lines) ? lines : lines.trim().split("\n").map((line) => line.trim());
+  lineArray.forEach((line) => addChatLine(line, options));
+};
 
 export class CommandHandler {
   private trie = new Trie();
   private commandRegistry: Map<string, string>;
 
-  constructor(
-    private setMode: React.Dispatch<React.SetStateAction<string>>,
-  ) {
+  constructor(private setMode: React.Dispatch<React.SetStateAction<string>>) {
     const ctor = (this as any).constructor;
     this.commandRegistry = ctor.commandRegistry ?? new Map();
 
@@ -36,12 +35,12 @@ export class CommandHandler {
     }
   }
 
-  parseCommand(input: string) {
+  public parseCommand(input: string) {
     const [raw, ...args] = input.trim().split(/\s+/);
     const cmd = raw.toLowerCase();
 
     let entry = this.trie.searchExact(cmd);
-
+    
     if (!entry) {
       const matches = this.trie.searchPrefix(cmd);
       if (matches.length === 1) {
@@ -49,11 +48,11 @@ export class CommandHandler {
       } else if (matches.length > 1) {
         entry = matches[0].entry;
       }
-    }
-
+    } 
+    
     if (entry) {
       const fn = (this as any)[entry.method];
-      if (typeof fn === 'function') {
+      if (typeof fn === "function") {
         fn.call(this, args);
       } else {
         console.error(`Handler ${entry.method} is not a function`);
@@ -63,7 +62,7 @@ export class CommandHandler {
     }
   }
 
-  @command('speed')
+  @command("speed")
   commandSpeed(args: string[]) {
     if (+args[0] > 0 && Player.instance) {
       Player.instance.playerMovement.moveSpeed = +args[0];
@@ -72,32 +71,36 @@ export class CommandHandler {
       addChatLine("Invalid speed value");
     }
   }
-  
-  @command('help')
+
+  @command("help")
   commandHelp() {
-    addChatLine("----- Available commands -----");
-    addChatLine("/zone {shortname} - Example /zone qeynos2");
-    addChatLine("/spawn {model} - Example /spawn hum");
-    addChatLine("/controls - Displays controls");
-    addChatLine("----- Keyboard Hotkeys -----");
-    addChatLine("Space: Jump");
-    addChatLine("Shift: Sprint");
-    addChatLine("Ctrl: Crouch");
-    addChatLine("WASD: Movement");
-    addChatLine("Mouse: Look around");
-    addChatLine("U: Toggle UI");
+    addChatLines(`
+        ----- Available commands -----
+        /zone {shortname} - Example /zone qeynos2
+        /spawn {model} - Example /spawn hum
+        /controls - Displays controls
+        ----- Keyboard Hotkeys -----
+        Space: Jump
+        Shift: Sprint
+        Ctrl: Crouch
+        WASD: Movement
+        Mouse: Look around
+        U: Toggle UI
+    `);
   }
 
-  @command('controls')
+  @command("controls")
   commandControls() {
-    addChatLine("Movement: W, A, S, D");
-    addChatLine("Jump (Up): Space");
-    addChatLine("Sprint: Shift");
-    addChatLine("Crouch (Down): Ctrl");
-    addChatLine("Look around: Mouse with Right Click = Mouse lock");
+    addChatLines([
+      "Movement: W, A, S, D",
+      "Jump (Up): Space",
+      "Sprint: Shift",
+      "Crouch (Down): Ctrl",
+      "Look around: Mouse with Right Click = Mouse lock",
+    ]);
   }
 
-  @command('zone')
+  @command("zone")
   async commandZone(args: string[]) {
     const zone = args[0];
     if (zone) {
@@ -110,13 +113,13 @@ export class CommandHandler {
     }
   }
 
-  @command('camp')
+  @command("camp")
   commandCamp() {
     GameManager.instance.dispose();
     this.setMode("character-select");
   }
 
-  @command('spawn')
+  @command("spawn")
   commandSpawn(args: string[]) {
     const spawn = args[0];
     if (spawn) {
@@ -124,6 +127,6 @@ export class CommandHandler {
       GameManager.instance.spawnModel(spawn);
     } else {
       addChatLine("No model entered");
-    }  
+    }
   }
 }
