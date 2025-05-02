@@ -21,6 +21,7 @@ export class PlayerMovement {
   public gravity: boolean = true;
   public gravityCoefficient: number = 14.76;
   private sprintMultiplier: number = 2.0;
+  private updateDelta = 0;
 
   private velocity = new Vector3(0, 0, 0);
   private movement = new Vector3(0, 0, 0);
@@ -32,6 +33,8 @@ export class PlayerMovement {
   constructor(player: Player) {
     this.player = player;
     this.bindKeys();
+    const node = this.player.getNode() as CharacterBody3D;
+    console.log("Player collision layer:", node.collision_layer, "mask:", node.collision_mask);
   }
 
   bindKeys() {
@@ -147,6 +150,8 @@ export class PlayerMovement {
       this.player.playIdle();
     }
 
+    this.updateDelta += delta;
+
     if (
       this.movement.x === 0 &&
       this.movement.y === 0 &&
@@ -157,6 +162,11 @@ export class PlayerMovement {
       node.velocity = this.velocity;
       node.move_and_slide();
       return;
+    }
+
+    if (this.updateDelta > 0.5) {
+      console.log('Would send update');
+      this.updateDelta = 0;
     }
 
     const { x: basisX, z: basisZ } = this.player.getNode()!.transform.basis.x;

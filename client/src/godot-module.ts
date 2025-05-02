@@ -81,7 +81,8 @@ export const {
   ArrayMesh,
   PackedInt32Array,
   ConvexPolygonShape3D,
-  AABB
+  AABB,
+  BoxMesh,
 } = godot;
 
 export default godot;

@@ -3,17 +3,23 @@ package zone
 import (
 	"fmt"
 	"knervous/eqgo/internal/message"
+	"knervous/eqgo/internal/session"
 	"sync"
 	"time"
 )
 
+type ClientEntry struct {
+	ClientSession *session.Session
+}
+
 type ZoneInstance struct {
 	ZoneID     int
 	InstanceID int
-	Inbox      chan message.ClientMessage
+	Clients    map[int]ClientEntry
 	Quit       chan struct{}
 	wg         sync.WaitGroup
 	registry   *HandlerRegistry
+	mutex      sync.RWMutex
 }
 
 func NewZoneInstance(zoneID, instanceID int) *ZoneInstance {
@@ -21,13 +27,41 @@ func NewZoneInstance(zoneID, instanceID int) *ZoneInstance {
 	z := &ZoneInstance{
 		ZoneID:     zoneID,
 		InstanceID: instanceID,
-		Inbox:      make(chan message.ClientMessage, 128),
 		Quit:       make(chan struct{}),
+		Clients:    make(map[int]ClientEntry),
 		registry:   zoneRegistry,
 	}
 	z.wg.Add(1)
 	go z.run()
 	return z
+}
+
+func (z *ZoneInstance) AddClient(sessionID int) {
+	clientSession, ok := session.GetSessionManager().GetSession(sessionID)
+	if !ok {
+		fmt.Printf("failed to get session for sessionID %d\n", sessionID)
+		return
+	}
+	z.mutex.Lock()
+	defer z.mutex.Unlock()
+
+	z.Clients[sessionID] = ClientEntry{
+		ClientSession: clientSession,
+	}
+	fmt.Printf("Added client session %d to zone %d instance %d\n", sessionID, z.ZoneID, z.InstanceID)
+}
+
+func (z *ZoneInstance) HandleClientPacket(msg message.ClientMessage) {
+	// Fast read-only check for existence
+	z.mutex.RLock()
+	_, exists := z.Clients[msg.SessionID]
+	z.mutex.RUnlock()
+
+	if !exists {
+		z.AddClient(msg.SessionID)
+	}
+
+	z.registry.HandleZonePacket(msg)
 }
 
 func (z *ZoneInstance) run() {
@@ -44,8 +78,6 @@ func (z *ZoneInstance) run() {
 			// world tick here
 		case <-zoneLoop.C:
 			// z.update()
-		case msg := <-z.Inbox:
-			z.registry.HandleZonePacket(msg)
 		case <-z.Quit:
 			fmt.Printf("[Zone %d·Inst %d] shutting down\n", z.ZoneID, z.InstanceID)
 			return

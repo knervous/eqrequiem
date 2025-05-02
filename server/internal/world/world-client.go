@@ -172,9 +172,14 @@ func CharacterCreate(accountId int64, cc *eqpb.CharCreate) bool {
 	pp.ZoneId = 2 // Qeynos as default
 
 	startZone, err := GetStartZone(ctx, uint8(pp.CharClass), uint32(pp.Deity), uint32(pp.Race))
+	setLoc := false
 	if err == nil {
 		pp.ZoneId = int32(startZone.ZoneID)
 		cc.StartZone = int32(pp.ZoneId)
+		pp.X = float32(startZone.X)
+		pp.Y = float32(startZone.Y)
+		pp.Z = float32(startZone.Z)
+		setLoc = true
 	}
 
 	zone, err := GetZone(ctx, pp.ZoneId)
@@ -182,7 +187,7 @@ func CharacterCreate(accountId int64, cc *eqpb.CharCreate) bool {
 		pp.X = float32(zone.SafeX)
 		pp.Y = float32(zone.SafeY)
 		pp.Z = float32(zone.SafeZ)
-	} else {
+	} else if !setLoc {
 		pp.X = -1
 		pp.Y = -1
 		pp.Z = -1

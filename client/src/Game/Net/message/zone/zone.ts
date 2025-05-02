@@ -47,6 +47,219 @@ export interface ZoneChange {
      */
     success: number;
 }
+/**
+ * @generated from protobuf message eq.zone.NewZone
+ */
+export interface NewZone {
+    /**
+     * @generated from protobuf field: string char_name = 1;
+     */
+    charName: string;
+    /**
+     * @generated from protobuf field: string short_name = 2;
+     */
+    shortName: string;
+    /**
+     * @generated from protobuf field: string long_name = 3;
+     */
+    longName: string;
+    /**
+     * @generated from protobuf field: int32 ztype = 4;
+     */
+    ztype: number;
+    /**
+     * @generated from protobuf field: repeated int32 fog_red = 5;
+     */
+    fogRed: number[];
+    /**
+     * @generated from protobuf field: repeated int32 fog_green = 6;
+     */
+    fogGreen: number[];
+    /**
+     * @generated from protobuf field: repeated int32 fog_blue = 7;
+     */
+    fogBlue: number[];
+    /**
+     * @generated from protobuf field: repeated float fog_minclip = 8;
+     */
+    fogMinclip: number[];
+    /**
+     * @generated from protobuf field: repeated float fog_maxclip = 9;
+     */
+    fogMaxclip: number[];
+    /**
+     * @generated from protobuf field: float gravity = 10;
+     */
+    gravity: number;
+    /**
+     * @generated from protobuf field: int32 time_type = 11;
+     */
+    timeType: number;
+    /**
+     * @generated from protobuf field: repeated int32 rain_chance = 12;
+     */
+    rainChance: number[];
+    /**
+     * @generated from protobuf field: repeated int32 rain_duration = 13;
+     */
+    rainDuration: number[];
+    /**
+     * @generated from protobuf field: repeated int32 snow_chance = 14;
+     */
+    snowChance: number[];
+    /**
+     * @generated from protobuf field: repeated int32 snow_duration = 15;
+     */
+    snowDuration: number[];
+    /**
+     * @generated from protobuf field: int32 sky = 16;
+     */
+    sky: number;
+    /**
+     * @generated from protobuf field: float zone_exp_multiplier = 17;
+     */
+    zoneExpMultiplier: number;
+    /**
+     * @generated from protobuf field: float safe_y = 18;
+     */
+    safeY: number;
+    /**
+     * @generated from protobuf field: float safe_x = 19;
+     */
+    safeX: number;
+    /**
+     * @generated from protobuf field: float safe_z = 20;
+     */
+    safeZ: number;
+    /**
+     * @generated from protobuf field: float max_z = 21;
+     */
+    maxZ: number;
+    /**
+     * @generated from protobuf field: float underworld = 22;
+     */
+    underworld: number;
+    /**
+     * @generated from protobuf field: float minclip = 23;
+     */
+    minclip: number;
+    /**
+     * @generated from protobuf field: float maxclip = 24;
+     */
+    maxclip: number;
+    /**
+     * @generated from protobuf field: string zone_short_name2 = 25;
+     */
+    zoneShortName2: string;
+    /**
+     * @generated from protobuf field: int32 zone_id_number = 26;
+     */
+    zoneIdNumber: number;
+    /**
+     * @generated from protobuf field: int32 zone_instance = 27;
+     */
+    zoneInstance: number;
+    /**
+     * @generated from protobuf field: repeated eq.zone.ZonePoint zone_points = 28;
+     */
+    zonePoints: ZonePoint[];
+}
+/**
+ * @generated from protobuf message eq.zone.RequestClientZoneChange
+ */
+export interface RequestClientZoneChange {
+    /**
+     * @generated from protobuf field: int32 zone_id = 1;
+     */
+    zoneId: number;
+    /**
+     * @generated from protobuf field: int32 instance_id = 2;
+     */
+    instanceId: number;
+    /**
+     * @generated from protobuf field: float y = 3;
+     */
+    y: number;
+    /**
+     * @generated from protobuf field: float x = 4;
+     */
+    x: number;
+    /**
+     * @generated from protobuf field: float z = 5;
+     */
+    z: number;
+    /**
+     * @generated from protobuf field: float heading = 6;
+     */
+    heading: number;
+    /**
+     * @generated from protobuf field: eq.zone.ZoneChangeType type = 7;
+     */
+    type: ZoneChangeType;
+}
+/**
+ * @generated from protobuf message eq.zone.ZonePoint
+ */
+export interface ZonePoint {
+    /**
+     * @generated from protobuf field: int32 iterator = 1;
+     */
+    iterator: number;
+    /**
+     * @generated from protobuf field: float y = 2;
+     */
+    y: number;
+    /**
+     * @generated from protobuf field: float x = 3;
+     */
+    x: number;
+    /**
+     * @generated from protobuf field: float z = 4;
+     */
+    z: number;
+    /**
+     * @generated from protobuf field: float heading = 5;
+     */
+    heading: number;
+    /**
+     * @generated from protobuf field: int32 zoneid = 6;
+     */
+    zoneid: number;
+    /**
+     * @generated from protobuf field: int32 zoneinstance = 7;
+     */
+    zoneinstance: number;
+    /**
+     * @generated from protobuf field: int32 number = 8;
+     */
+    number: number;
+}
+/**
+ * @generated from protobuf message eq.zone.ZoneSession
+ */
+export interface ZoneSession {
+    /**
+     * @generated from protobuf field: int32 zone_id = 1;
+     */
+    zoneId: number;
+    /**
+     * @generated from protobuf field: int32 instance_id = 2;
+     */
+    instanceId: number;
+}
+/**
+ * @generated from protobuf enum eq.zone.ZoneChangeType
+ */
+export enum ZoneChangeType {
+    /**
+     * @generated from protobuf enum value: FROM_WORLD = 0;
+     */
+    FROM_WORLD = 0,
+    /**
+     * @generated from protobuf enum value: FROM_ZONE = 1;
+     */
+    FROM_ZONE = 1
+}
 // @generated message type with reflection information, may provide speed optimized methods
 class ZoneChange$Type extends MessageType<ZoneChange> {
     constructor() {
@@ -150,3 +363,591 @@ class ZoneChange$Type extends MessageType<ZoneChange> {
  * @generated MessageType for protobuf message eq.zone.ZoneChange
  */
 export const ZoneChange = new ZoneChange$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class NewZone$Type extends MessageType<NewZone> {
+    constructor() {
+        super("eq.zone.NewZone", [
+            { no: 1, name: "char_name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "short_name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "long_name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 4, name: "ztype", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 5, name: "fog_red", kind: "scalar", repeat: 1 /*RepeatType.PACKED*/, T: 5 /*ScalarType.INT32*/ },
+            { no: 6, name: "fog_green", kind: "scalar", repeat: 1 /*RepeatType.PACKED*/, T: 5 /*ScalarType.INT32*/ },
+            { no: 7, name: "fog_blue", kind: "scalar", repeat: 1 /*RepeatType.PACKED*/, T: 5 /*ScalarType.INT32*/ },
+            { no: 8, name: "fog_minclip", kind: "scalar", repeat: 1 /*RepeatType.PACKED*/, T: 2 /*ScalarType.FLOAT*/ },
+            { no: 9, name: "fog_maxclip", kind: "scalar", repeat: 1 /*RepeatType.PACKED*/, T: 2 /*ScalarType.FLOAT*/ },
+            { no: 10, name: "gravity", kind: "scalar", T: 2 /*ScalarType.FLOAT*/ },
+            { no: 11, name: "time_type", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 12, name: "rain_chance", kind: "scalar", repeat: 1 /*RepeatType.PACKED*/, T: 5 /*ScalarType.INT32*/ },
+            { no: 13, name: "rain_duration", kind: "scalar", repeat: 1 /*RepeatType.PACKED*/, T: 5 /*ScalarType.INT32*/ },
+            { no: 14, name: "snow_chance", kind: "scalar", repeat: 1 /*RepeatType.PACKED*/, T: 5 /*ScalarType.INT32*/ },
+            { no: 15, name: "snow_duration", kind: "scalar", repeat: 1 /*RepeatType.PACKED*/, T: 5 /*ScalarType.INT32*/ },
+            { no: 16, name: "sky", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 17, name: "zone_exp_multiplier", kind: "scalar", T: 2 /*ScalarType.FLOAT*/ },
+            { no: 18, name: "safe_y", kind: "scalar", T: 2 /*ScalarType.FLOAT*/ },
+            { no: 19, name: "safe_x", kind: "scalar", T: 2 /*ScalarType.FLOAT*/ },
+            { no: 20, name: "safe_z", kind: "scalar", T: 2 /*ScalarType.FLOAT*/ },
+            { no: 21, name: "max_z", kind: "scalar", T: 2 /*ScalarType.FLOAT*/ },
+            { no: 22, name: "underworld", kind: "scalar", T: 2 /*ScalarType.FLOAT*/ },
+            { no: 23, name: "minclip", kind: "scalar", T: 2 /*ScalarType.FLOAT*/ },
+            { no: 24, name: "maxclip", kind: "scalar", T: 2 /*ScalarType.FLOAT*/ },
+            { no: 25, name: "zone_short_name2", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 26, name: "zone_id_number", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 27, name: "zone_instance", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 28, name: "zone_points", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => ZonePoint }
+        ]);
+    }
+    create(value?: PartialMessage<NewZone>): NewZone {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.charName = "";
+        message.shortName = "";
+        message.longName = "";
+        message.ztype = 0;
+        message.fogRed = [];
+        message.fogGreen = [];
+        message.fogBlue = [];
+        message.fogMinclip = [];
+        message.fogMaxclip = [];
+        message.gravity = 0;
+        message.timeType = 0;
+        message.rainChance = [];
+        message.rainDuration = [];
+        message.snowChance = [];
+        message.snowDuration = [];
+        message.sky = 0;
+        message.zoneExpMultiplier = 0;
+        message.safeY = 0;
+        message.safeX = 0;
+        message.safeZ = 0;
+        message.maxZ = 0;
+        message.underworld = 0;
+        message.minclip = 0;
+        message.maxclip = 0;
+        message.zoneShortName2 = "";
+        message.zoneIdNumber = 0;
+        message.zoneInstance = 0;
+        message.zonePoints = [];
+        if (value !== undefined)
+            reflectionMergePartial<NewZone>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: NewZone): NewZone {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string char_name */ 1:
+                    message.charName = reader.string();
+                    break;
+                case /* string short_name */ 2:
+                    message.shortName = reader.string();
+                    break;
+                case /* string long_name */ 3:
+                    message.longName = reader.string();
+                    break;
+                case /* int32 ztype */ 4:
+                    message.ztype = reader.int32();
+                    break;
+                case /* repeated int32 fog_red */ 5:
+                    if (wireType === WireType.LengthDelimited)
+                        for (let e = reader.int32() + reader.pos; reader.pos < e;)
+                            message.fogRed.push(reader.int32());
+                    else
+                        message.fogRed.push(reader.int32());
+                    break;
+                case /* repeated int32 fog_green */ 6:
+                    if (wireType === WireType.LengthDelimited)
+                        for (let e = reader.int32() + reader.pos; reader.pos < e;)
+                            message.fogGreen.push(reader.int32());
+                    else
+                        message.fogGreen.push(reader.int32());
+                    break;
+                case /* repeated int32 fog_blue */ 7:
+                    if (wireType === WireType.LengthDelimited)
+                        for (let e = reader.int32() + reader.pos; reader.pos < e;)
+                            message.fogBlue.push(reader.int32());
+                    else
+                        message.fogBlue.push(reader.int32());
+                    break;
+                case /* repeated float fog_minclip */ 8:
+                    if (wireType === WireType.LengthDelimited)
+                        for (let e = reader.int32() + reader.pos; reader.pos < e;)
+                            message.fogMinclip.push(reader.float());
+                    else
+                        message.fogMinclip.push(reader.float());
+                    break;
+                case /* repeated float fog_maxclip */ 9:
+                    if (wireType === WireType.LengthDelimited)
+                        for (let e = reader.int32() + reader.pos; reader.pos < e;)
+                            message.fogMaxclip.push(reader.float());
+                    else
+                        message.fogMaxclip.push(reader.float());
+                    break;
+                case /* float gravity */ 10:
+                    message.gravity = reader.float();
+                    break;
+                case /* int32 time_type */ 11:
+                    message.timeType = reader.int32();
+                    break;
+                case /* repeated int32 rain_chance */ 12:
+                    if (wireType === WireType.LengthDelimited)
+                        for (let e = reader.int32() + reader.pos; reader.pos < e;)
+                            message.rainChance.push(reader.int32());
+                    else
+                        message.rainChance.push(reader.int32());
+                    break;
+                case /* repeated int32 rain_duration */ 13:
+                    if (wireType === WireType.LengthDelimited)
+                        for (let e = reader.int32() + reader.pos; reader.pos < e;)
+                            message.rainDuration.push(reader.int32());
+                    else
+                        message.rainDuration.push(reader.int32());
+                    break;
+                case /* repeated int32 snow_chance */ 14:
+                    if (wireType === WireType.LengthDelimited)
+                        for (let e = reader.int32() + reader.pos; reader.pos < e;)
+                            message.snowChance.push(reader.int32());
+                    else
+                        message.snowChance.push(reader.int32());
+                    break;
+                case /* repeated int32 snow_duration */ 15:
+                    if (wireType === WireType.LengthDelimited)
+                        for (let e = reader.int32() + reader.pos; reader.pos < e;)
+                            message.snowDuration.push(reader.int32());
+                    else
+                        message.snowDuration.push(reader.int32());
+                    break;
+                case /* int32 sky */ 16:
+                    message.sky = reader.int32();
+                    break;
+                case /* float zone_exp_multiplier */ 17:
+                    message.zoneExpMultiplier = reader.float();
+                    break;
+                case /* float safe_y */ 18:
+                    message.safeY = reader.float();
+                    break;
+                case /* float safe_x */ 19:
+                    message.safeX = reader.float();
+                    break;
+                case /* float safe_z */ 20:
+                    message.safeZ = reader.float();
+                    break;
+                case /* float max_z */ 21:
+                    message.maxZ = reader.float();
+                    break;
+                case /* float underworld */ 22:
+                    message.underworld = reader.float();
+                    break;
+                case /* float minclip */ 23:
+                    message.minclip = reader.float();
+                    break;
+                case /* float maxclip */ 24:
+                    message.maxclip = reader.float();
+                    break;
+                case /* string zone_short_name2 */ 25:
+                    message.zoneShortName2 = reader.string();
+                    break;
+                case /* int32 zone_id_number */ 26:
+                    message.zoneIdNumber = reader.int32();
+                    break;
+                case /* int32 zone_instance */ 27:
+                    message.zoneInstance = reader.int32();
+                    break;
+                case /* repeated eq.zone.ZonePoint zone_points */ 28:
+                    message.zonePoints.push(ZonePoint.internalBinaryRead(reader, reader.uint32(), options));
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: NewZone, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string char_name = 1; */
+        if (message.charName !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.charName);
+        /* string short_name = 2; */
+        if (message.shortName !== "")
+            writer.tag(2, WireType.LengthDelimited).string(message.shortName);
+        /* string long_name = 3; */
+        if (message.longName !== "")
+            writer.tag(3, WireType.LengthDelimited).string(message.longName);
+        /* int32 ztype = 4; */
+        if (message.ztype !== 0)
+            writer.tag(4, WireType.Varint).int32(message.ztype);
+        /* repeated int32 fog_red = 5; */
+        if (message.fogRed.length) {
+            writer.tag(5, WireType.LengthDelimited).fork();
+            for (let i = 0; i < message.fogRed.length; i++)
+                writer.int32(message.fogRed[i]);
+            writer.join();
+        }
+        /* repeated int32 fog_green = 6; */
+        if (message.fogGreen.length) {
+            writer.tag(6, WireType.LengthDelimited).fork();
+            for (let i = 0; i < message.fogGreen.length; i++)
+                writer.int32(message.fogGreen[i]);
+            writer.join();
+        }
+        /* repeated int32 fog_blue = 7; */
+        if (message.fogBlue.length) {
+            writer.tag(7, WireType.LengthDelimited).fork();
+            for (let i = 0; i < message.fogBlue.length; i++)
+                writer.int32(message.fogBlue[i]);
+            writer.join();
+        }
+        /* repeated float fog_minclip = 8; */
+        if (message.fogMinclip.length) {
+            writer.tag(8, WireType.LengthDelimited).fork();
+            for (let i = 0; i < message.fogMinclip.length; i++)
+                writer.float(message.fogMinclip[i]);
+            writer.join();
+        }
+        /* repeated float fog_maxclip = 9; */
+        if (message.fogMaxclip.length) {
+            writer.tag(9, WireType.LengthDelimited).fork();
+            for (let i = 0; i < message.fogMaxclip.length; i++)
+                writer.float(message.fogMaxclip[i]);
+            writer.join();
+        }
+        /* float gravity = 10; */
+        if (message.gravity !== 0)
+            writer.tag(10, WireType.Bit32).float(message.gravity);
+        /* int32 time_type = 11; */
+        if (message.timeType !== 0)
+            writer.tag(11, WireType.Varint).int32(message.timeType);
+        /* repeated int32 rain_chance = 12; */
+        if (message.rainChance.length) {
+            writer.tag(12, WireType.LengthDelimited).fork();
+            for (let i = 0; i < message.rainChance.length; i++)
+                writer.int32(message.rainChance[i]);
+            writer.join();
+        }
+        /* repeated int32 rain_duration = 13; */
+        if (message.rainDuration.length) {
+            writer.tag(13, WireType.LengthDelimited).fork();
+            for (let i = 0; i < message.rainDuration.length; i++)
+                writer.int32(message.rainDuration[i]);
+            writer.join();
+        }
+        /* repeated int32 snow_chance = 14; */
+        if (message.snowChance.length) {
+            writer.tag(14, WireType.LengthDelimited).fork();
+            for (let i = 0; i < message.snowChance.length; i++)
+                writer.int32(message.snowChance[i]);
+            writer.join();
+        }
+        /* repeated int32 snow_duration = 15; */
+        if (message.snowDuration.length) {
+            writer.tag(15, WireType.LengthDelimited).fork();
+            for (let i = 0; i < message.snowDuration.length; i++)
+                writer.int32(message.snowDuration[i]);
+            writer.join();
+        }
+        /* int32 sky = 16; */
+        if (message.sky !== 0)
+            writer.tag(16, WireType.Varint).int32(message.sky);
+        /* float zone_exp_multiplier = 17; */
+        if (message.zoneExpMultiplier !== 0)
+            writer.tag(17, WireType.Bit32).float(message.zoneExpMultiplier);
+        /* float safe_y = 18; */
+        if (message.safeY !== 0)
+            writer.tag(18, WireType.Bit32).float(message.safeY);
+        /* float safe_x = 19; */
+        if (message.safeX !== 0)
+            writer.tag(19, WireType.Bit32).float(message.safeX);
+        /* float safe_z = 20; */
+        if (message.safeZ !== 0)
+            writer.tag(20, WireType.Bit32).float(message.safeZ);
+        /* float max_z = 21; */
+        if (message.maxZ !== 0)
+            writer.tag(21, WireType.Bit32).float(message.maxZ);
+        /* float underworld = 22; */
+        if (message.underworld !== 0)
+            writer.tag(22, WireType.Bit32).float(message.underworld);
+        /* float minclip = 23; */
+        if (message.minclip !== 0)
+            writer.tag(23, WireType.Bit32).float(message.minclip);
+        /* float maxclip = 24; */
+        if (message.maxclip !== 0)
+            writer.tag(24, WireType.Bit32).float(message.maxclip);
+        /* string zone_short_name2 = 25; */
+        if (message.zoneShortName2 !== "")
+            writer.tag(25, WireType.LengthDelimited).string(message.zoneShortName2);
+        /* int32 zone_id_number = 26; */
+        if (message.zoneIdNumber !== 0)
+            writer.tag(26, WireType.Varint).int32(message.zoneIdNumber);
+        /* int32 zone_instance = 27; */
+        if (message.zoneInstance !== 0)
+            writer.tag(27, WireType.Varint).int32(message.zoneInstance);
+        /* repeated eq.zone.ZonePoint zone_points = 28; */
+        for (let i = 0; i < message.zonePoints.length; i++)
+            ZonePoint.internalBinaryWrite(message.zonePoints[i], writer.tag(28, WireType.LengthDelimited).fork(), options).join();
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message eq.zone.NewZone
+ */
+export const NewZone = new NewZone$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class RequestClientZoneChange$Type extends MessageType<RequestClientZoneChange> {
+    constructor() {
+        super("eq.zone.RequestClientZoneChange", [
+            { no: 1, name: "zone_id", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 2, name: "instance_id", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 3, name: "y", kind: "scalar", T: 2 /*ScalarType.FLOAT*/ },
+            { no: 4, name: "x", kind: "scalar", T: 2 /*ScalarType.FLOAT*/ },
+            { no: 5, name: "z", kind: "scalar", T: 2 /*ScalarType.FLOAT*/ },
+            { no: 6, name: "heading", kind: "scalar", T: 2 /*ScalarType.FLOAT*/ },
+            { no: 7, name: "type", kind: "enum", T: () => ["eq.zone.ZoneChangeType", ZoneChangeType] }
+        ]);
+    }
+    create(value?: PartialMessage<RequestClientZoneChange>): RequestClientZoneChange {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.zoneId = 0;
+        message.instanceId = 0;
+        message.y = 0;
+        message.x = 0;
+        message.z = 0;
+        message.heading = 0;
+        message.type = 0;
+        if (value !== undefined)
+            reflectionMergePartial<RequestClientZoneChange>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: RequestClientZoneChange): RequestClientZoneChange {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* int32 zone_id */ 1:
+                    message.zoneId = reader.int32();
+                    break;
+                case /* int32 instance_id */ 2:
+                    message.instanceId = reader.int32();
+                    break;
+                case /* float y */ 3:
+                    message.y = reader.float();
+                    break;
+                case /* float x */ 4:
+                    message.x = reader.float();
+                    break;
+                case /* float z */ 5:
+                    message.z = reader.float();
+                    break;
+                case /* float heading */ 6:
+                    message.heading = reader.float();
+                    break;
+                case /* eq.zone.ZoneChangeType type */ 7:
+                    message.type = reader.int32();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: RequestClientZoneChange, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* int32 zone_id = 1; */
+        if (message.zoneId !== 0)
+            writer.tag(1, WireType.Varint).int32(message.zoneId);
+        /* int32 instance_id = 2; */
+        if (message.instanceId !== 0)
+            writer.tag(2, WireType.Varint).int32(message.instanceId);
+        /* float y = 3; */
+        if (message.y !== 0)
+            writer.tag(3, WireType.Bit32).float(message.y);
+        /* float x = 4; */
+        if (message.x !== 0)
+            writer.tag(4, WireType.Bit32).float(message.x);
+        /* float z = 5; */
+        if (message.z !== 0)
+            writer.tag(5, WireType.Bit32).float(message.z);
+        /* float heading = 6; */
+        if (message.heading !== 0)
+            writer.tag(6, WireType.Bit32).float(message.heading);
+        /* eq.zone.ZoneChangeType type = 7; */
+        if (message.type !== 0)
+            writer.tag(7, WireType.Varint).int32(message.type);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message eq.zone.RequestClientZoneChange
+ */
+export const RequestClientZoneChange = new RequestClientZoneChange$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class ZonePoint$Type extends MessageType<ZonePoint> {
+    constructor() {
+        super("eq.zone.ZonePoint", [
+            { no: 1, name: "iterator", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 2, name: "y", kind: "scalar", T: 2 /*ScalarType.FLOAT*/ },
+            { no: 3, name: "x", kind: "scalar", T: 2 /*ScalarType.FLOAT*/ },
+            { no: 4, name: "z", kind: "scalar", T: 2 /*ScalarType.FLOAT*/ },
+            { no: 5, name: "heading", kind: "scalar", T: 2 /*ScalarType.FLOAT*/ },
+            { no: 6, name: "zoneid", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 7, name: "zoneinstance", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 8, name: "number", kind: "scalar", T: 5 /*ScalarType.INT32*/ }
+        ]);
+    }
+    create(value?: PartialMessage<ZonePoint>): ZonePoint {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.iterator = 0;
+        message.y = 0;
+        message.x = 0;
+        message.z = 0;
+        message.heading = 0;
+        message.zoneid = 0;
+        message.zoneinstance = 0;
+        message.number = 0;
+        if (value !== undefined)
+            reflectionMergePartial<ZonePoint>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: ZonePoint): ZonePoint {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* int32 iterator */ 1:
+                    message.iterator = reader.int32();
+                    break;
+                case /* float y */ 2:
+                    message.y = reader.float();
+                    break;
+                case /* float x */ 3:
+                    message.x = reader.float();
+                    break;
+                case /* float z */ 4:
+                    message.z = reader.float();
+                    break;
+                case /* float heading */ 5:
+                    message.heading = reader.float();
+                    break;
+                case /* int32 zoneid */ 6:
+                    message.zoneid = reader.int32();
+                    break;
+                case /* int32 zoneinstance */ 7:
+                    message.zoneinstance = reader.int32();
+                    break;
+                case /* int32 number */ 8:
+                    message.number = reader.int32();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: ZonePoint, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* int32 iterator = 1; */
+        if (message.iterator !== 0)
+            writer.tag(1, WireType.Varint).int32(message.iterator);
+        /* float y = 2; */
+        if (message.y !== 0)
+            writer.tag(2, WireType.Bit32).float(message.y);
+        /* float x = 3; */
+        if (message.x !== 0)
+            writer.tag(3, WireType.Bit32).float(message.x);
+        /* float z = 4; */
+        if (message.z !== 0)
+            writer.tag(4, WireType.Bit32).float(message.z);
+        /* float heading = 5; */
+        if (message.heading !== 0)
+            writer.tag(5, WireType.Bit32).float(message.heading);
+        /* int32 zoneid = 6; */
+        if (message.zoneid !== 0)
+            writer.tag(6, WireType.Varint).int32(message.zoneid);
+        /* int32 zoneinstance = 7; */
+        if (message.zoneinstance !== 0)
+            writer.tag(7, WireType.Varint).int32(message.zoneinstance);
+        /* int32 number = 8; */
+        if (message.number !== 0)
+            writer.tag(8, WireType.Varint).int32(message.number);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message eq.zone.ZonePoint
+ */
+export const ZonePoint = new ZonePoint$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class ZoneSession$Type extends MessageType<ZoneSession> {
+    constructor() {
+        super("eq.zone.ZoneSession", [
+            { no: 1, name: "zone_id", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 2, name: "instance_id", kind: "scalar", T: 5 /*ScalarType.INT32*/ }
+        ]);
+    }
+    create(value?: PartialMessage<ZoneSession>): ZoneSession {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.zoneId = 0;
+        message.instanceId = 0;
+        if (value !== undefined)
+            reflectionMergePartial<ZoneSession>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: ZoneSession): ZoneSession {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* int32 zone_id */ 1:
+                    message.zoneId = reader.int32();
+                    break;
+                case /* int32 instance_id */ 2:
+                    message.instanceId = reader.int32();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: ZoneSession, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* int32 zone_id = 1; */
+        if (message.zoneId !== 0)
+            writer.tag(1, WireType.Varint).int32(message.zoneId);
+        /* int32 instance_id = 2; */
+        if (message.instanceId !== 0)
+            writer.tag(2, WireType.Varint).int32(message.instanceId);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message eq.zone.ZoneSession
+ */
+export const ZoneSession = new ZoneSession$Type();

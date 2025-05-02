@@ -153,6 +153,134 @@ func (x *WebInitiateConnection) GetLogin() bool {
 	return false
 }
 
+type EnterWorld struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Tutorial      int32                  `protobuf:"varint,2,opt,name=tutorial,proto3" json:"tutorial,omitempty"`
+	ReturnHome    int32                  `protobuf:"varint,3,opt,name=return_home,json=returnHome,proto3" json:"return_home,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *EnterWorld) Reset() {
+	*x = EnterWorld{}
+	mi := &file_world_world_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *EnterWorld) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*EnterWorld) ProtoMessage() {}
+
+func (x *EnterWorld) ProtoReflect() protoreflect.Message {
+	mi := &file_world_world_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use EnterWorld.ProtoReflect.Descriptor instead.
+func (*EnterWorld) Descriptor() ([]byte, []int) {
+	return file_world_world_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *EnterWorld) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *EnterWorld) GetTutorial() int32 {
+	if x != nil {
+		return x.Tutorial
+	}
+	return 0
+}
+
+func (x *EnterWorld) GetReturnHome() int32 {
+	if x != nil {
+		return x.ReturnHome
+	}
+	return 0
+}
+
+type NameApproval struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Race          int32                  `protobuf:"varint,2,opt,name=race,proto3" json:"race,omitempty"`
+	CharClass     int32                  `protobuf:"varint,3,opt,name=char_class,json=charClass,proto3" json:"char_class,omitempty"`
+	Deity         int32                  `protobuf:"varint,4,opt,name=deity,proto3" json:"deity,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *NameApproval) Reset() {
+	*x = NameApproval{}
+	mi := &file_world_world_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *NameApproval) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*NameApproval) ProtoMessage() {}
+
+func (x *NameApproval) ProtoReflect() protoreflect.Message {
+	mi := &file_world_world_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use NameApproval.ProtoReflect.Descriptor instead.
+func (*NameApproval) Descriptor() ([]byte, []int) {
+	return file_world_world_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *NameApproval) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *NameApproval) GetRace() int32 {
+	if x != nil {
+		return x.Race
+	}
+	return 0
+}
+
+func (x *NameApproval) GetCharClass() int32 {
+	if x != nil {
+		return x.CharClass
+	}
+	return 0
+}
+
+func (x *NameApproval) GetDeity() int32 {
+	if x != nil {
+		return x.Deity
+	}
+	return 0
+}
+
 var File_world_world_proto protoreflect.FileDescriptor
 
 const file_world_world_proto_rawDesc = "" +
@@ -163,7 +291,19 @@ const file_world_world_proto_rawDesc = "" +
 	"\vJWTResponse\x12\x16\n" +
 	"\x06status\x18\x01 \x01(\x05R\x06status\"-\n" +
 	"\x15WebInitiateConnection\x12\x14\n" +
-	"\x05login\x18\x01 \x01(\bR\x05loginB(Z&knervous/eqgo/internal/api/proto/worldb\x06proto3"
+	"\x05login\x18\x01 \x01(\bR\x05login\"]\n" +
+	"\n" +
+	"EnterWorld\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x12\x1a\n" +
+	"\btutorial\x18\x02 \x01(\x05R\btutorial\x12\x1f\n" +
+	"\vreturn_home\x18\x03 \x01(\x05R\n" +
+	"returnHome\"k\n" +
+	"\fNameApproval\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x12\x12\n" +
+	"\x04race\x18\x02 \x01(\x05R\x04race\x12\x1d\n" +
+	"\n" +
+	"char_class\x18\x03 \x01(\x05R\tcharClass\x12\x14\n" +
+	"\x05deity\x18\x04 \x01(\x05R\x05deityB(Z&knervous/eqgo/internal/api/proto/worldb\x06proto3"
 
 var (
 	file_world_world_proto_rawDescOnce sync.Once
@@ -177,11 +317,13 @@ func file_world_world_proto_rawDescGZIP() []byte {
 	return file_world_world_proto_rawDescData
 }
 
-var file_world_world_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
+var file_world_world_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
 var file_world_world_proto_goTypes = []any{
 	(*JWTLogin)(nil),              // 0: eq.world.JWTLogin
 	(*JWTResponse)(nil),           // 1: eq.world.JWTResponse
 	(*WebInitiateConnection)(nil), // 2: eq.world.WebInitiateConnection
+	(*EnterWorld)(nil),            // 3: eq.world.EnterWorld
+	(*NameApproval)(nil),          // 4: eq.world.NameApproval
 }
 var file_world_world_proto_depIdxs = []int32{
 	0, // [0:0] is the sub-list for method output_type
@@ -202,7 +344,7 @@ func file_world_world_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_world_world_proto_rawDesc), len(file_world_world_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   3,
+			NumMessages:   5,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

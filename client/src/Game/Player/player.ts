@@ -7,7 +7,7 @@ import {
   MeshInstance3D,
   CollisionShape3D,
 } from "godot";
-import * as EQMessage from "../Net/message/EQMessage";
+import * as EQMessage from "@eqmessage";
 import RACE_DATA from "../Constants/race-data";
 import { LoaderOptions } from "@game/GLTF/base";
 import { PlayerMovement } from "./player-movement";
@@ -31,6 +31,7 @@ export default class Player extends Actor {
     const race = player?.race ?? 1;
     const raceDataEntry = RACE_DATA[race];
     const model = raceDataEntry[player?.gender ?? 0] || raceDataEntry[2];
+    console.log('Loading player model:', model);
     super("models", model, Player.playerOptions);
     this.player = player;
     this.playerMovement = new PlayerMovement(this);

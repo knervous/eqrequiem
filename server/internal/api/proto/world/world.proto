@@ -5,14 +5,26 @@ option go_package = "knervous/eqgo/internal/api/proto/world";
 
 
 message JWTLogin {
-    string token = 1;
-  }
-  
-  message JWTResponse {
-    int32 status = 1;
-  }
-  
-  message WebInitiateConnection {
-    bool login = 1;
-  }
-  
+  string token = 1;
+}
+
+message JWTResponse {
+  int32 status = 1;
+}
+
+message WebInitiateConnection {
+  bool login = 1;
+}
+
+message EnterWorld {
+  string name = 1;
+  int32 tutorial = 2;
+  int32 return_home = 3;
+}
+
+message NameApproval {
+  string name = 1;
+  int32 race = 2;
+  int32 char_class = 3;
+  int32 deity = 4;
+}

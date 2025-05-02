@@ -44,9 +44,9 @@ func (wh *WorldHandler) HandleDatagram(msg message.ClientMessage) {
 		return
 	}
 
-	// Route to the zone from the session
+	// Route to the zone from the session and create if it doesn't exist
 	zone, _ := wh.zoneManager.GetOrCreate(session.ZoneID, session.InstanceID)
-	zone.Inbox <- msg
+	zone.HandleClientPacket(msg)
 }
 
 // RemoveSession cleans up session data.

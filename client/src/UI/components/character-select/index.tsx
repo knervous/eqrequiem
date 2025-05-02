@@ -1,6 +1,6 @@
-import React, { use, useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useUIContext } from "../context";
-import * as EQMessage from "../../../Game/Net/message";
+import * as EQMessage from "@eqmessage";
 import { WorldSocket } from "../../net/instances";
 import { Box, Stack } from "@mui/material";
 import { UiWindowComponent } from "../../common/ui-window";
@@ -53,10 +53,12 @@ export const CharacterSelectUIComponent: React.FC = () => {
     if (!selectedChar) {
       return;
     }
+
     WorldSocket.registerOpCodeHandler(
       EQMessage.OpCodes.OP_ZoneSessionValid,
       EQMessage.Bool,
       (data) => {
+        console.log('Zone session valid:', data);
         if (data) {
           WorldSocket.sendMessage(
             EQMessage.OpCodes.OP_RequestClientZoneChange,
@@ -94,17 +96,7 @@ export const CharacterSelectUIComponent: React.FC = () => {
       EQMessage.EnterWorld,
       { name: selectedChar.name, tutorial: 0, returnHome: 0 },
     );
-
-    GameManager.instance.instantiatePlayer(
-      selectedChar as EQMessage.PlayerProfile,
-    );
-    // setMode("game");
-    // MusicPlayer.stop();
-    // GameManager.instance.loadZoneId(selectedChar.zone);
-    // GameManager.instance.instantiatePlayer(
-    //   selectedChar as EQMessage.PlayerProfile,
-    // );
-  }, [setMode, selectedChar]);
+  }, [selectedChar, setMode]);
 
   useEffect(() => {
     const keyHandler = (e: KeyboardEvent) => {

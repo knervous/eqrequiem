@@ -4,11 +4,15 @@ import (
 	"encoding/binary"
 	eqpb "knervous/eqgo/internal/api/proto"
 	"knervous/eqgo/internal/message"
+	"knervous/eqgo/internal/session"
 	"log"
 )
 
+type ClientMessage struct {
+}
+
 // DatagramHandler defines the signature for handling datagrams.
-type DatagramHandler func(msg message.ClientMessage, payload []byte)
+type DatagramHandler func(msg message.ClientMessage, clientSession *session.Session, payload []byte)
 
 // HandlerRegistry holds the handler mappings and dependencies.
 type HandlerRegistry struct {
@@ -37,7 +41,12 @@ func (r *HandlerRegistry) HandleZonePacket(msg message.ClientMessage) {
 	op := binary.LittleEndian.Uint16(msg.Data[:2])
 	payload := msg.Data[2:]
 	if h, ok := r.handlers[(eqpb.OpCodes)(op)]; ok {
-		h(msg, payload)
+		clientSession, ok := session.GetSessionManager().GetSession(msg.SessionID)
+		if !ok {
+			log.Printf("failed to get session for sessionID %d", msg.SessionID)
+			return
+		}
+		h(msg, clientSession, payload)
 	} else {
 		log.Printf("no handler for opcode %d from session %d", op, msg.SessionID)
 	}

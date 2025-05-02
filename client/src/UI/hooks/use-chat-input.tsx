@@ -22,6 +22,7 @@ export const useChatInput = () => {
 
   const handleKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLInputElement>) => {
+      event.stopPropagation();
       if (event.key === "Enter") {
         event.preventDefault();
         if (inputValue.trim()) {

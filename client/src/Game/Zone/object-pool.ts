@@ -5,9 +5,11 @@ import { createStaticCollision } from "@game/GLTF/gltf-utilities";
 export default class ZoneObjects {
   parent: Node3D;
   objects: any;
-  constructor(parent: Node3D, objects: any) {
+  usePhysics: boolean;
+  constructor(parent: Node3D, objects: any, usePhysics: boolean) {
     this.parent = parent;
     this.objects = objects;
+    this.usePhysics = usePhysics;
   }
   dispose() {
     // Clean up resources if needed.
@@ -20,14 +22,14 @@ export default class ZoneObjects {
       // Process each key in parallel.
       const keyPromises = Object.entries(this.objects).map(
         async ([key, entries]) => {
-          const objectModel = new ObjectMesh("objects", key);
+          const objectModel = new ObjectMesh("objects", key, this.usePhysics);
           const packedScene = await objectModel.createPackedScene();
           if (packedScene) {
             // Process each entry in parallel.
             await Promise.all(
               (entries as any[]).map(async (entry, idx) => {
                 const instance =
-                  (await objectModel.instancePackedScene(objectPool)) as Node3D;
+                  (await objectModel.instancePackedScene(objectPool, this.usePhysics)) as Node3D;
                 if (instance) {
                   instance.set_name(`${key}-${idx}`);
                   instance.position = new Vector3(-entry.x, entry.y, entry.z);

@@ -10,6 +10,7 @@ import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
+	sync "sync"
 	unsafe "unsafe"
 )
 
@@ -20,19 +21,1751 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+type ItemInstance struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            int32                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	ItemId        int32                  `protobuf:"varint,2,opt,name=item_id,json=itemId,proto3" json:"item_id,omitempty"`
+	Mods          string                 `protobuf:"bytes,3,opt,name=mods,proto3" json:"mods,omitempty"` // JSON string
+	Charges       uint32                 `protobuf:"varint,4,opt,name=charges,proto3" json:"charges,omitempty"`
+	Quantity      uint32                 `protobuf:"varint,5,opt,name=quantity,proto3" json:"quantity,omitempty"`
+	OwnerId       *uint32                `protobuf:"varint,6,opt,name=owner_id,json=ownerId,proto3,oneof" json:"owner_id,omitempty"`
+	OwnerType     int32                  `protobuf:"varint,7,opt,name=owner_type,json=ownerType,proto3" json:"owner_type,omitempty"`
+	Slot          int32                  `protobuf:"varint,8,opt,name=slot,proto3" json:"slot,omitempty"`
+	Item          *Items                 `protobuf:"bytes,9,opt,name=item,proto3" json:"item,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ItemInstance) Reset() {
+	*x = ItemInstance{}
+	mi := &file_item_item_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ItemInstance) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ItemInstance) ProtoMessage() {}
+
+func (x *ItemInstance) ProtoReflect() protoreflect.Message {
+	mi := &file_item_item_proto_msgTypes[0]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ItemInstance.ProtoReflect.Descriptor instead.
+func (*ItemInstance) Descriptor() ([]byte, []int) {
+	return file_item_item_proto_rawDescGZIP(), []int{0}
+}
+
+func (x *ItemInstance) GetId() int32 {
+	if x != nil {
+		return x.Id
+	}
+	return 0
+}
+
+func (x *ItemInstance) GetItemId() int32 {
+	if x != nil {
+		return x.ItemId
+	}
+	return 0
+}
+
+func (x *ItemInstance) GetMods() string {
+	if x != nil {
+		return x.Mods
+	}
+	return ""
+}
+
+func (x *ItemInstance) GetCharges() uint32 {
+	if x != nil {
+		return x.Charges
+	}
+	return 0
+}
+
+func (x *ItemInstance) GetQuantity() uint32 {
+	if x != nil {
+		return x.Quantity
+	}
+	return 0
+}
+
+func (x *ItemInstance) GetOwnerId() uint32 {
+	if x != nil && x.OwnerId != nil {
+		return *x.OwnerId
+	}
+	return 0
+}
+
+func (x *ItemInstance) GetOwnerType() int32 {
+	if x != nil {
+		return x.OwnerType
+	}
+	return 0
+}
+
+func (x *ItemInstance) GetSlot() int32 {
+	if x != nil {
+		return x.Slot
+	}
+	return 0
+}
+
+func (x *ItemInstance) GetItem() *Items {
+	if x != nil {
+		return x.Item
+	}
+	return nil
+}
+
+type Items struct {
+	state               protoimpl.MessageState `protogen:"open.v1"`
+	Id                  int32                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Minstatus           int32                  `protobuf:"varint,2,opt,name=minstatus,proto3" json:"minstatus,omitempty"`
+	Name                string                 `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
+	Aagi                int32                  `protobuf:"varint,4,opt,name=aagi,proto3" json:"aagi,omitempty"`
+	Ac                  int32                  `protobuf:"varint,5,opt,name=ac,proto3" json:"ac,omitempty"`
+	Accuracy            int32                  `protobuf:"varint,6,opt,name=accuracy,proto3" json:"accuracy,omitempty"`
+	Acha                int32                  `protobuf:"varint,7,opt,name=acha,proto3" json:"acha,omitempty"`
+	Adex                int32                  `protobuf:"varint,8,opt,name=adex,proto3" json:"adex,omitempty"`
+	Aint                int32                  `protobuf:"varint,9,opt,name=aint,proto3" json:"aint,omitempty"`
+	Artifactflag        uint32                 `protobuf:"varint,10,opt,name=artifactflag,proto3" json:"artifactflag,omitempty"`
+	Asta                int32                  `protobuf:"varint,11,opt,name=asta,proto3" json:"asta,omitempty"`
+	Astr                int32                  `protobuf:"varint,12,opt,name=astr,proto3" json:"astr,omitempty"`
+	Attack              int32                  `protobuf:"varint,13,opt,name=attack,proto3" json:"attack,omitempty"`
+	Augrestrict         int32                  `protobuf:"varint,14,opt,name=augrestrict,proto3" json:"augrestrict,omitempty"`
+	Augslot1Type        int32                  `protobuf:"varint,15,opt,name=augslot1type,proto3" json:"augslot1type,omitempty"`
+	Augslot1Visible     int32                  `protobuf:"varint,16,opt,name=augslot1visible,proto3" json:"augslot1visible,omitempty"`
+	Augslot2Type        int32                  `protobuf:"varint,17,opt,name=augslot2type,proto3" json:"augslot2type,omitempty"`
+	Augslot2Visible     int32                  `protobuf:"varint,18,opt,name=augslot2visible,proto3" json:"augslot2visible,omitempty"`
+	Augslot3Type        int32                  `protobuf:"varint,19,opt,name=augslot3type,proto3" json:"augslot3type,omitempty"`
+	Augslot3Visible     int32                  `protobuf:"varint,20,opt,name=augslot3visible,proto3" json:"augslot3visible,omitempty"`
+	Augslot4Type        int32                  `protobuf:"varint,21,opt,name=augslot4type,proto3" json:"augslot4type,omitempty"`
+	Augslot4Visible     int32                  `protobuf:"varint,22,opt,name=augslot4visible,proto3" json:"augslot4visible,omitempty"`
+	Augslot5Type        int32                  `protobuf:"varint,23,opt,name=augslot5type,proto3" json:"augslot5type,omitempty"`
+	Augslot5Visible     int32                  `protobuf:"varint,24,opt,name=augslot5visible,proto3" json:"augslot5visible,omitempty"`
+	Augslot6Type        int32                  `protobuf:"varint,25,opt,name=augslot6type,proto3" json:"augslot6type,omitempty"`
+	Augslot6Visible     int32                  `protobuf:"varint,26,opt,name=augslot6visible,proto3" json:"augslot6visible,omitempty"`
+	Augtype             int32                  `protobuf:"varint,27,opt,name=augtype,proto3" json:"augtype,omitempty"`
+	Avoidance           int32                  `protobuf:"varint,28,opt,name=avoidance,proto3" json:"avoidance,omitempty"`
+	Awis                int32                  `protobuf:"varint,29,opt,name=awis,proto3" json:"awis,omitempty"`
+	Bagsize             int32                  `protobuf:"varint,30,opt,name=bagsize,proto3" json:"bagsize,omitempty"`
+	Bagslots            int32                  `protobuf:"varint,31,opt,name=bagslots,proto3" json:"bagslots,omitempty"`
+	Bagtype             int32                  `protobuf:"varint,32,opt,name=bagtype,proto3" json:"bagtype,omitempty"`
+	Bagwr               int32                  `protobuf:"varint,33,opt,name=bagwr,proto3" json:"bagwr,omitempty"`
+	Banedmgamt          int32                  `protobuf:"varint,34,opt,name=banedmgamt,proto3" json:"banedmgamt,omitempty"`
+	Banedmgraceamt      int32                  `protobuf:"varint,35,opt,name=banedmgraceamt,proto3" json:"banedmgraceamt,omitempty"`
+	Banedmgbody         int32                  `protobuf:"varint,36,opt,name=banedmgbody,proto3" json:"banedmgbody,omitempty"`
+	Banedmgrace         int32                  `protobuf:"varint,37,opt,name=banedmgrace,proto3" json:"banedmgrace,omitempty"`
+	Bardtype            int32                  `protobuf:"varint,38,opt,name=bardtype,proto3" json:"bardtype,omitempty"`
+	Bardvalue           int32                  `protobuf:"varint,39,opt,name=bardvalue,proto3" json:"bardvalue,omitempty"`
+	Book                int32                  `protobuf:"varint,40,opt,name=book,proto3" json:"book,omitempty"`
+	Casttime            int32                  `protobuf:"varint,41,opt,name=casttime,proto3" json:"casttime,omitempty"`
+	Casttime2           int32                  `protobuf:"varint,42,opt,name=casttime2,proto3" json:"casttime2,omitempty"`
+	Classes             int32                  `protobuf:"varint,43,opt,name=classes,proto3" json:"classes,omitempty"`
+	Color               uint32                 `protobuf:"varint,44,opt,name=color,proto3" json:"color,omitempty"`
+	Combateffects       string                 `protobuf:"bytes,45,opt,name=combateffects,proto3" json:"combateffects,omitempty"`
+	Extradmgskill       int32                  `protobuf:"varint,46,opt,name=extradmgskill,proto3" json:"extradmgskill,omitempty"`
+	Extradmgamt         int32                  `protobuf:"varint,47,opt,name=extradmgamt,proto3" json:"extradmgamt,omitempty"`
+	Price               int32                  `protobuf:"varint,48,opt,name=price,proto3" json:"price,omitempty"`
+	Cr                  int32                  `protobuf:"varint,49,opt,name=cr,proto3" json:"cr,omitempty"`
+	Damage              int32                  `protobuf:"varint,50,opt,name=damage,proto3" json:"damage,omitempty"`
+	Damageshield        int32                  `protobuf:"varint,51,opt,name=damageshield,proto3" json:"damageshield,omitempty"`
+	Deity               int32                  `protobuf:"varint,52,opt,name=deity,proto3" json:"deity,omitempty"`
+	Delay               int32                  `protobuf:"varint,53,opt,name=delay,proto3" json:"delay,omitempty"`
+	Augdistiller        uint32                 `protobuf:"varint,54,opt,name=augdistiller,proto3" json:"augdistiller,omitempty"`
+	Dotshielding        int32                  `protobuf:"varint,55,opt,name=dotshielding,proto3" json:"dotshielding,omitempty"`
+	Dr                  int32                  `protobuf:"varint,56,opt,name=dr,proto3" json:"dr,omitempty"`
+	Clicktype           int32                  `protobuf:"varint,57,opt,name=clicktype,proto3" json:"clicktype,omitempty"`
+	Clicklevel2         int32                  `protobuf:"varint,58,opt,name=clicklevel2,proto3" json:"clicklevel2,omitempty"`
+	Elemdmgtype         int32                  `protobuf:"varint,59,opt,name=elemdmgtype,proto3" json:"elemdmgtype,omitempty"`
+	Elemdmgamt          int32                  `protobuf:"varint,60,opt,name=elemdmgamt,proto3" json:"elemdmgamt,omitempty"`
+	Endur               int32                  `protobuf:"varint,61,opt,name=endur,proto3" json:"endur,omitempty"`
+	Factionamt1         int32                  `protobuf:"varint,62,opt,name=factionamt1,proto3" json:"factionamt1,omitempty"`
+	Factionamt2         int32                  `protobuf:"varint,63,opt,name=factionamt2,proto3" json:"factionamt2,omitempty"`
+	Factionamt3         int32                  `protobuf:"varint,64,opt,name=factionamt3,proto3" json:"factionamt3,omitempty"`
+	Factionamt4         int32                  `protobuf:"varint,65,opt,name=factionamt4,proto3" json:"factionamt4,omitempty"`
+	Factionmod1         int32                  `protobuf:"varint,66,opt,name=factionmod1,proto3" json:"factionmod1,omitempty"`
+	Factionmod2         int32                  `protobuf:"varint,67,opt,name=factionmod2,proto3" json:"factionmod2,omitempty"`
+	Factionmod3         int32                  `protobuf:"varint,68,opt,name=factionmod3,proto3" json:"factionmod3,omitempty"`
+	Factionmod4         int32                  `protobuf:"varint,69,opt,name=factionmod4,proto3" json:"factionmod4,omitempty"`
+	Focuseffect         int32                  `protobuf:"varint,70,opt,name=focuseffect,proto3" json:"focuseffect,omitempty"`
+	Fr                  int32                  `protobuf:"varint,71,opt,name=fr,proto3" json:"fr,omitempty"`
+	Fvnodrop            int32                  `protobuf:"varint,72,opt,name=fvnodrop,proto3" json:"fvnodrop,omitempty"`
+	Haste               int32                  `protobuf:"varint,73,opt,name=haste,proto3" json:"haste,omitempty"`
+	Clicklevel          int32                  `protobuf:"varint,74,opt,name=clicklevel,proto3" json:"clicklevel,omitempty"`
+	Hp                  int32                  `protobuf:"varint,75,opt,name=hp,proto3" json:"hp,omitempty"`
+	Regen               int32                  `protobuf:"varint,76,opt,name=regen,proto3" json:"regen,omitempty"`
+	Icon                int32                  `protobuf:"varint,77,opt,name=icon,proto3" json:"icon,omitempty"`
+	Idfile              string                 `protobuf:"bytes,78,opt,name=idfile,proto3" json:"idfile,omitempty"`
+	Itemclass           int32                  `protobuf:"varint,79,opt,name=itemclass,proto3" json:"itemclass,omitempty"`
+	Itemtype            int32                  `protobuf:"varint,80,opt,name=itemtype,proto3" json:"itemtype,omitempty"`
+	Light               int32                  `protobuf:"varint,81,opt,name=light,proto3" json:"light,omitempty"`
+	Lore                string                 `protobuf:"bytes,82,opt,name=lore,proto3" json:"lore,omitempty"`
+	Loregroup           int32                  `protobuf:"varint,83,opt,name=loregroup,proto3" json:"loregroup,omitempty"`
+	Magic               int32                  `protobuf:"varint,84,opt,name=magic,proto3" json:"magic,omitempty"`
+	Mana                int32                  `protobuf:"varint,85,opt,name=mana,proto3" json:"mana,omitempty"`
+	Manaregen           int32                  `protobuf:"varint,86,opt,name=manaregen,proto3" json:"manaregen,omitempty"`
+	Enduranceregen      int32                  `protobuf:"varint,87,opt,name=enduranceregen,proto3" json:"enduranceregen,omitempty"`
+	Material            int32                  `protobuf:"varint,88,opt,name=material,proto3" json:"material,omitempty"`
+	Herosforgemodel     int32                  `protobuf:"varint,89,opt,name=herosforgemodel,proto3" json:"herosforgemodel,omitempty"`
+	Maxcharges          int32                  `protobuf:"varint,90,opt,name=maxcharges,proto3" json:"maxcharges,omitempty"`
+	Mr                  int32                  `protobuf:"varint,91,opt,name=mr,proto3" json:"mr,omitempty"`
+	Nodrop              int32                  `protobuf:"varint,92,opt,name=nodrop,proto3" json:"nodrop,omitempty"`
+	Norent              int32                  `protobuf:"varint,93,opt,name=norent,proto3" json:"norent,omitempty"`
+	Pendingloreflag     uint32                 `protobuf:"varint,94,opt,name=pendingloreflag,proto3" json:"pendingloreflag,omitempty"`
+	Pr                  int32                  `protobuf:"varint,95,opt,name=pr,proto3" json:"pr,omitempty"`
+	Procrate            int32                  `protobuf:"varint,96,opt,name=procrate,proto3" json:"procrate,omitempty"`
+	Races               int32                  `protobuf:"varint,97,opt,name=races,proto3" json:"races,omitempty"`
+	Range               int32                  `protobuf:"varint,98,opt,name=range,proto3" json:"range,omitempty"`
+	Reclevel            int32                  `protobuf:"varint,99,opt,name=reclevel,proto3" json:"reclevel,omitempty"`
+	Recskill            int32                  `protobuf:"varint,100,opt,name=recskill,proto3" json:"recskill,omitempty"`
+	Reqlevel            int32                  `protobuf:"varint,101,opt,name=reqlevel,proto3" json:"reqlevel,omitempty"`
+	Sellrate            float64                `protobuf:"fixed64,102,opt,name=sellrate,proto3" json:"sellrate,omitempty"`
+	Shielding           int32                  `protobuf:"varint,103,opt,name=shielding,proto3" json:"shielding,omitempty"`
+	Size                int32                  `protobuf:"varint,104,opt,name=size,proto3" json:"size,omitempty"`
+	Skillmodtype        int32                  `protobuf:"varint,105,opt,name=skillmodtype,proto3" json:"skillmodtype,omitempty"`
+	Skillmodvalue       int32                  `protobuf:"varint,106,opt,name=skillmodvalue,proto3" json:"skillmodvalue,omitempty"`
+	Slots               int32                  `protobuf:"varint,107,opt,name=slots,proto3" json:"slots,omitempty"`
+	Clickeffect         int32                  `protobuf:"varint,108,opt,name=clickeffect,proto3" json:"clickeffect,omitempty"`
+	Spellshield         int32                  `protobuf:"varint,109,opt,name=spellshield,proto3" json:"spellshield,omitempty"`
+	Strikethrough       int32                  `protobuf:"varint,110,opt,name=strikethrough,proto3" json:"strikethrough,omitempty"`
+	Stunresist          int32                  `protobuf:"varint,111,opt,name=stunresist,proto3" json:"stunresist,omitempty"`
+	Summonedflag        uint32                 `protobuf:"varint,112,opt,name=summonedflag,proto3" json:"summonedflag,omitempty"`
+	Tradeskills         int32                  `protobuf:"varint,113,opt,name=tradeskills,proto3" json:"tradeskills,omitempty"`
+	Favor               int32                  `protobuf:"varint,114,opt,name=favor,proto3" json:"favor,omitempty"`
+	Weight              int32                  `protobuf:"varint,115,opt,name=weight,proto3" json:"weight,omitempty"`
+	Benefitflag         int32                  `protobuf:"varint,116,opt,name=benefitflag,proto3" json:"benefitflag,omitempty"`
+	Booktype            int32                  `protobuf:"varint,117,opt,name=booktype,proto3" json:"booktype,omitempty"`
+	Recastdelay         int32                  `protobuf:"varint,118,opt,name=recastdelay,proto3" json:"recastdelay,omitempty"`
+	Recasttype          int32                  `protobuf:"varint,119,opt,name=recasttype,proto3" json:"recasttype,omitempty"`
+	Guildfavor          int32                  `protobuf:"varint,120,opt,name=guildfavor,proto3" json:"guildfavor,omitempty"`
+	Attuneable          int32                  `protobuf:"varint,121,opt,name=attuneable,proto3" json:"attuneable,omitempty"`
+	Nopet               int32                  `protobuf:"varint,122,opt,name=nopet,proto3" json:"nopet,omitempty"`
+	Updated             string                 `protobuf:"bytes,123,opt,name=updated,proto3" json:"updated,omitempty"` // ISO 8601 string for time.Time
+	Pointtype           int32                  `protobuf:"varint,124,opt,name=pointtype,proto3" json:"pointtype,omitempty"`
+	Potionbelt          int32                  `protobuf:"varint,125,opt,name=potionbelt,proto3" json:"potionbelt,omitempty"`
+	Potionbeltslots     int32                  `protobuf:"varint,126,opt,name=potionbeltslots,proto3" json:"potionbeltslots,omitempty"`
+	Stacksize           int32                  `protobuf:"varint,127,opt,name=stacksize,proto3" json:"stacksize,omitempty"`
+	Notransfer          int32                  `protobuf:"varint,128,opt,name=notransfer,proto3" json:"notransfer,omitempty"`
+	Stackable           int32                  `protobuf:"varint,129,opt,name=stackable,proto3" json:"stackable,omitempty"`
+	Proceffect          int32                  `protobuf:"varint,130,opt,name=proceffect,proto3" json:"proceffect,omitempty"`
+	Proctype            int32                  `protobuf:"varint,131,opt,name=proctype,proto3" json:"proctype,omitempty"`
+	Proclevel2          int32                  `protobuf:"varint,132,opt,name=proclevel2,proto3" json:"proclevel2,omitempty"`
+	Proclevel           int32                  `protobuf:"varint,133,opt,name=proclevel,proto3" json:"proclevel,omitempty"`
+	Worneffect          int32                  `protobuf:"varint,134,opt,name=worneffect,proto3" json:"worneffect,omitempty"`
+	Worntype            int32                  `protobuf:"varint,135,opt,name=worntype,proto3" json:"worntype,omitempty"`
+	Wornlevel2          int32                  `protobuf:"varint,136,opt,name=wornlevel2,proto3" json:"wornlevel2,omitempty"`
+	Wornlevel           int32                  `protobuf:"varint,137,opt,name=wornlevel,proto3" json:"wornlevel,omitempty"`
+	Focustype           int32                  `protobuf:"varint,138,opt,name=focustype,proto3" json:"focustype,omitempty"`
+	Focuslevel2         int32                  `protobuf:"varint,139,opt,name=focuslevel2,proto3" json:"focuslevel2,omitempty"`
+	Focuslevel          int32                  `protobuf:"varint,140,opt,name=focuslevel,proto3" json:"focuslevel,omitempty"`
+	Scrolleffect        int32                  `protobuf:"varint,141,opt,name=scrolleffect,proto3" json:"scrolleffect,omitempty"`
+	Scrolltype          int32                  `protobuf:"varint,142,opt,name=scrolltype,proto3" json:"scrolltype,omitempty"`
+	Scrolllevel2        int32                  `protobuf:"varint,143,opt,name=scrolllevel2,proto3" json:"scrolllevel2,omitempty"`
+	Scrolllevel         int32                  `protobuf:"varint,144,opt,name=scrolllevel,proto3" json:"scrolllevel,omitempty"`
+	Svcorruption        int32                  `protobuf:"varint,145,opt,name=svcorruption,proto3" json:"svcorruption,omitempty"`
+	Skillmodmax         int32                  `protobuf:"varint,146,opt,name=skillmodmax,proto3" json:"skillmodmax,omitempty"`
+	Questitemflag       int32                  `protobuf:"varint,147,opt,name=questitemflag,proto3" json:"questitemflag,omitempty"`
+	Purity              int32                  `protobuf:"varint,148,opt,name=purity,proto3" json:"purity,omitempty"`
+	Evoitem             int32                  `protobuf:"varint,149,opt,name=evoitem,proto3" json:"evoitem,omitempty"`
+	Evoid               int32                  `protobuf:"varint,150,opt,name=evoid,proto3" json:"evoid,omitempty"`
+	Evolvinglevel       int32                  `protobuf:"varint,151,opt,name=evolvinglevel,proto3" json:"evolvinglevel,omitempty"`
+	Evomax              int32                  `protobuf:"varint,152,opt,name=evomax,proto3" json:"evomax,omitempty"`
+	Dsmitigation        int32                  `protobuf:"varint,153,opt,name=dsmitigation,proto3" json:"dsmitigation,omitempty"`
+	Healamt             int32                  `protobuf:"varint,154,opt,name=healamt,proto3" json:"healamt,omitempty"`
+	Spelldmg            int32                  `protobuf:"varint,155,opt,name=spelldmg,proto3" json:"spelldmg,omitempty"`
+	Clairvoyance        int32                  `protobuf:"varint,156,opt,name=clairvoyance,proto3" json:"clairvoyance,omitempty"`
+	Backstabdmg         int32                  `protobuf:"varint,157,opt,name=backstabdmg,proto3" json:"backstabdmg,omitempty"`
+	Elitematerial       int32                  `protobuf:"varint,158,opt,name=elitematerial,proto3" json:"elitematerial,omitempty"`
+	Scriptfileid        int32                  `protobuf:"varint,159,opt,name=scriptfileid,proto3" json:"scriptfileid,omitempty"`
+	Expendablearrow     int32                  `protobuf:"varint,160,opt,name=expendablearrow,proto3" json:"expendablearrow,omitempty"`
+	Powersourcecapacity int32                  `protobuf:"varint,161,opt,name=powersourcecapacity,proto3" json:"powersourcecapacity,omitempty"`
+	Bardeffect          int32                  `protobuf:"varint,162,opt,name=bardeffect,proto3" json:"bardeffect,omitempty"`
+	Bardeffecttype      int32                  `protobuf:"varint,163,opt,name=bardeffecttype,proto3" json:"bardeffecttype,omitempty"`
+	Bardlevel2          int32                  `protobuf:"varint,164,opt,name=bardlevel2,proto3" json:"bardlevel2,omitempty"`
+	Bardlevel           int32                  `protobuf:"varint,165,opt,name=bardlevel,proto3" json:"bardlevel,omitempty"`
+	Subtype             int32                  `protobuf:"varint,166,opt,name=subtype,proto3" json:"subtype,omitempty"`
+	Heirloom            int32                  `protobuf:"varint,167,opt,name=heirloom,proto3" json:"heirloom,omitempty"`
+	Placeable           int32                  `protobuf:"varint,168,opt,name=placeable,proto3" json:"placeable,omitempty"`
+	Epicitem            int32                  `protobuf:"varint,169,opt,name=epicitem,proto3" json:"epicitem,omitempty"`
+	unknownFields       protoimpl.UnknownFields
+	sizeCache           protoimpl.SizeCache
+}
+
+func (x *Items) Reset() {
+	*x = Items{}
+	mi := &file_item_item_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Items) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Items) ProtoMessage() {}
+
+func (x *Items) ProtoReflect() protoreflect.Message {
+	mi := &file_item_item_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Items.ProtoReflect.Descriptor instead.
+func (*Items) Descriptor() ([]byte, []int) {
+	return file_item_item_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *Items) GetId() int32 {
+	if x != nil {
+		return x.Id
+	}
+	return 0
+}
+
+func (x *Items) GetMinstatus() int32 {
+	if x != nil {
+		return x.Minstatus
+	}
+	return 0
+}
+
+func (x *Items) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *Items) GetAagi() int32 {
+	if x != nil {
+		return x.Aagi
+	}
+	return 0
+}
+
+func (x *Items) GetAc() int32 {
+	if x != nil {
+		return x.Ac
+	}
+	return 0
+}
+
+func (x *Items) GetAccuracy() int32 {
+	if x != nil {
+		return x.Accuracy
+	}
+	return 0
+}
+
+func (x *Items) GetAcha() int32 {
+	if x != nil {
+		return x.Acha
+	}
+	return 0
+}
+
+func (x *Items) GetAdex() int32 {
+	if x != nil {
+		return x.Adex
+	}
+	return 0
+}
+
+func (x *Items) GetAint() int32 {
+	if x != nil {
+		return x.Aint
+	}
+	return 0
+}
+
+func (x *Items) GetArtifactflag() uint32 {
+	if x != nil {
+		return x.Artifactflag
+	}
+	return 0
+}
+
+func (x *Items) GetAsta() int32 {
+	if x != nil {
+		return x.Asta
+	}
+	return 0
+}
+
+func (x *Items) GetAstr() int32 {
+	if x != nil {
+		return x.Astr
+	}
+	return 0
+}
+
+func (x *Items) GetAttack() int32 {
+	if x != nil {
+		return x.Attack
+	}
+	return 0
+}
+
+func (x *Items) GetAugrestrict() int32 {
+	if x != nil {
+		return x.Augrestrict
+	}
+	return 0
+}
+
+func (x *Items) GetAugslot1Type() int32 {
+	if x != nil {
+		return x.Augslot1Type
+	}
+	return 0
+}
+
+func (x *Items) GetAugslot1Visible() int32 {
+	if x != nil {
+		return x.Augslot1Visible
+	}
+	return 0
+}
+
+func (x *Items) GetAugslot2Type() int32 {
+	if x != nil {
+		return x.Augslot2Type
+	}
+	return 0
+}
+
+func (x *Items) GetAugslot2Visible() int32 {
+	if x != nil {
+		return x.Augslot2Visible
+	}
+	return 0
+}
+
+func (x *Items) GetAugslot3Type() int32 {
+	if x != nil {
+		return x.Augslot3Type
+	}
+	return 0
+}
+
+func (x *Items) GetAugslot3Visible() int32 {
+	if x != nil {
+		return x.Augslot3Visible
+	}
+	return 0
+}
+
+func (x *Items) GetAugslot4Type() int32 {
+	if x != nil {
+		return x.Augslot4Type
+	}
+	return 0
+}
+
+func (x *Items) GetAugslot4Visible() int32 {
+	if x != nil {
+		return x.Augslot4Visible
+	}
+	return 0
+}
+
+func (x *Items) GetAugslot5Type() int32 {
+	if x != nil {
+		return x.Augslot5Type
+	}
+	return 0
+}
+
+func (x *Items) GetAugslot5Visible() int32 {
+	if x != nil {
+		return x.Augslot5Visible
+	}
+	return 0
+}
+
+func (x *Items) GetAugslot6Type() int32 {
+	if x != nil {
+		return x.Augslot6Type
+	}
+	return 0
+}
+
+func (x *Items) GetAugslot6Visible() int32 {
+	if x != nil {
+		return x.Augslot6Visible
+	}
+	return 0
+}
+
+func (x *Items) GetAugtype() int32 {
+	if x != nil {
+		return x.Augtype
+	}
+	return 0
+}
+
+func (x *Items) GetAvoidance() int32 {
+	if x != nil {
+		return x.Avoidance
+	}
+	return 0
+}
+
+func (x *Items) GetAwis() int32 {
+	if x != nil {
+		return x.Awis
+	}
+	return 0
+}
+
+func (x *Items) GetBagsize() int32 {
+	if x != nil {
+		return x.Bagsize
+	}
+	return 0
+}
+
+func (x *Items) GetBagslots() int32 {
+	if x != nil {
+		return x.Bagslots
+	}
+	return 0
+}
+
+func (x *Items) GetBagtype() int32 {
+	if x != nil {
+		return x.Bagtype
+	}
+	return 0
+}
+
+func (x *Items) GetBagwr() int32 {
+	if x != nil {
+		return x.Bagwr
+	}
+	return 0
+}
+
+func (x *Items) GetBanedmgamt() int32 {
+	if x != nil {
+		return x.Banedmgamt
+	}
+	return 0
+}
+
+func (x *Items) GetBanedmgraceamt() int32 {
+	if x != nil {
+		return x.Banedmgraceamt
+	}
+	return 0
+}
+
+func (x *Items) GetBanedmgbody() int32 {
+	if x != nil {
+		return x.Banedmgbody
+	}
+	return 0
+}
+
+func (x *Items) GetBanedmgrace() int32 {
+	if x != nil {
+		return x.Banedmgrace
+	}
+	return 0
+}
+
+func (x *Items) GetBardtype() int32 {
+	if x != nil {
+		return x.Bardtype
+	}
+	return 0
+}
+
+func (x *Items) GetBardvalue() int32 {
+	if x != nil {
+		return x.Bardvalue
+	}
+	return 0
+}
+
+func (x *Items) GetBook() int32 {
+	if x != nil {
+		return x.Book
+	}
+	return 0
+}
+
+func (x *Items) GetCasttime() int32 {
+	if x != nil {
+		return x.Casttime
+	}
+	return 0
+}
+
+func (x *Items) GetCasttime2() int32 {
+	if x != nil {
+		return x.Casttime2
+	}
+	return 0
+}
+
+func (x *Items) GetClasses() int32 {
+	if x != nil {
+		return x.Classes
+	}
+	return 0
+}
+
+func (x *Items) GetColor() uint32 {
+	if x != nil {
+		return x.Color
+	}
+	return 0
+}
+
+func (x *Items) GetCombateffects() string {
+	if x != nil {
+		return x.Combateffects
+	}
+	return ""
+}
+
+func (x *Items) GetExtradmgskill() int32 {
+	if x != nil {
+		return x.Extradmgskill
+	}
+	return 0
+}
+
+func (x *Items) GetExtradmgamt() int32 {
+	if x != nil {
+		return x.Extradmgamt
+	}
+	return 0
+}
+
+func (x *Items) GetPrice() int32 {
+	if x != nil {
+		return x.Price
+	}
+	return 0
+}
+
+func (x *Items) GetCr() int32 {
+	if x != nil {
+		return x.Cr
+	}
+	return 0
+}
+
+func (x *Items) GetDamage() int32 {
+	if x != nil {
+		return x.Damage
+	}
+	return 0
+}
+
+func (x *Items) GetDamageshield() int32 {
+	if x != nil {
+		return x.Damageshield
+	}
+	return 0
+}
+
+func (x *Items) GetDeity() int32 {
+	if x != nil {
+		return x.Deity
+	}
+	return 0
+}
+
+func (x *Items) GetDelay() int32 {
+	if x != nil {
+		return x.Delay
+	}
+	return 0
+}
+
+func (x *Items) GetAugdistiller() uint32 {
+	if x != nil {
+		return x.Augdistiller
+	}
+	return 0
+}
+
+func (x *Items) GetDotshielding() int32 {
+	if x != nil {
+		return x.Dotshielding
+	}
+	return 0
+}
+
+func (x *Items) GetDr() int32 {
+	if x != nil {
+		return x.Dr
+	}
+	return 0
+}
+
+func (x *Items) GetClicktype() int32 {
+	if x != nil {
+		return x.Clicktype
+	}
+	return 0
+}
+
+func (x *Items) GetClicklevel2() int32 {
+	if x != nil {
+		return x.Clicklevel2
+	}
+	return 0
+}
+
+func (x *Items) GetElemdmgtype() int32 {
+	if x != nil {
+		return x.Elemdmgtype
+	}
+	return 0
+}
+
+func (x *Items) GetElemdmgamt() int32 {
+	if x != nil {
+		return x.Elemdmgamt
+	}
+	return 0
+}
+
+func (x *Items) GetEndur() int32 {
+	if x != nil {
+		return x.Endur
+	}
+	return 0
+}
+
+func (x *Items) GetFactionamt1() int32 {
+	if x != nil {
+		return x.Factionamt1
+	}
+	return 0
+}
+
+func (x *Items) GetFactionamt2() int32 {
+	if x != nil {
+		return x.Factionamt2
+	}
+	return 0
+}
+
+func (x *Items) GetFactionamt3() int32 {
+	if x != nil {
+		return x.Factionamt3
+	}
+	return 0
+}
+
+func (x *Items) GetFactionamt4() int32 {
+	if x != nil {
+		return x.Factionamt4
+	}
+	return 0
+}
+
+func (x *Items) GetFactionmod1() int32 {
+	if x != nil {
+		return x.Factionmod1
+	}
+	return 0
+}
+
+func (x *Items) GetFactionmod2() int32 {
+	if x != nil {
+		return x.Factionmod2
+	}
+	return 0
+}
+
+func (x *Items) GetFactionmod3() int32 {
+	if x != nil {
+		return x.Factionmod3
+	}
+	return 0
+}
+
+func (x *Items) GetFactionmod4() int32 {
+	if x != nil {
+		return x.Factionmod4
+	}
+	return 0
+}
+
+func (x *Items) GetFocuseffect() int32 {
+	if x != nil {
+		return x.Focuseffect
+	}
+	return 0
+}
+
+func (x *Items) GetFr() int32 {
+	if x != nil {
+		return x.Fr
+	}
+	return 0
+}
+
+func (x *Items) GetFvnodrop() int32 {
+	if x != nil {
+		return x.Fvnodrop
+	}
+	return 0
+}
+
+func (x *Items) GetHaste() int32 {
+	if x != nil {
+		return x.Haste
+	}
+	return 0
+}
+
+func (x *Items) GetClicklevel() int32 {
+	if x != nil {
+		return x.Clicklevel
+	}
+	return 0
+}
+
+func (x *Items) GetHp() int32 {
+	if x != nil {
+		return x.Hp
+	}
+	return 0
+}
+
+func (x *Items) GetRegen() int32 {
+	if x != nil {
+		return x.Regen
+	}
+	return 0
+}
+
+func (x *Items) GetIcon() int32 {
+	if x != nil {
+		return x.Icon
+	}
+	return 0
+}
+
+func (x *Items) GetIdfile() string {
+	if x != nil {
+		return x.Idfile
+	}
+	return ""
+}
+
+func (x *Items) GetItemclass() int32 {
+	if x != nil {
+		return x.Itemclass
+	}
+	return 0
+}
+
+func (x *Items) GetItemtype() int32 {
+	if x != nil {
+		return x.Itemtype
+	}
+	return 0
+}
+
+func (x *Items) GetLight() int32 {
+	if x != nil {
+		return x.Light
+	}
+	return 0
+}
+
+func (x *Items) GetLore() string {
+	if x != nil {
+		return x.Lore
+	}
+	return ""
+}
+
+func (x *Items) GetLoregroup() int32 {
+	if x != nil {
+		return x.Loregroup
+	}
+	return 0
+}
+
+func (x *Items) GetMagic() int32 {
+	if x != nil {
+		return x.Magic
+	}
+	return 0
+}
+
+func (x *Items) GetMana() int32 {
+	if x != nil {
+		return x.Mana
+	}
+	return 0
+}
+
+func (x *Items) GetManaregen() int32 {
+	if x != nil {
+		return x.Manaregen
+	}
+	return 0
+}
+
+func (x *Items) GetEnduranceregen() int32 {
+	if x != nil {
+		return x.Enduranceregen
+	}
+	return 0
+}
+
+func (x *Items) GetMaterial() int32 {
+	if x != nil {
+		return x.Material
+	}
+	return 0
+}
+
+func (x *Items) GetHerosforgemodel() int32 {
+	if x != nil {
+		return x.Herosforgemodel
+	}
+	return 0
+}
+
+func (x *Items) GetMaxcharges() int32 {
+	if x != nil {
+		return x.Maxcharges
+	}
+	return 0
+}
+
+func (x *Items) GetMr() int32 {
+	if x != nil {
+		return x.Mr
+	}
+	return 0
+}
+
+func (x *Items) GetNodrop() int32 {
+	if x != nil {
+		return x.Nodrop
+	}
+	return 0
+}
+
+func (x *Items) GetNorent() int32 {
+	if x != nil {
+		return x.Norent
+	}
+	return 0
+}
+
+func (x *Items) GetPendingloreflag() uint32 {
+	if x != nil {
+		return x.Pendingloreflag
+	}
+	return 0
+}
+
+func (x *Items) GetPr() int32 {
+	if x != nil {
+		return x.Pr
+	}
+	return 0
+}
+
+func (x *Items) GetProcrate() int32 {
+	if x != nil {
+		return x.Procrate
+	}
+	return 0
+}
+
+func (x *Items) GetRaces() int32 {
+	if x != nil {
+		return x.Races
+	}
+	return 0
+}
+
+func (x *Items) GetRange() int32 {
+	if x != nil {
+		return x.Range
+	}
+	return 0
+}
+
+func (x *Items) GetReclevel() int32 {
+	if x != nil {
+		return x.Reclevel
+	}
+	return 0
+}
+
+func (x *Items) GetRecskill() int32 {
+	if x != nil {
+		return x.Recskill
+	}
+	return 0
+}
+
+func (x *Items) GetReqlevel() int32 {
+	if x != nil {
+		return x.Reqlevel
+	}
+	return 0
+}
+
+func (x *Items) GetSellrate() float64 {
+	if x != nil {
+		return x.Sellrate
+	}
+	return 0
+}
+
+func (x *Items) GetShielding() int32 {
+	if x != nil {
+		return x.Shielding
+	}
+	return 0
+}
+
+func (x *Items) GetSize() int32 {
+	if x != nil {
+		return x.Size
+	}
+	return 0
+}
+
+func (x *Items) GetSkillmodtype() int32 {
+	if x != nil {
+		return x.Skillmodtype
+	}
+	return 0
+}
+
+func (x *Items) GetSkillmodvalue() int32 {
+	if x != nil {
+		return x.Skillmodvalue
+	}
+	return 0
+}
+
+func (x *Items) GetSlots() int32 {
+	if x != nil {
+		return x.Slots
+	}
+	return 0
+}
+
+func (x *Items) GetClickeffect() int32 {
+	if x != nil {
+		return x.Clickeffect
+	}
+	return 0
+}
+
+func (x *Items) GetSpellshield() int32 {
+	if x != nil {
+		return x.Spellshield
+	}
+	return 0
+}
+
+func (x *Items) GetStrikethrough() int32 {
+	if x != nil {
+		return x.Strikethrough
+	}
+	return 0
+}
+
+func (x *Items) GetStunresist() int32 {
+	if x != nil {
+		return x.Stunresist
+	}
+	return 0
+}
+
+func (x *Items) GetSummonedflag() uint32 {
+	if x != nil {
+		return x.Summonedflag
+	}
+	return 0
+}
+
+func (x *Items) GetTradeskills() int32 {
+	if x != nil {
+		return x.Tradeskills
+	}
+	return 0
+}
+
+func (x *Items) GetFavor() int32 {
+	if x != nil {
+		return x.Favor
+	}
+	return 0
+}
+
+func (x *Items) GetWeight() int32 {
+	if x != nil {
+		return x.Weight
+	}
+	return 0
+}
+
+func (x *Items) GetBenefitflag() int32 {
+	if x != nil {
+		return x.Benefitflag
+	}
+	return 0
+}
+
+func (x *Items) GetBooktype() int32 {
+	if x != nil {
+		return x.Booktype
+	}
+	return 0
+}
+
+func (x *Items) GetRecastdelay() int32 {
+	if x != nil {
+		return x.Recastdelay
+	}
+	return 0
+}
+
+func (x *Items) GetRecasttype() int32 {
+	if x != nil {
+		return x.Recasttype
+	}
+	return 0
+}
+
+func (x *Items) GetGuildfavor() int32 {
+	if x != nil {
+		return x.Guildfavor
+	}
+	return 0
+}
+
+func (x *Items) GetAttuneable() int32 {
+	if x != nil {
+		return x.Attuneable
+	}
+	return 0
+}
+
+func (x *Items) GetNopet() int32 {
+	if x != nil {
+		return x.Nopet
+	}
+	return 0
+}
+
+func (x *Items) GetUpdated() string {
+	if x != nil {
+		return x.Updated
+	}
+	return ""
+}
+
+func (x *Items) GetPointtype() int32 {
+	if x != nil {
+		return x.Pointtype
+	}
+	return 0
+}
+
+func (x *Items) GetPotionbelt() int32 {
+	if x != nil {
+		return x.Potionbelt
+	}
+	return 0
+}
+
+func (x *Items) GetPotionbeltslots() int32 {
+	if x != nil {
+		return x.Potionbeltslots
+	}
+	return 0
+}
+
+func (x *Items) GetStacksize() int32 {
+	if x != nil {
+		return x.Stacksize
+	}
+	return 0
+}
+
+func (x *Items) GetNotransfer() int32 {
+	if x != nil {
+		return x.Notransfer
+	}
+	return 0
+}
+
+func (x *Items) GetStackable() int32 {
+	if x != nil {
+		return x.Stackable
+	}
+	return 0
+}
+
+func (x *Items) GetProceffect() int32 {
+	if x != nil {
+		return x.Proceffect
+	}
+	return 0
+}
+
+func (x *Items) GetProctype() int32 {
+	if x != nil {
+		return x.Proctype
+	}
+	return 0
+}
+
+func (x *Items) GetProclevel2() int32 {
+	if x != nil {
+		return x.Proclevel2
+	}
+	return 0
+}
+
+func (x *Items) GetProclevel() int32 {
+	if x != nil {
+		return x.Proclevel
+	}
+	return 0
+}
+
+func (x *Items) GetWorneffect() int32 {
+	if x != nil {
+		return x.Worneffect
+	}
+	return 0
+}
+
+func (x *Items) GetWorntype() int32 {
+	if x != nil {
+		return x.Worntype
+	}
+	return 0
+}
+
+func (x *Items) GetWornlevel2() int32 {
+	if x != nil {
+		return x.Wornlevel2
+	}
+	return 0
+}
+
+func (x *Items) GetWornlevel() int32 {
+	if x != nil {
+		return x.Wornlevel
+	}
+	return 0
+}
+
+func (x *Items) GetFocustype() int32 {
+	if x != nil {
+		return x.Focustype
+	}
+	return 0
+}
+
+func (x *Items) GetFocuslevel2() int32 {
+	if x != nil {
+		return x.Focuslevel2
+	}
+	return 0
+}
+
+func (x *Items) GetFocuslevel() int32 {
+	if x != nil {
+		return x.Focuslevel
+	}
+	return 0
+}
+
+func (x *Items) GetScrolleffect() int32 {
+	if x != nil {
+		return x.Scrolleffect
+	}
+	return 0
+}
+
+func (x *Items) GetScrolltype() int32 {
+	if x != nil {
+		return x.Scrolltype
+	}
+	return 0
+}
+
+func (x *Items) GetScrolllevel2() int32 {
+	if x != nil {
+		return x.Scrolllevel2
+	}
+	return 0
+}
+
+func (x *Items) GetScrolllevel() int32 {
+	if x != nil {
+		return x.Scrolllevel
+	}
+	return 0
+}
+
+func (x *Items) GetSvcorruption() int32 {
+	if x != nil {
+		return x.Svcorruption
+	}
+	return 0
+}
+
+func (x *Items) GetSkillmodmax() int32 {
+	if x != nil {
+		return x.Skillmodmax
+	}
+	return 0
+}
+
+func (x *Items) GetQuestitemflag() int32 {
+	if x != nil {
+		return x.Questitemflag
+	}
+	return 0
+}
+
+func (x *Items) GetPurity() int32 {
+	if x != nil {
+		return x.Purity
+	}
+	return 0
+}
+
+func (x *Items) GetEvoitem() int32 {
+	if x != nil {
+		return x.Evoitem
+	}
+	return 0
+}
+
+func (x *Items) GetEvoid() int32 {
+	if x != nil {
+		return x.Evoid
+	}
+	return 0
+}
+
+func (x *Items) GetEvolvinglevel() int32 {
+	if x != nil {
+		return x.Evolvinglevel
+	}
+	return 0
+}
+
+func (x *Items) GetEvomax() int32 {
+	if x != nil {
+		return x.Evomax
+	}
+	return 0
+}
+
+func (x *Items) GetDsmitigation() int32 {
+	if x != nil {
+		return x.Dsmitigation
+	}
+	return 0
+}
+
+func (x *Items) GetHealamt() int32 {
+	if x != nil {
+		return x.Healamt
+	}
+	return 0
+}
+
+func (x *Items) GetSpelldmg() int32 {
+	if x != nil {
+		return x.Spelldmg
+	}
+	return 0
+}
+
+func (x *Items) GetClairvoyance() int32 {
+	if x != nil {
+		return x.Clairvoyance
+	}
+	return 0
+}
+
+func (x *Items) GetBackstabdmg() int32 {
+	if x != nil {
+		return x.Backstabdmg
+	}
+	return 0
+}
+
+func (x *Items) GetElitematerial() int32 {
+	if x != nil {
+		return x.Elitematerial
+	}
+	return 0
+}
+
+func (x *Items) GetScriptfileid() int32 {
+	if x != nil {
+		return x.Scriptfileid
+	}
+	return 0
+}
+
+func (x *Items) GetExpendablearrow() int32 {
+	if x != nil {
+		return x.Expendablearrow
+	}
+	return 0
+}
+
+func (x *Items) GetPowersourcecapacity() int32 {
+	if x != nil {
+		return x.Powersourcecapacity
+	}
+	return 0
+}
+
+func (x *Items) GetBardeffect() int32 {
+	if x != nil {
+		return x.Bardeffect
+	}
+	return 0
+}
+
+func (x *Items) GetBardeffecttype() int32 {
+	if x != nil {
+		return x.Bardeffecttype
+	}
+	return 0
+}
+
+func (x *Items) GetBardlevel2() int32 {
+	if x != nil {
+		return x.Bardlevel2
+	}
+	return 0
+}
+
+func (x *Items) GetBardlevel() int32 {
+	if x != nil {
+		return x.Bardlevel
+	}
+	return 0
+}
+
+func (x *Items) GetSubtype() int32 {
+	if x != nil {
+		return x.Subtype
+	}
+	return 0
+}
+
+func (x *Items) GetHeirloom() int32 {
+	if x != nil {
+		return x.Heirloom
+	}
+	return 0
+}
+
+func (x *Items) GetPlaceable() int32 {
+	if x != nil {
+		return x.Placeable
+	}
+	return 0
+}
+
+func (x *Items) GetEpicitem() int32 {
+	if x != nil {
+		return x.Epicitem
+	}
+	return 0
+}
+
 var File_item_item_proto protoreflect.FileDescriptor
 
 const file_item_item_proto_rawDesc = "" +
 	"\n" +
-	"\x0fitem/item.proto\x12\aeq.itemB'Z%knervous/eqgo/internal/api/proto/itemb\x06proto3"
+	"\x0fitem/item.proto\x12\aeq.item\"\x85\x02\n" +
+	"\fItemInstance\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\x05R\x02id\x12\x17\n" +
+	"\aitem_id\x18\x02 \x01(\x05R\x06itemId\x12\x12\n" +
+	"\x04mods\x18\x03 \x01(\tR\x04mods\x12\x18\n" +
+	"\acharges\x18\x04 \x01(\rR\acharges\x12\x1a\n" +
+	"\bquantity\x18\x05 \x01(\rR\bquantity\x12\x1e\n" +
+	"\bowner_id\x18\x06 \x01(\rH\x00R\aownerId\x88\x01\x01\x12\x1d\n" +
+	"\n" +
+	"owner_type\x18\a \x01(\x05R\townerType\x12\x12\n" +
+	"\x04slot\x18\b \x01(\x05R\x04slot\x12\"\n" +
+	"\x04item\x18\t \x01(\v2\x0e.eq.item.ItemsR\x04itemB\v\n" +
+	"\t_owner_id\"\xeb'\n" +
+	"\x05Items\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\x05R\x02id\x12\x1c\n" +
+	"\tminstatus\x18\x02 \x01(\x05R\tminstatus\x12\x12\n" +
+	"\x04name\x18\x03 \x01(\tR\x04name\x12\x12\n" +
+	"\x04aagi\x18\x04 \x01(\x05R\x04aagi\x12\x0e\n" +
+	"\x02ac\x18\x05 \x01(\x05R\x02ac\x12\x1a\n" +
+	"\baccuracy\x18\x06 \x01(\x05R\baccuracy\x12\x12\n" +
+	"\x04acha\x18\a \x01(\x05R\x04acha\x12\x12\n" +
+	"\x04adex\x18\b \x01(\x05R\x04adex\x12\x12\n" +
+	"\x04aint\x18\t \x01(\x05R\x04aint\x12\"\n" +
+	"\fartifactflag\x18\n" +
+	" \x01(\rR\fartifactflag\x12\x12\n" +
+	"\x04asta\x18\v \x01(\x05R\x04asta\x12\x12\n" +
+	"\x04astr\x18\f \x01(\x05R\x04astr\x12\x16\n" +
+	"\x06attack\x18\r \x01(\x05R\x06attack\x12 \n" +
+	"\vaugrestrict\x18\x0e \x01(\x05R\vaugrestrict\x12\"\n" +
+	"\faugslot1type\x18\x0f \x01(\x05R\faugslot1type\x12(\n" +
+	"\x0faugslot1visible\x18\x10 \x01(\x05R\x0faugslot1visible\x12\"\n" +
+	"\faugslot2type\x18\x11 \x01(\x05R\faugslot2type\x12(\n" +
+	"\x0faugslot2visible\x18\x12 \x01(\x05R\x0faugslot2visible\x12\"\n" +
+	"\faugslot3type\x18\x13 \x01(\x05R\faugslot3type\x12(\n" +
+	"\x0faugslot3visible\x18\x14 \x01(\x05R\x0faugslot3visible\x12\"\n" +
+	"\faugslot4type\x18\x15 \x01(\x05R\faugslot4type\x12(\n" +
+	"\x0faugslot4visible\x18\x16 \x01(\x05R\x0faugslot4visible\x12\"\n" +
+	"\faugslot5type\x18\x17 \x01(\x05R\faugslot5type\x12(\n" +
+	"\x0faugslot5visible\x18\x18 \x01(\x05R\x0faugslot5visible\x12\"\n" +
+	"\faugslot6type\x18\x19 \x01(\x05R\faugslot6type\x12(\n" +
+	"\x0faugslot6visible\x18\x1a \x01(\x05R\x0faugslot6visible\x12\x18\n" +
+	"\aaugtype\x18\x1b \x01(\x05R\aaugtype\x12\x1c\n" +
+	"\tavoidance\x18\x1c \x01(\x05R\tavoidance\x12\x12\n" +
+	"\x04awis\x18\x1d \x01(\x05R\x04awis\x12\x18\n" +
+	"\abagsize\x18\x1e \x01(\x05R\abagsize\x12\x1a\n" +
+	"\bbagslots\x18\x1f \x01(\x05R\bbagslots\x12\x18\n" +
+	"\abagtype\x18  \x01(\x05R\abagtype\x12\x14\n" +
+	"\x05bagwr\x18! \x01(\x05R\x05bagwr\x12\x1e\n" +
+	"\n" +
+	"banedmgamt\x18\" \x01(\x05R\n" +
+	"banedmgamt\x12&\n" +
+	"\x0ebanedmgraceamt\x18# \x01(\x05R\x0ebanedmgraceamt\x12 \n" +
+	"\vbanedmgbody\x18$ \x01(\x05R\vbanedmgbody\x12 \n" +
+	"\vbanedmgrace\x18% \x01(\x05R\vbanedmgrace\x12\x1a\n" +
+	"\bbardtype\x18& \x01(\x05R\bbardtype\x12\x1c\n" +
+	"\tbardvalue\x18' \x01(\x05R\tbardvalue\x12\x12\n" +
+	"\x04book\x18( \x01(\x05R\x04book\x12\x1a\n" +
+	"\bcasttime\x18) \x01(\x05R\bcasttime\x12\x1c\n" +
+	"\tcasttime2\x18* \x01(\x05R\tcasttime2\x12\x18\n" +
+	"\aclasses\x18+ \x01(\x05R\aclasses\x12\x14\n" +
+	"\x05color\x18, \x01(\rR\x05color\x12$\n" +
+	"\rcombateffects\x18- \x01(\tR\rcombateffects\x12$\n" +
+	"\rextradmgskill\x18. \x01(\x05R\rextradmgskill\x12 \n" +
+	"\vextradmgamt\x18/ \x01(\x05R\vextradmgamt\x12\x14\n" +
+	"\x05price\x180 \x01(\x05R\x05price\x12\x0e\n" +
+	"\x02cr\x181 \x01(\x05R\x02cr\x12\x16\n" +
+	"\x06damage\x182 \x01(\x05R\x06damage\x12\"\n" +
+	"\fdamageshield\x183 \x01(\x05R\fdamageshield\x12\x14\n" +
+	"\x05deity\x184 \x01(\x05R\x05deity\x12\x14\n" +
+	"\x05delay\x185 \x01(\x05R\x05delay\x12\"\n" +
+	"\faugdistiller\x186 \x01(\rR\faugdistiller\x12\"\n" +
+	"\fdotshielding\x187 \x01(\x05R\fdotshielding\x12\x0e\n" +
+	"\x02dr\x188 \x01(\x05R\x02dr\x12\x1c\n" +
+	"\tclicktype\x189 \x01(\x05R\tclicktype\x12 \n" +
+	"\vclicklevel2\x18: \x01(\x05R\vclicklevel2\x12 \n" +
+	"\velemdmgtype\x18; \x01(\x05R\velemdmgtype\x12\x1e\n" +
+	"\n" +
+	"elemdmgamt\x18< \x01(\x05R\n" +
+	"elemdmgamt\x12\x14\n" +
+	"\x05endur\x18= \x01(\x05R\x05endur\x12 \n" +
+	"\vfactionamt1\x18> \x01(\x05R\vfactionamt1\x12 \n" +
+	"\vfactionamt2\x18? \x01(\x05R\vfactionamt2\x12 \n" +
+	"\vfactionamt3\x18@ \x01(\x05R\vfactionamt3\x12 \n" +
+	"\vfactionamt4\x18A \x01(\x05R\vfactionamt4\x12 \n" +
+	"\vfactionmod1\x18B \x01(\x05R\vfactionmod1\x12 \n" +
+	"\vfactionmod2\x18C \x01(\x05R\vfactionmod2\x12 \n" +
+	"\vfactionmod3\x18D \x01(\x05R\vfactionmod3\x12 \n" +
+	"\vfactionmod4\x18E \x01(\x05R\vfactionmod4\x12 \n" +
+	"\vfocuseffect\x18F \x01(\x05R\vfocuseffect\x12\x0e\n" +
+	"\x02fr\x18G \x01(\x05R\x02fr\x12\x1a\n" +
+	"\bfvnodrop\x18H \x01(\x05R\bfvnodrop\x12\x14\n" +
+	"\x05haste\x18I \x01(\x05R\x05haste\x12\x1e\n" +
+	"\n" +
+	"clicklevel\x18J \x01(\x05R\n" +
+	"clicklevel\x12\x0e\n" +
+	"\x02hp\x18K \x01(\x05R\x02hp\x12\x14\n" +
+	"\x05regen\x18L \x01(\x05R\x05regen\x12\x12\n" +
+	"\x04icon\x18M \x01(\x05R\x04icon\x12\x16\n" +
+	"\x06idfile\x18N \x01(\tR\x06idfile\x12\x1c\n" +
+	"\titemclass\x18O \x01(\x05R\titemclass\x12\x1a\n" +
+	"\bitemtype\x18P \x01(\x05R\bitemtype\x12\x14\n" +
+	"\x05light\x18Q \x01(\x05R\x05light\x12\x12\n" +
+	"\x04lore\x18R \x01(\tR\x04lore\x12\x1c\n" +
+	"\tloregroup\x18S \x01(\x05R\tloregroup\x12\x14\n" +
+	"\x05magic\x18T \x01(\x05R\x05magic\x12\x12\n" +
+	"\x04mana\x18U \x01(\x05R\x04mana\x12\x1c\n" +
+	"\tmanaregen\x18V \x01(\x05R\tmanaregen\x12&\n" +
+	"\x0eenduranceregen\x18W \x01(\x05R\x0eenduranceregen\x12\x1a\n" +
+	"\bmaterial\x18X \x01(\x05R\bmaterial\x12(\n" +
+	"\x0fherosforgemodel\x18Y \x01(\x05R\x0fherosforgemodel\x12\x1e\n" +
+	"\n" +
+	"maxcharges\x18Z \x01(\x05R\n" +
+	"maxcharges\x12\x0e\n" +
+	"\x02mr\x18[ \x01(\x05R\x02mr\x12\x16\n" +
+	"\x06nodrop\x18\\ \x01(\x05R\x06nodrop\x12\x16\n" +
+	"\x06norent\x18] \x01(\x05R\x06norent\x12(\n" +
+	"\x0fpendingloreflag\x18^ \x01(\rR\x0fpendingloreflag\x12\x0e\n" +
+	"\x02pr\x18_ \x01(\x05R\x02pr\x12\x1a\n" +
+	"\bprocrate\x18` \x01(\x05R\bprocrate\x12\x14\n" +
+	"\x05races\x18a \x01(\x05R\x05races\x12\x14\n" +
+	"\x05range\x18b \x01(\x05R\x05range\x12\x1a\n" +
+	"\breclevel\x18c \x01(\x05R\breclevel\x12\x1a\n" +
+	"\brecskill\x18d \x01(\x05R\brecskill\x12\x1a\n" +
+	"\breqlevel\x18e \x01(\x05R\breqlevel\x12\x1a\n" +
+	"\bsellrate\x18f \x01(\x01R\bsellrate\x12\x1c\n" +
+	"\tshielding\x18g \x01(\x05R\tshielding\x12\x12\n" +
+	"\x04size\x18h \x01(\x05R\x04size\x12\"\n" +
+	"\fskillmodtype\x18i \x01(\x05R\fskillmodtype\x12$\n" +
+	"\rskillmodvalue\x18j \x01(\x05R\rskillmodvalue\x12\x14\n" +
+	"\x05slots\x18k \x01(\x05R\x05slots\x12 \n" +
+	"\vclickeffect\x18l \x01(\x05R\vclickeffect\x12 \n" +
+	"\vspellshield\x18m \x01(\x05R\vspellshield\x12$\n" +
+	"\rstrikethrough\x18n \x01(\x05R\rstrikethrough\x12\x1e\n" +
+	"\n" +
+	"stunresist\x18o \x01(\x05R\n" +
+	"stunresist\x12\"\n" +
+	"\fsummonedflag\x18p \x01(\rR\fsummonedflag\x12 \n" +
+	"\vtradeskills\x18q \x01(\x05R\vtradeskills\x12\x14\n" +
+	"\x05favor\x18r \x01(\x05R\x05favor\x12\x16\n" +
+	"\x06weight\x18s \x01(\x05R\x06weight\x12 \n" +
+	"\vbenefitflag\x18t \x01(\x05R\vbenefitflag\x12\x1a\n" +
+	"\bbooktype\x18u \x01(\x05R\bbooktype\x12 \n" +
+	"\vrecastdelay\x18v \x01(\x05R\vrecastdelay\x12\x1e\n" +
+	"\n" +
+	"recasttype\x18w \x01(\x05R\n" +
+	"recasttype\x12\x1e\n" +
+	"\n" +
+	"guildfavor\x18x \x01(\x05R\n" +
+	"guildfavor\x12\x1e\n" +
+	"\n" +
+	"attuneable\x18y \x01(\x05R\n" +
+	"attuneable\x12\x14\n" +
+	"\x05nopet\x18z \x01(\x05R\x05nopet\x12\x18\n" +
+	"\aupdated\x18{ \x01(\tR\aupdated\x12\x1c\n" +
+	"\tpointtype\x18| \x01(\x05R\tpointtype\x12\x1e\n" +
+	"\n" +
+	"potionbelt\x18} \x01(\x05R\n" +
+	"potionbelt\x12(\n" +
+	"\x0fpotionbeltslots\x18~ \x01(\x05R\x0fpotionbeltslots\x12\x1c\n" +
+	"\tstacksize\x18\x7f \x01(\x05R\tstacksize\x12\x1f\n" +
+	"\n" +
+	"notransfer\x18\x80\x01 \x01(\x05R\n" +
+	"notransfer\x12\x1d\n" +
+	"\tstackable\x18\x81\x01 \x01(\x05R\tstackable\x12\x1f\n" +
+	"\n" +
+	"proceffect\x18\x82\x01 \x01(\x05R\n" +
+	"proceffect\x12\x1b\n" +
+	"\bproctype\x18\x83\x01 \x01(\x05R\bproctype\x12\x1f\n" +
+	"\n" +
+	"proclevel2\x18\x84\x01 \x01(\x05R\n" +
+	"proclevel2\x12\x1d\n" +
+	"\tproclevel\x18\x85\x01 \x01(\x05R\tproclevel\x12\x1f\n" +
+	"\n" +
+	"worneffect\x18\x86\x01 \x01(\x05R\n" +
+	"worneffect\x12\x1b\n" +
+	"\bworntype\x18\x87\x01 \x01(\x05R\bworntype\x12\x1f\n" +
+	"\n" +
+	"wornlevel2\x18\x88\x01 \x01(\x05R\n" +
+	"wornlevel2\x12\x1d\n" +
+	"\twornlevel\x18\x89\x01 \x01(\x05R\twornlevel\x12\x1d\n" +
+	"\tfocustype\x18\x8a\x01 \x01(\x05R\tfocustype\x12!\n" +
+	"\vfocuslevel2\x18\x8b\x01 \x01(\x05R\vfocuslevel2\x12\x1f\n" +
+	"\n" +
+	"focuslevel\x18\x8c\x01 \x01(\x05R\n" +
+	"focuslevel\x12#\n" +
+	"\fscrolleffect\x18\x8d\x01 \x01(\x05R\fscrolleffect\x12\x1f\n" +
+	"\n" +
+	"scrolltype\x18\x8e\x01 \x01(\x05R\n" +
+	"scrolltype\x12#\n" +
+	"\fscrolllevel2\x18\x8f\x01 \x01(\x05R\fscrolllevel2\x12!\n" +
+	"\vscrolllevel\x18\x90\x01 \x01(\x05R\vscrolllevel\x12#\n" +
+	"\fsvcorruption\x18\x91\x01 \x01(\x05R\fsvcorruption\x12!\n" +
+	"\vskillmodmax\x18\x92\x01 \x01(\x05R\vskillmodmax\x12%\n" +
+	"\rquestitemflag\x18\x93\x01 \x01(\x05R\rquestitemflag\x12\x17\n" +
+	"\x06purity\x18\x94\x01 \x01(\x05R\x06purity\x12\x19\n" +
+	"\aevoitem\x18\x95\x01 \x01(\x05R\aevoitem\x12\x15\n" +
+	"\x05evoid\x18\x96\x01 \x01(\x05R\x05evoid\x12%\n" +
+	"\revolvinglevel\x18\x97\x01 \x01(\x05R\revolvinglevel\x12\x17\n" +
+	"\x06evomax\x18\x98\x01 \x01(\x05R\x06evomax\x12#\n" +
+	"\fdsmitigation\x18\x99\x01 \x01(\x05R\fdsmitigation\x12\x19\n" +
+	"\ahealamt\x18\x9a\x01 \x01(\x05R\ahealamt\x12\x1b\n" +
+	"\bspelldmg\x18\x9b\x01 \x01(\x05R\bspelldmg\x12#\n" +
+	"\fclairvoyance\x18\x9c\x01 \x01(\x05R\fclairvoyance\x12!\n" +
+	"\vbackstabdmg\x18\x9d\x01 \x01(\x05R\vbackstabdmg\x12%\n" +
+	"\relitematerial\x18\x9e\x01 \x01(\x05R\relitematerial\x12#\n" +
+	"\fscriptfileid\x18\x9f\x01 \x01(\x05R\fscriptfileid\x12)\n" +
+	"\x0fexpendablearrow\x18\xa0\x01 \x01(\x05R\x0fexpendablearrow\x121\n" +
+	"\x13powersourcecapacity\x18\xa1\x01 \x01(\x05R\x13powersourcecapacity\x12\x1f\n" +
+	"\n" +
+	"bardeffect\x18\xa2\x01 \x01(\x05R\n" +
+	"bardeffect\x12'\n" +
+	"\x0ebardeffecttype\x18\xa3\x01 \x01(\x05R\x0ebardeffecttype\x12\x1f\n" +
+	"\n" +
+	"bardlevel2\x18\xa4\x01 \x01(\x05R\n" +
+	"bardlevel2\x12\x1d\n" +
+	"\tbardlevel\x18\xa5\x01 \x01(\x05R\tbardlevel\x12\x19\n" +
+	"\asubtype\x18\xa6\x01 \x01(\x05R\asubtype\x12\x1b\n" +
+	"\bheirloom\x18\xa7\x01 \x01(\x05R\bheirloom\x12\x1d\n" +
+	"\tplaceable\x18\xa8\x01 \x01(\x05R\tplaceable\x12\x1b\n" +
+	"\bepicitem\x18\xa9\x01 \x01(\x05R\bepicitemB'Z%knervous/eqgo/internal/api/proto/itemb\x06proto3"
 
-var file_item_item_proto_goTypes = []any{}
+var (
+	file_item_item_proto_rawDescOnce sync.Once
+	file_item_item_proto_rawDescData []byte
+)
+
+func file_item_item_proto_rawDescGZIP() []byte {
+	file_item_item_proto_rawDescOnce.Do(func() {
+		file_item_item_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_item_item_proto_rawDesc), len(file_item_item_proto_rawDesc)))
+	})
+	return file_item_item_proto_rawDescData
+}
+
+var file_item_item_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_item_item_proto_goTypes = []any{
+	(*ItemInstance)(nil), // 0: eq.item.ItemInstance
+	(*Items)(nil),        // 1: eq.item.Items
+}
 var file_item_item_proto_depIdxs = []int32{
-	0, // [0:0] is the sub-list for method output_type
-	0, // [0:0] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	1, // 0: eq.item.ItemInstance.item:type_name -> eq.item.Items
+	1, // [1:1] is the sub-list for method output_type
+	1, // [1:1] is the sub-list for method input_type
+	1, // [1:1] is the sub-list for extension type_name
+	1, // [1:1] is the sub-list for extension extendee
+	0, // [0:1] is the sub-list for field type_name
 }
 
 func init() { file_item_item_proto_init() }
@@ -40,18 +1773,20 @@ func file_item_item_proto_init() {
 	if File_item_item_proto != nil {
 		return
 	}
+	file_item_item_proto_msgTypes[0].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_item_item_proto_rawDesc), len(file_item_item_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   0,
+			NumMessages:   2,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
 		GoTypes:           file_item_item_proto_goTypes,
 		DependencyIndexes: file_item_item_proto_depIdxs,
+		MessageInfos:      file_item_item_proto_msgTypes,
 	}.Build()
 	File_item_item_proto = out.File
 	file_item_item_proto_goTypes = nil

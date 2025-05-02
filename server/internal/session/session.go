@@ -1,6 +1,7 @@
 package session
 
 import (
+	"knervous/eqgo/internal/db/jetgen/eqgo/model"
 	"sync"
 )
 
@@ -12,6 +13,7 @@ type Session struct {
 	InstanceID    int    // Current instance ID the session is in
 	IP            string // Client IP address
 	CharacterName string
+	CharacterData *model.CharacterData
 }
 
 // SessionManager manages active sessions.

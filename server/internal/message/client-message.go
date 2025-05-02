@@ -1,6 +1,8 @@
 package message
 
-import "google.golang.org/protobuf/proto"
+import (
+	"google.golang.org/protobuf/proto"
+)
 
 type ClientMessenger interface {
 	SendDatagram(sessionID int, opcode uint16, msg proto.Message) error

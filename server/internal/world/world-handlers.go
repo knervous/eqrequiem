@@ -5,6 +5,7 @@ import (
 	"log"
 
 	eqpb "knervous/eqgo/internal/api/proto"
+	db_character "knervous/eqgo/internal/db/character"
 	"knervous/eqgo/internal/discord"
 	"knervous/eqgo/internal/message"
 	"knervous/eqgo/internal/session"
@@ -91,8 +92,16 @@ func HandleZoneSession(msg message.ClientMessage, payload []byte, wh *WorldHandl
 		log.Printf("EnterWorld unmarshal error: %v", err)
 		return
 	}
+
+	charData, err := db_character.GetCharacterByName(session.CharacterName)
+	if err != nil {
+		log.Printf("failed to get character %q for accountID %d: %v", session.CharacterName, session.AccountID, err)
+		return
+	}
+	session.CharacterData = charData
 	session.ZoneID = int(req.ZoneId)
 	session.InstanceID = int(req.InstanceId)
+
 	msg.Messenger.SendDatagram(msg.SessionID, uint16(eqpb.OpCodes_OP_ZoneSessionValid), &eqpb.Bool{Value: true})
 }
 

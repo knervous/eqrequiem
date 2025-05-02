@@ -257,7 +257,9 @@ export class BaseGltfModel {
       this.parseMaterials(gltfState);
       const rootNode = gltfDocument.generate_scene(gltfState) as Node3D;
       if (rootNode) {
-        await this.traverseAndSwapTextures(rootNode);
+        await this.traverseAndSwapTextures(rootNode).catch((e) => {
+          console.log("Error traversing and swapping textures:", e);
+        });
         this.gltfNode = rootNode;
         await this.instantiateSecondaryMesh();
         if (this.node instanceof CharacterBody3D) {
@@ -279,6 +281,7 @@ export class BaseGltfModel {
         } else {
           this.node = rootNode;
         }
+        
         if (this.node instanceof CharacterBody3D) {
           const aabb = getMeshAABB(this.gltfNode);
           const collisionShape = new CollisionShape3D();
@@ -519,18 +522,24 @@ export class BaseGltfModel {
   public async createPackedScene(): Promise<PackedScene | undefined> {
     await this.instantiate();
     const ps = new PackedScene();
+    if (!this.gltfNode) {
+      return;
+    }
     ps.pack(this.gltfNode!); // Pack the root (CharacterBody3D or GLTF Node3D)
     this.packedScene = ps;
     return ps;
   }
 
-  public instancePackedScene(rootNode: Node3D): Node | undefined {
+  public instancePackedScene(rootNode: Node3D, usePhysics: boolean): Node | undefined {
     if (this.packedScene) {
-      const staticBody = new StaticBody3D();
-      rootNode.add_child(staticBody);
-
       const instance = this.packedScene.instantiate().get_child(0) as Node3D;
-      instance.reparent(staticBody, false);
+      if (usePhysics) {
+        const staticBody = new StaticBody3D();
+        rootNode.add_child(staticBody);
+        instance.reparent(staticBody, false);
+      } else {
+        instance.reparent(rootNode, false);
+      }
       this.setupAnimations(instance);
       return instance;
     } else {

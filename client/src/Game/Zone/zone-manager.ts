@@ -31,8 +31,11 @@ export class ZoneManager {
   private zoneContainer: Node3D | null = null;
   private zoneObjects: ZoneObjects | null = null;
   private metadata: any = {};
-
+  private usePhysics: boolean = true;
   public zoneName = "qeynos2";
+  public get CurrentZone() {
+    return this.parent.CurrentZone;
+  }
 
   get GameManager(): GameManager {
     return this.parent;
@@ -58,13 +61,13 @@ export class ZoneManager {
     this.skyManager.dispose();
   }
 
-  public async loadZone(zoneName: string): Promise<void> {
+  public async loadZone(zoneName: string, usePhysics: boolean): Promise<void> {
     this.dispose();
     this.zoneName = zoneName;
     this.zoneContainer = new Node3D();
     this.zoneContainer.set_name(zoneName);
     this.parent.add_child(this.zoneContainer);
-
+    this.usePhysics = usePhysics;
     this.instantiateZone();
   }
 
@@ -74,7 +77,7 @@ export class ZoneManager {
       return;
     }
     this.parent.setLoading(true);
-    const zoneModel = new ZoneMesh("zones", this.zoneName);
+    const zoneModel = new ZoneMesh("zones", this.zoneName, this.usePhysics);
     zoneModel.LoaderOptions.doCull = false;
     const rootNode = await zoneModel.instantiate();
     if (rootNode) {
@@ -92,8 +95,9 @@ export class ZoneManager {
         console.log("Got metadata", metadata);
         this.metadata = metadata;
         console.log("Version: ", metadata.version);
-        this.regionManager.instantiateRegions(metadata.regions);
-        this.zoneObjects = new ZoneObjects(this.zoneContainer, metadata.objects);
+        console.log('Current zone', this.CurrentZone);
+        this.regionManager.instantiateRegions(metadata.regions, this.CurrentZone?.zonePoints);
+        this.zoneObjects = new ZoneObjects(this.zoneContainer, metadata.objects, this.usePhysics);
         this.zoneObjects.Load().catch((e) => {
           console.log("Failed to load zone objects", e);
         });

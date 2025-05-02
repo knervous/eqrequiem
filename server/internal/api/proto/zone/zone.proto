@@ -4,12 +4,77 @@ package eq.zone;
 option go_package = "knervous/eqgo/internal/api/proto/zone";
 
 message ZoneChange {
-    string char_name = 1;
-    int32 zone_id = 2;
-    int32 instance_id = 3;
-    float y = 4;
-    float x = 5;
-    float z = 6;
-    int32 zone_reason = 7;
-    int32 success = 8;
-  }
+  string char_name = 1;
+  int32 zone_id = 2;
+  int32 instance_id = 3;
+  float y = 4;
+  float x = 5;
+  float z = 6;
+  int32 zone_reason = 7;
+  int32 success = 8;
+}
+
+
+message NewZone {
+  string char_name = 1;
+  string short_name = 2;
+  string long_name = 3;
+  int32 ztype = 4;
+  repeated int32 fog_red = 5;
+  repeated int32 fog_green = 6;
+  repeated int32 fog_blue = 7;
+  repeated float fog_minclip = 8;
+  repeated float fog_maxclip = 9;
+  float gravity = 10;
+  int32 time_type = 11;
+  repeated int32 rain_chance = 12;
+  repeated int32 rain_duration = 13;
+  repeated int32 snow_chance = 14;
+  repeated int32 snow_duration = 15;
+  int32 sky = 16;
+  float zone_exp_multiplier = 17;
+  float safe_y = 18;
+  float safe_x = 19;
+  float safe_z = 20;
+  float max_z = 21;
+  float underworld = 22;
+  float minclip = 23;
+  float maxclip = 24;
+  string zone_short_name2 = 25;
+  int32 zone_id_number = 26;
+  int32 zone_instance = 27;
+  repeated ZonePoint zone_points = 28;
+}
+
+
+enum ZoneChangeType {
+  FROM_WORLD = 0;
+  FROM_ZONE = 1;
+}
+
+message RequestClientZoneChange {
+  int32 zone_id = 1;
+  int32 instance_id = 2;
+  float y = 3;
+  float x = 4;
+  float z = 5;
+  float heading = 6;
+  ZoneChangeType type = 7;
+}
+
+
+message ZonePoint {
+  int32 iterator = 1;
+  float y = 2;
+  float x = 3;
+  float z = 4;
+  float heading = 5;
+  int32 zoneid = 6;
+  int32 zoneinstance = 7;
+  int32 number = 8;
+}
+
+message ZoneSession {
+  int32 zone_id = 1;
+  int32 instance_id = 2;
+}

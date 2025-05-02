@@ -16,7 +16,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-func GetCharacterByName(ctx context.Context, name string) (*model.CharacterData, error) {
+func GetCharacterByName(name string) (*model.CharacterData, error) {
 	cacheKey := fmt.Sprintf("character:name:%s", name)
 	if val, found, err := cache.GetCache().Get(cacheKey); err == nil && found {
 		if character, ok := val.(*model.CharacterData); ok {
@@ -25,6 +25,7 @@ func GetCharacterByName(ctx context.Context, name string) (*model.CharacterData,
 	}
 
 	var character model.CharacterData
+	ctx := context.Background()
 	err := table.CharacterData.
 		SELECT(table.CharacterData.AllColumns).
 		FROM(table.CharacterData).
@@ -39,6 +40,40 @@ func GetCharacterByName(ctx context.Context, name string) (*model.CharacterData,
 
 	cache.GetCache().Set(cacheKey, &character)
 	return &character, nil
+}
+
+func UpdateCharacter(charData *model.CharacterData, accountID int64) error {
+	cacheKey := fmt.Sprintf("character:id:%d", charData.ID)
+	if _, err := cache.GetCache().Set(cacheKey, charData); err != nil {
+		return err
+	}
+	charSelectCacheKey := fmt.Sprintf("account:characters:%d", accountID)
+	cache.GetCache().Delete(charSelectCacheKey)
+
+	stmt := table.CharacterData.
+		UPDATE(
+			table.CharacterData.ZoneID,
+			table.CharacterData.ZoneInstance,
+			table.CharacterData.X,
+			table.CharacterData.Y,
+			table.CharacterData.Z,
+			table.CharacterData.Heading,
+		).
+		SET(
+			charData.ZoneID,
+			charData.ZoneInstance,
+			charData.X,
+			charData.Y,
+			charData.Z,
+			charData.Heading,
+		).
+		WHERE(table.CharacterData.ID.EQ(mysql.Int32(int32(charData.ID))))
+
+	if _, err := stmt.Exec(db.GlobalWorldDB.DB); err != nil {
+		return fmt.Errorf("failed to update inventory slot: %v", err)
+	}
+
+	return nil
 }
 
 func InstantiateStartingItems(race, classID, deity, zone int32) ([]items.ItemInstance, error) {

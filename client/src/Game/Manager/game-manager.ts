@@ -9,7 +9,7 @@ import {
 import Player from "../Player/player";
 import Actor from "../Actor/actor";
 import CharacterSelect from "../Zone/character-select";
-import * as EQMessage from "../Net/message/EQMessage";
+import * as EQMessage from "@eqmessage";
 import { supportedZones } from "../Constants/supportedZones";
 import MusicManager from "@game/Music/music-manager";
 import { ZoneManager } from "@game/Zone/zone-manager";
@@ -30,6 +30,8 @@ export default class GameManager extends Node3D {
   private worldTickInterval: number = -1;
   private lastPlayer: EQMessage.PlayerProfile | null = null;
   private player: Player | null = null;
+
+  public CurrentZone: EQMessage.NewZone | null = null;
 
   get CharacterSelect(): CharacterSelect | null {
     return this.characterSelect;
@@ -57,6 +59,7 @@ export default class GameManager extends Node3D {
     this.set_name("GameManager");
     this.zoneManager = new ZoneManager(this);
     GameManager.instance = this;
+    window.gm = this;
   }
 
   public setLoading(value: boolean) {
@@ -84,9 +87,14 @@ export default class GameManager extends Node3D {
   }
 
   public async loadCharacterSelect() {
-    await this.loadZone("load2");
+    await this.loadZone("load2", false);
     this.player = null;
     this.characterSelect = new CharacterSelect(this);
+  }
+
+  public async loadZoneServer(zone: EQMessage.NewZone) {
+    this.CurrentZone = zone;
+    await this.loadZoneId(zone.zoneIdNumber);
   }
 
   public async loadZoneId(zoneId: number): Promise<void> {
@@ -99,11 +107,11 @@ export default class GameManager extends Node3D {
     }
   }
 
-  public async loadZone(zoneName: string): Promise<void> {
+  public async loadZone(zoneName: string, usePhysics = true): Promise<void> {
     this.dispose();
-    this.zoneManager?.loadZone(zoneName);
+    this.zoneManager?.loadZone(zoneName, usePhysics);
     this.worldTickInterval = setInterval(() => { 
-      this.zoneManager?.SkyManager.worldTick();
+      this.zoneManager?.SkyManager?.worldTick?.();
     }, 100);
   }
 
@@ -122,7 +130,6 @@ export default class GameManager extends Node3D {
 
   public async instantiatePlayer(
     player: EQMessage.PlayerProfile = this.lastPlayer,
-    position: { x: number; y: number; z: number } = { x: 0, y: 0, z: 0 },
   ) {
     this.lastPlayer = player;
     if (this.player) {
@@ -135,11 +142,11 @@ export default class GameManager extends Node3D {
       this.player.Load("");
       this.add_child(rootNode);
       setTimeout(() => {
-        rootNode.position = new Vector3(position.x, 5, position.z);
-        this.player?.updateCameraPosition(this.player.getNode());
+        rootNode.position = new Vector3(-player.x, player.z + 10, player.y);
+        this.player?.playerCamera.updateCameraPosition(this.player.getNode());
       }, 0);
 
-      console.log("Setting position", position);
+      //console.log("Setting position", position);
       this.player.swapFace(player.face);
       rootNode.scale = new Vector3(1.5, 1.5, 1.5);
       rootNode.rotate_x(deg_to_rad(0));

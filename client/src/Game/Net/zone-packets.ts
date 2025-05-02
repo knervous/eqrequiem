@@ -1,6 +1,6 @@
 import Player from "@game/Player/player";
 import GameManager from "@game/Manager/game-manager";
-import * as EQMessage from "./message/EQMessage";
+import * as EQMessage from "@eqmessage";
 import { MessageType } from "@protobuf-ts/runtime";
 import { WorldSocket } from "@ui/net/instances";
 
@@ -31,13 +31,17 @@ export class ZonePacketHandler {
   }
 
   @opCodeHandler(EQMessage.OpCodes.OP_NewZone, EQMessage.NewZone)
-  commandSpeed(newZone: EQMessage.NewZone) {
+  newZone(newZone: EQMessage.NewZone) {
     this.setMode('game');
-    console.log('Got new zone', newZone);
-    // setMode("game");
-    // MusicPlayer.stop();
-    GameManager.instance.loadZoneId(newZone.zoneId);
+    GameManager.instance.loadZoneServer(newZone);
+  }
 
+  @opCodeHandler(EQMessage.OpCodes.OP_PlayerProfile, EQMessage.PlayerProfile)
+  loadPlayerProfile(playerProfile: EQMessage.PlayerProfile) {
+    console.log('Got player profile', playerProfile);
+    GameManager.instance.instantiatePlayer(playerProfile);
+    // //GameManager.instance.instantiatePlayer(playerProfile);
+    // GameManager.instance.setLoading(false);
   }
 
 }

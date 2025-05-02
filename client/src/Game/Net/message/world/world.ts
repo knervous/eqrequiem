@@ -37,6 +37,44 @@ export interface WebInitiateConnection {
      */
     login: boolean;
 }
+/**
+ * @generated from protobuf message eq.world.EnterWorld
+ */
+export interface EnterWorld {
+    /**
+     * @generated from protobuf field: string name = 1;
+     */
+    name: string;
+    /**
+     * @generated from protobuf field: int32 tutorial = 2;
+     */
+    tutorial: number;
+    /**
+     * @generated from protobuf field: int32 return_home = 3;
+     */
+    returnHome: number;
+}
+/**
+ * @generated from protobuf message eq.world.NameApproval
+ */
+export interface NameApproval {
+    /**
+     * @generated from protobuf field: string name = 1;
+     */
+    name: string;
+    /**
+     * @generated from protobuf field: int32 race = 2;
+     */
+    race: number;
+    /**
+     * @generated from protobuf field: int32 char_class = 3;
+     */
+    charClass: number;
+    /**
+     * @generated from protobuf field: int32 deity = 4;
+     */
+    deity: number;
+}
 // @generated message type with reflection information, may provide speed optimized methods
 class JWTLogin$Type extends MessageType<JWTLogin> {
     constructor() {
@@ -178,3 +216,137 @@ class WebInitiateConnection$Type extends MessageType<WebInitiateConnection> {
  * @generated MessageType for protobuf message eq.world.WebInitiateConnection
  */
 export const WebInitiateConnection = new WebInitiateConnection$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class EnterWorld$Type extends MessageType<EnterWorld> {
+    constructor() {
+        super("eq.world.EnterWorld", [
+            { no: 1, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "tutorial", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 3, name: "return_home", kind: "scalar", T: 5 /*ScalarType.INT32*/ }
+        ]);
+    }
+    create(value?: PartialMessage<EnterWorld>): EnterWorld {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.name = "";
+        message.tutorial = 0;
+        message.returnHome = 0;
+        if (value !== undefined)
+            reflectionMergePartial<EnterWorld>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: EnterWorld): EnterWorld {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string name */ 1:
+                    message.name = reader.string();
+                    break;
+                case /* int32 tutorial */ 2:
+                    message.tutorial = reader.int32();
+                    break;
+                case /* int32 return_home */ 3:
+                    message.returnHome = reader.int32();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: EnterWorld, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string name = 1; */
+        if (message.name !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.name);
+        /* int32 tutorial = 2; */
+        if (message.tutorial !== 0)
+            writer.tag(2, WireType.Varint).int32(message.tutorial);
+        /* int32 return_home = 3; */
+        if (message.returnHome !== 0)
+            writer.tag(3, WireType.Varint).int32(message.returnHome);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message eq.world.EnterWorld
+ */
+export const EnterWorld = new EnterWorld$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class NameApproval$Type extends MessageType<NameApproval> {
+    constructor() {
+        super("eq.world.NameApproval", [
+            { no: 1, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "race", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 3, name: "char_class", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 4, name: "deity", kind: "scalar", T: 5 /*ScalarType.INT32*/ }
+        ]);
+    }
+    create(value?: PartialMessage<NameApproval>): NameApproval {
+        const message = globalThis.Object.create((this.messagePrototype!));
+        message.name = "";
+        message.race = 0;
+        message.charClass = 0;
+        message.deity = 0;
+        if (value !== undefined)
+            reflectionMergePartial<NameApproval>(this, message, value);
+        return message;
+    }
+    internalBinaryRead(reader: IBinaryReader, length: number, options: BinaryReadOptions, target?: NameApproval): NameApproval {
+        let message = target ?? this.create(), end = reader.pos + length;
+        while (reader.pos < end) {
+            let [fieldNo, wireType] = reader.tag();
+            switch (fieldNo) {
+                case /* string name */ 1:
+                    message.name = reader.string();
+                    break;
+                case /* int32 race */ 2:
+                    message.race = reader.int32();
+                    break;
+                case /* int32 char_class */ 3:
+                    message.charClass = reader.int32();
+                    break;
+                case /* int32 deity */ 4:
+                    message.deity = reader.int32();
+                    break;
+                default:
+                    let u = options.readUnknownField;
+                    if (u === "throw")
+                        throw new globalThis.Error(`Unknown field ${fieldNo} (wire type ${wireType}) for ${this.typeName}`);
+                    let d = reader.skip(wireType);
+                    if (u !== false)
+                        (u === true ? UnknownFieldHandler.onRead : u)(this.typeName, message, fieldNo, wireType, d);
+            }
+        }
+        return message;
+    }
+    internalBinaryWrite(message: NameApproval, writer: IBinaryWriter, options: BinaryWriteOptions): IBinaryWriter {
+        /* string name = 1; */
+        if (message.name !== "")
+            writer.tag(1, WireType.LengthDelimited).string(message.name);
+        /* int32 race = 2; */
+        if (message.race !== 0)
+            writer.tag(2, WireType.Varint).int32(message.race);
+        /* int32 char_class = 3; */
+        if (message.charClass !== 0)
+            writer.tag(3, WireType.Varint).int32(message.charClass);
+        /* int32 deity = 4; */
+        if (message.deity !== 0)
+            writer.tag(4, WireType.Varint).int32(message.deity);
+        let u = options.writeUnknownFields;
+        if (u !== false)
+            (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
+        return writer;
+    }
+}
+/**
+ * @generated MessageType for protobuf message eq.world.NameApproval
+ */
+export const NameApproval = new NameApproval$Type();

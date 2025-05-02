@@ -1,7 +1,7 @@
 import { BaseGltfModel, LoaderOptions } from "../GLTF/base";
 
 export default class ObjectMesh extends BaseGltfModel {
-  static objectOptions: LoaderOptions = {
+  static objectOptions: Partial<LoaderOptions> = {
     useStaticPhysics: true,
     flipTextureY: false,
     secondaryMeshIndex: 0,
@@ -10,7 +10,7 @@ export default class ObjectMesh extends BaseGltfModel {
     doCull: true,
   };
   
-  constructor(folder: string, model: string) {
-    super(folder, model, ObjectMesh.objectOptions);
+  constructor(folder: string, model: string, usePhysics: boolean) {
+    super(folder, model, { ...ObjectMesh.objectOptions, useStaticPhysics: usePhysics });
   }
 }

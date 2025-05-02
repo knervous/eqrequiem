@@ -15,15 +15,18 @@ import React, { useState } from 'react';
   
 export const DevPlayer: React.FC = () => {
   const playerData = Player.instance;
-  const [speed, setSpeed] = useState(playerData.move_speed);
-  const [selectedAnimation, setSelectedAnimation] = useState(playerData.currentAnimation);
+  const [speed, setSpeed] = useState(playerData?.playerMovement?.moveSpeed ?? 20);
+  const [selectedAnimation, setSelectedAnimation] = useState(playerData?.currentAnimation ?? '');
   const [collisionEnabled, setCollisionEnabled] = useState(true); // Default value, adjust as needed
   const [gravityEnabled, setGravityEnabled] = useState(true);    // Default value, adjust as needed
     
   const handleSpeedChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const newSpeed = Number(event.target.value);
     setSpeed(newSpeed);
-    playerData.move_speed = newSpeed;
+    if (playerData) {
+      playerData.playerMovement.moveSpeed = newSpeed;
+
+    }
   };
     
   const handleAnimationChange = (event: React.ChangeEvent<{ value: unknown }>) => {
@@ -79,7 +82,7 @@ export const DevPlayer: React.FC = () => {
       </Box>
       
       <Typography gutterBottom>
-        {playerData.player.name} - Level {playerData.player.level}
+        {playerData?.player.name} - Level {playerData?.player.level}
       </Typography>
       
       {/* Speed Input */}
@@ -107,7 +110,7 @@ export const DevPlayer: React.FC = () => {
             onChange={handleAnimationChange}
             size="small"
           >
-            {playerData.animations.map((anim) => (
+            {playerData?.animations.map((anim) => (
               <MenuItem key={anim} value={anim}>
                 {anim}
               </MenuItem>

@@ -1,7 +1,7 @@
 import { Camera3D, Color, Node3D, OmniLight3D, Vector3 } from "godot";
 import type GameManager from "../Manager/game-manager";
 import Actor from "../Actor/actor";
-import * as EQMessage from "../Net/message/EQMessage";
+import * as EQMessage from "@eqmessage";
 import { RACE_DATA } from "../Constants/race-data";
 import { CLASS_DATA_NAMES } from "../Constants/class-data";
 import { zoneData } from "../Constants/zone-data";
