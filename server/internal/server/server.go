@@ -15,6 +15,8 @@ import (
 	"knervous/eqgo/internal/cert"
 	"knervous/eqgo/internal/db"
 	"knervous/eqgo/internal/discord"
+	"knervous/eqgo/internal/message"
+	"knervous/eqgo/internal/session"
 	"knervous/eqgo/internal/world"
 
 	"github.com/quic-go/quic-go"
@@ -27,7 +29,7 @@ type Server struct {
 	wtServer       *webtransport.Server
 	zoneManager    *world.ZoneManager
 	worldHandler   *world.WorldHandler
-	sessionManager *world.SessionManager
+	sessionManager *session.SessionManager
 	sessions       map[int]*webtransport.Session
 	udpConn        *net.UDPConn
 }
@@ -38,16 +40,17 @@ func NewServer(dsn string) (*Server, error) {
 	registry := world.NewWorldOpCodeRegistry()
 
 	// Create ZoneManager with HandlerRegistry
-	zoneManager := world.NewZoneManager(registry)
+	zoneManager := world.NewZoneManager()
 
 	// Create SessionManager
-	sessionManager := world.NewSessionManager()
+	sessionManager := session.NewSessionManager()
 
 	// Initialize global SessionManager
-	world.InitSessionManager(sessionManager)
+	session.InitSessionManager(sessionManager)
 
 	// Create WorldHandler with ZoneManager and SessionManager
 	worldHandler := world.NewWorldHandler(zoneManager, sessionManager)
+	registry.WH = worldHandler
 
 	cache.Init()
 
@@ -245,7 +248,7 @@ func (s *Server) makeEQHandler() http.HandlerFunc {
 					return
 				}
 				// Send datagram to WorldHandler with IP
-				s.worldHandler.HandleDatagram(world.ZoneMessage{
+				s.worldHandler.HandleDatagram(message.ClientMessage{
 					SessionID: sid,
 					Data:      dat,
 					Messenger: s,

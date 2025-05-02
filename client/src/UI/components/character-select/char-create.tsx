@@ -87,20 +87,10 @@ export const CharacterCreate = ({ setView, charInfo }) => {
   const [description, setDescription] = useState(CharClassStrings[1]);
 
   const createCharacter = useCallback(() => {
-    WorldSocket.sendMessage(
-      EQMessage.OpCodes.OP_ApproveName,
-      EQMessage.NameApproval,
-      {
-        name,
-        race: +selectedRace,
-        charClass: selectedClass,
-        deity: selectedDeity,
-      },
-    );
-
     const char = {
       gender,
       face,
+      name,
       tutorial: 0,
       ...character,
       race: +selectedRace,
@@ -113,19 +103,19 @@ export const CharacterCreate = ({ setView, charInfo }) => {
       EQMessage.OpCodes.OP_ApproveName_Server,
       EQMessage.Int,
       (data) => {
-        console.log("Got data", data);
         if (data.value === 1) {
-          WorldSocket.sendMessage(
-            EQMessage.OpCodes.OP_CharacterCreate,
-            EQMessage.CharCreate,
-            char,
-          );
           setView(VIEWS.CHAR_SELECT);
         } else {
           alert("Invalid name");
         }
       },
     );
+    WorldSocket.sendMessage(
+      EQMessage.OpCodes.OP_CharacterCreate,
+      EQMessage.CharCreate,
+      char,
+    );
+    
   }, [
     name,
     gender,

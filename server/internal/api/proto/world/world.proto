@@ -1,0 +1,18 @@
+syntax = "proto3";
+package eq.world;
+
+option go_package = "knervous/eqgo/internal/api/proto/world";
+
+
+message JWTLogin {
+    string token = 1;
+  }
+  
+  message JWTResponse {
+    int32 status = 1;
+  }
+  
+  message WebInitiateConnection {
+    bool login = 1;
+  }
+  

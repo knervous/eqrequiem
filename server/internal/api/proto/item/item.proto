@@ -1,0 +1,4 @@
+syntax = "proto3";
+package eq.item;
+
+option go_package = "knervous/eqgo/internal/api/proto/item";

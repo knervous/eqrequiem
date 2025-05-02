@@ -3,15 +3,16 @@ package world
 import (
 	"context"
 	"log"
-	"unicode"
 
 	eqpb "knervous/eqgo/internal/api/proto"
 	"knervous/eqgo/internal/discord"
+	"knervous/eqgo/internal/message"
+	"knervous/eqgo/internal/session"
 
 	"google.golang.org/protobuf/proto"
 )
 
-func sendCharInfo(msg ZoneMessage, accountId int64) {
+func sendCharInfo(msg message.ClientMessage, accountId int64) {
 	ctx := context.Background()
 	charInfo, err := GetCharSelectInfo(ctx, accountId)
 	if err != nil {
@@ -21,11 +22,7 @@ func sendCharInfo(msg ZoneMessage, accountId int64) {
 	msg.Messenger.SendStream(msg.SessionID, uint16(eqpb.OpCodes_OP_SendCharInfo), charInfo)
 }
 
-func sendMaxCharacters(msg ZoneMessage) {
-	msg.Messenger.SendDatagram(msg.SessionID, uint16(eqpb.OpCodes_OP_SendCharInfo), &eqpb.Int{Value: 8})
-}
-
-func HandleJWTLogin(msg ZoneMessage, payload []byte) {
+func HandleJWTLogin(msg message.ClientMessage, payload []byte, wh *WorldHandler) {
 	ctx := context.Background()
 
 	req := &eqpb.JWTLogin{}
@@ -51,7 +48,7 @@ func HandleJWTLogin(msg ZoneMessage, payload []byte) {
 	}
 
 	// Initialize session with accountID
-	sessionManager := GetSessionManager()
+	sessionManager := session.GetSessionManager()
 	sessionManager.CreateSession(msg.SessionID, accountID, msg.IP)
 
 	resp := &eqpb.JWTResponse{
@@ -64,10 +61,45 @@ func HandleJWTLogin(msg ZoneMessage, payload []byte) {
 	LoginIP(ctx, accountID, msg.IP)
 }
 
-func HandleCharacterCreate(msg ZoneMessage, payload []byte) {
-	session, found := GetSessionManager().GetSession(msg.SessionID)
+func HandleEnterWorld(msg message.ClientMessage, payload []byte, wh *WorldHandler) {
+	session, found := session.GetSessionManager().GetSession(msg.SessionID)
 	if !found {
-		log.Printf("failed to get session for sessionID %d: %v", msg.SessionID)
+		log.Printf("failed to get session for sessionID %d", msg.SessionID)
+		return
+	}
+	req := &eqpb.EnterWorld{}
+	if err := proto.Unmarshal(payload, req); err != nil {
+		log.Printf("EnterWorld unmarshal error: %v", err)
+		return
+	}
+	if accountMatch, err := AccountHasCharacterName(context.Background(), session.AccountID, req.Name); err != nil || !accountMatch {
+		log.Printf("Tried to log in unsuccessfully from account %d with character %q: %v", session.AccountID, req.Name, err)
+		return
+	}
+	session.CharacterName = req.Name
+	msg.Messenger.SendDatagram(msg.SessionID, uint16(eqpb.OpCodes_OP_PostEnterWorld), &eqpb.Int{Value: 1})
+}
+
+func HandleZoneSession(msg message.ClientMessage, payload []byte, wh *WorldHandler) {
+	session, found := session.GetSessionManager().GetSession(msg.SessionID)
+	if !found {
+		log.Printf("failed to get session for sessionID %d", msg.SessionID)
+		return
+	}
+	req := &eqpb.ZoneSession{}
+	if err := proto.Unmarshal(payload, req); err != nil {
+		log.Printf("EnterWorld unmarshal error: %v", err)
+		return
+	}
+	session.ZoneID = int(req.ZoneId)
+	session.InstanceID = int(req.InstanceId)
+	msg.Messenger.SendDatagram(msg.SessionID, uint16(eqpb.OpCodes_OP_ZoneSessionValid), &eqpb.Bool{Value: true})
+}
+
+func HandleCharacterCreate(msg message.ClientMessage, payload []byte, wh *WorldHandler) {
+	session, found := session.GetSessionManager().GetSession(msg.SessionID)
+	if !found {
+		log.Printf("failed to get session for sessionID %d", msg.SessionID)
 		return
 	}
 	req := &eqpb.CharCreate{}
@@ -76,15 +108,22 @@ func HandleCharacterCreate(msg ZoneMessage, payload []byte) {
 		return
 	}
 
-	if !CharacterCreate(session.CharacterName, session.AccountID, req) {
+	if !ValidateName(req.Name) {
+		msg.Messenger.SendDatagram(msg.SessionID, uint16(eqpb.OpCodes_OP_ApproveName_Server), &eqpb.Int{Value: 0})
 		return
 	}
+
+	if !CharacterCreate(session.AccountID, req) {
+		msg.Messenger.SendDatagram(msg.SessionID, uint16(eqpb.OpCodes_OP_ApproveName_Server), &eqpb.Int{Value: 0})
+		return
+	}
+	msg.Messenger.SendDatagram(msg.SessionID, uint16(eqpb.OpCodes_OP_ApproveName_Server), &eqpb.Int{Value: 1})
 
 	sendCharInfo(msg, session.AccountID)
 }
 
-func HandleCharacterDelete(msg ZoneMessage, payload []byte) {
-	session, found := GetSessionManager().GetSession(msg.SessionID)
+func HandleCharacterDelete(msg message.ClientMessage, payload []byte, wh *WorldHandler) {
+	session, found := session.GetSessionManager().GetSession(msg.SessionID)
 	if !found {
 		log.Printf("failed to get session for sessionID %d", msg.SessionID)
 		return
@@ -100,45 +139,4 @@ func HandleCharacterDelete(msg ZoneMessage, payload []byte) {
 	}
 
 	sendCharInfo(msg, session.AccountID)
-}
-
-func HandleApproveName(msg ZoneMessage, payload []byte) {
-	ctx := context.Background()
-	session, found := GetSessionManager().GetSession(msg.SessionID)
-	if !found {
-		log.Printf("failed to get session for sessionID %d", msg.SessionID)
-		return
-	}
-	req := &eqpb.NameApprove{}
-	if err := proto.Unmarshal(payload, req); err != nil {
-		log.Printf("JWTLogin unmarshal error: %v", err)
-		return
-	}
-
-	isValid := true
-	if len(req.Name) < 4 || len(req.Name) > 15 {
-		isValid = false
-	} else if !unicode.IsUpper(rune(req.Name[0])) {
-		isValid = false
-	} else if !CheckNameFilter(ctx, req.Name) {
-		isValid = false
-	} else {
-		for idx, char := range req.Name {
-			if idx > 0 && (!unicode.IsLetter(char) || unicode.IsUpper(char)) {
-				isValid = false
-				break
-			}
-		}
-	}
-	retValue := 0
-	if isValid {
-		retValue = 1
-		session.CharacterName = req.Name
-	}
-	resp := &eqpb.Int{
-		Value: int32(retValue),
-	}
-	if err := msg.Messenger.SendDatagram(msg.SessionID, uint16(eqpb.OpCodes_OP_ApproveName_Server), resp); err != nil {
-		log.Printf("failed to send NameApproveResponse for session %d: %v", msg.SessionID, err)
-	}
 }

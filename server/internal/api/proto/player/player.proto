@@ -1,0 +1,4 @@
+syntax = "proto3";
+package eq.player;
+
+option go_package = "knervous/eqgo/internal/api/proto/player";

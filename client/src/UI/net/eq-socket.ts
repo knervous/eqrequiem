@@ -71,7 +71,7 @@ export class EqSocket {
     }
 
     try {
-      if (import.meta.env.VITE_LOCAL_WT === "true") {
+      if (import.meta.env.VITE_LOCAL_DEV === "true") {
         const hash = await fetch(`/api/hash?port=7100&ip=127.0.0.1`).then((r: Response) => r.text());
         this.webtransport = new WebTransport(`https://127.0.0.1/eq`, {
           serverCertificateHashes: [{ algorithm: "sha-256", value: base64ToArrayBuffer(hash) }],

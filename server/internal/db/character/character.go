@@ -1,14 +1,45 @@
-package character
+package db_character
 
 import (
-	db "knervous/eqgo/internal/db"
+	"context"
+	"fmt"
+	"knervous/eqgo/internal/cache"
+	"knervous/eqgo/internal/db"
 	"knervous/eqgo/internal/db/items"
 	"knervous/eqgo/internal/db/jetgen/eqgo/model"
 	"knervous/eqgo/internal/db/jetgen/eqgo/table"
 	"slices"
 	"strconv"
 	"strings"
+
+	"github.com/go-jet/jet/v2/mysql"
+	_ "github.com/go-sql-driver/mysql"
 )
+
+func GetCharacterByName(ctx context.Context, name string) (*model.CharacterData, error) {
+	cacheKey := fmt.Sprintf("character:name:%s", name)
+	if val, found, err := cache.GetCache().Get(cacheKey); err == nil && found {
+		if character, ok := val.(*model.CharacterData); ok {
+			return character, nil
+		}
+	}
+
+	var character model.CharacterData
+	err := table.CharacterData.
+		SELECT(table.CharacterData.AllColumns).
+		FROM(table.CharacterData).
+		WHERE(
+			table.CharacterData.Name.EQ(mysql.String(name)).
+				AND(table.CharacterData.DeletedAt.IS_NULL()),
+		).
+		QueryContext(ctx, db.GlobalWorldDB.DB, &character)
+	if err != nil {
+		return nil, fmt.Errorf("query character_data: %w", err)
+	}
+
+	cache.GetCache().Set(cacheKey, &character)
+	return &character, nil
+}
 
 func InstantiateStartingItems(race, classID, deity, zone int32) ([]items.ItemInstance, error) {
 	// 1) load them all

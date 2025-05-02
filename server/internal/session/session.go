@@ -1,4 +1,4 @@
-package world
+package session
 
 import (
 	"sync"
@@ -9,6 +9,7 @@ type Session struct {
 	SessionID     int
 	AccountID     int64
 	ZoneID        int    // Current zone the session is in
+	InstanceID    int    // Current instance ID the session is in
 	IP            string // Client IP address
 	CharacterName string
 }

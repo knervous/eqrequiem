@@ -1,6 +1,6 @@
 import React, { use, useCallback, useEffect, useMemo, useState } from "react";
 import { useUIContext } from "../context";
-import * as EQMessage from "../../../Game/Net/message/EQMessage";
+import * as EQMessage from "../../../Game/Net/message";
 import { WorldSocket } from "../../net/instances";
 import { Box, Stack } from "@mui/material";
 import { UiWindowComponent } from "../../common/ui-window";
@@ -53,12 +53,57 @@ export const CharacterSelectUIComponent: React.FC = () => {
     if (!selectedChar) {
       return;
     }
-    setMode("game");
-    MusicPlayer.stop();
-    GameManager.instance.loadZoneId(selectedChar.zone);
+    WorldSocket.registerOpCodeHandler(
+      EQMessage.OpCodes.OP_ZoneSessionValid,
+      EQMessage.Bool,
+      (data) => {
+        if (data) {
+          WorldSocket.sendMessage(
+            EQMessage.OpCodes.OP_RequestClientZoneChange,
+            EQMessage.RequestClientZoneChange,
+            { 
+              type: EQMessage.ZoneChangeType.FROM_WORLD, // Type 0 is zone in from world
+            },
+          );
+        } else {
+          alert("Could not enter world");
+        }
+      },
+    );
+    WorldSocket.registerOpCodeHandler(
+      EQMessage.OpCodes.OP_PostEnterWorld,
+      EQMessage.Int,
+      (data) => {
+        if (data.value === 1) {
+          
+          WorldSocket.sendMessage(
+            EQMessage.OpCodes.OP_ZoneSession,
+            EQMessage.ZoneSession,
+            { 
+              zoneId: selectedChar.zone,
+              instanceId: 0,
+            },
+          );
+        } else {
+          alert("Could not enter world");
+        }
+      },
+    );
+    WorldSocket.sendMessage(
+      EQMessage.OpCodes.OP_EnterWorld,
+      EQMessage.EnterWorld,
+      { name: selectedChar.name, tutorial: 0, returnHome: 0 },
+    );
+
     GameManager.instance.instantiatePlayer(
       selectedChar as EQMessage.PlayerProfile,
     );
+    // setMode("game");
+    // MusicPlayer.stop();
+    // GameManager.instance.loadZoneId(selectedChar.zone);
+    // GameManager.instance.instantiatePlayer(
+    //   selectedChar as EQMessage.PlayerProfile,
+    // );
   }, [setMode, selectedChar]);
 
   useEffect(() => {

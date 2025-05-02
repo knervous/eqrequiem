@@ -4,6 +4,7 @@ import (
 	"context"
 	eqpb "knervous/eqgo/internal/api/proto"
 	"log"
+	"unicode"
 
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -122,19 +123,18 @@ var ClassRaceLookupTable = [16][16]bool{
 }
 
 // OPCharCreate creates the character in the database
-func CharacterCreate(name string, accountId int64, cc *eqpb.CharCreate) bool {
+func CharacterCreate(accountId int64, cc *eqpb.CharCreate) bool {
 	ctx := context.Background()
 	if !CheckCharCreateInfo(cc) {
 		log.Println("CheckCharCreateInfo failed")
 		return false
 	}
-
 	// Initialize player profile
 	var pp eqpb.PlayerProfile
 	pp.Skills = make([]int32, 78)
 	pp.Languages = make([]int32, 18)
 	pp.Binds = make([]*eqpb.Bind, 5)
-	pp.Name = name
+	pp.Name = cc.Name
 	pp.Race = cc.Race
 	pp.CharClass = cc.CharClass
 	pp.Gender = cc.Gender
@@ -461,4 +461,24 @@ func StoreCharacter(accountID int64, pp *eqpb.PlayerProfile) bool {
 	// Get character ID
 	ctx := context.Background()
 	return SaveCharacterCreate(ctx, accountID, pp)
+}
+
+func ValidateName(name string) bool {
+	ctx := context.Background()
+	isValid := true
+	if len(name) < 4 || len(name) > 15 {
+		isValid = false
+	} else if !unicode.IsUpper(rune(name[0])) {
+		isValid = false
+	} else if !CheckNameFilter(ctx, name) {
+		isValid = false
+	} else {
+		for idx, char := range name {
+			if idx > 0 && (!unicode.IsLetter(char) || unicode.IsUpper(char)) {
+				isValid = false
+				break
+			}
+		}
+	}
+	return isValid
 }

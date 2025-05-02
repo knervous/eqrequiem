@@ -14,6 +14,7 @@ import { godotBindings } from "@/godot/bindings";
 import { UIEvents } from "@ui/events/ui-events";
 
 import "./overlay.css";
+import { ZonePacketHandler } from "@game/Net/zone-packets";
 
 
 let storedState: UiState | string | null = localStorage.getItem(stateKey);
@@ -39,6 +40,8 @@ export const Overlay: React.FC<Props> = (props: Props) => {
     uiReducer,
     (storedState as UiState | null) ?? initialUiState,
   );
+
+  useMemo(() => new ZonePacketHandler(setMode), [setMode]);
 
   useEffect(() => {
     if (mode === 'game') {

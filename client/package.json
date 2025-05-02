@@ -7,12 +7,12 @@
     "dev": "cross-env VITE_USE_SAGE=true LOCAL_DEV=true vite",
     "v": "vercel dev",
     "upload": "node scripts/upload.js ~/documents/everquest_rof2",
-    "start": "cross-env VITE_LOCAL_WT=true VITE_USE_SAGE=false LOCAL_DEV=true vite",
+    "start": "cross-env VITE_LOCAL_DEV=true VITE_USE_SAGE=false LOCAL_DEV=true vite",
     "start:prod": "cross-env VITE_USE_SAGE=false LOCAL_DEV=true vite",
     "build": "vite build",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
-    "proto": "npx protoc --ts_out src/Game/Net/message --proto_path ../server/internal/api/proto ../server/internal/api/proto/EQMessage.proto"
+    "proto": "npx protoc --ts_out src/Game/Net/message --proto_path ../server/internal/api/proto ../server/internal/api/proto/**/*.proto ../server/internal/api/proto/*.proto"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",

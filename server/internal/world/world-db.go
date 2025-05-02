@@ -5,11 +5,11 @@ import (
 	"fmt"
 	eqpb "knervous/eqgo/internal/api/proto"
 	"knervous/eqgo/internal/cache"
-	"knervous/eqgo/internal/character"
 	"knervous/eqgo/internal/db"
 	"log"
 	"strings"
 
+	db_character "knervous/eqgo/internal/db/character"
 	"knervous/eqgo/internal/db/items"
 	"knervous/eqgo/internal/db/jetgen/eqgo/model"
 	"knervous/eqgo/internal/db/jetgen/eqgo/table"
@@ -111,6 +111,28 @@ func GetOrCreateAccount(ctx context.Context, discordID string) (int64, error) {
 	}
 	cache.GetCache().Set(cacheKey, id)
 	return id, nil
+}
+
+func AccountHasCharacterName(ctx context.Context, accountID int64, charName string) (bool, error) {
+	// Never cache this - always keep up to date
+	var chars []model.CharacterData
+	err := table.CharacterData.
+		SELECT(
+			table.CharacterData.Name,
+		).
+		FROM(table.CharacterData).
+		WHERE(
+			table.CharacterData.AccountID.EQ(mysql.Int64(accountID)).
+				AND(table.CharacterData.Name.EQ(mysql.String(charName))).
+				AND(table.CharacterData.DeletedAt.IS_NULL()),
+		).
+		LIMIT(1).
+		QueryContext(ctx, db.GlobalWorldDB.DB, &chars)
+	if err != nil {
+		return false, fmt.Errorf("query character_data: %w", err)
+	}
+
+	return len(chars) > 0, nil
 }
 
 func GetCharSelectInfo(ctx context.Context, accountID int64) (*eqpb.CharacterSelect, error) {
@@ -551,7 +573,7 @@ func SaveCharacterCreate(ctx context.Context, accountID int64, pp *eqpb.PlayerPr
 	}
 
 	// Save inventory later
-	startingItems, err := character.InstantiateStartingItems(pp.Race, pp.CharClass, pp.Deity, pp.ZoneId)
+	startingItems, err := db_character.InstantiateStartingItems(pp.Race, pp.CharClass, pp.Deity, pp.ZoneId)
 	if err != nil {
 		log.Printf("Failed to instantiate starting items for %s: %v", pp.Name, err)
 		return false
