@@ -6,6 +6,7 @@ import {
   Node3D,
   MeshInstance3D,
   CollisionShape3D,
+  is_instance_valid,
 } from "godot";
 import * as EQMessage from "@eqmessage";
 import RACE_DATA from "../Constants/race-data";
@@ -40,6 +41,7 @@ export default class Player extends Actor {
   }
 
   public dispose() {
+    console.log('Call player dispose');
     super.dispose();
   }
 
@@ -48,7 +50,7 @@ export default class Player extends Actor {
   }
 
   public getPlayerPosition() {
-    return this.getNode()?.global_position;
+    return is_instance_valid(this.getNode()) ? this.getNode()?.global_position : null;
   }
 
   public input(buttonIndex: number) {

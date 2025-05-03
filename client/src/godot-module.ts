@@ -83,6 +83,7 @@ export const {
   ConvexPolygonShape3D,
   AABB,
   BoxMesh,
+  is_instance_valid,
 } = godot;
 
 export default godot;

@@ -64,7 +64,7 @@ var (
 
 // getItemsFilePath resolves the path to items.dat relative to the executable
 func getItemsFilePath() string {
-	exe, err := os.Executable()
+	exe, err := os.Getwd()
 	if err != nil {
 		panic(err) // Handle appropriately in production
 	}
@@ -98,12 +98,11 @@ func getDefaultItems() ([]model.Items, error) {
 	return items, nil
 }
 
-// openItemsMMF opens and initializes the memory-mapped file (internal)
 func openItemsMMF() (*ItemsMMF, error) {
 	// Check if items.dat exists
 	if _, err := os.Stat(getItemsFilePath()); os.IsNotExist(err) {
-		fmt.Println("items.dat not found, creating a new one...")
-		defaultItems, err := getDefaultItems() // You need to implement this
+		fmt.Println("items.dat not found in folder, creating a new one...", getItemsFilePath())
+		defaultItems, err := getDefaultItems()
 		if err != nil {
 			return nil, err
 		}

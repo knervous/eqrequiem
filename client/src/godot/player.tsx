@@ -1,6 +1,4 @@
 import React, { useEffect, useRef } from "react";
-//import { Overlay } from "requiem-ui/components/overlay";
-import { getRootEQFile } from 'sage-core/util/fileHandler';
 import "./ui.css";
 
 export const GodotWrapper = ({ splash }) => {
@@ -24,17 +22,11 @@ export const GodotWrapper = ({ splash }) => {
     };
   }, []);
   useEffect(() => {
-    // Dynamically load the Godot engine script (Test.js)
     const script = document.createElement("script");
     script.src = "Test.js";
     script.async = true;
     script.onload = () => {
-      if (typeof Engine === "undefined") {
-        console.error("Engine is not defined after loading Test.js");
-        return;
-      }
 
-      // Get references from our React refs
       if (
         !statusOverlayRef.current ||
         !statusProgressRef.current ||

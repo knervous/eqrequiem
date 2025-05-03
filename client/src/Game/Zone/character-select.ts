@@ -5,6 +5,7 @@ import * as EQMessage from "@eqmessage";
 import { RACE_DATA } from "../Constants/race-data";
 import { CLASS_DATA_NAMES } from "../Constants/class-data";
 import { zoneData } from "../Constants/zone-data";
+import { ZoneManager } from "./zone-manager";
 
 const CLASS_DATA_ENUM = {
   "Warrior": 1,
@@ -34,6 +35,7 @@ export default class CharacterSelect {
   private orbitAngle: number = 0; // Current angle of orbit
   private rotationSpeed: number = 1; // Radians per second; adjust as needed
   private gameManager: GameManager;
+  private zoneManager: ZoneManager | null = null;
   private locations = {
     [CLASS_DATA_ENUM.Warrior]: { x: -600, y: -184, z: 1475 },
     [CLASS_DATA_ENUM.Cleric]: { x: -603.5, y: -92.5, z: -328 },
@@ -54,18 +56,37 @@ export default class CharacterSelect {
   public character: Actor | null = null;
   private camera: Camera3D | null = null;
   private orbitIntervalId: number | undefined;
-
+  private worldTickInterval: number | undefined;
   public faceCam = false;
 
   constructor(gameManager: GameManager) {
     this.gameManager = gameManager;
     this.camera = gameManager.Camera;
+    this.initialize();
+  }
+
+  private async initialize() {
+    this.zoneManager = new ZoneManager(this.gameManager);
+    this.zoneManager?.loadZone('load2', false);
+    this.worldTickInterval = setInterval(() => { 
+      this.zoneManager?.SkyManager?.worldTick?.();
+    }, 500);
   }
 
   public dispose() {
-    this.character?.dispose();
+    if (this.character) {
+      this.character?.dispose();
+
+    }
+    if (this.zoneManager) {
+      this.zoneManager.dispose();
+      this.zoneManager = null;
+    }
     if (this.orbitIntervalId !== undefined) {
       clearInterval(this.orbitIntervalId);
+    }
+    if (this.worldTickInterval !== undefined) {
+      clearInterval(this.worldTickInterval);
     }
   }
 
@@ -118,6 +139,7 @@ export default class CharacterSelect {
         }
 
       } catch (e) {
+        this.dispose();
         console.error("Error in orbiting:", e);
       }
     }, interval);

@@ -40,9 +40,11 @@ func main() {
 		log.Fatalf("failed to initialize db.WorldDB: %v", err)
 	}
 
-	items.InitializeItemsMMF()
-	item, _ := items.GetItemTemplateByID(1003)
-	fmt.Println(item)
+	_, err = items.InitializeItemsMMF()
+	if err != nil {
+		log.Fatalf("failed to initialize items: %v", err)
+	}
+
 	srv, err := server.NewServer(dsn)
 	if err != nil {
 		log.Fatalf("failed to create server: %v", err)

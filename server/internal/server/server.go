@@ -52,7 +52,10 @@ func NewServer(dsn string) (*Server, error) {
 	worldHandler := world.NewWorldHandler(zoneManager, sessionManager)
 	registry.WH = worldHandler
 
-	cache.Init()
+	err := cache.Init()
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize cache: %w", err)
+	}
 
 	return &Server{
 		zoneManager:    zoneManager,
@@ -167,8 +170,14 @@ func listenUDP(port int) (*net.UDPConn, int, error) {
 		return nil, 0, fmt.Errorf("listen UDP %s: %w", addr, err)
 	}
 	// Increase buffer sizes
-	conn.SetReadBuffer(4 * 1024 * 1024)  // 4MB
-	conn.SetWriteBuffer(4 * 1024 * 1024) // 4MB
+	err = conn.SetReadBuffer(4 * 1024 * 1024) // 4MB
+	if err != nil {
+		return nil, 0, fmt.Errorf("set read buffer: %w", err)
+	}
+	err = conn.SetWriteBuffer(4 * 1024 * 1024) // 4MB
+	if err != nil {
+		return nil, 0, fmt.Errorf("set write buffer: %w", err)
+	}
 	return conn, conn.LocalAddr().(*net.UDPAddr).Port, nil
 }
 
@@ -198,7 +207,10 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	_ = r.FormValue("zoneId")
 	_ = r.FormValue("port")
-	w.Write([]byte("OK"))
+	_, err := w.Write([]byte("OK"))
+	if err != nil {
+		log.Printf("Error writing response: %v", err)
+	}
 }
 
 // corsMiddleware adds CORS headers.

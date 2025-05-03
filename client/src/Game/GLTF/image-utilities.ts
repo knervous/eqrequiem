@@ -56,6 +56,15 @@ export const loadNewTexture = async (
     return null;
   }
   buffer = buffer instanceof Uint8Array ? buffer.buffer : buffer;
+  if (!(buffer instanceof ArrayBuffer)) {
+    console.error("Buffer must be an ArrayBuffer or Uint8Array", file, name);
+    throw new Error("Buffer must be an ArrayBuffer or Uint8Array");
+  }
+  // Check if buffer is large enough for getUint16 (at least 2 bytes)
+  if (buffer.byteLength < 2) {
+    console.error("Buffer is too small to read image header", file);
+    throw new Error("Buffer is too small to read image header");
+  }
   const image = new Image();
   let err;
   let needFlip = false;

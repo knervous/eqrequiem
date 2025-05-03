@@ -31,7 +31,7 @@ export default class ZoneObjects {
                 const instance =
                   (await objectModel.instancePackedScene(objectPool, this.usePhysics)) as Node3D;
                 if (instance) {
-                  instance.set_name(`${key}-${idx}`);
+                  instance.set_name(`${key}`);
                   instance.position = new Vector3(-entry.x, entry.y, entry.z);
                   instance.scale = new Vector3(
                     entry.scale,

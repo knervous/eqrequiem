@@ -1,0 +1,15 @@
+linters:
+  enable:
+    - staticcheck
+    - errcheck
+    - gosec
+  disable:
+    - golint
+linters-settings:
+  staticcheck:
+    checks: ["all"]
+run:
+  timeout: 5m
+issues:
+  exclude:
+    - vendor

@@ -17,11 +17,12 @@ import {
   GeometryInstance3D,
   BaseMaterial3D,
   StaticBody3D,
+  Color,
+  is_instance_valid,
 } from "godot";
 import { FileSystem } from "../FileSystem/filesystem";
 import {
   createConcaveShapeFromMesh,
-  createConcaveShapeFromMeshes,
   getMeshAABB,
 } from "./gltf-utilities";
 import { getMaterialsByName, loadNewTexture } from "./image-utilities";
@@ -106,8 +107,12 @@ export class BaseGltfModel {
   }
 
   public dispose() {
-    this.node?.queue_free();
-    this.gltfNode?.queue_free();
+    if (is_instance_valid(this.node)) {
+      this.node?.queue_free();
+    }
+    if (is_instance_valid(this.gltfNode)) {
+      this.gltfNode?.queue_free();
+    }
     this.animationIntervals.forEach(clearInterval);
   }
 
@@ -361,15 +366,13 @@ export class BaseGltfModel {
           break;
         case ShaderType.DiffuseSkydome:
         case ShaderType.TransparentSkydome:
-          material.shading_mode =
-            StandardMaterial3D.ShadingMode.SHADING_MODE_UNSHADED; // Already set, ensures no lighting
+          material.shading_mode = 0;
           material.transparency = 1; // Ensure transparency is enabled
-          material.blend_mode = StandardMaterial3D.BlendMode.BLEND_MODE_MIX; // Ensure transparency is enabled
+          material.blend_mode = 0; // Ensure transparency is enabled
           material.alpha_scissor_threshold = 128 / 255; // Consistent with your AlphaShaderMap
-          material.distance_fade_mode =
-            StandardMaterial3D.DistanceFadeMode.DISTANCE_FADE_DISABLED; // Disable distance fading
-          material.no_depth_test = true; // Render on top, ignoring depth (optional, for skydome visibility)
-          //material.albedo_color = new Color(1, 1, 1, 128 / 255); // Ensure full brightness with your desired alpha
+          material.distance_fade_mode = 0;// Disable distance fading
+          //material.no_depth_test = true; // Render on top, ignoring depth (optional, for skydome visibility)
+          material.albedo_color = new Color(1, 1, 1, 128 / 255); // Ensure full brightness with your desired alpha
           break;
       }
 
@@ -434,7 +437,7 @@ export class BaseGltfModel {
     }
   }
 
-  private setupAnimations(rootNode: Node3D): void {
+  private setupAnimations(rootNode: Node3D, forInstance: boolean = false): void {
     if (!rootNode) {
       return;
     }
@@ -448,16 +451,21 @@ export class BaseGltfModel {
       }
     };
 
-    this.animationPlayer = findAnimationPlayer(rootNode);
-    if (this.animationPlayer) {
-      const animations = this.animationPlayer.get_animation_list();
+    this.animationPlayer = this.animationPlayer || findAnimationPlayer(rootNode);
+    let animPlayer = this.animationPlayer;
+    if (animPlayer) {
+      if (forInstance) {
+        animPlayer = animPlayer.duplicate();
+        rootNode.get_parent().add_child(animPlayer);
+      }
+      const animations = animPlayer.get_animation_list();
       if (animations.size() > 0) {
         const animationName = animations.get(0);
-        const animation = this.animationPlayer.get_animation(animationName);
+        const animation = animPlayer.get_animation(animationName);
         if (animation) {
           animation.loop_mode = Animation.LoopMode.LOOP_LINEAR;
         }
-        this.animationPlayer.play(animationName);
+        animPlayer.play(animationName);
       }
     }
   }
@@ -523,9 +531,19 @@ export class BaseGltfModel {
     await this.instantiate();
     const ps = new PackedScene();
     if (!this.gltfNode) {
+      console.log("No gltfNode to pack");
       return;
     }
-    ps.pack(this.gltfNode!); // Pack the root (CharacterBody3D or GLTF Node3D)
+    // Verify AnimationPlayer presence
+    const animationPlayer = this.gltfNode.getNodesOfType(AnimationPlayer)[0];
+    if (!animationPlayer) {
+      console.log("Warning: No AnimationPlayer found in gltfNode before packing");
+    } else {
+      console.log("AnimationPlayer present in gltfNode:",  animationPlayer.get_path().get_concatenated_names());
+      this.animationPlayer = animationPlayer;
+
+    }
+    ps.pack(this.gltfNode);
     this.packedScene = ps;
     return ps;
   }
@@ -540,7 +558,7 @@ export class BaseGltfModel {
       } else {
         instance.reparent(rootNode, false);
       }
-      this.setupAnimations(instance);
+      this.setupAnimations(instance, true);
       return instance;
     } else {
       console.log("PackedScene not available. Call createPackedScene() first.");

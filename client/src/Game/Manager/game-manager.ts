@@ -87,8 +87,7 @@ export default class GameManager extends Node3D {
   }
 
   public async loadCharacterSelect() {
-    await this.loadZone("load2", false);
-    this.player = null;
+    this.player?.dispose();
     this.characterSelect = new CharacterSelect(this);
   }
 
@@ -112,7 +111,7 @@ export default class GameManager extends Node3D {
     this.zoneManager?.loadZone(zoneName, usePhysics);
     this.worldTickInterval = setInterval(() => { 
       this.zoneManager?.SkyManager?.worldTick?.();
-    }, 100);
+    }, 1000);
   }
 
   public async spawnModel(model: string) {

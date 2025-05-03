@@ -68,9 +68,9 @@ export default class DayNightSkyManager {
   private layer1OffsetVec: Vector3 = new Vector3(0, 0, 0);
   private layer2OffsetVec: Vector3 = new Vector3(0, 0, 0);
   // ─── Procedural Sky & Sun ─────────────────────────
-  private worldEnv: WorldEnvironment;
-  private skyMat: PhysicalSkyMaterial;
-  private sun: DirectionalLight3D;
+  private worldEnv: WorldEnvironment | null = null;
+  private skyMat: PhysicalSkyMaterial | null = null;
+  private sun: DirectionalLight3D | null = null;
 
   // ─── For camera follow ────────────────────────────
   private cam: Camera3D;
@@ -133,12 +133,15 @@ export default class DayNightSkyManager {
   dispose() {
     if (this.domeRoot) {
       this.domeRoot.queue_free();
+      this.domeRoot = null;
     }
     if (this.worldEnv) {
       this.worldEnv.queue_free();
+      this.worldEnv = null;
     }
     if (this.sun) {
       this.sun.queue_free();
+      this.sun = null;
     }
   }
 
@@ -161,8 +164,12 @@ export default class DayNightSkyManager {
     this.layer2OffsetVec.y = this.uvOffsetLayer2.y;
 
     // Apply without allocation
-    this.layer1Mat.uv1_offset = this.layer1OffsetVec;
-    this.layer2Mat.uv1_offset = this.layer2OffsetVec;
+    if (this.layer1Mat) {
+      this.layer1Mat.uv1_offset = this.layer1OffsetVec;
+    }
+    if (this.layer2Mat) {
+      this.layer2Mat.uv1_offset = this.layer2OffsetVec;
+    }
   }
 
   public setTimeOfDay(time: number): void {
@@ -239,6 +246,10 @@ export default class DayNightSkyManager {
     low.a = 0.5;
     mid.a = 0.5;
     high.a = 0.5;
+
+    if (!this.layer1Mat || !this.layer2Mat) {
+      return;
+    }
     // apply to layer1 (horizon)
     this.layer1Mat.albedo_color         = low;
     this.layer1Mat.emission_enabled     = true;

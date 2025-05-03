@@ -16,37 +16,40 @@ export const CompassWindowComponent: React.FC = () => {
   const totalDegreesRef = useRef(0); // Accumulate total degrees for continuity
 
   useEffect(() => {
-
     const interval = setInterval(() => {
       // Get player rotation in radians from Godot
-      const rotation =
+      try {
+        const rotation =
       Player.instance?.getPlayerRotation()
         ?.y ?? 0;
 
-      // Convert current and previous rotations to degrees
-      const currentDegrees = (rotation * 180) / Math.PI;
-      const prevDegrees = (prevRotationRef.current * 180) / Math.PI;
+        // Convert current and previous rotations to degrees
+        const currentDegrees = (rotation * 180) / Math.PI;
+        const prevDegrees = (prevRotationRef.current * 180) / Math.PI;
 
-      // Calculate the difference, accounting for wrap-around
-      let deltaDegrees = currentDegrees - prevDegrees;
-      if (deltaDegrees > 180) {
-        deltaDegrees -= 360; // Adjust for crossing from PI to -PI
-      } else if (deltaDegrees < -180) {
-        deltaDegrees += 360; // Adjust for crossing from -PI to PI
+        // Calculate the difference, accounting for wrap-around
+        let deltaDegrees = currentDegrees - prevDegrees;
+        if (deltaDegrees > 180) {
+          deltaDegrees -= 360; // Adjust for crossing from PI to -PI
+        } else if (deltaDegrees < -180) {
+          deltaDegrees += 360; // Adjust for crossing from -PI to PI
+        }
+
+        // Update total degrees for continuous rotation
+        totalDegreesRef.current += deltaDegrees;
+
+        // Update previous rotation
+        prevRotationRef.current = rotation;
+
+        // Calculate offset based on total degrees
+        const stripWidth = strip.entry.width; // Width of one instance of the strip image
+        const offsetPerDegree = stripWidth / 360; // Pixels per degree
+        const newOffset = (totalDegreesRef.current % 360) * offsetPerDegree * -1;
+
+        setOffset(newOffset);
+      } finally {
+        // Do nothing
       }
-
-      // Update total degrees for continuous rotation
-      totalDegreesRef.current += deltaDegrees;
-
-      // Update previous rotation
-      prevRotationRef.current = rotation;
-
-      // Calculate offset based on total degrees
-      const stripWidth = strip.entry.width; // Width of one instance of the strip image
-      const offsetPerDegree = stripWidth / 360; // Pixels per degree
-      const newOffset = (totalDegreesRef.current % 360) * offsetPerDegree * -1;
-
-      setOffset(newOffset);
     }, 10); // Update every 50ms for smoother movement (adjust as needed)
 
     // Cleanup interval on unmount

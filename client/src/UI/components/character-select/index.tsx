@@ -26,13 +26,12 @@ export const CharacterSelectUIComponent: React.FC = () => {
     React.useState<EQMessage.CharacterSelectEntry | null>(null);
 
   const charSelectHandler = useCallback(
-    (charInfo: EQMessage.CharacterSelect) => {
-      GameManager.instance.loadCharacterSelect();
+    async (charInfo: EQMessage.CharacterSelect) => {
+      await GameManager.instance.loadCharacterSelect();
       setGotCharInfo(true);
       setCharInfo(charInfo);
       setSelectedChar(charInfo?.characters[0] ?? null);
       if (!splashed) {
-       
         setSplash?.(true);
         setTimeout(() => {
           setSplash?.(false);

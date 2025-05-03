@@ -45,7 +45,7 @@ export const createConcaveShapeFromMeshes = (meshInstances: MeshInstance3D[]): C
   return concaveShape;
 };
 
-export const  createStaticCollision = (instance: Node3D) => {
+export const createStaticCollision = (instance: Node3D) => {
   const meshInstances = instance.getNodesOfType(MeshInstance3D);
   const concaveShape = createConcaveShapeFromMeshes(meshInstances);
   if (!concaveShape) return;
@@ -53,7 +53,7 @@ export const  createStaticCollision = (instance: Node3D) => {
   collisionShape.shape = concaveShape;
 
   instance.get_parent().add_child(collisionShape);
-  collisionShape.global_transform = instance.global_transform;
+  //collisionShape.global_transform = instance.global_transform;
   collisionShape.global_position = instance.global_position;
 };
 

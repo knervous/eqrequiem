@@ -41,7 +41,6 @@ export default class AnimationCache {
       const rootNode = gltfDocument.generate_scene(gltfState) as Node3D;
       if (rootNode) {
         const animationPlayer = findAnimationPlayer(rootNode);
-        console.log("++++ QUEUE FREE ++++", +rootNode.get_path());
         rootNode.queue_free();
 
         if (animationPlayer) {

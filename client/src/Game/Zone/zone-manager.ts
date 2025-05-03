@@ -30,7 +30,6 @@ export class ZoneManager {
   }
   private zoneContainer: Node3D | null = null;
   private zoneObjects: ZoneObjects | null = null;
-  private metadata: any = {};
   private usePhysics: boolean = true;
   public zoneName = "qeynos2";
   public get CurrentZone() {
@@ -80,6 +79,9 @@ export class ZoneManager {
     const zoneModel = new ZoneMesh("zones", this.zoneName, this.usePhysics);
     zoneModel.LoaderOptions.doCull = false;
     const rootNode = await zoneModel.instantiate();
+    if (!this.zoneContainer) {
+      return;
+    }
     if (rootNode) {
       this.zoneContainer.add_child(rootNode);
       rootNode.set_physics_process(true);

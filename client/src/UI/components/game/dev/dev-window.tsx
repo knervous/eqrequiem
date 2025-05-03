@@ -41,7 +41,7 @@ export const DevWindowComponent: React.FC = () => {
   const [timeOfDay, setTimeOfDay] = useState(12);
   useEffect(() => {
     if (GameManager.instance?.ZoneManager?.SkyManager) {
-      GameManager.instance.ZoneManager?.SkyManager.setTimeOfDay(timeOfDay);
+      //GameManager.instance.ZoneManager?.SkyManager.setTimeOfDay(timeOfDay);
     }
   }, [timeOfDay]);
 

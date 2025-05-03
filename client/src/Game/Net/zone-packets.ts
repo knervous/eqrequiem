@@ -32,14 +32,19 @@ export class ZonePacketHandler {
 
   @opCodeHandler(EQMessage.OpCodes.OP_NewZone, EQMessage.NewZone)
   newZone(newZone: EQMessage.NewZone) {
-    this.setMode('game');
+
     GameManager.instance.loadZoneServer(newZone);
+    this.setMode('game');
+
   }
 
   @opCodeHandler(EQMessage.OpCodes.OP_PlayerProfile, EQMessage.PlayerProfile)
   loadPlayerProfile(playerProfile: EQMessage.PlayerProfile) {
     console.log('Got player profile', playerProfile);
+
     GameManager.instance.instantiatePlayer(playerProfile);
+
+    
     // //GameManager.instance.instantiatePlayer(playerProfile);
     // GameManager.instance.setLoading(false);
   }

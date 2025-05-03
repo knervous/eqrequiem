@@ -17,7 +17,6 @@ import (
 	"log"
 	"math/big"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/quic-go/quic-go/http3"
@@ -153,6 +152,7 @@ func getTLSConf(start, end time.Time) (*tls.Config, []byte, error) {
 	}
 
 	return &tls.Config{
+		MinVersion: tls.VersionTLS13,
 		Certificates: []tls.Certificate{{
 			Certificate: [][]byte{cert.Raw},
 			PrivateKey:  priv,
@@ -193,10 +193,4 @@ func generateCert(start, end time.Time) (*x509.Certificate, []byte, *ecdsa.Priva
 		return nil, nil, nil, err
 	}
 	return ca, caBytes, caPrivateKey, nil
-}
-
-func formatByteSlice(b []byte) string {
-	s := strings.ReplaceAll(fmt.Sprintf("%#v", b[:]), "[]byte{", "[")
-	s = strings.ReplaceAll(s, "}", "]")
-	return s
 }

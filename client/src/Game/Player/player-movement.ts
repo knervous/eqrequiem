@@ -6,6 +6,7 @@ import {
   Key,
   CharacterBody3D,
   DisplayServer,
+  is_instance_valid,
 } from "godot";
 import type Player from "./player";
 
@@ -60,7 +61,7 @@ export class PlayerMovement {
 
   public movementTick(delta: number) {
     const node = this.player.getNode() as CharacterBody3D;
-    if (!node) return;
+    if (!node || !is_instance_valid(node)) return;
     if (this.player.getNode()?.get_viewport()?.gui_get_focus_owner()) {
       return;
     }
@@ -165,7 +166,6 @@ export class PlayerMovement {
     }
 
     if (this.updateDelta > 0.5) {
-      console.log('Would send update');
       this.updateDelta = 0;
     }
 
