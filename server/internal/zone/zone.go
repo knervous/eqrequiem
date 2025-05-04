@@ -10,8 +10,8 @@ import (
 	db_zone "github.com/knervous/eqgo/internal/db/zone"
 	"github.com/knervous/eqgo/internal/message"
 	"github.com/knervous/eqgo/internal/session"
-	"github.com/knervous/eqgo/quests"
-	questregistry "github.com/knervous/eqgo/quests/registry"
+	"github.com/knervous/eqgo/quest"
+	questregistry "github.com/knervous/eqgo/quest/registry"
 )
 
 type ClientEntry struct {
@@ -29,7 +29,7 @@ type ZoneInstance struct {
 	mutex      sync.RWMutex
 }
 
-var zoneQuestInterface *quests.ZoneQuestInterface = nil
+var zoneQuestInterface *quest.ZoneQuestInterface = nil
 
 func NewZoneInstance(zoneID, instanceID int) *ZoneInstance {
 	zoneRegistry := NewZoneOpCodeRegistry(zoneID)
@@ -46,6 +46,7 @@ func NewZoneInstance(zoneID, instanceID int) *ZoneInstance {
 		registry:   zoneRegistry,
 	}
 	z.wg.Add(1)
+	spawnZone(zone)
 	go z.run()
 	return z
 }
@@ -87,11 +88,7 @@ func (z *ZoneInstance) run() {
 	fmt.Printf("[Zone %d·Inst %d] started\n", z.ZoneID, z.InstanceID)
 
 	// Register quests
-	zoneQuestInterface = questregistry.GetQuestInterface(quests.ZoneIndex(z.ZoneID), *z.Zone.ShortName)
-
-	zoneQuestInterface.HandleNpcEvent("Captain_Tillin", &quests.QuestEvent{
-		EventType: quests.EVENT_SAY,
-	})
+	zoneQuestInterface = questregistry.GetQuestInterface(*z.Zone.ShortName)
 
 	for {
 		select {
