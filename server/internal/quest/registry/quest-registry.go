@@ -7,9 +7,9 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/knervous/eqgo/quest"
-	"github.com/knervous/eqgo/quest/zones/qeynos"
-	"github.com/knervous/eqgo/quest/zones/qeynos2"
+	"github.com/knervous/eqgo/internal/quest"
+	"github.com/knervous/eqgo/internal/quest/zones/qeynos"
+	"github.com/knervous/eqgo/internal/quest/zones/qeynos2"
 )
 
 var (

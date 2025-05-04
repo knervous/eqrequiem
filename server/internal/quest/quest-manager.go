@@ -6,7 +6,7 @@ import (
 
 	"github.com/knervous/eqgo/internal/db/items"
 	"github.com/knervous/eqgo/internal/db/jetgen/eqgo/model"
-	entity "github.com/knervous/eqgo/internal/entities"
+	entity "github.com/knervous/eqgo/internal/entity"
 )
 
 type QuestEventType uint16

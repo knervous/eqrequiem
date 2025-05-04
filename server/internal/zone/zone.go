@@ -8,10 +8,11 @@ import (
 
 	"github.com/knervous/eqgo/internal/db/jetgen/eqgo/model"
 	db_zone "github.com/knervous/eqgo/internal/db/zone"
+	entity "github.com/knervous/eqgo/internal/entity"
 	"github.com/knervous/eqgo/internal/message"
+	"github.com/knervous/eqgo/internal/quest"
+	questregistry "github.com/knervous/eqgo/internal/quest/registry"
 	"github.com/knervous/eqgo/internal/session"
-	"github.com/knervous/eqgo/quest"
-	questregistry "github.com/knervous/eqgo/quest/registry"
 )
 
 type ClientEntry struct {
@@ -89,6 +90,16 @@ func (z *ZoneInstance) run() {
 
 	// Register quests
 	zoneQuestInterface = questregistry.GetQuestInterface(*z.Zone.ShortName)
+
+	zoneQuestInterface.Invoke("Captain_Tillin", &quest.QuestEvent{
+		EventType: quest.EventSay,
+		Actor: &entity.NPC{
+			NpcData: model.NpcTypes{
+				Name: "Captaaaain Tillin",
+			},
+		},
+		// any other data relating to event
+	})
 
 	for {
 		select {

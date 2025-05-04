@@ -1,7 +1,10 @@
 package entity
 
+import "github.com/knervous/eqgo/internal/db/jetgen/eqgo/model"
+
 type NPC struct {
 	Mob
+	NpcData         model.NpcTypes
 	AggressionLevel int
 }
 
