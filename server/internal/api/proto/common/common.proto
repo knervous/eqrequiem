@@ -2,7 +2,7 @@
 syntax = "proto3";
 package eq.common;
 
-option go_package = "knervous/eqgo/internal/api/proto/common";
+option go_package = "github.com/knervous/eqgo/internal/api/proto/common";
 
 message InventorySlot {
   int32 type = 1;

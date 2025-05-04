@@ -2,14 +2,15 @@ package main
 
 import (
 	"fmt"
-	"knervous/eqgo/internal/config"
-	"knervous/eqgo/internal/db"
-	items "knervous/eqgo/internal/db/items"
-	"knervous/eqgo/internal/server"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/knervous/eqgo/internal/config"
+	"github.com/knervous/eqgo/internal/db"
+	items "github.com/knervous/eqgo/internal/db/items"
+	"github.com/knervous/eqgo/internal/server"
 
 	_ "github.com/go-sql-driver/mysql" // Import MySQL driver
 )
@@ -19,10 +20,10 @@ func getConnectionString() (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to read config: %v", err)
 	}
-	host := serverConfig.GetString("db_host", "")
-	user := serverConfig.GetString("db_user", "")
-	pass := serverConfig.GetString("db_pass", "")
-	port := serverConfig.GetInt("db_port", 3307)
+	host := serverConfig.DBHost
+	port := serverConfig.DBPort
+	user := serverConfig.DBUser
+	pass := serverConfig.DBPass
 
 	if host == "" || user == "" || pass == "" {
 		return "", fmt.Errorf("database connection string is not set")

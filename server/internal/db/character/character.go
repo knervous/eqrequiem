@@ -3,14 +3,15 @@ package db_character
 import (
 	"context"
 	"fmt"
-	"knervous/eqgo/internal/cache"
-	"knervous/eqgo/internal/db"
-	"knervous/eqgo/internal/db/items"
-	"knervous/eqgo/internal/db/jetgen/eqgo/model"
-	"knervous/eqgo/internal/db/jetgen/eqgo/table"
 	"slices"
 	"strconv"
 	"strings"
+
+	"github.com/knervous/eqgo/internal/cache"
+	"github.com/knervous/eqgo/internal/db"
+	"github.com/knervous/eqgo/internal/db/items"
+	"github.com/knervous/eqgo/internal/db/jetgen/eqgo/model"
+	"github.com/knervous/eqgo/internal/db/jetgen/eqgo/table"
 
 	"github.com/go-jet/jet/v2/mysql"
 	_ "github.com/go-sql-driver/mysql"

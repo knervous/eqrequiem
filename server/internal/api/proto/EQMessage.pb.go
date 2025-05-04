@@ -7,13 +7,13 @@
 package eqmessage
 
 import (
+	common "github.com/knervous/eqgo/internal/api/proto/common"
+	item "github.com/knervous/eqgo/internal/api/proto/item"
+	player "github.com/knervous/eqgo/internal/api/proto/player"
+	world "github.com/knervous/eqgo/internal/api/proto/world"
+	zone "github.com/knervous/eqgo/internal/api/proto/zone"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
-	common "knervous/eqgo/internal/api/proto/common"
-	item "knervous/eqgo/internal/api/proto/item"
-	player "knervous/eqgo/internal/api/proto/player"
-	world "knervous/eqgo/internal/api/proto/world"
-	zone "knervous/eqgo/internal/api/proto/zone"
 	reflect "reflect"
 	unsafe "unsafe"
 )
@@ -990,7 +990,7 @@ var File_eqmessage_proto protoreflect.FileDescriptor
 
 const file_eqmessage_proto_rawDesc = "" +
 	"\n" +
-	"\x0feqmessage.proto\x12\x02eq\x1a\x13common/common.proto\x1a\x0fzone/zone.proto\x1a\x0fitem/item.proto\x1a\x13player/player.proto\x1a\x14common/opcodes.proto\x1a\x11world/world.protoB.H\x01Z*knervous/eqgo/internal/api/proto/eqmessageP\x00P\x01P\x02P\x03P\x04P\x05b\x06proto3"
+	"\x0feqmessage.proto\x12\x02eq\x1a\x13common/common.proto\x1a\x0fzone/zone.proto\x1a\x0fitem/item.proto\x1a\x13player/player.proto\x1a\x14common/opcodes.proto\x1a\x11world/world.protoB9H\x01Z5github.com/knervous/eqgo/internal/api/proto/eqmessageP\x00P\x01P\x02P\x03P\x04P\x05b\x06proto3"
 
 var file_eqmessage_proto_goTypes = []any{}
 var file_eqmessage_proto_depIdxs = []int32{

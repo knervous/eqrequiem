@@ -1740,7 +1740,7 @@ const file_item_item_proto_rawDesc = "" +
 	"\asubtype\x18\xa6\x01 \x01(\x05R\asubtype\x12\x1b\n" +
 	"\bheirloom\x18\xa7\x01 \x01(\x05R\bheirloom\x12\x1d\n" +
 	"\tplaceable\x18\xa8\x01 \x01(\x05R\tplaceable\x12\x1b\n" +
-	"\bepicitem\x18\xa9\x01 \x01(\x05R\bepicitemB'Z%knervous/eqgo/internal/api/proto/itemb\x06proto3"
+	"\bepicitem\x18\xa9\x01 \x01(\x05R\bepicitemB2Z0github.com/knervous/eqgo/internal/api/proto/itemb\x06proto3"
 
 var (
 	file_item_item_proto_rawDescOnce sync.Once

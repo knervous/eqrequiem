@@ -2,12 +2,13 @@ package zone
 
 import (
 	"context"
-	eqpb "knervous/eqgo/internal/api/proto"
-	db_character "knervous/eqgo/internal/db/character"
-	db_zone "knervous/eqgo/internal/db/zone"
-	"knervous/eqgo/internal/message"
-	"knervous/eqgo/internal/session"
 	"log"
+
+	eqpb "github.com/knervous/eqgo/internal/api/proto"
+	db_character "github.com/knervous/eqgo/internal/db/character"
+	db_zone "github.com/knervous/eqgo/internal/db/zone"
+	"github.com/knervous/eqgo/internal/message"
+	"github.com/knervous/eqgo/internal/session"
 
 	"github.com/jinzhu/copier"
 	"google.golang.org/protobuf/proto"

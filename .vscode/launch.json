@@ -5,23 +5,27 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Attach to Godot",
-            "port": 9229,
-            "request": "attach",
-            "skipFiles": [
-                "<node_internals>/**"
-            ],
-            "type": "node"
-        },
-        {
-            "name": "Run Go Server",
+            "name": "EQGO",
             "type": "go",
             "request": "launch",
             "mode": "auto",
             "program": "${workspaceFolder}/server/cmd/server",
+            "cwd": "${workspaceFolder}/server",
             "env": {},
             "args": []
-          },
+        },
+        {
+            "name": "EQGO: Quest Dev",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/server/cmd/server",
+            "cwd": "${workspaceFolder}/server",
+            "env": {},
+            "args": [],
+            "buildFlags": "-tags=dev"
+
+        },
         {
             "type": "node",
             "request": "attach",
@@ -29,7 +33,9 @@
             "port": 9229,
             "restart": true,
             "sourceMaps": true,
-            "skipFiles": ["<node_internals>/**"]
-          }
+            "skipFiles": [
+                "<node_internals>/**"
+            ]
+        }
     ]
 }

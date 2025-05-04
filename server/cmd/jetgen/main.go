@@ -2,8 +2,9 @@ package main
 
 import (
 	"fmt"
-	"knervous/eqgo/internal/config"
 	"log"
+
+	"github.com/knervous/eqgo/internal/config"
 
 	"github.com/go-jet/jet/v2/generator/mysql"
 )
@@ -14,10 +15,10 @@ func getConnection() (mysql.DBConnection, error) {
 		return mysql.DBConnection{}, fmt.Errorf("failed to read config: %v", err)
 	}
 
-	host := serverConfig.GetString("db_host", "")
-	port := serverConfig.GetInt("db_port", 3306)
-	user := serverConfig.GetString("db_user", "")
-	pass := serverConfig.GetString("db_pass", "")
+	host := serverConfig.DBHost
+	port := serverConfig.DBPort
+	user := serverConfig.DBUser
+	pass := serverConfig.DBPass
 
 	if host == "" || user == "" || pass == "" {
 		return mysql.DBConnection{}, fmt.Errorf("database connection details are not set")

@@ -1,7 +1,7 @@
 syntax = "proto3";
 package eq.world;
 
-option go_package = "knervous/eqgo/internal/api/proto/world";
+option go_package = "github.com/knervous/eqgo/internal/api/proto/world";
 
 
 message JWTLogin {

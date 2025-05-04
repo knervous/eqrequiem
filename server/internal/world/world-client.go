@@ -2,9 +2,10 @@ package world
 
 import (
 	"context"
-	eqpb "knervous/eqgo/internal/api/proto"
 	"log"
 	"unicode"
+
+	eqpb "github.com/knervous/eqgo/internal/api/proto"
 
 	_ "github.com/go-sql-driver/mysql"
 )

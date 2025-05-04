@@ -3,16 +3,17 @@ package world
 import (
 	"context"
 	"fmt"
-	eqpb "knervous/eqgo/internal/api/proto"
-	"knervous/eqgo/internal/cache"
-	"knervous/eqgo/internal/db"
 	"log"
 	"strings"
 
-	db_character "knervous/eqgo/internal/db/character"
-	"knervous/eqgo/internal/db/items"
-	"knervous/eqgo/internal/db/jetgen/eqgo/model"
-	"knervous/eqgo/internal/db/jetgen/eqgo/table"
+	eqpb "github.com/knervous/eqgo/internal/api/proto"
+	"github.com/knervous/eqgo/internal/cache"
+	"github.com/knervous/eqgo/internal/db"
+
+	db_character "github.com/knervous/eqgo/internal/db/character"
+	"github.com/knervous/eqgo/internal/db/items"
+	"github.com/knervous/eqgo/internal/db/jetgen/eqgo/model"
+	"github.com/knervous/eqgo/internal/db/jetgen/eqgo/table"
 
 	"github.com/go-jet/jet/v2/mysql"
 	_ "github.com/go-sql-driver/mysql"

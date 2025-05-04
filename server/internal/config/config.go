@@ -34,62 +34,35 @@ func GetCert() (string, error) {
 	return key, nil
 }
 
-type Config map[string]interface{}
+type Config struct {
+	DBHost      string `json:"db_host"`
+	DBPort      int    `json:"db_port"`
+	DBUser      string `json:"db_user"`
+	DBPass      string `json:"db_pass"`
+	Local       bool   `json:"local"`
+	LocalQuests bool   `json:"localQuests"`
+}
 
-func NewConfig() (Config, error) {
+func NewConfig() (*Config, error) {
 	data, err := configData.ReadFile("serverconfig/eqemu_config.json")
 	if err != nil {
 		return nil, err
 	}
 
-	var config Config
-	if err := json.Unmarshal(data, &config); err != nil {
+	// Initialize with default values
+	config := &Config{
+		DBHost:      "127.0.0.1", // Default host
+		DBPort:      3306,        // Default MySQL port
+		DBUser:      "root",      // Default user
+		DBPass:      "",          // Default empty password
+		Local:       false,       // Default local setting
+		LocalQuests: false,       // Default local setting
+	}
+
+	// Unmarshal JSON, overwriting defaults with provided values
+	if err := json.Unmarshal(data, config); err != nil {
 		return nil, err
 	}
 
 	return config, nil
-}
-
-func (c Config) Get(keyPath string, defaultValue interface{}) interface{} {
-	keys := strings.Split(keyPath, ".")
-	current := c
-
-	for i, key := range keys {
-		if i == len(keys)-1 {
-			if value, ok := current[key]; ok {
-				return value
-			}
-			return defaultValue
-		}
-
-		if next, ok := current[key].(map[string]interface{}); ok {
-			current = next
-		} else {
-			return defaultValue
-		}
-	}
-
-	return defaultValue
-}
-
-func (c Config) GetString(keyPath string, defaultValue string) string {
-	if value, ok := c.Get(keyPath, defaultValue).(string); ok {
-		return value
-	}
-	return defaultValue
-}
-
-func (c Config) GetInt(keyPath string, defaultValue int) int {
-	// JSON numbers are float64 by default
-	if value, ok := c.Get(keyPath, float64(defaultValue)).(float64); ok {
-		return int(value)
-	}
-	return defaultValue
-}
-
-func (c Config) GetBool(keyPath string, defaultValue bool) bool {
-	if value, ok := c.Get(keyPath, defaultValue).(bool); ok {
-		return value
-	}
-	return defaultValue
 }

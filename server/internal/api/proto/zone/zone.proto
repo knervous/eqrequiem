@@ -1,7 +1,7 @@
 syntax = "proto3";
 package eq.zone;
 
-option go_package = "knervous/eqgo/internal/api/proto/zone";
+option go_package = "github.com/knervous/eqgo/internal/api/proto/zone";
 
 message ZoneChange {
   string char_name = 1;

@@ -8,6 +8,6 @@ import public "player/player.proto";
 import public "common/opcodes.proto";
 import public "world/world.proto";
 
-option go_package = "knervous/eqgo/internal/api/proto/eqmessage";
+option go_package = "github.com/knervous/eqgo/internal/api/proto/eqmessage";
 option optimize_for = SPEED;
 

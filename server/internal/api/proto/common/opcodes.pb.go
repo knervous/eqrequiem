@@ -2497,7 +2497,7 @@ const file_common_opcodes_proto_rawDesc = "" +
 	"\x1bNested_CharacterSelectEntry\x10\xe9\a\x12\x1b\n" +
 	"\x16Nested_CharSelectEquip\x10\xea\a\x12\x10\n" +
 	"\vNested_Tint\x10\xeb\a\x12\x16\n" +
-	"\x11Nested_StringList\x10\xec\aB)Z'knervous/eqgo/internal/api/proto/commonb\x06proto3"
+	"\x11Nested_StringList\x10\xec\aB4Z2github.com/knervous/eqgo/internal/api/proto/commonb\x06proto3"
 
 var (
 	file_common_opcodes_proto_rawDescOnce sync.Once

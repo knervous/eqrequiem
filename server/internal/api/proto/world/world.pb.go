@@ -303,7 +303,7 @@ const file_world_world_proto_rawDesc = "" +
 	"\x04race\x18\x02 \x01(\x05R\x04race\x12\x1d\n" +
 	"\n" +
 	"char_class\x18\x03 \x01(\x05R\tcharClass\x12\x14\n" +
-	"\x05deity\x18\x04 \x01(\x05R\x05deityB(Z&knervous/eqgo/internal/api/proto/worldb\x06proto3"
+	"\x05deity\x18\x04 \x01(\x05R\x05deityB3Z1github.com/knervous/eqgo/internal/api/proto/worldb\x06proto3"
 
 var (
 	file_world_world_proto_rawDescOnce sync.Once

@@ -13,11 +13,12 @@ import (
 	"encoding/binary"
 	"encoding/pem"
 	"fmt"
-	"knervous/eqgo/internal/config"
 	"log"
 	"math/big"
 	"net/http"
 	"time"
+
+	"github.com/knervous/eqgo/internal/config"
 
 	"github.com/quic-go/quic-go/http3"
 )
@@ -66,7 +67,7 @@ func LoadTLSConfig() (*tls.Config, error) {
 		return nil, fmt.Errorf("failed to read config: %v", err)
 	}
 	var tlsConf *tls.Config
-	local := serverConfig.GetBool("local", false)
+	local := serverConfig.Local
 	if !local {
 		// Try embedded key.pem first
 		tlsConf, err := loadEmbeddedTLSConfig()

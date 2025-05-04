@@ -2,9 +2,10 @@ package world
 
 import (
 	"encoding/binary"
-	eqpb "knervous/eqgo/internal/api/proto"
-	"knervous/eqgo/internal/message"
 	"log"
+
+	eqpb "github.com/knervous/eqgo/internal/api/proto"
+	"github.com/knervous/eqgo/internal/message"
 )
 
 // DatagramHandler defines the signature for handling datagrams.

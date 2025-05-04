@@ -2,10 +2,11 @@ package zone
 
 import (
 	"encoding/binary"
-	eqpb "knervous/eqgo/internal/api/proto"
-	"knervous/eqgo/internal/message"
-	"knervous/eqgo/internal/session"
 	"log"
+
+	eqpb "github.com/knervous/eqgo/internal/api/proto"
+	"github.com/knervous/eqgo/internal/message"
+	"github.com/knervous/eqgo/internal/session"
 )
 
 type ClientMessage struct {

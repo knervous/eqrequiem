@@ -4,13 +4,14 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
-	eqpb "knervous/eqgo/internal/api/proto"
 	"log"
 	"time"
 
+	eqpb "github.com/knervous/eqgo/internal/api/proto"
+
 	"github.com/jinzhu/copier"
 
-	"knervous/eqgo/internal/db/jetgen/eqgo/model"
+	"github.com/knervous/eqgo/internal/db/jetgen/eqgo/model"
 )
 
 func ConvertItemTemplateToPb(item *model.Items) *eqpb.Items {

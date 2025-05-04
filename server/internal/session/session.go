@@ -1,8 +1,9 @@
 package session
 
 import (
-	"knervous/eqgo/internal/db/jetgen/eqgo/model"
 	"sync"
+
+	"github.com/knervous/eqgo/internal/db/jetgen/eqgo/model"
 )
 
 // Session holds the context for a client session.

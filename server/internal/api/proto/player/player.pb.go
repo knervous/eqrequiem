@@ -7,10 +7,10 @@
 package player
 
 import (
+	common "github.com/knervous/eqgo/internal/api/proto/common"
+	item "github.com/knervous/eqgo/internal/api/proto/item"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
-	common "knervous/eqgo/internal/api/proto/common"
-	item "knervous/eqgo/internal/api/proto/item"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -1565,7 +1565,7 @@ const file_player_player_proto_rawDesc = "" +
 	"\x11guild_autoconsent\x18z \x01(\x05R\x10guildAutoconsent\x12\x16\n" +
 	"\x06level3\x18{ \x01(\x05R\x06level3\x12\x1a\n" +
 	"\bshowhelm\x18| \x01(\x05R\bshowhelm\x12>\n" +
-	"\x0finventory_items\x18~ \x03(\v2\x15.eq.item.ItemInstanceR\x0einventoryItemsB)Z'knervous/eqgo/internal/api/proto/playerb\x06proto3"
+	"\x0finventory_items\x18~ \x03(\v2\x15.eq.item.ItemInstanceR\x0einventoryItemsB4Z2github.com/knervous/eqgo/internal/api/proto/playerb\x06proto3"
 
 var (
 	file_player_player_proto_rawDescOnce sync.Once

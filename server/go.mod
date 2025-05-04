@@ -1,4 +1,4 @@
-module knervous/eqgo
+module github.com/knervous/eqgo
 
 go 1.24.2
 
@@ -13,6 +13,7 @@ require (
 	github.com/quic-go/quic-go v0.43.0
 	github.com/quic-go/webtransport-go v0.8.0
 	github.com/sevlyar/go-daemon v0.1.6
+	github.com/traefik/yaegi v0.16.1
 	google.golang.org/protobuf v1.36.6
 )
 

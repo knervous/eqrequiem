@@ -5,12 +5,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"knervous/eqgo/internal/config"
 	"log"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
+
+	"github.com/knervous/eqgo/internal/config"
 
 	"github.com/golang-jwt/jwt/v5"
 )

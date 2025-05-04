@@ -4,11 +4,11 @@ import (
 	"context"
 	"log"
 
-	eqpb "knervous/eqgo/internal/api/proto"
-	db_character "knervous/eqgo/internal/db/character"
-	"knervous/eqgo/internal/discord"
-	"knervous/eqgo/internal/message"
-	"knervous/eqgo/internal/session"
+	eqpb "github.com/knervous/eqgo/internal/api/proto"
+	db_character "github.com/knervous/eqgo/internal/db/character"
+	"github.com/knervous/eqgo/internal/discord"
+	"github.com/knervous/eqgo/internal/message"
+	"github.com/knervous/eqgo/internal/session"
 
 	"google.golang.org/protobuf/proto"
 )

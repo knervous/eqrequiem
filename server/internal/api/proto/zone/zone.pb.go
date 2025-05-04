@@ -751,7 +751,7 @@ const file_zone_zone_proto_rawDesc = "" +
 	"\x0eZoneChangeType\x12\x0e\n" +
 	"\n" +
 	"FROM_WORLD\x10\x00\x12\r\n" +
-	"\tFROM_ZONE\x10\x01B'Z%knervous/eqgo/internal/api/proto/zoneb\x06proto3"
+	"\tFROM_ZONE\x10\x01B2Z0github.com/knervous/eqgo/internal/api/proto/zoneb\x06proto3"
 
 var (
 	file_zone_zone_proto_rawDescOnce sync.Once

@@ -2,11 +2,12 @@ package world
 
 import (
 	"encoding/binary"
-	"knervous/eqgo/internal/message"
-	"knervous/eqgo/internal/session"
-	"knervous/eqgo/internal/zone"
 	"log"
 	"sync"
+
+	"github.com/knervous/eqgo/internal/message"
+	"github.com/knervous/eqgo/internal/session"
+	"github.com/knervous/eqgo/internal/zone"
 )
 
 // WorldHandler manages global message routing and session-to-zone mapping.

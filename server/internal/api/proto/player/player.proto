@@ -1,7 +1,7 @@
 syntax = "proto3";
 package eq.player;
 
-option go_package = "knervous/eqgo/internal/api/proto/player";
+option go_package = "github.com/knervous/eqgo/internal/api/proto/player";
 
 import "item/item.proto";
 import "common/common.proto";

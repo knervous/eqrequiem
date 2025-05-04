@@ -5,12 +5,13 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"knervous/eqgo/internal/db"
-	"knervous/eqgo/internal/db/jetgen/eqgo/model"
-	"knervous/eqgo/internal/db/jetgen/eqgo/table"
 	"os"
 	"path/filepath"
 	"sync"
+
+	"github.com/knervous/eqgo/internal/db"
+	"github.com/knervous/eqgo/internal/db/jetgen/eqgo/model"
+	"github.com/knervous/eqgo/internal/db/jetgen/eqgo/table"
 
 	_ "github.com/go-sql-driver/mysql"
 
