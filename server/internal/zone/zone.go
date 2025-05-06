@@ -9,7 +9,6 @@ import (
 	"github.com/knervous/eqgo/internal/db/jetgen/eqgo/model"
 	db_zone "github.com/knervous/eqgo/internal/db/zone"
 	entity "github.com/knervous/eqgo/internal/entity"
-	"github.com/knervous/eqgo/internal/message"
 	"github.com/knervous/eqgo/internal/quest"
 	questregistry "github.com/knervous/eqgo/internal/quest/registry"
 	"github.com/knervous/eqgo/internal/session"
@@ -67,17 +66,17 @@ func (z *ZoneInstance) AddClient(sessionID int) {
 	fmt.Printf("Added client session %d to zone %d instance %d\n", sessionID, z.ZoneID, z.InstanceID)
 }
 
-func (z *ZoneInstance) HandleClientPacket(msg message.ClientMessage) {
+func (z *ZoneInstance) HandleClientPacket(session *session.Session, data []byte) {
 	// Fast read-only check for existence
 	z.mutex.RLock()
-	_, exists := z.Clients[msg.SessionID]
+	_, exists := z.Clients[session.SessionID]
 	z.mutex.RUnlock()
 
 	if !exists {
-		z.AddClient(msg.SessionID)
+		z.AddClient(session.SessionID)
 	}
 
-	z.registry.HandleZonePacket(msg)
+	z.registry.HandleZonePacket(session, data)
 }
 
 func (z *ZoneInstance) run() {
@@ -90,16 +89,19 @@ func (z *ZoneInstance) run() {
 
 	// Register quests
 	zoneQuestInterface = questregistry.GetQuestInterface(*z.Zone.ShortName)
-
-	zoneQuestInterface.Invoke("Captain_Tillin", &quest.QuestEvent{
-		EventType: quest.EventSay,
-		Actor: &entity.NPC{
-			NpcData: model.NpcTypes{
-				Name: "Captaaaain Tillin",
+	if zoneQuestInterface == nil {
+		fmt.Printf("[Zone %d·Inst %d] failed to get quest interface\n", z.ZoneID, z.InstanceID)
+	} else {
+		zoneQuestInterface.Invoke("Captain_Tillin", &quest.QuestEvent{
+			EventType: quest.EventSay,
+			Actor: &entity.NPC{
+				NpcData: model.NpcTypes{
+					Name: "Captaaaain Tillin",
+				},
 			},
-		},
-		// any other data relating to event
-	})
+			// any other data relating to event
+		})
+	}
 
 	for {
 		select {

@@ -4,34 +4,38 @@ import (
 	"context"
 	"log"
 
-	eqpb "github.com/knervous/eqgo/internal/api/proto"
+	eq "github.com/knervous/eqgo/internal/api/capnp"
+	"github.com/knervous/eqgo/internal/api/opcodes"
 	db_character "github.com/knervous/eqgo/internal/db/character"
 	"github.com/knervous/eqgo/internal/discord"
-	"github.com/knervous/eqgo/internal/message"
 	"github.com/knervous/eqgo/internal/session"
-
-	"google.golang.org/protobuf/proto"
 )
 
-func sendCharInfo(msg message.ClientMessage, accountId int64) {
+func sendCharInfo(ses *session.Session, accountId int64) {
 	ctx := context.Background()
-	charInfo, err := GetCharSelectInfo(ctx, accountId)
+	charInfo, err := GetCharSelectInfo(ses, ctx, accountId)
 	if err != nil {
 		log.Printf("failed to get character select info for accountID %d: %v", accountId, err)
 		return
 	}
-	msg.Messenger.SendStream(msg.SessionID, uint16(eqpb.OpCodes_OP_SendCharInfo), charInfo)
+	ses.SendStream(charInfo.Message(), opcodes.SendCharInfo)
 }
 
-func HandleJWTLogin(msg message.ClientMessage, payload []byte, wh *WorldHandler) {
+func HandleJWTLogin(ses *session.Session, payload []byte, wh *WorldHandler) {
 	ctx := context.Background()
-
-	req := &eqpb.JWTLogin{}
-	if err := proto.Unmarshal(payload, req); err != nil {
-		log.Printf("JWTLogin unmarshal error: %v", err)
+	jwtLogin, err := eq.Deserialize(payload, eq.ReadRootJWTLogin)
+	if err != nil {
+		log.Printf("failed to read JWTLogin struct: %v", err)
 		return
 	}
-	discordID, err := discord.ValidateJWT(req.Token)
+
+	token, err := jwtLogin.Token()
+	if err != nil {
+		log.Printf("failed to get token from JWTLogin struct: %v", err)
+		return
+	}
+
+	discordID, err := discord.ValidateJWT(token)
 	if err != nil {
 		log.Printf("failed to validate JWT token: %v", err)
 		return
@@ -40,112 +44,137 @@ func HandleJWTLogin(msg message.ClientMessage, payload []byte, wh *WorldHandler)
 	accountID, err := GetOrCreateAccount(ctx, discordID)
 	if err != nil {
 		log.Printf("failed to get or create account for discordID %q: %v", discordID, err)
-		resp := &eqpb.JWTResponse{Status: 1}
-		if err := msg.Messenger.SendDatagram(msg.SessionID, uint16(eqpb.OpCodes_OP_JWTResponse), resp); err != nil {
-			log.Printf("failed to send JWTResponse for session %d: %v", msg.SessionID, err)
+		jwtResponse, err := session.NewMessage(ses, eq.NewRootJWTResponse)
+		jwtResponse.SetStatus(0)
+		ses.SendData(jwtResponse.Message(), opcodes.JWTResponse)
+
+		if err != nil {
+			log.Printf("failed to send JWTResponse: %v", err)
 		}
-
 		return
 	}
 
-	// Initialize session with accountID
-	sessionManager := session.GetSessionManager()
-	sessionManager.CreateSession(msg.SessionID, accountID, msg.IP)
-
-	resp := &eqpb.JWTResponse{
-		Status: 0,
-	}
-	if err := msg.Messenger.SendDatagram(msg.SessionID, uint16(eqpb.OpCodes_OP_JWTResponse), resp); err != nil {
-		log.Printf("failed to send JWTResponse for session %d: %v", msg.SessionID, err)
-	}
-	sendCharInfo(msg, accountID)
-	LoginIP(ctx, accountID, msg.IP)
-}
-
-func HandleEnterWorld(msg message.ClientMessage, payload []byte, wh *WorldHandler) {
-	session, found := session.GetSessionManager().GetSession(msg.SessionID)
-	if !found {
-		log.Printf("failed to get session for sessionID %d", msg.SessionID)
-		return
-	}
-	req := &eqpb.EnterWorld{}
-	if err := proto.Unmarshal(payload, req); err != nil {
-		log.Printf("EnterWorld unmarshal error: %v", err)
-		return
-	}
-	if accountMatch, err := AccountHasCharacterName(context.Background(), session.AccountID, req.Name); err != nil || !accountMatch {
-		log.Printf("Tried to log in unsuccessfully from account %d with character %q: %v", session.AccountID, req.Name, err)
-		return
-	}
-	session.CharacterName = req.Name
-	msg.Messenger.SendDatagram(msg.SessionID, uint16(eqpb.OpCodes_OP_PostEnterWorld), &eqpb.Int{Value: 1})
-}
-
-func HandleZoneSession(msg message.ClientMessage, payload []byte, wh *WorldHandler) {
-	session, found := session.GetSessionManager().GetSession(msg.SessionID)
-	if !found {
-		log.Printf("failed to get session for sessionID %d", msg.SessionID)
-		return
-	}
-	req := &eqpb.ZoneSession{}
-	if err := proto.Unmarshal(payload, req); err != nil {
-		log.Printf("EnterWorld unmarshal error: %v", err)
-		return
-	}
-
-	charData, err := db_character.GetCharacterByName(session.CharacterName)
+	ses.AccountID = accountID
+	ses.Authenticated = true
+	jwtResponse, err := session.NewMessage(ses, eq.NewRootJWTResponse)
 	if err != nil {
-		log.Printf("failed to get character %q for accountID %d: %v", session.CharacterName, session.AccountID, err)
+		log.Printf("failed to create JWTResponse: %v", err)
 		return
 	}
-	session.CharacterData = charData
-	session.ZoneID = int(req.ZoneId)
-	session.InstanceID = int(req.InstanceId)
+	jwtResponse.SetStatus(7)
+	err = ses.SendData(jwtResponse.Message(), opcodes.JWTResponse)
+	if err != nil {
+		log.Printf("failed to send JWTResponse: %v", err)
+	}
 
-	msg.Messenger.SendDatagram(msg.SessionID, uint16(eqpb.OpCodes_OP_ZoneSessionValid), &eqpb.Bool{Value: true})
+	if err != nil {
+		log.Printf("failed to send JWTResponse: %v", err)
+	}
+
+	sendCharInfo(ses, accountID)
+	LoginIP(ctx, accountID, ses.IP)
 }
 
-func HandleCharacterCreate(msg message.ClientMessage, payload []byte, wh *WorldHandler) {
-	session, found := session.GetSessionManager().GetSession(msg.SessionID)
-	if !found {
-		log.Printf("failed to get session for sessionID %d", msg.SessionID)
+func HandleEnterWorld(ses *session.Session, payload []byte, wh *WorldHandler) {
+	req, err := eq.Deserialize(payload, eq.ReadRootEnterWorld)
+	if err != nil {
+		log.Printf("failed to read JWTLogin struct: %v", err)
 		return
 	}
-	req := &eqpb.CharCreate{}
-	if err := proto.Unmarshal(payload, req); err != nil {
-		log.Printf("JWTLogin unmarshal error: %v", err)
+	name, err := req.Name()
+	if err != nil {
+		log.Printf("failed to get name from EnterWorld struct: %v", err)
 		return
 	}
+	if accountMatch, err := AccountHasCharacterName(context.Background(), ses.AccountID, name); err != nil || !accountMatch {
+		log.Printf("Tried to log in unsuccessfully from account %d with character %q: %v", ses.AccountID, req.Name, err)
+		return
+	}
+	ses.CharacterName = name
 
-	if !ValidateName(req.Name) {
-		msg.Messenger.SendDatagram(msg.SessionID, uint16(eqpb.OpCodes_OP_ApproveName_Server), &eqpb.Int{Value: 0})
+	enterWorld, err := session.NewMessage(ses, eq.NewRootInt)
+	if err != nil {
+		log.Printf("failed to create EnterWorld message: %v", err)
 		return
 	}
-
-	if !CharacterCreate(session.AccountID, req) {
-		msg.Messenger.SendDatagram(msg.SessionID, uint16(eqpb.OpCodes_OP_ApproveName_Server), &eqpb.Int{Value: 0})
-		return
-	}
-	msg.Messenger.SendDatagram(msg.SessionID, uint16(eqpb.OpCodes_OP_ApproveName_Server), &eqpb.Int{Value: 1})
-
-	sendCharInfo(msg, session.AccountID)
+	enterWorld.SetValue(1)
+	ses.SendData(enterWorld.Message(), opcodes.PostEnterWorld)
 }
 
-func HandleCharacterDelete(msg message.ClientMessage, payload []byte, wh *WorldHandler) {
-	session, found := session.GetSessionManager().GetSession(msg.SessionID)
-	if !found {
-		log.Printf("failed to get session for sessionID %d", msg.SessionID)
+func HandleZoneSession(ses *session.Session, payload []byte, wh *WorldHandler) {
+	req, err := eq.Deserialize(payload, eq.ReadRootZoneSession)
+	if err != nil {
+		log.Printf("failed to read JWTLogin struct: %v", err)
 		return
 	}
-	req := &eqpb.String{}
-	if err := proto.Unmarshal(payload, req); err != nil {
-		log.Printf("CharDelete unmarshal error: %v", err)
+
+	charData, err := db_character.GetCharacterByName(ses.CharacterName)
+	if err != nil {
+		log.Printf("failed to get character %q for accountID %d: %v", ses.CharacterName, ses.AccountID, err)
 		return
 	}
+	ses.CharacterData = charData
+	ses.ZoneID = int(req.ZoneId())
+	ses.InstanceID = int(req.InstanceId())
+
+	enterWorld, err := session.NewMessage(ses, eq.NewRootInt)
+	if err != nil {
+		log.Printf("failed to create EnterWorld message: %v", err)
+		return
+	}
+	enterWorld.SetValue(1)
+	ses.SendData(enterWorld.Message(), opcodes.ZoneSessionValid)
+
+}
+
+func HandleCharacterCreate(ses *session.Session, payload []byte, wh *WorldHandler) {
+	req, err := eq.Deserialize(payload, eq.ReadRootCharCreate)
+	if err != nil {
+		log.Printf("failed to read JWTLogin struct: %v", err)
+		return
+	}
+
+	name, err := req.Name()
+	if err != nil {
+		log.Printf("failed to get name from CharCreate struct: %v", err)
+		return
+	}
+	if !ValidateName(name) {
+		enterWorld, _ := session.NewMessage(ses, eq.NewRootInt)
+		enterWorld.SetValue(0)
+		ses.SendData(enterWorld.Message(), opcodes.ApproveName_Server)
+		return
+	}
+
+	if !CharacterCreate(ses, ses.AccountID, req) {
+		enterWorld, _ := session.NewMessage(ses, eq.NewRootInt)
+		enterWorld.SetValue(0)
+		ses.SendData(enterWorld.Message(), opcodes.ApproveName_Server)
+		return
+	}
+	enterWorld, _ := session.NewMessage(ses, eq.NewRootInt)
+	enterWorld.SetValue(1)
+	ses.SendData(enterWorld.Message(), opcodes.ApproveName_Server)
+
+	sendCharInfo(ses, ses.AccountID)
+}
+
+func HandleCharacterDelete(session *session.Session, payload []byte, wh *WorldHandler) {
+	req, err := eq.Deserialize(payload, eq.ReadRootString)
+	if err != nil {
+		log.Printf("failed to read JWTLogin struct: %v", err)
+		return
+	}
+
 	ctx := context.Background()
-	if err := DeleteCharacter(ctx, session.AccountID, req.Value); err != nil {
+	name, err := req.Value()
+	if err != nil {
+		log.Printf("failed to get name from CharCreate struct: %v", err)
+		return
+	}
+	if err := DeleteCharacter(ctx, session.AccountID, name); err != nil {
 		return
 	}
 
-	sendCharInfo(msg, session.AccountID)
+	sendCharInfo(session, session.AccountID)
 }

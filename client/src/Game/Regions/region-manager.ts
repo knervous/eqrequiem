@@ -1,28 +1,24 @@
-import { supportedZones } from "@game/Constants/supportedZones";
 import Player from "@game/Player/player";
 import type { ZoneManager } from "@game/Zone/zone-manager";
 import {
   Area3D,
-  BoxMesh,
   BoxShape3D,
   Callable,
   CollisionShape3D,
   Node3D,
   Vector3,
 } from "godot";
-import * as EQMessage from "@eqmessage";
 import { WorldSocket } from "@ui/net/instances";
-import { BaseMaterial3D } from "godot";
-import { Color } from "godot";
-import { StandardMaterial3D } from "godot";
-import { MeshInstance3D } from "godot";
+import { RequestClientZoneChange, ZoneChangeType, ZonePoint } from "@game/Net/internal/api/capnp/zone";
+import { OpCodes } from "@game/Net/opcodes";
+
 export class RegionManager {
   private zoneManager: ZoneManager;
   private regionAreas: Map<number, Area3D> = new Map();
   private activeRegions: Set<number> = new Set();
   private areaContainer: Node3D | null = null;
   private regions: any[] = [];
-  private zonePoints: EQMessage.ZonePoint[] = [];
+  private zonePoints: ZonePoint[] = [];
   constructor(zoneManager) {
     this.zoneManager = zoneManager;
   }
@@ -35,7 +31,7 @@ export class RegionManager {
     this.regionAreas.clear();
     this.activeRegions.clear();
   }
-  public instantiateRegions(regions: any[], zonePoints: EQMessage.ZonePoint[]) {
+  public instantiateRegions(regions: any[], zonePoints: ZonePoint[]) {
     console.log('Inst regions with regions and ZP', regions, zonePoints);
     this.regions = regions;
     this.zonePoints = zonePoints;
@@ -201,10 +197,10 @@ export class RegionManager {
               }
               console.log("Teleport to zone", newZone);
               WorldSocket.sendMessage(
-                EQMessage.OpCodes.OP_RequestClientZoneChange,
-                EQMessage.RequestClientZoneChange,
+                OpCodes.RequestClientZoneChange,
+                RequestClientZoneChange,
                 {
-                  type: EQMessage.ZoneChangeType.FROM_ZONE,
+                  type: ZoneChangeType.FROM_ZONE,
                   zoneId: newZone.zoneIndex,
                   instanceId: 0,
                   x: newZone.y,

@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { nameByRace } from "fantasy-name-generator";
-import * as EQMessage from "@eqmessage";
 import {
   Divider,
   MenuItem,
@@ -33,6 +32,8 @@ import GameManager from "@game/Manager/game-manager";
 import { StatRow } from "./stat-row";
 import { SupportedRaces } from "./races";
 import { SupportedClasses } from "./classes";
+import { OpCodes } from "@game/Net/opcodes";
+import { CharCreate, Int } from "@game/Net/internal/api/capnp/common";
 
 const selectProps = {
   size: "small",
@@ -100,8 +101,8 @@ export const CharacterCreate = ({ setView, charInfo }) => {
     };
     console.log("Send character", char);
     WorldSocket.registerOpCodeHandler(
-      EQMessage.OpCodes.OP_ApproveName_Server,
-      EQMessage.Int,
+      OpCodes.ApproveName_Server,
+      Int,
       (data) => {
         if (data.value === 1) {
           setView(VIEWS.CHAR_SELECT);
@@ -111,8 +112,8 @@ export const CharacterCreate = ({ setView, charInfo }) => {
       },
     );
     WorldSocket.sendMessage(
-      EQMessage.OpCodes.OP_CharacterCreate,
-      EQMessage.CharCreate,
+      OpCodes.CharacterCreate,
+      CharCreate,
       char,
     );
     

@@ -55,9 +55,9 @@ func GetQuestInterface(zoneName string) *quest.ZoneQuestInterface {
 	sourceFS := os.DirFS(moduleRoot)
 	i := interp.New(interp.Options{
 		SourcecodeFilesystem: sourceFS,
-		// Env:                  []string{"GO111MODULE=on"}, // Ensure module mode
-		Unrestricted: true,
-		GoPath:       os.Getenv("GOPATH"),
+		Env:                  []string{"GO111MODULE=on"}, // Ensure module mode
+		Unrestricted:         true,
+		GoPath:               os.Getenv("GOPATH"),
 	})
 	i.Use(stdlib.Symbols)
 	i.Use(yaegi_wrappers.Symbols)

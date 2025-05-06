@@ -5,7 +5,6 @@ import (
 	"log"
 	"sync"
 
-	"github.com/knervous/eqgo/internal/message"
 	"github.com/knervous/eqgo/internal/session"
 	"github.com/knervous/eqgo/internal/zone"
 )
@@ -27,27 +26,24 @@ func NewWorldHandler(zoneManager *ZoneManager, sessionManager *session.SessionMa
 	}
 }
 
-// HandleDatagram processes incoming datagrams and routes them.
-func (wh *WorldHandler) HandleDatagram(msg message.ClientMessage) {
-
-	// Get session to determine the zone
-	session, ok := wh.sessionManager.GetSession(msg.SessionID)
+// HandlePacket processes incoming datagrams and routes them.
+func (wh *WorldHandler) HandlePacket(session *session.Session, data []byte) {
 
 	// Check if the message should be handled globally (e.g., login)
-	if wh.globalRegistry.ShouldHandleGlobally(msg.Data) {
-		wh.globalRegistry.HandleWorldPacket(msg, ok)
+	if wh.globalRegistry.ShouldHandleGlobally(data) {
+		wh.globalRegistry.HandleWorldPacket(session, data)
 		return
 	}
 
-	if !ok {
-		op := binary.LittleEndian.Uint16(msg.Data[:2])
-		log.Printf("unauthenticated opcode %d from session %d – dropping", op, msg.SessionID)
+	if !session.Authenticated {
+		op := binary.LittleEndian.Uint16(data[:2])
+		log.Printf("unauthenticated opcode %d from session %d – dropping", op, session.SessionID)
 		return
 	}
 
 	// Route to the zone from the session and create if it doesn't exist
 	zone, _ := wh.zoneManager.GetOrCreate(session.ZoneID, session.InstanceID)
-	zone.HandleClientPacket(msg)
+	zone.HandleClientPacket(session, data)
 }
 
 // RemoveSession cleans up session data.

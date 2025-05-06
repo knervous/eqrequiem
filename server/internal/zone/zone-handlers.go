@@ -2,70 +2,116 @@ package zone
 
 import (
 	"context"
+	"fmt"
 	"log"
 
-	eqpb "github.com/knervous/eqgo/internal/api/proto"
+	eq "github.com/knervous/eqgo/internal/api/capnp"
+	"github.com/knervous/eqgo/internal/api/opcodes"
+
 	db_character "github.com/knervous/eqgo/internal/db/character"
 	db_zone "github.com/knervous/eqgo/internal/db/zone"
-	"github.com/knervous/eqgo/internal/message"
 	"github.com/knervous/eqgo/internal/session"
-
-	"github.com/jinzhu/copier"
-	"google.golang.org/protobuf/proto"
 )
 
-func HandleRequestClientZoneChange(msg message.ClientMessage, clientSession *session.Session, payload []byte) {
-	req := &eqpb.RequestClientZoneChange{}
-	if err := proto.Unmarshal(payload, req); err != nil {
-		log.Printf("ZoneChangeRequest unmarshal error: %v", err)
+func HandleRequestClientZoneChange(clientSession *session.Session, payload []byte) {
+	req, err := eq.Deserialize(payload, eq.ReadRootRequestClientZoneChange)
+	if err != nil {
+		log.Printf("failed to read JWTLogin struct: %v", err)
 		return
 	}
+
 	charData := clientSession.CharacterData
 	if charData == nil {
 		log.Printf("client session %d has no character data", clientSession.SessionID)
 		return
 	}
-	if req.Type == eqpb.ZoneChangeType_FROM_WORLD {
-		req.X = float32(charData.X)
-		req.Y = float32(charData.Y)
-		req.Z = float32(charData.Z)
-		req.Heading = float32(charData.Heading)
-		req.InstanceId = int32(charData.ZoneInstance)
-		req.ZoneId = int32(charData.ZoneID)
+	if req.Type() == 0 {
+		req.SetX(float32(charData.X))
+		req.SetY(float32(charData.Y))
+		req.SetZ(float32(charData.Z))
+		req.SetHeading(float32(charData.Heading))
+		req.SetInstanceId(int32(charData.ZoneInstance))
+		req.SetZoneId(int32(charData.ZoneID))
+
 	} else {
 		// We are zoning from another zone
 		// Get validation logic later for this zone request, for now save off and bust cache
-		charData.X = float64(req.X)
-		charData.Y = float64(req.Y)
-		charData.Z = float64(req.Z)
-		charData.Heading = float64(req.Heading)
-		charData.ZoneID = uint32(req.ZoneId)
-		charData.ZoneInstance = uint32(req.InstanceId)
+
+		charData.X = float64(req.X())
+		charData.Y = float64(req.Y())
+		charData.Z = float64(req.Z())
+		charData.Heading = float64(req.Heading())
+		charData.ZoneID = uint32(req.ZoneId())
+		charData.ZoneInstance = uint32(req.InstanceId())
 		db_character.UpdateCharacter(charData, clientSession.AccountID)
 
 	}
-	dbZone, err := db_zone.GetZoneById(context.Background(), int(req.ZoneId))
+	dbZone, err := db_zone.GetZoneById(context.Background(), int(req.ZoneId()))
 	if err != nil {
 		log.Printf("failed to get zone %d: %v", req.ZoneId, err)
 		return
 	}
-	newZone := &eqpb.NewZone{}
+	fmt.Println("zone data", dbZone)
 
-	if err := copier.Copy(newZone, dbZone); err != nil {
-		log.Printf("warning: copier.Copy failed: %v", err)
+	// TODO get here later
+	// newZone := &eqpb.NewZone{}
+
+	newZone, err := session.NewMessage(clientSession, eq.NewRootNewZone)
+	if err != nil {
+		log.Printf("failed to create NewZone message: %v", err)
+		return
 	}
+	newZone.SetShortName(*dbZone.ShortName)
+	newZone.SetLongName(*&dbZone.LongName)
+	newZone.SetZoneIdNumber(int32(dbZone.Zoneidnumber))
+	newZone.SetSafeX(float32(dbZone.SafeX))
+	newZone.SetSafeY(float32(dbZone.SafeY))
+	newZone.SetSafeZ(float32(dbZone.SafeZ))
 
-	playerProfile := &eqpb.PlayerProfile{}
-	copier.Copy(playerProfile, charData)
-	playerProfile.ZoneId = int32(charData.ZoneID)
-	playerProfile.CharClass = int32(charData.Class)
-
-	zonePoints, err := db_zone.GetZonePointsByZoneName(newZone.ShortName)
+	zonePoints, err := db_zone.GetZonePointsByZoneName(*dbZone.ShortName)
 	if err != nil {
 		log.Printf("failed to get zone points for zone %s: %v", newZone.ShortName, err)
 		return
 	}
-	newZone.ZonePoints = zonePoints
-	msg.Messenger.SendStream(msg.SessionID, uint16(eqpb.OpCodes_OP_NewZone), newZone)
-	msg.Messenger.SendStream(msg.SessionID, uint16(eqpb.OpCodes_OP_PlayerProfile), playerProfile)
+	zp, err := newZone.NewZonePoints(int32(len(zonePoints)))
+	if err != nil {
+		log.Printf("failed to create NewZone message: %v", err)
+		return
+	}
+	for i, zonePoint := range zonePoints {
+		zonePointProto := zp.At(i)
+
+		zonePointProto.SetX(float32(zonePoint.X))
+		zonePointProto.SetY(float32(zonePoint.Y))
+		zonePointProto.SetZ(float32(zonePoint.Z))
+		zonePointProto.SetZoneId(int32(zonePoint.TargetZoneID))
+		zonePointProto.SetZoneInstance(int32(zonePoint.TargetInstance))
+		zonePointProto.SetHeading(float32(zonePoint.Heading))
+		zonePointProto.SetNumber(int32(zonePoint.Number))
+	}
+
+	clientSession.SendStream(newZone.Message(), opcodes.NewZone)
+	playerProfile, err := session.NewMessage(clientSession, eq.NewRootPlayerProfile)
+	if err != nil {
+		log.Printf("failed to create PlayerProfile message: %v", err)
+		return
+	}
+	playerProfile.SetName(charData.Name)
+	playerProfile.SetLevel(int32(charData.Level))
+	playerProfile.SetRace(int32(charData.Race))
+	playerProfile.SetCharClass(int32(charData.Class))
+	playerProfile.SetStr(int32(charData.Str))
+	playerProfile.SetSta(int32(charData.Sta))
+	playerProfile.SetDex(int32(charData.Dex))
+	playerProfile.SetAgi(int32(charData.Agi))
+	playerProfile.SetWis(int32(charData.Wis))
+	playerProfile.SetIntel(int32(charData.Int))
+	playerProfile.SetCha(int32(charData.Cha))
+	playerProfile.SetZoneId(int32(charData.ZoneID))
+	playerProfile.SetZoneInstance(int32(charData.ZoneInstance))
+	playerProfile.SetX(float32(charData.X))
+	playerProfile.SetY(float32(charData.Y))
+	playerProfile.SetZ(float32(charData.Z))
+	playerProfile.SetHeading(float32(charData.Heading))
+	clientSession.SendStream(playerProfile.Message(), opcodes.PlayerProfile)
 }

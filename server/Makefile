@@ -5,7 +5,7 @@
 BINARY_NAME = server
 DAEMON_SRC = ./cmd/daemon
 SERVER_SRC = ./cmd/server
-PROTO_SRC = ./cmd/proto
+CAPNP_SRC = ./cmd/capnp
 JET_SRC = ./cmd/jetgen
 PID_FILE = server.pid
 LOG_FILE = server.log
@@ -19,9 +19,10 @@ server:
 start: server
 s: server
 
-proto:
-	@echo "Generating protocol buffers..."
-	@go run $(PROTO_SRC)
+capnp:
+	@echo "Generating capnp go/TS..."
+	@go run $(CAPNP_SRC)
+capn: capnp
 
 jet:
 	@echo "Generating jet files..."

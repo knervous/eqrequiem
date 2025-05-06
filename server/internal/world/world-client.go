@@ -5,7 +5,8 @@ import (
 	"log"
 	"unicode"
 
-	eqpb "github.com/knervous/eqgo/internal/api/proto"
+	eq "github.com/knervous/eqgo/internal/api/capnp"
+	"github.com/knervous/eqgo/internal/session"
 
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -124,40 +125,65 @@ var ClassRaceLookupTable = [16][16]bool{
 }
 
 // OPCharCreate creates the character in the database
-func CharacterCreate(accountId int64, cc *eqpb.CharCreate) bool {
+func CharacterCreate(ses *session.Session, accountId int64, cc eq.CharCreate) bool {
 	ctx := context.Background()
 	if !CheckCharCreateInfo(cc) {
 		log.Println("CheckCharCreateInfo failed")
 		return false
 	}
-	// Initialize player profile
-	var pp eqpb.PlayerProfile
-	pp.Skills = make([]int32, 78)
-	pp.Languages = make([]int32, 18)
-	pp.Binds = make([]*eqpb.Bind, 5)
-	pp.Name = cc.Name
-	pp.Race = cc.Race
-	pp.CharClass = cc.CharClass
-	pp.Gender = cc.Gender
-	pp.Deity = cc.Deity
-	pp.Str = cc.Str
-	pp.Sta = cc.Sta
-	pp.Agi = cc.Agi
-	pp.Dex = cc.Dex
-	pp.Wis = cc.Wis
-	pp.Intel = cc.Intel
-	pp.Cha = cc.Cha
-	pp.Face = cc.Face
-	pp.Beard = cc.Beard
-	pp.Level = 1
-	pp.Points = 5
-	pp.CurHp = 1000
-	pp.HungerLevel = 6000
-	pp.ThirstLevel = 6000
+	pp, err := session.NewMessage(ses, eq.NewPlayerProfile)
+	if err != nil {
+		log.Printf("failed to create new PlayerProfile message: %v", err)
+		return false
+	}
+	segment := pp.Segment()
+	_, err = pp.NewSkills(78)
+	if err != nil {
+		log.Printf("failed to create new Skills list: %v", err)
+		return false
+	}
+	_, err = pp.NewLanguages(18)
+	if err != nil {
+		log.Printf("failed to create new Languages list: %v", err)
+		return false
+	}
 
-	// Set default skills
-	pp.Skills[27] = 50 // Swimming
-	pp.Skills[55] = 50 // Sense Heading
+	_, err = pp.NewBinds(5)
+	if err != nil {
+		log.Printf("failed to create new Binds list: %v", err)
+		return false
+	}
+
+	if !eq.CopyErrorValue(cc.Name, pp.SetName) {
+		return false
+	}
+	pp.SetRace(cc.Race())
+	pp.SetCharClass(cc.CharClass())
+	pp.SetGender(cc.Gender())
+	pp.SetDeity(cc.Deity())
+	pp.SetStr(cc.Str())
+	pp.SetSta(cc.Sta())
+	pp.SetAgi(cc.Agi())
+	pp.SetDex(cc.Dex())
+	pp.SetWis(cc.Wis())
+	pp.SetIntel(cc.Intel())
+	pp.SetCha(cc.Cha())
+	pp.SetFace(cc.Face())
+	pp.SetBeard(cc.Beard())
+	pp.SetLevel(1)
+	pp.SetPoints(5)
+	pp.SetCurHp(1000)
+	pp.SetHungerLevel(6000)
+	pp.SetThirstLevel(6000)
+	pp.SetHeading(0)
+	pp.SetPvp(0)
+	pp.SetZoneId(2) // Qeynos as default
+	pp.SetX(-1)
+	pp.SetY(-1)
+	pp.SetZ(-1)
+	skills, _ := pp.Skills()
+	skills.Set(27, 50) // Swimming
+	skills.Set(55, 50) // Sense Heading
 
 	// Set racial and class skills and languages
 	SetRacialLanguages(&pp)
@@ -165,54 +191,44 @@ func CharacterCreate(accountId int64, cc *eqpb.CharCreate) bool {
 	SetClassStartingSkills(&pp)
 	SetClassLanguages(&pp)
 
-	// Set PVP status (assuming server type 1 is PVP)
-
-	pp.Pvp = 0
-
-	// Set starting zone
-	pp.ZoneId = 2 // Qeynos as default
-
-	startZone, err := GetStartZone(ctx, uint8(pp.CharClass), uint32(pp.Deity), uint32(pp.Race))
+	startZone, err := GetStartZone(ctx, uint8(pp.CharClass()), uint32(pp.Deity()), uint32(pp.Race()))
 	setLoc := false
 	if err == nil {
-		pp.ZoneId = int32(startZone.ZoneID)
-		cc.StartZone = int32(pp.ZoneId)
-		pp.X = float32(startZone.X)
-		pp.Y = float32(startZone.Y)
-		pp.Z = float32(startZone.Z)
+		pp.SetZoneId(int32(startZone.ZoneID))
+		cc.SetStartZone(int32(pp.ZoneId()))
+		pp.SetX(float32(startZone.X))
+		pp.SetY(float32(startZone.Y))
+		pp.SetZ(float32(startZone.Z))
 		setLoc = true
 	}
 
-	zone, err := GetZone(ctx, pp.ZoneId)
+	zone, err := GetZone(ctx, pp.ZoneId())
 	if err != nil {
-		pp.X = float32(zone.SafeX)
-		pp.Y = float32(zone.SafeY)
-		pp.Z = float32(zone.SafeZ)
+		pp.SetX(float32(zone.SafeX))
+		pp.SetY(float32(zone.SafeY))
+		pp.SetZ(float32(zone.SafeZ))
 	} else if !setLoc {
-		pp.X = -1
-		pp.Y = -1
-		pp.Z = -1
+		pp.SetX(-1)
+		pp.SetY(-1)
+		pp.SetZ(-1)
 	}
-
+	binds, _ := pp.Binds()
 	// Set bind points
 	for i := range 5 {
-		pp.Binds[i] = &eqpb.Bind{
-			ZoneId:  pp.ZoneId,
-			X:       pp.X,
-			Y:       pp.Y,
-			Z:       pp.Z,
-			Heading: pp.Heading,
-		}
+		bind, _ := eq.NewBind(segment)
+		bind.SetZoneId(pp.ZoneId())
+		bind.SetX(pp.X())
+		bind.SetY(pp.Y())
+		bind.SetZ(pp.Z())
+		bind.SetHeading(pp.Heading())
+		binds.Set(i, bind)
 	}
 
 	// Store character
 	return StoreCharacter(accountId, &pp)
 }
 
-func CheckCharCreateInfo(cc *eqpb.CharCreate) bool {
-	if cc == nil {
-		return false
-	}
+func CheckCharCreateInfo(cc eq.CharCreate) bool {
 	// Map race to table index
 	raceMap := map[uint32]int{
 		RaceHuman:     0,
@@ -232,16 +248,18 @@ func CheckCharCreateInfo(cc *eqpb.CharCreate) bool {
 		RaceFroglok:   14,
 		RaceDrakkin:   15,
 	}
+	race := cc.Race()
+	class := cc.CharClass()
 
-	raceIdx, ok := raceMap[uint32(cc.Race)]
+	raceIdx, ok := raceMap[uint32(race)]
 	if !ok || raceIdx >= 16 {
-		log.Printf("Race %d is out of range", cc.Race)
+		log.Printf("Race %d is out of range", race)
 		return false
 	}
 
-	classIdx := int(cc.CharClass) - 1
+	classIdx := int(class) - 1
 	if classIdx >= 16 {
-		log.Printf("Class %d is out of range", cc.CharClass)
+		log.Printf("Class %d is out of range", class)
 		return false
 	}
 
@@ -252,17 +270,17 @@ func CheckCharCreateInfo(cc *eqpb.CharCreate) bool {
 	}
 
 	// Calculate base stats
-	bSTR := BaseClassStats[uint32(cc.CharClass)][0] + BaseRaceStats[uint32(cc.Race)][0]
-	bSTA := BaseClassStats[uint32(cc.CharClass)][1] + BaseRaceStats[uint32(cc.Race)][1]
-	bAGI := BaseClassStats[uint32(cc.CharClass)][2] + BaseRaceStats[uint32(cc.Race)][2]
-	bDEX := BaseClassStats[uint32(cc.CharClass)][3] + BaseRaceStats[uint32(cc.Race)][3]
-	bWIS := BaseClassStats[uint32(cc.CharClass)][4] + BaseRaceStats[uint32(cc.Race)][4]
-	bINT := BaseClassStats[uint32(cc.CharClass)][5] + BaseRaceStats[uint32(cc.Race)][5]
-	bCHA := BaseClassStats[uint32(cc.CharClass)][6] + BaseRaceStats[uint32(cc.Race)][6]
-	statPoints := BaseClassStats[uint32(cc.CharClass)][7]
+	bSTR := BaseClassStats[uint32(class)][0] + BaseRaceStats[uint32(race)][0]
+	bSTA := BaseClassStats[uint32(class)][1] + BaseRaceStats[uint32(race)][1]
+	bAGI := BaseClassStats[uint32(class)][2] + BaseRaceStats[uint32(race)][2]
+	bDEX := BaseClassStats[uint32(class)][3] + BaseRaceStats[uint32(race)][3]
+	bWIS := BaseClassStats[uint32(class)][4] + BaseRaceStats[uint32(race)][4]
+	bINT := BaseClassStats[uint32(class)][5] + BaseRaceStats[uint32(race)][5]
+	bCHA := BaseClassStats[uint32(class)][6] + BaseRaceStats[uint32(race)][6]
+	statPoints := BaseClassStats[uint32(class)][7]
 
 	bTotal := bSTR + bSTA + bAGI + bDEX + bWIS + bINT + bCHA
-	cTotal := cc.Str + cc.Sta + cc.Agi + cc.Dex + cc.Wis + cc.Intel + cc.Cha
+	cTotal := cc.Str() + cc.Sta() + cc.Agi() + cc.Dex() + cc.Wis() + cc.Intel() + cc.Cha()
 
 	errors := 0
 	if bTotal+statPoints != uint32(cTotal) {
@@ -270,31 +288,31 @@ func CheckCharCreateInfo(cc *eqpb.CharCreate) bool {
 		errors++
 	}
 
-	if uint32(cc.Str) > bSTR+statPoints || cc.Str < int32(bSTR) {
+	if uint32(cc.Str()) > bSTR+statPoints || cc.Str() < int32(bSTR) {
 		log.Println("Str out of range")
 		errors++
 	}
-	if uint32(cc.Sta) > bSTA+statPoints || uint32(cc.Sta) < bSTA {
+	if uint32(cc.Sta()) > bSTA+statPoints || uint32(cc.Sta()) < bSTA {
 		log.Println("Sta out of range")
 		errors++
 	}
-	if uint32(cc.Agi) > bAGI+statPoints || uint32(cc.Agi) < bAGI {
+	if uint32(cc.Agi()) > bAGI+statPoints || uint32(cc.Agi()) < bAGI {
 		log.Println("Agi out of range")
 		errors++
 	}
-	if uint32(cc.Dex) > bDEX+statPoints || uint32(cc.Dex) < bDEX {
+	if uint32(cc.Dex()) > bDEX+statPoints || uint32(cc.Dex()) < bDEX {
 		log.Println("Dex out of range")
 		errors++
 	}
-	if uint32(cc.Wis) > bWIS+statPoints || uint32(cc.Wis) < bWIS {
+	if uint32(cc.Wis()) > bWIS+statPoints || uint32(cc.Wis()) < bWIS {
 		log.Println("Wis out of range")
 		errors++
 	}
-	if uint32(cc.Intel) > bINT+statPoints || uint32(cc.Intel) < bINT {
+	if uint32(cc.Intel()) > bINT+statPoints || uint32(cc.Intel()) < bINT {
 		log.Println("Intel out of range")
 		errors++
 	}
-	if uint32(cc.Cha) > bCHA+statPoints || uint32(cc.Cha) < bCHA {
+	if uint32(cc.Cha()) > bCHA+statPoints || uint32(cc.Cha()) < bCHA {
 		log.Println("Cha out of range")
 		errors++
 	}
@@ -304,7 +322,7 @@ func CheckCharCreateInfo(cc *eqpb.CharCreate) bool {
 }
 
 // SetRacialLanguages sets language skills based on race
-func SetRacialLanguages(pp *eqpb.PlayerProfile) {
+func SetRacialLanguages(pp *eq.PlayerProfile) {
 	const (
 		LanguageCommonTongue  = 0
 		LanguageBarbarian     = 1
@@ -327,74 +345,79 @@ func SetRacialLanguages(pp *eqpb.PlayerProfile) {
 	)
 
 	maxValue := int32(100) // Language::MaxValue equivalent
-
-	switch pp.Race {
+	languages, err := pp.Languages()
+	if err != nil {
+		log.Printf("failed to get languages: %v", err)
+		return
+	}
+	switch pp.Race() {
 	case RaceHuman:
-		pp.Languages[LanguageCommonTongue] = maxValue
+		languages.Set(LanguageCommonTongue, maxValue)
 	case RaceBarbarian:
-		pp.Languages[LanguageCommonTongue] = maxValue
-		pp.Languages[LanguageBarbarian] = maxValue
+		languages.Set(LanguageCommonTongue, maxValue)
+		languages.Set(LanguageBarbarian, maxValue)
 	case RaceErudite:
-		pp.Languages[LanguageCommonTongue] = maxValue
-		pp.Languages[LanguageErudian] = maxValue
+		languages.Set(LanguageCommonTongue, maxValue)
+		languages.Set(LanguageErudian, maxValue)
 	case RaceWoodElf:
-		pp.Languages[LanguageCommonTongue] = maxValue
-		pp.Languages[LanguageElvish] = maxValue
+		languages.Set(LanguageCommonTongue, maxValue)
+		languages.Set(LanguageElvish, maxValue)
 	case RaceHighElf:
-		pp.Languages[LanguageCommonTongue] = maxValue
-		pp.Languages[LanguageDarkElvish] = 25
-		pp.Languages[LanguageElderElvish] = 25
-		pp.Languages[LanguageElvish] = maxValue
+		languages.Set(LanguageCommonTongue, maxValue)
+		languages.Set(LanguageElvish, maxValue)
+		languages.Set(LanguageDarkElvish, maxValue)
+		languages.Set(LanguageElderElvish, maxValue)
 	case RaceDarkElf:
-		pp.Languages[LanguageCommonTongue] = maxValue
-		pp.Languages[LanguageDarkElvish] = maxValue
-		pp.Languages[LanguageDarkSpeech] = maxValue
-		pp.Languages[LanguageElderElvish] = maxValue
-		pp.Languages[LanguageElvish] = 25
+		languages.Set(LanguageCommonTongue, maxValue)
+		languages.Set(LanguageDarkElvish, maxValue)
+		languages.Set(LanguageDarkSpeech, maxValue)
+		languages.Set(LanguageElderElvish, maxValue)
+		languages.Set(LanguageElvish, 25)
 	case RaceHalfElf:
-		pp.Languages[LanguageCommonTongue] = maxValue
-		pp.Languages[LanguageElvish] = maxValue
+		languages.Set(LanguageCommonTongue, maxValue)
+		languages.Set(LanguageDarkElvish, maxValue)
 	case RaceDwarf:
-		pp.Languages[LanguageCommonTongue] = maxValue
-		pp.Languages[LanguageDwarvish] = maxValue
-		pp.Languages[LanguageGnomish] = 25
+		languages.Set(LanguageCommonTongue, maxValue)
+		languages.Set(LanguageDwarvish, maxValue)
+		languages.Set(LanguageDarkElvish, 25)
 	case RaceTroll:
-		pp.Languages[LanguageCommonTongue] = 25 // RuleI(Character, TrollCommonTongue)
-		pp.Languages[LanguageDarkSpeech] = maxValue
-		pp.Languages[LanguageTroll] = maxValue
+		languages.Set(LanguageCommonTongue, 25) // RuleI(Character, TrollCommonTongue)
+		languages.Set(LanguageDarkSpeech, maxValue)
+		languages.Set(LanguageTroll, maxValue)
 	case RaceOgre:
-		pp.Languages[LanguageCommonTongue] = 25 // RuleI(Character, OgreCommonTongue)
-		pp.Languages[LanguageDarkSpeech] = maxValue
-		pp.Languages[LanguageOgre] = maxValue
+		languages.Set(LanguageCommonTongue, 25) // RuleI(Character, OgreCommonTongue)
+		languages.Set(LanguageDarkSpeech, maxValue)
+		languages.Set(LanguageOgre, maxValue)
 	case RaceHalfling:
-		pp.Languages[LanguageCommonTongue] = maxValue
-		pp.Languages[LanguageHalfling] = maxValue
+		languages.Set(LanguageCommonTongue, maxValue)
+		languages.Set(LanguageHalfling, maxValue)
 	case RaceGnome:
-		pp.Languages[LanguageCommonTongue] = maxValue
-		pp.Languages[LanguageDwarvish] = 25
-		pp.Languages[LanguageGnomish] = maxValue
+		languages.Set(LanguageCommonTongue, maxValue)
+		languages.Set(LanguageGnomish, maxValue)
+		languages.Set(LanguageDwarvish, 25)
 	case RaceIksar:
-		pp.Languages[LanguageCommonTongue] = 25 // RuleI(Character, IksarCommonTongue)
-		pp.Languages[LanguageDarkSpeech] = maxValue
-		pp.Languages[LanguageLizardman] = maxValue
+		languages.Set(LanguageCommonTongue, 25)
+		languages.Set(LanguageLizardman, maxValue)
+		languages.Set(LanguageDarkSpeech, maxValue)
+
 	case RaceVahShir:
-		pp.Languages[LanguageCommonTongue] = maxValue
-		pp.Languages[LanguageCombineTongue] = maxValue
-		pp.Languages[LanguageErudian] = 25
-		pp.Languages[LanguageVahShir] = maxValue
+		languages.Set(LanguageCommonTongue, maxValue)
+		languages.Set(LanguageCombineTongue, maxValue)
+		languages.Set(LanguageVahShir, maxValue)
+		languages.Set(LanguageErudian, 25)
 	case RaceFroglok:
-		pp.Languages[LanguageCommonTongue] = maxValue
-		pp.Languages[LanguageFroglok] = maxValue
-		pp.Languages[LanguageTroll] = 25
+		languages.Set(LanguageCommonTongue, maxValue)
+		languages.Set(LanguageFroglok, maxValue)
+		languages.Set(LanguageTroll, 25)
 	case RaceDrakkin:
-		pp.Languages[LanguageCommonTongue] = maxValue
-		pp.Languages[LanguageElderDragon] = maxValue
-		pp.Languages[LanguageDragon] = maxValue
+		languages.Set(LanguageCommonTongue, maxValue)
+		languages.Set(LanguageElderDragon, maxValue)
+		languages.Set(LanguageDragon, maxValue)
 	}
 }
 
 // SetRaceStartingSkills sets race-specific starting skills
-func SetRaceStartingSkills(pp *eqpb.PlayerProfile) {
+func SetRaceStartingSkills(pp *eq.PlayerProfile) {
 	const (
 		SkillHide      = 29
 		SkillSneak     = 34
@@ -403,67 +426,71 @@ func SetRaceStartingSkills(pp *eqpb.PlayerProfile) {
 		SkillTinkering = 23
 		SkillSafeFall  = 31
 	)
-
-	switch pp.Race {
+	skills, err := pp.Skills()
+	if err != nil {
+		log.Printf("failed to get skills: %v", err)
+		return
+	}
+	switch pp.Race() {
 	case RaceDarkElf:
-		pp.Skills[SkillHide] = 50
+		skills.Set(SkillHide, 50)
 	case RaceFroglok:
-		if pp.Skills[SkillSwimming] < 125 {
-			pp.Skills[SkillSwimming] = 125
-		}
+		skills.Set(SkillSwimming, 100)
 	case RaceGnome:
-		pp.Skills[SkillTinkering] = 50
+		skills.Set(SkillTinkering, 50)
 	case RaceHalfling:
-		pp.Skills[SkillHide] = 50
-		pp.Skills[SkillSneak] = 50
+		skills.Set(SkillHide, 50)
+		skills.Set(SkillSneak, 50)
 	case RaceIksar:
-		pp.Skills[SkillForage] = 50
-		if pp.Skills[SkillSwimming] < 100 {
-			pp.Skills[SkillSwimming] = 100
-		}
+		skills.Set(SkillForage, 50)
+		skills.Set(SkillSwimming, 50)
 	case RaceWoodElf:
-		pp.Skills[SkillForage] = 50
-		pp.Skills[SkillHide] = 50
+		skills.Set(SkillForage, 50)
+		skills.Set(SkillHide, 50)
 	case RaceVahShir:
-		pp.Skills[SkillSafeFall] = 50
-		pp.Skills[SkillSneak] = 50
+		skills.Set(SkillSafeFall, 50)
+		skills.Set(SkillSneak, 50)
 	}
 }
 
 // SetClassStartingSkills sets class-specific starting skills
-func SetClassStartingSkills(pp *eqpb.PlayerProfile) {
+func SetClassStartingSkills(pp *eq.PlayerProfile) {
 	// Simplified: Set non-zero skills to their cap at level 1
 	// You may need a skill_caps table or function to get accurate caps
+	skills, err := pp.Skills()
+	if err != nil {
+		log.Printf("failed to get skills: %v", err)
+		return
+	}
 	for i := 0; i <= 77; i++ {
-		if pp.Skills[i] == 0 {
+		if skills.At(i) == 0 {
 			// Skip specialized skills, tradeskills (except fishing), etc.
 			if i == 23 || i == 24 || i == 25 || i == 26 || i == 28 || i == 30 || i == 32 || i == 33 || i == 35 {
 				continue
 			}
-			pp.Skills[i] = 50 // Placeholder; replace with actual skill cap logic
+			skills.Set(i, 50) // Placeholder; replace with actual skill cap logic
 		}
 	}
 }
 
 // SetClassLanguages sets class-specific languages
-func SetClassLanguages(pp *eqpb.PlayerProfile) {
+func SetClassLanguages(pp *eq.PlayerProfile) {
 	const (
 		LanguageThievesCant = 18
 	)
 	maxValue := uint32(100)
-
-	if pp.CharClass == ClassRogue {
-		pp.Languages[LanguageThievesCant] = int32(maxValue)
+	languages, err := pp.Languages()
+	if err != nil {
+		log.Printf("failed to get languages: %v", err)
+		return
+	}
+	if pp.CharClass() == ClassRogue {
+		languages.Set(LanguageThievesCant, int32(maxValue))
 	}
 }
 
-// SetStartingItems sets starting items for the character
-func SetStartingItems(pp *eqpb.PlayerProfile, race, class, deity, zoneID uint32, name string) {
-
-}
-
 // StoreCharacter saves the character to the database
-func StoreCharacter(accountID int64, pp *eqpb.PlayerProfile) bool {
+func StoreCharacter(accountID int64, pp *eq.PlayerProfile) bool {
 	// Get character ID
 	ctx := context.Background()
 	return SaveCharacterCreate(ctx, accountID, pp)

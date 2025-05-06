@@ -9,7 +9,6 @@ import {
 import Player from "../Player/player";
 import Actor from "../Actor/actor";
 import CharacterSelect from "../Zone/character-select";
-import * as EQMessage from "@eqmessage";
 import { supportedZones } from "../Constants/supportedZones";
 import MusicManager from "@game/Music/music-manager";
 import { ZoneManager } from "@game/Zone/zone-manager";
@@ -18,6 +17,8 @@ import { InputEventMouseButton } from "godot";
 import { MouseButton } from "godot";
 import { InputEventMouseMotion } from "godot";
 import { InputEventPanGesture } from "godot";
+import { PlayerProfile } from "@game/Net/internal/api/capnp/player";
+import { NewZone } from "@game/Net/internal/api/capnp/zone";
 
 declare const window: Window;
 
@@ -28,10 +29,10 @@ export default class GameManager extends Node3D {
   private musicManager: MusicManager | null = null;
 
   private worldTickInterval: number = -1;
-  private lastPlayer: EQMessage.PlayerProfile | null = null;
+  private lastPlayer: PlayerProfile | null = null;
   private player: Player | null = null;
 
-  public CurrentZone: EQMessage.NewZone | null = null;
+  public CurrentZone: NewZone | null = null;
 
   get CharacterSelect(): CharacterSelect | null {
     return this.characterSelect;
@@ -91,7 +92,7 @@ export default class GameManager extends Node3D {
     this.characterSelect = new CharacterSelect(this);
   }
 
-  public async loadZoneServer(zone: EQMessage.NewZone) {
+  public async loadZoneServer(zone: NewZone) {
     this.CurrentZone = zone;
     await this.loadZoneId(zone.zoneIdNumber);
   }
@@ -128,7 +129,7 @@ export default class GameManager extends Node3D {
   }
 
   public async instantiatePlayer(
-    player: EQMessage.PlayerProfile = this.lastPlayer,
+    player: PlayerProfile = this.lastPlayer,
   ) {
     this.lastPlayer = player;
     if (this.player) {

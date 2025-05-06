@@ -1,22 +1,22 @@
-import Player from "@game/Player/player";
 import GameManager from "@game/Manager/game-manager";
-import * as EQMessage from "@eqmessage";
-import { MessageType } from "@protobuf-ts/runtime";
 import { WorldSocket } from "@ui/net/instances";
+import { OpCodes } from "./opcodes";
+import { NewZone } from "./internal/api/capnp/zone";
+import { PlayerProfile } from "./internal/api/capnp/player";
 
 
-export function opCodeHandler(opCode: EQMessage.OpCodes, type: MessageType<any>): MethodDecorator {
+export function opCodeHandler(opCode: OpCodes, type: any): MethodDecorator {
   return (target: object, propertyKey: string | symbol) => {
     const ctor = target.constructor as any;
     if (!ctor.opCodeHandlers) {
-      ctor.opCodeHandlers = new Map<string, MessageType<any>>();
+      ctor.opCodeHandlers = new Map<string, any>();
     }
     ctor.opCodeHandlers.set(opCode, [propertyKey, type]);
   };
 }
 
 export class ZonePacketHandler {
-  private opCodeHandlers: Map<EQMessage.OpCodes, [string, MessageType<any>]>;
+  private opCodeHandlers: Map<OpCodes, [string, any]>;
 
   constructor(private setMode: React.Dispatch<React.SetStateAction<string>>) {
     const ctor = (this as any).constructor;
@@ -30,16 +30,16 @@ export class ZonePacketHandler {
     }
   }
 
-  @opCodeHandler(EQMessage.OpCodes.OP_NewZone, EQMessage.NewZone)
-  newZone(newZone: EQMessage.NewZone) {
+  @opCodeHandler(OpCodes.NewZone, NewZone)
+  newZone(newZone: NewZone) {
 
     GameManager.instance.loadZoneServer(newZone);
     this.setMode('game');
 
   }
 
-  @opCodeHandler(EQMessage.OpCodes.OP_PlayerProfile, EQMessage.PlayerProfile)
-  loadPlayerProfile(playerProfile: EQMessage.PlayerProfile) {
+  @opCodeHandler(OpCodes.PlayerProfile, PlayerProfile)
+  loadPlayerProfile(playerProfile: PlayerProfile) {
     console.log('Got player profile', playerProfile);
 
     GameManager.instance.instantiatePlayer(playerProfile);

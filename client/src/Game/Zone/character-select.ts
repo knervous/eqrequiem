@@ -1,11 +1,11 @@
 import { Camera3D, Color, Node3D, OmniLight3D, Vector3 } from "godot";
 import type GameManager from "../Manager/game-manager";
 import Actor from "../Actor/actor";
-import * as EQMessage from "@eqmessage";
 import { RACE_DATA } from "../Constants/race-data";
 import { CLASS_DATA_NAMES } from "../Constants/class-data";
 import { zoneData } from "../Constants/zone-data";
 import { ZoneManager } from "./zone-manager";
+import { CharacterSelectEntry } from "@game/Net/internal/api/capnp/player";
 
 const CLASS_DATA_ENUM = {
   "Warrior": 1,
@@ -146,7 +146,7 @@ export default class CharacterSelect {
   }
 
 
-  public async loadModel(player: EQMessage.CharacterSelectEntry | null) {
+  public async loadModel(player: CharacterSelectEntry | null) {
     if (this.character) {
       this.character.dispose();
     }

@@ -1,16 +1,20 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useUIContext } from "../context";
-import * as EQMessage from "@eqmessage";
 import { WorldSocket } from "../../net/instances";
 import { Box, Stack } from "@mui/material";
 import { UiWindowComponent } from "../../common/ui-window";
 import { UiButtonComponent } from "../../common/ui-button";
 import { VIEWS } from "../../../Game/Constants/constants";
 import { CharacterCreate } from "./char-create";
-
-import "./component.css";
 import GameManager from "@game/Manager/game-manager";
 import { MusicPlayer } from "@game/Music/music-player";
+import { OpCodes } from "@game/Net/opcodes";
+import { Int, String } from "@game/Net/internal/api/capnp/common";
+import { EnterWorld, JWTLogin, JWTResponse } from "@game/Net/internal/api/capnp/world";
+import { CharacterSelect, CharacterSelectEntry } from "@game/Net/internal/api/capnp/player";
+import { RequestClientZoneChange, ZoneChangeType, ZoneSession } from "@game/Net/internal/api/capnp/zone";
+
+import "./component.css";
 
 let splashed = false;
 
@@ -20,13 +24,13 @@ export const CharacterSelectUIComponent: React.FC = () => {
   const [view, setView] = useState(VIEWS.CHAR_SELECT);
   const setSplash = window.setSplash;
   const [charInfo, setCharInfo] =
-    React.useState<EQMessage.CharacterSelect | null>(null);
+    React.useState<CharacterSelect | null>(null);
   const [gotCharInfo, setGotCharInfo] = React.useState(false);
   const [selectedChar, setSelectedChar] =
-    React.useState<EQMessage.CharacterSelectEntry | null>(null);
+    React.useState<CharacterSelectEntry | null>(null);
 
   const charSelectHandler = useCallback(
-    async (charInfo: EQMessage.CharacterSelect) => {
+    async (charInfo: CharacterSelect) => {
       await GameManager.instance.loadCharacterSelect();
       setGotCharInfo(true);
       setCharInfo(charInfo);
@@ -54,16 +58,16 @@ export const CharacterSelectUIComponent: React.FC = () => {
     }
 
     WorldSocket.registerOpCodeHandler(
-      EQMessage.OpCodes.OP_ZoneSessionValid,
-      EQMessage.Bool,
+      OpCodes.ZoneSessionValid,
+      Int,
       (data) => {
         console.log('Zone session valid:', data);
         if (data) {
           WorldSocket.sendMessage(
-            EQMessage.OpCodes.OP_RequestClientZoneChange,
-            EQMessage.RequestClientZoneChange,
+            OpCodes.RequestClientZoneChange,
+            RequestClientZoneChange,
             { 
-              type: EQMessage.ZoneChangeType.FROM_WORLD, // Type 0 is zone in from world
+              type: ZoneChangeType.FROM_WORLD, // Type 0 is zone in from world
             },
           );
         } else {
@@ -72,14 +76,13 @@ export const CharacterSelectUIComponent: React.FC = () => {
       },
     );
     WorldSocket.registerOpCodeHandler(
-      EQMessage.OpCodes.OP_PostEnterWorld,
-      EQMessage.Int,
+      OpCodes.PostEnterWorld,
+      Int,
       (data) => {
         if (data.value === 1) {
-          
           WorldSocket.sendMessage(
-            EQMessage.OpCodes.OP_ZoneSession,
-            EQMessage.ZoneSession,
+            OpCodes.ZoneSession,
+            ZoneSession,
             { 
               zoneId: selectedChar.zone,
               instanceId: 0,
@@ -91,11 +94,11 @@ export const CharacterSelectUIComponent: React.FC = () => {
       },
     );
     WorldSocket.sendMessage(
-      EQMessage.OpCodes.OP_EnterWorld,
-      EQMessage.EnterWorld,
+      OpCodes.EnterWorld,
+      EnterWorld,
       { name: selectedChar.name, tutorial: 0, returnHome: 0 },
     );
-  }, [selectedChar, setMode]);
+  }, [selectedChar]);
 
   useEffect(() => {
     const keyHandler = (e: KeyboardEvent) => {
@@ -121,14 +124,24 @@ export const CharacterSelectUIComponent: React.FC = () => {
     setTimeout(() => {
       setSplash?.(false);
     }, 1000);
-    WorldSocket.registerOpCodeHandler<EQMessage.CharacterSelect>(
-      EQMessage.OpCodes.OP_SendCharInfo,
-      EQMessage.CharacterSelect,
+    WorldSocket.registerOpCodeHandler<CharacterSelect>(
+      OpCodes.SendCharInfo,
+      CharacterSelect,
       charSelectHandler,
     );
-    WorldSocket.sendMessage(EQMessage.OpCodes.OP_JWTLogin, EQMessage.JWTLogin, {
+
+    WorldSocket.registerOpCodeHandler<Int>(
+      OpCodes.JWTResponse,
+      JWTResponse,
+      (e) => {
+        console.log('JWT Response', e.value);
+      },
+    );
+
+    WorldSocket.sendMessage(OpCodes.JWTLogin, JWTLogin, {
       token: token.current,
     });
+    
   }, [setMode, charSelectHandler, token, setSplash]);
 
   const charSelectNum = useMemo(() => {
@@ -140,7 +153,7 @@ export const CharacterSelectUIComponent: React.FC = () => {
       GameManager.instance.CharacterSelect?.loadModel({
         race: 0,
         charClass: 0,
-      } as EQMessage.CharacterSelectEntry);
+      } as CharacterSelectEntry);
       return;
     }
     GameManager.instance.CharacterSelect?.loadModel(
@@ -150,7 +163,7 @@ export const CharacterSelectUIComponent: React.FC = () => {
           charClass: 0,
           name: "Soandso",
           level: 1,
-        } as EQMessage.CharacterSelectEntry),
+        } as CharacterSelectEntry),
     );
   }, [selectedChar?.name, gotCharInfo, view]); // eslint-disable-line
 
@@ -225,8 +238,8 @@ export const CharacterSelectUIComponent: React.FC = () => {
                     return;
                   }
                   WorldSocket.sendMessage(
-                    EQMessage.OpCodes.OP_DeleteCharacter,
-                    EQMessage.String$,
+                    OpCodes.DeleteCharacter,
+                    String,
                     { value: selectedChar.name },
                   );
                 }}

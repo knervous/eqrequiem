@@ -6,7 +6,9 @@ import (
 	"log"
 	"strings"
 
-	eqpb "github.com/knervous/eqgo/internal/api/proto"
+	eq "github.com/knervous/eqgo/internal/api/capnp"
+	"github.com/knervous/eqgo/internal/session"
+
 	"github.com/knervous/eqgo/internal/cache"
 	"github.com/knervous/eqgo/internal/db"
 
@@ -136,14 +138,8 @@ func AccountHasCharacterName(ctx context.Context, accountID int64, charName stri
 	return len(chars) > 0, nil
 }
 
-func GetCharSelectInfo(ctx context.Context, accountID int64) (*eqpb.CharacterSelect, error) {
-	cacheKey := fmt.Sprintf("account:characters:%d", accountID)
-	if val, found, err := cache.GetCache().Get(cacheKey); err == nil && found {
-		if characters, ok := val.(*eqpb.CharacterSelect); ok {
-			log.Println("Cache hit for character select info!!")
-			return (*eqpb.CharacterSelect)(characters), nil
-		}
-	}
+func GetCharSelectInfo(ses *session.Session, ctx context.Context, accountID int64) (eq.CharacterSelect, error) {
+
 	const limit = 8
 
 	var chars []model.CharacterData
@@ -159,27 +155,34 @@ func GetCharSelectInfo(ctx context.Context, accountID int64) (*eqpb.CharacterSel
 		ORDER_BY(table.CharacterData.Name.ASC()).
 		LIMIT(limit).
 		QueryContext(ctx, db.GlobalWorldDB.DB, &chars); err != nil {
-		return nil, fmt.Errorf("query character_data: %w", err)
-	}
 
-	info := &eqpb.CharacterSelect{
-		CharacterCount: int32(len(chars)),
-		Characters:     make([]*eqpb.CharacterSelectEntry, len(chars)),
+		return eq.CharacterSelect{}, fmt.Errorf("query character_data: %w", err)
 	}
+	info, err := session.NewMessage(ses, eq.NewRootCharacterSelect)
+	if err != nil {
+		return eq.CharacterSelect{}, fmt.Errorf("create character select message: %w", err)
+	}
+	info.SetCharacterCount(int32(len(chars)))
+
+	characters, err := info.NewCharacters(int32(len(chars)))
+
+	if err != nil {
+		return eq.CharacterSelect{}, fmt.Errorf("get character select message: %w", err)
+	}
+	info.SetCharacters(characters)
 	for i, c := range chars {
-		info.Characters[i] = &eqpb.CharacterSelectEntry{
-			Name:      c.Name,
-			Items:     make([]*eqpb.ItemInstance, 0),
-			Gender:    int32(c.Gender),
-			Race:      int32(c.Race),
-			CharClass: int32(c.Class),
-			Level:     int32(c.Level),
-			Deity:     int32(c.Deity),
-			LastLogin: int32(c.LastLogin),
-			Face:      int32(c.Face),
-			Zone:      int32(c.ZoneID),
-			Enabled:   1,
-		}
+		characterSelectEntry := characters.At(i)
+		characterSelectEntry.SetName(c.Name)
+		characterSelectEntry.SetGender(int32(c.Gender))
+		characterSelectEntry.SetRace(int32(c.Race))
+		characterSelectEntry.SetCharClass(int32(c.Class))
+		characterSelectEntry.SetLevel(int32(c.Level))
+		characterSelectEntry.SetDeity(int32(c.Deity))
+		characterSelectEntry.SetLastLogin(int32(c.LastLogin))
+		characterSelectEntry.SetFace(int32(c.Face))
+		characterSelectEntry.SetZone(int32(c.ZoneID))
+		characterSelectEntry.SetEnabled(1)
+
 		var charItems []items.ItemWithSlot
 		stmt := table.ItemInstances.
 			SELECT(
@@ -196,28 +199,31 @@ func GetCharSelectInfo(ctx context.Context, accountID int64) (*eqpb.CharacterSel
 			)
 
 		if err := stmt.QueryContext(ctx, db.GlobalWorldDB.DB, &charItems); err != nil {
-			return nil, fmt.Errorf("query character_data items: %w", err)
+			return eq.CharacterSelect{}, fmt.Errorf("query character_data items: %w", err)
 		}
-		for _, item := range charItems {
-			itemTemplate, err := items.GetItemTemplateByID(item.ItemID)
+		charItemsLength := int32(len(charItems))
+		capCharItems, err := characterSelectEntry.NewItems(charItemsLength)
+		if err != nil {
+			return eq.CharacterSelect{}, fmt.Errorf("get character select message: %w", err)
+		}
+		for itemIdx, charItem := range charItems {
+			itemTemplate, err := items.GetItemTemplateByID(charItem.ItemID)
 			if err != nil {
-				log.Printf("failed to get item template for itemID %d: %v", item.ItemID, err)
+				log.Printf("failed to get item template for itemID %d: %v", charItem.ItemID, err)
 				continue
 			}
 
-			info.Characters[i].Items = append(info.Characters[i].Items, &eqpb.ItemInstance{
-				ItemId:   item.ItemID,
-				Charges:  uint32(item.Charges),
-				Quantity: uint32(item.Quantity),
-				Mods:     *item.Mods,
-				OwnerId:  item.OwnerID,
-				Slot:     int32(item.Slot),
-				Item:     items.ConvertItemTemplateToPb(&itemTemplate),
-			})
+			item := capCharItems.At(itemIdx)
+			item.SetItemId(charItem.ItemID)
+			item.SetCharges(uint32(charItem.Charges))
+			item.SetQuantity(uint32(charItem.Quantity))
+			item.SetMods(*charItem.Mods)
+			item.SetOwnerId(*charItem.OwnerID)
+			item.SetSlot(int32(charItem.Slot))
+			item.SetItem(items.ConvertItemTemplateToCapnp(ses, &itemTemplate))
 		}
 	}
 
-	cache.GetCache().Set(cacheKey, info)
 	return info, nil
 }
 
@@ -346,7 +352,7 @@ func InsertBind(ctx context.Context, characterID int64, bind model.CharacterBind
 	return err
 }
 
-func GetOrCreateCharacterID(ctx context.Context, accountId int64, pp *eqpb.PlayerProfile) (int64, error) {
+func GetOrCreateCharacterID(ctx context.Context, accountId int64, pp *eq.PlayerProfile) (int64, error) {
 	cacheKey := fmt.Sprintf("account:character:%d", accountId)
 	if val, found, err := cache.GetCache().Get(cacheKey); err == nil && found {
 		if characterId, ok := val.(int32); ok {
@@ -355,10 +361,14 @@ func GetOrCreateCharacterID(ctx context.Context, accountId int64, pp *eqpb.Playe
 	}
 
 	var acc model.Account
-	err := table.CharacterData.
+	name, err := pp.Name()
+	if err != nil {
+		return 0, fmt.Errorf("get name from PlayerProfile: %w", err)
+	}
+	err = table.CharacterData.
 		SELECT(table.CharacterData.ID).
 		FROM(table.CharacterData).
-		WHERE(table.CharacterData.ID.EQ(mysql.Int(accountId)).AND(table.CharacterData.Name.EQ(mysql.String(pp.Name)))).
+		WHERE(table.CharacterData.ID.EQ(mysql.Int(accountId)).AND(table.CharacterData.Name.EQ(mysql.String(name)))).
 		QueryContext(ctx, db.GlobalWorldDB.DB, &acc)
 
 	if err == nil {
@@ -373,7 +383,7 @@ func GetOrCreateCharacterID(ctx context.Context, accountId int64, pp *eqpb.Playe
 		).
 		VALUES(
 			mysql.Int(accountId),
-			mysql.String(pp.Name),
+			mysql.String(name),
 		).
 		ExecContext(ctx, db.GlobalWorldDB.DB)
 	if err != nil {
@@ -389,7 +399,7 @@ func GetOrCreateCharacterID(ctx context.Context, accountId int64, pp *eqpb.Playe
 }
 
 // SaveCharacterCreate saves the character creation data to the database
-func SaveCharacterCreate(ctx context.Context, accountID int64, pp *eqpb.PlayerProfile) bool {
+func SaveCharacterCreate(ctx context.Context, accountID int64, pp *eq.PlayerProfile) bool {
 	// Get or create character ID
 	charID, err := GetOrCreateCharacterID(ctx, accountID, pp)
 	if err != nil {
@@ -441,36 +451,36 @@ func SaveCharacterCreate(ctx context.Context, accountID int64, pp *eqpb.PlayerPr
 			table.CharacterData.PvpStatus,
 		).
 		SET(
-			mysql.Uint32(uint32(pp.ZoneId)),
-			mysql.Float(float64(pp.X)),
-			mysql.Float(float64(pp.Y)),
-			mysql.Float(float64(pp.Z)),
-			mysql.Float(float64(pp.Heading)),
-			mysql.Uint32(uint32(pp.Race)),
-			mysql.Uint8(uint8(pp.CharClass)),
-			mysql.Uint8(uint8(pp.Gender)),
-			mysql.Uint32(uint32(pp.Deity)),
-			mysql.Uint8(uint8(pp.Level)),
-			mysql.Int32(pp.Str),
-			mysql.Int32(pp.Sta),
-			mysql.Int32(pp.Agi),
-			mysql.Int32(pp.Dex),
-			mysql.Int32(pp.Wis),
-			mysql.Int32(pp.Intel),
-			mysql.Int32(pp.Cha),
-			mysql.Int32(pp.Face),
-			mysql.Int32(pp.Eyecolor1),
-			mysql.Int32(pp.Eyecolor2),
-			mysql.Int32(pp.Hairstyle),
-			mysql.Int32(pp.Haircolor),
-			mysql.Int32(pp.Beard),
-			mysql.Int32(pp.Beardcolor),
-			mysql.Int32(pp.Lastlogin),
-			mysql.Int32(pp.Points),
-			mysql.Int32(pp.CurHp),
-			mysql.Int32(pp.HungerLevel),
-			mysql.Int32(pp.ThirstLevel),
-			mysql.Uint8(uint8(pp.Pvp)),
+			mysql.Uint32(uint32(pp.ZoneId())),
+			mysql.Float(float64(pp.X())),
+			mysql.Float(float64(pp.Y())),
+			mysql.Float(float64(pp.Z())),
+			mysql.Float(float64(pp.Heading())),
+			mysql.Uint32(uint32(pp.Race())),
+			mysql.Uint8(uint8(pp.CharClass())),
+			mysql.Uint8(uint8(pp.Gender())),
+			mysql.Uint32(uint32(pp.Deity())),
+			mysql.Uint8(uint8(pp.Level())),
+			mysql.Int32(pp.Str()),
+			mysql.Int32(pp.Sta()),
+			mysql.Int32(pp.Agi()),
+			mysql.Int32(pp.Dex()),
+			mysql.Int32(pp.Wis()),
+			mysql.Int32(pp.Intel()),
+			mysql.Int32(pp.Cha()),
+			mysql.Int32(pp.Face()),
+			mysql.Int32(pp.Eyecolor1()),
+			mysql.Int32(pp.Eyecolor2()),
+			mysql.Int32(pp.Hairstyle()),
+			mysql.Int32(pp.Haircolor()),
+			mysql.Int32(pp.Beard()),
+			mysql.Int32(pp.Beardcolor()),
+			mysql.Int32(pp.Lastlogin()),
+			mysql.Int32(pp.Points()),
+			mysql.Int32(pp.CurHp()),
+			mysql.Int32(pp.HungerLevel()),
+			mysql.Int32(pp.ThirstLevel()),
+			mysql.Uint8(uint8(pp.Pvp())),
 		).
 		WHERE(table.CharacterData.ID.EQ(mysql.Int64(charID)))
 
@@ -480,7 +490,17 @@ func SaveCharacterCreate(ctx context.Context, accountID int64, pp *eqpb.PlayerPr
 	}
 
 	// Save skills
-	for i, skill := range pp.Skills {
+	skills, err := pp.Skills()
+	if err != nil {
+		log.Printf("Failed to get skills for %s: %v", pp.Name, err)
+		return false
+	}
+	for i := range skills.Len() {
+		skill := skills.At(i)
+		if err != nil {
+			log.Printf("Failed to get skill %d for %s: %v", i, pp.Name, err)
+			return false
+		}
 		if skill > 0 {
 			stmt := table.CharacterSkills.
 				INSERT(
@@ -504,7 +524,13 @@ func SaveCharacterCreate(ctx context.Context, accountID int64, pp *eqpb.PlayerPr
 	}
 
 	// Save languages
-	for i, lang := range pp.Languages {
+	languages, err := pp.Languages()
+	if err != nil {
+		log.Printf("Failed to get languages for %s: %v", pp.Name, err)
+		return false
+	}
+	for i := range languages.Len() {
+		lang := languages.At(i)
 		if lang > 0 {
 			stmt := table.CharacterLanguages.
 				INSERT(
@@ -528,8 +554,14 @@ func SaveCharacterCreate(ctx context.Context, accountID int64, pp *eqpb.PlayerPr
 	}
 
 	// Save bind points
-	for i, bind := range pp.Binds {
-		if bind.ZoneId == 0 {
+	binds, err := pp.Binds()
+	if err != nil {
+		log.Printf("Failed to get bind points for %s: %v", pp.Name, err)
+		return false
+	}
+	for i := range binds.Len() {
+		bind := binds.At(i)
+		if bind.ZoneId() == 0 {
 			continue // Skip unset binds
 		}
 		stmt := table.CharacterBind.
@@ -545,21 +577,21 @@ func SaveCharacterCreate(ctx context.Context, accountID int64, pp *eqpb.PlayerPr
 			).
 			VALUES(
 				charID,
-				bind.ZoneId,
+				bind.ZoneId(),
 				0, // InstanceID assumed 0 for new characters
-				bind.X,
-				bind.Y,
-				bind.Z,
-				bind.Heading,
+				bind.X(),
+				bind.Y(),
+				bind.Z(),
+				bind.Heading(),
 				i,
 			).
 			ON_DUPLICATE_KEY_UPDATE(
-				table.CharacterBind.ZoneID.SET(mysql.Uint16(uint16(bind.ZoneId))),
+				table.CharacterBind.ZoneID.SET(mysql.Uint16(uint16(bind.ZoneId()))),
 				table.CharacterBind.InstanceID.SET(mysql.Uint32(0)),
-				table.CharacterBind.X.SET(mysql.Float(float64(bind.X))),
-				table.CharacterBind.Y.SET(mysql.Float(float64(bind.Y))),
-				table.CharacterBind.Z.SET(mysql.Float(float64(bind.Z))),
-				table.CharacterBind.Heading.SET(mysql.Float(float64(bind.Heading))),
+				table.CharacterBind.X.SET(mysql.Float(float64(bind.X()))),
+				table.CharacterBind.Y.SET(mysql.Float(float64(bind.Y()))),
+				table.CharacterBind.Z.SET(mysql.Float(float64(bind.Z()))),
+				table.CharacterBind.Heading.SET(mysql.Float(float64(bind.Heading()))),
 			)
 		if _, err := stmt.ExecContext(ctx, tx); err != nil {
 			log.Printf("Failed to save bind point %d for %s: %v", i, pp.Name, err)
@@ -574,7 +606,7 @@ func SaveCharacterCreate(ctx context.Context, accountID int64, pp *eqpb.PlayerPr
 	}
 
 	// Save inventory later
-	startingItems, err := db_character.InstantiateStartingItems(pp.Race, pp.CharClass, pp.Deity, pp.ZoneId)
+	startingItems, err := db_character.InstantiateStartingItems(pp.Race(), pp.CharClass(), pp.Deity(), pp.ZoneId())
 	if err != nil {
 		log.Printf("Failed to instantiate starting items for %s: %v", pp.Name, err)
 		return false

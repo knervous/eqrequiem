@@ -3,7 +3,6 @@ package server
 import (
 	"context"
 	"crypto/tls"
-	"encoding/binary"
 	"fmt"
 	"io"
 	"log"
@@ -15,14 +14,12 @@ import (
 	"github.com/knervous/eqgo/internal/cert"
 	"github.com/knervous/eqgo/internal/db"
 	"github.com/knervous/eqgo/internal/discord"
-	"github.com/knervous/eqgo/internal/message"
 	"github.com/knervous/eqgo/internal/session"
 	"github.com/knervous/eqgo/internal/world"
 
 	"github.com/quic-go/quic-go"
 	"github.com/quic-go/quic-go/http3"
 	"github.com/quic-go/webtransport-go"
-	"google.golang.org/protobuf/proto"
 )
 
 type Server struct {
@@ -65,7 +62,7 @@ func NewServer(dsn string) (*Server, error) {
 	}, nil
 }
 
-func (s *Server) SendStream(sessionID int, opcode uint16, msg proto.Message) error {
+func (s *Server) SendStream(sessionID int, data []byte) error {
 	sess, ok := s.sessions[sessionID]
 	if !ok {
 		return fmt.Errorf("session %d not found", sessionID)
@@ -76,36 +73,18 @@ func (s *Server) SendStream(sessionID int, opcode uint16, msg proto.Message) err
 	}
 	defer stream.Close()
 
-	data, err := proto.Marshal(msg)
-	if err != nil {
-		return fmt.Errorf("marshal %T: %w", msg, err)
-	}
-
-	// Create buffer: 4-byte length + 2-byte opcode + data
-	length := uint32(2 + len(data))
-	buf := make([]byte, 4+2+len(data))
-	binary.LittleEndian.PutUint32(buf[:4], length) // Length prefix
-	binary.LittleEndian.PutUint16(buf[4:6], opcode)
-	copy(buf[6:], data)
-
-	_, err = stream.Write(buf)
+	_, err = stream.Write(data)
 	return err
 }
 
 // Implement world.ClientMessenger
-func (s *Server) SendDatagram(sessionID int, opcode uint16, msg proto.Message) error {
+func (s *Server) SendDatagram(sessionID int, data []byte) error {
 	sess, ok := s.sessions[sessionID]
 	if !ok {
 		return fmt.Errorf("session %d not found", sessionID)
 	}
-	data, err := proto.Marshal(msg)
-	if err != nil {
-		return fmt.Errorf("marshal %T: %w", msg, err)
-	}
-	buf := make([]byte, 2+len(data))
-	binary.LittleEndian.PutUint16(buf[:2], opcode)
-	copy(buf[2:], data)
-	err = sess.SendDatagram(buf)
+
+	err := sess.SendDatagram(data)
 	if err != nil {
 		log.Printf("failed to send datagram: %v", err)
 		return fmt.Errorf("send datagram: %w", err)
@@ -247,11 +226,13 @@ func (s *Server) makeEQHandler() http.HandlerFunc {
 		// Extract IP from r.RemoteAddr
 		ip, _, _ := net.SplitHostPort(r.RemoteAddr)
 
+		// Initialize session with Server as ClientMessenger
+		session := s.sessionManager.CreateSession(s, sid, ip)
 		// Handle datagrams
 		go func() {
 			ctx := context.Background()
 			for {
-				dat, err := sess.ReceiveDatagram(ctx)
+				data, err := sess.ReceiveDatagram(ctx)
 				if err != nil {
 					log.Printf("datagram recv closed (sess %d): %v", sid, err)
 					delete(s.sessions, sid)
@@ -259,13 +240,7 @@ func (s *Server) makeEQHandler() http.HandlerFunc {
 					s.worldHandler.RemoveSession(sid)
 					return
 				}
-				// Send datagram to WorldHandler with IP
-				s.worldHandler.HandleDatagram(message.ClientMessage{
-					SessionID: sid,
-					Data:      dat,
-					Messenger: s,
-					IP:        ip,
-				})
+				s.worldHandler.HandlePacket(session, data)
 			}
 		}()
 
@@ -278,6 +253,7 @@ func (s *Server) makeEQHandler() http.HandlerFunc {
 					return
 				}
 				data, _ := io.ReadAll(strm)
+				s.worldHandler.HandlePacket(session, data)
 				log.Printf("sess %d stream → %d bytes", sid, len(data))
 			}
 		}()

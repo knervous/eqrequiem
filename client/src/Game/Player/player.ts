@@ -8,16 +8,16 @@ import {
   CollisionShape3D,
   is_instance_valid,
 } from "godot";
-import * as EQMessage from "@eqmessage";
 import RACE_DATA from "../Constants/race-data";
 import { LoaderOptions } from "@game/GLTF/base";
 import { PlayerMovement } from "./player-movement";
 import { PlayerCamera } from "./player-cam";
+import { PlayerProfile } from "@game/Net/internal/api/capnp/player";
 
 export default class Player extends Actor {
   public playerMovement: PlayerMovement;
   public playerCamera: PlayerCamera;
-  public player: EQMessage.PlayerProfile | null = null;
+  public player: PlayerProfile | null = null;
   public isPlayerMoving: boolean = false;
 
   static instance: Player | null = null;
@@ -28,7 +28,7 @@ export default class Player extends Actor {
     useCapsulePhysics: true,
   };
 
-  constructor(player: EQMessage.PlayerProfile, camera: Camera3D) {
+  constructor(player: PlayerProfile, camera: Camera3D) {
     const race = player?.race ?? 1;
     const raceDataEntry = RACE_DATA[race];
     const model = raceDataEntry[player?.gender ?? 0] || raceDataEntry[2];

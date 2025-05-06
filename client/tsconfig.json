@@ -37,7 +37,8 @@
       "@game/*": ["src/Game/*"], // Map @game/* to src/Game/*
       "@ui/*": ["src/UI/*"], // Map @game/* to src/Game/*
       "@/*": ["src/*"], // Map @game/* to src/Game/*
-      "@eqmessage": ["src/Game/Net/message/index.ts"], // Map @eqmessage
+      "@eqmessage": ["src/Game/Net/internal/api/capnp/*"],
+      "@opcodes": ["src/Game/Net/opcodes.ts"],
       "sage-core/*": ["../../eqsage/sage/lib/*"] // Map sage core*
     }
   },

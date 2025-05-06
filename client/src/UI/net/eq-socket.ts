@@ -1,15 +1,12 @@
+import { Int } from "@game/Net/internal/api/capnp/common";
+import { OpCodes } from "@game/Net/opcodes";
+import * as capnp    from "capnp-ts";
+
 import { MessageType } from "@protobuf-ts/runtime";
+import * as $ from "capnp-es";
+import { JWTResponse } from "@game/Net/internal/api/capnp/world";
 
 // Define interfaces for WebTransport options and hash
-interface CertificateHash {
-  algorithm: "sha-256";
-  value: ArrayBuffer;
-}
-
-interface WebTransportOptions {
-  serverCertificateHashes?: CertificateHash[];
-}
-
 interface WebTransport {
   datagrams: {
     writable: WritableStream<Uint8Array>;
@@ -22,6 +19,15 @@ interface WebTransport {
   ready: Promise<void>;
   closed: Promise<boolean>;
   close(): void;
+}
+
+function setStructFields<T extends $.Struct>(struct: T, data: Partial<Record<keyof T, any>>) {
+  for (const [key, value] of Object.entries(data)) {
+    if (value !== undefined) {
+      // TypeScript ensures key is a valid field of T, and we use 'any' for value to allow flexibility
+      (struct as any)[key] = value;
+    }
+  }
 }
 
 // Utility functions
@@ -81,8 +87,8 @@ export class EqSocket {
         this.webtransport = new WebTransport(`https://${url}:${port}/eq`);
       }
 
-      await this.webtransport.ready;
-      this.writer = this.webtransport.datagrams.writable.getWriter();
+      await this.webtransport!.ready;
+      this.writer = this.webtransport!.datagrams.writable.getWriter();
       this.isConnected = true;
     } catch (e) {
       console.warn("Error connecting socket:", e);
@@ -116,7 +122,7 @@ export class EqSocket {
 
     this.writeQueue = this.writeQueue.then(async () => {
       try {
-        await this.writer.write(buffer);
+        await this.writer!.write(buffer);
       } catch (e) {
         console.error("Error sending datagram:", e);
         throw e;
@@ -125,63 +131,78 @@ export class EqSocket {
 
     return this.writeQueue;
   }
+  
 
-  // Send message over datagrams
-  public async sendMessage<T extends object>(
+  // change your signature to accept the actual struct class
+
+  public async sendMessage<T extends $.Struct>(
     opCode: number,
-    messageType: MessageType<T>,
-    messageData: Partial<T>,
+    StructType: Parameters<$.Message["initRoot"]>[0] & { prototype: T },
+    messageData: Partial<Record<keyof T, any>>,
   ): Promise<void> {
-    const message = messageType.create(messageData);
-    const messageBuffer = messageType.toBinary(message);
-    const opcodeBuffer = new Uint16Array([opCode]).buffer;
-    const combinedBuffer = concatArrayBuffer(opcodeBuffer, messageBuffer.buffer);
-    await this.send(new Uint8Array(combinedBuffer));
+    const message = new $.Message();
+    const root    = message.initRoot(StructType);
+    setStructFields(root, messageData);
+    const buf     = $.Message.toArrayBuffer(message);
+    const opBuf   = new Uint16Array([opCode]).buffer;
+    await this.send(new Uint8Array(concatArrayBuffer(opBuf, buf)));
   }
 
-  // Send message over streams
-  public async sendStreamMessage<T extends object>(
+  public async sendStreamMessage<T extends $.Struct>(
     opCode: number,
-    messageType: MessageType<T>,
-    messageData: Partial<T>,
+    StructType: Parameters<$.Message["initRoot"]>[0] & { prototype: T },
+    messageData: Partial<Record<keyof T, any>>,
   ): Promise<void> {
     if (!this.webtransport) {
       console.error("Sending stream from an unopen socket");
       throw new Error("Socket not connected");
     }
-
-    const message = messageType.create(messageData);
-    const messageBuffer = messageType.toBinary(message);
-    const opcodeBuffer = new Uint16Array([opCode]).buffer;
-    const combinedBuffer = concatArrayBuffer(opcodeBuffer, messageBuffer.buffer);
-
-    try {
-      // Open a new unidirectional stream
-      const stream = await this.webtransport.createUnidirectionalStream();
-      const writer = stream.getWriter();
-      await writer.write(new Uint8Array(combinedBuffer));
-      await writer.close();
-    } catch (e) {
-      console.error("Error sending stream message:", e);
-      throw e;
-    }
+    const message = new $.Message();
+    const root    = message.initRoot(StructType);
+    setStructFields(root, messageData);
+    const buf     = $.Message.toArrayBuffer(message);
+    const opBuf   = new Uint16Array([opCode]).buffer;
+    await this.send(new Uint8Array(concatArrayBuffer(opBuf, buf)));
   }
 
-  public registerOpCodeHandler<T extends object>(
-    opCode: number,
-    messageType: MessageType<T>,
+
+  public registerOpCodeHandler<T extends $.Struct>(
+    opCode: OpCodes,
+    StructType: Parameters<$.Message["initRoot"]>[0] & { prototype: T },
     handler: (data: T) => void,
   ): void {
     this.opCodeHandlers[opCode] = (data: Uint8Array) => {
       try {
-        const decoded = messageType.fromBinary(data);
-        handler(decoded);
+        const message = new $.Message();
+        const root1    = message.initRoot(JWTResponse);
+        root1.status = 7;
+        const buf     = $.Message.toArrayBuffer(message);
+
+        
+        const testReader = new $.Message(buf, false, true);
+        const testRoot = testReader.getRoot(JWTResponse);
+        {
+          const message = new $.Message();
+          const root1   = message.initRoot(JWTResponse);
+          root1.status  = 7;
+          const buf     = $.Message.toArrayBuffer(message);     // <-- has framing header
+  
+          // 2) parse with framing
+          //    • pass a Uint8Array (so we respect its .byteOffset/.byteLength)
+          //    • omit ‘singleSegment’ (defaults to false) so capnp-es will parse the header
+          const u8         = new Uint8Array(buf);
+          const testReader = new $.Message(u8, /* packed= */ false);
+          const testRoot   = testReader.getRoot(JWTResponse);
+  
+        }
+        const reader = new $.Message(data, false);
+        const root = reader.getRoot(StructType);
+        handler(root);
       } catch (e) {
-        console.error(`Error decoding message for opcode ${opCode}:`, e);
+        console.error(`Error decoding Cap’n Proto message for opcode ${opCode}:`, e);
       }
     };
   }
-
   public close(): void {
     this.isConnected = false;
     if (this.writer) {
@@ -213,6 +234,9 @@ export class EqSocket {
         if (value) {
           const opcode = new Uint16Array(value.buffer.slice(0, 2))[0];
           if (this.opCodeHandlers[opcode]) {
+            console.log('Handler for datagram opcode', opcode);
+            // Call the handler with the rest of the datagram
+            console.log(value.buffer);
             this.opCodeHandlers[opcode](value.slice(2));
           } else {
             console.log(`No handler for datagram opcode ${opcode}`, value);

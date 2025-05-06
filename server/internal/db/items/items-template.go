@@ -5,27 +5,23 @@ import (
 	"encoding/binary"
 	"errors"
 	"log"
-	"time"
 
-	eqpb "github.com/knervous/eqgo/internal/api/proto"
-
-	"github.com/jinzhu/copier"
+	eq "github.com/knervous/eqgo/internal/api/capnp"
+	"github.com/knervous/eqgo/internal/session"
 
 	"github.com/knervous/eqgo/internal/db/jetgen/eqgo/model"
 )
 
-func ConvertItemTemplateToPb(item *model.Items) *eqpb.Items {
-	pb := &eqpb.Items{}
-
-	if err := copier.Copy(pb, item); err != nil {
-		log.Printf("warning: copier.Copy failed: %v", err)
+func ConvertItemTemplateToCapnp(ses *session.Session, item *model.Items) eq.Items {
+	i, err := eq.NewItems(ses.RootSeg)
+	if err != nil {
+		log.Printf("error creating new Items capnp object: %v", err)
+		return eq.Items{}
 	}
-	pb.Id = item.ID
-	if item.Updated != nil {
-		pb.Updated = item.Updated.Format(time.RFC3339)
-	}
+	i.SetId(item.ID)
+	i.SetName(item.Name)
 
-	return pb
+	return i
 }
 
 func CreateItemInstanceFromTemplateID(id int32) ItemInstance {

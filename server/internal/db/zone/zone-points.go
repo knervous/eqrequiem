@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	eqpb "github.com/knervous/eqgo/internal/api/proto"
 	"github.com/knervous/eqgo/internal/cache"
+
 	"github.com/knervous/eqgo/internal/db"
 	"github.com/knervous/eqgo/internal/db/jetgen/eqgo/model"
 	"github.com/knervous/eqgo/internal/db/jetgen/eqgo/table"
@@ -14,11 +14,10 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-func GetZonePointsByZoneName(zoneName string) ([]*eqpb.ZonePoint, error) {
-
+func GetZonePointsByZoneName(zoneName string) ([]*model.ZonePoints, error) {
 	cacheKey := fmt.Sprintf("zone:id:%s", zoneName)
 	if val, found, err := cache.GetCache().Get(cacheKey); err == nil && found {
-		if zonePoints, ok := val.([]*eqpb.ZonePoint); ok {
+		if zonePoints, ok := val.([]*model.ZonePoints); ok {
 			return zonePoints, nil
 		}
 	}
@@ -34,20 +33,10 @@ func GetZonePointsByZoneName(zoneName string) ([]*eqpb.ZonePoint, error) {
 	if err != nil {
 		return nil, fmt.Errorf("query zone_data: %w", err)
 	}
-	// Convert to protobuf
-	var zonePointsProto []*eqpb.ZonePoint
-	for _, zonePoint := range zonePoints {
-		zonePointProto := &eqpb.ZonePoint{}
-		zonePointProto.X = float32(zonePoint.X)
-		zonePointProto.Y = float32(zonePoint.Y)
-		zonePointProto.Z = float32(zonePoint.Z)
-		zonePointProto.Zoneid = int32(zonePoint.TargetZoneID)
-		zonePointProto.Zoneinstance = int32(zonePoint.TargetInstance)
-		zonePointProto.Heading = float32(zonePoint.Heading)
-		zonePointProto.Number = int32(zonePoint.Number)
-		zonePointsProto = append(zonePointsProto, zonePointProto)
+	// Store in cache
+	if ok, err := cache.GetCache().Set(cacheKey, zonePoints); err != nil || !ok {
+		return nil, fmt.Errorf("cache set error: %w", err)
 	}
 
-	cache.GetCache().Set(cacheKey, &zonePointsProto)
-	return zonePointsProto, nil
+	return zonePoints, nil
 }

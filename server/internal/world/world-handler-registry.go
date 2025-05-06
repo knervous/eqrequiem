@@ -4,30 +4,30 @@ import (
 	"encoding/binary"
 	"log"
 
-	eqpb "github.com/knervous/eqgo/internal/api/proto"
-	"github.com/knervous/eqgo/internal/message"
+	"github.com/knervous/eqgo/internal/api/opcodes"
+	"github.com/knervous/eqgo/internal/session"
 )
 
 // DatagramHandler defines the signature for handling datagrams.
-type DatagramHandler func(msg message.ClientMessage, payload []byte, wh *WorldHandler)
+type DatagramHandler func(session *session.Session, payload []byte, wh *WorldHandler)
 
 // HandlerRegistry holds the handler mappings and dependencies.
 type HandlerRegistry struct {
-	handlers      map[eqpb.OpCodes]DatagramHandler
-	globalOpcodes map[eqpb.OpCodes]bool // Opcodes that should be handled globally
+	handlers      map[opcodes.OpCode]DatagramHandler
+	globalOpcodes map[opcodes.OpCode]bool // Opcodes that should be handled globally
 	WH            *WorldHandler
 }
 
 func NewWorldOpCodeRegistry() *HandlerRegistry {
-	handlers := map[eqpb.OpCodes]DatagramHandler{
-		eqpb.OpCodes_OP_JWTLogin:        HandleJWTLogin,
-		eqpb.OpCodes_OP_CharacterCreate: HandleCharacterCreate,
-		eqpb.OpCodes_OP_DeleteCharacter: HandleCharacterDelete,
-		eqpb.OpCodes_OP_EnterWorld:      HandleEnterWorld,
-		eqpb.OpCodes_OP_ZoneSession:     HandleZoneSession,
+	handlers := map[opcodes.OpCode]DatagramHandler{
+		opcodes.JWTLogin:        HandleJWTLogin,
+		opcodes.CharacterCreate: HandleCharacterCreate,
+		opcodes.DeleteCharacter: HandleCharacterDelete,
+		opcodes.EnterWorld:      HandleEnterWorld,
+		opcodes.ZoneSession:     HandleZoneSession,
 	}
 
-	globalOpcodes := make(map[eqpb.OpCodes]bool)
+	globalOpcodes := make(map[opcodes.OpCode]bool)
 	for opCode := range handlers {
 		globalOpcodes[opCode] = true
 	}
@@ -45,29 +45,29 @@ func (r *HandlerRegistry) ShouldHandleGlobally(data []byte) bool {
 		return false
 	}
 	op := binary.LittleEndian.Uint16(data[:2])
-	return r.globalOpcodes[(eqpb.OpCodes)(op)]
+	return r.globalOpcodes[(opcodes.OpCode)(op)]
 }
 
-func (r *HandlerRegistry) HandleWorldPacket(msg message.ClientMessage, validSession bool) {
-	if len(msg.Data) < 2 {
-		log.Printf("invalid datagram length %d from session %d", len(msg.Data), msg.SessionID)
+func (r *HandlerRegistry) HandleWorldPacket(ses *session.Session, data []byte) {
+	if len(data) < 2 {
+		log.Printf("invalid datagram length %d from session %d", len(data), ses.SessionID)
 		return
 	}
-	op := binary.LittleEndian.Uint16(msg.Data[:2])
-	payload := msg.Data[2:]
-	if (!validSession && op != uint16(eqpb.OpCodes_OP_JWTLogin)) || len(payload) == 0 {
-		log.Printf("unauthenticated opcode %d from session %d", op, msg.SessionID)
-	} else if h, ok := r.handlers[(eqpb.OpCodes)(op)]; ok {
-		h(msg, payload, r.WH)
+	op := binary.LittleEndian.Uint16(data[:2])
+	payload := data[2:]
+	if (!ses.Authenticated && op != uint16(opcodes.JWTLogin)) || len(payload) == 0 {
+		log.Printf("unauthenticated opcode %d from session %d", op, ses.SessionID)
+	} else if h, ok := r.handlers[(opcodes.OpCode)(op)]; ok {
+		h(ses, payload, r.WH)
 	} else {
-		log.Printf("no handler for opcode %d from session %d", op, msg.SessionID)
+		log.Printf("no handler for opcode %d from session %d", op, ses.SessionID)
 	}
 }
 
 func NewZoneOpCodeRegistry(zoneID int) *HandlerRegistry {
 	registry := &HandlerRegistry{
-		handlers:      map[eqpb.OpCodes]DatagramHandler{},
-		globalOpcodes: map[eqpb.OpCodes]bool{},
+		handlers:      map[opcodes.OpCode]DatagramHandler{},
+		globalOpcodes: map[opcodes.OpCode]bool{},
 	}
 
 	return registry

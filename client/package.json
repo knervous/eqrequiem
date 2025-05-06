@@ -22,6 +22,8 @@
     "@mui/x-tree-view": "^7.26.0",
     "@protobuf-ts/runtime": "^2.9.6",
     "allotment": "^1.20.3",
+    "capnp-es": "^0.0.9",
+    "capnp-ts": "^0.7.0",
     "comlink": "^4.4.2",
     "fantasy-name-generator": "^2.0.0",
     "jsonwebtoken": "^9.0.2",
