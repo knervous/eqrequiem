@@ -1,5 +1,5 @@
 # Makefile for Go daemon project
-.PHONY: all build up down clean lint
+.PHONY: all build up down clean lint server start s capnp capn jet
 
 # Variables
 BINARY_NAME = server

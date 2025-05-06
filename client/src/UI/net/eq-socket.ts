@@ -53,6 +53,7 @@ export class EqSocket {
   public isConnected: boolean = false;
   private writer: WritableStreamDefaultWriter<Uint8Array> | null = null;
   private writeQueue: Promise<void> = Promise.resolve();
+  private onClose: (() => void) | null = null;
 
   constructor() {
     this.close = this.close.bind(this);
@@ -109,7 +110,7 @@ export class EqSocket {
       this.close();
       onClose();
     });
-
+    this.onClose = onClose;
     return true;
   }
 
@@ -173,28 +174,6 @@ export class EqSocket {
   ): void {
     this.opCodeHandlers[opCode] = (data: Uint8Array) => {
       try {
-        const message = new $.Message();
-        const root1    = message.initRoot(JWTResponse);
-        root1.status = 7;
-        const buf     = $.Message.toArrayBuffer(message);
-
-        
-        const testReader = new $.Message(buf, false, true);
-        const testRoot = testReader.getRoot(JWTResponse);
-        {
-          const message = new $.Message();
-          const root1   = message.initRoot(JWTResponse);
-          root1.status  = 7;
-          const buf     = $.Message.toArrayBuffer(message);     // <-- has framing header
-  
-          // 2) parse with framing
-          //    • pass a Uint8Array (so we respect its .byteOffset/.byteLength)
-          //    • omit ‘singleSegment’ (defaults to false) so capnp-es will parse the header
-          const u8         = new Uint8Array(buf);
-          const testReader = new $.Message(u8, /* packed= */ false);
-          const testRoot   = testReader.getRoot(JWTResponse);
-  
-        }
         const reader = new $.Message(data, false);
         const root = reader.getRoot(StructType);
         handler(root);
@@ -213,6 +192,7 @@ export class EqSocket {
       console.log("Closing WebTransport");
       this.webtransport.close();
       this.webtransport = null;
+      this.onClose?.();
     }
   }
 
@@ -234,9 +214,6 @@ export class EqSocket {
         if (value) {
           const opcode = new Uint16Array(value.buffer.slice(0, 2))[0];
           if (this.opCodeHandlers[opcode]) {
-            console.log('Handler for datagram opcode', opcode);
-            // Call the handler with the rest of the datagram
-            console.log(value.buffer);
             this.opCodeHandlers[opcode](value.slice(2));
           } else {
             console.log(`No handler for datagram opcode ${opcode}`, value);

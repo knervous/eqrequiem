@@ -59,12 +59,17 @@ export const LoginWindowComponent: React.FC = () => {
         const discordAuthUrl = `https://discord.com/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&response_type=${RESPONSE_TYPE}&redirect_uri=${REDIRECT_URI}&scope=${SCOPE}`;
         window.location.href = discordAuthUrl;
       }
-      await WorldSocket.connect("eqrequiem.ddns.net", 443, () => {
-        console.log("Disconnected");
-        navigate("/");
-      });
-      token.current = storedDetails.token;
-      setMode("character-select");
+      if (
+        await WorldSocket.connect("eqrequiem.ddns.net", 443, () => {
+          console.log("Disconnected");
+          navigate("/");
+        })
+      ) {
+        token.current = storedDetails.token;
+        setMode("character-select");
+      } else {
+        alert("World Server Offline");
+      }
     },
     [setMode, token, navigate],
   );
@@ -338,7 +343,6 @@ export const LoginWindowComponent: React.FC = () => {
                 if (associatedFiles.length > 0) {
                   await godotBindings.processFiles(name, associatedFiles);
                 }
-                
               }
               console.log("Done");
             }}
