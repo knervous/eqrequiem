@@ -1,13 +1,11 @@
 package session
 
 import (
-	"encoding/binary"
 	"fmt"
+	"io"
 	"sync"
 
 	capnp "capnproto.org/go/capnp/v3"
-	capnpext "github.com/knervous/eqgo/internal/api"
-	"github.com/knervous/eqgo/internal/api/opcodes"
 	"github.com/knervous/eqgo/internal/db/jetgen/eqgo/model"
 )
 
@@ -32,6 +30,7 @@ type Session struct {
 	messageBuffer *capnp.Message
 	arena         capnp.Arena
 	segmentBuf    []byte          // Pre-allocated buffer for message and serialization
+	packBuf       []byte          // Pre-allocated buffer for packing/unpacking messages
 	messenger     ClientMessenger // For sending replies
 
 }
@@ -71,6 +70,7 @@ func (sm *SessionManager) CreateSession(messenger ClientMessenger, sessionID int
 	defer sm.mu.Unlock()
 	const initialSegCap = 8 * 1024
 	segmentBuf := make([]byte, 0, initialSegCap)
+	packBuf := make([]byte, 0, initialSegCap)
 	msg, seg := capnp.NewSingleSegmentMessage(nil)
 
 	session := &Session{
@@ -83,6 +83,7 @@ func (sm *SessionManager) CreateSession(messenger ClientMessenger, sessionID int
 		segmentBuf:    segmentBuf,
 		messageBuffer: msg,
 		messenger:     messenger,
+		packBuf:       packBuf,
 	}
 	sm.sessions[sessionID] = session
 	return session
@@ -99,60 +100,61 @@ func NewMessage[T any](
 		return zero, fmt.Errorf("new message: %w", err)
 	}
 	s.RootSeg = newSeg
-
-	// Call constructor to populate the segment
 	return ctor(s.RootSeg)
 }
 
-func (s *Session) SendData(
-	message *capnp.Message,
-	opcode opcodes.OpCode,
-) error {
-	buf := s.segmentBuf[:cap(s.segmentBuf)]
-	payload := buf[2:]
-
-	n, err := capnpext.MarshalTo(message, payload)
-	if err == capnpext.ErrBufferTooSmall {
-		newCap := 2 + n
-		s.segmentBuf = make([]byte, newCap)
-		buf = s.segmentBuf
-		payload = buf[2:]
-		n, err = capnpext.MarshalTo(message, payload)
+func (s *Session) ReadMessageZero(data []byte) error {
+	if err := capnp.UnmarshalZeroTo(s.messageBuffer, &s.segmentBuf, data); err != nil {
+		return err
 	}
+	seg, err := s.messageBuffer.Segment(0)
 	if err != nil {
-		return fmt.Errorf("SendData: %w", err)
+		return err
 	}
-
-	totalLen := 2 + n
-	binary.LittleEndian.PutUint16(buf[:2], uint16(opcode))
-	return s.messenger.SendDatagram(s.SessionID, buf[:totalLen])
+	s.RootSeg = seg
+	return nil
 }
-func (s *Session) SendStream(
-	message *capnp.Message,
-	opcode opcodes.OpCode,
-) error {
-	const headerSize = 6
 
-	buf := s.segmentBuf[:cap(s.segmentBuf)]
-	payload := buf[headerSize:]
-
-	n, err := capnpext.MarshalTo(message, payload)
-	if err == capnpext.ErrBufferTooSmall {
-		newCap := headerSize + n
-		s.segmentBuf = make([]byte, newCap)
-		buf = s.segmentBuf
-		payload = buf[headerSize:]
-		n, err = capnpext.MarshalTo(message, payload)
+func (s *Session) ReadMessagePackedZero(data []byte) error {
+	if err := capnp.UnmarshalPackedZeroTo(s.messageBuffer, &s.segmentBuf, &s.packBuf, data); err != nil {
+		return err
 	}
+	seg, err := s.messageBuffer.Segment(0)
 	if err != nil {
-		return fmt.Errorf("SendStream: %w", err)
+		return err
+	}
+	s.RootSeg = seg
+	return nil
+}
+
+func Deserialize[T any](ses *Session, data []byte, get func(*capnp.Message) (T, error)) (T, error) {
+	err := ses.ReadMessageZero(data)
+	if err != nil {
+		var zero T
+		return zero, err
+	}
+	return get(ses.messageBuffer)
+}
+
+func (s *Session) Close() {
+	// 1) Release the Cap’n Proto Message/Arena
+	//    This returns any underlying segment buffers to the bufferpool.
+	s.messageBuffer.Release()
+
+	// 2) (Optional) zero out or drop references for GC
+	s.RootSeg = nil
+	s.arena = nil
+	// slice buffers (segmentBuf, packBuf) can just be discarded or
+	// kept around if you plan to re-open the session.
+	s.segmentBuf = nil
+	s.packBuf = nil
+
+	// 3) If your messenger holds a connection you should close it:
+	if closer, ok := s.messenger.(io.Closer); ok {
+		_ = closer.Close()
 	}
 
-	totalLen := headerSize + n
-	binary.LittleEndian.PutUint32(buf[0:4], uint32(2+n))
-	binary.LittleEndian.PutUint16(buf[4:6], uint16(opcode))
-
-	return s.messenger.SendStream(s.SessionID, buf[:totalLen])
+	// 4) Any other per‐session cleanup here…
 }
 
 // GetSession retrieves a session by sessionID.
@@ -168,8 +170,10 @@ func (sm *SessionManager) GetSession(sessionID int) (*Session, bool) {
 func (sm *SessionManager) RemoveSession(sessionID int) {
 	sm.mu.Lock()
 	defer sm.mu.Unlock()
-
-	delete(sm.sessions, sessionID)
+	if sess, ok := sm.sessions[sessionID]; ok {
+		sess.Close() // free up the pools
+		delete(sm.sessions, sessionID)
+	}
 }
 
 // UpdateZone updates the zoneID for a session.

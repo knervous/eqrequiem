@@ -13,16 +13,16 @@ import (
 	"github.com/knervous/eqgo/internal/session"
 )
 
-func HandleRequestClientZoneChange(clientSession *session.Session, payload []byte) {
-	req, err := eq.Deserialize(payload, eq.ReadRootRequestClientZoneChange)
+func HandleRequestClientZoneChange(ses *session.Session, payload []byte) {
+	req, err := session.Deserialize(ses, payload, eq.ReadRootRequestClientZoneChange)
 	if err != nil {
 		log.Printf("failed to read JWTLogin struct: %v", err)
 		return
 	}
 
-	charData := clientSession.CharacterData
+	charData := ses.CharacterData
 	if charData == nil {
-		log.Printf("client session %d has no character data", clientSession.SessionID)
+		log.Printf("client session %d has no character data", ses.SessionID)
 		return
 	}
 	if req.Type() == 0 {
@@ -43,7 +43,7 @@ func HandleRequestClientZoneChange(clientSession *session.Session, payload []byt
 		charData.Heading = float64(req.Heading())
 		charData.ZoneID = uint32(req.ZoneId())
 		charData.ZoneInstance = uint32(req.InstanceId())
-		db_character.UpdateCharacter(charData, clientSession.AccountID)
+		db_character.UpdateCharacter(charData, ses.AccountID)
 
 	}
 	dbZone, err := db_zone.GetZoneById(context.Background(), int(req.ZoneId()))
@@ -56,7 +56,7 @@ func HandleRequestClientZoneChange(clientSession *session.Session, payload []byt
 	// TODO get here later
 	// newZone := &eqpb.NewZone{}
 
-	newZone, err := session.NewMessage(clientSession, eq.NewRootNewZone)
+	newZone, err := session.NewMessage(ses, eq.NewRootNewZone)
 	if err != nil {
 		log.Printf("failed to create NewZone message: %v", err)
 		return
@@ -90,8 +90,8 @@ func HandleRequestClientZoneChange(clientSession *session.Session, payload []byt
 		zonePointProto.SetNumber(int32(zonePoint.Number))
 	}
 
-	clientSession.SendStream(newZone.Message(), opcodes.NewZone)
-	playerProfile, err := session.NewMessage(clientSession, eq.NewRootPlayerProfile)
+	ses.SendStream(newZone.Message(), opcodes.NewZone)
+	playerProfile, err := session.NewMessage(ses, eq.NewRootPlayerProfile)
 	if err != nil {
 		log.Printf("failed to create PlayerProfile message: %v", err)
 		return
@@ -113,5 +113,5 @@ func HandleRequestClientZoneChange(clientSession *session.Session, payload []byt
 	playerProfile.SetY(float32(charData.Y))
 	playerProfile.SetZ(float32(charData.Z))
 	playerProfile.SetHeading(float32(charData.Heading))
-	clientSession.SendStream(playerProfile.Message(), opcodes.PlayerProfile)
+	ses.SendStream(playerProfile.Message(), opcodes.PlayerProfile)
 }

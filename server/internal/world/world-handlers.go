@@ -23,7 +23,7 @@ func sendCharInfo(ses *session.Session, accountId int64) {
 
 func HandleJWTLogin(ses *session.Session, payload []byte, wh *WorldHandler) {
 	ctx := context.Background()
-	jwtLogin, err := eq.Deserialize(payload, eq.ReadRootJWTLogin)
+	jwtLogin, err := session.Deserialize(ses, payload, eq.ReadRootJWTLogin)
 	if err != nil {
 		log.Printf("failed to read JWTLogin struct: %v", err)
 		return
@@ -76,7 +76,7 @@ func HandleJWTLogin(ses *session.Session, payload []byte, wh *WorldHandler) {
 }
 
 func HandleEnterWorld(ses *session.Session, payload []byte, wh *WorldHandler) {
-	req, err := eq.Deserialize(payload, eq.ReadRootEnterWorld)
+	req, err := session.Deserialize(ses, payload, eq.ReadRootEnterWorld)
 	if err != nil {
 		log.Printf("failed to read JWTLogin struct: %v", err)
 		return
@@ -102,7 +102,7 @@ func HandleEnterWorld(ses *session.Session, payload []byte, wh *WorldHandler) {
 }
 
 func HandleZoneSession(ses *session.Session, payload []byte, wh *WorldHandler) {
-	req, err := eq.Deserialize(payload, eq.ReadRootZoneSession)
+	req, err := session.Deserialize(ses, payload, eq.ReadRootZoneSession)
 	if err != nil {
 		log.Printf("failed to read JWTLogin struct: %v", err)
 		return
@@ -128,7 +128,7 @@ func HandleZoneSession(ses *session.Session, payload []byte, wh *WorldHandler) {
 }
 
 func HandleCharacterCreate(ses *session.Session, payload []byte, wh *WorldHandler) {
-	req, err := eq.Deserialize(payload, eq.ReadRootCharCreate)
+	req, err := session.Deserialize(ses, payload, eq.ReadRootCharCreate)
 	if err != nil {
 		log.Printf("failed to read JWTLogin struct: %v", err)
 		return
@@ -159,8 +159,8 @@ func HandleCharacterCreate(ses *session.Session, payload []byte, wh *WorldHandle
 	sendCharInfo(ses, ses.AccountID)
 }
 
-func HandleCharacterDelete(session *session.Session, payload []byte, wh *WorldHandler) {
-	req, err := eq.Deserialize(payload, eq.ReadRootString)
+func HandleCharacterDelete(ses *session.Session, payload []byte, wh *WorldHandler) {
+	req, err := session.Deserialize(ses, payload, eq.ReadRootString)
 	if err != nil {
 		log.Printf("failed to read JWTLogin struct: %v", err)
 		return
@@ -172,9 +172,9 @@ func HandleCharacterDelete(session *session.Session, payload []byte, wh *WorldHa
 		log.Printf("failed to get name from CharCreate struct: %v", err)
 		return
 	}
-	if err := DeleteCharacter(ctx, session.AccountID, name); err != nil {
+	if err := DeleteCharacter(ctx, ses.AccountID, name); err != nil {
 		return
 	}
 
-	sendCharInfo(session, session.AccountID)
+	sendCharInfo(ses, ses.AccountID)
 }

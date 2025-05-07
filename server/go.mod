@@ -16,6 +16,9 @@ require (
 	github.com/traefik/yaegi v0.16.1
 )
 
+// replace capnproto.org/go/capnp/v3 => ../../go-capnp
+replace capnproto.org/go/capnp/v3 => github.com/knervous/go-capnp/v3 v3.1.1-knervous1
+
 require (
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
