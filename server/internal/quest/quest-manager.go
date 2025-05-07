@@ -236,3 +236,41 @@ func (z *ZoneQuestInterface) Invoke(name string, evt *QuestEvent) bool {
 	}
 	return false
 }
+
+// Reset the whole struct (zeroing every field).
+// The compiler will turn this into a single memclr.
+func (e *QuestEvent) Reset() *QuestEvent {
+	*e = QuestEvent{}
+	return e
+}
+
+// Now “builder” methods—each one is just one store + return receiver:
+func (e *QuestEvent) Type(t QuestEventType) *QuestEvent {
+	e.EventType = t
+	return e
+}
+func (e *QuestEvent) SetActor(a entity.Moblike) *QuestEvent {
+	e.Actor = a
+	return e
+}
+func (e *QuestEvent) SetReceiver(r entity.Moblike) *QuestEvent {
+	e.Receiver = r
+	return e
+}
+func (e *QuestEvent) Spell(id uint32) *QuestEvent {
+	e.SpellID = id
+	return e
+}
+func (e *QuestEvent) Extra(d uint32) *QuestEvent {
+	e.ExtraData = d
+	return e
+}
+func (e *QuestEvent) Encounter(name string) *QuestEvent {
+	e.EncounterName = name
+	return e
+}
+func (e *QuestEvent) Strings(vals ...string) *QuestEvent {
+	e.StringArray = e.StringArray[:0]
+	e.StringArray = append(e.StringArray, vals...)
+	return e
+}

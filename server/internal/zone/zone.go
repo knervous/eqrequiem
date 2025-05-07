@@ -27,6 +27,11 @@ type ZoneInstance struct {
 	wg         sync.WaitGroup
 	registry   *HandlerRegistry
 	mutex      sync.RWMutex
+	questEvent *quest.QuestEvent
+}
+
+func (z *ZoneInstance) QE() *quest.QuestEvent {
+	return z.questEvent.Reset()
 }
 
 var zoneQuestInterface *quest.ZoneQuestInterface = nil
@@ -44,6 +49,7 @@ func NewZoneInstance(zoneID, instanceID int) *ZoneInstance {
 		Quit:       make(chan struct{}),
 		Clients:    make(map[int]ClientEntry),
 		registry:   zoneRegistry,
+		questEvent: &quest.QuestEvent{},
 	}
 	z.wg.Add(1)
 	spawnZone(zone)
@@ -92,15 +98,11 @@ func (z *ZoneInstance) run() {
 	if zoneQuestInterface == nil {
 		fmt.Printf("[Zone %d·Inst %d] failed to get quest interface\n", z.ZoneID, z.InstanceID)
 	} else {
-		zoneQuestInterface.Invoke("Captain_Tillin", &quest.QuestEvent{
-			EventType: quest.EventSay,
-			Actor: &entity.NPC{
-				NpcData: model.NpcTypes{
-					Name: "Captaaaain Tillin",
-				},
+		zoneQuestInterface.Invoke("Captain_Tillin", z.QE().Type(quest.EventSay).SetActor(&entity.NPC{
+			NpcData: model.NpcTypes{
+				Name: "Captaaaain Tillin",
 			},
-			// any other data relating to event
-		})
+		}))
 	}
 
 	for {

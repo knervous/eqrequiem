@@ -28,8 +28,9 @@ func init() {
 func BenchmarkQuestInvoke(b *testing.B) {
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
-		questEvent.EventType = quest.EventSay
-		questEvent.Actor = npc
+		questEvent.Reset()
+		questEvent.Type(quest.EventSay)
+		questEvent.SetActor(npc)
 		questInterface.Invoke("Captain_Tillin", questEvent)
 	}
 }
