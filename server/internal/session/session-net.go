@@ -13,15 +13,13 @@ func (s *Session) SendData(
 	message *capnp.Message,
 	opcode opcodes.OpCode,
 ) error {
-	buf := s.segmentBuf[:cap(s.segmentBuf)]
-	payload := buf[2:]
+	payload := s.segmentBuf[2:]
 
 	n, err := capnpext.MarshalTo(message, payload)
 	if err == capnpext.ErrBufferTooSmall {
 		newCap := 2 + n
 		s.segmentBuf = make([]byte, newCap)
-		buf = s.segmentBuf
-		payload = buf[2:]
+		payload = s.segmentBuf[2:]
 		n, err = capnpext.MarshalTo(message, payload)
 	}
 	if err != nil {
@@ -29,8 +27,8 @@ func (s *Session) SendData(
 	}
 
 	totalLen := 2 + n
-	binary.LittleEndian.PutUint16(buf[:2], uint16(opcode))
-	return s.messenger.SendDatagram(s.SessionID, buf[:totalLen])
+	binary.LittleEndian.PutUint16(s.segmentBuf[:2], uint16(opcode))
+	return s.messenger.SendDatagram(s.SessionID, s.segmentBuf[:totalLen])
 }
 
 func (s *Session) SendStream(

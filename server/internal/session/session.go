@@ -69,7 +69,7 @@ func (sm *SessionManager) CreateSession(messenger ClientMessenger, sessionID int
 	sm.mu.Lock()
 	defer sm.mu.Unlock()
 	const initialSegCap = 8 * 1024
-	segmentBuf := make([]byte, 0, initialSegCap)
+	segmentBuf := make([]byte, initialSegCap)
 	packBuf := make([]byte, 0, initialSegCap)
 	msg, seg := capnp.NewSingleSegmentMessage(nil)
 

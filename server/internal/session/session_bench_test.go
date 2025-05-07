@@ -28,12 +28,23 @@ func init() {
 	buffer = []byte{0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0}
 	packedBuffer = []byte{16, 2, 16, 1, 1, 1}
 	equalValue = 1
+	benchSession.segmentBuf = buffer
 }
 
 func BenchmarkDeserialize(b *testing.B) {
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
 		_, err := Deserialize(benchDeserSession, buffer, eq.ReadRootJWTResponse)
+		if err != nil {
+			b.Fatal(err)
+		}
+	}
+}
+
+func BenchmarkCreateNewMessage(b *testing.B) {
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		_, err := NewMessage(benchSession, eq.NewRootJWTResponse)
 		if err != nil {
 			b.Fatal(err)
 		}
@@ -47,11 +58,6 @@ func BenchmarkSendData(b *testing.B) {
 		if err != nil {
 			b.Fatal(err)
 		}
-		benchMessage, _ = NewMessage(benchSession, eq.NewRootJWTResponse)
-		bytes := benchMessage.Segment().Data()
-		if len(bytes) == 0 {
-			b.Fatal("expected non-empty bytes")
-		}
 
 	}
 }
@@ -63,11 +69,5 @@ func BenchmarkSendStream(b *testing.B) {
 		if err != nil {
 			b.Fatal(err)
 		}
-		benchMessage, _ = NewMessage(benchSession, eq.NewRootJWTResponse)
-		bytes := benchMessage.Segment().Data()
-		if len(bytes) == 0 {
-			b.Fatal("expected non-empty bytes")
-		}
-
 	}
 }
