@@ -12,38 +12,70 @@ import (
 
 	"github.com/knervous/eqgo/internal/quest"
 	"github.com/knervous/eqgo/internal/quest/yaegi_wrappers"
-
 	"github.com/traefik/yaegi/interp"
 	"github.com/traefik/yaegi/stdlib"
 )
 
+type zoneEntry struct {
+	quest   *quest.ZoneQuestInterface
+	interp  *interp.Interpreter
+	symbols map[string]map[string]reflect.Value
+}
+
 var (
 	mu            sync.RWMutex
-	questRegistry = map[string]*quest.ZoneQuestInterface{}
+	questRegistry = map[string]*zoneEntry{}
+	fileCache     = map[string][]string{}
+	fileCacheMu   sync.RWMutex
 )
 
 func init() {
 	fmt.Println("[dev] quest-registry-dev.go loaded")
 }
 
+func isTestEnvironment() bool {
+	env := os.Getenv("EQGO_TEST_ENV")
+	fmt.Printf("[dev] EQGO_TEST_ENV=%s\n", env)
+	return env == "1"
+}
+
+func getZoneFiles(moduleRoot, zoneName string) ([]string, error) {
+	fileCacheMu.RLock()
+	if files, ok := fileCache[zoneName]; ok {
+		fileCacheMu.RUnlock()
+		return files, nil
+	}
+	fileCacheMu.RUnlock()
+
+	pattern := fmt.Sprintf("internal/quest/zones/%s/*.go", zoneName)
+	fullPattern := fmt.Sprintf("%s/%s", moduleRoot, pattern)
+	files, err := filepath.Glob(fullPattern)
+	if err != nil {
+		return nil, err
+	}
+
+	fileCacheMu.Lock()
+	fileCache[zoneName] = files
+	fileCacheMu.Unlock()
+	return files, nil
+}
+
 func GetQuestInterface(zoneName string) *quest.ZoneQuestInterface {
 	mu.RLock()
-	if q, ok := questRegistry[zoneName]; ok {
+	if entry, ok := questRegistry[zoneName]; ok {
 		mu.RUnlock()
-		return q
+		return entry.quest
 	}
 	mu.RUnlock()
 
 	moduleRoot, err := os.Getwd()
+	fmt.Println("[dev] moduleRoot:", moduleRoot)
 	if err != nil {
 		fmt.Printf("Getwd error: %v\n", err)
 		return nil
 	}
 
-	pattern := fmt.Sprintf("internal/quest/zones/%s/*.go", zoneName)
-	fullPattern := fmt.Sprintf("%s/%s", moduleRoot, pattern)
-
-	files, err := filepath.Glob(fullPattern)
+	files, err := getZoneFiles(moduleRoot, zoneName)
 	if err != nil {
 		fmt.Printf("Glob error: %v\n", err)
 		return nil
@@ -52,17 +84,17 @@ func GetQuestInterface(zoneName string) *quest.ZoneQuestInterface {
 		fmt.Printf("No quest files found for zone %s\n", zoneName)
 		return nil
 	}
+
 	sourceFS := os.DirFS(moduleRoot)
 	i := interp.New(interp.Options{
 		SourcecodeFilesystem: sourceFS,
-		Env:                  []string{"GO111MODULE=on"}, // Ensure module mode
+		Env:                  []string{"GO111MODULE=on"},
 		Unrestricted:         true,
 		GoPath:               os.Getenv("GOPATH"),
 	})
 	i.Use(stdlib.Symbols)
 	i.Use(yaegi_wrappers.Symbols)
 
-	// Reorder files to evaluate main.go last
 	var mainFile string
 	var otherFiles []string
 	for _, f := range files {
@@ -72,7 +104,6 @@ func GetQuestInterface(zoneName string) *quest.ZoneQuestInterface {
 			otherFiles = append(otherFiles, f)
 		}
 	}
-	// Combine files with main.go at the end
 	orderedFiles := append(otherFiles, mainFile)
 
 	fmt.Printf("[dev] Loading zone %s with %d file(s): %v\n", zoneName, len(orderedFiles), orderedFiles)
@@ -103,14 +134,12 @@ func GetQuestInterface(zoneName string) *quest.ZoneQuestInterface {
 		return nil
 	}
 
-	// Verify that zoneVal is a function
 	if zoneVal.Kind() != reflect.Func {
 		fmt.Printf("RegisterZone is not a function, got type: %v\n", zoneVal.Kind())
 		return nil
 	}
 
-	// Call the RegisterZone function
-	results := zoneVal.Call(nil) // No arguments
+	results := zoneVal.Call(nil)
 	if len(results) != 1 {
 		fmt.Printf("RegisterZone returned unexpected number of results: %d\n", len(results))
 		return nil
@@ -122,7 +151,11 @@ func GetQuestInterface(zoneName string) *quest.ZoneQuestInterface {
 	}
 
 	mu.Lock()
-	questRegistry[zoneName] = zoneQuest
+	questRegistry[zoneName] = &zoneEntry{
+		quest:   zoneQuest,
+		interp:  i,
+		symbols: symbols,
+	}
 	mu.Unlock()
 
 	fmt.Printf("[dev] Registered zone quest: %s\n", zoneName)

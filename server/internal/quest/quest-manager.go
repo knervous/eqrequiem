@@ -227,8 +227,8 @@ func (z *ZoneQuestInterface) Unregister(name string, events ...QuestEventType) {
 }
 
 func (z *ZoneQuestInterface) Invoke(name string, evt *QuestEvent) bool {
-	z.mu.RLock()
-	defer z.mu.RUnlock()
+	// z.mu.RLock()
+	// defer z.mu.RUnlock()
 	if handlers, ok := z.handlers[name]; ok {
 		if handler, ok := handlers[evt.EventType]; ok {
 			return handler(evt)

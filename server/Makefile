@@ -1,5 +1,5 @@
 # Makefile for Go daemon project
-.PHONY: all build up down clean lint server start s capnp capn jet
+.PHONY: all build up down clean lint server start s capnp capn jet quest
 
 # Variables
 BINARY_NAME = server
@@ -57,3 +57,11 @@ clean:
 lint:
 	@echo "Running linter..."
 	@golangci-lint run ./...
+
+quest:
+	@echo "Running quest tests..."
+	@echo "Running NATIVE..."
+	@go test -bench=. -benchmem ./internal/quest/registry
+	@echo "Running YAEGI..."
+	@go test -bench=. -benchmem -tags=dev ./internal/quest/registry
+	@echo "Quest tests completed."

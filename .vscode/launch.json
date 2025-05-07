@@ -32,6 +32,32 @@
             "mode": "test",
             "program": "${workspaceFolder}/server/internal/session",
             "cwd": "${workspaceFolder}/server",
+            "args": [
+                "-test.bench=.",
+                "-test.benchmem"
+            ],
+            "env": {}
+        },
+        {
+            "name": "Quests Perf Bench",
+            "type": "go",
+            "request": "launch",
+            "mode": "test",
+            "program": "${workspaceFolder}/server/internal/quest/registry",
+            "cwd": "${workspaceFolder}/server",
+            "args": [
+                "-test.bench=.",
+                "-test.benchmem"
+            ],
+            "env": {}
+        },
+        {
+            "name": "Quests Perf Dev Bench",
+            "type": "go",
+            "request": "launch",
+            "mode": "test",
+            "program": "${workspaceFolder}/server/internal/quest/registry",
+            "cwd": "${workspaceFolder}/server/internal/quest/registry",
             "buildFlags": "-tags=dev",
             "args": [
                 "-test.bench=.",
