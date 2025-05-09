@@ -3,6 +3,8 @@ import { WorldSocket } from "@ui/net/instances";
 import { OpCodes } from "./opcodes";
 import { NewZone } from "./internal/api/capnp/zone";
 import { PlayerProfile } from "./internal/api/capnp/player";
+import { ChannelMessage, Spawn, Spawns } from "./internal/api/capnp/common";
+import { UIEvents } from "@ui/events/ui-events";
 
 
 export function opCodeHandler(opCode: OpCodes, type: any): MethodDecorator {
@@ -43,10 +45,16 @@ export class ZonePacketHandler {
     console.log('Got player profile', playerProfile);
 
     GameManager.instance.instantiatePlayer(playerProfile);
-
-    
-    // //GameManager.instance.instantiatePlayer(playerProfile);
-    // GameManager.instance.setLoading(false);
   }
 
+  @opCodeHandler(OpCodes.ZoneSpawns, Spawn)
+  loadZoneSpawns(spawn: Spawn) {
+    GameManager.instance.ZoneManager?.EntityPool?.AddSpawn(spawn);
+  }
+
+  @opCodeHandler(OpCodes.ChannelMessage, ChannelMessage)
+  processChannelMessage(channelMessage: ChannelMessage) {
+    UIEvents.emit("chat", { type: 0, line: `${channelMessage.sender} says, '${channelMessage.message}'`, color: "#ddd" });
+
+  }
 }

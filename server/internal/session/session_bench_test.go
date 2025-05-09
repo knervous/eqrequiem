@@ -28,7 +28,7 @@ func init() {
 	buffer = []byte{0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0}
 	packedBuffer = []byte{16, 2, 16, 1, 1, 1}
 	equalValue = 1
-	benchSession.segmentBuf = buffer
+	benchSession.writeBuffer = buffer
 }
 
 func BenchmarkDeserialize(b *testing.B) {

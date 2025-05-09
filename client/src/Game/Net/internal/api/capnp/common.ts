@@ -367,30 +367,25 @@ export class Spawns extends $.Struct {
   static readonly _capnp = {
     displayName: "Spawns",
     id: "84ff32fdda835dfe",
-    size: new $.ObjectSize(8, 1)
+    size: new $.ObjectSize(0, 1)
   };
-  get spawnCount(): number {
-    return $.utils.getInt32(0, this);
-  }
-  set spawnCount(value: number) {
-    $.utils.setInt32(0, value, this);
-  }
-  _adoptSpawns(value: $.Orphan<Spawn>): void {
+  static _Spawns: $.ListCtor<Spawn>;
+  _adoptSpawns(value: $.Orphan<$.List<Spawn>>): void {
     $.utils.adopt(value, $.utils.getPointer(0, this));
   }
-  _disownSpawns(): $.Orphan<Spawn> {
+  _disownSpawns(): $.Orphan<$.List<Spawn>> {
     return $.utils.disown(this.spawns);
   }
-  get spawns(): Spawn {
-    return $.utils.getStruct(0, Spawn, this);
+  get spawns(): $.List<Spawn> {
+    return $.utils.getList(0, Spawns._Spawns, this);
   }
   _hasSpawns(): boolean {
     return !$.utils.isNull($.utils.getPointer(0, this));
   }
-  _initSpawns(): Spawn {
-    return $.utils.initStructAt(0, Spawn, this);
+  _initSpawns(length: number): $.List<Spawn> {
+    return $.utils.initList(0, Spawns._Spawns, length, this);
   }
-  set spawns(value: Spawn) {
+  set spawns(value: $.List<Spawn>) {
     $.utils.copyFrom(value, $.utils.getPointer(0, this));
   }
   toString(): string {
@@ -11573,6 +11568,7 @@ export class String extends $.Struct {
     return "String_" + super.toString();
   }
 }
+Spawns._Spawns = $.CompositeList(Spawn);
 Bandolier._Items = $.CompositeList(BandolierItem);
 PotionBelt._Items = $.CompositeList(PotionBeltItem);
 MultiMoveItem._Moves = $.CompositeList(MultiMoveItemSub);

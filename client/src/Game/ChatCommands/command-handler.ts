@@ -2,6 +2,9 @@ import { UIEvents } from "@ui/events/ui-events";
 import { Trie } from "./trie";
 import Player from "@game/Player/player";
 import GameManager from "@game/Manager/game-manager";
+import { WorldSocket } from "@ui/net/instances";
+import { OpCodes } from "@game/Net/opcodes";
+import { ChannelMessage } from "@game/Net/internal/api/capnp/common";
 
 export function command(name: string): MethodDecorator {
   return (target: object, propertyKey: string | symbol) => {
@@ -110,6 +113,22 @@ export class CommandHandler {
       addChatLine(`You have entered ${zone}`);
     } else {
       addChatLine("No zone entered");
+    }
+  }
+
+  @command("say")
+  commandSay(args: string[]) {
+    const message = args.join(" ");
+    if (message) {
+      addChatLine(`You say, '${message}'`, { type: 1 });
+      WorldSocket.sendMessage(OpCodes.ChannelMessage, ChannelMessage, {
+        sender: Player.instance?.player?.name ?? "",
+        targetname: Player.instance?.Target?.name,
+        chanNum: 0,
+        message,
+      });
+    } else {
+      // addChatLine("No message entered");
     }
   }
 

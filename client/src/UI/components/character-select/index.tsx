@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useUIContext } from "../context";
 import { WorldSocket } from "../../net/instances";
 import { Box, Stack } from "@mui/material";
@@ -25,16 +25,18 @@ export const CharacterSelectUIComponent: React.FC = () => {
   const setSplash = window.setSplash;
   const [charInfo, setCharInfo] =
     React.useState<CharacterSelect | null>(null);
-  const [gotCharInfo, setGotCharInfo] = React.useState(false);
+  const gotCharInfo = useRef(false);
   const [selectedChar, setSelectedChar] =
     React.useState<CharacterSelectEntry | null>(null);
 
   const charSelectHandler = useCallback(
-    async (charInfo: CharacterSelect) => {
-      await GameManager.instance.loadCharacterSelect();
-      setGotCharInfo(true);
-      setCharInfo(charInfo);
-      setSelectedChar(charInfo?.characters[0] ?? null);
+    async (serverCharInfo: CharacterSelect) => {
+      if (!gotCharInfo.current) {
+        await GameManager.instance.loadCharacterSelect();
+      }
+      gotCharInfo.current = true;
+      setCharInfo(serverCharInfo);
+      setSelectedChar(serverCharInfo?.characters[0] ?? null);
       if (!splashed) {
         setSplash?.(true);
         setTimeout(() => {
@@ -130,11 +132,17 @@ export const CharacterSelectUIComponent: React.FC = () => {
       charSelectHandler,
     );
 
-    WorldSocket.registerOpCodeHandler<Int>(
+    WorldSocket.registerOpCodeHandler<JWTResponse>(
       OpCodes.JWTResponse,
       JWTResponse,
       (e) => {
-        console.log('JWT Response', e.value);
+        if (!e.status) {
+          alert("Could not login to server");
+          setMode("login");
+          GameManager.instance.dispose();
+          WorldSocket.close();
+        }
+        console.log('JWT Response', e.status);
       },
     );
 
@@ -149,11 +157,7 @@ export const CharacterSelectUIComponent: React.FC = () => {
   }, [charInfo?.characterCount]);
 
   useEffect(() => {
-    if (!gotCharInfo || view === VIEWS.CHAR_CREATE) {
-      GameManager.instance.CharacterSelect?.loadModel({
-        race: 0,
-        charClass: 0,
-      } as CharacterSelectEntry);
+    if (view === VIEWS.CHAR_CREATE) {
       return;
     }
     GameManager.instance.CharacterSelect?.loadModel(
@@ -165,9 +169,9 @@ export const CharacterSelectUIComponent: React.FC = () => {
           level: 1,
         } as CharacterSelectEntry),
     );
-  }, [selectedChar?.name, gotCharInfo, view]); // eslint-disable-line
+  }, [selectedChar?.name, view]); // eslint-disable-line
 
-  return !gotCharInfo ? null : (
+  return !gotCharInfo.current ? null : (
     <Box className="char-select">
       {view === VIEWS.CHAR_SELECT ? (
         <UiWindowComponent

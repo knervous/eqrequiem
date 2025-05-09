@@ -3,11 +3,44 @@ package quest
 import (
 	"fmt"
 	"sync"
+	"time"
+
+	db_zone "github.com/knervous/eqgo/internal/db/zone"
 
 	"github.com/knervous/eqgo/internal/db/items"
 	"github.com/knervous/eqgo/internal/db/jetgen/eqgo/model"
 	entity "github.com/knervous/eqgo/internal/entity"
+	"github.com/knervous/eqgo/internal/session"
 )
+
+// ZoneAccess provides access to ZoneInstance data for quests.
+type ZoneAccess interface {
+	// Zone data
+	GetZone() *model.Zone
+	GetZoneID() int
+	GetInstanceID() int
+
+	// Clients
+	//GetClients() map[int]ClientEntry
+	//GetClientBySessionID(sessionID int) (ClientEntry, bool)
+
+	// NPCs
+	GetNPCs() map[int]*entity.NPC
+	GetNPCByID(npcID int) (*entity.NPC, bool)
+
+	// Spawning
+	GetZonePool() map[int64]*db_zone.SpawnPoolEntry
+	GetSpawnTimers() map[int64]time.Time
+	GetSpawn2ToNpc() map[int64]int
+
+	// Broadcasting
+	BroadcastChannelMessage(senderName, message string, chatChannel int)
+}
+
+// ClientEntry mirrors zone.ClientEntry for quest access.
+type ClientEntry struct {
+	ClientSession *session.Session
+}
 
 type QuestEventType uint16
 
@@ -175,18 +208,23 @@ type QuestEvent struct {
 
 type QuestHandler func(*QuestEvent) bool
 type ZoneQuestInterface struct {
-	mu       sync.RWMutex
-	handlers map[string]map[QuestEventType]QuestHandler
+	ZoneAccess ZoneAccess //
+	Mu         sync.RWMutex
+	Handlers   map[string]map[QuestEventType]QuestHandler
+}
+
+func (z *ZoneQuestInterface) SetZoneAccess(za ZoneAccess) {
+	z.ZoneAccess = za
 }
 
 func (z *ZoneQuestInterface) Register(name string, events ...any) {
-	z.mu.Lock()
-	defer z.mu.Unlock()
-	if z.handlers == nil {
-		z.handlers = make(map[string]map[QuestEventType]QuestHandler)
+	z.Mu.Lock()
+	defer z.Mu.Unlock()
+	if z.Handlers == nil {
+		z.Handlers = make(map[string]map[QuestEventType]QuestHandler)
 	}
-	if z.handlers[name] == nil {
-		z.handlers[name] = make(map[QuestEventType]QuestHandler)
+	if z.Handlers[name] == nil {
+		z.Handlers[name] = make(map[QuestEventType]QuestHandler)
 	}
 	for i := 0; i < len(events); i += 2 {
 		event, ok := events[i].(QuestEventType)
@@ -195,9 +233,9 @@ func (z *ZoneQuestInterface) Register(name string, events ...any) {
 		}
 		switch handler := events[i+1].(type) {
 		case QuestHandler:
-			z.handlers[name][event] = handler
+			z.Handlers[name][event] = handler
 		case func(*QuestEvent) bool:
-			z.handlers[name][event] = QuestHandler(handler)
+			z.Handlers[name][event] = QuestHandler(handler)
 		default:
 			panic(fmt.Sprintf("arg %d is not a valid QuestHandler", i+1))
 		}
@@ -205,31 +243,29 @@ func (z *ZoneQuestInterface) Register(name string, events ...any) {
 }
 
 func (z *ZoneQuestInterface) Unregister(name string, events ...QuestEventType) {
-	z.mu.Lock()
-	defer z.mu.Unlock()
+	z.Mu.Lock()
+	defer z.Mu.Unlock()
 
-	if z.handlers == nil || z.handlers[name] == nil {
+	if z.Handlers == nil || z.Handlers[name] == nil {
 		return
 	}
 
 	if len(events) == 0 {
-		delete(z.handlers, name)
+		delete(z.Handlers, name)
 		return
 	}
 
 	for _, event := range events {
-		delete(z.handlers[name], event)
+		delete(z.Handlers[name], event)
 	}
 
-	if len(z.handlers[name]) == 0 {
-		delete(z.handlers, name)
+	if len(z.Handlers[name]) == 0 {
+		delete(z.Handlers, name)
 	}
 }
 
 func (z *ZoneQuestInterface) Invoke(name string, evt *QuestEvent) bool {
-	// z.mu.RLock()
-	// defer z.mu.RUnlock()
-	if handlers, ok := z.handlers[name]; ok {
+	if handlers, ok := z.Handlers[name]; ok {
 		if handler, ok := handlers[evt.EventType]; ok {
 			return handler(evt)
 		}

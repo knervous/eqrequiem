@@ -6,6 +6,7 @@ require (
 	capnproto.org/go/capnp/v3 v3.1.0-alpha.1
 	github.com/dgraph-io/ristretto/v2 v2.2.0
 	github.com/edsrzf/mmap-go v1.2.0
+	github.com/fsnotify/fsnotify v1.9.0
 	github.com/go-jet/jet/v2 v2.13.0
 	github.com/go-sql-driver/mysql v1.9.2
 	github.com/golang-jwt/jwt/v5 v5.2.2
@@ -17,6 +18,7 @@ require (
 )
 
 // replace capnproto.org/go/capnp/v3 => ../../go-capnp
+
 replace capnproto.org/go/capnp/v3 => github.com/knervous/go-capnp/v3 v3.1.1-knervous1
 
 require (

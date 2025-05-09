@@ -28,10 +28,11 @@ export const useChatInput = () => {
         if (inputValue.trim()) {
           setHistoryStack((prev) => [inputValue, ...prev]);
           setHistoryIndex(-1);
-          if (inputValue.startsWith('/')) {
-            commandHandler.parseCommand(inputValue.slice(1));
+          let cmd = inputValue.trim();
+          if (!inputValue.startsWith('/')) {
+            cmd = `/say ${cmd}`;
           }
-          //chatCommandHandler(inputValue);
+          commandHandler.parseCommand(cmd.slice(1));
           setInputValue("");
           setTimeout(() => inputRef.current?.blur(), 10);
         }
@@ -55,7 +56,7 @@ export const useChatInput = () => {
         }
       }
     },
-    [inputValue, historyStack, historyIndex],
+    [inputValue, historyStack, historyIndex, commandHandler],
   );
 
   return {

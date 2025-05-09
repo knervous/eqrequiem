@@ -44,7 +44,7 @@ export default class GameManager extends Node3D {
   }
   private zoneManager: ZoneManager | null = null;
 
-  public zoneName = "qeynos2";
+
 
   private camera: Camera3D | null = null;
   get Camera(): Camera3D | null {
@@ -89,6 +89,9 @@ export default class GameManager extends Node3D {
 
   public async loadCharacterSelect() {
     this.player?.dispose();
+    if (this.characterSelect) {
+      this.characterSelect.dispose();
+    }
     this.characterSelect = new CharacterSelect(this);
   }
 
@@ -129,7 +132,7 @@ export default class GameManager extends Node3D {
   }
 
   public async instantiatePlayer(
-    player: PlayerProfile = this.lastPlayer,
+    player: Partial<PlayerProfile> = this.lastPlayer,
   ) {
     this.lastPlayer = player;
     if (this.player) {
@@ -162,6 +165,7 @@ export default class GameManager extends Node3D {
     switch (true) {
       case event instanceof InputEventMouseButton: {
         this.player.input(event.button_index);
+        this.zoneManager?.EntityPool?.mouseEvent(event);
         if (event.button_index === MouseButton.MOUSE_BUTTON_RIGHT) {
           DisplayServer.mouse_set_mode(
             event.pressed

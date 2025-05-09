@@ -13,12 +13,23 @@ import { LoaderOptions } from "@game/GLTF/base";
 import { PlayerMovement } from "./player-movement";
 import { PlayerCamera } from "./player-cam";
 import { PlayerProfile } from "@game/Net/internal/api/capnp/player";
+import { Spawn } from "@game/Net/internal/api/capnp/common";
 
 export default class Player extends Actor {
   public playerMovement: PlayerMovement;
   public playerCamera: PlayerCamera;
   public player: PlayerProfile | null = null;
   public isPlayerMoving: boolean = false;
+  public  get Target() {
+    return this.target;
+  }
+  public set Target(target: Spawn | null) {
+    this.target = target;
+    if (target) {
+      this.observers["target"].forEach((obs) => obs(target));
+    }
+  }
+  private target: Spawn | null = null;
 
   static instance: Player | null = null;
 
@@ -38,6 +49,21 @@ export default class Player extends Actor {
     this.playerMovement = new PlayerMovement(this);
     this.playerCamera = new PlayerCamera(this, camera);
     Player.instance = this;
+  }
+
+  private observers: Record<string, ((any) => void)[]> = {};
+
+  public addObserver(name: string, observer: (any) => void) {
+    if (!this.observers[name]) {
+      this.observers[name] = [];
+    }
+    this.observers[name].push(observer);
+  }
+
+  public removeObserver(name: string, observer: (any) => void) {
+    if (this.observers[name]) {
+      this.observers[name] = this.observers[name].filter((obs) => obs !== observer);
+    }
   }
 
   public dispose() {

@@ -7,13 +7,34 @@ import (
 
 	eq "github.com/knervous/eqgo/internal/api/capnp"
 	"github.com/knervous/eqgo/internal/api/opcodes"
+	entity "github.com/knervous/eqgo/internal/entity"
+	"github.com/knervous/eqgo/internal/quest"
 
 	db_character "github.com/knervous/eqgo/internal/db/character"
 	db_zone "github.com/knervous/eqgo/internal/db/zone"
 	"github.com/knervous/eqgo/internal/session"
 )
 
-func HandleRequestClientZoneChange(ses *session.Session, payload []byte) {
+func HandleChannelMessage(z *ZoneInstance, ses *session.Session, payload []byte) {
+	req, err := session.Deserialize(ses, payload, eq.ReadRootChannelMessage)
+	if err != nil {
+		log.Printf("failed to read JWTLogin struct: %v", err)
+		return
+	}
+	targetName, err := req.Targetname()
+	if err != nil {
+		log.Printf("failed to get target name: %v", err)
+		return
+	}
+	//client := z.Clients[ses.SessionID]
+	z.QuestInterface.Invoke(targetName, z.QE().Type(quest.EventSay).SetActor(&entity.Client{
+		Mob: entity.Mob{
+			MobName: ses.CharacterData.Name,
+		},
+	}))
+}
+
+func HandleRequestClientZoneChange(z *ZoneInstance, ses *session.Session, payload []byte) {
 	req, err := session.Deserialize(ses, payload, eq.ReadRootRequestClientZoneChange)
 	if err != nil {
 		log.Printf("failed to read JWTLogin struct: %v", err)
@@ -62,7 +83,7 @@ func HandleRequestClientZoneChange(ses *session.Session, payload []byte) {
 		return
 	}
 	newZone.SetShortName(*dbZone.ShortName)
-	newZone.SetLongName(*&dbZone.LongName)
+	newZone.SetLongName(dbZone.LongName)
 	newZone.SetZoneIdNumber(int32(dbZone.Zoneidnumber))
 	newZone.SetSafeX(float32(dbZone.SafeX))
 	newZone.SetSafeY(float32(dbZone.SafeY))
@@ -91,6 +112,9 @@ func HandleRequestClientZoneChange(ses *session.Session, payload []byte) {
 	}
 
 	ses.SendStream(newZone.Message(), opcodes.NewZone)
+
+	// PlayerProfile
+
 	playerProfile, err := session.NewMessage(ses, eq.NewRootPlayerProfile)
 	if err != nil {
 		log.Printf("failed to create PlayerProfile message: %v", err)
@@ -114,4 +138,29 @@ func HandleRequestClientZoneChange(ses *session.Session, payload []byte) {
 	playerProfile.SetZ(float32(charData.Z))
 	playerProfile.SetHeading(float32(charData.Heading))
 	ses.SendStream(playerProfile.Message(), opcodes.PlayerProfile)
+
+	// Test
+
+	// Zone spawns
+
+	for _, npc := range z.Npcs {
+		spawn, err := session.NewMessage(ses, eq.NewRootSpawn)
+		if err != nil {
+			log.Printf("failed to create Spawn message: %v", err)
+			return
+		}
+		spawn.SetRace(int32(npc.NpcData.Race))
+		spawn.SetCharClass(int32(npc.NpcData.Class))
+		spawn.SetLevel(int32(npc.NpcData.Level))
+		spawn.SetName(npc.Name())
+		spawn.SetSpawnId(int32(npc.ID()))
+		spawn.SetX(int32(npc.X))
+		spawn.SetY(int32(npc.Y))
+		spawn.SetZ(int32(npc.Z))
+		spawn.SetHeading(int32(npc.Heading))
+		ses.SendStream(spawn.Message(), opcodes.ZoneSpawns)
+
+		// TODO fill out rest of struct
+	}
+
 }

@@ -1,5 +1,4 @@
 import { FileSystem } from "@game/FileSystem/filesystem";
-import { BaseGltfModel } from "@game/GLTF/base";
 import type GameManager from "@game/Manager/game-manager";
 import { RegionManager } from "@game/Regions/region-manager";
 import { Node3D } from "godot";
@@ -7,6 +6,8 @@ import ZoneObjects from "./object-pool";
 import LightManager from "@game/Lights/light-manager";
 import DayNightSkyManager from "@game/Sky/sky-manager";
 import ZoneMesh from "./zone-geometry";
+import { Spawns } from "@game/Net/internal/api/capnp/common";
+import EntityPool from "./entity-pool";
 
 
 export class ZoneManager {
@@ -29,6 +30,11 @@ export class ZoneManager {
     return this.zoneContainer;
   }
   private zoneContainer: Node3D | null = null;
+
+  get EntityPool(): EntityPool | null {
+    return this.entityPool;
+  }
+  private entityPool: EntityPool | null = null;
   private zoneObjects: ZoneObjects | null = null;
   private usePhysics: boolean = true;
   public zoneName = "qeynos2";
@@ -67,9 +73,18 @@ export class ZoneManager {
     this.zoneContainer.set_name(zoneName);
     this.parent.add_child(this.zoneContainer);
     this.usePhysics = usePhysics;
+    this.entityPool = new EntityPool(this.zoneContainer);
+    this.entityPool?.Load();
     this.instantiateZone();
   }
 
+  public async loadSpawns(spawns: Spawns) {
+    console.log('Got spawns', spawns);
+    if (!this.zoneContainer) {
+      return;
+    }
+    
+  }
   public async instantiateZone() {
     console.log('Inst zone');
     if (!this.zoneContainer) {
@@ -100,6 +115,7 @@ export class ZoneManager {
         console.log('Current zone', this.CurrentZone);
         this.regionManager.instantiateRegions(metadata.regions, this.CurrentZone?.zonePoints);
         this.zoneObjects = new ZoneObjects(this.zoneContainer, metadata.objects, this.usePhysics);
+
         this.zoneObjects.Load().catch((e) => {
           console.log("Failed to load zone objects", e);
         });

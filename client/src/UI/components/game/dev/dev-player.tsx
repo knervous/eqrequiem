@@ -56,37 +56,8 @@ export const DevPlayer: React.FC = () => {
         color: 'white !important',
       },
     }}>
-
-      {/* Collision and Gravity Checkboxes */}
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-        <FormControlLabel
-          control={
-            <Checkbox
-              checked={collisionEnabled}
-              onChange={handleCollisionChange}
-              color="primary"
-            />
-          }
-          label="Enable Collision"
-        />
-        <FormControlLabel
-          control={
-            <Checkbox
-              checked={gravityEnabled}
-              onChange={handleGravityChange}
-              color="primary"
-            />
-          }
-          label="Enable Gravity"
-        />
-      </Box>
-      
-      <Typography gutterBottom>
-        {playerData?.player.name} - Level {playerData?.player.level}
-      </Typography>
-      
       {/* Speed Input */}
-      <Box sx={{ mb: 2, mt: 4 }}>
+      <Box sx={{ mb: 2, mt: 0 }}>
         <TextField
           label="Move Speed"
           type="number"
@@ -98,6 +69,34 @@ export const DevPlayer: React.FC = () => {
           inputProps={{ min: 0, step: 1 }}
         />
       </Box>
+      {/* Collision and Gravity Checkboxes */}
+      <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1 }}>
+        <FormControlLabel
+          control={
+            <Checkbox
+              size='small'
+
+              checked={collisionEnabled}
+              onChange={handleCollisionChange}
+              color="primary"
+            />
+          }
+          label="Collision"
+        />
+        <FormControlLabel
+        
+          control={
+            <Checkbox
+              size='small'
+              checked={gravityEnabled}
+              onChange={handleGravityChange}
+              color="primary"
+            />
+          }
+          label="Gravity"
+        />
+      </Box>
+
     
       {/* Animation Selector and Play Button */}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>

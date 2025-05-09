@@ -84,6 +84,9 @@ export const {
   AABB,
   BoxMesh,
   is_instance_valid,
+  PhysicsRayQueryParameters3D,
+  Basis,
+  Transform3D,
 } = godot;
 
 export default godot;

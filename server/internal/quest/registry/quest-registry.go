@@ -21,6 +21,14 @@ var (
 	}
 )
 
+func IsDev() bool {
+	return false
+}
+
+func RegisterReload(zoneName string, callback func(*quest.ZoneQuestInterface)) {
+
+}
+
 // GetQuestInterface returns the cached or newly constructed quest data for a zone
 func GetQuestInterface(zoneName string) *quest.ZoneQuestInterface {
 	mu.RLock()

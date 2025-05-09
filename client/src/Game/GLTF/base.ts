@@ -107,12 +107,12 @@ export class BaseGltfModel {
   }
 
   public dispose() {
-    if (is_instance_valid(this.node)) {
-      this.node?.queue_free();
-    }
-    if (is_instance_valid(this.gltfNode)) {
-      this.gltfNode?.queue_free();
-    }
+    // if (is_instance_valid(this.node)) {
+    this.node?.queue_free();
+    // }
+    // if (is_instance_valid(this.gltfNode)) {
+    this.gltfNode?.queue_free();
+    // }
     this.animationIntervals.forEach(clearInterval);
   }
 
@@ -226,10 +226,7 @@ export class BaseGltfModel {
       secondaryRootNode.queue_free();
       return;
     }
-    console.log(
-      "Primary skeleton found:",
-      primarySkeleton.get_path().get_concatenated_names(),
-    );
+
     const meshes = secondaryRootNode.getNodesOfType(MeshInstance3D);
     if (meshes.length === 0) {
       console.log("No MeshInstance3D nodes found in secondary model");
@@ -251,7 +248,7 @@ export class BaseGltfModel {
       `${this.model.toLowerCase()}.glb`,
     );
     if (!buffer) {
-      console.log("Buffer not found!");
+      console.warn("Buffer not found!");
       return;
     }
 
@@ -517,7 +514,7 @@ export class BaseGltfModel {
           material.uv1_scale = new Vector3(1, -1, 1);
         }
       } else {
-        console.log(
+        console.warn(
           "Material is not a StandardMaterial3D or missing texture. Skipping texture swap.",
           material.resource_name,
         );
@@ -531,15 +528,15 @@ export class BaseGltfModel {
     await this.instantiate();
     const ps = new PackedScene();
     if (!this.gltfNode) {
-      console.log("No gltfNode to pack");
+      //console.log("No gltfNode to pack");
       return;
     }
     // Verify AnimationPlayer presence
     const animationPlayer = this.gltfNode.getNodesOfType(AnimationPlayer)[0];
     if (!animationPlayer) {
-      console.log("Warning: No AnimationPlayer found in gltfNode before packing");
+    //  console.log("Warning: No AnimationPlayer found in gltfNode before packing");
     } else {
-      console.log("AnimationPlayer present in gltfNode:",  animationPlayer.get_path().get_concatenated_names());
+      //console.log("AnimationPlayer present in gltfNode:",  animationPlayer.get_path().get_concatenated_names());
       this.animationPlayer = animationPlayer;
 
     }

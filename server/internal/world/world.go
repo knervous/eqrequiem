@@ -49,6 +49,15 @@ func (wh *WorldHandler) HandlePacket(session *session.Session, data []byte) {
 // RemoveSession cleans up session data.
 func (wh *WorldHandler) RemoveSession(sessionID int) {
 	wh.sessionManager.RemoveSession(sessionID)
+	ses, ok := wh.sessionManager.GetSession(sessionID)
+	if ok && ses != nil && ses.ZoneID != -1 {
+		zoneInstance, ok := wh.zoneManager.Get(ses.ZoneID, ses.InstanceID)
+		if ok {
+			zoneInstance.RemoveClient(sessionID)
+		}
+		return
+	}
+
 }
 
 type zoneKey struct {
@@ -66,6 +75,14 @@ func NewZoneManager() *ZoneManager {
 	return &ZoneManager{
 		zones: make(map[zoneKey]*zone.ZoneInstance),
 	}
+}
+
+func (m *ZoneManager) Get(zoneID, instanceID int) (*zone.ZoneInstance, bool) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	key := zoneKey{ZoneID: zoneID, InstanceID: instanceID}
+	inst, ok := m.zones[key]
+	return inst, ok
 }
 
 // GetOrCreate retrieves or creates a zone instance.

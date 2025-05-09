@@ -13,7 +13,7 @@ type ClientMessage struct {
 }
 
 // DatagramHandler defines the signature for handling datagrams.
-type DatagramHandler func(clientSession *session.Session, payload []byte)
+type DatagramHandler func(z *ZoneInstance, clientSession *session.Session, payload []byte)
 
 // HandlerRegistry holds the handler mappings and dependencies.
 type HandlerRegistry struct {
@@ -24,6 +24,7 @@ type HandlerRegistry struct {
 func NewZoneOpCodeRegistry(zoneID int) *HandlerRegistry {
 	handlers := map[opcodes.OpCode]DatagramHandler{
 		opcodes.RequestClientZoneChange: HandleRequestClientZoneChange,
+		opcodes.ChannelMessage:          HandleChannelMessage,
 	}
 
 	registry := &HandlerRegistry{
@@ -34,7 +35,7 @@ func NewZoneOpCodeRegistry(zoneID int) *HandlerRegistry {
 	return registry
 }
 
-func (r *HandlerRegistry) HandleZonePacket(session *session.Session, data []byte) {
+func (r *HandlerRegistry) HandleZonePacket(z *ZoneInstance, session *session.Session, data []byte) {
 	if len(data) < 2 {
 		log.Printf("invalid datagram length %d from session %d", len(data), session.SessionID)
 		return
@@ -42,7 +43,7 @@ func (r *HandlerRegistry) HandleZonePacket(session *session.Session, data []byte
 	op := binary.LittleEndian.Uint16(data[:2])
 	payload := data[2:]
 	if h, ok := r.handlers[(opcodes.OpCode)(op)]; ok {
-		h(session, payload)
+		h(z, session, payload)
 	} else {
 		log.Printf("no handler for opcode %d from session %d", op, session.SessionID)
 	}

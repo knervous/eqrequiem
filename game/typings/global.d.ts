@@ -5,10 +5,19 @@ declare module "godot" {
     interface Vector3 {
       subtract(other: Vector3): Vector3;
       add(other: Vector3): Vector3;
+      addNoMutate(other: Vector3): Vector3;
       multiplyScalar(scalar: number): Vector3;
+      xform(other: Vector3): Vector3;
       set(x: number, y: number, z: number): Vector3;
       normalized(): Vector3;
       negated(): Vector3;
+    }
+    interface Transform3D {
+      xform(other: Vector3): Vector3;
+      affine_inverse(): Transform3D;
+    }
+    interface Basis {
+      xform(other: Vector3): Vector3;
     }
 
     interface GDictionary {

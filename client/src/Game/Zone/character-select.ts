@@ -8,22 +8,22 @@ import { ZoneManager } from "./zone-manager";
 import { CharacterSelectEntry } from "@game/Net/internal/api/capnp/player";
 
 const CLASS_DATA_ENUM = {
-  "Warrior": 1,
-  "Cleric": 2,
-  "Paladin": 3,
-  "Ranger": 4,
-  "Shadowknight": 5,
-  "Druid": 6,
-  "Monk": 7,
-  "Bard": 8,
-  "Rogue": 9,
-  "Shaman": 10,
-  "Necromancer": 11,
-  "Wizard": 12,
-  "Mage": 13,
-  "Enchanter": 14,
-  "Beastlord": 15,
-  "Berserker": 16,
+  Warrior: 1,
+  Cleric: 2,
+  Paladin: 3,
+  Ranger: 4,
+  Shadowknight: 5,
+  Druid: 6,
+  Monk: 7,
+  Bard: 8,
+  Rogue: 9,
+  Shaman: 10,
+  Necromancer: 11,
+  Wizard: 12,
+  Mage: 13,
+  Enchanter: 14,
+  Beastlord: 15,
+  Berserker: 16,
 };
 
 export default class CharacterSelect {
@@ -67,16 +67,16 @@ export default class CharacterSelect {
 
   private async initialize() {
     this.zoneManager = new ZoneManager(this.gameManager);
-    this.zoneManager?.loadZone('load2', false);
-    this.worldTickInterval = setInterval(() => { 
+    this.zoneManager?.loadZone("load2", false);
+    this.worldTickInterval = setInterval(() => {
       this.zoneManager?.SkyManager?.worldTick?.();
     }, 500);
   }
 
   public dispose() {
+    console.log('Disposing character select');
     if (this.character) {
       this.character?.dispose();
-
     }
     if (this.zoneManager) {
       this.zoneManager.dispose();
@@ -125,19 +125,19 @@ export default class CharacterSelect {
             console.warn("Head mesh not found, using primary node for faceCam");
           }
           // Position camera to the right of the head (90 degrees from forward)
-          this.cameraPosition = node.global_position
-            .add(new Vector3(-5, 3, 0)); // Move to the right of the head
+          this.cameraPosition = node.global_position.add(new Vector3(-5, 3, 0)); // Move to the right of the head
 
           if (this.camera !== null) {
             this.camera.position = this.cameraPosition;
             // Look at the head's position with a slight offset for framing
-            this.camera.look_at(node.global_position.add(this.lookatOffset), Vector3.UP);
+            this.camera.look_at(
+              node.global_position.add(this.lookatOffset),
+              Vector3.UP,
+            );
           }
         } else {
           this.updateCameraPosition(node);
-
         }
-
       } catch (e) {
         this.dispose();
         console.error("Error in orbiting:", e);
@@ -145,16 +145,16 @@ export default class CharacterSelect {
     }, interval);
   }
 
-
   public async loadModel(player: CharacterSelectEntry | null) {
     if (this.character) {
+      console.log("Disposing character", this.character);
       this.character.dispose();
     }
     if (player?.charClass === 0 || player?.race === 0) {
       player.race = 1;
       player.charClass = 1;
     }
-    console.log('Loading model', player);
+    console.log("Loading model", player);
     const race = player?.race ?? 1;
     const raceDataEntry = RACE_DATA[race];
     const model = raceDataEntry[player?.gender ?? 0] || raceDataEntry[2];
@@ -164,11 +164,20 @@ export default class CharacterSelect {
     if (rootNode && player) {
       this.character.Load("");
       this.gameManager.add_child(rootNode);
-      const location = this.locations[player?.charClass ?? CLASS_DATA_ENUM.Shaman];
-      rootNode.global_position = new Vector3(location.x, location.y + 3, location.z);
-      console.log('PLAYER', player);
-      this.character.setNameplate(player.name ? `${player.name} - Level ${player.level} ${CLASS_DATA_NAMES[player.charClass]}\n ${zoneData.find((z) => z.zone === player?.zone)?.longName ?? 'Unknown Zone'}` : 'Soandso');
-      
+      const location =
+        this.locations[player?.charClass ?? CLASS_DATA_ENUM.Shaman];
+      rootNode.global_position = new Vector3(
+        location.x,
+        location.y + 3,
+        location.z,
+      );
+      console.log("PLAYER", player);
+      this.character.setNameplate(
+        player.name
+          ? `${player.name} - Level ${player.level} ${CLASS_DATA_NAMES[player.charClass]}\n ${zoneData.find((z) => z.zone === player?.zone)?.longName ?? "Unknown Zone"}`
+          : "Soandso",
+      );
+
       this.character.swapFace(player?.face ?? 0);
       // Add OmniLight3D for character illumination, positioned 1 meter in front
       const light = new OmniLight3D();
@@ -179,7 +188,9 @@ export default class CharacterSelect {
       light.shadow_enabled = true; // Enable soft shadows
 
       // Calculate position: 1 meter in front (negative Z basis) and 2 meters above
-      const forwardDirection = rootNode.global_transform.basis.z.normalized().multiplyScalar(-1); // Forward is -Z
+      const forwardDirection = rootNode.global_transform.basis.z
+        .normalized()
+        .multiplyScalar(-1); // Forward is -Z
       const lightDistance = 3; // 1 meter in front
       const lightHeight = 2; // 2 meters above character
       light.position = new Vector3(

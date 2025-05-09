@@ -1,4 +1,4 @@
-import { JSON as GJSON, GDictionary, Vector3, Node3D, Node, PackedStringArray, GArray, Color, PackedColorArray } from "godot";
+import { JSON as GJSON, GDictionary, Vector3, Node3D, Node, PackedStringArray, GArray, Color, PackedColorArray, Transform3D, Basis } from "godot";
 type V3 = {
     x: number;
     y: number;
@@ -69,11 +69,40 @@ Vector3.prototype.add = function(other: Vector3): Vector3 {
   return this;
 };
 
+Vector3.prototype.addNoMutate = function(other: Vector3): Vector3 {
+  return new Vector3(this.x + other.x, this.y + other.y, this.z + other.z);
+};
+
 Vector3.prototype.multiplyScalar = function(scalar: number): Vector3 {
   this.x *= scalar;
   this.y *= scalar;
   this.z *= scalar;
   return this;
+};
+
+export function xform(transform: Transform3D | Basis, point: Vector3): Vector3 {
+  // Handle both Transform3D and Basis
+  const basis: Basis = transform instanceof Basis ? transform : transform.basis;
+  const origin: Vector3 = transform instanceof Transform3D ? transform.origin : new Vector3(0, 0, 0);
+
+  // Apply basis transformation
+  const x = basis.x.dot(point);
+  const y = basis.y.dot(point);
+  const z = basis.z.dot(point);
+
+  // Combine with translation
+  return new Vector3(
+    x + origin.x,
+    y + origin.y,
+    z + origin.z,
+  );
+}
+Transform3D.prototype.xform = function (point: Vector3): Vector3 {
+  return xform(this, point);
+};
+
+Basis.prototype.xform = function (point: Vector3): Vector3 {
+  return xform(this, point);
 };
 
 Vector3.prototype.negated = function(): Vector3 {

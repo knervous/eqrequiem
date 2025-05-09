@@ -73,8 +73,7 @@ struct TintProfile {
 }
 
 struct Spawns {
-  spawnCount @0 :Int32;
-  spawns @1 :Spawn;
+  spawns @0 :List(Spawn);
 }
 
 struct Spawn {

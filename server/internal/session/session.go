@@ -6,8 +6,15 @@ import (
 	"sync"
 
 	capnp "capnproto.org/go/capnp/v3"
+	"github.com/knervous/eqgo/internal/api/opcodes"
 	"github.com/knervous/eqgo/internal/db/jetgen/eqgo/model"
 )
+
+type pendingMsg struct {
+	ctor    func(*capnp.Segment) (capnp.Struct, error)
+	opcode  uint16
+	builder func(capnp.Struct) error
+}
 
 type ClientMessenger interface {
 	SendDatagram(sessionID int, data []byte) error
@@ -27,12 +34,18 @@ type Session struct {
 	CharacterData *model.CharacterData
 
 	// Private
-	messageBuffer *capnp.Message
-	arena         capnp.Arena
-	segmentBuf    []byte          // Pre-allocated buffer for message and serialization
-	packBuf       []byte          // Pre-allocated buffer for packing/unpacking messages
-	messenger     ClientMessenger // For sending replies
 
+	writeMessageBuffer *capnp.Message
+	readMessageBuffer  *capnp.Message
+	arena              capnp.Arena
+	writeBuffer        []byte          // Pre-allocated buffer for message and serialization
+	readBuffer         []byte          // Pre-allocated buffer for message and serialization
+	packBuf            []byte          // Pre-allocated buffer for packing/unpacking messages
+	messenger          ClientMessenger // For sending replies
+	sendMu             sync.Mutex
+	messageMu          sync.Mutex
+	closed             bool
+	closedMu           sync.RWMutex
 }
 
 // SessionManager manages active sessions.
@@ -69,21 +82,25 @@ func (sm *SessionManager) CreateSession(messenger ClientMessenger, sessionID int
 	sm.mu.Lock()
 	defer sm.mu.Unlock()
 	const initialSegCap = 8 * 1024
-	segmentBuf := make([]byte, initialSegCap)
+	writeBuf := make([]byte, initialSegCap)
+	readBuf := make([]byte, initialSegCap)
 	packBuf := make([]byte, 0, initialSegCap)
 	msg, seg := capnp.NewSingleSegmentMessage(nil)
+	readMsg, _ := capnp.NewSingleSegmentMessage(nil)
 
 	session := &Session{
-		SessionID:     sessionID,
-		Authenticated: false,
-		ZoneID:        1,
-		IP:            ip,
-		RootSeg:       seg,
-		arena:         msg.Arena,
-		segmentBuf:    segmentBuf,
-		messageBuffer: msg,
-		messenger:     messenger,
-		packBuf:       packBuf,
+		SessionID:          sessionID,
+		Authenticated:      false,
+		ZoneID:             -1,
+		IP:                 ip,
+		RootSeg:            seg,
+		arena:              msg.Arena,
+		writeBuffer:        writeBuf,
+		readBuffer:         readBuf,
+		writeMessageBuffer: msg,
+		readMessageBuffer:  readMsg,
+		messenger:          messenger,
+		packBuf:            packBuf,
 	}
 	sm.sessions[sessionID] = session
 	return session
@@ -94,7 +111,9 @@ func NewMessage[T any](
 	s *Session,
 	ctor func(*capnp.Segment) (T, error),
 ) (T, error) {
-	newSeg, err := s.messageBuffer.Reset(s.arena)
+	s.messageMu.Lock()
+	defer s.messageMu.Unlock()
+	newSeg, err := s.writeMessageBuffer.Reset(s.arena)
 	if err != nil {
 		var zero T
 		return zero, fmt.Errorf("new message: %w", err)
@@ -104,10 +123,10 @@ func NewMessage[T any](
 }
 
 func (s *Session) ReadMessageZero(data []byte) error {
-	if err := capnp.UnmarshalZeroTo(s.messageBuffer, &s.segmentBuf, data); err != nil {
+	if err := capnp.UnmarshalZeroTo(s.readMessageBuffer, &s.readBuffer, data); err != nil {
 		return err
 	}
-	seg, err := s.messageBuffer.Segment(0)
+	seg, err := s.readMessageBuffer.Segment(0)
 	if err != nil {
 		return err
 	}
@@ -116,10 +135,10 @@ func (s *Session) ReadMessageZero(data []byte) error {
 }
 
 func (s *Session) ReadMessagePackedZero(data []byte) error {
-	if err := capnp.UnmarshalPackedZeroTo(s.messageBuffer, &s.segmentBuf, &s.packBuf, data); err != nil {
+	if err := capnp.UnmarshalPackedZeroTo(s.writeMessageBuffer, &s.writeBuffer, &s.packBuf, data); err != nil {
 		return err
 	}
-	seg, err := s.messageBuffer.Segment(0)
+	seg, err := s.writeMessageBuffer.Segment(0)
 	if err != nil {
 		return err
 	}
@@ -133,28 +152,22 @@ func Deserialize[T any](ses *Session, data []byte, get func(*capnp.Message) (T, 
 		var zero T
 		return zero, err
 	}
-	return get(ses.messageBuffer)
+	return get(ses.readMessageBuffer)
 }
 
 func (s *Session) Close() {
-	// 1) Release the Cap’n Proto Message/Arena
-	//    This returns any underlying segment buffers to the bufferpool.
-	s.messageBuffer.Release()
+	s.closedMu.Lock()
+	s.closed = true
+	s.closedMu.Unlock()
 
-	// 2) (Optional) zero out or drop references for GC
+	s.writeMessageBuffer.Release()
 	s.RootSeg = nil
 	s.arena = nil
-	// slice buffers (segmentBuf, packBuf) can just be discarded or
-	// kept around if you plan to re-open the session.
-	s.segmentBuf = nil
+	s.writeBuffer = nil
 	s.packBuf = nil
-
-	// 3) If your messenger holds a connection you should close it:
 	if closer, ok := s.messenger.(io.Closer); ok {
 		_ = closer.Close()
 	}
-
-	// 4) Any other per‐session cleanup here…
 }
 
 // GetSession retrieves a session by sessionID.
@@ -184,4 +197,34 @@ func (sm *SessionManager) UpdateZone(sessionID int, zoneID int) {
 	if session, ok := sm.sessions[sessionID]; ok {
 		session.ZoneID = zoneID
 	}
+}
+
+type capnpMessage interface {
+	Message() *capnp.Message
+}
+
+func QueueMessage[T capnpMessage](
+	s *Session,
+	ctor func(*capnp.Segment) (T, error),
+	opcode opcodes.OpCode,
+	build func(T) error,
+) error {
+	s.closedMu.RLock()
+	if s.closed {
+		s.closedMu.RUnlock()
+		return fmt.Errorf("session %d is closed", s.SessionID)
+	}
+	s.closedMu.RUnlock()
+
+	s.sendMu.Lock()
+	defer s.sendMu.Unlock()
+
+	obj, err := NewMessage(s, ctor)
+	if err != nil {
+		return fmt.Errorf("new message: %w", err)
+	}
+	if err := build(obj); err != nil {
+		return fmt.Errorf("build message: %w", err)
+	}
+	return s.SendStreamNoLock(obj.Message(), opcode)
 }

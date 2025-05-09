@@ -10,43 +10,75 @@ import (
 )
 
 func (s *Session) SendData(
-	message *capnp.Message,
+	msg *capnp.Message,
 	opcode opcodes.OpCode,
 ) error {
-	payload := s.segmentBuf[2:]
+	s.sendMu.Lock()
+	defer s.sendMu.Unlock()
+	payload := s.writeBuffer[2:]
 
-	n, err := capnpext.MarshalTo(message, payload)
+	n, err := capnpext.MarshalTo(msg, payload)
 	if err == capnpext.ErrBufferTooSmall {
 		newCap := 2 + n
-		s.segmentBuf = make([]byte, newCap)
-		payload = s.segmentBuf[2:]
-		n, err = capnpext.MarshalTo(message, payload)
+		s.writeBuffer = make([]byte, newCap)
+		payload = s.writeBuffer[2:]
+		n, err = capnpext.MarshalTo(msg, payload)
 	}
 	if err != nil {
 		return fmt.Errorf("SendData: %w", err)
 	}
 
 	totalLen := 2 + n
-	binary.LittleEndian.PutUint16(s.segmentBuf[:2], uint16(opcode))
-	return s.messenger.SendDatagram(s.SessionID, s.segmentBuf[:totalLen])
+	binary.LittleEndian.PutUint16(s.writeBuffer[:2], uint16(opcode))
+	return s.messenger.SendDatagram(s.SessionID, s.writeBuffer[:totalLen])
 }
 
 func (s *Session) SendStream(
-	message *capnp.Message,
+	msg *capnp.Message,
+	opcode opcodes.OpCode,
+) error {
+	s.sendMu.Lock()
+	defer s.sendMu.Unlock()
+	const headerSize = 6
+
+	buf := s.writeBuffer[:cap(s.writeBuffer)]
+	payload := buf[headerSize:]
+
+	n, err := capnpext.MarshalTo(msg, payload)
+	if err == capnpext.ErrBufferTooSmall {
+		newCap := headerSize + n
+		s.writeBuffer = make([]byte, newCap)
+		buf = s.writeBuffer
+		payload = buf[headerSize:]
+		n, err = capnpext.MarshalTo(msg, payload)
+	}
+	if err != nil {
+		return fmt.Errorf("SendStream: %w", err)
+	}
+
+	totalLen := headerSize + n
+	binary.LittleEndian.PutUint32(buf[0:4], uint32(2+n))
+	binary.LittleEndian.PutUint16(buf[4:6], uint16(opcode))
+
+	return s.messenger.SendStream(s.SessionID, buf[:totalLen])
+}
+
+func (s *Session) SendStreamNoLock(
+	msg *capnp.Message,
 	opcode opcodes.OpCode,
 ) error {
 	const headerSize = 6
 
-	buf := s.segmentBuf[:cap(s.segmentBuf)]
+	buf := s.writeBuffer[:cap(s.writeBuffer)]
 	payload := buf[headerSize:]
 
-	n, err := capnpext.MarshalTo(message, payload)
+	n, err := capnpext.MarshalTo(msg, payload)
 	if err == capnpext.ErrBufferTooSmall {
 		newCap := headerSize + n
-		s.segmentBuf = make([]byte, newCap)
-		buf = s.segmentBuf
+		s.writeBuffer = make([]byte, newCap)
+		buf = s.writeBuffer
 		payload = buf[headerSize:]
-		n, err = capnpext.MarshalTo(message, payload)
+		n, err = capnpext.MarshalTo(msg, payload)
 	}
 	if err != nil {
 		return fmt.Errorf("SendStream: %w", err)
