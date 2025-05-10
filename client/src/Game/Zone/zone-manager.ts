@@ -137,6 +137,7 @@ export class ZoneManager {
     }
     this.lightManager.tick(delta);
     this.skyManager.tick(delta);
+    this.entityPool?.process(delta);
 
   }
 }

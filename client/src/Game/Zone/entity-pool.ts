@@ -14,6 +14,7 @@ import {
   StaticBody3D,
   GArray,
   GDictionary,
+  GeometryInstance3D,
 } from "godot";
 import ObjectMesh from "@game/Object/object-geometry";
 import { Spawn } from "@game/Net/internal/api/capnp/common";
@@ -28,7 +29,7 @@ export default class EntityPool {
   entityObjectContainer: Node3D | null = null;
   loadedPromise: Promise<void> | null = null;
   loadedPromiseResolve: () => void = () => {};
-
+  private spawnQueue: Spawn[] = [];
   constructor(parent: Node3D) {
     this.parent = parent;
     this.loadedPromise = new Promise((res) => {
@@ -56,17 +57,17 @@ export default class EntityPool {
       console.log("Error loading objects", e);
     }
   }
-
-  async AddSpawn(spawn: Spawn) {
-    console.log('Want to add spawn');
-    if (!this.entityObjectContainer) {
-      await this.loadedPromise;
-    }
-    if (!this.entityObjectContainer) {
-      console.error("Entity object container is null");
+  accumulatedDelta: number = 0;
+  async process(delta: number) {
+    this.accumulatedDelta += delta;
+    if (this.accumulatedDelta < 0.1) {
       return;
     }
-    console.log('Adding spawn' + spawn.spawnId);
+    this.accumulatedDelta = 0;
+    const spawn = this.spawnQueue.shift();
+    if (!spawn) {
+      return;
+    }
 
     this.entities[spawn.spawnId] = spawn;
   
@@ -95,9 +96,15 @@ export default class EntityPool {
     staticBody.collision_mask = 1 << 0; // Sees layer 1 (world)
     staticBody.add_child(instance);
     staticBody.add_child(shape);
-  
+    instance.visibility_range_end = 500; // Cull beyond this distance
+    instance.visibility_range_end_margin = 25.0; // Optional: buffer for smoother culling
+    // Optional: Add fade-out effect
+    instance.visibility_range_fade_mode =
+      GeometryInstance3D.VisibilityRangeFadeMode.VISIBILITY_RANGE_FADE_SELF;
+    instance.visibility_range_begin = 25.0; // Start fading 10m before end
+    instance.visibility_range_begin_margin = 20.0; // Start fading 10m before end
     
-    this.entityObjectContainer.add_child(staticBody);
+    this.entityObjectContainer?.add_child(staticBody);
     
   
     staticBody.global_position = new Vector3(-spawn.y, spawn.z, spawn.x);
@@ -109,6 +116,19 @@ export default class EntityPool {
     nameplate.modulate = new Color(0.5, 0.5, 1, 1);
     nameplate.text = spawn.name;
     instance.add_child(nameplate);
+  }
+
+  async AddSpawn(spawn: Spawn) {
+    console.log('Want to add spawn');
+    if (!this.entityObjectContainer) {
+      await this.loadedPromise;
+    }
+    if (!this.entityObjectContainer) {
+      console.error("Entity object container is null");
+      return;
+    }
+    this.spawnQueue.push(spawn);
+   
   }
   mouseEvent(event: InputEvent) {
     if (

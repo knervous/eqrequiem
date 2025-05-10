@@ -1,6 +1,7 @@
 import { Animation, Callable, Label3D, Vector3, Color } from "godot";
 import { BaseGltfModel, LoaderOptions } from "../GLTF/base";
 import { AnimationDefinitions } from "../Animation/animation-constants";
+import { Spawn } from "@game/Net/internal/api/capnp/common";
 
 
 const prefixes = {
@@ -19,9 +20,13 @@ export default class Actor extends BaseGltfModel {
   public animations: string[] = [];
   public currentAnimation: string = ""; 
   public currentPlayToEnd: boolean = false;
+  public data: Spawn | null = null;
   static actorOptions: Partial<LoaderOptions> = {
     flipTextureY: true,
     shadow: false, 
+    cullRange: 250,
+    doCull: true,
+    useCapsulePhysics: true,
   };
 
   // Nameplate node (a Label3D) and its backing string.
@@ -112,9 +117,30 @@ export default class Actor extends BaseGltfModel {
   public playIdle() {
     this.playAnimation(AnimationDefinitions.Idle2);
   }
-  public Load(name: string) {
+  public Load() {
     this.animations =
       this.animationPlayer?.get_animation_list().toArray() ?? [];
     this.playIdle();
+    
+  }
+  
+
+  public setPosition(position: Vector3) {
+    const node = this.getNode();
+    if (node) {
+      node.global_position = position;
+    }
+  }
+  public setRotation(rotation: Vector3) {
+    const node = this.getNode();
+    if (node) {
+      node.rotation_degrees = rotation;
+    }
+  }
+  public setScale(scale: Vector3) {
+    const node = this.getNode();
+    if (node) {
+      node.scale = scale;
+    }
   }
 }

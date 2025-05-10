@@ -315,6 +315,16 @@ export const LoginWindowComponent: React.FC = () => {
           <Button
             variant="contained"
             onClick={async () => {
+
+              // First do global
+              console.log('Processing global');
+              const globalCharFiles = ["global_chr.s3d", "global3_chr.s3d", "global4_chr.s3d"];
+              await godotBindings.processFiles('global_chr', globalCharFiles);
+
+              // Items
+              console.log('Processing items');
+              const itemFiles = ["gequip.s3d", "gequip2.s3d"];
+              await godotBindings.processFiles('gequip', itemFiles);
               for (const zone of Object.values(supportedZones)) {
                 const name = zone.shortName;
                 const associatedFiles: string[] = [];

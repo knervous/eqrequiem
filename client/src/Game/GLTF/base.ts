@@ -189,12 +189,12 @@ export class BaseGltfModel {
       this.LoaderOptions.secondaryMeshIndex ?? 0
     )
       .toString()
-      .padStart(2, "0")}.glb`;
-    console.log("Loading secondary mesh from", path);
+      .padStart(2, "0")}.glb`.toLowerCase();
+    console.log("Loading secondary mesh from", path, fileName);
 
     const buffer = await FileSystem.getFileBytes(path, fileName);
     if (!buffer) {
-      console.log("Failed to load buffer for", path);
+      console.log("Failed to load buffer for", path, fileName);
       return;
     }
 
@@ -305,7 +305,6 @@ export class BaseGltfModel {
           }
           collisionShape.shape = capsule;
           this.node.add_child(collisionShape);
-          this.node.set_physics_process(true);
         }
         this.setupAnimations(rootNode);
         // rootNode.getNodesOfType(MeshInstance3D).forEach((mesh) => {
@@ -378,6 +377,28 @@ export class BaseGltfModel {
     if (animatedMaterials.length) {
       this.animateTextures(animatedMaterials);
     }
+  }
+
+  public attachToExistingNode(node: Node3D): void {
+    // Set the root node
+    this.node = node;
+
+    // Assume the first child of `node` is the GLTF visual root
+    const gltfChild = node.get_child(0);
+    if (gltfChild instanceof Node3D) {
+      this.gltfNode = gltfChild;
+    }
+
+    // Re-apply visibility culling on all MeshInstance3D children
+    if (this.gltfNode) {
+      this.applyVisibilityRange(this.gltfNode);
+    }
+
+    // Re-setup animations so playIdle, etc. work
+    this.setupAnimations(this.gltfNode ?? node, true);
+
+    // (Optional) if you had a nameplate or other UI-subnodes, reattach or recreate
+    // e.g., this.setNameplate(currentNameplateText);
   }
 
   private async animateTextures(
@@ -524,6 +545,21 @@ export class BaseGltfModel {
     }
   }
 
+  public async createPackedCharacterScene(): Promise<PackedScene | undefined> {
+    await this.instantiate();
+    const ps = new PackedScene();
+    if (!this.node) {
+      return;
+    }
+    // Verify AnimationPlayer presence
+    const animationPlayer = this.node.getNodesOfType(AnimationPlayer)[0];
+    this.animationPlayer = animationPlayer;
+
+    ps.pack(this.node);
+    this.packedScene = ps;
+    return ps;
+  }
+
   public async createPackedScene(): Promise<PackedScene | undefined> {
     await this.instantiate();
     const ps = new PackedScene();
@@ -545,6 +581,19 @@ export class BaseGltfModel {
     return ps;
   }
 
+  public instancePackedActorScene(rootNode: Node3D): Node | undefined {
+    if (this.packedScene) {
+      const instance = this.packedScene.instantiate().get_child(0) as Node3D;
+
+      rootNode.add_child(instance);
+
+      // this.setupAnimations(instance, true);
+      return instance;
+    } else {
+      console.log("PackedScene not available. Call createPackedScene() first.");
+      return undefined;
+    }
+  }
   public instancePackedScene(rootNode: Node3D, usePhysics: boolean): Node | undefined {
     if (this.packedScene) {
       const instance = this.packedScene.instantiate().get_child(0) as Node3D;

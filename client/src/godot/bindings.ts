@@ -33,7 +33,7 @@ type CacheEntry = {
 
 const baseUrl = "https://eqrequiem.blob.core.windows.net/game";
 const zippedPrefixes = ["eqrequiem/textures"];
-const REQUIEM_FILE_VERSION = '1.0';
+const REQUIEM_FILE_VERSION = '1.0.2';
 
 function selectMinimalFiles(candidateArrays: number[][]): number[] {
   let remaining = candidateArrays.slice();
@@ -148,7 +148,12 @@ class GodotBindings {
     const stringFileVersion = new TextDecoder('utf-8').decode(requiemFileVersion);
     console.log('Str', stringFileVersion);
     if (stringFileVersion !== REQUIEM_FILE_VERSION) {
-      await deleteEqFileOrFolder('root', 'eqrequiem');
+      console.log('DELETING OPFS');
+      await deleteEqFileOrFolder('eqrequiem', 'data');
+      await deleteEqFileOrFolder('eqrequiem', 'items');
+      await deleteEqFileOrFolder('eqrequiem', 'models');
+      await deleteEqFileOrFolder('eqrequiem', 'objects');
+      await deleteEqFileOrFolder('eqrequiem', 'zones');
       await writeRootEQFile('eqrequiem', 'requiem_version.txt', new TextEncoder().encode(REQUIEM_FILE_VERSION));
     }
     /**

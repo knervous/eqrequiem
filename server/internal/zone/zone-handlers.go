@@ -139,10 +139,6 @@ func HandleRequestClientZoneChange(z *ZoneInstance, ses *session.Session, payloa
 	playerProfile.SetHeading(float32(charData.Heading))
 	ses.SendStream(playerProfile.Message(), opcodes.PlayerProfile)
 
-	// Test
-
-	// Zone spawns
-
 	for _, npc := range z.Npcs {
 		spawn, err := session.NewMessage(ses, eq.NewRootSpawn)
 		if err != nil {
