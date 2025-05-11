@@ -17,7 +17,7 @@ import {
   GeometryInstance3D,
 } from "godot";
 import ObjectMesh from "@game/Object/object-geometry";
-import { Spawn } from "@game/Net/internal/api/capnp/common";
+import { EntityPositionUpdate, Spawn } from "@game/Net/internal/api/capnp/common";
 import { SphereShape3D } from "@/godot-module";
 import { traverseForMaterials } from "@game/GLTF/image-utilities";
 import Player from "@game/Player/player";
@@ -25,6 +25,7 @@ import Player from "@game/Player/player";
 export default class EntityPool {
   parent: Node3D;
   entities: Record<number, Spawn> = {};
+  nodes : Record<number, Node3D> = {};
   entityContainer: Record<string, Promise<ObjectMesh>> = {};
   entityObjectContainer: Node3D | null = null;
   loadedPromise: Promise<void> | null = null;
@@ -42,6 +43,26 @@ export default class EntityPool {
       this.entityObjectContainer.queue_free();
       this.entityObjectContainer = null;
     }
+  }
+
+  UpdateSpawnPosition(spawnUpdate: EntityPositionUpdate) {
+    const spawnId = spawnUpdate.spawnId;
+    const spawn = this.entities[spawnId];
+    if (!spawn) {
+      return;
+    }
+    spawn.x = spawnUpdate.position.x;
+    spawn.y = spawnUpdate.position.y;
+    spawn.z = spawnUpdate.position.z;
+
+    const node = this.nodes[spawnId];
+    if (!node) {
+      return;
+    }
+    const staticBody = node as StaticBody3D;
+    staticBody.global_position = new Vector3(-spawnUpdate.position.y, spawnUpdate.position.z, spawnUpdate.position.x);
+    
+    ;// = new Vector3(-spawn.y, spawn.z, spawn.x);
   }
 
   async Load(): Promise<void> {
@@ -81,7 +102,7 @@ export default class EntityPool {
     instance.mesh = sphereMesh;
   
     const material = new StandardMaterial3D();
-    material.albedo_color = new Color(1, 0, 0);
+    material.albedo_color = new Color(0, 0.5, 0.5);
     sphereMesh.material = material;
   
     instance.scale = new Vector3(2, 2, 2);
@@ -116,6 +137,8 @@ export default class EntityPool {
     nameplate.modulate = new Color(0.5, 0.5, 1, 1);
     nameplate.text = spawn.name;
     instance.add_child(nameplate);
+
+    this.nodes[spawn.spawnId] = staticBody;
   }
 
   async AddSpawn(spawn: Spawn) {

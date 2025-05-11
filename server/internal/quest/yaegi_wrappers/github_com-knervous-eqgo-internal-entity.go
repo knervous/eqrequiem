@@ -12,7 +12,7 @@ func init() {
 		// type definitions
 		"Client":  reflect.ValueOf((*entity.Client)(nil)),
 		"Mob":     reflect.ValueOf((*entity.Mob)(nil)),
-		"Moblike": reflect.ValueOf((*entity.Moblike)(nil)),
+		"Entity": reflect.ValueOf((*entity.Entity)(nil)),
 		"NPC":     reflect.ValueOf((*entity.NPC)(nil)),
 
 		// interface wrapper definitions
@@ -20,7 +20,7 @@ func init() {
 	}
 }
 
-// _github_com_knervous_eqgo_internal_entity_Moblike is an interface wrapper for Moblike type
+// _github_com_knervous_eqgo_internal_entity_Moblike is an interface wrapper for Entity type
 type _github_com_knervous_eqgo_internal_entity_Moblike struct {
 	IValue interface{}
 	WID    func() int

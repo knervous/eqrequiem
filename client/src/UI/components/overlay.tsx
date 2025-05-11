@@ -45,9 +45,9 @@ export const Overlay: React.FC<Props> = (props: Props) => {
 
   useEffect(() => {
     if (mode === 'game') {
-      UIEvents.emit("chat", { type: 0, line: 'Welcome to EQ Requiem!', color: '#ddd' });
-      UIEvents.emit("chat", { type: 0, line: 'This is currently a demo sandbox with development features.', color: '#ddd' });
-      UIEvents.emit("chat", { type: 0, line: 'Type /help to get started.', color: '#ddd' });
+      UIEvents.emit("chat", { type: 0, message: 'Welcome to EQ Requiem!', color: '#ddd' });
+      UIEvents.emit("chat", { type: 0, message: 'This is currently a demo sandbox with development features.', color: '#ddd' });
+      UIEvents.emit("chat", { type: 0, message: 'Type /help to get started.', color: '#ddd' });
     }
 
   }, [mode]);

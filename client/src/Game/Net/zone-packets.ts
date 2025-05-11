@@ -3,8 +3,9 @@ import { WorldSocket } from "@ui/net/instances";
 import { OpCodes } from "./opcodes";
 import { NewZone } from "./internal/api/capnp/zone";
 import { PlayerProfile } from "./internal/api/capnp/player";
-import { ChannelMessage, Spawn, Spawns } from "./internal/api/capnp/common";
+import { ChannelMessage, EntityPositionUpdate, Spawn, Spawns } from "./internal/api/capnp/common";
 import { UIEvents } from "@ui/events/ui-events";
+import { ChatMessage } from "@ui/components/game/chat/chat-types";
 
 
 export function opCodeHandler(opCode: OpCodes, type: any): MethodDecorator {
@@ -52,9 +53,31 @@ export class ZonePacketHandler {
     GameManager.instance.ZoneManager?.EntityPool?.AddSpawn(spawn);
   }
 
+  @opCodeHandler(OpCodes.SpawnPositionUpdate, EntityPositionUpdate)
+  updateSpawnPosition(spawnUpdate: EntityPositionUpdate) {
+    GameManager.instance.ZoneManager?.EntityPool?.UpdateSpawnPosition(spawnUpdate);
+  }
+
   @opCodeHandler(OpCodes.ChannelMessage, ChannelMessage)
   processChannelMessage(channelMessage: ChannelMessage) {
-    UIEvents.emit("chat", { type: 0, line: `${channelMessage.sender} says, '${channelMessage.message}'`, color: "#ddd" });
 
+    const msg: ChatMessage = {
+      message: channelMessage.message,
+      chanNum: channelMessage.chanNum,
+      color: "#ddd",
+    };
+    switch(channelMessage.chanNum) { 
+      case -1:
+        msg.message = `[Server Message] '${channelMessage.message}'`;
+        msg.color = "#00AAEE";
+        break;
+      case 0:
+        msg.message = `${channelMessage.sender} says, '${channelMessage.message}'`;
+
+        break;
+      default:
+        break;
+    }
+    UIEvents.emit("chat", msg);
   }
 }

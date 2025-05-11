@@ -17,6 +17,7 @@ type SpawnPoolEntry struct {
 	Spawn2       *model.Spawn2
 	SpawnGroup   *model.Spawngroup
 	SpawnEntries []*SpawnEntryWithNPC
+	GridEntries  []*model.GridEntries
 }
 
 type SpawnEntryWithNPC struct {
@@ -49,6 +50,7 @@ func GetZoneSpawnPool(zoneName string) (map[int64]*SpawnPoolEntry, error) {
 			table.Spawn2.Y,
 			table.Spawn2.Z,
 			table.Spawn2.Heading,
+			table.Spawn2.Pathgrid,
 			table.Spawn2.Respawntime,
 			table.Spawngroup.ID.AS("spawngroup.id"),
 			table.Spawngroup.Name.AS("spawngroup.name"),

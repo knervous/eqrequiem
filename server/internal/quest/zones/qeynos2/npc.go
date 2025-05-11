@@ -12,7 +12,7 @@ func registerNpcQuests(zq *quest.ZoneQuestInterface) {
 		"Guard_Gehnus",
 		quest.EventSay, func(e *quest.QuestEvent) bool {
 			greetings := fmt.Sprintf("Hello, %s! How can I assist you today?", e.Actor.Name())
-			zq.ZoneAccess.BroadcastChannelMessage("Guard Gehnus", greetings, 0)
+			e.Receiver.Say(greetings)
 			switch e.Actor.(type) {
 			case *entity.NPC:
 				return true
@@ -29,8 +29,8 @@ func registerNpcQuests(zq *quest.ZoneQuestInterface) {
 	zq.Register(
 		"Phin_Esrinap",
 		quest.EventSay, func(e *quest.QuestEvent) bool {
-			greetings := fmt.Sprintf("Hello, %s! Changed the quest", e.Actor.Name())
-			zq.ZoneAccess.BroadcastChannelMessage("Phin_Esrinap", greetings, 0)
+			greetings := fmt.Sprintf("Hello, %s!", e.Actor.Name())
+			e.Receiver.Say(greetings)
 			switch e.Actor.(type) {
 			case *entity.NPC:
 				return true

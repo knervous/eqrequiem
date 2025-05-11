@@ -2,6 +2,7 @@ package zone
 
 import (
 	"fmt"
+	"math"
 	"math/rand"
 	"time"
 
@@ -13,18 +14,96 @@ import (
 	"github.com/knervous/eqgo/internal/session"
 )
 
+// processSpawns handles the spawning and pathing of NPCs in the zone.
+func (z *ZoneInstance) spawnTick(now time.Time, npc *entity.NPC) {
+	if len(npc.GridEntries) == 0 {
+		return
+	}
+	// 1) still pausing?
+	if now.Before(npc.PauseUntil) {
+		npc.LastUpdate = now
+		return
+	}
+
+	// 2) save old pos for movement check
+	oldX, oldY, oldZ := npc.Position.X, npc.Position.Y, npc.Position.Z
+
+	// 3) interpolation logic (as before)…
+	target := npc.GridEntries[npc.GridIndex]
+	tx, ty, tz := float32(target.X), float32(target.Y), float32(target.Z)
+	delta := now.Sub(npc.LastUpdate).Seconds()
+	npc.LastUpdate = now
+
+	dx := tx - oldX
+	dy := ty - oldY
+	dz := float32(0.0) //tz - oldZ
+	distSq := dx*dx + dy*dy + dz*dz
+
+	if distSq == 0 {
+		// arrived → schedule pause & advance index
+		pause := npc.GridEntries[npc.GridIndex].Pause
+		npc.PauseUntil = now.Add(time.Duration(pause) * time.Second)
+		npc.GridIndex = (npc.GridIndex + 1) % len(npc.GridEntries)
+	} else {
+		dist := float32(math.Sqrt(float64(distSq)))
+		moveAmt := npc.Speed * float32(delta)
+		if moveAmt >= dist {
+			npc.Position.X, npc.Position.Y, npc.Position.Z = tx, ty, tz
+			pause := npc.GridEntries[npc.GridIndex].Pause
+			npc.PauseUntil = now.Add(time.Duration(pause) * time.Second)
+			npc.GridIndex = (npc.GridIndex + 1) % len(npc.GridEntries)
+		} else {
+			frac := moveAmt / dist
+			npc.Position.X += dx * frac
+			npc.Position.Y += dy * frac
+			npc.Position.Z += dz * frac
+		}
+		// recompute heading
+		npc.Position.Heading = float32(math.Atan2(
+			float64(npc.Position.Y-oldY),
+			float64(npc.Position.X-oldX),
+		) * (180.0 / math.Pi))
+	}
+
+	// 4) only broadcast if we actually moved
+	if npc.Position.X != oldX || npc.Position.Y != oldY || npc.Position.Z != oldZ {
+		for _, client := range z.Clients {
+			_ = session.QueueMessage(
+				client.ClientSession,
+				eq.NewRootEntityPositionUpdate,
+				opcodes.SpawnPositionUpdate,
+				func(m eq.EntityPositionUpdate) error {
+					m.SetSpawnId(int32(npc.Mob.MobID))
+					pos, _ := m.NewPosition()
+					pos.SetX(npc.Position.X)
+					pos.SetY(npc.Position.Y)
+					pos.SetZ(npc.Position.Z)
+					return nil
+				},
+			)
+		}
+	}
+}
+
 func (z *ZoneInstance) processSpawns() {
 	z.mutex.Lock()
 	defer z.mutex.Unlock()
 
 	now := time.Now()
 	for spawn2ID, entry := range z.ZonePool {
-		if _, exists := z.spawn2ToNpc[spawn2ID]; exists {
+		if npcID, exists := z.spawn2ToNpc[spawn2ID]; exists {
+			npc, ok := z.Npcs[npcID]
+			if ok {
+				z.spawnTick(now, npc)
+			}
 			continue
 		}
 		nextSpawnTime, exists := z.spawnTimers[spawn2ID]
+
+		// Respawning
 		if !exists || now.After(nextSpawnTime) {
 			npcType, err := respawnNpc(*entry)
+
 			if err != nil {
 				fmt.Printf("Failed to respawn NPC for Spawn2 %d: %v\n", spawn2ID, err)
 				continue
@@ -32,8 +111,15 @@ func (z *ZoneInstance) processSpawns() {
 			npcID := z.nextNpcID
 			z.nextNpcID++
 			npc := &entity.NPC{
-				NpcData: *npcType,
+				GridEntries:  z.gridEntries[int64(entry.Spawn2.Pathgrid)],
+				GridIndex:    1,
+				NextGridMove: now.Add(time.Duration(entry.Spawn2.Respawntime) * time.Millisecond),
+				NpcData:      *npcType,
+				PauseUntil:   now,
+				LastUpdate:   now, // for interpolation deltas
 				Mob: entity.Mob{
+					Speed:   1,
+					Zone:    z,
 					Spawn2:  *entry.Spawn2,
 					MobID:   npcID,
 					MobName: npcType.Name,
@@ -45,18 +131,17 @@ func (z *ZoneInstance) processSpawns() {
 					},
 				},
 			}
+			if len(npc.GridEntries) > 0 {
+				fmt.Println("NPC has grid entries")
+			}
+
 			z.Npcs[npcID] = npc
+			z.npcsByName[npcType.Name] = npc
 			z.spawn2ToNpc[spawn2ID] = npcID
 			z.spawnTimers[spawn2ID] = now.Add(24 * time.Hour)
 
 			fmt.Printf("Spawned NPC %s (ID: %d) at Spawn2 %d (%.2f, %.2f, %.2f)\n",
 				npcType.Name, npcID, spawn2ID, entry.Spawn2.X, entry.Spawn2.Y, entry.Spawn2.Z)
-
-			// // Copy clients to avoid holding lock during message sending
-			// clients := make([]*session.Session, 0, len(z.Clients))
-			// for _, client := range z.Clients {
-			// 	clients = append(clients, client.ClientSession)
-			// }
 
 			for _, client := range z.Clients {
 				err := session.QueueMessage(
@@ -131,4 +216,53 @@ func respawnNpc(entry db_zone.SpawnPoolEntry) (*model.NpcTypes, error) {
 	}
 
 	return nil, fmt.Errorf("failed to select NPC for spawngroup %d", entry.SpawnGroup.ID)
+}
+
+// DespawnNPC removes a live NPC from the zone, notifies clients, and
+// frees up its spawn point for the next respawn.
+func (z *ZoneInstance) DespawnNPC(npcID int) error {
+	z.mutex.Lock()
+	defer z.mutex.Unlock()
+
+	// 1) Find the NPC
+	npc, ok := z.Npcs[npcID]
+	if !ok {
+		return fmt.Errorf("NPC with ID %d not found", npcID)
+	}
+
+	// 2) Broadcast despawn to all clients
+	for _, client := range z.Clients {
+		if err := session.QueueMessage(
+			client.ClientSession,
+			eq.NewRootDeleteSpawn, // builder for a Despawn message
+			opcodes.DeleteSpawn,   // your zone‐despawn opcode
+			func(d eq.DeleteSpawn) error {
+				d.SetSpawnId(int32(npcID))
+				return nil
+			},
+		); err != nil {
+			fmt.Printf("Failed to send despawn to session %d: %v\n",
+				client.ClientSession.SessionID, err)
+		}
+	}
+
+	// 3) Tear down local indices
+
+	// a) Remove from the ID→NPC map
+	delete(z.Npcs, npcID)
+
+	// b) Remove from the name index (only if it’s the same instance)
+	if existing, exists := z.npcsByName[npc.MobName]; exists && existing.MobID == npcID {
+		delete(z.npcsByName, npc.MobName)
+	}
+
+	// c) Free up the spawn2ID → npcID mapping so the next spawn can run
+	for spawn2ID, id := range z.spawn2ToNpc {
+		if id == npcID {
+			delete(z.spawn2ToNpc, spawn2ID)
+			break
+		}
+	}
+
+	return nil
 }

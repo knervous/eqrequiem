@@ -6,11 +6,12 @@ import { UiAction } from "../../../state/reducer";
 import { UiWindowComponent } from "../../../common/ui-window";
 import { useChatInput } from "../../../hooks/use-chat-input";
 import { useChatFocus } from "../../../hooks/use-chat-focus";
+import { ChatMessage } from "./chat-types";
 
 type Props = {
   state: ChatWindow;
   index: number;
-  messages: string[];
+  messages: ChatMessage[];
   main: boolean;
   dispatcher: React.Dispatch<UiAction>;
 };
@@ -86,9 +87,9 @@ export const ChatWindowComponent: React.FC<Props> = ({
     >
       <Stack sx={chatStyles.container} direction="column">
         <Box sx={chatStyles.messages}>
-          {messages.map((message, idx) => (
-            <Box key={idx} sx={{ wordBreak: "break-word" }}>
-              {message}
+          {messages.map((chatMessage, idx) => (
+            <Box key={idx} sx={{ wordBreak: "break-word", color: chatMessage.color ?? "#ddd" }}>
+              {chatMessage.message}
             </Box>
           ))}
           <div ref={messagesEndRef} />

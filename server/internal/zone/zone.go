@@ -36,8 +36,13 @@ type ZoneInstance struct {
 	QuestInterface *quest.ZoneQuestInterface
 
 	// Entities
-	ZonePool    map[int64]*db_zone.SpawnPoolEntry
-	Npcs        map[int]*entity.NPC
+	ZonePool   map[int64]*db_zone.SpawnPoolEntry
+	Npcs       map[int]*entity.NPC
+	npcsByName map[string]*entity.NPC // name → NPC
+
+	// Grid
+	gridEntries map[int64][]*model.GridEntries
+
 	spawnTimers map[int64]time.Time // Maps Spawn2.ID to next spawn time
 	spawn2ToNpc map[int64]int       // Maps Spawn2.ID to NPC ID (if spawned)
 	nextNpcID   int                 // Incremental NPC ID generator
@@ -45,7 +50,6 @@ type ZoneInstance struct {
 	wg         sync.WaitGroup
 	registry   *HandlerRegistry
 	mutex      sync.RWMutex
-	messageMu  sync.RWMutex
 	questEvent *quest.QuestEvent
 	backlogMu  sync.Mutex
 	backlog    []packet // Unbounded FIFO
@@ -73,6 +77,13 @@ func NewZoneInstance(zoneID, instanceID int) *ZoneInstance {
 		spawnTimers[spawn2ID] = time.Now()
 	}
 
+	// Grid entries
+	gridEntries, err := db_zone.GetZoneGridEntries(zone.ID)
+	if err != nil {
+		fmt.Println("Error getting grid entries:", err)
+		return nil
+	}
+
 	// Register quests
 	QuestInterface := questregistry.GetQuestInterface(*zone.ShortName)
 
@@ -85,7 +96,9 @@ func NewZoneInstance(zoneID, instanceID int) *ZoneInstance {
 		ZonePool:       zonePool,
 		QuestInterface: QuestInterface,
 		Npcs:           make(map[int]*entity.NPC),
+		npcsByName:     make(map[string]*entity.NPC),
 
+		gridEntries: gridEntries,
 		spawnTimers: spawnTimers,
 		spawn2ToNpc: make(map[int64]int),
 		nextNpcID:   1,
@@ -103,7 +116,7 @@ func NewZoneInstance(zoneID, instanceID int) *ZoneInstance {
 		questregistry.RegisterReload(*zone.ShortName, func(qi *quest.ZoneQuestInterface) {
 			z.QuestInterface = qi
 			z.QuestInterface.SetZoneAccess(z)
-			z.BroadcastChannelMessage("Dev", "Quests were hot reloaded", 0)
+			z.BroadcastServerMessage("Quests were hot reloaded")
 
 		})
 	}
@@ -115,7 +128,9 @@ func NewZoneInstance(zoneID, instanceID int) *ZoneInstance {
 
 // QE returns the quest event for the zone.
 func (z *ZoneInstance) QE() *quest.QuestEvent {
-	return z.questEvent.Reset()
+	qe := z.questEvent.Reset()
+	qe.ZoneAccess = z
+	return qe
 }
 
 // AddClient adds a client session to the zone.

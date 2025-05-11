@@ -4,6 +4,11 @@ using Go = import "go.capnp";  # Import go.capnp for Go annotations
 $Go.package("net");         # Go package name
 $Go.import("github.com/knervous/eqgo/internal/api/capnp");  # Go import path
 
+struct Vector3 {
+  x @0 :Float32;
+  y @1 :Float32;
+  z @2 :Float32;
+}
 
 struct InventorySlot {
   type @0 :Int32;
@@ -486,17 +491,16 @@ struct BecomeCorpse {
   z @3 :Float32;
 }
 
-struct PlayerPositionUpdateServer {
+struct EntityPositionUpdate {
   spawnId @0 :Int32;
-  deltaHeading @1 :Int32;
-  xPos @2 :Int32;
-  yPos @3 :Int32;
-  animation @4 :Int32;
-  zPos @5 :Int32;
-  deltaY @6 :Int32;
-  deltaX @7 :Int32;
-  heading @8 :Int32;
-  deltaZ @9 :Int32;
+  position @1: Vector3;
+  velocity @2: Vector3;
+  heading @3 :Float32;
+}
+
+struct EntityAnimation {
+  spawnId @0 :Int32;
+  animation @1 :Int32;
 }
 
 struct PlayerPositionUpdateClient {

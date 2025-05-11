@@ -15,7 +15,7 @@ import (
 )
 
 func GetZonePointsByZoneName(zoneName string) ([]*model.ZonePoints, error) {
-	cacheKey := fmt.Sprintf("zone:id:%s", zoneName)
+	cacheKey := fmt.Sprintf("zone:points:id:%s", zoneName)
 	if val, found, err := cache.GetCache().Get(cacheKey); err == nil && found {
 		if zonePoints, ok := val.([]*model.ZonePoints); ok {
 			return zonePoints, nil

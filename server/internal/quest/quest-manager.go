@@ -3,39 +3,12 @@ package quest
 import (
 	"fmt"
 	"sync"
-	"time"
-
-	db_zone "github.com/knervous/eqgo/internal/db/zone"
 
 	"github.com/knervous/eqgo/internal/db/items"
 	"github.com/knervous/eqgo/internal/db/jetgen/eqgo/model"
 	entity "github.com/knervous/eqgo/internal/entity"
 	"github.com/knervous/eqgo/internal/session"
 )
-
-// ZoneAccess provides access to ZoneInstance data for quests.
-type ZoneAccess interface {
-	// Zone data
-	GetZone() *model.Zone
-	GetZoneID() int
-	GetInstanceID() int
-
-	// Clients
-	//GetClients() map[int]ClientEntry
-	//GetClientBySessionID(sessionID int) (ClientEntry, bool)
-
-	// NPCs
-	GetNPCs() map[int]*entity.NPC
-	GetNPCByID(npcID int) (*entity.NPC, bool)
-
-	// Spawning
-	GetZonePool() map[int64]*db_zone.SpawnPoolEntry
-	GetSpawnTimers() map[int64]time.Time
-	GetSpawn2ToNpc() map[int64]int
-
-	// Broadcasting
-	BroadcastChannelMessage(senderName, message string, chatChannel int)
-}
 
 // ClientEntry mirrors zone.ClientEntry for quest access.
 type ClientEntry struct {
@@ -194,8 +167,8 @@ const (
 // Big TBD on what data is going in here
 type QuestEvent struct {
 	EventType     QuestEventType
-	Actor         entity.Moblike // will be Actor which can be interpreted as any type of Mob (NPC, PC, Client)
-	Receiver      entity.Moblike
+	Actor         entity.Entity // will be Actor which can be interpreted as any type of Mob (NPC, PC, Client)
+	Receiver      entity.Entity
 	Item          *[]items.ItemInstance
 	ZoneData      *[]interface{}
 	EncounterName string
@@ -204,16 +177,17 @@ type QuestEvent struct {
 	ItemArray     *[]items.ItemInstance
 	ActorArray    *[]model.Spawn2
 	StringArray   []string
+	ZoneAccess    entity.ZoneAccess
 }
 
 type QuestHandler func(*QuestEvent) bool
 type ZoneQuestInterface struct {
-	ZoneAccess ZoneAccess //
+	ZoneAccess entity.ZoneAccess //
 	Mu         sync.RWMutex
 	Handlers   map[string]map[QuestEventType]QuestHandler
 }
 
-func (z *ZoneQuestInterface) SetZoneAccess(za ZoneAccess) {
+func (z *ZoneQuestInterface) SetZoneAccess(za entity.ZoneAccess) {
 	z.ZoneAccess = za
 }
 
@@ -285,11 +259,11 @@ func (e *QuestEvent) Type(t QuestEventType) *QuestEvent {
 	e.EventType = t
 	return e
 }
-func (e *QuestEvent) SetActor(a entity.Moblike) *QuestEvent {
+func (e *QuestEvent) SetActor(a entity.Entity) *QuestEvent {
 	e.Actor = a
 	return e
 }
-func (e *QuestEvent) SetReceiver(r entity.Moblike) *QuestEvent {
+func (e *QuestEvent) SetReceiver(r entity.Entity) *QuestEvent {
 	e.Receiver = r
 	return e
 }

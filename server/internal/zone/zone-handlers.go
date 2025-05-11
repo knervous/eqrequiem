@@ -26,12 +26,11 @@ func HandleChannelMessage(z *ZoneInstance, ses *session.Session, payload []byte)
 		log.Printf("failed to get target name: %v", err)
 		return
 	}
-	//client := z.Clients[ses.SessionID]
 	z.QuestInterface.Invoke(targetName, z.QE().Type(quest.EventSay).SetActor(&entity.Client{
 		Mob: entity.Mob{
 			MobName: ses.CharacterData.Name,
 		},
-	}))
+	}).SetReceiver(z.GetNPCByName(targetName)))
 }
 
 func HandleRequestClientZoneChange(z *ZoneInstance, ses *session.Session, payload []byte) {

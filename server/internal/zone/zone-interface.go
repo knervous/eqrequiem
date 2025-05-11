@@ -65,6 +65,12 @@ func (z *ZoneInstance) GetNPCByID(npcID int) (*entity.NPC, bool) {
 	return npc, ok
 }
 
+func (z *ZoneInstance) GetNPCByName(name string) *entity.NPC {
+	z.mutex.RLock()
+	defer z.mutex.RUnlock()
+	return z.npcsByName[name]
+}
+
 func (z *ZoneInstance) GetZonePool() map[int64]*db_zone.SpawnPoolEntry {
 	z.mutex.RLock()
 	defer z.mutex.RUnlock()
@@ -108,6 +114,25 @@ func (z *ZoneInstance) BroadcastChannelMessage(senderName, message string, chatC
 				m.SetSender(senderName)
 				m.SetMessage_(message)
 				m.SetChanNum(int32(chatChannel))
+				return nil
+			},
+		)
+	}
+}
+
+func (z *ZoneInstance) BroadcastServerMessage(message string) {
+	z.mutex.RLock()
+	defer z.mutex.RUnlock()
+
+	for _, ce := range z.Clients {
+		session.QueueMessage(
+			ce.ClientSession,
+			eq.NewRootChannelMessage,
+			opcodes.ChannelMessage,
+			func(m eq.ChannelMessage) error {
+				m.SetSender("")
+				m.SetMessage_(message)
+				m.SetChanNum(int32(-1))
 				return nil
 			},
 		)
