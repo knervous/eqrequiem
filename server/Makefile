@@ -2,9 +2,10 @@
 .PHONY: all build up down clean lint server start s capnp capn jet quest
 
 # Variables
-BINARY_NAME = server
-DAEMON_SRC = ./cmd/daemon
 SERVER_SRC = ./cmd/server
+SERVER_NAME = server
+DAEMON_SRC = ./cmd/daemon
+DAEMON_NAME = daemon
 CAPNP_SRC = ./cmd/capnp
 JET_SRC = ./cmd/jetgen
 PID_FILE = server.pid
@@ -30,13 +31,14 @@ jet:
 
 # Build the daemon binary
 build:
-	@echo "Building $(BINARY_NAME)..."
-	@go build -o $(BINARY_NAME) $(DAEMON_SRC)
+	@echo "Building $(SERVER_NAME) and $(DAEMON_NAME)..."
+	@go build -o $(DAEMON_NAME) $(DAEMON_SRC)
+	@go build -o $(SERVER_NAME) $(SERVER_SRC)
 
 # Start the daemon
 up: build
 	@echo "Starting daemon..."
-	@./$(BINARY_NAME) &
+	sudo ./$(DAEMON_NAME) &
 
 # Stop the daemon
 down:
@@ -51,7 +53,8 @@ down:
 # Clean up generated files
 clean:
 	@echo "Cleaning up..."
-	@rm -f $(BINARY_NAME) $(PID_FILE) $(LOG_FILE)
+	@rm -f $(DAEMON_NAME) $(PID_FILE) $(LOG_FILE)
+	@rm -f $(SERVER_NAME)
 
 # Run linter (optional, requires golangci-lint)
 lint:
