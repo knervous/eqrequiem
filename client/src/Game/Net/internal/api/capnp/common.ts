@@ -2684,80 +2684,50 @@ export class EntityAnimation extends $.Struct {
     return "EntityAnimation_" + super.toString();
   }
 }
-export class PlayerPositionUpdateClient extends $.Struct {
+export class ClientPositionUpdate extends $.Struct {
   static readonly _capnp = {
-    displayName: "PlayerPositionUpdateClient",
-    id: "c3cb1662234dd3f3",
-    size: new $.ObjectSize(48, 0)
+    displayName: "ClientPositionUpdate",
+    id: "971031099b134c74",
+    size: new $.ObjectSize(24, 0)
   };
-  get spawnId(): number {
+  get clientId(): number {
     return $.utils.getInt32(0, this);
   }
-  set spawnId(value: number) {
+  set clientId(value: number) {
     $.utils.setInt32(0, value, this);
   }
-  get sequence(): number {
-    return $.utils.getInt32(4, this);
+  get x(): number {
+    return $.utils.getFloat32(4, this);
   }
-  set sequence(value: number) {
-    $.utils.setInt32(4, value, this);
+  set x(value: number) {
+    $.utils.setFloat32(4, value, this);
   }
-  get yPos(): number {
+  get y(): number {
     return $.utils.getFloat32(8, this);
   }
-  set yPos(value: number) {
+  set y(value: number) {
     $.utils.setFloat32(8, value, this);
   }
-  get deltaZ(): number {
+  get z(): number {
     return $.utils.getFloat32(12, this);
   }
-  set deltaZ(value: number) {
+  set z(value: number) {
     $.utils.setFloat32(12, value, this);
   }
-  get deltaX(): number {
+  get heading(): number {
     return $.utils.getFloat32(16, this);
   }
-  set deltaX(value: number) {
+  set heading(value: number) {
     $.utils.setFloat32(16, value, this);
   }
-  get deltaY(): number {
-    return $.utils.getFloat32(20, this);
-  }
-  set deltaY(value: number) {
-    $.utils.setFloat32(20, value, this);
-  }
   get animation(): number {
-    return $.utils.getInt32(24, this);
+    return $.utils.getInt32(20, this);
   }
   set animation(value: number) {
-    $.utils.setInt32(24, value, this);
-  }
-  get deltaHeading(): number {
-    return $.utils.getInt32(28, this);
-  }
-  set deltaHeading(value: number) {
-    $.utils.setInt32(28, value, this);
-  }
-  get xPos(): number {
-    return $.utils.getFloat32(32, this);
-  }
-  set xPos(value: number) {
-    $.utils.setFloat32(32, value, this);
-  }
-  get zPos(): number {
-    return $.utils.getFloat32(36, this);
-  }
-  set zPos(value: number) {
-    $.utils.setFloat32(36, value, this);
-  }
-  get heading(): number {
-    return $.utils.getInt32(40, this);
-  }
-  set heading(value: number) {
-    $.utils.setInt32(40, value, this);
+    $.utils.setInt32(20, value, this);
   }
   toString(): string {
-    return "PlayerPositionUpdateClient_" + super.toString();
+    return "ClientPositionUpdate_" + super.toString();
   }
 }
 export class SpawnHPUpdate extends $.Struct {

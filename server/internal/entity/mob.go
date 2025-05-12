@@ -8,12 +8,11 @@ import (
 
 type Mob struct {
 	model.Spawn2
-	MobID        int
-	MobName      string
-	LastPosition MobPosition
-	Position     MobPosition
-	Zone         ZoneAccess
-	Speed        float32
+	MobID    int
+	MobName  string
+	Position MobPosition
+	Zone     ZoneAccess
+	Speed    float32
 }
 
 func (m *Mob) ID() int      { return m.MobID }
@@ -26,6 +25,14 @@ func (m *Mob) GetZone() ZoneAccess { return m.Zone }
 
 func (m *Mob) Say(msg string) {
 	m.Zone.BroadcastChannelMessage(m.CleanName(), msg, 0)
+}
+
+func (m *Mob) GetPosition() MobPosition {
+	return m.Position
+}
+
+func (m *Mob) SetPosition(pos MobPosition) {
+	m.Position = pos
 }
 
 type MobPosition struct {

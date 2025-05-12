@@ -34,8 +34,8 @@ func (z *ZoneInstance) GetInstanceID() int {
 func (z *ZoneInstance) GetClients() map[int]ClientEntry {
 	z.mutex.RLock()
 	defer z.mutex.RUnlock()
-	clientsCopy := make(map[int]ClientEntry, len(z.Clients))
-	for k, v := range z.Clients {
+	clientsCopy := make(map[int]ClientEntry, len(z.ClientEntries))
+	for k, v := range z.ClientEntries {
 		clientsCopy[k] = v
 	}
 	return clientsCopy
@@ -44,7 +44,7 @@ func (z *ZoneInstance) GetClients() map[int]ClientEntry {
 func (z *ZoneInstance) GetClientBySessionID(sessionID int) (ClientEntry, bool) {
 	z.mutex.RLock()
 	defer z.mutex.RUnlock()
-	client, ok := z.Clients[sessionID]
+	client, ok := z.ClientEntries[sessionID]
 	return client, ok
 }
 
@@ -105,7 +105,7 @@ func (z *ZoneInstance) BroadcastChannelMessage(senderName, message string, chatC
 	z.mutex.RLock()
 	defer z.mutex.RUnlock()
 
-	for _, ce := range z.Clients {
+	for _, ce := range z.ClientEntries {
 		session.QueueMessage(
 			ce.ClientSession,
 			eq.NewRootChannelMessage,
@@ -124,7 +124,7 @@ func (z *ZoneInstance) BroadcastServerMessage(message string) {
 	z.mutex.RLock()
 	defer z.mutex.RUnlock()
 
-	for _, ce := range z.Clients {
+	for _, ce := range z.ClientEntries {
 		session.QueueMessage(
 			ce.ClientSession,
 			eq.NewRootChannelMessage,

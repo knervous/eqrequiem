@@ -10,6 +10,7 @@ struct Vector3 {
   z @2 :Float32;
 }
 
+
 struct InventorySlot {
   type @0 :Int32;
   slot @1 :Int32;
@@ -503,18 +504,13 @@ struct EntityAnimation {
   animation @1 :Int32;
 }
 
-struct PlayerPositionUpdateClient {
-  spawnId @0 :Int32;
-  sequence @1 :Int32;
-  yPos @2 :Float32;
-  deltaZ @3 :Float32;
-  deltaX @4 :Float32;
-  deltaY @5 :Float32;
-  animation @6 :Int32;
-  deltaHeading @7 :Int32;
-  xPos @8 :Float32;
-  zPos @9 :Float32;
-  heading @10 :Int32;
+struct ClientPositionUpdate {
+  clientId @0 :Int32;
+  x @1 :Float32;
+  y @2 :Float32;
+  z @3 :Float32;
+  heading @4 :Float32;
+  animation @5 :Int32;
 }
 
 struct SpawnHPUpdate {

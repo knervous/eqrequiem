@@ -8,6 +8,7 @@ import (
 	"github.com/knervous/eqgo/internal/api/opcodes"
 	db_character "github.com/knervous/eqgo/internal/db/character"
 	"github.com/knervous/eqgo/internal/discord"
+	"github.com/knervous/eqgo/internal/entity"
 	"github.com/knervous/eqgo/internal/session"
 )
 
@@ -113,7 +114,9 @@ func HandleZoneSession(ses *session.Session, payload []byte, wh *WorldHandler) {
 		log.Printf("failed to get character %q for accountID %d: %v", ses.CharacterName, ses.AccountID, err)
 		return
 	}
-	ses.CharacterData = charData
+	ses.Client = &entity.Client{
+		CharData: charData,
+	}
 	ses.ZoneID = int(req.ZoneId())
 	ses.InstanceID = int(req.InstanceId())
 

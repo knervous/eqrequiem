@@ -58,30 +58,14 @@ func (z *ZoneInstance) spawnTick(now time.Time, npc *entity.NPC) {
 			npc.Position.Y += dy * frac
 			npc.Position.Z += dz * frac
 		}
-		// recompute heading
 		npc.Position.Heading = float32(math.Atan2(
 			float64(npc.Position.Y-oldY),
 			float64(npc.Position.X-oldX),
 		) * (180.0 / math.Pi))
 	}
 
-	// 4) only broadcast if we actually moved
 	if npc.Position.X != oldX || npc.Position.Y != oldY || npc.Position.Z != oldZ {
-		for _, client := range z.Clients {
-			_ = session.QueueMessage(
-				client.ClientSession,
-				eq.NewRootEntityPositionUpdate,
-				opcodes.SpawnPositionUpdate,
-				func(m eq.EntityPositionUpdate) error {
-					m.SetSpawnId(int32(npc.Mob.MobID))
-					pos, _ := m.NewPosition()
-					pos.SetX(npc.Position.X)
-					pos.SetY(npc.Position.Y)
-					pos.SetZ(npc.Position.Z)
-					return nil
-				},
-			)
-		}
+		z.markMoved(npc.MobID, npc.Position)
 	}
 }
 
@@ -108,8 +92,8 @@ func (z *ZoneInstance) processSpawns() {
 				fmt.Printf("Failed to respawn NPC for Spawn2 %d: %v\n", spawn2ID, err)
 				continue
 			}
-			npcID := z.nextNpcID
-			z.nextNpcID++
+			npcID := z.nextEntityID
+			z.nextEntityID++
 			npc := &entity.NPC{
 				GridEntries:  z.gridEntries[int64(entry.Spawn2.Pathgrid)],
 				GridIndex:    1,
@@ -143,23 +127,24 @@ func (z *ZoneInstance) processSpawns() {
 			fmt.Printf("Spawned NPC %s (ID: %d) at Spawn2 %d (%.2f, %.2f, %.2f)\n",
 				npcType.Name, npcID, spawn2ID, entry.Spawn2.X, entry.Spawn2.Y, entry.Spawn2.Z)
 
-			for _, client := range z.Clients {
+			pktBuilder := func(spawn eq.Spawn) error {
+				spawn.SetRace(int32(npcType.Race))
+				spawn.SetCharClass(int32(npcType.Class))
+				spawn.SetLevel(int32(npcType.Level))
+				spawn.SetName(npcType.Name)
+				spawn.SetSpawnId(int32(npcID))
+				spawn.SetX(int32(entry.Spawn2.X))
+				spawn.SetY(int32(entry.Spawn2.Y))
+				spawn.SetZ(int32(entry.Spawn2.Z))
+				spawn.SetHeading(int32(entry.Spawn2.Heading))
+				return nil
+			}
+			for _, client := range z.ClientEntries {
 				err := session.QueueMessage(
 					client.ClientSession,
 					eq.NewRootSpawn,
 					opcodes.ZoneSpawns,
-					func(spawn eq.Spawn) error {
-						spawn.SetRace(int32(npcType.Race))
-						spawn.SetCharClass(int32(npcType.Class))
-						spawn.SetLevel(int32(npcType.Level))
-						spawn.SetName(npcType.Name)
-						spawn.SetSpawnId(int32(npcID))
-						spawn.SetX(int32(entry.Spawn2.X))
-						spawn.SetY(int32(entry.Spawn2.Y))
-						spawn.SetZ(int32(entry.Spawn2.Z))
-						spawn.SetHeading(int32(entry.Spawn2.Heading))
-						return nil
-					},
+					pktBuilder,
 				)
 				if err != nil {
 					fmt.Printf("Failed to send spawn message to session %d: %v\n", client.ClientSession.SessionID, err)
@@ -231,7 +216,7 @@ func (z *ZoneInstance) DespawnNPC(npcID int) error {
 	}
 
 	// 2) Broadcast despawn to all clients
-	for _, client := range z.Clients {
+	for _, client := range z.ClientEntries {
 		if err := session.QueueMessage(
 			client.ClientSession,
 			eq.NewRootDeleteSpawn, // builder for a Despawn message

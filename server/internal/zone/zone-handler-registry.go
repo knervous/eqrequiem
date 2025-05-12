@@ -25,6 +25,7 @@ func NewZoneOpCodeRegistry(zoneID int) *HandlerRegistry {
 	handlers := map[opcodes.OpCode]DatagramHandler{
 		opcodes.RequestClientZoneChange: HandleRequestClientZoneChange,
 		opcodes.ChannelMessage:          HandleChannelMessage,
+		opcodes.ClientUpdate:            HandleClientUpdate,
 	}
 
 	registry := &HandlerRegistry{

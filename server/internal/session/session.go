@@ -7,7 +7,7 @@ import (
 
 	capnp "capnproto.org/go/capnp/v3"
 	"github.com/knervous/eqgo/internal/api/opcodes"
-	"github.com/knervous/eqgo/internal/db/jetgen/eqgo/model"
+	"github.com/knervous/eqgo/internal/entity"
 )
 
 type pendingMsg struct {
@@ -31,7 +31,7 @@ type Session struct {
 	IP            string         // Client IP address
 	RootSeg       *capnp.Segment // Current segment
 	CharacterName string
-	CharacterData *model.CharacterData
+	Client        *entity.Client
 
 	// Private
 
@@ -85,8 +85,8 @@ func (sm *SessionManager) CreateSession(messenger ClientMessenger, sessionID int
 	writeBuf := make([]byte, initialSegCap)
 	readBuf := make([]byte, initialSegCap)
 	packBuf := make([]byte, 0, initialSegCap)
-	msg, seg := capnp.NewSingleSegmentMessage(nil)
-	readMsg, _ := capnp.NewSingleSegmentMessage(nil)
+	msg, seg, _ := capnp.NewMessage(capnp.SingleSegment(nil))
+	readMsg, _, _ := capnp.NewMessage(capnp.SingleSegment(nil))
 
 	session := &Session{
 		SessionID:          sessionID,

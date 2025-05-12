@@ -16,8 +16,8 @@ export function command(name: string): MethodDecorator {
   };
 }
 
-const addChatLine = (line: string, options: object = {}) => {
-  UIEvents.emit("chat", { type: 0, line, color: "#ddd", ...options });
+const addChatLine = (message: string, options: object = {}) => {
+  UIEvents.emit("chat", { type: 0, message, color: "#ddd", ...options });
 };
 
 const addChatLines = (lines: string | string[], options: object = {}) => {

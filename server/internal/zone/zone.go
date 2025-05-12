@@ -17,6 +17,7 @@ import (
 // ClientEntry represents a client session in the zone.
 type ClientEntry struct {
 	ClientSession *session.Session
+	EntityId      int
 }
 
 // packet represents a client packet to be processed.
@@ -27,25 +28,33 @@ type packet struct {
 
 // ZoneInstance manages a zone instance, including clients, NPCs, and spawning.
 type ZoneInstance struct {
-	Zone       *model.Zone
-	ZoneID     int
-	InstanceID int
-	Clients    map[int]ClientEntry
-	Quit       chan struct{}
+	Zone          *model.Zone
+	ZoneID        int
+	InstanceID    int
+	ClientEntries map[int]ClientEntry
+	Quit          chan struct{}
 
 	QuestInterface *quest.ZoneQuestInterface
 
 	// Entities
-	ZonePool   map[int64]*db_zone.SpawnPoolEntry
-	Npcs       map[int]*entity.NPC
-	npcsByName map[string]*entity.NPC // name → NPC
+	ZonePool    map[int64]*db_zone.SpawnPoolEntry
+	Npcs        map[int]*entity.NPC
+	npcsByName  map[string]*entity.NPC // name → NPC
+	clientsById map[int]*entity.Client
+
+	// spatial-grid bookkeeping:
+	entityCell map[int]int64
+	bucketMap  map[int64]map[int]struct{}
+	subs       map[int]map[int]struct{} // still per‐entity subscriber lists
+
+	dirtyEntities []int // list of npcIDs that moved this tick
 
 	// Grid
 	gridEntries map[int64][]*model.GridEntries
 
-	spawnTimers map[int64]time.Time // Maps Spawn2.ID to next spawn time
-	spawn2ToNpc map[int64]int       // Maps Spawn2.ID to NPC ID (if spawned)
-	nextNpcID   int                 // Incremental NPC ID generator
+	spawnTimers  map[int64]time.Time // Maps Spawn2.ID to next spawn time
+	spawn2ToNpc  map[int64]int       // Maps Spawn2.ID to NPC ID (if spawned)
+	nextEntityID int                 // Incremental NPC ID generator
 
 	wg         sync.WaitGroup
 	registry   *HandlerRegistry
@@ -92,21 +101,30 @@ func NewZoneInstance(zoneID, instanceID int) *ZoneInstance {
 		ZoneID:         zoneID,
 		InstanceID:     instanceID,
 		Quit:           make(chan struct{}),
-		Clients:        make(map[int]ClientEntry),
+		ClientEntries:  make(map[int]ClientEntry),
 		ZonePool:       zonePool,
 		QuestInterface: QuestInterface,
 		Npcs:           make(map[int]*entity.NPC),
 		npcsByName:     make(map[string]*entity.NPC),
+		clientsById:    make(map[int]*entity.Client),
 
-		gridEntries: gridEntries,
-		spawnTimers: spawnTimers,
-		spawn2ToNpc: make(map[int64]int),
-		nextNpcID:   1,
-		registry:    zoneRegistry,
-		questEvent:  &quest.QuestEvent{},
-		backlog:     make([]packet, 0, 1024),
-		notify:      make(chan struct{}, 1),
+		// Grid processing
+		entityCell:    make(map[int]int64),
+		subs:          make(map[int]map[int]struct{}),
+		bucketMap:     make(map[int64]map[int]struct{}),
+		dirtyEntities: make([]int, 0, 256),
+
+		gridEntries:  gridEntries,
+		spawnTimers:  spawnTimers,
+		spawn2ToNpc:  make(map[int64]int),
+		nextEntityID: 1,
+		registry:     zoneRegistry,
+		questEvent:   &quest.QuestEvent{},
+		backlog:      make([]packet, 0, 1024),
+		notify:       make(chan struct{}, 1),
 	}
+
+	// Quest Interface
 	if QuestInterface == nil {
 		fmt.Printf("[Zone %d·Inst %d :: Name %s] failed to get quest interface\n", zoneID, instanceID, *zone.ShortName)
 	} else {
@@ -142,17 +160,21 @@ func (z *ZoneInstance) AddClient(sessionID int) {
 	}
 	z.mutex.Lock()
 	defer z.mutex.Unlock()
-
-	z.Clients[sessionID] = ClientEntry{
+	nextId := z.nextEntityID
+	z.nextEntityID++
+	z.ClientEntries[sessionID] = ClientEntry{
 		ClientSession: clientSession,
+		EntityId:      nextId,
 	}
+	z.clientsById[nextId] = clientSession.Client
+
 	fmt.Printf("Added client session %d to zone %d instance %d\n", sessionID, z.ZoneID, z.InstanceID)
 }
 
 // HandleClientPacket queues a client packet for processing.
 func (z *ZoneInstance) HandleClientPacket(ses *session.Session, data []byte) {
 	z.mutex.RLock()
-	_, exists := z.Clients[ses.SessionID]
+	_, exists := z.ClientEntries[ses.SessionID]
 	z.mutex.RUnlock()
 
 	if !exists {
@@ -172,7 +194,8 @@ func (z *ZoneInstance) HandleClientPacket(ses *session.Session, data []byte) {
 func (z *ZoneInstance) RemoveClient(sessionID int) {
 	z.mutex.Lock()
 	defer z.mutex.Unlock()
-	delete(z.Clients, sessionID)
+	fmt.Println("Removing client session", sessionID)
+	delete(z.ClientEntries, sessionID)
 }
 
 // run is the main loop for the zone instance.
@@ -190,7 +213,7 @@ func (z *ZoneInstance) run() {
 			// World tick tasks (e.g., global updates)
 		case <-zoneLoop.C:
 			z.processSpawns()
-			// Other zone updates (e.g., NPC AI, movement)
+			z.FlushUpdates()
 		case <-z.Quit:
 			fmt.Printf("[Zone %d·Inst %d] shutting down\n", z.ZoneID, z.InstanceID)
 			return

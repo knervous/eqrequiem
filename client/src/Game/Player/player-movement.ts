@@ -9,6 +9,9 @@ import {
   is_instance_valid,
 } from "godot";
 import type Player from "./player";
+import { WorldSocket } from "@ui/net/instances";
+import { OpCodes } from "@game/Net/opcodes";
+import { ClientPositionUpdate, PositionVector } from "@game/Net/internal/api/capnp/common";
 
 type SimpleVector3 = {
   x: number;
@@ -167,6 +170,13 @@ export class PlayerMovement {
 
     if (this.updateDelta > 0.5) {
       this.updateDelta = 0;
+      WorldSocket.sendMessage(OpCodes.ClientUpdate, ClientPositionUpdate, {
+        x: -currentPos.x,
+        y: currentPos.z,
+        z: currentPos.y,
+        heading: node.rotation.y,
+        animation: 0,
+      });
     }
 
     const { x: basisX, z: basisZ } = this.player.getNode()!.transform.basis.x;

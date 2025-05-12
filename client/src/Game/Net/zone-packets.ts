@@ -6,6 +6,7 @@ import { PlayerProfile } from "./internal/api/capnp/player";
 import { ChannelMessage, EntityPositionUpdate, Spawn, Spawns } from "./internal/api/capnp/common";
 import { UIEvents } from "@ui/events/ui-events";
 import { ChatMessage } from "@ui/components/game/chat/chat-types";
+import Player from "@game/Player/player";
 
 
 export function opCodeHandler(opCode: OpCodes, type: any): MethodDecorator {
@@ -50,6 +51,7 @@ export class ZonePacketHandler {
 
   @opCodeHandler(OpCodes.ZoneSpawns, Spawn)
   loadZoneSpawns(spawn: Spawn) {
+    console.log("Got zone spawn", spawn.name);
     GameManager.instance.ZoneManager?.EntityPool?.AddSpawn(spawn);
   }
 
@@ -72,6 +74,9 @@ export class ZonePacketHandler {
         msg.color = "#00AAEE";
         break;
       case 0:
+        if (channelMessage.sender === Player.instance?.player?.name) {
+          return;
+        }
         msg.message = `${channelMessage.sender} says, '${channelMessage.message}'`;
 
         break;
