@@ -8,7 +8,9 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"strconv"
 	"strings"
+	"time" // Added for grace period
 
 	"github.com/knervous/eqgo/internal/cache"
 	"github.com/knervous/eqgo/internal/cert"
@@ -29,23 +31,16 @@ type Server struct {
 	sessionManager *session.SessionManager
 	sessions       map[int]*webtransport.Session
 	udpConn        *net.UDPConn
+	gracePeriod    time.Duration // New: grace period for session cleanup
+	debugMode      bool          // New: disable cleanup for debugging
 }
 
-// NewServer creates a new server with the given DSN.
-func NewServer(dsn string) (*Server, error) {
-	// Create HandlerRegistry with db.WorldDB
+// NewServer creates a new server with the given DSN and configuration.
+func NewServer(dsn string, gracePeriod time.Duration, debugMode bool) (*Server, error) {
 	registry := world.NewWorldOpCodeRegistry()
-
-	// Create ZoneManager with HandlerRegistry
 	zoneManager := world.NewZoneManager()
-
-	// Create SessionManager
 	sessionManager := session.NewSessionManager()
-
-	// Initialize global SessionManager
 	session.InitSessionManager(sessionManager)
-
-	// Create WorldHandler with ZoneManager and SessionManager
 	worldHandler := world.NewWorldHandler(zoneManager, sessionManager)
 	registry.WH = worldHandler
 
@@ -59,6 +54,8 @@ func NewServer(dsn string) (*Server, error) {
 		worldHandler:   worldHandler,
 		sessionManager: sessionManager,
 		sessions:       make(map[int]*webtransport.Session),
+		gracePeriod:    gracePeriod, // e.g., 30 seconds
+		debugMode:      debugMode,   // Enable for debugging
 	}, nil
 }
 
@@ -77,7 +74,6 @@ func (s *Server) SendStream(sessionID int, data []byte) error {
 	return err
 }
 
-// Implement world.ClientMessenger
 func (s *Server) SendDatagram(sessionID int, data []byte) error {
 	sess, ok := s.sessions[sessionID]
 	if !ok {
@@ -92,7 +88,6 @@ func (s *Server) SendDatagram(sessionID int, data []byte) error {
 	return nil
 }
 
-// StartServer starts the WebTransport and HTTPS servers.
 func (s *Server) StartServer() {
 	tlsConf, err := cert.LoadTLSConfig()
 	if err != nil {
@@ -108,11 +103,10 @@ func (s *Server) StartServer() {
 	s.udpConn = udpConn
 	log.Printf("Server bound to UDP port: %d", port)
 
-	// Custom QUIC configuration for larger buffers
 	quicConf := &quic.Config{
-		MaxStreamReceiveWindow:     4 * 1024 * 1024,  // 4MB per stream
-		MaxConnectionReceiveWindow: 16 * 1024 * 1024, // 16MB per connection
-		MaxIncomingStreams:         1000,             // Adjust based on your needs
+		MaxStreamReceiveWindow:     4 * 1024 * 1024,
+		MaxConnectionReceiveWindow: 16 * 1024 * 1024,
+		MaxIncomingStreams:         1000,
 	}
 
 	s.wtServer = &webtransport.Server{
@@ -148,19 +142,17 @@ func listenUDP(port int) (*net.UDPConn, int, error) {
 	if err != nil {
 		return nil, 0, fmt.Errorf("listen UDP %s: %w", addr, err)
 	}
-	// Increase buffer sizes
-	err = conn.SetReadBuffer(4 * 1024 * 1024) // 4MB
+	err = conn.SetReadBuffer(4 * 1024 * 1024)
 	if err != nil {
 		return nil, 0, fmt.Errorf("set read buffer: %w", err)
 	}
-	err = conn.SetWriteBuffer(4 * 1024 * 1024) // 4MB
+	err = conn.SetWriteBuffer(4 * 1024 * 1024)
 	if err != nil {
 		return nil, 0, fmt.Errorf("set write buffer: %w", err)
 	}
 	return conn, conn.LocalAddr().(*net.UDPAddr).Port, nil
 }
 
-// startHTTPServer runs the HTTPS endpoints (/code, /register) on port 443.
 func startHTTPServer(tlsConf *tls.Config) {
 	mux := http.NewServeMux()
 	mux.Handle("/code", corsMiddleware(http.HandlerFunc(discord.DiscordAuthHandler)))
@@ -178,7 +170,6 @@ func startHTTPServer(tlsConf *tls.Config) {
 	}
 }
 
-// registerHandler records zone→port mapping; only from localhost.
 func registerHandler(w http.ResponseWriter, r *http.Request) {
 	if !strings.HasPrefix(r.RemoteAddr, "127.0.0.1:") {
 		http.Error(w, "Forbidden", http.StatusForbidden)
@@ -192,7 +183,6 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// corsMiddleware adds CORS headers.
 func corsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -207,7 +197,6 @@ func corsMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-// makeEQHandler returns the WebTransport handler.
 func (s *Server) makeEQHandler() http.HandlerFunc {
 	var sessionID int
 	return func(rw http.ResponseWriter, r *http.Request) {
@@ -218,16 +207,33 @@ func (s *Server) makeEQHandler() http.HandlerFunc {
 			return
 		}
 
-		sessionID++
-		sid := sessionID
-		s.sessions[sid] = sess
-		log.Printf("Accepted WebTransport session %d from %s", sid, r.RemoteAddr)
-
 		// Extract IP from r.RemoteAddr
-		ip, _, _ := net.SplitHostPort(r.RemoteAddr)
+		clientIP, _, _ := net.SplitHostPort(r.RemoteAddr)
+		params := r.URL.Query()
+		var sid int = 0
+		var session *session.Session
+		if params.Get("sid") != "0" {
+			sessionId, err := strconv.Atoi(params.Get("sid"))
+			if err != nil {
+				sess.CloseWithError(400, "Bad session param")
+			}
+			ses, err := s.sessionManager.GetValidSession(sessionId, clientIP)
+			if err == nil {
+				fmt.Printf("Reconnecting session %d from %s", sessionId, clientIP)
+				session = ses
+				ses.Messenger = s
+				ses.SendData(nil, 0)
+			}
+		}
+		if session == nil {
+			// New session
+			sessionID++
+			sid = sessionID
+			s.sessions[sid] = sess
+			log.Printf("Accepted new WebTransport session %d from %s", sid, clientIP)
+			session = s.sessionManager.CreateSession(s, sid, clientIP)
+		}
 
-		// Initialize session with Server as ClientMessenger
-		session := s.sessionManager.CreateSession(s, sid, ip)
 		// Handle datagrams
 		go func() {
 			ctx := context.Background()
@@ -235,9 +241,7 @@ func (s *Server) makeEQHandler() http.HandlerFunc {
 				data, err := sess.ReceiveDatagram(ctx)
 				if err != nil {
 					log.Printf("datagram recv closed (sess %d): %v", sid, err)
-					delete(s.sessions, sid)
-					s.sessionManager.RemoveSession(sid)
-					s.worldHandler.RemoveSession(sid)
+					s.handleSessionClose(sid, clientIP)
 					return
 				}
 				s.worldHandler.HandlePacket(session, data)
@@ -250,6 +254,7 @@ func (s *Server) makeEQHandler() http.HandlerFunc {
 				strm, err := sess.AcceptStream(sess.Context())
 				if err != nil {
 					log.Printf("stream accept closed (sess %d): %v", sid, err)
+					s.handleSessionClose(sid, clientIP)
 					return
 				}
 				data, _ := io.ReadAll(strm)
@@ -260,7 +265,29 @@ func (s *Server) makeEQHandler() http.HandlerFunc {
 	}
 }
 
-// StopServer shuts down the server gracefully.
+// handleSessionClose manages session cleanup with a grace period for reconnection.
+func (s *Server) handleSessionClose(sessionID int, clientIP string) {
+	if s.debugMode {
+		log.Printf("Debug mode: keeping session %d alive for %s", sessionID, clientIP)
+		return
+	}
+
+	// Start grace period timer
+	time.AfterFunc(s.gracePeriod, func() {
+		// Check if session was replaced (reconnected)
+		if sess, exists := s.sessions[sessionID]; exists && sess.Context().Value("clientIP") == clientIP {
+			log.Printf("Session %d still active for %s; skipping cleanup", sessionID, clientIP)
+			return
+		}
+
+		// Clean up session
+		log.Printf("Cleaning up session %d for %s after grace period", sessionID, clientIP)
+		delete(s.sessions, sessionID)
+		s.sessionManager.RemoveSession(sessionID)
+		s.worldHandler.RemoveSession(sessionID)
+	})
+}
+
 func (s *Server) StopServer() {
 	if s.wtServer != nil {
 		s.wtServer.Close()

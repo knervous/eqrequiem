@@ -36,8 +36,8 @@ func (z *ZoneInstance) markMoved(id int, pos entity.MobPosition) {
 	// 2) rebucket on cell change
 	newCell := worldToCell(pos.X, pos.Y, pos.Z)
 	newKey := packCell(newCell)
-	oldKey := z.entityCell[id]
-	if oldKey != newKey {
+	oldKey, existed := z.entityCell[id]
+	if !existed || oldKey != newKey {
 		z.rebucket(id, oldKey, newKey, newCell)
 	}
 }
@@ -92,22 +92,65 @@ func (z *ZoneInstance) resubscribe(id int, cell [3]int) {
 	z.subs[id] = old
 }
 
+// RegisterNewClientGrid handles placing a freshly connected client into the spatial grid
+// and wiring up bidirectional subscriptions so everyone immediately sees each other.
+func (z *ZoneInstance) registerNewClientGrid(id int, pos entity.MobPosition) {
+	// 1) Bucket the new client and subscribe them to neighbors
+	z.markMoved(id, pos)
+
+	// 2) Subscribe each existing neighbor to this new client
+	z.subscribeExistingToNew(id, pos)
+
+	// 3) Flush right away so both sides get a "spawn" update instantly
+	z.FlushUpdates()
+}
+
+// subscribeExistingToNew adds the new client (newID) as a subscriber on all entities
+// in the 3×3×3 neighborhood around its spawn cell, and flags them dirty so an
+// immediate position update (spawn) goes out.
+func (z *ZoneInstance) subscribeExistingToNew(newID int, pos entity.MobPosition) {
+	cell := worldToCell(pos.X, pos.Y, pos.Z)
+	for di := -1; di <= 1; di++ {
+		for dj := -1; dj <= 1; dj++ {
+			for dk := -1; dk <= 1; dk++ {
+				neighbor := [3]int{cell[0] + di, cell[1] + dj, cell[2] + dk}
+				key := packCell(neighbor)
+				for otherID := range z.bucketMap[key] {
+					if otherID == newID {
+						continue
+					}
+					// ensure the map exists
+					if z.subs[otherID] == nil {
+						z.subs[otherID] = make(map[int]struct{})
+					}
+					// add new client as subscriber
+					z.subs[otherID][newID] = struct{}{}
+					// flag for immediate update
+					z.dirtyEntities = append(z.dirtyEntities, otherID)
+				}
+			}
+		}
+	}
+}
+
 // FlushUpdates sends all pending position updates to subscribers.
 func (z *ZoneInstance) FlushUpdates() {
 	for _, id := range z.dirtyEntities {
 		pkt := func(m eq.EntityPositionUpdate) error {
-			m.SetSpawnId(int32(id))
 			posBuilder, _ := m.NewPosition()
 			// choose source of truth
 			if npc, ok := z.Npcs[id]; ok {
 				posBuilder.SetX(npc.Position.X)
 				posBuilder.SetY(npc.Position.Y)
 				posBuilder.SetZ(npc.Position.Z)
+				m.SetSpawnId(int32(id))
+
 			} else if client, ok := z.clientsById[id]; ok {
 				p := client.GetPosition()
 				posBuilder.SetX(p.X)
 				posBuilder.SetY(p.Y)
 				posBuilder.SetZ(p.Z)
+				m.SetSpawnId(int32(z.ClientEntries[id].EntityId))
 			}
 			return nil
 		}

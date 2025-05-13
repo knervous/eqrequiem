@@ -31,6 +31,7 @@ export const CharacterSelectUIComponent: React.FC = () => {
 
   const charSelectHandler = useCallback(
     async (serverCharInfo: CharacterSelect) => {
+      console.log('here??');
       if (!gotCharInfo.current) {
         await GameManager.instance.loadCharacterSelect();
       }
@@ -131,7 +132,7 @@ export const CharacterSelectUIComponent: React.FC = () => {
       CharacterSelect,
       charSelectHandler,
     );
-
+    console.log('Sending token');
     WorldSocket.registerOpCodeHandler<JWTResponse>(
       OpCodes.JWTResponse,
       JWTResponse,
@@ -141,6 +142,8 @@ export const CharacterSelectUIComponent: React.FC = () => {
           setMode("login");
           GameManager.instance.dispose();
           WorldSocket.close();
+        } else {
+          WorldSocket.setSessionId(e.status);
         }
         console.log('JWT Response', e.status);
       },
@@ -151,7 +154,6 @@ export const CharacterSelectUIComponent: React.FC = () => {
     });
     
   }, [setMode, charSelectHandler, token, setSplash]);
-
   const charSelectNum = useMemo(() => {
     return 8 - (charInfo?.characterCount ?? 0);
   }, [charInfo?.characterCount]);

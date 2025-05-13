@@ -3,7 +3,7 @@ package opcodes
 type OpCode uint16
 
 const (
-	Unknown OpCode = iota
+	Reconnect OpCode = iota
 	Padding1
 	Padding2
 	//////////////////////

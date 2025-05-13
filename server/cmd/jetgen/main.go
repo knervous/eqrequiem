@@ -10,7 +10,7 @@ import (
 )
 
 func getConnection() (mysql.DBConnection, error) {
-	serverConfig, err := config.NewConfig()
+	serverConfig, err := config.Get()
 	if err != nil {
 		return mysql.DBConnection{}, fmt.Errorf("failed to read config: %v", err)
 	}

@@ -46,7 +46,7 @@ export const LoginWindowComponent: React.FC = () => {
 
   const connectToWorld = useCallback(
     async (worldName = defaultWorldName) => {
-      let storedDetails = null;
+      let storedDetails: ({ token: string} | null) = null;
       try {
         const storedDetailsString = localStorage.getItem(worldName);
         if (storedDetailsString) {
@@ -65,6 +65,10 @@ export const LoginWindowComponent: React.FC = () => {
           navigate("/");
         })
       ) {
+        if (storedDetails === null) {
+          alert("World Server Offline");
+          return;
+        }
         token.current = storedDetails.token;
         setMode("character-select");
       } else {

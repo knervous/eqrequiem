@@ -36,7 +36,6 @@ export class ZonePacketHandler {
 
   @opCodeHandler(OpCodes.NewZone, NewZone)
   newZone(newZone: NewZone) {
-
     GameManager.instance.loadZoneServer(newZone);
     this.setMode('game');
 

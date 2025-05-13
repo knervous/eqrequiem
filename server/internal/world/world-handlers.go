@@ -62,7 +62,7 @@ func HandleJWTLogin(ses *session.Session, payload []byte, wh *WorldHandler) {
 		log.Printf("failed to create JWTResponse: %v", err)
 		return
 	}
-	jwtResponse.SetStatus(1)
+	jwtResponse.SetStatus(int32(ses.SessionID))
 	err = ses.SendData(jwtResponse.Message(), opcodes.JWTResponse)
 	if err != nil {
 		log.Printf("failed to send JWTResponse: %v", err)

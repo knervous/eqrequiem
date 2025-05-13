@@ -55,7 +55,7 @@ func HandleClientUpdate(z *ZoneInstance, ses *session.Session, payload []byte) {
 		Heading: req.Heading(),
 	}
 	ses.Client.SetPosition(newPosition)
-	z.markMoved(ses.Client.MobID, newPosition)
+	z.markMoved(ses.SessionID, newPosition)
 }
 
 func HandleRequestClientZoneChange(z *ZoneInstance, ses *session.Session, payload []byte) {

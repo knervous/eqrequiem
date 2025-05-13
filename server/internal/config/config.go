@@ -41,22 +41,29 @@ type Config struct {
 	DBPass      string `json:"db_pass"`
 	Local       bool   `json:"local"`
 	LocalQuests bool   `json:"localQuests"`
+	GracePeriod int    `json:"gracePeriod"`
 }
 
-func NewConfig() (*Config, error) {
+var config *Config
+
+func Get() (*Config, error) {
+	if config != nil {
+		return config, nil
+	}
 	data, err := configData.ReadFile("serverconfig/eqemu_config.json")
 	if err != nil {
 		return nil, err
 	}
 
 	// Initialize with default values
-	config := &Config{
+	config = &Config{
 		DBHost:      "127.0.0.1", // Default host
 		DBPort:      3306,        // Default MySQL port
 		DBUser:      "root",      // Default user
 		DBPass:      "",          // Default empty password
 		Local:       false,       // Default local setting
 		LocalQuests: false,       // Default local setting
+		GracePeriod: 5,           // Default local setting
 	}
 
 	// Unmarshal JSON, overwriting defaults with provided values

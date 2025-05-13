@@ -1,5 +1,5 @@
 export enum OpCodes {
-    Unknown = 0,
+    Reconnect = 0,
 	Padding1,
 	Padding2,
     // JWT

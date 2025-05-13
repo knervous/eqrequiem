@@ -1,30 +1,41 @@
-import { Int } from "@game/Net/internal/api/capnp/common";
 import { OpCodes } from "@game/Net/opcodes";
-import * as capnp    from "capnp-ts";
-
-import { MessageType } from "@protobuf-ts/runtime";
 import * as $ from "capnp-es";
-import { JWTResponse } from "@game/Net/internal/api/capnp/world";
+interface WebTransportOptions {
+  serverCertificateHashes?: Array<{
+    algorithm: 'sha-256'; // Currently, only 'sha-256' is supported
+    value: ArrayBuffer;
+  }>;
+  allowPooling?: boolean;
+  congestionControl?: 'default' | 'low-latency' | 'throughput';
+}
 
-// Define interfaces for WebTransport options and hash
 interface WebTransport {
-  datagrams: {
-    writable: WritableStream<Uint8Array>;
-    readable: ReadableStream<Uint8Array>;
+  readonly datagrams: {
+    readonly writable: WritableStream<Uint8Array>;
+    readonly readable: ReadableStream<Uint8Array>;
   };
-  incomingBidirectionalStreams: ReadableStream<{
+  readonly incomingBidirectionalStreams: ReadableStream<{
     readable: ReadableStream<Uint8Array>;
     writable: WritableStream<Uint8Array>;
   }>;
-  ready: Promise<void>;
-  closed: Promise<boolean>;
-  close(): void;
+  readonly incomingUnidirectionalStreams: ReadableStream<ReadableStream<Uint8Array>>;
+  readonly ready: Promise<void>;
+  readonly closed: Promise<{ reason?: string; closeCode?: number }>;
+  close(closeInfo?: { closeCode?: number; reason?: string }): void;
+  createBidirectionalStream(): Promise<{
+    readable: ReadableStream<Uint8Array>;
+    writable: WritableStream<Uint8Array>;
+  }>;
+  createUnidirectionalStream(): Promise<WritableStream<Uint8Array>>;
 }
 
+// Define the constructor type separately
+interface WebTransportConstructor {
+  new (url: string, options?: WebTransportOptions): WebTransport;
+}
 function setStructFields<T extends $.Struct>(struct: T, data: Partial<Record<keyof T, any>>) {
   for (const [key, value] of Object.entries(data)) {
     if (value !== undefined) {
-      // TypeScript ensures key is a valid field of T, and we use 'any' for value to allow flexibility
       (struct as any)[key] = value;
     }
   }
@@ -54,10 +65,27 @@ export class EqSocket {
   private writer: WritableStreamDefaultWriter<Uint8Array> | null = null;
   private writeQueue: Promise<void> = Promise.resolve();
   private onClose: (() => void) | null = null;
+  // Reconnection properties
+  private url: string | null = null;
+  private port: number | string | null = null;
+  private maxRetries: number;
+  private retryCount: number = 0;
+  private reconnectTimeout: NodeJS.Timeout | null = null;
+  private allowReconnect: boolean;
+  private sessionId: number | null = null;
 
-  constructor() {
+  constructor(config: {
+    maxRetries?: number; // Default 5
+    allowReconnect?: boolean; // Default true
+  } = {}) {
+    this.maxRetries = config.maxRetries ?? 5;
+    this.allowReconnect = config.allowReconnect ?? true;
     this.close = this.close.bind(this);
-    window.addEventListener("beforeunload", this.close);
+    window.addEventListener("beforeunload", () => this.close(false));
+  }
+
+  public setSessionId(sessionId: number): void {
+    this.sessionId = sessionId;
   }
 
   public async connect(
@@ -65,52 +93,66 @@ export class EqSocket {
     port: number | string,
     onClose: () => void,
   ): Promise<boolean> {
-    const WebTransport = (window as any).WebTransport;
+    const WebTransport = (window as any).WebTransport as WebTransportConstructor;
     if (!WebTransport) {
       console.error("WebTransport not supported");
       return false;
     }
 
+    // Store connection parameters
+    this.url = url;
+    this.port = port;
+    this.onClose = onClose;
+
     console.log(`Connecting via WebTransport to: ${port}`);
     if (this.webtransport !== null && !(await this.webtransport.closed)) {
       console.log("Clearing webtransport");
-      this.close();
+      this.close(false); // Don't schedule reconnect during initial connect
     }
 
     try {
+      const sid = this.sessionId ?? 0;
       if (import.meta.env.VITE_LOCAL_DEV === "true") {
         const hash = await fetch(`/api/hash?port=7100&ip=127.0.0.1`).then((r: Response) => r.text());
-        this.webtransport = new WebTransport(`https://127.0.0.1/eq`, {
+        this.webtransport = new WebTransport(`https://127.0.0.1/eq?sid=${sid}`, {
           serverCertificateHashes: [{ algorithm: "sha-256", value: base64ToArrayBuffer(hash) }],
         });
         console.log("Got hash", hash);
       } else {
-        this.webtransport = new WebTransport(`https://${url}:${port}/eq`);
+        this.webtransport = new WebTransport(`https://${url}:${port}/eq?sid=${sid}`);
       }
 
       await this.webtransport!.ready;
       this.writer = this.webtransport!.datagrams.writable.getWriter();
       this.isConnected = true;
+      this.retryCount = 0; // Reset retry count on successful connection
+
+      // Monitor WebTransport closure for reconnection
+      this.webtransport!.closed.then(() => {
+        console.log("WebTransport closed");
+        this.close();
+      }).catch((e) => {
+        console.warn("WebTransport closed with error:", e);
+        this.close();
+      });
     } catch (e) {
       console.warn("Error connecting socket:", e);
-      this.close();
+      this.scheduleReconnect();
       return false;
     }
 
     // Start datagram read loop
-    this.readLoop(onClose).catch((e) => {
+    this.readLoop().catch((e) => {
       console.warn("Error in datagram read loop:", e);
       this.close();
-      onClose();
     });
 
     // Start stream read loop
-    this.streamReadLoop(onClose).catch((e) => {
+    this.streamReadLoop().catch((e) => {
       console.warn("Error in stream read loop:", e);
       this.close();
-      onClose();
     });
-    this.onClose = onClose;
+
     return true;
   }
 
@@ -126,15 +168,13 @@ export class EqSocket {
         await this.writer!.write(buffer);
       } catch (e) {
         console.error("Error sending datagram:", e);
+        this.close();
         throw e;
       }
     });
 
     return this.writeQueue;
   }
-  
-
-  // change your signature to accept the actual struct class
 
   public async sendMessage<T extends $.Struct>(
     opCode: number,
@@ -142,10 +182,10 @@ export class EqSocket {
     messageData: Partial<Record<keyof T, any>>,
   ): Promise<void> {
     const message = new $.Message();
-    const root    = message.initRoot(StructType);
+    const root = message.initRoot(StructType);
     setStructFields(root, messageData);
-    const buf     = $.Message.toArrayBuffer(message);
-    const opBuf   = new Uint16Array([opCode]).buffer;
+    const buf = $.Message.toArrayBuffer(message);
+    const opBuf = new Uint16Array([opCode]).buffer;
     await this.send(new Uint8Array(concatArrayBuffer(opBuf, buf)));
   }
 
@@ -159,13 +199,12 @@ export class EqSocket {
       throw new Error("Socket not connected");
     }
     const message = new $.Message();
-    const root    = message.initRoot(StructType);
+    const root = message.initRoot(StructType);
     setStructFields(root, messageData);
-    const buf     = $.Message.toArrayBuffer(message);
-    const opBuf   = new Uint16Array([opCode]).buffer;
+    const buf = $.Message.toArrayBuffer(message);
+    const opBuf = new Uint16Array([opCode]).buffer;
     await this.send(new Uint8Array(concatArrayBuffer(opBuf, buf)));
   }
-
 
   public registerOpCodeHandler<T extends $.Struct>(
     opCode: OpCodes,
@@ -176,13 +215,14 @@ export class EqSocket {
       try {
         const reader = new $.Message(data, false);
         const root = reader.getRoot(StructType);
-        handler(root);
+        handler(root as T);
       } catch (e) {
         console.error(`Error decoding Cap’n Proto message for opcode ${opCode}:`, e);
       }
     };
   }
-  public close(): void {
+
+  public close(scheduleReconnect: boolean = true): void {
     this.isConnected = false;
     if (this.writer) {
       this.writer.releaseLock();
@@ -192,12 +232,42 @@ export class EqSocket {
       console.log("Closing WebTransport");
       this.webtransport.close();
       this.webtransport = null;
+    }
+    if (scheduleReconnect && this.allowReconnect) {
+      this.scheduleReconnect();
+    } else {
+      console.log("Connection closed; no reconnection scheduled");
       this.onClose?.();
     }
   }
 
+  // Schedule reconnection with exponential backoff
+  private scheduleReconnect(): void {
+    if (this.reconnectTimeout) {
+      clearTimeout(this.reconnectTimeout);
+    }
+    if (this.retryCount >= this.maxRetries || !this.url || !this.port || !this.onClose) {
+      console.log("Max retries reached or no connection params; calling onClose");
+      this.onClose?.();
+      this.retryCount = 0;
+      return;
+    }
+
+    const delay = Math.min(1000 * Math.pow(2, this.retryCount), 30_000); // Exponential backoff, max 30s
+    this.retryCount++;
+    console.log(`Scheduling reconnect attempt ${this.retryCount}/${this.maxRetries} in ${delay}ms`);
+
+    this.reconnectTimeout = setTimeout(async () => {
+      console.log(`Attempting reconnect to ${this.url}:${this.port}`);
+      const success = await this.connect(this.url!, this.port!, this.onClose!);
+      if (!success) {
+        this.scheduleReconnect(); // Retry again if failed
+      }
+    }, delay);
+  }
+
   // Datagram read loop
-  private async readLoop(onClose: () => void): Promise<void> {
+  private async readLoop(): Promise<void> {
     if (!this.webtransport) return;
 
     const reader = this.webtransport.datagrams.readable.getReader();
@@ -208,7 +278,6 @@ export class EqSocket {
         if (done) {
           console.log('Done loop');
           this.close();
-          onClose();
           break;
         }
         if (value) {
@@ -229,7 +298,7 @@ export class EqSocket {
   }
 
   // Stream read loop
-  private async streamReadLoop(onClose: () => void): Promise<void> {
+  private async streamReadLoop(): Promise<void> {
     if (!this.webtransport) return;
 
     const streamReader = this.webtransport.incomingBidirectionalStreams.getReader();
@@ -240,11 +309,9 @@ export class EqSocket {
         if (done) {
           console.log('Done stream loop');
           this.close();
-          onClose();
           break;
         }
         if (stream) {
-          // Process the stream in a separate async function to allow concurrent stream handling
           this.processStream(stream.readable, stream.writable).catch((e) => {
             console.warn("Error processing stream:", e);
           });
@@ -265,7 +332,7 @@ export class EqSocket {
   ): Promise<void> {
     const reader = readable.getReader();
     let buffer = new Uint8Array(0);
-  
+
     try {
       while (true) {
         const { value, done } = await reader.read();
@@ -275,27 +342,23 @@ export class EqSocket {
           newBuffer.set(buffer, 0);
           newBuffer.set(value, buffer.length);
           buffer = newBuffer;
-  
-          // Process messages while we have enough data
+
           while (buffer.length >= 4) {
-            // Read 4-byte length prefix
-            const length = new DataView(buffer.buffer).getUint32(0, true); // Little-endian
+            const length = new DataView(buffer.buffer).getUint32(0, true);
             if (buffer.length < 4 + length) {
-              break; // Wait for more data
+              break;
             }
-  
-            // Extract message (opcode + payload)
+
             const message = buffer.slice(4, 4 + length);
             const opcode = new Uint16Array(message.buffer.slice(0, 2))[0];
             const payload = message.slice(2);
-  
+
             if (this.opCodeHandlers[opcode]) {
               this.opCodeHandlers[opcode](payload);
             } else {
               console.log(`No handler for stream opcode ${opcode}`, payload);
             }
-  
-            // Remove processed message from buffer
+
             buffer = buffer.slice(4 + length);
           }
         }

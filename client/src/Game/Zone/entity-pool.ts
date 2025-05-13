@@ -48,19 +48,20 @@ export default class EntityPool {
   UpdateSpawnPosition(spawnUpdate: EntityPositionUpdate) {
     const spawnId = spawnUpdate.spawnId;
     const spawn = this.entities[spawnId];
+    console.log('Update spawn position', spawnId, spawn);
     if (!spawn) {
       return;
     }
-    spawn.x = spawnUpdate.position.x;
-    spawn.y = spawnUpdate.position.y;
-    spawn.z = spawnUpdate.position.z;
+    spawn.x = -spawnUpdate.position.x;
+    spawn.y = spawnUpdate.position.z;
+    spawn.z = spawnUpdate.position.y;
 
     const node = this.nodes[spawnId];
     if (!node) {
       return;
     }
     const staticBody = node as StaticBody3D;
-    staticBody.global_position = new Vector3(-spawnUpdate.position.y, spawnUpdate.position.z, spawnUpdate.position.x);
+    staticBody.global_position = new Vector3(-spawnUpdate.position.x, spawnUpdate.position.z, spawnUpdate.position.y);
     
     ;// = new Vector3(-spawn.y, spawn.z, spawn.x);
   }
@@ -109,7 +110,7 @@ export default class EntityPool {
   
     const shape = new CollisionShape3D();
     const sphereShape = new SphereShape3D();
-    sphereShape.radius = 2.0;
+    sphereShape.radius = 200.0;
     shape.shape = sphereShape;
     shape.disabled = false; // Explicitly enable
   
@@ -117,7 +118,7 @@ export default class EntityPool {
     staticBody.collision_mask = 1 << 0; // Sees layer 1 (world)
     staticBody.add_child(instance);
     staticBody.add_child(shape);
-    instance.visibility_range_end = 500; // Cull beyond this distance
+    instance.visibility_range_end = 5000; // Cull beyond this distance
     instance.visibility_range_end_margin = 25.0; // Optional: buffer for smoother culling
     // Optional: Add fade-out effect
     instance.visibility_range_fade_mode =

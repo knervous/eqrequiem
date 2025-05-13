@@ -28,7 +28,6 @@ func NewWorldHandler(zoneManager *ZoneManager, sessionManager *session.SessionMa
 
 // HandlePacket processes incoming datagrams and routes them.
 func (wh *WorldHandler) HandlePacket(session *session.Session, data []byte) {
-
 	// Check if the message should be handled globally (e.g., login)
 	if wh.globalRegistry.ShouldHandleGlobally(data) {
 		wh.globalRegistry.HandleWorldPacket(session, data)

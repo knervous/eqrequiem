@@ -62,7 +62,7 @@ func GenerateTLSConfig(certPEM, keyPEM []byte) (*tls.Config, error) {
 
 // LoadTLSConfig loads TLS config, preferring embedded key.pem if available, falling back to dynamic generation
 func LoadTLSConfig() (*tls.Config, error) {
-	serverConfig, err := config.NewConfig()
+	serverConfig, err := config.Get()
 	if err != nil {
 		return nil, fmt.Errorf("failed to read config: %v", err)
 	}

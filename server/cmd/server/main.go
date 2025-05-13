@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/knervous/eqgo/internal/config"
 	"github.com/knervous/eqgo/internal/db"
@@ -16,7 +17,7 @@ import (
 )
 
 func getConnectionString() (string, error) {
-	serverConfig, err := config.NewConfig()
+	serverConfig, err := config.Get()
 	if err != nil {
 		return "", fmt.Errorf("failed to read config: %v", err)
 	}
@@ -46,10 +47,22 @@ func main() {
 		log.Fatalf("failed to initialize items: %v", err)
 	}
 
-	srv, err := server.NewServer(dsn)
+	serverConfig, err := config.Get()
+	if err != nil {
+		log.Fatalf("failed to read config: %v", err)
+	}
+
+	srv, err := server.NewServer(dsn, time.Duration(serverConfig.GracePeriod), serverConfig.Local)
 	if err != nil {
 		log.Fatalf("failed to create server: %v", err)
 	}
+
+	// _, err = nav.GetNavigation()
+
+	// if err != nil {
+	// 	log.Fatalf("Failed to create navigation %v", err)
+	// }
+
 	go srv.StartServer()
 
 	sigChan := make(chan os.Signal, 1)

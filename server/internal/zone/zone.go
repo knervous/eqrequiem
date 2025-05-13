@@ -167,6 +167,7 @@ func (z *ZoneInstance) AddClient(sessionID int) {
 		EntityId:      nextId,
 	}
 	z.clientsById[nextId] = clientSession.Client
+	z.registerNewClientGrid(sessionID, clientSession.Client.GetPosition())
 
 	fmt.Printf("Added client session %d to zone %d instance %d\n", sessionID, z.ZoneID, z.InstanceID)
 }
@@ -196,6 +197,7 @@ func (z *ZoneInstance) RemoveClient(sessionID int) {
 	defer z.mutex.Unlock()
 	fmt.Println("Removing client session", sessionID)
 	delete(z.ClientEntries, sessionID)
+	delete(z.clientsById, sessionID)
 }
 
 // run is the main loop for the zone instance.
@@ -203,7 +205,7 @@ func (z *ZoneInstance) run() {
 	defer z.wg.Done()
 	zoneLoop := time.NewTicker(50 * time.Millisecond)
 	defer zoneLoop.Stop()
-	worldTick := time.NewTicker(50 * time.Millisecond)
+	worldTick := time.NewTicker(6 * time.Second)
 	defer worldTick.Stop()
 	fmt.Printf("[Zone %d·Inst %d] started\n", z.ZoneID, z.InstanceID)
 

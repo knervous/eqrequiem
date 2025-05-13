@@ -32,16 +32,16 @@ type Session struct {
 	RootSeg       *capnp.Segment // Current segment
 	CharacterName string
 	Client        *entity.Client
+	Messenger     ClientMessenger // For sending replies
 
 	// Private
 
 	writeMessageBuffer *capnp.Message
 	readMessageBuffer  *capnp.Message
 	arena              capnp.Arena
-	writeBuffer        []byte          // Pre-allocated buffer for message and serialization
-	readBuffer         []byte          // Pre-allocated buffer for message and serialization
-	packBuf            []byte          // Pre-allocated buffer for packing/unpacking messages
-	messenger          ClientMessenger // For sending replies
+	writeBuffer        []byte // Pre-allocated buffer for message and serialization
+	readBuffer         []byte // Pre-allocated buffer for message and serialization
+	packBuf            []byte // Pre-allocated buffer for packing/unpacking messages
 	sendMu             sync.Mutex
 	messageMu          sync.Mutex
 	closed             bool
@@ -77,6 +77,20 @@ func NewSessionManager() *SessionManager {
 	}
 }
 
+func (sm *SessionManager) GetValidSession(sessionID int, ip string) (*Session, error) {
+	sm.mu.RLock()
+	defer sm.mu.RUnlock()
+
+	session, ok := sm.sessions[sessionID]
+	if !ok {
+		return nil, fmt.Errorf("session not found")
+	}
+	if session.IP != ip {
+		return nil, fmt.Errorf("IP mismatch")
+	}
+	return session, nil
+}
+
 // CreateSession initializes a new session with the given sessionID and accountID.
 func (sm *SessionManager) CreateSession(messenger ClientMessenger, sessionID int, ip string) *Session {
 	sm.mu.Lock()
@@ -99,7 +113,7 @@ func (sm *SessionManager) CreateSession(messenger ClientMessenger, sessionID int
 		readBuffer:         readBuf,
 		writeMessageBuffer: msg,
 		readMessageBuffer:  readMsg,
-		messenger:          messenger,
+		Messenger:          messenger,
 		packBuf:            packBuf,
 	}
 	sm.sessions[sessionID] = session
@@ -165,7 +179,7 @@ func (s *Session) Close() {
 	s.arena = nil
 	s.writeBuffer = nil
 	s.packBuf = nil
-	if closer, ok := s.messenger.(io.Closer); ok {
+	if closer, ok := s.Messenger.(io.Closer); ok {
 		_ = closer.Close()
 	}
 }
