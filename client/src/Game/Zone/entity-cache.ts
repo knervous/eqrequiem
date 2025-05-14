@@ -4,7 +4,6 @@ import Entity from "@game/Entity/entity";
 import { Vector3 } from "@/godot-module";
 import { Spawn } from "@game/Net/internal/api/capnp/common";
 import RACE_DATA from "@game/Constants/race-data";
-
 type ModelKey = string;
 
 export default class EntityCache {
@@ -19,10 +18,6 @@ export default class EntityCache {
     if (!this.packedScenes[model]) {
       const base = new Entity("models", model);
       await base.createPackedEntityScene();
-      const node = base.getNode();
-      if (node) {
-        //node.visible = false;
-      }
       this.packedScenes[model] = Promise.resolve(base);
     }
     return this.packedScenes[model]!;

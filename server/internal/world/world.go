@@ -47,15 +47,14 @@ func (wh *WorldHandler) HandlePacket(session *session.Session, data []byte) {
 
 // RemoveSession cleans up session data.
 func (wh *WorldHandler) RemoveSession(sessionID int) {
-	wh.sessionManager.RemoveSession(sessionID)
 	ses, ok := wh.sessionManager.GetSession(sessionID)
 	if ok && ses != nil && ses.ZoneID != -1 {
 		zoneInstance, ok := wh.zoneManager.Get(ses.ZoneID, ses.InstanceID)
 		if ok {
 			zoneInstance.RemoveClient(sessionID)
 		}
-		return
 	}
+	wh.sessionManager.RemoveSession(sessionID)
 
 }
 

@@ -70,13 +70,12 @@ export default class Actor extends BaseGltfModel {
   ) {
     if (
       !this.animationPlayer ||
-      !this.animations.includes(animationName) ||
       animationName === this.currentAnimation ||
       this.currentPlayToEnd
     ) {
       return;
     }
-    const animation = this.animationPlayer.get_animation(animationName);
+    const animation = this.animationPlayer.has_animation(animationName) && this.animationPlayer.get_animation(animationName);
     if (animation) {
       if (playToEnd) {
         this.currentPlayToEnd = true;

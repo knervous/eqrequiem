@@ -87,6 +87,8 @@ export const {
   PhysicsRayQueryParameters3D,
   Basis,
   Transform3D,
+  ResourceSaver,
+  FileAccess,
 } = godot;
 
 export default godot;

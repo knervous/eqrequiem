@@ -142,6 +142,10 @@ func (z *ZoneInstance) subscribeExistingToNew(newID int, pos entity.MobPosition)
 // FlushUpdates sends all pending position updates to subscribers.
 func (z *ZoneInstance) FlushUpdates() {
 	for _, id := range z.dirtyEntities {
+		entity := z.Entities[id]
+		if entity.Type() == EntityTypeNPC {
+			continue
+		}
 		pkt := func(m eq.EntityPositionUpdate) error {
 			posBuilder, _ := m.NewPosition()
 			entity := z.Entities[id]
@@ -168,8 +172,11 @@ func (z *ZoneInstance) FlushUpdates() {
 			return nil
 		}
 
-		for sid := range z.subs[id] {
-			if cs := z.ClientEntries[sid].ClientSession; cs != nil {
+		for entityId := range z.subs[id] {
+			if entityId == id {
+				continue
+			}
+			if cs := z.ClientEntriesByEntityID[entityId].ClientSession; cs != nil {
 				session.QueueMessage(
 					cs,
 					eq.NewRootEntityPositionUpdate,

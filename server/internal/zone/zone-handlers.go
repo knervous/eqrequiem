@@ -79,8 +79,12 @@ func HandleClientAnimation(z *ZoneInstance, ses *session.Session, payload []byte
 		m.SetSpawnId(req.SpawnId())
 		return nil
 	}
-	for sid := range z.subs[ses.SessionID] {
-		if cs := z.ClientEntries[sid].ClientSession; cs != nil && cs != ses {
+	spawnId := req.SpawnId()
+	for entityId := range z.subs[int(spawnId)] {
+		if entityId == int(spawnId) {
+			continue
+		}
+		if cs := z.ClientEntriesByEntityID[entityId].ClientSession; cs != nil && cs != ses {
 			session.QueueDatagram(
 				cs,
 				eq.NewRootEntityAnimation,
@@ -207,6 +211,7 @@ func HandleRequestClientZoneChange(z *ZoneInstance, ses *session.Session, payloa
 		spawn.SetLevel(int32(npc.NpcData.Level))
 		spawn.SetName(npc.Name())
 		spawn.SetSpawnId(int32(npc.ID()))
+		spawn.SetIsNpc(1)
 		spawn.SetX(int32(npc.X))
 		spawn.SetY(int32(npc.Y))
 		spawn.SetZ(int32(npc.Z))
@@ -222,8 +227,8 @@ func HandleRequestClientZoneChange(z *ZoneInstance, ses *session.Session, payloa
 	z.registerNewClientGrid(clientEntry.EntityId, entity.MobPosition{X: float32(charData.X), Y: float32(charData.Y), Z: float32(charData.Z), Heading: float32(charData.Heading)})
 
 	// Send all client entities
-	for id, client := range z.ClientEntries {
-		if id == ses.SessionID || client.ClientSession == nil {
+	for sessionId, client := range z.ClientEntries {
+		if sessionId == ses.SessionID || client.ClientSession == nil {
 			continue
 		}
 		pcData := client.ClientSession.Client.CharData
@@ -240,6 +245,7 @@ func HandleRequestClientZoneChange(z *ZoneInstance, ses *session.Session, payloa
 		pc.SetCharClass(int32(pcData.Class))
 		pc.SetLevel(int32(pcData.Level))
 		pc.SetName(pcData.Name)
+		pc.SetIsNpc(0)
 		pc.SetSpawnId(int32(client.EntityId))
 		pc.SetX(int32(pcData.X))
 		pc.SetY(int32(pcData.Y))
@@ -257,6 +263,7 @@ func HandleRequestClientZoneChange(z *ZoneInstance, ses *session.Session, payloa
 				me.SetLevel(int32(charData.Level))
 				me.SetName(charData.Name)
 				me.SetSpawnId(int32(clientEntry.EntityId))
+				me.SetIsNpc(0)
 				me.SetX(int32(charData.X))
 				me.SetY(int32(charData.Y))
 				me.SetZ(int32(charData.Z))

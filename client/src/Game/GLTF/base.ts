@@ -75,7 +75,7 @@ export class BaseGltfModel {
   protected node: Node3D | undefined; // This will now be the CharacterBody3D root
   protected secondaryNode: Node3D | undefined; // This will now be the CharacterBody3D root
   protected gltfNode: Node3D | undefined; // The GLTF scene node
-  protected packedScene: PackedScene | undefined;
+  public packedScene: PackedScene | undefined;
   protected animationPlayer: AnimationPlayer | undefined;
   protected animationIntervals: number[] = [];
 

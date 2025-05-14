@@ -135,6 +135,7 @@ func (z *ZoneInstance) processSpawns() {
 				spawn.SetCharClass(int32(npcType.Class))
 				spawn.SetLevel(int32(npcType.Level))
 				spawn.SetName(npcType.Name)
+				spawn.SetIsNpc(1)
 				spawn.SetSpawnId(int32(npcID))
 				spawn.SetX(int32(entry.Spawn2.X))
 				spawn.SetY(int32(entry.Spawn2.Y))

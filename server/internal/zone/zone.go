@@ -28,11 +28,12 @@ type packet struct {
 
 // ZoneInstance manages a zone instance, including clients, NPCs, and spawning.
 type ZoneInstance struct {
-	Zone          *model.Zone
-	ZoneID        int
-	InstanceID    int
-	ClientEntries map[int]ClientEntry
-	Quit          chan struct{}
+	Zone                    *model.Zone
+	ZoneID                  int
+	InstanceID              int
+	ClientEntries           map[int]ClientEntry
+	ClientEntriesByEntityID map[int]ClientEntry
+	Quit                    chan struct{}
 
 	QuestInterface *quest.ZoneQuestInterface
 
@@ -97,16 +98,17 @@ func NewZoneInstance(zoneID, instanceID int) *ZoneInstance {
 	QuestInterface := questregistry.GetQuestInterface(*zone.ShortName)
 
 	z := &ZoneInstance{
-		Zone:           zone,
-		ZoneID:         zoneID,
-		InstanceID:     instanceID,
-		Quit:           make(chan struct{}),
-		ClientEntries:  make(map[int]ClientEntry),
-		ZonePool:       zonePool,
-		QuestInterface: QuestInterface,
-		Npcs:           make(map[int]*entity.NPC),
-		Entities:       make(map[int]entity.Entity),
-		npcsByName:     make(map[string]*entity.NPC),
+		Zone:                    zone,
+		ZoneID:                  zoneID,
+		InstanceID:              instanceID,
+		Quit:                    make(chan struct{}),
+		ClientEntries:           make(map[int]ClientEntry),
+		ClientEntriesByEntityID: make(map[int]ClientEntry),
+		ZonePool:                zonePool,
+		QuestInterface:          QuestInterface,
+		Npcs:                    make(map[int]*entity.NPC),
+		Entities:                make(map[int]entity.Entity),
+		npcsByName:              make(map[string]*entity.NPC),
 
 		// Grid processing
 		entityCell:    make(map[int]int64),
@@ -166,6 +168,7 @@ func (z *ZoneInstance) AddClient(sessionID int) {
 		ClientSession: clientSession,
 		EntityId:      nextId,
 	}
+	z.ClientEntriesByEntityID[nextId] = z.ClientEntries[sessionID]
 	clientSession.Client.Mob.MobID = nextId
 	z.Entities[nextId] = clientSession.Client
 	fmt.Printf("Added client session %d to zone %d instance %d\n", sessionID, z.ZoneID, z.InstanceID)

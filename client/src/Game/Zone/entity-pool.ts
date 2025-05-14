@@ -166,14 +166,20 @@ export default class EntityPool {
   }
 
   UpdateSpawnPosition(sp: EntityPositionUpdate) {
-    // Disable this for now, work on it later
+    // Disable this for NPC for now, work on it later
 
-    return;
     const sid = sp.spawnId;
     const spawn = this.spawns[sid];
     const entity = this.entities[sid];
-    if (!spawn) return;
+    if (spawn) {
+      console.log('Spawn is NPC', spawn.isNpc, sid, spawn.name);
 
+    } else {
+      console.log('Spawn not found', sid);
+      return;
+    }
+    if (!spawn) return;
+    console.log('Update spawn position', sid, spawn.name);
     // record old cell
     const oldCell: CellTriple = [spawn.cellX, spawn.cellY, spawn.cellZ];
 
@@ -194,12 +200,12 @@ export default class EntityPool {
 
     // update visual
     if (entity && entity.getNode() && entity.data) {
-      entity.data.x = -spawn.x;
-      entity.data.y = spawn.z;
-      entity.data.z = spawn.y;
+      // entity.data.x = -spawn.x;
+      // entity.data.y = spawn.z;
+      // entity.data.z = spawn.y;
       const node = entity.getNode()!;
       // node.rotate_y(sp.heading * (360 / 512));
-      node.global_position = new Vector3(-spawn.y, spawn.z, spawn.x);
+      node.global_position = new Vector3(-spawn.x, spawn.z, spawn.y);
     }
   }
 
