@@ -6,6 +6,7 @@ import (
 
 	eq "github.com/knervous/eqgo/internal/api/capnp"
 	"github.com/knervous/eqgo/internal/api/opcodes"
+	"github.com/knervous/eqgo/internal/config"
 	db_character "github.com/knervous/eqgo/internal/db/character"
 	"github.com/knervous/eqgo/internal/discord"
 	"github.com/knervous/eqgo/internal/entity"
@@ -35,11 +36,16 @@ func HandleJWTLogin(ses *session.Session, payload []byte, wh *WorldHandler) {
 		log.Printf("failed to get token from JWTLogin struct: %v", err)
 		return
 	}
-
-	discordID, err := discord.ValidateJWT(token)
-	if err != nil {
-		log.Printf("failed to validate JWT token: %v", err)
-		return
+	var discordID string
+	serverConfig, _ := config.Get()
+	if !serverConfig.Local {
+		discordID, err = discord.ValidateJWT(token)
+		if err != nil {
+			log.Printf("failed to validate JWT token: %v", err)
+			return
+		}
+	} else {
+		discordID = "local"
 	}
 
 	accountID, err := GetOrCreateAccount(ctx, discordID)

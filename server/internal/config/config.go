@@ -7,17 +7,17 @@ import (
 	"strings"
 )
 
-//go:embed serverconfig/key.pem
+//go:embed key.pem
 var keyPEMData embed.FS
 
-//go:embed serverconfig/discord.txt
-var discordKeyData embed.FS
-
-//go:embed serverconfig/eqemu_config.json
+//go:embed eqgo_config.json
 var configData embed.FS
 
+//go:embed discord.txt
+var discordKeyData embed.FS
+
 func GetDiscordKey() (string, error) {
-	data, err := discordKeyData.ReadFile("serverconfig/discord.txt")
+	data, err := discordKeyData.ReadFile("discord.txt")
 	if err != nil {
 		return "", fmt.Errorf("failed to read embedded discord key: %w", err)
 	}
@@ -26,7 +26,7 @@ func GetDiscordKey() (string, error) {
 }
 
 func GetCert() (string, error) {
-	data, err := keyPEMData.ReadFile("serverconfig/key.pem")
+	data, err := keyPEMData.ReadFile("key.pem")
 	if err != nil {
 		return "", fmt.Errorf("failed to read embedded cert: %w", err)
 	}
@@ -50,10 +50,6 @@ func Get() (*Config, error) {
 	if config != nil {
 		return config, nil
 	}
-	data, err := configData.ReadFile("serverconfig/eqemu_config.json")
-	if err != nil {
-		return nil, err
-	}
 
 	// Initialize with default values
 	config = &Config{
@@ -61,14 +57,19 @@ func Get() (*Config, error) {
 		DBPort:      3306,        // Default MySQL port
 		DBUser:      "root",      // Default user
 		DBPass:      "",          // Default empty password
-		Local:       false,       // Default local setting
+		Local:       true,        // Default local setting
 		LocalQuests: false,       // Default local setting
 		GracePeriod: 5,           // Default local setting
 	}
 
+	data, err := configData.ReadFile("eqgo_config.json")
+	if err != nil {
+		return config, nil
+	}
+
 	// Unmarshal JSON, overwriting defaults with provided values
 	if err := json.Unmarshal(data, config); err != nil {
-		return nil, err
+		return config, nil
 	}
 
 	return config, nil

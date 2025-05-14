@@ -150,6 +150,7 @@ export default class CharacterSelect {
       console.log("Disposing character", this.character);
       this.character.dispose();
     }
+  
     if (player?.charClass === 0 || player?.race === 0) {
       player.race = 1;
       player.charClass = 1;

@@ -37,7 +37,13 @@ export const CharacterSelectUIComponent: React.FC = () => {
       }
       gotCharInfo.current = true;
       setCharInfo(serverCharInfo);
-      setSelectedChar(serverCharInfo?.characters[0] ?? null);
+      setSelectedChar(serverCharInfo.characterCount > 0 ? serverCharInfo.characters[0] : {
+        race: 0,
+        charClass: 0,
+        name: "Soandso",
+        level: 1,
+      } as CharacterSelectEntry,
+      );
       if (!splashed) {
         setSplash?.(true);
         setTimeout(() => {
@@ -159,19 +165,13 @@ export const CharacterSelectUIComponent: React.FC = () => {
   }, [charInfo?.characterCount]);
 
   useEffect(() => {
-    if (view === VIEWS.CHAR_CREATE) {
+    if (view === VIEWS.CHAR_CREATE || !selectedChar) {
       return;
     }
     GameManager.instance.CharacterSelect?.loadModel(
-      selectedChar ??
-        ({
-          race: 0,
-          charClass: 0,
-          name: "Soandso",
-          level: 1,
-        } as CharacterSelectEntry),
+      selectedChar,
     );
-  }, [selectedChar?.name, view]); // eslint-disable-line
+  }, [selectedChar, view]);  
 
   return !gotCharInfo.current ? null : (
     <Box className="char-select">
@@ -254,7 +254,7 @@ export const CharacterSelectUIComponent: React.FC = () => {
             <UiButtonComponent
               buttonName="A_BigBtn"
               text={"Enter World"}
-              isDisabled={!selectedChar}
+              isDisabled={!selectedChar || charSelectNum === 8}
               scale={1.5}
               textFontSize="9px"
               sx={{ margin: "12px" }}

@@ -1,3 +1,6 @@
 server
 server.log
 server.pid
+discord.txt
+eqgo_config.json
+key.pem

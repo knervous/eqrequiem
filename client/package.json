@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "cross-env VITE_USE_SAGE=true LOCAL_DEV=true vite",
+    "dev": "cross-env VITE_USE_SAGE=true VITE_LOCAL_DEV=true vite",
     "v": "vercel dev",
     "upload": "node scripts/upload.js ~/documents/everquest_rof2",
     "start": "cross-env VITE_LOCAL_DEV=true VITE_USE_SAGE=false LOCAL_DEV=true vite",

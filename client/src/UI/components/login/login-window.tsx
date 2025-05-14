@@ -55,7 +55,8 @@ export const LoginWindowComponent: React.FC = () => {
       } catch (e) {
         console.error("Error parsing stored world details:", e);
       }
-      if (!storedDetails) {
+      const local = import.meta.env.VITE_LOCAL_DEV === 'true';
+      if (!storedDetails && !local) {
         const discordAuthUrl = `https://discord.com/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&response_type=${RESPONSE_TYPE}&redirect_uri=${REDIRECT_URI}&scope=${SCOPE}`;
         window.location.href = discordAuthUrl;
       }
@@ -65,11 +66,15 @@ export const LoginWindowComponent: React.FC = () => {
           navigate("/");
         })
       ) {
-        if (storedDetails === null) {
-          alert("World Server Offline");
-          return;
+        if (local) {
+          token.current = "local";
+        } else {
+          if (storedDetails === null) {
+            alert("World Server Offline");
+            return;
+          }
+          token.current = storedDetails.token;
         }
-        token.current = storedDetails.token;
         setMode("character-select");
       } else {
         alert("World Server Offline");
