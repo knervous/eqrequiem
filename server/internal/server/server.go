@@ -267,10 +267,10 @@ func (s *Server) makeEQHandler() http.HandlerFunc {
 
 // handleSessionClose manages session cleanup with a grace period for reconnection.
 func (s *Server) handleSessionClose(sessionID int, clientIP string) {
-	if s.debugMode {
-		log.Printf("Debug mode: keeping session %d alive for %s", sessionID, clientIP)
-		return
-	}
+	// if s.debugMode {
+	// 	log.Printf("Debug mode: keeping session %d alive for %s", sessionID, clientIP)
+	// 	return
+	// }
 
 	// Start grace period timer
 	time.AfterFunc(s.gracePeriod, func() {

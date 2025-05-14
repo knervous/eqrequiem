@@ -18,4 +18,8 @@ type NPC struct {
 	LastUpdate   time.Time            // last time we moved/interpolated
 }
 
-func (n *NPC) Type() string { return "npc" }
+func (n *NPC) Type() int32 { return EntityTypeNPC }
+
+func (n *NPC) GetPosition() MobPosition {
+	return n.Mob.Position
+}

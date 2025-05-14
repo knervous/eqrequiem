@@ -424,7 +424,7 @@ export class Spawn extends $.Struct {
   static readonly _capnp = {
     displayName: "Spawn",
     id: "d8facf5bce9546c7",
-    size: new $.ObjectSize(200, 5)
+    size: new $.ObjectSize(216, 5)
   };
   get gm(): number {
     return $.utils.getInt32(0, this);
@@ -767,6 +767,24 @@ export class Spawn extends $.Struct {
   }
   set lfg(value: number) {
     $.utils.setInt32(196, value, this);
+  }
+  get cellX(): number {
+    return $.utils.getInt32(200, this);
+  }
+  set cellX(value: number) {
+    $.utils.setInt32(200, value, this);
+  }
+  get cellY(): number {
+    return $.utils.getInt32(204, this);
+  }
+  set cellY(value: number) {
+    $.utils.setInt32(204, value, this);
+  }
+  get cellZ(): number {
+    return $.utils.getInt32(208, this);
+  }
+  set cellZ(value: number) {
+    $.utils.setInt32(208, value, this);
   }
   toString(): string {
     return "Spawn_" + super.toString();
@@ -2608,7 +2626,7 @@ export class EntityPositionUpdate extends $.Struct {
   static readonly _capnp = {
     displayName: "EntityPositionUpdate",
     id: "93bff6bb5eecbc2a",
-    size: new $.ObjectSize(8, 2)
+    size: new $.ObjectSize(24, 2)
   };
   get spawnId(): number {
     return $.utils.getInt32(0, this);
@@ -2658,6 +2676,24 @@ export class EntityPositionUpdate extends $.Struct {
   set heading(value: number) {
     $.utils.setFloat32(4, value, this);
   }
+  get cellX(): number {
+    return $.utils.getInt32(8, this);
+  }
+  set cellX(value: number) {
+    $.utils.setInt32(8, value, this);
+  }
+  get cellY(): number {
+    return $.utils.getInt32(12, this);
+  }
+  set cellY(value: number) {
+    $.utils.setInt32(12, value, this);
+  }
+  get cellZ(): number {
+    return $.utils.getInt32(16, this);
+  }
+  set cellZ(value: number) {
+    $.utils.setInt32(16, value, this);
+  }
   toString(): string {
     return "EntityPositionUpdate_" + super.toString();
   }
@@ -2666,7 +2702,7 @@ export class EntityAnimation extends $.Struct {
   static readonly _capnp = {
     displayName: "EntityAnimation",
     id: "df6175fbc7aa8195",
-    size: new $.ObjectSize(8, 0)
+    size: new $.ObjectSize(8, 1)
   };
   get spawnId(): number {
     return $.utils.getInt32(0, this);
@@ -2674,11 +2710,11 @@ export class EntityAnimation extends $.Struct {
   set spawnId(value: number) {
     $.utils.setInt32(0, value, this);
   }
-  get animation(): number {
-    return $.utils.getInt32(4, this);
+  get animation(): string {
+    return $.utils.getText(0, this);
   }
-  set animation(value: number) {
-    $.utils.setInt32(4, value, this);
+  set animation(value: string) {
+    $.utils.setText(0, value, this);
   }
   toString(): string {
     return "EntityAnimation_" + super.toString();

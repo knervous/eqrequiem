@@ -1235,6 +1235,12 @@ export class PlayerProfile extends $.Struct {
   set inventoryItems(value: $.List<ItemInstance>) {
     $.utils.copyFrom(value, $.utils.getPointer(23, this));
   }
+  get spawnId(): number {
+    return $.utils.getInt32(412, this);
+  }
+  set spawnId(value: number) {
+    $.utils.setInt32(412, value, this);
+  }
   toString(): string {
     return "PlayerProfile_" + super.toString();
   }

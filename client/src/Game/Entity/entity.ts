@@ -1,10 +1,7 @@
-import { Animation, Callable, Label3D, Vector3, Color } from "godot";
-import { BaseGltfModel, LoaderOptions } from "../GLTF/base";
+import { Animation, Callable, Label3D, Vector3, Color, Node3D } from "godot";
 import { AnimationDefinitions } from "../Animation/animation-constants";
-import { EntityAnimation, Spawn } from "@game/Net/internal/api/capnp/common";
-import { WorldSocket } from "@ui/net/instances";
-import { OpCodes } from "@game/Net/opcodes";
-import { PlayerProfile } from "@game/Net/internal/api/capnp/player";
+import { Spawn } from "@game/Net/internal/api/capnp/common";
+import EntityBase from "./entity-base";
 
 
 const prefixes = {
@@ -19,24 +16,26 @@ const prefixes = {
 };
 
 
-export default class Actor extends BaseGltfModel {
+export default class Entity extends EntityBase {
   public animations: string[] = [];
   public currentAnimation: string = ""; 
   public currentPlayToEnd: boolean = false;
-  public data: Spawn | PlayerProfile | null = null;
-  static actorOptions: Partial<LoaderOptions> = {
-    flipTextureY: true,
-    shadow: false, 
-    cullRange: 250,
-    doCull: true,
-    useCapsulePhysics: true,
-  };
-
+  public data: Spawn | null = null;
   // Nameplate node (a Label3D) and its backing string.
   private nameplate: Label3D | null = null;
   
-  constructor(folder: string, model: string, options: Partial<LoaderOptions> = Actor.actorOptions) {
-    super(folder, model, options);
+  constructor(folder: string, model: string) {
+    super(folder, model);
+  }
+
+  public clone(instance: Node3D, data: Spawn): Entity {
+    const clone = new Entity(this.folder, this.model);
+    clone.animationPlayer = this.findAnimationPlayer(instance);
+    clone.animations = clone.animationPlayer?.get_animation_list().toArray() ?? [];
+    clone.data = data;
+    clone.node = instance;
+    return clone;
+
   }
 
   public swapFace(index: number) {
@@ -85,12 +84,6 @@ export default class Actor extends BaseGltfModel {
       this.animationPlayer.stop();
       this.animationPlayer.play(animationName);
       this.currentAnimation = animationName;
-      if (this.data) {
-        WorldSocket.sendMessage(OpCodes.Animation, EntityAnimation, {
-          spawnId: this.data?.spawnId,
-          animation: animationName,
-        });
-      }
       if (this.currentPlayToEnd) {
         this.animationPlayer.connect(
           "animation_finished",
@@ -130,6 +123,7 @@ export default class Actor extends BaseGltfModel {
     this.animations =
       this.animationPlayer?.get_animation_list().toArray() ?? [];
     this.playIdle();
+    
   }
   
 

@@ -37,10 +37,10 @@ type ZoneInstance struct {
 	QuestInterface *quest.ZoneQuestInterface
 
 	// Entities
-	ZonePool    map[int64]*db_zone.SpawnPoolEntry
-	Npcs        map[int]*entity.NPC
-	npcsByName  map[string]*entity.NPC // name → NPC
-	clientsById map[int]*entity.Client
+	ZonePool   map[int64]*db_zone.SpawnPoolEntry
+	Npcs       map[int]*entity.NPC
+	npcsByName map[string]*entity.NPC // name → NPC
+	Entities   map[int]entity.Entity
 
 	// spatial-grid bookkeeping:
 	entityCell map[int]int64
@@ -105,8 +105,8 @@ func NewZoneInstance(zoneID, instanceID int) *ZoneInstance {
 		ZonePool:       zonePool,
 		QuestInterface: QuestInterface,
 		Npcs:           make(map[int]*entity.NPC),
+		Entities:       make(map[int]entity.Entity),
 		npcsByName:     make(map[string]*entity.NPC),
-		clientsById:    make(map[int]*entity.Client),
 
 		// Grid processing
 		entityCell:    make(map[int]int64),
@@ -166,9 +166,8 @@ func (z *ZoneInstance) AddClient(sessionID int) {
 		ClientSession: clientSession,
 		EntityId:      nextId,
 	}
-	z.clientsById[nextId] = clientSession.Client
-	z.registerNewClientGrid(sessionID, clientSession.Client.GetPosition())
-
+	clientSession.Client.Mob.MobID = nextId
+	z.Entities[nextId] = clientSession.Client
 	fmt.Printf("Added client session %d to zone %d instance %d\n", sessionID, z.ZoneID, z.InstanceID)
 }
 
@@ -196,8 +195,9 @@ func (z *ZoneInstance) RemoveClient(sessionID int) {
 	z.mutex.Lock()
 	defer z.mutex.Unlock()
 	fmt.Println("Removing client session", sessionID)
+	clientSession := z.ClientEntries[sessionID]
 	delete(z.ClientEntries, sessionID)
-	delete(z.clientsById, sessionID)
+	delete(z.Entities, clientSession.EntityId)
 }
 
 // run is the main loop for the zone instance.

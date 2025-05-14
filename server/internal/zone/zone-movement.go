@@ -9,8 +9,14 @@ import (
 	"github.com/knervous/eqgo/internal/session"
 )
 
+const (
+	EntityTypeNPC = iota
+	EntityTypePlayer
+	EntityTypeCorpse
+)
+
 // cellSize is the edge length (in world units) of each grid cell.
-const cellSize = 500.0
+const cellSize = 300.0
 
 // packCell encodes a 3D cell coordinate into a single int64 key.
 func packCell(c [3]int) int64 {
@@ -138,20 +144,27 @@ func (z *ZoneInstance) FlushUpdates() {
 	for _, id := range z.dirtyEntities {
 		pkt := func(m eq.EntityPositionUpdate) error {
 			posBuilder, _ := m.NewPosition()
-			// choose source of truth
-			if npc, ok := z.Npcs[id]; ok {
-				posBuilder.SetX(npc.Position.X)
-				posBuilder.SetY(npc.Position.Y)
-				posBuilder.SetZ(npc.Position.Z)
-				m.SetSpawnId(int32(id))
-
-			} else if client, ok := z.clientsById[id]; ok {
-				p := client.GetPosition()
-				posBuilder.SetX(p.X)
-				posBuilder.SetY(p.Y)
-				posBuilder.SetZ(p.Z)
-				m.SetSpawnId(int32(z.ClientEntries[id].EntityId))
+			entity := z.Entities[id]
+			if entity == nil {
+				return nil
 			}
+			m.SetSpawnId(int32(entity.ID()))
+			pos := entity.GetPosition()
+			if entity.Type() == EntityTypeNPC {
+				posBuilder.SetX(pos.X)
+				posBuilder.SetY(pos.Y)
+				posBuilder.SetZ(pos.Z)
+			} else {
+				posBuilder.SetX(pos.X)
+				posBuilder.SetY(pos.Y)
+				posBuilder.SetZ(pos.Z)
+			}
+
+			m.SetHeading(pos.Heading)
+			c := worldToCell(pos.X, pos.Y, pos.Z)
+			m.SetCellX(int32(c[0]))
+			m.SetCellY(int32(c[1]))
+			m.SetCellZ(int32(c[2]))
 			return nil
 		}
 

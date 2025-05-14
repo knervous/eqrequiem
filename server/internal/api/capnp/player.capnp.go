@@ -1906,6 +1906,13 @@ func (s PlayerProfile) NewInventoryItems(n int32) (ItemInstance_List, error) {
 	err = capnp.Struct(s).SetPtr(23, l.ToPtr())
 	return l, err
 }
+func (s PlayerProfile) SpawnId() int32 {
+	return int32(capnp.Struct(s).Uint32(412))
+}
+
+func (s PlayerProfile) SetSpawnId(v int32) {
+	capnp.Struct(s).SetUint32(412, uint32(v))
+}
 
 // PlayerProfile_List is a list of PlayerProfile.
 type PlayerProfile_List = capnp.StructList[PlayerProfile]

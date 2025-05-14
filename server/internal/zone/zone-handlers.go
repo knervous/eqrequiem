@@ -47,15 +47,49 @@ func HandleClientUpdate(z *ZoneInstance, ses *session.Session, payload []byte) {
 		log.Printf("failed to read JWTLogin struct: %v", err)
 		return
 	}
-
 	newPosition := entity.MobPosition{
 		X:       req.X(),
 		Y:       req.Y(),
 		Z:       req.Z(),
 		Heading: req.Heading(),
 	}
+	clientSession := z.ClientEntries[ses.SessionID]
 	ses.Client.SetPosition(newPosition)
-	z.markMoved(ses.SessionID, newPosition)
+	z.markMoved(clientSession.EntityId, newPosition)
+}
+
+func HandleClientAnimation(z *ZoneInstance, ses *session.Session, payload []byte) {
+	req, err := session.Deserialize(ses, payload, eq.ReadRootEntityAnimation)
+	if err != nil {
+		log.Printf("failed to read JWTLogin struct: %v", err)
+		return
+	}
+	animation, err := req.Animation()
+	if err != nil {
+		log.Printf("failed to get animation: %v", err)
+		return
+	}
+
+	pkt := func(m eq.EntityAnimation) error {
+		err := m.SetAnimation(animation)
+		if err != nil {
+			log.Printf("failed to set animation: %v", err)
+			return err
+		}
+		m.SetSpawnId(req.SpawnId())
+		return nil
+	}
+	for sid := range z.subs[ses.SessionID] {
+		if cs := z.ClientEntries[sid].ClientSession; cs != nil && cs != ses {
+			session.QueueDatagram(
+				cs,
+				eq.NewRootEntityAnimation,
+				opcodes.Animation,
+				pkt,
+			)
+		}
+	}
+
 }
 
 func HandleRequestClientZoneChange(z *ZoneInstance, ses *session.Session, payload []byte) {
@@ -158,6 +192,7 @@ func HandleRequestClientZoneChange(z *ZoneInstance, ses *session.Session, payloa
 	playerProfile.SetY(float32(charData.Y))
 	playerProfile.SetZ(float32(charData.Z))
 	playerProfile.SetHeading(float32(charData.Heading))
+	playerProfile.SetSpawnId(int32(clientEntry.EntityId))
 	ses.SendStream(playerProfile.Message(), opcodes.PlayerProfile)
 
 	// Send all zone spawns
@@ -176,10 +211,16 @@ func HandleRequestClientZoneChange(z *ZoneInstance, ses *session.Session, payloa
 		spawn.SetY(int32(npc.Y))
 		spawn.SetZ(int32(npc.Z))
 		spawn.SetHeading(int32(npc.Heading))
+		c := worldToCell(npc.Position.X, npc.Position.Y, npc.Position.Z)
+		spawn.SetCellX(int32(c[0]))
+		spawn.SetCellY(int32(c[1]))
+		spawn.SetCellZ(int32(c[2]))
 		ses.SendStream(spawn.Message(), opcodes.ZoneSpawns)
 
 		// TODO fill out rest of struct
 	}
+	z.registerNewClientGrid(clientEntry.EntityId, entity.MobPosition{X: float32(charData.X), Y: float32(charData.Y), Z: float32(charData.Z), Heading: float32(charData.Heading)})
+
 	// Send all client entities
 	for id, client := range z.ClientEntries {
 		if id == ses.SessionID || client.ClientSession == nil {

@@ -11,12 +11,13 @@ import {
 import type Player from "./player";
 import { WorldSocket } from "@ui/net/instances";
 import { OpCodes } from "@game/Net/opcodes";
-import { ClientPositionUpdate, PositionVector } from "@game/Net/internal/api/capnp/common";
+import { ClientPositionUpdate } from "@game/Net/internal/api/capnp/common";
 
-type SimpleVector3 = {
+type SimpleVector4 = {
   x: number;
   y: number;
   z: number;
+  heading: number;
 };
 export class PlayerMovement {
   private player: Player;
@@ -32,7 +33,7 @@ export class PlayerMovement {
   private vectorUp = new Vector3(0, 1, 0);
   private forwardXZ = new Vector3(0, 0, 0);
   private rightXZ = new Vector3(0, 0, 0);
-  private lastPlayerPosition: SimpleVector3 = { x: 0, y: 0, z: 0 };
+  private lastPlayerPosition: SimpleVector4 = { x: 0, y: 0, z: 0, heading: 0 };
 
   constructor(player: Player) {
     this.player = player;
@@ -73,11 +74,17 @@ export class PlayerMovement {
     if (!currentPos) {
       return;
     }
+    const heading = this.player.getPlayerRotation();
+    if (heading === undefined) {
+      return;
+    }
     this.player.isPlayerMoving =
       currentPos.x !== this.lastPlayerPosition.x ||
       currentPos.y !== this.lastPlayerPosition.y ||
-      currentPos.z !== this.lastPlayerPosition.z;
+      currentPos.z !== this.lastPlayerPosition.z ||
+      heading.y !== this.lastPlayerPosition.heading;
     this.lastPlayerPosition = {
+      heading: heading.y,
       x: currentPos.x,
       y: currentPos.y,
       z: currentPos.z,
@@ -170,11 +177,12 @@ export class PlayerMovement {
 
     if (this.updateDelta > 0.5) {
       this.updateDelta = 0;
+      console.log('Send update');
       WorldSocket.sendMessage(OpCodes.ClientUpdate, ClientPositionUpdate, {
         x: -currentPos.x,
         y: currentPos.z,
         z: currentPos.y,
-        heading: node.rotation.y,
+        heading: heading.y,
         animation: 0,
       });
     }

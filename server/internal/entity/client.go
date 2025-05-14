@@ -24,4 +24,4 @@ func (c *Client) SetPosition(pos MobPosition) {
 	c.CharData.Heading = float64(pos.Heading)
 }
 
-func (c *Client) Type() string { return "client" }
+func (n *Client) Type() int32 { return EntityTypePlayer }

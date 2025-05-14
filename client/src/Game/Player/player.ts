@@ -48,6 +48,7 @@ export default class Player extends Actor {
     this.player = player;
     this.playerMovement = new PlayerMovement(this);
     this.playerCamera = new PlayerCamera(this, camera);
+    this.data = player;
     Player.instance = this;
   }
 
@@ -107,8 +108,8 @@ export default class Player extends Actor {
     }
   }
 
-  public async Load(name: string) {
-    await super.Load(name);
+  public async Load() {
+    await super.Load();
     const node = this.getNode() as CharacterBody3D;
     if (!node) return;
     node.set_process(true);

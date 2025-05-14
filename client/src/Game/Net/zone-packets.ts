@@ -3,7 +3,7 @@ import { WorldSocket } from "@ui/net/instances";
 import { OpCodes } from "./opcodes";
 import { NewZone } from "./internal/api/capnp/zone";
 import { PlayerProfile } from "./internal/api/capnp/player";
-import { ChannelMessage, EntityPositionUpdate, Spawn, Spawns } from "./internal/api/capnp/common";
+import { ChannelMessage, EntityAnimation, EntityPositionUpdate, Spawn, Spawns } from "./internal/api/capnp/common";
 import { UIEvents } from "@ui/events/ui-events";
 import { ChatMessage } from "@ui/components/game/chat/chat-types";
 import Player from "@game/Player/player";
@@ -52,6 +52,11 @@ export class ZonePacketHandler {
   loadZoneSpawns(spawn: Spawn) {
     console.log("Got zone spawn", spawn.name);
     GameManager.instance.ZoneManager?.EntityPool?.AddSpawn(spawn);
+  }
+
+  @opCodeHandler(OpCodes.Animation, EntityAnimation)
+  updateSpawnAnimation(animation: EntityAnimation) {
+    GameManager.instance.ZoneManager?.EntityPool?.PlayAnimation(animation);
   }
 
   @opCodeHandler(OpCodes.SpawnPositionUpdate, EntityPositionUpdate)

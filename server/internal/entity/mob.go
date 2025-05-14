@@ -6,6 +6,12 @@ import (
 	"github.com/knervous/eqgo/internal/db/jetgen/eqgo/model"
 )
 
+const (
+	EntityTypeNPC = iota
+	EntityTypePlayer
+	EntityTypeCorpse
+)
+
 type Mob struct {
 	model.Spawn2
 	MobID    int
@@ -20,7 +26,7 @@ func (m *Mob) Name() string { return m.MobName }
 func (m *Mob) CleanName() string {
 	return strings.ReplaceAll(m.Name(), "_", " ")
 }
-func (m *Mob) Type() string        { return "mob" }
+func (m *Mob) Type() int32         { return EntityTypeNPC }
 func (m *Mob) GetZone() ZoneAccess { return m.Zone }
 
 func (m *Mob) Say(msg string) {
@@ -35,6 +41,10 @@ func (m *Mob) SetPosition(pos MobPosition) {
 	m.Position = pos
 }
 
+func (m *Mob) GetMob() *Mob {
+	return m
+}
+
 type MobPosition struct {
 	X       float32
 	Y       float32
@@ -44,7 +54,9 @@ type MobPosition struct {
 
 type Entity interface {
 	ID() int
+	GetMob() *Mob
 	Name() string
-	Type() string
+	Type() int32
 	Say(msg string)
+	GetPosition() MobPosition
 }

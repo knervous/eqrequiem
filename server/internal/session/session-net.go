@@ -35,6 +35,30 @@ func (s *Session) SendData(
 	return s.Messenger.SendDatagram(s.SessionID, s.writeBuffer[:totalLen])
 }
 
+func (s *Session) SendDataNoLock(
+	msg *capnp.Message,
+	opcode opcodes.OpCode,
+) error {
+	payload := s.writeBuffer[2:]
+	var totalLen int = 2
+	if msg != nil {
+		n, err := capnpext.MarshalTo(msg, payload)
+		if err == capnpext.ErrBufferTooSmall {
+			newCap := 2 + n
+			s.writeBuffer = make([]byte, newCap)
+			payload = s.writeBuffer[2:]
+			n, err = capnpext.MarshalTo(msg, payload)
+		}
+		if err != nil {
+			return fmt.Errorf("SendData: %w", err)
+		}
+		totalLen = 2 + n
+	}
+
+	binary.LittleEndian.PutUint16(s.writeBuffer[:2], uint16(opcode))
+	return s.Messenger.SendDatagram(s.SessionID, s.writeBuffer[:totalLen])
+}
+
 func (s *Session) SendStream(
 	msg *capnp.Message,
 	opcode opcodes.OpCode,

@@ -168,4 +168,5 @@ struct PlayerProfile {
   level3 @122 :Int32;
   showhelm @123 :Int32;
   inventoryItems @124 :List(Item.ItemInstance);
+  spawnId @125 :Int32;
 }

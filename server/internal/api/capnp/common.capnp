@@ -138,6 +138,9 @@ struct Spawn {
   boundingRadius @52 :Float32;
   equipmentTint @53 :Int32;
   lfg @54 :Int32;
+  cellX     @55 :Int32;
+  cellY     @56 :Int32;
+  cellZ     @57 :Int32;
 }
 
 struct ClientZoneEntry {
@@ -497,11 +500,14 @@ struct EntityPositionUpdate {
   position @1: Vector3;
   velocity @2: Vector3;
   heading @3 :Float32;
+  cellX     @4 :Int32;
+  cellY     @5 :Int32;
+  cellZ     @6 :Int32;
 }
 
 struct EntityAnimation {
   spawnId @0 :Int32;
-  animation @1 :Int32;
+  animation @1 :Text;
 }
 
 struct ClientPositionUpdate {

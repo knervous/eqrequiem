@@ -120,9 +120,12 @@ func (z *ZoneInstance) processSpawns() {
 			}
 
 			z.Npcs[npcID] = npc
+			z.Entities[npcID] = npc
 			z.npcsByName[npcType.Name] = npc
 			z.spawn2ToNpc[spawn2ID] = npcID
 			z.spawnTimers[spawn2ID] = now.Add(24 * time.Hour)
+
+			z.registerNewClientGrid(npcID, npc.Mob.Position)
 
 			fmt.Printf("Spawned NPC %s (ID: %d) at Spawn2 %d (%.2f, %.2f, %.2f)\n",
 				npcType.Name, npcID, spawn2ID, entry.Spawn2.X, entry.Spawn2.Y, entry.Spawn2.Z)
@@ -137,6 +140,10 @@ func (z *ZoneInstance) processSpawns() {
 				spawn.SetY(int32(entry.Spawn2.Y))
 				spawn.SetZ(int32(entry.Spawn2.Z))
 				spawn.SetHeading(int32(entry.Spawn2.Heading))
+				c := worldToCell(npc.Position.X, npc.Position.Y, npc.Position.Z)
+				spawn.SetCellX(int32(c[0]))
+				spawn.SetCellY(int32(c[1]))
+				spawn.SetCellZ(int32(c[2]))
 				return nil
 			}
 			for _, client := range z.ClientEntries {

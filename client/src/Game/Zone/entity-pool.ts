@@ -1,38 +1,41 @@
 import {
   Node3D,
   Vector3,
-  MeshInstance3D,
-  SphereMesh,
-  StandardMaterial3D,
-  Color,
-  Label3D,
   InputEventMouseButton,
   MouseButton,
   PhysicsRayQueryParameters3D,
-  AABB,
-  CollisionShape3D,
   StaticBody3D,
-  GArray,
-  GDictionary,
-  GeometryInstance3D,
 } from "godot";
+import { vec3 } from "gl-matrix";
+
 import ObjectMesh from "@game/Object/object-geometry";
-import { EntityPositionUpdate, Spawn } from "@game/Net/internal/api/capnp/common";
-import { SphereShape3D } from "@/godot-module";
-import { traverseForMaterials } from "@game/GLTF/image-utilities";
+import { EntityAnimation, EntityPositionUpdate, Spawn } from "@game/Net/internal/api/capnp/common";
 import Player from "@game/Player/player";
+import EntityCache from "./entity-cache";
+import Entity from "@game/Entity/entity";
+import { Grid } from "./zone-grid";
+
+type CellTriple = [number, number, number];
+type Vec3 = { x: number; y: number; z: number };
 
 export default class EntityPool {
   parent: Node3D;
-  entities: Record<number, Spawn> = {};
-  nodes : Record<number, Node3D> = {};
+  entities: Record<number, Entity> = {};
   entityContainer: Record<string, Promise<ObjectMesh>> = {};
   entityObjectContainer: Node3D | null = null;
-  loadedPromise: Promise<void> | null = null;
   loadedPromiseResolve: () => void = () => {};
-  private spawnQueue: Spawn[] = [];
+  loadedPromise: Promise<void> | null = null;
+  actorPool: EntityCache | null = null;
+  private spawnQueue: Set<Spawn> = new Set();  
+  private grid: Grid;
+  private spawns: Record<number, Spawn> = {};
+  private maxInstantiated: number = 50;
+  private accumulatedDelta: number = 0;
+
   constructor(parent: Node3D) {
     this.parent = parent;
+    // Only cellSize is needed now; we use string-based keys internally
+    this.grid = new Grid(300.0);
     this.loadedPromise = new Promise((res) => {
       this.loadedPromiseResolve = res;
     });
@@ -45,115 +48,168 @@ export default class EntityPool {
     }
   }
 
-  UpdateSpawnPosition(spawnUpdate: EntityPositionUpdate) {
-    const spawnId = spawnUpdate.spawnId;
-    const spawn = this.entities[spawnId];
-    console.log('Update spawn position', spawnId, spawn);
-    if (!spawn) {
-      return;
-    }
-    spawn.x = -spawnUpdate.position.x;
-    spawn.y = spawnUpdate.position.z;
-    spawn.z = spawnUpdate.position.y;
-
-    const node = this.nodes[spawnId];
-    if (!node) {
-      return;
-    }
-    const staticBody = node as StaticBody3D;
-    staticBody.global_position = new Vector3(-spawnUpdate.position.x, spawnUpdate.position.z, spawnUpdate.position.y);
-    
-    ;// = new Vector3(-spawn.y, spawn.z, spawn.x);
-  }
-
   async Load(): Promise<void> {
     try {
       this.entityObjectContainer = new Node3D();
       this.entityObjectContainer.set_name("EntityPool");
       this.parent.add_child(this.entityObjectContainer);
-      // Set the script to process input
-      this.parent.set_process_input(true);
-      // Bind the input handler
+      this.actorPool = new EntityCache();
       this.loadedPromiseResolve();
     } catch (e) {
       console.log("Error loading objects", e);
     }
   }
-  accumulatedDelta: number = 0;
+
   async process(delta: number) {
     this.accumulatedDelta += delta;
-    if (this.accumulatedDelta < 0.1) {
-      return;
-    }
+    if (this.accumulatedDelta < 1) return;
     this.accumulatedDelta = 0;
-    const spawn = this.spawnQueue.shift();
-    if (!spawn) {
-      return;
+
+    if (!Player.instance) return;
+
+    const playerPos3D = Player.instance.getNode()?.global_position ?? Vector3.ZERO;
+    const logicalPlayer: Vec3 = {
+      x: -playerPos3D.x,
+      y: playerPos3D.z,
+      z: playerPos3D.y,
+    };
+
+    const nearbySpawnIds = this.grid.getNearbySpawnIds(logicalPlayer);
+    const playerVec = vec3.fromValues(
+      playerPos3D.x,
+      playerPos3D.y,
+      playerPos3D.z,
+    );
+
+    // sort queue by distance
+    const sortedSpawns = Array.from(this.spawnQueue).sort((a, b) => {
+      const pa = vec3.fromValues(-a.y, a.z, a.x);
+      const pb = vec3.fromValues(-b.y, b.z, b.x);
+      return vec3.squaredDistance(pa, playerVec) 
+           - vec3.squaredDistance(pb, playerVec);
+    });
+
+    // free distant entities
+    if (Object.keys(this.entities).length >= this.maxInstantiated) {
+      for (const sidStr in this.entities) {
+        const sid = Number(sidStr);
+        if (!nearbySpawnIds.includes(sid)) {
+          const ent = this.entities[sid];
+          const spawn = this.spawns[sid];
+          this.grid.removeSpawn(spawn);
+          ent.getNode()?.queue_free();
+          delete this.entities[sid];
+          this.AddSpawn(spawn);
+        }
+      }
     }
 
-    this.entities[spawn.spawnId] = spawn;
-  
-    const staticBody = new StaticBody3D();
-    staticBody.set_name(`${spawn.name}_${spawn.spawnId}`);
-    staticBody.set_meta("spawnId", spawn.spawnId);
-    const instance = new MeshInstance3D();
-    const sphereMesh = new SphereMesh();
-    sphereMesh.radius = 2.0;
-    sphereMesh.height = 4.0;
-    instance.mesh = sphereMesh;
-  
-    const material = new StandardMaterial3D();
-    material.albedo_color = new Color(0, 0.5, 0.5);
-    sphereMesh.material = material;
-  
-    instance.scale = new Vector3(2, 2, 2);
-  
-    const shape = new CollisionShape3D();
-    const sphereShape = new SphereShape3D();
-    sphereShape.radius = 200.0;
-    shape.shape = sphereShape;
-    shape.disabled = false; // Explicitly enable
-  
-    staticBody.collision_layer = 1 << 1; // Layer 2
-    staticBody.collision_mask = 1 << 0; // Sees layer 1 (world)
-    staticBody.add_child(instance);
-    staticBody.add_child(shape);
-    instance.visibility_range_end = 5000; // Cull beyond this distance
-    instance.visibility_range_end_margin = 25.0; // Optional: buffer for smoother culling
-    // Optional: Add fade-out effect
-    instance.visibility_range_fade_mode =
-      GeometryInstance3D.VisibilityRangeFadeMode.VISIBILITY_RANGE_FADE_SELF;
-    instance.visibility_range_begin = 25.0; // Start fading 10m before end
-    instance.visibility_range_begin_margin = 20.0; // Start fading 10m before end
-    
-    this.entityObjectContainer?.add_child(staticBody);
-    
-  
-    staticBody.global_position = new Vector3(-spawn.y, spawn.z, spawn.x);
 
-    const nameplate = new Label3D();
-    nameplate.billboard = 1;
-    nameplate.position = new Vector3(0, 4, 0);
-    nameplate.font_size = 150.5;
-    nameplate.modulate = new Color(0.5, 0.5, 1, 1);
-    nameplate.text = spawn.name;
-    instance.add_child(nameplate);
+    // instantiate new nearby
+    const retried: Set<number> = new Set();
+    for (const spawn of sortedSpawns) {
+      if (Object.keys(this.entities).length >= this.maxInstantiated) break;
+      if (retried.has(spawn.spawnId)) continue;
 
-    this.nodes[spawn.spawnId] = staticBody;
+      if (!nearbySpawnIds.includes(spawn.spawnId)) {
+        retried.add(spawn.spawnId);
+        continue;
+      }
+
+      if (this.entities[spawn.spawnId]) continue;
+
+      const entity = await this.actorPool!.acquire(spawn, this.entityObjectContainer!);
+      if (!entity) {
+        console.error("Failed to acquire entity for spawn", spawn.spawnId);
+        // fallback logic
+        spawn.race = 1;
+        retried.add(spawn.spawnId);
+        continue;
+      }
+      console.log('Acquired entity', entity.data?.name);
+      entity.playIdle();
+
+      this.entities[spawn.spawnId] = entity;
+      // remove from queue once we've successfully instantiated it
+      this.spawnQueue.delete(spawn);
+    }
+    // re-queue any that we want to retry
+    for (const retryId of retried) {
+      const spawn = this.spawns[retryId];
+      if (spawn) this.spawnQueue.add(spawn);
+    }
+
+    // free any entities that moved out of range, and re-add their spawns
+    for (const sidStr in this.entities) {
+      const sid = Number(sidStr);
+      if (!nearbySpawnIds.includes(sid)) {
+        const ent   = this.entities[sid];
+        const spawn = this.spawns[sid];
+        console.log('Freeing entity', ent.data?.name);
+
+        ent.getNode()?.queue_free();
+        delete this.entities[sid];
+        this.grid.removeSpawn(spawn);
+
+        this.AddSpawn(spawn);
+      }
+    }
   }
 
-  async AddSpawn(spawn: Spawn) {
-    console.log('Want to add spawn');
-    if (!this.entityObjectContainer) {
-      await this.loadedPromise;
-    }
-    if (!this.entityObjectContainer) {
-      console.error("Entity object container is null");
-      return;
-    }
-    this.spawnQueue.push(spawn);
-   
+  AddSpawn(spawn: Spawn) {
+    this.loadedPromise?.then(() => {
+      console.log('Adding spawn', spawn.spawnId, spawn.name);
+      this.spawns[spawn.spawnId] = spawn;
+      this.grid.addSpawn(spawn);
+      this.spawnQueue.add(spawn);
+    });
   }
+
+  UpdateSpawnPosition(sp: EntityPositionUpdate) {
+    // Disable this for now, work on it later
+
+    return;
+    const sid = sp.spawnId;
+    const spawn = this.spawns[sid];
+    const entity = this.entities[sid];
+    if (!spawn) return;
+
+    // record old cell
+    const oldCell: CellTriple = [spawn.cellX, spawn.cellY, spawn.cellZ];
+
+    // apply new pos & cell
+    spawn.x = sp.position.x;
+    spawn.y = sp.position.y;
+    spawn.z = sp.position.z;
+    spawn.cellX = sp.cellX;
+    spawn.cellY = sp.cellY;
+    spawn.cellZ = sp.cellZ;
+
+    // update bucket if needed
+    if (oldCell[0] !== spawn.cellX ||
+        oldCell[1] !== spawn.cellY ||
+        oldCell[2] !== spawn.cellZ) {
+      this.grid.updateSpawnCell(spawn, oldCell);
+    }
+
+    // update visual
+    if (entity && entity.getNode() && entity.data) {
+      entity.data.x = -spawn.x;
+      entity.data.y = spawn.z;
+      entity.data.z = spawn.y;
+      const node = entity.getNode()!;
+      // node.rotate_y(sp.heading * (360 / 512));
+      node.global_position = new Vector3(-spawn.y, spawn.z, spawn.x);
+    }
+  }
+
+  PlayAnimation(anim: EntityAnimation) {
+    const e = this.entities[anim.spawnId];
+    if (!e || !e.data || !e.getNode()) return;
+    console.log('Play animation', anim.spawnId);
+    e.playAnimation(anim.animation as unknown as string);
+  }
+
   mouseEvent(event: InputEvent) {
     if (
       event instanceof InputEventMouseButton &&
@@ -163,46 +219,31 @@ export default class EntityPool {
       const cam = this.parent.get_viewport().get_camera_3d();
       if (!cam) return;
 
-        
-      const mousePos = this.parent.get_viewport().get_mouse_position();
-      const from = cam.project_ray_origin(mousePos);
-      const dir  = cam.project_ray_normal(mousePos).normalized();
-      const dirScaled = dir.multiplyScalar(1000);
-      const to   = from.addNoMutate(dirScaled); // long enough to hit anything
-  
+      const mp = this.parent.get_viewport().get_mouse_position();
+      const from = cam.project_ray_origin(mp);
+      const dir  = cam.project_ray_normal(mp).normalized();
+      const to   = from.addNoMutate(dir.multiplyScalar(1000));
+
       const params = new PhysicsRayQueryParameters3D();
-      params.from           = from;
-      params.to             = to;
-      params.collision_mask = (1 << 1) /* entities */ | (1 << 0) /* world */;
+      params.from = from;
+      params.to   = to;
+      params.collision_mask = (1<<1)|(1<<0);
       params.collide_with_bodies = true;
       params.collide_with_areas  = false;
-      //params.collision_mask = (1<<0) | (1<<1); // world + entities
-      // exclude camera so it doesn’t self-hit:
-      const hit = this.parent
-        .get_world_3d()
-        .direct_space_state
-        .intersect_ray(params);
+
+      const hit = this.parent.get_world_3d().direct_space_state.intersect_ray(params);
       if (!hit) return;
       const collider = hit.get("collider") as StaticBody3D | undefined;
-      if (!collider) return;
-      if (
-        collider.get_parent() === this.entityObjectContainer
-      ) {
-        console.log(`Clicked entity: ${collider.get_name()}`);
+      if (collider?.get_parent() === this.entityObjectContainer) {
         this.handleEntityClick(collider);
       }
     }
   }
-  
-  handleEntityClick(entity: StaticBody3D | undefined) {
-    if (!entity) return;
-    const spawnId = entity.get_meta("spawnId");
-    console.log('Spawn id', spawnId);
-    console.log('Entity', this.entities[spawnId]);
-    if (!Player.instance) {
-      return;
-    }
-    Player.instance.Target = this.entities[spawnId];
 
+  private handleEntityClick(node: StaticBody3D) {
+    const sid = node.get_meta("spawnId");
+    console.log('Clicked spawn', sid);
+    if (!Player.instance) return;
+    Player.instance.Target = this.entities[sid].data;
   }
 }

@@ -200,11 +200,16 @@ export class BaseGltfModel {
 
     const gltfState = new GLTFState();
     const gltfDocument = new GLTFDocument();
-    const result = gltfDocument.append_from_buffer(buffer, "/", gltfState);
+    try {
+      const result = gltfDocument.append_from_buffer(buffer, "/", gltfState);
 
-    if (result !== 0) {
-      console.log("Error appending secondary GLTF buffer:", result);
-      return;
+      if (result !== 0) {
+        console.log("Error appending secondary GLTF buffer:", result);
+        return;
+      }
+  
+    } catch(e) {
+      console.error("Error creating secondary GLTFDocument:", e);
     }
 
     const secondaryRootNode = gltfDocument.generate_scene(gltfState) as Node3D;
@@ -235,7 +240,7 @@ export class BaseGltfModel {
         this.secondaryNode = this.secondaryNode || mesh;
         mesh.skeleton = "..";
         mesh.reparent(primarySkeleton, false);
-        mesh.owner = primarySkeleton;
+        mesh.owner = this.gltfNode;      // <-- make the root the owner
       }
     }
 
@@ -455,35 +460,33 @@ export class BaseGltfModel {
     }
   }
 
-  private setupAnimations(rootNode: Node3D, forInstance: boolean = false): void {
+  protected findAnimationPlayer = (node: Node): AnimationPlayer | undefined => {
+    if (node instanceof AnimationPlayer) {
+      return node;
+    }
+    for (const child of node.get_children()) {
+      const result = this.findAnimationPlayer(child);
+      if (result) return result;
+    }
+  };
+
+  private setupAnimations(rootNode: Node3D, forInstance: boolean = false, autoplay = true): void {
     if (!rootNode) {
       return;
     }
-    const findAnimationPlayer = (node: Node): AnimationPlayer | undefined => {
-      if (node instanceof AnimationPlayer) {
-        return node;
-      }
-      for (const child of node.get_children()) {
-        const result = findAnimationPlayer(child);
-        if (result) return result;
-      }
-    };
 
-    this.animationPlayer = this.animationPlayer || findAnimationPlayer(rootNode);
+    this.animationPlayer = this.animationPlayer || this.findAnimationPlayer(rootNode);
     let animPlayer = this.animationPlayer;
     if (animPlayer) {
       if (forInstance) {
-        animPlayer = animPlayer.duplicate();
-        rootNode.get_parent().add_child(animPlayer);
+        animPlayer = animPlayer.duplicate()!;
+        const parent = rootNode.get_parent() ?? rootNode;
+        parent.add_child(animPlayer!);
       }
-      const animations = animPlayer.get_animation_list();
-      if (animations.size() > 0) {
-        const animationName = animations.get(0);
-        const animation = animPlayer.get_animation(animationName);
-        if (animation) {
-          animation.loop_mode = Animation.LoopMode.LOOP_LINEAR;
-        }
-        animPlayer.play(animationName);
+      const animation = animPlayer?.has_animation('pos') && animPlayer?.get_animation('pos');
+      if (autoplay && animation && animPlayer !== undefined) {
+        animation.loop_mode = Animation.LoopMode.LOOP_LINEAR;
+        animPlayer.play('pos');
       }
     }
   }
@@ -545,7 +548,7 @@ export class BaseGltfModel {
     }
   }
 
-  public async createPackedCharacterScene(): Promise<PackedScene | undefined> {
+  public async createPackedEntityScene(): Promise<PackedScene | undefined> {
     await this.instantiate();
     const ps = new PackedScene();
     if (!this.node) {
@@ -581,13 +584,11 @@ export class BaseGltfModel {
     return ps;
   }
 
-  public instancePackedActorScene(rootNode: Node3D): Node | undefined {
+  public instancePackedActorScene(): Node | undefined {
     if (this.packedScene) {
-      const instance = this.packedScene.instantiate().get_child(0) as Node3D;
+      const instance = this.packedScene.instantiate() as Node3D;
 
-      rootNode.add_child(instance);
-
-      // this.setupAnimations(instance, true);
+      this.setupAnimations(instance, true, false);
       return instance;
     } else {
       console.log("PackedScene not available. Call createPackedScene() first.");

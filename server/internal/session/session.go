@@ -242,3 +242,29 @@ func QueueMessage[T capnpMessage](
 	}
 	return s.SendStreamNoLock(obj.Message(), opcode)
 }
+
+func QueueDatagram[T capnpMessage](
+	s *Session,
+	ctor func(*capnp.Segment) (T, error),
+	opcode opcodes.OpCode,
+	build func(T) error,
+) error {
+	s.closedMu.RLock()
+	if s.closed {
+		s.closedMu.RUnlock()
+		return fmt.Errorf("session %d is closed", s.SessionID)
+	}
+	s.closedMu.RUnlock()
+
+	s.sendMu.Lock()
+	defer s.sendMu.Unlock()
+
+	obj, err := NewMessage(s, ctor)
+	if err != nil {
+		return fmt.Errorf("new message: %w", err)
+	}
+	if err := build(obj); err != nil {
+		return fmt.Errorf("build message: %w", err)
+	}
+	return s.SendDataNoLock(obj.Message(), opcode)
+}
