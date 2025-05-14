@@ -118,6 +118,11 @@ export class CommandHandler {
     }
   }
 
+  @command("ooc")
+  commandOoc(args: string[]) {
+    alert('TODO fill me in!');
+  }
+
   @command("say")
   commandSay(args: string[]) {
     const message = args.join(" ");
@@ -129,8 +134,6 @@ export class CommandHandler {
         chanNum: 0,
         message,
       });
-    } else {
-      // addChatLine("No message entered");
     }
   }
 

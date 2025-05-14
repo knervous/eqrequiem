@@ -66,7 +66,6 @@ export class ZonePacketHandler {
 
   @opCodeHandler(OpCodes.ChannelMessage, ChannelMessage)
   processChannelMessage(channelMessage: ChannelMessage) {
-
     const msg: ChatMessage = {
       message: channelMessage.message,
       chanNum: channelMessage.chanNum,
@@ -82,7 +81,6 @@ export class ZonePacketHandler {
           return;
         }
         msg.message = `${channelMessage.sender} says, '${channelMessage.message}'`;
-
         break;
       default:
         break;
