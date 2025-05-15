@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "cross-env VITE_USE_SAGE=true VITE_LOCAL_DEV=true vite",
+    "sage:dev": "cross-env VITE_USE_SAGE=true VITE_LOCAL_DEV=true vite",
     "v": "vercel dev",
     "upload": "node scripts/upload.js ~/documents/everquest_rof2",
     "start": "cross-env VITE_LOCAL_DEV=true VITE_USE_SAGE=false LOCAL_DEV=true vite",
@@ -34,7 +34,7 @@
     "react-router-dom": "^7.2.0",
     "react-social-login-buttons": "^4.1.1",
     "requiem-ui": "file:../ui",
-    "sage-core": "^0.0.34",
+    "sage-core": "^0.0.35",
     "tga-js": "^1.1.1",
     "use-context-selector": "^2.0.0",
     "use-debounce": "^10.0.4"
