@@ -215,14 +215,14 @@ func HandleRequestClientZoneChange(z *ZoneInstance, ses *session.Session, payloa
 		spawn.SetX(int32(npc.X))
 		spawn.SetY(int32(npc.Y))
 		spawn.SetZ(int32(npc.Z))
+		spawn.SetBodytype(int32(npc.NpcData.Bodytype))
+		spawn.SetEquipChest(int32(npc.NpcData.Texture))
 		spawn.SetHeading(int32(npc.Heading))
 		c := worldToCell(npc.Position.X, npc.Position.Y, npc.Position.Z)
 		spawn.SetCellX(int32(c[0]))
 		spawn.SetCellY(int32(c[1]))
 		spawn.SetCellZ(int32(c[2]))
 		ses.SendStream(spawn.Message(), opcodes.ZoneSpawns)
-
-		// TODO fill out rest of struct
 	}
 	z.registerNewClientGrid(clientEntry.EntityId, entity.MobPosition{X: float32(charData.X), Y: float32(charData.Y), Z: float32(charData.Z), Heading: float32(charData.Heading)})
 

@@ -140,6 +140,8 @@ func (z *ZoneInstance) processSpawns() {
 				spawn.SetX(int32(entry.Spawn2.X))
 				spawn.SetY(int32(entry.Spawn2.Y))
 				spawn.SetZ(int32(entry.Spawn2.Z))
+				spawn.SetBodytype(int32(npcType.Bodytype))
+				spawn.SetEquipChest(int32(npcType.Texture))
 				spawn.SetHeading(int32(entry.Spawn2.Heading))
 				c := worldToCell(npc.Position.X, npc.Position.Y, npc.Position.Z)
 				spawn.SetCellX(int32(c[0]))

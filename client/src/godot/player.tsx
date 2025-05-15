@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import "./ui.css";
+import "./player.css";
 
 export const GodotWrapper = ({ splash }) => {
   const canvasRef = useRef(null);
@@ -222,79 +223,6 @@ export const GodotWrapper = ({ splash }) => {
 
   return (
     <>
-      <style>{`
-        html, body, #canvas {
-          margin: 0;
-          padding: 0;
-          border: 0;
-        }
-        body {
-          color: white;
-          background-color: black;
-          overflow: hidden;
-          touch-action: none;
-        }
-        #canvas {
-          display: block;
-        }
-        #canvas:focus {
-          outline: none;
-        }
-        #status, #status-splash, #status-progress {
-          position: absolute;
-          left: 0;
-          right: 0;
-        }
-        #status, #status-splash {
-          top: 0;
-          bottom: 0;
-        }
-        #status {
-          background-color: #242424;
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          align-items: center;
-          visibility: hidden;
-        }
-        #status-splash {
-          max-height: 100%;
-          max-width: 100%;
-          margin: auto;
-        }
-        #status-splash.show-image--false {
-          display: none;
-        }
-        #status-splash.fullsize--true {
-          height: 100%;
-          width: 100%;
-          object-fit: contain;
-        }
-        #status-splash.use-filter--false {
-          image-rendering: pixelated;
-        }
-        #status-progress, #status-notice {
-          display: none;
-        }
-        #status-progress {
-          bottom: 10%;
-          width: 50%;
-          margin: 0 auto;
-        }
-        #status-notice {
-          background-color: #5b3943;
-          border-radius: 0.5rem;
-          border: 1px solid #9b3943;
-          color: #e0e0e0;
-          font-family: 'Noto Sans', 'Droid Sans', Arial, sans-serif;
-          line-height: 1.3;
-          margin: 0 2rem;
-          overflow: hidden;
-          padding: 1rem;
-          text-align: center;
-          z-index: 1;
-        }
-      `}</style>
       {loaded && <Overlay.Component
         sx={{
           width: "100vw",

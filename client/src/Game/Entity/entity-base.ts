@@ -6,6 +6,7 @@ export default class EntityBase extends BaseGltfModel {
     shadow: false,
     cullRange: 250,
     doCull: true,
+    flipTextureY: true,
   };
   
   constructor(folder: string, model: string) {

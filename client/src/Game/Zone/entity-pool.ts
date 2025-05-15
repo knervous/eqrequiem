@@ -128,6 +128,7 @@ export default class EntityPool {
       }
       console.log('Acquired entity', entity.data?.name);
       entity.playIdle();
+      entity.setNPCTexture();
 
       this.entities[spawn.spawnId] = entity;
       // remove from queue once we've successfully instantiated it
@@ -157,6 +158,8 @@ export default class EntityPool {
   }
 
   AddSpawn(spawn: Spawn) {
+    // Filter for dev
+    //if (!spawn.name.includes("Guard")) return;
     this.loadedPromise?.then(() => {
       console.log('Adding spawn', spawn.spawnId, spawn.name);
       this.spawns[spawn.spawnId] = spawn;
