@@ -51,6 +51,9 @@ In order to start the server, you must first install MySQL and seed the database
 ### Config
 - Under the directory `server/internal/config` there's a template called `eqgo_config_template.json`, copy that and rename it `eqgo_config.json`
 - Fill out all the necessary credentials to connect to your MySQL DB
+- Go to `server/internal/config` and generate `key.pem` with
+  - `openssl genpkey -algorithm RSA -out key.pem -pkeyopt rsa_keygen_bits:2048`
+- To avoid error when using `make` or `go run`, create a [Discord application](https://discord.com/developers/docs/quick-start/getting-started#step-1-creating-an-app), get your bot token, and paste it into `discord.txt` inside `server/internal/config`
 
 ### Ready to launch
 - For the rest of the commands you should be cd into `server` in the root directory
