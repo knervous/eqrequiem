@@ -43,7 +43,7 @@ export const UiButtonComponent: React.FC<Props> = (props: Props) => {
     () =>
       props.isDisabled
         ? disabled
-        : isPressed || props.selected
+        : (isPressed || props.selected)
           ? pressed
           : isHovered
             ? hover

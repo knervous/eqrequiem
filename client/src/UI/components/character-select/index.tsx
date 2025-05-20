@@ -193,7 +193,7 @@ export const CharacterSelectUIComponent: React.FC = () => {
           >
             {charInfo?.characters.map((c) => (
               <UiButtonComponent
-                selected={selectedChar === c}
+                selected={selectedChar?.name === c?.name}
                 buttonName="A_BigBtn"
                 text={c.name}
                 scale={1.5}

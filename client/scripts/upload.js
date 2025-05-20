@@ -2,7 +2,16 @@ import { BlobServiceClient } from "@azure/storage-blob";
 import { DefaultAzureCredential } from "@azure/identity";
 import { createHash } from "crypto";
 import { tmpdir } from "os";
-import { readdir, mkdtemp, rm, stat } from "fs/promises";
+import {
+  readdir,
+  mkdtemp,
+  rm,
+  stat,
+  writeFile,
+  readFile,
+  mkdir,
+  copyFile,
+} from "fs/promises";
 import { createReadStream } from "fs";
 import { basename, join, extname, sep } from "path";
 import { createGzip } from "zlib";
@@ -11,15 +20,14 @@ import pLimit from "p-limit";
 import ffmpeg from "fluent-ffmpeg";
 import { PassThrough } from "stream";
 import archiver from "archiver";
+import { convertToWebP } from "./convert.js";
 
 const accountName = "eqrequiem";
-const containerName = "game";
+const containerName = "requiem";
 const rootFolder = "eqrequiem";
 const rootPath = process.argv[2] || process.cwd();
 
 const zippedPrefixes = ["eqrequiem/textures"];
-
-// folders inside 'eqrequiem'
 const allowedFolders = new Set([
   "data",
   "models",
@@ -29,29 +37,26 @@ const allowedFolders = new Set([
   "zones",
   "sounds",
 ]);
-// root-level folders to upload without prefix
 const allowedRootFolders = new Set(["uifiles", "eqrequiem"]);
-// root-level files to upload without prefix
 const allowedRootFiles = new Set(["eqstr_us.txt"]);
-// supported extensions
 const allowedExtensions = new Set([
   ".txt",
   ".json",
   ".glb",
+  ".webp",
   ".dds",
   ".wav",
   ".mid",
   ".tga",
 ]);
 
-// concurrency limiter (max 20 tasks)
-const limit = pLimit(20);
+const limit = pLimit(500);
 
-// helper to pick a MIME type based on filename
 function getContentType(fileName) {
   if (fileName.endsWith(".json")) return "application/json";
   if (fileName.endsWith(".txt")) return "text/plain";
   if (fileName.endsWith(".dds")) return "image/bmp";
+  if (fileName.endsWith(".webp")) return "image/webp";
   if (fileName.endsWith(".mp3")) return "audio/mpeg";
   if (fileName.endsWith(".mid")) return "audio/midi";
   if (fileName.endsWith(".tga")) return "image/x-targa";
@@ -59,7 +64,6 @@ function getContentType(fileName) {
   return "application/octet-stream";
 }
 
-// stream-based SHA-256 hash
 async function calculateFileHashStream(filePath) {
   const hash = createHash("sha256");
   await pipeline(createReadStream(filePath), hash);
@@ -106,12 +110,58 @@ async function isBlobDifferent(blobClient, localPath, metadataHash = null) {
   }
 }
 
-async function uploadStreamed(blobClient, sourceStream, blobName, localHash, metadataHash = null) {
+async function convertToWebPFile(inputPath, outputDir) {
+  const inputBuffer = await readFile(inputPath);
+  const arrayBuffer = inputBuffer.buffer.slice(
+    inputBuffer.byteOffset,
+    inputBuffer.byteOffset + inputBuffer.byteLength,
+  );
+  const webp = await convertToWebP(arrayBuffer, inputPath);
+  const outputPath = join(
+    outputDir,
+    `${basename(inputPath, extname(inputPath))}.webp`,
+  );
+  await writeFile(outputPath, Buffer.from(webp));
+  return outputPath;
+}
+
+async function prepareStagingDir(srcDir, stagingDir) {
+  const entries = await readdir(srcDir, { withFileTypes: true });
+  for (const entry of entries) {
+    if (entry.name === ".DS_Store") continue;
+    const srcPath = join(srcDir, entry.name);
+    const destPath = join(stagingDir, entry.name);
+
+    if (entry.isDirectory()) {
+      await mkdir(destPath, { recursive: true });
+      await prepareStagingDir(srcPath, destPath);
+    } else {
+      const ext = extname(entry.name).toLowerCase();
+      if (ext === ".dds" || ext === ".tga") {
+        await convertToWebPFile(srcPath, stagingDir);
+      } else {
+        await copyFile(srcPath, destPath);
+      }
+    }
+  }
+}
+
+async function uploadStreamed(
+  blobClient,
+  sourceStream,
+  blobName,
+  localHash,
+  metadataHash = null,
+) {
   const isGzipped = blobName.endsWith(".gz");
-  const contentType = getContentType(isGzipped ? blobName.replace(/\.gz$/, "") : blobName);
+  const contentType = getContentType(
+    isGzipped ? blobName.replace(/\.gz$/, "") : blobName,
+  );
 
   const headers = {
-    blobContentType: blobName.endsWith(".zip") ? "application/zip" : contentType,
+    blobContentType: blobName.endsWith(".zip")
+      ? "application/zip"
+      : contentType,
   };
   if (isGzipped) {
     headers.blobContentEncoding = "gzip";
@@ -129,7 +179,6 @@ async function uploadStreamed(blobClient, sourceStream, blobName, localHash, met
   console.log(`Uploaded → ${blobName}`);
 }
 
-// Convert WAV to MP3 using fluent-ffmpeg
 function wavToMp3Stream(filePath) {
   const pass = new PassThrough();
   ffmpeg()
@@ -146,18 +195,34 @@ async function processFile(fullPath, containerClient, relativeKey, prefix) {
   let targetName;
   let src;
 
-  // Base name (with optional prefix)
   if (prefix) {
     targetName = `${rootFolder}/${relativeKey}`;
   } else {
     targetName = relativeKey;
   }
-
-  // Lowercase all blob paths
   targetName = targetName.toLowerCase();
+  console.log('Process file', fullPath)
+  if (ext === ".dds" || ext === ".tga") {
+    const tempDir = await mkdtemp(join(tmpdir(), "image-webp-"));
+    try {
+      const webpPath = await convertToWebPFile(fullPath, tempDir);
+      targetName = targetName.replace(new RegExp(`${ext}$`, "i"), ".webp");
+      src = createReadStream(webpPath);
 
-  if (relativeKey.startsWith("sounds" + sep)) {
-    // Handle sounds
+      const blobClient = containerClient.getBlockBlobClient(targetName);
+      const localHash = await calculateFileHashStream(webpPath);
+      if (!(await isBlobDifferent(blobClient, webpPath))) {
+        await rm(tempDir, { recursive: true, force: true });
+        return;
+      }
+      await uploadStreamed(blobClient, src, targetName, localHash);
+      console.log(`Converted and uploaded ${fullPath} → ${targetName}`);
+    } catch(e) {
+      console.error(`Error processing ${fullPath}:`, e.message);
+    } finally {
+      await rm(tempDir, { recursive: true, force: true });
+    }
+  } else if (relativeKey.startsWith("sounds" + sep)) {
     if (ext === ".wav") {
       targetName = targetName.replace(/\.wav$/i, ".mp3");
       src = wavToMp3Stream(fullPath);
@@ -168,7 +233,6 @@ async function processFile(fullPath, containerClient, relativeKey, prefix) {
       return;
     }
   } else if (prefix) {
-    // Handle assets under eqrequiem
     if (ext === ".glb") {
       targetName += ".gz";
       src = createReadStream(fullPath).pipe(createGzip());
@@ -176,7 +240,6 @@ async function processFile(fullPath, containerClient, relativeKey, prefix) {
       src = createReadStream(fullPath);
     }
   } else {
-    // Root-level non-sound asset
     src = createReadStream(fullPath);
   }
 
@@ -195,7 +258,11 @@ async function processDirectory(
   prefix,
 ) {
   const relativeRoot = `${rootFolder}/${relativeBase}`;
-  if (zippedPrefixes.some(zp => relativeRoot.startsWith(zp) && relativeRoot !== zp)) { 
+  if (
+    zippedPrefixes.some(
+      (zp) => relativeRoot.startsWith(zp) && relativeRoot !== zp,
+    )
+  ) {
     const zipName = `${relativeRoot}.zip`;
     await zipAndUploadDirectory(dirPath, containerClient, zipName);
     return;
@@ -217,7 +284,6 @@ async function processDirectory(
       );
     } else {
       if (!allowedExtensions.has(ext)) {
-        // console.log(`Skipping unsupported file: ${fullPath}`);
         continue;
       }
       tasks.push(
@@ -234,7 +300,10 @@ async function zipAndUploadDirectory(dirPath, containerClient, blobName) {
   console.log(`Created temp directory: ${tempDir}`);
 
   try {
-    // Preflight metadata hash check
+    const stagingDir = join(tempDir, "staging");
+    await mkdir(stagingDir);
+    await prepareStagingDir(dirPath, stagingDir);
+
     const metadataHash = await calculateDirectoryMetadataHash(dirPath);
     const blobClient = containerClient.getBlockBlobClient(blobName);
 
@@ -243,14 +312,10 @@ async function zipAndUploadDirectory(dirPath, containerClient, blobName) {
       return;
     }
 
-    // Create a PassThrough stream for the zip
     const pass = new PassThrough();
     const archive = archiver("zip", { zlib: { level: 9 } });
-
-    // Pipe archive to PassThrough
     archive.pipe(pass);
 
-    // Compute hash while streaming
     const hash = createHash("sha256");
     let totalSize = 0;
     pass.on("data", (chunk) => {
@@ -258,40 +323,31 @@ async function zipAndUploadDirectory(dirPath, containerClient, blobName) {
       totalSize += chunk.length;
     });
 
-    // Error handling for archive
     archive.on("error", (err) => {
       console.error(`Archiver error for ${blobName}:`, err.message);
-      pass.destroy(err); // Explicitly destroy the PassThrough stream
+      pass.destroy(err);
     });
-
-    // Handle PassThrough errors
     pass.on("error", (err) => {
       console.error(`PassThrough error for ${blobName}:`, err.message);
     });
 
-    // Log progress
-    archive.on("progress", (data) => {
-      // console.log(`Archiver progress for ${blobName}:`, data);
-    });
-
-    // Resolve hash when stream ends
     const hashPromise = new Promise((resolve, reject) => {
       pass.on("end", () => resolve(hash.digest("hex")));
       pass.on("error", reject);
     });
 
-    // Add directory to archive and finalize
-    archive.directory(dirPath, false);
+    archive.directory(stagingDir, false);
     archive.finalize();
 
-    // Upload stream and compute hash concurrently
     const [localHash] = await Promise.all([
       hashPromise,
-      uploadStreamed(blobClient, pass, blobName, null, metadataHash), // Pass null for localHash temporarily
+      uploadStreamed(blobClient, pass, blobName, null, metadataHash),
     ]);
 
-    // Update metadata with final hash
-    await blobClient.setMetadata({ filehash: localHash, metadatahash: metadataHash });
+    await blobClient.setMetadata({
+      filehash: localHash,
+      metadatahash: metadataHash,
+    });
     console.log(`Uploaded ${blobName} (${totalSize} bytes)`);
   } catch (err) {
     console.error(`Failed to process ${blobName}:`, err.message);
@@ -301,7 +357,6 @@ async function zipAndUploadDirectory(dirPath, containerClient, blobName) {
     console.log(`Cleaned up temp directory: ${tempDir}`);
   }
 }
-
 
 async function uploadFilesToAzure() {
   const cred = new DefaultAzureCredential();
@@ -313,23 +368,22 @@ async function uploadFilesToAzure() {
   const tasks = [];
 
   const rootName = basename(rootPath);
+  const onlyRoot = process.argv[3] && process.argv[3] === 'skip';
 
-  // If the script was invoked inside one of the supported folders,
-  // skip the root‑level scan and just process that folder.
-  if (allowedFolders.has(rootName) || allowedRootFolders.has(rootName)) {
+  if (!onlyRoot && allowedFolders.has(rootName) || allowedRootFolders.has(rootName)) {
     const prefix = allowedFolders.has(rootName);
     tasks.push(
       limit(() => processDirectory(rootPath, container, rootName, prefix)),
     );
   } else {
-    // Otherwise, scan the rootPath directory as before
     for (const entry of await readdir(rootPath, { withFileTypes: true })) {
       const name = entry.name;
       const fullPath = join(rootPath, name);
-
+      if (onlyRoot && name !== 'uifiles') {
+        continue;
+      }
       if (entry.isDirectory()) {
         if (allowedFolders.has(name)) {
-          // e.g. data/, models/, … → relBase=name, prefix=true
           tasks.push(
             limit(() => processDirectory(fullPath, container, name, true)),
           );
@@ -354,4 +408,14 @@ async function uploadFilesToAzure() {
   console.log("All uploads complete.");
 }
 
-uploadFilesToAzure().catch((err) => console.error(err));
+uploadFilesToAzure()
+  .catch((err) => {
+    console.error(err)
+  })
+  .then(() => {
+    console.log('Finished')
+  })
+  .finally(() => {
+    console.log("Done!");
+    process.exit(0);
+  });

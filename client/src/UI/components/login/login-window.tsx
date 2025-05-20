@@ -15,7 +15,7 @@ import {
   getFilesRecursively,
 } from "sage-core/util/fileHandler";
 import { supportedZones } from "@game/Constants/supportedZones";
-import { godotBindings } from "@/godot/bindings";
+import { fsBindings } from "@/Core/bindings";
 
 const defaultWorldName = "requiem";
 declare const window: Window;
@@ -88,7 +88,7 @@ export const LoginWindowComponent: React.FC = () => {
       Array.from({ length: 6 }).map((_, i) => {
         return ImageCache.getImageUrl(
           "uifiles/default",
-          `EQLS_WndBorder_0${i + 1}.tga`,
+          `EQLS_WndBorder_0${i + 1}.webp`,
         );
       }),
     ).then(setImageTiles);
@@ -325,15 +325,19 @@ export const LoginWindowComponent: React.FC = () => {
             variant="contained"
             onClick={async () => {
 
+              //load2
+              console.log('Processing load2');
+              const load2Files = ["load2.s3d","load2_obj.s3d"];
+              await fsBindings.processFiles('load2', load2Files);
               // First do global
               console.log('Processing global');
               const globalCharFiles = ["global_chr.s3d", "global3_chr.s3d", "global4_chr.s3d"];
-              await godotBindings.processFiles('global_chr', globalCharFiles);
+              await fsBindings.processFiles('global_chr', globalCharFiles);
 
-              // Items
+              //Items
               console.log('Processing items');
               const itemFiles = ["gequip.s3d", "gequip2.s3d"];
-              await godotBindings.processFiles('gequip', itemFiles);
+              await fsBindings.processFiles('gequip', itemFiles);
               for (const zone of Object.values(supportedZones)) {
                 const name = zone.shortName;
                 const associatedFiles: string[] = [];
@@ -348,7 +352,7 @@ export const LoginWindowComponent: React.FC = () => {
                 }
                 console.log("Process", name);
                 for await (const fileHandle of getFilesRecursively(
-                  godotBindings.rootFileSystemHandle,
+                  fsBindings.rootFileSystemHandle,
                   "",
                   new RegExp(`^${name}[_\\.].*`),
                   false,
@@ -360,7 +364,7 @@ export const LoginWindowComponent: React.FC = () => {
                 }
                 console.log(`Found ${name}`, associatedFiles);
                 if (associatedFiles.length > 0) {
-                  await godotBindings.processFiles(name, associatedFiles);
+                  await fsBindings.processFiles(name, associatedFiles);
                 }
               }
               console.log("Done");

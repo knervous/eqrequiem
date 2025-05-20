@@ -1,6 +1,0 @@
-[gd_scene load_steps=2 format=3 uid="uid://co8sw0kcgsi4i"]
-
-[ext_resource type="Script" uid="uid://dpgyakortmabp" path="res://_JS/Code/game-root.js" id="1_80nbo"]
-
-[node name="Game" type="Node3D"]
-script = ExtResource("1_80nbo")

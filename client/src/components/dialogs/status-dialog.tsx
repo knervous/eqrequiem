@@ -58,7 +58,7 @@ export const StatusDialog = ({
               permissions to the File System. Visit{' '}
               <Link
                 target="_blank"
-                href="https://developer.mozilla.org/en-US/docs/Web/API/FileSystemHandle/requestPermission"
+                href="https://developer.mozilla.org/en-US/docs/Web/API/CoreHandle/requestPermission"
               >
                 this link
               </Link>{' '}

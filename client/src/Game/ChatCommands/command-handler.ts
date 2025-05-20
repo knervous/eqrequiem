@@ -143,17 +143,6 @@ export class CommandHandler {
     this.setMode("character-select");
   }
 
-  @command("spawn")
-  commandSpawn(args: string[]) {
-    const spawn = args[0];
-    if (spawn) {
-      addChatLine(`Spawning ${spawn}`);
-      GameManager.instance.spawnModel(spawn);
-    } else {
-      addChatLine("No model entered");
-    }
-  }
-
   @command("nod")
   commandNod() {
     Player.instance?.playAnimation(AnimationDefinitions.Nod, Animation.LoopMode.LOOP_NONE, true);

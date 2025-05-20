@@ -18,7 +18,6 @@ import {
   BaseMaterial3D,
   StaticBody3D,
   Color,
-  is_instance_valid,
 } from "godot";
 import { FileSystem } from "../FileSystem/filesystem";
 import {

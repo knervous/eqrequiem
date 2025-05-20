@@ -34,6 +34,7 @@ import { SupportedRaces } from "./races";
 import { SupportedClasses } from "./classes";
 import { OpCodes } from "@game/Net/opcodes";
 import { CharCreate, Int } from "@game/Net/internal/api/capnp/common";
+import Player from "@game/Player/player";
 
 const selectProps = {
   size: "small",
@@ -174,7 +175,7 @@ export const CharacterCreate = ({ setView, charInfo }) => {
         }
       }
     }
-    GameManager.instance?.CharacterSelect?.loadModel(newCharacter);
+    GameManager.instance?.CharacterSelect?.loadModel(newCharacter, true);
 
     const classStats = baseClassStats[selectedClass - 1];
     const raceStats = baseStats[selectedRace - 1];
@@ -251,10 +252,14 @@ export const CharacterCreate = ({ setView, charInfo }) => {
     setName(name);
   }, [selectedRace, gender]);
 
+  useEffect(() => {
+    Player.instance?.UpdateNameplate([name || 'Soandso']);
+  },[name]);
+
   const toggleFaceIdx = useCallback((val) => () => {
     setFace((prev) => (prev + val < 0 ? 0 : prev + val > 7 ? 7 : prev + val));
     if (GameManager.instance?.CharacterSelect) {
-      GameManager.instance.CharacterSelect.character?.swapFace(
+      GameManager.instance.CharacterSelect.character?.SwapFace(
         face + val,
       );
     }

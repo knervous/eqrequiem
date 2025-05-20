@@ -10,7 +10,7 @@ import { LoginUIComponent } from "./login";
 import { GameUIComponent } from "./game";
 import { CharacterSelectUIComponent } from "./character-select";
 import { StringTable } from "../util/string-table";
-import { godotBindings } from "@/godot/bindings";
+import { fsBindings } from "@/Core/bindings";
 import { UIEvents } from "@ui/events/ui-events";
 
 import "./overlay.css";
@@ -81,7 +81,7 @@ export const Overlay: React.FC<Props> = (props: Props) => {
   return (
     <UIContext.Provider
       value={{
-        getEQFile: godotBindings.getFile,
+        getEQFile: fsBindings.getFile,
         ui: uiState,
         dispatcher,
         mode,

@@ -11,7 +11,7 @@ declare global {
 
 declare const window: Window;
 
-const godot = window.require("godot");
+const godot = window?.require?.("godot") ?? {};
 
 export const {
   Animation,

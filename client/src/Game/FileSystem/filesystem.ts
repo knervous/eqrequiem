@@ -1,4 +1,4 @@
-import { godotBindings } from "@/godot/bindings";
+import { fsBindings } from "@/Core/bindings";
 
 
 export class FileSystem {
@@ -7,7 +7,7 @@ export class FileSystem {
     fileName?: string,
   ): Promise<ArrayBuffer | undefined> {
     let buffer: ArrayBuffer | undefined;
-    const bytes = await godotBindings.getFile?.(folderPath, fileName ?? '');
+    const bytes = await fsBindings.getFile?.(folderPath, fileName ?? '');
     if (bytes) {
       buffer = bytes;
     }

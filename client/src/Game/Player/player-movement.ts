@@ -1,14 +1,6 @@
-import {
-  InputMap,
-  InputEventKey,
-  Input,
-  Vector3,
-  Key,
-  CharacterBody3D,
-  DisplayServer,
-  is_instance_valid,
-} from "godot";
-import type Player from "./player";
+import BABYLON from '@bjs';
+import type * as BJS from '@babylonjs/core';
+import type Player from "./player"; // Assuming Player type is defined
 import { WorldSocket } from "@ui/net/instances";
 import { OpCodes } from "@game/Net/opcodes";
 import { ClientPositionUpdate } from "@game/Net/internal/api/capnp/common";
@@ -19,146 +11,164 @@ type SimpleVector4 = {
   z: number;
   heading: number;
 };
+
 export class PlayerMovement {
   private player: Player;
+  private scene: BJS.Scene;
+  private physicsBody: BJS.PhysicsBody;
   public moveSpeed: number = 20;
   public turnSpeed: number = 1.5;
   public gravity: boolean = true;
   public gravityCoefficient: number = 14.76;
   private sprintMultiplier: number = 2.0;
-  private updateDelta = 0;
+  private updateDelta: number = 0;
 
-  private velocity = new Vector3(0, 0, 0);
-  private movement = new Vector3(0, 0, 0);
-  private vectorUp = new Vector3(0, 1, 0);
-  private forwardXZ = new Vector3(0, 0, 0);
-  private rightXZ = new Vector3(0, 0, 0);
+  private velocity: BJS.Vector3 = new BABYLON.Vector3(0, 0, 0);
+  private movement: BJS.Vector3 = new BABYLON.Vector3(0, 0, 0);
+  private vectorUp: BJS.Vector3 = new BABYLON.Vector3(0, 1, 0);
+  private forwardXZ: BJS.Vector3 = new BABYLON.Vector3(0, 0, 0);
+  private rightXZ: BJS.Vector3 = new BABYLON.Vector3(0, 0, 0);
   private lastPlayerPosition: SimpleVector4 = { x: 0, y: 0, z: 0, heading: 0 };
 
-  constructor(player: Player) {
+  // Key state tracking
+  private keyStates: { [key: string]: boolean } = {};
+
+  constructor(player: Player, scene: BJS.Scene) {
     this.player = player;
+    this.scene = scene;
+    this.physicsBody = this.player.mesh!.physicsBody!;
     this.bindKeys();
-    const node = this.player.getNode() as CharacterBody3D;
-    console.log("Player collision layer:", node.collision_layer, "mask:", node.collision_mask);
   }
 
   bindKeys() {
-    const actions = [
-      { name: "move_forward", key: Key.KEY_W },
-      { name: "move_backward", key: Key.KEY_S },
-      { name: "turn_left", key: Key.KEY_A },
-      { name: "turn_right", key: Key.KEY_D },
-      { name: "move_up", key: Key.KEY_SPACE },
-      { name: "move_down", key: Key.KEY_CTRL },
-      { name: "sprint", key: Key.KEY_SHIFT },
-    ];
+    const keyMap: { [action: string]: string } = {
+      move_forward: "KeyW",
+      move_backward: "KeyS",
+      turn_left: "KeyA",
+      turn_right: "KeyD",
+      move_up: "Space",
+      move_down: "ControlLeft",
+      sprint: "ShiftLeft",
+    };
 
-    actions.forEach(({ name, key }) => {
-      if (!InputMap.has_action(name)) {
-        InputMap.add_action(name);
-        const keyEvent = new InputEventKey();
-        keyEvent.keycode = key;
-        InputMap.action_add_event(name, keyEvent);
-      }
+    // Set up key event listeners
+    window.addEventListener("keydown", (e) => {
+      this.keyStates[e.code] = true;
+    });
+    window.addEventListener("keyup", (e) => {
+      this.keyStates[e.code] = false;
     });
   }
 
+  private isActionPressed(action: string): boolean {
+    const keyMap: { [action: string]: string } = {
+      move_forward: "KeyW",
+      move_backward: "KeyS",
+      turn_left: "KeyA",
+      turn_right: "KeyD",
+      move_up: "Space",
+      move_down: "ControlLeft",
+      sprint: "ShiftLeft",
+    };
+    return !!this.keyStates[keyMap[action]];
+  }
+
   public movementTick(delta: number) {
-    const node = this.player.getNode() as CharacterBody3D;
-    if (!node || !is_instance_valid(node)) return;
-    if (this.player.getNode()?.get_viewport()?.gui_get_focus_owner()) {
+    const mesh = this.player.mesh;
+    if (!mesh || !this.physicsBody) return;
+
+    // Check if GUI has focus (approximation, assumes external focus check)
+    if (document.activeElement && document.activeElement !== document.body) {
       return;
     }
 
-    const currentPos = this.player.getPlayerPosition();
-    if (!currentPos) {
+    const currentPos = mesh.position;
+    const heading = mesh.rotation.y;
+    if (currentPos === undefined || heading === undefined) {
       return;
     }
-    const heading = this.player.getPlayerRotation();
-    if (heading === undefined) {
-      return;
-    }
+
+    // Update movement state
     this.player.isPlayerMoving =
       currentPos.x !== this.lastPlayerPosition.x ||
       currentPos.y !== this.lastPlayerPosition.y ||
       currentPos.z !== this.lastPlayerPosition.z ||
-      heading.y !== this.lastPlayerPosition.heading;
+      heading !== this.lastPlayerPosition.heading;
     this.lastPlayerPosition = {
-      heading: heading.y,
+      heading,
       x: currentPos.x,
       y: currentPos.y,
       z: currentPos.z,
     };
 
-    const mouseCaptured =
-      DisplayServer.mouse_get_mode() === Input.MouseMode.MOUSE_MODE_CAPTURED;
+    const mouseCaptured = this.scene.getEngine().isPointerLock;
     let didTurn = false;
 
     this.movement.set(0, 0, 0);
     let playWalk = false;
     let didJump = false;
     let didCrouch = false;
-    const onFloor = node.is_on_floor();
+
+    // Approximate is_on_floor by checking vertical velocity or raycast (simplified)
+    const onFloor = Math.abs(this.velocity.y) < 0.1;
+
     if (!mouseCaptured) {
-      const rotation = node.rotation;
-      if (Input.is_action_pressed("turn_left")) {
+      if (this.isActionPressed("turn_left")) {
         didTurn = true;
-        node.rotate_y(this.turnSpeed * delta);
-        // Sync camera yaw with player rotation during turn
-        this.player.playerCamera.cameraYaw = rotation.y + Math.PI / 2;
+        mesh.rotation.y += this.turnSpeed * delta;
+        this.player.playerCamera.cameraYaw = mesh.rotation.y + Math.PI / 2;
       }
-      if (Input.is_action_pressed("turn_right")) {
+      if (this.isActionPressed("turn_right")) {
         didTurn = true;
-        node.rotate_y(-this.turnSpeed * delta);
-        // Sync camera yaw with player rotation during turn
-        this.player.playerCamera.cameraYaw = rotation.y + Math.PI / 2;
+        mesh.rotation.y -= this.turnSpeed * delta;
+        this.player.playerCamera.cameraYaw = mesh.rotation.y + Math.PI / 2;
       }
     } else {
-      if (Input.is_action_pressed("turn_left")) {
+      if (this.isActionPressed("turn_left")) {
         playWalk = true;
         this.movement.x = 1;
       }
-      if (Input.is_action_pressed("turn_right")) {
+      if (this.isActionPressed("turn_right")) {
         playWalk = true;
         this.movement.x = -1;
       }
     }
 
-    if (Input.is_action_pressed("move_forward")) {
+    if (this.isActionPressed("move_forward")) {
       this.movement.z = -1;
       playWalk = true;
     }
-    if (Input.is_action_pressed("move_backward")) {
+    if (this.isActionPressed("move_backward")) {
       this.movement.z = 1;
       playWalk = true;
     }
 
-    if (Input.is_action_pressed("move_up")) {
+    if (this.isActionPressed("move_up")) {
       this.movement.y = 1;
       didJump = true;
     }
-    if (Input.is_action_pressed("move_down")) {
+    if (this.isActionPressed("move_down")) {
       this.movement.y = -1;
       didCrouch = true;
     }
 
-    // Rest of the animation logic remains unchanged
+    // Animation logic (unchanged)
     if (playWalk) {
       if (didJump) {
-        this.player.playJump();
+        //   this.player.playJump();
       } else if (didCrouch) {
-        this.player.playDuckWalk();
-      } else if (Input.is_action_pressed("sprint")) {
-        this.player.playRun();
+        //   this.player.playDuckWalk();
+      } else if (this.isActionPressed("sprint")) {
+        //   this.player.playRun();
       } else {
-        this.player.playWalk();
+      //  this.player.playWalk();
       }
     } else if (didTurn) {
-      this.player.playShuffle();
+    //  this.player.playShuffle();
     } else if (didJump) {
-      this.player.playStationaryJump();
+    //  this.player.playStationaryJump();
     } else {
-      this.player.playIdle();
+    //  this.player.playIdle();
     }
 
     this.updateDelta += delta;
@@ -169,87 +179,62 @@ export class PlayerMovement {
       this.movement.z === 0 &&
       !didTurn
     ) {
-      this.velocity.set(0, 0, 0);
-      node.velocity = this.velocity;
-      node.move_and_slide();
+      this.velocity.set(0, this.velocity.y, 0); // Preserve Y velocity for gravity
+      this.physicsBody.setLinearVelocity(this.velocity);
       return;
     }
 
     if (this.updateDelta > 0.5) {
       this.updateDelta = 0;
-      console.log('Send update');
       WorldSocket.sendMessage(OpCodes.ClientUpdate, ClientPositionUpdate, {
         x: -currentPos.x,
         y: currentPos.z,
         z: currentPos.y,
-        heading: heading.y,
+        heading,
         animation: 0,
       });
     }
 
-    const { x: basisX, z: basisZ } = this.player.getNode()!.transform.basis.x;
+    // Calculate forward and right vectors
+    const forward = BABYLON.Vector3.Forward().rotateByQuaternionToRef(mesh.absoluteRotationQuaternion, new BABYLON.Vector3());
+    this.forwardXZ.set(forward.x, 0, forward.z).normalize();
 
-    this.forwardXZ.set(basisX, 0, basisZ);
-    this.forwardXZ.normalized();
+    // Calculate right vector (cross product)
+    this.rightXZ = BABYLON.Vector3.Cross(this.forwardXZ, this.vectorUp).normalize();
 
-    this.rightXZ.x =
-      this.forwardXZ.y * this.vectorUp.z - this.forwardXZ.z * this.vectorUp.y;
-    this.rightXZ.y =
-      this.forwardXZ.z * this.vectorUp.x - this.forwardXZ.x * this.vectorUp.z;
-    this.rightXZ.z =
-      this.forwardXZ.x * this.vectorUp.y - this.forwardXZ.y * this.vectorUp.x;
-    const rightLength = Math.sqrt(
-      this.rightXZ.x * this.rightXZ.x +
-        this.rightXZ.y * this.rightXZ.y +
-        this.rightXZ.z * this.rightXZ.z,
-    );
-    if (rightLength > 0) {
-      this.rightXZ.x /= rightLength;
-      this.rightXZ.y /= rightLength;
-      this.rightXZ.z /= rightLength;
-    } else {
-      this.rightXZ.set(0, 0, 0);
-    }
-
-    const speedMod = Input.is_action_pressed("sprint")
-      ? this.sprintMultiplier
-      : 1.0;
+    const speedMod = this.isActionPressed("sprint") ? this.sprintMultiplier : 1.0;
     const movementZScaled = this.movement.z * this.moveSpeed * speedMod;
     const movementXScaled = this.movement.x * this.moveSpeed * speedMod;
     const movementYScaled = this.movement.y * this.moveSpeed * speedMod;
 
-    const velocityForward = this.forwardXZ.multiplyScalar(movementZScaled);
-    const velocityStrafe = this.rightXZ.multiplyScalar(movementXScaled);
-    const velocityY = this.vectorUp.multiplyScalar(movementYScaled);
+    const velocityForward = this.forwardXZ.scale(movementZScaled);
+    const velocityStrafe = this.rightXZ.scale(movementXScaled);
+    const velocityY = this.vectorUp.scale(movementYScaled);
 
     const velocityXZ = velocityForward.add(velocityStrafe);
     if (velocityXZ.length() > 0) {
-      velocityXZ.normalized().multiplyScalar(this.moveSpeed * speedMod);
+      velocityXZ.normalize().scale(this.moveSpeed * speedMod);
     }
 
     if (this.gravity) {
-      const horizontal = velocityXZ;
       let newVy = this.velocity.y;
       if (onFloor) {
         if (didJump) {
-          newVy = 9.0;
+          newVy = 9.0; // Jump velocity
         } else {
           newVy = 0;
         }
       } else {
         newVy -= this.gravityCoefficient * delta;
       }
-      this.velocity.set(horizontal.x, newVy, horizontal.z);
+      this.velocity.set(velocityXZ.x, newVy, velocityXZ.z);
     } else {
-      const movementYScaled = this.movement.y * this.moveSpeed * speedMod;
-      this.velocity.y = movementYScaled;
       this.velocity = velocityXZ.add(velocityY);
     }
 
-    node.velocity = this.velocity;
-    node.move_and_slide();
+    // Apply velocity to physics body
+    this.physicsBody.setLinearVelocity(this.velocity);
 
-    this.vectorUp.set(0, 1, 0);
-    this.player.playerCamera.updateCameraPosition(node);
+    this.player.playerCamera.updateCameraPosition();
   }
 }

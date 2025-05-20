@@ -1,42 +1,25 @@
-import { Camera3D, Color, Node3D, OmniLight3D, Vector3 } from "godot";
+import BABYLON from "@bjs";
+import type * as BJS from "@babylonjs/core";
 import type GameManager from "../Manager/game-manager";
-import Actor from "../Actor/actor";
-import { RACE_DATA } from "../Constants/race-data";
-import { CLASS_DATA_NAMES } from "../Constants/class-data";
-import { zoneData } from "../Constants/zone-data";
+import { CLASS_DATA_ENUM } from "../Constants/class-data";
 import { ZoneManager } from "./zone-manager";
-import { CharacterSelectEntry } from "@game/Net/internal/api/capnp/player";
-
-const CLASS_DATA_ENUM = {
-  Warrior: 1,
-  Cleric: 2,
-  Paladin: 3,
-  Ranger: 4,
-  Shadowknight: 5,
-  Druid: 6,
-  Monk: 7,
-  Bard: 8,
-  Rogue: 9,
-  Shaman: 10,
-  Necromancer: 11,
-  Wizard: 12,
-  Mage: 13,
-  Enchanter: 14,
-  Beastlord: 15,
-  Berserker: 16,
-};
+import {
+  CharacterSelectEntry,
+  PlayerProfile,
+} from "@game/Net/internal/api/capnp/player";
+import Player from "@game/Player/player";
 
 export default class CharacterSelect {
-  private cameraDistance: number = 8;
+  private cameraDistance: number = 15;
   private cameraHeight: number = 3;
-  private lookatOffset = new Vector3(0, 1, 0);
-  private cameraPosition = new Vector3(0, 0, 0);
+  private lookatOffset = new BABYLON.Vector3(0, 1, 0);
+  private cameraPosition = new BABYLON.Vector3(0, 0, 0);
   private cameraPitch: number = 0;
   private orbitAngle: number = 0; // Current angle of orbit
   private rotationSpeed: number = 1; // Radians per second; adjust as needed
   private gameManager: GameManager;
   private zoneManager: ZoneManager | null = null;
-  private locations = {
+  private readonly locations = {
     [CLASS_DATA_ENUM.Warrior]: { x: -600, y: -184, z: 1475 },
     [CLASS_DATA_ENUM.Cleric]: { x: -603.5, y: -92.5, z: -328 },
     [CLASS_DATA_ENUM.Paladin]: { x: 847, y: -184.5, z: -250 },
@@ -53,28 +36,28 @@ export default class CharacterSelect {
     [CLASS_DATA_ENUM.Enchanter]: { x: 885, y: 156.5, z: 685 },
     [CLASS_DATA_ENUM.Beastlord]: { x: 0, y: -728, z: -260 },
   };
-  public character: Actor | null = null;
-  private camera: Camera3D | null = null;
-  private orbitIntervalId: number | undefined;
-  private worldTickInterval: number | undefined;
+  public character: Player | null = null;
+  private camera: BJS.Camera | null = null;
+  private orbitIntervalId: NodeJS.Timeout | undefined;
+  private worldTickInterval: NodeJS.Timeout | undefined;
   public faceCam = false;
 
   constructor(gameManager: GameManager) {
     this.gameManager = gameManager;
-    this.camera = gameManager.Camera;
+    this.camera = gameManager.Camera!;
     this.initialize();
   }
 
   private async initialize() {
     this.zoneManager = new ZoneManager(this.gameManager);
-    this.zoneManager?.loadZone("load2", false);
+    this.zoneManager?.loadZone("load2", false, true);
     this.worldTickInterval = setInterval(() => {
       this.zoneManager?.SkyManager?.worldTick?.();
     }, 500);
   }
 
   public dispose() {
-    console.log('Disposing character select');
+    console.log("Disposing character select");
     if (this.character) {
       this.character?.dispose();
     }
@@ -91,8 +74,8 @@ export default class CharacterSelect {
   }
 
   // This function updates the camera position based on the current orbit angle.
-  private updateCameraPosition(node: Node3D) {
-    const playerPos = node.global_position;
+  private updateCameraPosition(node: BJS.AbstractMesh) {
+    const playerPos = node.position;
     const horizontalDistance = this.cameraDistance * Math.cos(this.cameraPitch);
     const verticalDistance = this.cameraDistance * Math.sin(this.cameraPitch);
     const offsetX = Math.sin(this.orbitAngle) * horizontalDistance;
@@ -105,12 +88,14 @@ export default class CharacterSelect {
     );
     if (this.camera !== null) {
       this.camera.position = this.cameraPosition;
-      this.camera.look_at(playerPos.add(this.lookatOffset), Vector3.UP);
+      this.camera.lockedTarget = playerPos.add(this.lookatOffset);
+
+      //this.camera.look_at(playerPos.add(this.lookatOffset), BABYLON.Vector3.Up);
     }
   }
 
   // Starts a setInterval loop that updates the orbit angle and camera position.
-  public startOrbiting(node: Node3D) {
+  public startOrbiting(node: BJS.Mesh) {
     const interval = 16; // Interval in milliseconds (roughly 60 FPS)
     clearInterval(this.orbitIntervalId); // Clear any existing interval
     this.orbitIntervalId = setInterval(() => {
@@ -118,22 +103,11 @@ export default class CharacterSelect {
       this.orbitAngle += this.rotationSpeed * delta;
       try {
         if (this.faceCam) {
-          const secondaryNode = this.character?.getHead();
-          if (secondaryNode) {
-            node = secondaryNode; // Use head mesh for faceCam
-          } else {
-            console.warn("Head mesh not found, using primary node for faceCam");
-          }
-          // Position camera to the right of the head (90 degrees from forward)
-          this.cameraPosition = node.global_position.add(new Vector3(-5, 3, 0)); // Move to the right of the head
-
+          this.cameraPosition = node.position.add(
+            new BABYLON.Vector3(5, 5, 0),
+          ); // Move to the right of the head
           if (this.camera !== null) {
             this.camera.position = this.cameraPosition;
-            // Look at the head's position with a slight offset for framing
-            this.camera.look_at(
-              node.global_position.add(this.lookatOffset),
-              Vector3.UP,
-            );
           }
         } else {
           this.updateCameraPosition(node);
@@ -145,67 +119,49 @@ export default class CharacterSelect {
     }, interval);
   }
 
-  public async loadModel(player: CharacterSelectEntry | null) {
+  public async loadModel(player: CharacterSelectEntry, charCreate: boolean = false) {
     if (this.character) {
-      console.log("Disposing character", this.character);
-      this.character.dispose();
+      await this.character?.dispose();
+      this.character = null;
     }
-  
-    if (player?.charClass === 0 || player?.race === 0) {
-      player.race = 1;
-      player.charClass = 1;
-    }
-    console.log("Loading model", player);
-    const race = player?.race ?? 1;
-    const raceDataEntry = RACE_DATA[race];
-    const model = raceDataEntry[player?.gender ?? 0] || raceDataEntry[2];
-    clearInterval(this.orbitIntervalId);
-    this.character = new Actor("models", model.toLowerCase());
-    const rootNode = await this.character.instantiate();
-    if (rootNode && player) {
-      this.character.Load("");
-      this.gameManager.add_child(rootNode);
+
+    this.character = new Player(
+      this.gameManager,
+      this.gameManager.Camera!,
+      false,
+    );
+    this.character?.Load({
+      ...player,
+      name: player.name,
+      level: player.level,
+      charClass: player.charClass,
+      race: player.race,
+      inventoryItems: player.items,
+      zoneId: player.zone,
+      face: player.face,
+    } as unknown as PlayerProfile, charCreate).then(() => {
       const location =
-        this.locations[player?.charClass ?? CLASS_DATA_ENUM.Shaman];
-      rootNode.global_position = new Vector3(
+      this.locations[player?.charClass ?? CLASS_DATA_ENUM.Shaman];
+      // Set the absolute world position
+      //this.character.mesh.position = BABYLON.Vector3.Zero();
+      this.character.mesh.position = new BABYLON.Vector3(
         location.x,
         location.y + 3,
         location.z,
       );
-      console.log("PLAYER", player);
-      this.character.setNameplate(
-        player.name
-          ? `${player.name} - Level ${player.level} ${CLASS_DATA_NAMES[player.charClass]}\n ${zoneData.find((z) => z.zone === player?.zone)?.longName ?? "Unknown Zone"}`
-          : "Soandso",
-      );
 
-      this.character.swapFace(player?.face ?? 0);
-      // Add OmniLight3D for character illumination, positioned 1 meter in front
-      const light = new OmniLight3D();
-      light.set_name("CharacterLight");
-      light.omni_range = 10; // Range of the light
-      light.light_energy = 1.5; // Intensity of the light
-      light.light_color = new Color(1, 0.95, 0.9); // Warm, soft white
-      light.shadow_enabled = true; // Enable soft shadows
+      // Force recompute the world matrix to ensure the position is applied
+      this.character.mesh.computeWorldMatrix(true);
+      this.updateCameraPosition(this.character.mesh);
+      this.startOrbiting(this.character.mesh!);
+      this.character.playIdle();
+    });
 
-      // Calculate position: 1 meter in front (negative Z basis) and 2 meters above
-      const forwardDirection = rootNode.global_transform.basis.z
-        .normalized()
-        .multiplyScalar(-1); // Forward is -Z
-      const lightDistance = 3; // 1 meter in front
-      const lightHeight = 2; // 2 meters above character
-      light.position = new Vector3(
-        forwardDirection.x * lightDistance,
-        lightHeight,
-        forwardDirection.z * lightDistance,
-      );
-      light.shadow_enabled = false;
-      light.light_specular = 0;
-      rootNode.add_child(light); // Attach light to character's root node
-      // Set initial camera position.
-      this.updateCameraPosition(rootNode);
-      // Start orbiting the camera around the player.
-      this.startOrbiting(rootNode);
-    }
+    clearInterval(this.orbitIntervalId);
+    // if (!this.character.mesh) {
+    //   console.warn("[CharacterSelect] No character mesh available");
+    //   return;
+    // }
+  
   }
 }

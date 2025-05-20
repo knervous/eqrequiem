@@ -1,84 +1,103 @@
+import BABYLON from "@bjs";
+import type * as BJS from "@babylonjs/core";
 import type Player from "./player";
-import {
-  Vector3,
-  Camera3D,
-  CharacterBody3D,
-  OmniLight3D,
-  Color,
-  Node3D,
-  DisplayServer,
-  Input,
-  MouseButton,
-} from "godot";
 
 export class PlayerCamera {
   private player: Player;
-  private camera: Camera3D;
+  private camera: BJS.UniversalCamera;
+  private cameraLight: BJS.PointLight;
   private isFirstPerson: boolean = false;
   private minCameraDistance: number = 1;
   private maxCameraDistance: number = 35;
   private cameraDistance: number = 13;
   private cameraHeight: number = 5;
-  private cameraLight: OmniLight3D;
-
-  private lookatOffset = new Vector3(0, 3, 0); // Head height for first-person
-  private cameraPosition = new Vector3(0, 0, 0);
+  private canvas: HTMLCanvasElement | null = null;
+  private isLocked: boolean = false;
+  private lookatOffset = new BABYLON.Vector3(0, 3, 0); // Head height for first-person
+  private cameraPosition = new BABYLON.Vector3(0, 0, 0);
   private cameraPitch: number = 0;
-  
   public isCameraRotating: boolean = false;
   public cameraYaw: number = 0;
 
-  constructor(player: Player, camera: Camera3D) {
+  // Mouse state tracking
+  private mouseStates: { [button: number]: boolean } = {};
+
+  constructor(player: Player, camera: BJS.UniversalCamera) {
     this.player = player;
     this.camera = camera;
-    const node = this.player.getNode() as Node3D;
-    this.cameraLight = new OmniLight3D();
-    this.cameraLight.position = new Vector3(0, 5, 0);
-    this.cameraLight.light_color = new Color(1.0, 0.85, 0.6, 1.0);
-    this.cameraLight.light_energy = 4.0;
-    this.cameraLight.light_specular = 0.0;
-    this.cameraLight.omni_range = 250.0;
-    this.cameraLight.layers = 1 << 0;
-    node?.add_child(this.cameraLight);
+    this.cameraLight = new BABYLON.PointLight(
+      "playerLight",
+      new BABYLON.Vector3(0, 5, 0),
+      this.player.gameManager.scene!,
+    );
+    this.cameraLight.radius = 100;
+    this.cameraLight.diffuse = new BABYLON.Color3(1.0, 0.85, 0.6);
+    this.cameraLight.intensity = 25.0;
+    this.cameraLight.specular = new BABYLON.Color3(0, 0, 0); // No specular
+    this.cameraLight.range = 100.0;
+    // Note: Babylon.js lights don't use layers like Godot; use includeOnlyMeshes if needed
+
+    this.bindInputEvents();
   }
-  private reparentLight(newParent: Node3D) {
-    const oldParent = this.cameraLight.get_parent() as Node3D | null;
-    if (oldParent !== newParent) {
-      if (oldParent) {
-        oldParent.remove_child(this.cameraLight);
-      }
-      newParent.add_child(this.cameraLight);
-    }
+
+  private bindInputEvents() {
+    const canvas = this.player.gameManager
+      .scene!.getEngine()
+      .getRenderingCanvas();
+    if (!canvas) return;
+    this.canvas = canvas;
+    // Mouse button events
+    canvas.addEventListener("mousedown", (e) => {
+      this.mouseStates[e.button] = true;
+      this.mouseInputButton(e.button);
+    });
+    canvas.addEventListener("mouseup", (e) => {
+      this.mouseStates[e.button] = false;
+      this.mouseInputButton(e.button);
+    });
+
+    // Mouse motion
+    canvas.addEventListener("mousemove", (e) => {
+      this.inputMouseMotion(e.movementX, e.movementY);
+    });
+
+    // Mouse wheel
+    canvas.addEventListener("wheel", (e) => {
+      const delta = e.deltaY > 0 ? 1 : -1;
+      this.adjustCameraDistance(delta);
+      e.preventDefault();
+    });
   }
 
   public mouseInputButton(buttonIndex: number) {
-    if (buttonIndex === MouseButton.MOUSE_BUTTON_LEFT) {
-      this.isCameraRotating = !this.isFirstPerson && Input.is_mouse_button_pressed(
-        MouseButton.MOUSE_BUTTON_LEFT,
-      );
-    }
-
-    // In first-person, always capture mouse for free look
-    if (this.isFirstPerson) {
-      // DisplayServer.mouse_set_mode(Input.MouseMode.MOUSE_MODE_CAPTURED);
-    } else {
-      if (this.isCameraRotating) {
-        DisplayServer.mouse_set_mode(Input.MouseMode.MOUSE_MODE_CAPTURED);
-      } else {
-        DisplayServer.mouse_set_mode(Input.MouseMode.MOUSE_MODE_VISIBLE);
+    if (this.mouseStates[buttonIndex]) {
+      if (buttonIndex === 2) {
+        document.exitPointerLock();
       }
-    }
-
-    if (buttonIndex === MouseButton.MOUSE_BUTTON_WHEEL_UP) {
-      this.adjustCameraDistance(-1);
-    } else if (buttonIndex === MouseButton.MOUSE_BUTTON_WHEEL_DOWN) {
-      this.adjustCameraDistance(1);
+    } else if (
+      (buttonIndex === 2 && !this.isLocked && this.canvas.requestPointerLock) ||
+      this.canvas.msRequestPointerLock ||
+      this.canvas.mozRequestPointerLock ||
+      this.canvas.webkitRequestPointerLock
+    ) {
+      try {
+        this.canvas.requestPointerLock();
+      } catch {}
     }
   }
 
+  public attachPlayerLight(mesh: BJS.AbstractMesh) {
+    if (!this.cameraLight) return;
+    this.cameraLight.parent = mesh;
+    const forward = mesh.getDirection(BABYLON.Axis.X).normalize();
+    const heightOff = new BABYLON.Vector3(0, 2, 1);
+    const forwardOff = forward.scale(-2); // 2 units in front
+
+    this.cameraLight.position = mesh.position.add(forwardOff).add(heightOff);
+  }
+
   public adjustCameraDistance(delta: number) {
-    const node = this.player.getNode();
-    if (!node) return;
+    if (!this.player.mesh) return;
     const deltaCoefficient = 0.2;
     this.cameraDistance = Math.max(
       this.minCameraDistance,
@@ -88,89 +107,101 @@ export class PlayerCamera {
       ),
     );
     this.isFirstPerson = this.cameraDistance <= this.minCameraDistance;
-    this.updateCameraPosition(node as CharacterBody3D);
+    this.updateCameraPosition();
   }
 
   public inputMouseMotion(x: number, y: number) {
-    const node = this.player.getNode() as CharacterBody3D;
-    if (!node) return;
-  
-    if (
-      DisplayServer.mouse_get_mode() === Input.MouseMode.MOUSE_MODE_CAPTURED
-    ) {
-      // Sensitivity adjustments
-      const yawSensitivity = 0.005;
-      const pitchSensitivity = 0.005;
-  
-      // Update yaw and pitch
-      this.cameraYaw -= x * yawSensitivity;
-      this.cameraPitch += y * pitchSensitivity; // Reversed pitch as per previous fix
-  
-      // Clamp pitch to prevent flipping (90 degrees up/down)
-      const maxPitch = Math.PI / 2 - 0.01; // Slight offset to avoid gimbal lock
-      this.cameraPitch = Math.max(-maxPitch, Math.min(maxPitch, this.cameraPitch));
-  
-      if (this.isFirstPerson) {
-        // In first-person, rotate player node on Y-axis to align movement
-        //node.rotation = new Vector3(0, this.cameraYaw, 0); // Removed negative sign
-        this.player.isPlayerMoving = true;
-        node.rotate_y(-x * yawSensitivity);
-        this.updateCameraPosition(node);
+    if (!this.player.mesh) return;
+
+    const isPointerLocked =
+      this.player.gameManager.scene!.getEngine().isPointerLock;
+    if (!isPointerLocked) return;
+
+    // Sensitivity adjustments
+    const yawSensitivity = 0.005;
+    const pitchSensitivity = 0.005;
+
+    // Update yaw and pitch
+    this.cameraYaw -= x * yawSensitivity;
+    this.cameraPitch += y * pitchSensitivity;
+
+    // Clamp pitch to prevent flipping
+    const maxPitch = Math.PI / 2 - 0.01;
+    this.cameraPitch = Math.max(
+      -maxPitch,
+      Math.min(maxPitch, this.cameraPitch),
+    );
+
+    if (this.isFirstPerson) {
+      // Rotate player mesh on Y-axis for movement
+      this.player.mesh.rotation.y = this.cameraYaw;
+      this.player.isPlayerMoving = true;
+      this.updateCameraPosition();
+    } else {
+      if (this.isCameraRotating) {
+        // Third-person camera rotation
+        this.updateCameraPosition();
       } else {
-        if (this.isCameraRotating) {
-          // Third-person camera rotation around player
-          this.updateCameraPosition(node);
-        } else {
-          // Rotate player and adjust camera yaw
-          this.player.isPlayerMoving = true;
-          node.rotate_y(-x * yawSensitivity);
-          this.updateCameraPosition(node);
-        }
+        // Rotate player and adjust camera yaw
+        this.player.mesh.rotation.y -= x * yawSensitivity;
+        this.player.isPlayerMoving = true;
+        this.updateCameraPosition();
       }
     }
   }
-  
-  public updateCameraPosition(node: CharacterBody3D) {
-    const playerPos = node.global_position;
-  
+
+  public updateCameraPosition() {
+    const mesh = this.player.mesh;
+    if (!mesh) return;
+
+    const playerPos = mesh.position;
+
     if (this.isFirstPerson) {
-      // Set player node invisible in first-person mode
-      node.visible = false;
-  
-      // Position camera at player's head level
-      this.camera.global_position = playerPos.add(this.lookatOffset);
-      this.reparentLight(this.camera);
-      // Apply pitch and yaw rotations to camera
-      this.camera.rotation = new Vector3(
+      // Hide player mesh
+      mesh.isVisible = false;
+
+      // Position camera at head level
+      this.camera.position = playerPos.add(this.lookatOffset);
+      this.cameraLight.position = this.camera.position;
+
+      // Apply pitch and yaw rotations
+      this.camera.rotation = new BABYLON.Vector3(
         -this.cameraPitch, // Negative for intuitive up/down
-        this.cameraYaw, // Ensure camera yaw matches player
+        this.cameraYaw,
         0,
       );
     } else {
-      this.reparentLight(node);
+      // Show player mesh
+      mesh.isVisible = true;
 
-      // Make player node visible in third-person mode
-      node.visible = true;
-  
+      // Position light at player
+      this.cameraLight.position = playerPos.add(new BABYLON.Vector3(0, 5, 0));
+
+      // Calculate camera position
       const horizontalDistance =
         this.cameraDistance * Math.cos(this.cameraPitch);
       const verticalDistance = this.cameraDistance * Math.sin(this.cameraPitch);
-  
+
       const offsetX = Math.sin(this.cameraYaw) * horizontalDistance;
       const offsetZ = Math.cos(this.cameraYaw) * horizontalDistance;
-  
+
       this.cameraPosition.set(
         playerPos.x + offsetX,
         playerPos.y + this.cameraHeight + verticalDistance,
         playerPos.z + offsetZ,
       );
-  
+
       this.camera.position = this.cameraPosition;
-      this.camera.look_at(playerPos.add(this.lookatOffset), Vector3.UP);
-  
+      this.camera.setTarget(playerPos.add(this.lookatOffset));
+
       if (this.player.isPlayerMoving && !this.isCameraRotating) {
-        this.cameraYaw = node.rotation.y + Math.PI / 2;
+        this.cameraYaw = mesh.rotation.y + Math.PI / 2;
       }
     }
+  }
+
+  public dispose() {
+    this.cameraLight.dispose();
+    // Note: Camera disposal is handled externally if needed
   }
 }
