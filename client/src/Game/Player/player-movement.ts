@@ -19,7 +19,7 @@ export class PlayerMovement {
   public moveSpeed: number = 20;
   public turnSpeed: number = 1.5;
   public gravity: boolean = true;
-  public gravityCoefficient: number = 14.76;
+  public gravityCoefficient: number = -5.76;
   private sprintMultiplier: number = 2.0;
   private updateDelta: number = 0;
 
@@ -35,33 +35,26 @@ export class PlayerMovement {
 
   constructor(player: Player, scene: BJS.Scene) {
     this.player = player;
-    this.scene = scene;
+    this.scene  = scene;
     this.physicsBody = this.player.mesh!.physicsBody!;
-    this.bindKeys();
-  }
 
-  bindKeys() {
-    const keyMap: { [action: string]: string } = {
-      move_forward: "KeyW",
-      move_backward: "KeyS",
-      turn_left: "KeyA",
-      turn_right: "KeyD",
-      move_up: "Space",
-      move_down: "ControlLeft",
-      sprint: "ShiftLeft",
-    };
-
-    // Set up key event listeners
-    window.addEventListener("keydown", (e) => {
-      this.keyStates[e.code] = true;
-    });
-    window.addEventListener("keyup", (e) => {
-      this.keyStates[e.code] = false;
+    // === register keyboard listeners ===
+    this.scene.onKeyboardObservable.add((kbInfo) => {
+      const code = kbInfo.event.code;             // e.g. "KeyW", "Space"
+      switch (kbInfo.type) {
+        case BABYLON.KeyboardEventTypes.KEYDOWN:
+          this.keyStates[code] = true;
+          break;
+        case BABYLON.KeyboardEventTypes.KEYUP:
+          this.keyStates[code] = false;
+          break;
+      }
     });
   }
+
 
   private isActionPressed(action: string): boolean {
-    const keyMap: { [action: string]: string } = {
+    const keyMap: Record<string,string> = {
       move_forward: "KeyW",
       move_backward: "KeyS",
       turn_left: "KeyA",
@@ -73,22 +66,22 @@ export class PlayerMovement {
     return !!this.keyStates[keyMap[action]];
   }
 
+
   public movementTick(delta: number) {
     const mesh = this.player.mesh;
     if (!mesh || !this.physicsBody) return;
-
-    // Check if GUI has focus (approximation, assumes external focus check)
+    console.log('Tick', delta);
+  
     if (document.activeElement && document.activeElement !== document.body) {
       return;
     }
-
+  
     const currentPos = mesh.position;
     const heading = mesh.rotation.y;
     if (currentPos === undefined || heading === undefined) {
       return;
     }
-
-    // Update movement state
+  
     this.player.isPlayerMoving =
       currentPos.x !== this.lastPlayerPosition.x ||
       currentPos.y !== this.lastPlayerPosition.y ||
@@ -100,18 +93,16 @@ export class PlayerMovement {
       y: currentPos.y,
       z: currentPos.z,
     };
-
+  
     const mouseCaptured = this.scene.getEngine().isPointerLock;
     let didTurn = false;
-
     this.movement.set(0, 0, 0);
     let playWalk = false;
     let didJump = false;
     let didCrouch = false;
-
-    // Approximate is_on_floor by checking vertical velocity or raycast (simplified)
-    const onFloor = Math.abs(this.velocity.y) < 0.1;
-
+  
+    const onFloor = false;// Math.abs(this.velocity.y) < 0.1;
+  
     if (!mouseCaptured) {
       if (this.isActionPressed("turn_left")) {
         didTurn = true;
@@ -123,17 +114,8 @@ export class PlayerMovement {
         mesh.rotation.y -= this.turnSpeed * delta;
         this.player.playerCamera.cameraYaw = mesh.rotation.y + Math.PI / 2;
       }
-    } else {
-      if (this.isActionPressed("turn_left")) {
-        playWalk = true;
-        this.movement.x = 1;
-      }
-      if (this.isActionPressed("turn_right")) {
-        playWalk = true;
-        this.movement.x = -1;
-      }
     }
-
+  
     if (this.isActionPressed("move_forward")) {
       this.movement.z = -1;
       playWalk = true;
@@ -142,7 +124,14 @@ export class PlayerMovement {
       this.movement.z = 1;
       playWalk = true;
     }
-
+    if (this.isActionPressed("turn_left") && mouseCaptured) {
+      playWalk = true;
+      this.movement.x = 1;
+    }
+    if (this.isActionPressed("turn_right") && mouseCaptured) {
+      playWalk = true;
+      this.movement.x = -1;
+    }
     if (this.isActionPressed("move_up")) {
       this.movement.y = 1;
       didJump = true;
@@ -151,39 +140,26 @@ export class PlayerMovement {
       this.movement.y = -1;
       didCrouch = true;
     }
-
-    // Animation logic (unchanged)
+  
     if (playWalk) {
       if (didJump) {
-        //   this.player.playJump();
+        this.player.playJump();
       } else if (didCrouch) {
-        //   this.player.playDuckWalk();
+        this.player.playDuckWalk();
       } else if (this.isActionPressed("sprint")) {
-        //   this.player.playRun();
+        this.player.playRun();
       } else {
-      //  this.player.playWalk();
+        this.player.playWalk();
       }
     } else if (didTurn) {
-    //  this.player.playShuffle();
+      this.player.playShuffle();
     } else if (didJump) {
-    //  this.player.playStationaryJump();
+      this.player.playStationaryJump();
     } else {
-    //  this.player.playIdle();
+      this.player.playIdle();
     }
-
+  
     this.updateDelta += delta;
-
-    if (
-      this.movement.x === 0 &&
-      this.movement.y === 0 &&
-      this.movement.z === 0 &&
-      !didTurn
-    ) {
-      this.velocity.set(0, this.velocity.y, 0); // Preserve Y velocity for gravity
-      this.physicsBody.setLinearVelocity(this.velocity);
-      return;
-    }
-
     if (this.updateDelta > 0.5) {
       this.updateDelta = 0;
       WorldSocket.sendMessage(OpCodes.ClientUpdate, ClientPositionUpdate, {
@@ -194,33 +170,33 @@ export class PlayerMovement {
         animation: 0,
       });
     }
-
-    // Calculate forward and right vectors
-    const forward = BABYLON.Vector3.Forward().rotateByQuaternionToRef(mesh.absoluteRotationQuaternion, new BABYLON.Vector3());
+  
+    const forward = BABYLON.Vector3.Forward().rotateByQuaternionToRef(
+      mesh.absoluteRotationQuaternion,
+      new BABYLON.Vector3(),
+    );
     this.forwardXZ.set(forward.x, 0, forward.z).normalize();
-
-    // Calculate right vector (cross product)
     this.rightXZ = BABYLON.Vector3.Cross(this.forwardXZ, this.vectorUp).normalize();
-
+  
     const speedMod = this.isActionPressed("sprint") ? this.sprintMultiplier : 1.0;
     const movementZScaled = this.movement.z * this.moveSpeed * speedMod;
     const movementXScaled = this.movement.x * this.moveSpeed * speedMod;
     const movementYScaled = this.movement.y * this.moveSpeed * speedMod;
-
+  
     const velocityForward = this.forwardXZ.scale(movementZScaled);
     const velocityStrafe = this.rightXZ.scale(movementXScaled);
     const velocityY = this.vectorUp.scale(movementYScaled);
-
+  
     const velocityXZ = velocityForward.add(velocityStrafe);
     if (velocityXZ.length() > 0) {
       velocityXZ.normalize().scale(this.moveSpeed * speedMod);
     }
-
+  
     if (this.gravity) {
       let newVy = this.velocity.y;
       if (onFloor) {
         if (didJump) {
-          newVy = 9.0; // Jump velocity
+          newVy = 9.0;
         } else {
           newVy = 0;
         }
@@ -231,10 +207,13 @@ export class PlayerMovement {
     } else {
       this.velocity = velocityXZ.add(velocityY);
     }
-
-    // Apply velocity to physics body
+  
     this.physicsBody.setLinearVelocity(this.velocity);
-
     this.player.playerCamera.updateCameraPosition();
+  
+    // Debug logging
+    console.log('Position:', mesh.position.asArray());
+    console.log('Velocity:', this.velocity.asArray());
+    console.log('Rotation:', mesh.rotation.y);
   }
 }

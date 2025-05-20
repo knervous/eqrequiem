@@ -78,6 +78,7 @@ const exportObject: BabylonAPI = {
     addImport(import('@babylonjs/core/Animations/animation'));
     addImport(import('@babylonjs/core/Cameras/'));
     addImport(import('@babylonjs/core/Materials/effect'));
+    addImport(import('@babylonjs/core/Events/keyboardEvents'));
 
     // Engine extensions
     addImport(import('@babylonjs/core/Engines/shaderStore'));

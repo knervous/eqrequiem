@@ -7,7 +7,7 @@ import MusicManager from "@game/Music/music-manager";
 import { ZoneManager } from "@game/Zone/zone-manager";
 import { PlayerProfile } from "@game/Net/internal/api/capnp/player";
 import HavokPhysics from "@babylonjs/havok";
-import { Effect } from "@babylonjs/core/Materials/effect";
+import { NewZone } from "@game/Net/internal/api/capnp/zone";
 
 declare const window: Window;
 
@@ -61,9 +61,6 @@ export default class GameManager {
     this.zoneManager = new ZoneManager(this);
     this.keyDown = this.keyDown.bind(this);
     this.resize = this.resize.bind(this);
-    this.sceneMouseDown = this.sceneMouseDown.bind(this);
-    this.sceneMouseUp = this.sceneMouseUp.bind(this);
-    this.sceneMouseMove = this.sceneMouseMove.bind(this);
     this.renderLoop = this.renderLoop.bind(this);
   }
 
@@ -117,9 +114,6 @@ export default class GameManager {
     }
     this.scene = new BABYLON.Scene(this.engine);
     this.scene.useRightHandedSystem = true;
-    this.scene.onPointerDown = this.sceneMouseDown;
-    this.scene.onPointerUp = this.sceneMouseUp;
-    this.scene.onPointerMove = this.sceneMouseMove;   // ← add this line
     this.canvas!.oncontextmenu = (e) => e.preventDefault();
     this.scene.onPointerObservable.add(this.onPointerEvent.bind(this));
 
@@ -144,22 +138,10 @@ export default class GameManager {
 
   onPointerEvent(eventData: BJS.PointerInfo) {
     switch(eventData.type) {
-      case BABYLON.PointerEventTypes.POINTERWHEEL:
-        // Handle mouse wheel event
-        console.log('wheel');
-        //this.handleMouseWheel(eventData);
-        break;
-      case BABYLON.PointerEventTypes.POINTERMOVE:
-        // Handle mouse move event
-        //this.handleMouseMove(eventData);
-        console.log('mouse move');
-        break;
       case BABYLON.PointerEventTypes.POINTERDOWN:
-        // Handle mouse down event
         console.log('mouse down');
         break;
       case BABYLON.PointerEventTypes.POINTERUP:
-        // Handle mouse up event
         console.log('mouse up');
         break;
       default:
@@ -209,50 +191,8 @@ export default class GameManager {
         break;
       }
       default:
-        if (this.player) {
-          this.player.playerMovement.inputKeyDown(e);
-        }
         break;
     }
-  }
-
-  // Handle mouse button events
-  sceneMouseDown(e: BJS.IPointerEvent) {
-    console.log('Hello event',e);
-    if (!this.player || !this.scene) return;
-
-    // Route mouse button press to player
-    this.player.inputMouseButton(e, true); // true for pressed
-
-    // Emulate Godot's right-click mouse capture behavior
-    if (e.button === 2) { // Right mouse button
-      this.scene.pointerMoveDisabled = true; // Lock pointer
-      this.engine?.enterPointerLock();
-    }
-
-    // Route to zoneManager's EntityPool if needed
-  }
-
-  // Handle mouse button release
-  sceneMouseUp(e: BJS.IPointerEvent) {
-    if (!this.player || !this.scene) return;
-
-    // Route mouse button release to player
-    // this.player.inputMouseButton(e, false); // false for released
-
-    // Release pointer lock on right mouse button up
-    if (e.button === 2) {
-      this.scene.pointerMoveDisabled = false;
-      //this.engine?.exitPointerLock();
-    }
-  }
-
-  // Handle mouse motion
-  sceneMouseMove(e: BJS.IPointerEvent) {
-    if (!this.player || !this.scene) return;
-
-    // Route mouse motion to player
-    this.player.inputMouseMotion(e.movementX, e.movementY);
   }
 
   public setLoading(value: boolean) {

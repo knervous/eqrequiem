@@ -135,7 +135,8 @@ export default class Player extends AssetContainer {
     this.playerCamera.inputMouseMotion(x, y);
   }
 
-  public tick(delta: number) {
+  public tick() {
+    const delta = (this.gameManager.scene?.getEngine().getDeltaTime() ?? 0) / 1000;
     this.playerMovement?.movementTick?.(delta);
   }
 
@@ -256,35 +257,24 @@ export default class Player extends AssetContainer {
     this.mesh.rotation.y = Math.PI;
     this.mesh.id = "Player";
     this.mesh.name = player.name;
-
+    this.mesh.position = new BABYLON.Vector3(0, 5, 0);
     // Light
     this.playerCamera.attachPlayerLight(this.mesh);
 
     // Create Havok physics body with capsule shape
     if (this.usePhysics) {
-      // Define capsule dimensions (adjust based on your model's scale)
-      const capsuleRadius = 0.3; // Radius of the capsule ends
-      const capsuleHeight = 2; // Total height including end caps
-      const pointA = new BABYLON.Vector3(
-        0,
-        capsuleHeight / 2 - capsuleRadius,
-        0,
-      );
-      const pointB = new BABYLON.Vector3(
-        0,
-        -(capsuleHeight / 2 - capsuleRadius),
-        0,
-      );
-
-      // Create capsule shape
+      const capsuleRadius = 0.5;
+      const capsuleHeight = 2.5;
+      const pointA = new BABYLON.Vector3(0, capsuleHeight / 2 - capsuleRadius, 0);
+      const pointB = new BABYLON.Vector3(0, -(capsuleHeight / 2 - capsuleRadius), 0);
+    
       const capsuleShape = new BABYLON.PhysicsShapeCapsule(
         pointA,
         pointB,
         capsuleRadius,
         this.gameManager.scene!,
       );
-
-      // Create physics body
+    
       this.physicsBody = new BABYLON.PhysicsBody(
         this.mesh,
         BABYLON.PhysicsMotionType.DYNAMIC,
@@ -293,16 +283,21 @@ export default class Player extends AssetContainer {
       );
       this.physicsBody.shape = capsuleShape;
       this.physicsBody.setMassProperties({
-        mass: 70, // Mass in kg (e.g., average human weight)
+        mass: 70,
+        inertia: new BABYLON.Vector3(0, 0, 0),
       });
-      this.mesh.physicsBody = this.physicsBody; // Link to mesh
+    
+      // Lock X and Z rotations to prevent spinning
+      this.physicsBody.setAngularDamping(0.9); // Keep high damping
+      this.physicsBody.setLinearDamping(0.1);
+      this.mesh.physicsBody = this.physicsBody;
       this.playerMovement = new PlayerMovement(this, this.gameManager.scene!);
     }
     this.mesh.computeWorldMatrix(true);
     createNameplate(
       this.gameManager.scene!,
       this.mesh,
-      charCreate
+      !this.usePhysics && charCreate
         ? ["Soandso"]
         : this.inGame
           ? [this.player.name]
@@ -314,6 +309,11 @@ export default class Player extends AssetContainer {
     );
 
     this.SwapFace(player.face);
+    if (this.usePhysics) {
+      this.gameManager.scene?.registerBeforeRender(() => {
+        this.tick();
+      });
+    }
   }
 
   /**

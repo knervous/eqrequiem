@@ -30,6 +30,9 @@ export class PlayerCamera {
       new BABYLON.Vector3(0, 5, 0),
       this.player.gameManager.scene!,
     );
+    this.onChangePointerLock = this.onChangePointerLock.bind(this);
+
+
     this.cameraLight.radius = 100;
     this.cameraLight.diffuse = new BABYLON.Color3(1.0, 0.85, 0.6);
     this.cameraLight.intensity = 25.0;
@@ -38,6 +41,11 @@ export class PlayerCamera {
     // Note: Babylon.js lights don't use layers like Godot; use includeOnlyMeshes if needed
 
     this.bindInputEvents();
+    document.addEventListener(
+      'pointerlockchange',
+      this.onChangePointerLock,
+      false,
+    );
   }
 
   private bindInputEvents() {
@@ -47,13 +55,12 @@ export class PlayerCamera {
     if (!canvas) return;
     this.canvas = canvas;
     // Mouse button events
+ 
     canvas.addEventListener("mousedown", (e) => {
-      this.mouseStates[e.button] = true;
       this.mouseInputButton(e.button);
     });
     canvas.addEventListener("mouseup", (e) => {
-      this.mouseStates[e.button] = false;
-      this.mouseInputButton(e.button);
+      this.mouseInputButton(e.button, true);
     });
 
     // Mouse motion
@@ -69,21 +76,28 @@ export class PlayerCamera {
     });
   }
 
-  public mouseInputButton(buttonIndex: number) {
-    if (this.mouseStates[buttonIndex]) {
-      if (buttonIndex === 2) {
-        document.exitPointerLock();
-      }
-    } else if (
-      (buttonIndex === 2 && !this.isLocked && this.canvas.requestPointerLock) ||
-      this.canvas.msRequestPointerLock ||
-      this.canvas.mozRequestPointerLock ||
-      this.canvas.webkitRequestPointerLock
-    ) {
-      try {
-        this.canvas.requestPointerLock();
-      } catch {}
+  private  onChangePointerLock = () => {
+    const controlEnabled = document.pointerLockElement;
+    if (!controlEnabled) {
+      this.isLocked = false;
+    } else {
+      this.isLocked = true;
     }
+  };
+
+  public mouseInputButton(buttonIndex: number, up: boolean = false) {
+    if (up) {
+      document.exitPointerLock();
+    } else  {
+      if (
+        (buttonIndex === 2 && !this.isLocked && this.canvas.requestPointerLock)
+      ) {
+        try {
+          this.canvas.requestPointerLock();
+        } catch {}
+      }
+    }
+   
   }
 
   public attachPlayerLight(mesh: BJS.AbstractMesh) {
@@ -111,6 +125,7 @@ export class PlayerCamera {
   }
 
   public inputMouseMotion(x: number, y: number) {
+
     if (!this.player.mesh) return;
 
     const isPointerLocked =
@@ -173,9 +188,7 @@ export class PlayerCamera {
     } else {
       // Show player mesh
       mesh.isVisible = true;
-
-      // Position light at player
-      this.cameraLight.position = playerPos.add(new BABYLON.Vector3(0, 5, 0));
+      this.camera.lockedTarget = this.player.mesh?.position;
 
       // Calculate camera position
       const horizontalDistance =
@@ -202,6 +215,11 @@ export class PlayerCamera {
 
   public dispose() {
     this.cameraLight.dispose();
+    document.removeEventListener(
+      'pointerlockchange',
+      this.onChangePointerLock,
+      false,
+    );
     // Note: Camera disposal is handled externally if needed
   }
 }

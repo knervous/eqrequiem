@@ -121,6 +121,9 @@ export class ZoneManager {
       file, // Pass ArrayBuffer directly
       this.parent.scene!,
     );
+    result.meshes.forEach((mesh) => {
+      mesh.checkCollisions = true;
+    });
     result.transformNodes[0].parent = this.zoneContainer;
     result.transformNodes[0].name = this.zoneName;
     
