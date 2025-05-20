@@ -142,15 +142,11 @@ export default class CharacterSelect {
     } as unknown as PlayerProfile, charCreate).then(() => {
       const location =
       this.locations[player?.charClass ?? CLASS_DATA_ENUM.Shaman];
-      // Set the absolute world position
-      //this.character.mesh.position = BABYLON.Vector3.Zero();
       this.character.mesh.position = new BABYLON.Vector3(
         location.x,
         location.y + 3,
         location.z,
       );
-
-      // Force recompute the world matrix to ensure the position is applied
       this.character.mesh.computeWorldMatrix(true);
       this.updateCameraPosition(this.character.mesh);
       this.startOrbiting(this.character.mesh!);
@@ -158,10 +154,5 @@ export default class CharacterSelect {
     });
 
     clearInterval(this.orbitIntervalId);
-    // if (!this.character.mesh) {
-    //   console.warn("[CharacterSelect] No character mesh available");
-    //   return;
-    // }
-  
   }
 }

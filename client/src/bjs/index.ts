@@ -80,6 +80,10 @@ const exportObject: BabylonAPI = {
     addImport(import('@babylonjs/core/Materials/effect'));
     addImport(import('@babylonjs/core/Events/keyboardEvents'));
 
+    // Ray
+    addImport(import('@babylonjs/core/Culling/ray'));
+
+
     // Engine extensions
     addImport(import('@babylonjs/core/Engines/shaderStore'));
     addImport(import('@babylonjs/core/Engines/Extensions/engine.dynamicTexture'));

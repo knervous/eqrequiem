@@ -122,8 +122,23 @@ export class ZoneManager {
       this.parent.scene!,
     );
     result.meshes.forEach((mesh) => {
-      mesh.checkCollisions = true;
+      if (this.usePhysics) {
+        // Create physics body for static zone geometry
+        mesh.physicsBody = new BABYLON.PhysicsBody(
+          mesh,
+          BABYLON.PhysicsMotionType.STATIC,
+          false,
+          this.parent.scene!,
+        );
+        // Use PhysicsShapeMesh for complex geometry
+        mesh.physicsBody.shape = new BABYLON.PhysicsShapeMesh(
+          mesh as BJS.Mesh, // The mesh to base the shape on
+          this.parent.scene!,
+        );
+        mesh.physicsBody.setMassProperties({ mass: 0 }); // Static
+      }
     });
+
     result.transformNodes[0].parent = this.zoneContainer;
     result.transformNodes[0].name = this.zoneName;
     

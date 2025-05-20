@@ -20,7 +20,6 @@ export class PlayerCamera {
   public cameraYaw: number = 0;
 
   // Mouse state tracking
-  private mouseStates: { [button: number]: boolean } = {};
 
   constructor(player: Player, camera: BJS.UniversalCamera) {
     this.player = player;
@@ -32,7 +31,6 @@ export class PlayerCamera {
     );
     this.onChangePointerLock = this.onChangePointerLock.bind(this);
 
-
     this.cameraLight.radius = 100;
     this.cameraLight.diffuse = new BABYLON.Color3(1.0, 0.85, 0.6);
     this.cameraLight.intensity = 25.0;
@@ -42,7 +40,7 @@ export class PlayerCamera {
 
     this.bindInputEvents();
     document.addEventListener(
-      'pointerlockchange',
+      "pointerlockchange",
       this.onChangePointerLock,
       false,
     );
@@ -55,7 +53,7 @@ export class PlayerCamera {
     if (!canvas) return;
     this.canvas = canvas;
     // Mouse button events
- 
+
     canvas.addEventListener("mousedown", (e) => {
       this.mouseInputButton(e.button);
     });
@@ -76,7 +74,7 @@ export class PlayerCamera {
     });
   }
 
-  private  onChangePointerLock = () => {
+  private onChangePointerLock = () => {
     const controlEnabled = document.pointerLockElement;
     if (!controlEnabled) {
       this.isLocked = false;
@@ -86,18 +84,24 @@ export class PlayerCamera {
   };
 
   public mouseInputButton(buttonIndex: number, up: boolean = false) {
-    if (up) {
+    if (!this.canvas) {
+      return;
+    }
+    console.log('Mouse in');
+    this.isCameraRotating = buttonIndex === 0 && !up;
+    if (up && buttonIndex === 2) {
       document.exitPointerLock();
-    } else  {
+    } else {
       if (
-        (buttonIndex === 2 && !this.isLocked && this.canvas.requestPointerLock)
+        buttonIndex === 2 &&
+        !this.isLocked &&
+        this.canvas.requestPointerLock
       ) {
         try {
           this.canvas.requestPointerLock();
         } catch {}
       }
     }
-   
   }
 
   public attachPlayerLight(mesh: BJS.AbstractMesh) {
@@ -125,12 +129,7 @@ export class PlayerCamera {
   }
 
   public inputMouseMotion(x: number, y: number) {
-
-    if (!this.player.mesh) return;
-
-    const isPointerLocked =
-      this.player.gameManager.scene!.getEngine().isPointerLock;
-    if (!isPointerLocked) return;
+    if (!this.player.mesh || !(this.isLocked || this.isCameraRotating)) return;
 
     // Sensitivity adjustments
     const yawSensitivity = 0.005;
@@ -147,76 +146,56 @@ export class PlayerCamera {
       Math.min(maxPitch, this.cameraPitch),
     );
 
-    if (this.isFirstPerson) {
-      // Rotate player mesh on Y-axis for movement
-      this.player.mesh.rotation.y = this.cameraYaw;
+    if (this.isFirstPerson || !this.isCameraRotating) {
       this.player.isPlayerMoving = true;
-      this.updateCameraPosition();
-    } else {
-      if (this.isCameraRotating) {
-        // Third-person camera rotation
-        this.updateCameraPosition();
-      } else {
-        // Rotate player and adjust camera yaw
-        this.player.mesh.rotation.y -= x * yawSensitivity;
-        this.player.isPlayerMoving = true;
-        this.updateCameraPosition();
-      }
-    }
+      this.player.setRotation(this.cameraYaw);
+    } 
+    this.updateCameraPosition();
   }
 
   public updateCameraPosition() {
     const mesh = this.player.mesh;
     if (!mesh) return;
-
     const playerPos = mesh.position;
 
+    mesh.isVisible = !this.isFirstPerson;
+    const hDist = this.cameraDistance * Math.cos(this.cameraPitch);
+    const vDist = this.cameraDistance * Math.sin(this.cameraPitch);
+
     if (this.isFirstPerson) {
-      // Hide player mesh
-      mesh.isVisible = false;
-
-      // Position camera at head level
       this.camera.position = playerPos.add(this.lookatOffset);
-      this.cameraLight.position = this.camera.position;
-
-      // Apply pitch and yaw rotations
       this.camera.rotation = new BABYLON.Vector3(
-        -this.cameraPitch, // Negative for intuitive up/down
+        -this.cameraPitch,
         this.cameraYaw,
         0,
       );
+    } else if (this.isCameraRotating) {
+      const pivot = mesh.position.add(this.lookatOffset);
+
+      const x = hDist * Math.sin(this.cameraYaw);
+      const z = hDist * Math.cos(this.cameraYaw);
+      const y = vDist;   // vertical offset *above* the lookat pivot
+  
+      this.camera.position = pivot.add(new BABYLON.Vector3(x, y, z));
+      this.camera.setTarget(pivot);
     } else {
-      // Show player mesh
-      mesh.isVisible = true;
-      this.camera.lockedTarget = this.player.mesh?.position;
-
-      // Calculate camera position
-      const horizontalDistance =
-        this.cameraDistance * Math.cos(this.cameraPitch);
-      const verticalDistance = this.cameraDistance * Math.sin(this.cameraPitch);
-
-      const offsetX = Math.sin(this.cameraYaw) * horizontalDistance;
-      const offsetZ = Math.cos(this.cameraYaw) * horizontalDistance;
-
-      this.cameraPosition.set(
-        playerPos.x + offsetX,
-        playerPos.y + this.cameraHeight + verticalDistance,
-        playerPos.z + offsetZ,
-      );
-
+      
+      const forward = mesh.getDirection(BABYLON.Axis.X).scale(hDist);
+      this.cameraPosition
+        .copyFrom(playerPos)
+        .addInPlace(new BABYLON.Vector3(0, this.cameraHeight + vDist, 0))
+        .addInPlace(forward);
       this.camera.position = this.cameraPosition;
       this.camera.setTarget(playerPos.add(this.lookatOffset));
-
-      if (this.player.isPlayerMoving && !this.isCameraRotating) {
-        this.cameraYaw = mesh.rotation.y + Math.PI / 2;
-      }
     }
+
+    //this.cameraLight.position = this.camera.position;
   }
 
   public dispose() {
     this.cameraLight.dispose();
     document.removeEventListener(
-      'pointerlockchange',
+      "pointerlockchange",
       this.onChangePointerLock,
       false,
     );

@@ -73,11 +73,11 @@ export default class GameManager {
       const havokPlugin = new BABYLON.HavokPlugin(true, HK);
       this.havokPlugin = havokPlugin;
       const didEnable = this.scene.enablePhysics(
-        new BABYLON.Vector3(0, -4.3, 0),
+        new BABYLON.Vector3(0, -9.81, 0),
         havokPlugin,
       );
       if (didEnable) {
-        this.scene._physicsEngine!.setGravity(new BABYLON.Vector3(0, -0.5, 0));
+        this.scene._physicsEngine!.setGravity(new BABYLON.Vector3(0, -9.81, 0));
       } else {
         console.error("Failed to enable physics engine");
       }
@@ -235,7 +235,7 @@ export default class GameManager {
     const zoneName = supportedZones[zoneId?.toString()]?.shortName;
     console.log("Loading zone: ", zoneId, zoneName);
     if (zoneName) {
-      await this.loadZone(zoneName);
+      await this.loadZone(zoneName, true);
     } else {
       console.error(`Zone ID ${zoneId} not found in supported zones.`);
     }
@@ -261,44 +261,4 @@ export default class GameManager {
     this.player = new Player(this, this.Camera!);
     this.player?.Load(player as PlayerProfile);
   }
-
-  // _input(event: InputEvent) {
-  //   if (!this.player) {
-  //     return;
-  //   }
-  //   switch (true) {
-  //     case event instanceof InputEventMouseButton: {
-  //       this.player.input(event.button_index);
-  //       this.zoneManager?.EntityPool?.mouseEvent(event);
-  //       if (event.button_index === MouseButton.MOUSE_BUTTON_RIGHT) {
-  //         DisplayServer.mouse_set_mode(
-  //           event.pressed
-  //             ? Input.MouseMode.MOUSE_MODE_CAPTURED
-  //             : Input.MouseMode.MOUSE_MODE_VISIBLE,
-  //         );
-  //       }
-  //       break;
-  //     }
-  //     case event instanceof InputEventMouseMotion: {
-  //       this.player.inputMouseMotion(event.relative.x, event.relative.y);
-  //       break;
-  //     }
-  //     case event instanceof InputEventPanGesture: {
-  //       this.player.input_pan(event.delta.y);
-  //       break;
-  //     }
-  //     default:
-  //       break;
-  //   }
-  // }
-
-  // _physics_process(delta: number): void {
-  //   if (this.player) {
-  //     this.player.tick(delta);
-  //   }
-  // }
-
-  // _process(delta: number): void {
-  //   this.zoneManager?.tick(delta);
-  // }
 }

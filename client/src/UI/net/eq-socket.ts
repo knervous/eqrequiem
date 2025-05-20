@@ -159,8 +159,8 @@ export class EqSocket {
   // Send data over datagrams
   public async send(buffer: Uint8Array): Promise<void> {
     if (!this.webtransport || !this.writer) {
-      console.error("Sending from an unopen socket");
-      throw new Error("Socket not connected");
+      //console.error("Sending from an unopen socket");
+      return;
     }
 
     this.writeQueue = this.writeQueue.then(async () => {

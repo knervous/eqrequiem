@@ -162,6 +162,24 @@ export default class Player extends AssetContainer {
     return `${this.model.slice(0, 3)}he${variation}`;
   }
 
+  public setRotation(yaw: number) {
+    if (!this.physicsBody || !this.mesh) {
+      return;
+    }
+    console.log('Set rot', yaw);
+    const normalized = ((yaw % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+    const q = BABYLON.Quaternion.RotationYawPitchRoll(normalized, 0, 0);
+    this.mesh.rotationQuaternion = q;
+    const plugin = this.gameManager.scene!
+      .getPhysicsEngine()!
+      .getPhysicsPlugin() as BJS.HavokPlugin;
+
+    plugin._hknp.HP_Body_SetOrientation(
+      this.physicsBody._pluginData.hpBodyId,
+      q.asArray(),
+    );
+  }
+
   public SwapFace(index: number) {
     if (!this.mesh) {
       return;
@@ -257,17 +275,24 @@ export default class Player extends AssetContainer {
     this.mesh.rotation.y = Math.PI;
     this.mesh.id = "Player";
     this.mesh.name = player.name;
-    this.mesh.position = new BABYLON.Vector3(0, 5, 0);
+    console.log('Player xyz', player.x, player.y, player.z);
+    this.mesh.position= new BABYLON.Vector3((player.x ?? 0) * -1, player.z ?? 5, player.y ?? 0);
+    //this.mesh.position = new BABYLON.Vector3(0, 5, 0);
+    if (this.usePhysics) {
+      this.mesh.scaling.setAll(1.5);
+    }
+
     // Light
     this.playerCamera.attachPlayerLight(this.mesh);
+    this.mesh.computeWorldMatrix(true);
 
     // Create Havok physics body with capsule shape
     if (this.usePhysics) {
       const capsuleRadius = 0.5;
-      const capsuleHeight = 2.5;
+      const capsuleHeight = 5.5;
       const pointA = new BABYLON.Vector3(0, capsuleHeight / 2 - capsuleRadius, 0);
       const pointB = new BABYLON.Vector3(0, -(capsuleHeight / 2 - capsuleRadius), 0);
-    
+      
       const capsuleShape = new BABYLON.PhysicsShapeCapsule(
         pointA,
         pointB,
@@ -283,17 +308,13 @@ export default class Player extends AssetContainer {
       );
       this.physicsBody.shape = capsuleShape;
       this.physicsBody.setMassProperties({
-        mass: 70,
+        mass: 5,
         inertia: new BABYLON.Vector3(0, 0, 0),
-      });
     
-      // Lock X and Z rotations to prevent spinning
-      this.physicsBody.setAngularDamping(0.9); // Keep high damping
-      this.physicsBody.setLinearDamping(0.1);
+      });
       this.mesh.physicsBody = this.physicsBody;
       this.playerMovement = new PlayerMovement(this, this.gameManager.scene!);
     }
-    this.mesh.computeWorldMatrix(true);
     createNameplate(
       this.gameManager.scene!,
       this.mesh,
