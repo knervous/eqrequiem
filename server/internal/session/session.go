@@ -8,6 +8,7 @@ import (
 	capnp "capnproto.org/go/capnp/v3"
 	"github.com/knervous/eqgo/internal/api/opcodes"
 	"github.com/knervous/eqgo/internal/entity"
+	"github.com/quic-go/webtransport-go"
 )
 
 type pendingMsg struct {
@@ -33,7 +34,7 @@ type Session struct {
 	CharacterName string
 	Client        *entity.Client
 	Messenger     ClientMessenger // For sending replies
-
+	ControlStream webtransport.Stream
 	// Private
 
 	writeMessageBuffer *capnp.Message
@@ -92,7 +93,7 @@ func (sm *SessionManager) GetValidSession(sessionID int, ip string) (*Session, e
 }
 
 // CreateSession initializes a new session with the given sessionID and accountID.
-func (sm *SessionManager) CreateSession(messenger ClientMessenger, sessionID int, ip string) *Session {
+func (sm *SessionManager) CreateSession(messenger ClientMessenger, sessionID int, ip string, stream webtransport.Stream) *Session {
 	sm.mu.Lock()
 	defer sm.mu.Unlock()
 	const initialSegCap = 8 * 1024
@@ -106,6 +107,7 @@ func (sm *SessionManager) CreateSession(messenger ClientMessenger, sessionID int
 		SessionID:          sessionID,
 		Authenticated:      false,
 		ZoneID:             -1,
+		ControlStream:      stream,
 		IP:                 ip,
 		RootSeg:            seg,
 		arena:              msg.Arena,

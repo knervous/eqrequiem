@@ -34,6 +34,7 @@ export class ZoneManager {
   private zoneContainer: BJS.TransformNode | null = null;
   private objectContainer: BJS.TransformNode | null = null;
   private lightContainer: BJS.TransformNode | null = null;
+  private entityContainer: BJS.TransformNode | null = null;
 
   get EntityPool(): EntityPool | null {
     return this.entityPool;
@@ -62,6 +63,7 @@ export class ZoneManager {
     this.regionManager = new RegionManager(this);
     this.lightManager = new LightManager();
     this.skyManager = new DayNightSkyManager(this);
+    
   }
 
   dispose() {
@@ -77,6 +79,10 @@ export class ZoneManager {
     if (this.lightContainer) {
       this.lightContainer.dispose();
       this.lightContainer = null;
+    }
+    if (this.entityContainer) {
+      this.entityContainer.dispose();
+      this.entityContainer = null;
     }
     this.intervals.forEach((i) => {
       clearInterval(i);
@@ -96,7 +102,9 @@ export class ZoneManager {
     this.zoneContainer = new BABYLON.TransformNode('ZoneContainer', this.parent.scene);
     this.objectContainer = new BABYLON.TransformNode('ZoneObjectContainer', this.parent.scene);
     this.lightContainer = new BABYLON.TransformNode('LightContainer', this.parent.scene);
+    this.entityContainer = new BABYLON.TransformNode('EntityContainer', this.parent.scene);
     this.usePhysics = usePhysics;
+    this.entityPool = new EntityPool(this.entityContainer, this.parent.scene!);
 
     if (this.zoneObjects) {
       this.zoneObjects.disposeAll();

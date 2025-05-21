@@ -76,9 +76,9 @@ func (z *ZoneInstance) processSpawns() {
 	now := time.Now()
 	for spawn2ID, entry := range z.ZonePool {
 		if npcID, exists := z.spawn2ToNpc[spawn2ID]; exists {
-			npc, ok := z.Npcs[npcID]
+			_, ok := z.Npcs[npcID]
 			if ok {
-				z.spawnTick(now, npc)
+				// z.spawnTick(now, npc)
 			}
 			continue
 		}
@@ -92,6 +92,7 @@ func (z *ZoneInstance) processSpawns() {
 				fmt.Printf("Failed to respawn NPC for Spawn2 %d: %v\n", spawn2ID, err)
 				continue
 			}
+			//fmt.Println("Spawning NPC", npcType.Name)
 			npcID := z.nextEntityID
 			z.nextEntityID++
 			npc := &entity.NPC{
@@ -115,9 +116,6 @@ func (z *ZoneInstance) processSpawns() {
 					},
 				},
 			}
-			if len(npc.GridEntries) > 0 {
-				fmt.Println("NPC has grid entries")
-			}
 
 			z.Npcs[npcID] = npc
 			z.Entities[npcID] = npc
@@ -127,8 +125,8 @@ func (z *ZoneInstance) processSpawns() {
 
 			z.registerNewClientGrid(npcID, npc.Mob.Position)
 
-			fmt.Printf("Spawned NPC %s (ID: %d) at Spawn2 %d (%.2f, %.2f, %.2f)\n",
-				npcType.Name, npcID, spawn2ID, entry.Spawn2.X, entry.Spawn2.Y, entry.Spawn2.Z)
+			// fmt.Printf("Spawned NPC %s (ID: %d) at Spawn2 %d (%.2f, %.2f, %.2f)\n",
+			// 	npcType.Name, npcID, spawn2ID, entry.Spawn2.X, entry.Spawn2.Y, entry.Spawn2.Z)
 
 			pktBuilder := func(spawn eq.Spawn) error {
 				spawn.SetRace(int32(npcType.Race))

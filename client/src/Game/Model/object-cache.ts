@@ -96,7 +96,6 @@ export default class ObjectCache {
       const materialExtras = mesh?.material?.metadata?.gltf?.extras;
       if (materialExtras?.frames?.length && materialExtras?.animationDelay) {
         const { frames, animationDelay } = materialExtras;
-        console.log('Ex', materialExtras);
         let currentFrameIndex = 0;
         const intervalId = setInterval(() => {
           try {

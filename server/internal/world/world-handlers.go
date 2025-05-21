@@ -2,6 +2,7 @@ package world
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	eq "github.com/knervous/eqgo/internal/api/capnp"
@@ -88,6 +89,8 @@ func HandleEnterWorld(ses *session.Session, payload []byte, wh *WorldHandler) {
 		log.Printf("failed to read JWTLogin struct: %v", err)
 		return
 	}
+	fmt.Println("Got enter world")
+
 	name, err := req.Name()
 	if err != nil {
 		log.Printf("failed to get name from EnterWorld struct: %v", err)
