@@ -46,6 +46,9 @@ export const BabylonWrapper = ({ splash }) => {
       }
       // Otherwise, forward the event to the canvas
       if (canvasRef.current) {
+        if (e.key === "F12") { 
+          return;
+        }
         // Create a new event of the same type and dispatch it on the canvas
         const newEvent = new e.constructor(e.type, e);
         newEvent.handled = true;

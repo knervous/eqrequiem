@@ -72,12 +72,13 @@ export default class GameManager {
       const HK = await getInitializedHavok();
       const havokPlugin = new BABYLON.HavokPlugin(true, HK);
       this.havokPlugin = havokPlugin;
+      const worldGravity = new BABYLON.Vector3(0, -9.81 * 4, 0);
       const didEnable = this.scene.enablePhysics(
-        new BABYLON.Vector3(0, -9.81, 0),
+        worldGravity,
         havokPlugin,
       );
       if (didEnable) {
-        this.scene._physicsEngine!.setGravity(new BABYLON.Vector3(0, -9.81, 0));
+        this.scene._physicsEngine!.setGravity(worldGravity);
       } else {
         console.error("Failed to enable physics engine");
       }
@@ -117,12 +118,7 @@ export default class GameManager {
     this.canvas!.oncontextmenu = (e) => e.preventDefault();
     this.scene.onPointerObservable.add(this.onPointerEvent.bind(this));
 
-    this.camera = new BABYLON.UniversalCamera(
-      "__camera__",
-      new BABYLON.Vector3(0, 0, 0),
-      this.scene,
-    );
-    this.camera.applyGravity = false;
+    
     this.engine.setHardwareScalingLevel(1 / window.devicePixelRatio);
     this.engine.disableManifestCheck = true;
     this.engine.enableOfflineSupport = false;
@@ -216,6 +212,10 @@ export default class GameManager {
       this.characterSelect.dispose();
       this.characterSelect = null;
     }
+    if (this.camera) {
+      this.camera.dispose();
+      this.camera = null;
+    }
   }
 
   public async loadCharacterSelect() {
@@ -223,6 +223,11 @@ export default class GameManager {
     if (this.characterSelect) {
       this.characterSelect.dispose();
     }
+    this.camera = new BABYLON.UniversalCamera(
+      "__camera__",
+      new BABYLON.Vector3(0, 0, 0),
+      this.scene!,
+    );
     this.characterSelect = new CharacterSelect(this);
   }
 
@@ -243,6 +248,11 @@ export default class GameManager {
 
   public async loadZone(zoneName: string, usePhysics = false): Promise<void> {
     this.dispose();
+    this.camera = new BABYLON.UniversalCamera(
+      "__camera__",
+      new BABYLON.Vector3(0, 0, 0),
+      this.scene!,
+    );
     this.zoneManager?.loadZone(zoneName, usePhysics);
     this.worldTickInterval = setInterval(() => {
       this.zoneManager?.SkyManager?.worldTick?.();

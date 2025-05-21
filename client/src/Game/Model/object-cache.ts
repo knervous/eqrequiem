@@ -4,6 +4,7 @@ import type * as BJS from "@babylonjs/core";
 
 import { FileSystem } from "@game/FileSystem/filesystem";
 import { Transform } from "@game/Zone/zone-types";
+import { swapMaterialTexture } from "./bjs-utils";
 
 type ModelKey = string;
 
@@ -12,7 +13,7 @@ export default class ObjectCache {
   public containers: Record<ModelKey, Promise<BJS.AssetContainer>> = {};
   private physicsBodies: Record<ModelKey, BJS.PhysicsBody[] | null> = {};
   private objectContainer: BJS.TransformNode | null = null;
-
+  private intervals: NodeJS.Timeout[] = [];
   constructor(usePhysics: boolean = true, zoneContainer: BJS.TransformNode | null = null) {
     this.usePhysics = usePhysics;
     if (zoneContainer) {
@@ -91,6 +92,25 @@ export default class ObjectCache {
       mesh.thinInstanceSetBuffer("matrix", matrixData, 16, false);
       mesh.alwaysSelectAsActiveMesh = false;
       mesh.thinInstanceRefreshBoundingInfo(true, false, false);
+      
+      const materialExtras = mesh?.material?.metadata?.gltf?.extras;
+      if (materialExtras?.frames?.length && materialExtras?.animationDelay) {
+        const { frames, animationDelay } = materialExtras;
+        console.log('Ex', materialExtras);
+        let currentFrameIndex = 0;
+        const intervalId = setInterval(() => {
+          try {
+            currentFrameIndex = (currentFrameIndex + 1) % frames.length;
+            const selectedFrame = frames[currentFrameIndex] as string;
+            swapMaterialTexture(mesh.material!, selectedFrame, true);
+          } catch (error) {
+            console.error(`[ObjectCache] Failed to swap texture for mesh ${mesh.name}:`, error);
+            clearInterval(intervalId);
+          }
+        }, animationDelay * 2);
+
+        this.intervals.push(intervalId);
+      }
   
       if (usePhysics && this.usePhysics) {
         // Create a physics shape for the mesh (shared across instances)
@@ -159,6 +179,8 @@ export default class ObjectCache {
   }
 
   disposeAll(): void {
+    this.intervals.forEach((interval) => clearInterval(interval));
+
     Object.keys(this.containers).forEach((model) => this.dispose(model));
   }
 }

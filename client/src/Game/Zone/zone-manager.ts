@@ -10,6 +10,7 @@ import { Spawns } from "@game/Net/internal/api/capnp/common";
 import EntityPool from "./entity-pool";
 import ObjectCache from "@/Game/Model/object-cache";
 import { ZoneMetadata } from "./zone-types";
+import { swapMaterialTexture } from "@game/Model/bjs-utils";
 
 export class ZoneManager {
   get RegionManager(): RegionManager {
@@ -53,6 +54,8 @@ export class ZoneManager {
   }
   private parent: GameManager;
 
+  private intervals: NodeJS.Timeout[] = [];
+
   constructor(parent: GameManager) {
     this.parent = parent;
     this.zoneContainer = null;
@@ -75,6 +78,9 @@ export class ZoneManager {
       this.lightContainer.dispose();
       this.lightContainer = null;
     }
+    this.intervals.forEach((i) => {
+      clearInterval(i);
+    });
     this.zoneObjects?.disposeAll();
     this.regionManager.dispose();
     this.lightManager.dispose();
@@ -122,6 +128,24 @@ export class ZoneManager {
       this.parent.scene!,
     );
     result.meshes.forEach((mesh) => {
+      const materialExtras = mesh?.material?.metadata?.gltf?.extras;
+      if (materialExtras?.frames?.length && materialExtras?.animationDelay) {
+        const { frames, animationDelay } = materialExtras;
+        let currentFrameIndex = 0;
+        const intervalId = setInterval(() => {
+          try {
+            currentFrameIndex = (currentFrameIndex + 1) % frames.length;
+            const selectedFrame = frames[currentFrameIndex] as string;
+            swapMaterialTexture(mesh.material!, selectedFrame, true);
+          } catch (error) {
+            console.error(`[ZoneManager] Failed to swap texture for mesh ${mesh.name}:`, error);
+            clearInterval(intervalId);
+          }
+        }, animationDelay * 2);
+
+        this.intervals.push(intervalId);
+      }
+        
       if (this.usePhysics) {
         // Create physics body for static zone geometry
         mesh.physicsBody = new BABYLON.PhysicsBody(
@@ -171,7 +195,51 @@ export class ZoneManager {
         console.log("Error parsing zone metadata", e);
       }
     }
-    
+
+    setTimeout(() => {
+      this.dedupeMaterialsByName();
+
+    }, 1000);
+  }
+
+
+  private dedupeMaterialsByName() {
+    if (!this.GameManager.scene) {
+      return;
+    }
+    const meshes: BJS.AbstractMesh[] = this.GameManager.scene.meshes;
+    const materials: BJS.Material[] = this.GameManager.scene.materials;
+
+    const nameMap = new Map<string, BJS.Material>();
+
+    for (const mat of materials.slice()) {
+      if (!mat.name) { continue; }
+      const key = mat.name;
+
+      if (!nameMap.has(key)) {
+      // first time we see this name → keep it
+        nameMap.set(key, mat);
+      } else {
+      // duplicate name → remap all references, then dispose
+        const canonical = nameMap.get(key)!;
+
+        for (const mesh of meshes) {
+          if (mesh.material === mat) {
+            mesh.material = canonical;
+          } else if (mesh.material instanceof BABYLON.MultiMaterial) {
+            const mm = mesh.material as BJS.MultiMaterial;
+            mm.subMaterials = mm.subMaterials.map((sub) => {
+              if (sub === mat) {
+                return canonical;
+              }
+              return sub;
+            });
+          }
+        }
+
+        mat.dispose(true, true);
+      }
+    }
   }
 
   private async instantiateObjects(metadata: ZoneMetadata) {

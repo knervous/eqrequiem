@@ -110,8 +110,8 @@ export class CommandHandler {
     const zone = args[0];
     if (zone) {
       addChatLine(`LOADING, PLEASE WAIT...`);
-      await GameManager.instance.loadZone(zone);
-      await GameManager.instance.instantiatePlayer({ x: 0, y: 10, z: 10 });
+      await GameManager.instance.loadZone(zone, true);
+      await GameManager.instance.instantiatePlayer({ x: 0, y: 10, z: 10, name: 'Soandso' });
       addChatLine(`You have entered ${zone}`);
     } else {
       addChatLine("No zone entered");

@@ -79,6 +79,8 @@ const exportObject: BabylonAPI = {
     addImport(import('@babylonjs/core/Cameras/'));
     addImport(import('@babylonjs/core/Materials/effect'));
     addImport(import('@babylonjs/core/Events/keyboardEvents'));
+    addImport(import('@babylonjs/core/Debug/rayHelper'));
+    addImport(import('@babylonjs/core/Engines/constants'));
 
     // Ray
     addImport(import('@babylonjs/core/Culling/ray'));

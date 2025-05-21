@@ -87,7 +87,6 @@ export class PlayerCamera {
     if (!this.canvas) {
       return;
     }
-    console.log('Mouse in');
     this.isCameraRotating = buttonIndex === 0 && !up;
     if (up && buttonIndex === 2) {
       document.exitPointerLock();
@@ -158,17 +157,17 @@ export class PlayerCamera {
     if (!mesh) return;
     const playerPos = mesh.position;
 
-    mesh.isVisible = !this.isFirstPerson;
+    //mesh.isVisible = !this.isFirstPerson;
     const hDist = this.cameraDistance * Math.cos(this.cameraPitch);
     const vDist = this.cameraDistance * Math.sin(this.cameraPitch);
 
     if (this.isFirstPerson) {
       this.camera.position = playerPos.add(this.lookatOffset);
       this.camera.rotation = new BABYLON.Vector3(
-        -this.cameraPitch,
-        this.cameraYaw,
-        0,
+        this.cameraPitch,
+        this.cameraYaw - Math.PI / 2, // Add 90 degrees to yaw        0,
       );
+      
     } else if (this.isCameraRotating) {
       const pivot = mesh.position.add(this.lookatOffset);
 

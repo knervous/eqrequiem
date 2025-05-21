@@ -28,6 +28,11 @@ export default class Player extends AssetContainer {
   public currentAnimation: string = "";
   public currentPlayToEnd: boolean = false;
   private inGame: boolean = true;
+  private capsuleShapePool: Map<number, BJS.PhysicsShapeCapsule> = new Map();
+  private currentCapsuleHeight: number = 5.5; // Track current height
+  private readonly heightChangeThreshold: number = 0.01; // Tolerance for height matching
+  private readonly maxStepHeight: number = 2.0; // Max height to step over (e.g., 0.3 meters)
+  private readonly stepHeightTolerance: number = 0.01; // Tolerance for height comparisons
 
   private animations: Record<string, BJS.AnimationGroup> = {};
   private physicsBody: BJS.PhysicsBody | null = null;
@@ -60,7 +65,7 @@ export default class Player extends AssetContainer {
     this.gameManager = gameManager;
     this.playerCamera = new PlayerCamera(this, camera);
     Player.instance = this;
-    window.player = this;
+    (window as any).player = this;
   }
 
   private observers: Record<string, ((any) => void)[]> = {};
@@ -85,6 +90,10 @@ export default class Player extends AssetContainer {
       this.physicsBody.dispose();
       this.physicsBody = null;
     }
+    for (const shape of this.capsuleShapePool.values()) {
+      shape.dispose();
+    }
+    this.capsuleShapePool.clear();
     if (this.mesh) {
       if (this.mesh.material) {
         // Handle single material
@@ -103,7 +112,9 @@ export default class Player extends AssetContainer {
         // Clear the material reference
         this.mesh.material = null;
       }
-      const nameplate = this.mesh.getChildren(undefined, false).find((m) => m.name === "namePlate");
+      const nameplate = this.mesh
+        .getChildren(undefined, false)
+        .find((m) => m.name === "namePlate");
       if (nameplate) {
         nameplate?.dispose?.(false, true);
       }
@@ -116,7 +127,6 @@ export default class Player extends AssetContainer {
     if (this.model && disposeContainer) {
       super.disposeModel(this.model);
     }
-
   }
 
   public getPlayerRotation() {
@@ -136,7 +146,8 @@ export default class Player extends AssetContainer {
   }
 
   public tick() {
-    const delta = (this.gameManager.scene?.getEngine().getDeltaTime() ?? 0) / 1000;
+    const delta =
+      (this.gameManager.scene?.getEngine().getDeltaTime() ?? 0) / 1000;
     this.playerMovement?.movementTick?.(delta);
   }
 
@@ -166,12 +177,11 @@ export default class Player extends AssetContainer {
     if (!this.physicsBody || !this.mesh) {
       return;
     }
-    console.log('Set rot', yaw);
     const normalized = ((yaw % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
     const q = BABYLON.Quaternion.RotationYawPitchRoll(normalized, 0, 0);
     this.mesh.rotationQuaternion = q;
-    const plugin = this.gameManager.scene!
-      .getPhysicsEngine()!
+    const plugin = this.gameManager
+      .scene!.getPhysicsEngine()!
       .getPhysicsPlugin() as BJS.HavokPlugin;
 
     plugin._hknp.HP_Body_SetOrientation(
@@ -186,13 +196,15 @@ export default class Player extends AssetContainer {
     }
     if (this.mesh.material instanceof BABYLON.MultiMaterial) {
       // Dispose of each sub-material in MultiMaterial
-      this.mesh.material.subMaterials.forEach((subMaterial) => { 
-        if (subMaterial?.name.includes('he00')) {
-          const newTexture = subMaterial.name.replace(/he00\d{1}/, `${MaterialPrefixes.Face}00${index}`);
+      this.mesh.material.subMaterials.forEach((subMaterial) => {
+        if (subMaterial?.name.includes("he00")) {
+          const newTexture = subMaterial.name.replace(
+            /he00\d{1}/,
+            `${MaterialPrefixes.Face}00${index}`,
+          );
           swapMaterialTexture(subMaterial, newTexture);
         }
-      },
-      );
+      });
     }
   }
 
@@ -200,11 +212,148 @@ export default class Player extends AssetContainer {
     if (!this.mesh) {
       return;
     }
-    const nameplate = this.mesh.getChildren(undefined, false).find((m) => m.name === "namePlate");
+    const nameplate = this.mesh
+      .getChildren(undefined, false)
+      .find((m) => m.name === "namePlate");
     if (nameplate) {
       nameplate.dispose(false, true);
     }
     createNameplate(this.gameManager.scene!, this.mesh, lines);
+  }
+
+  private updateCapsuleHeightFromBounds() {
+    if (!this.mesh || !this.physicsBody || !this.gameManager.scene) {
+      return;
+    }
+
+    // Wait for the next frame to ensure animation has applied
+    this.gameManager.scene.onAfterRenderObservable.addOnce(() => {
+      if (!this.mesh || !this.physicsBody || !this.gameManager.scene) {
+        return;
+      }
+      this.mesh.computeWorldMatrix(true);
+      const { min, max } = this.mesh.getHierarchyBoundingVectors(true);
+      const newHeight = max.y - min.y;
+      const capsuleRadius = 0.5;
+      const effectiveHeight = Math.max(newHeight, capsuleRadius * 2);
+
+      // Check if a shape with this height (within threshold) exists in the pool
+      let selectedShape: BJS.PhysicsShapeCapsule | null = null;
+      for (const [pooledHeight, shape] of this.capsuleShapePool) {
+        if (
+          Math.abs(effectiveHeight - pooledHeight) < this.heightChangeThreshold
+        ) {
+          selectedShape = shape;
+          break;
+        }
+      }
+
+      // If no matching shape, create a new one and add to pool
+      if (!selectedShape) {
+        const pointA = new BABYLON.Vector3(
+          0,
+          effectiveHeight / 2 - capsuleRadius,
+          0,
+        );
+        const pointB = new BABYLON.Vector3(
+          0,
+          -(effectiveHeight / 2 - capsuleRadius),
+          0,
+        );
+        selectedShape = new BABYLON.PhysicsShapeCapsule(
+          pointA,
+          pointB,
+          capsuleRadius,
+          this.gameManager.scene,
+        );
+        selectedShape.material.friction = 0.0;
+        selectedShape.material.restitution = 0.0;
+        this.capsuleShapePool.set(effectiveHeight, selectedShape);
+      }
+
+      // Store physics state
+      const currentPosition = this.mesh.position.clone();
+      const currentVelocity = this.physicsBody.getLinearVelocity();
+      const currentAngularVelocity = this.physicsBody.getAngularVelocity();
+
+      // Assign new or pooled shape
+      this.physicsBody.shape = selectedShape;
+      this.currentCapsuleHeight = effectiveHeight;
+
+      // Restore physics state
+      this.physicsBody.setLinearVelocity(currentVelocity);
+      this.physicsBody.setAngularVelocity(currentAngularVelocity);
+      this.mesh.position = currentPosition;
+    });
+  }
+
+  private setupStepClimbing() {
+    if (!this.physicsBody || !this.mesh) {
+      return;
+    }
+
+    if (this.physicsBody.shape) {
+      this.physicsBody.shape.material.friction = 0.1;
+      this.physicsBody.shape.material.restitution = 0.0;
+    }
+
+    this.physicsBody.setCollisionCallbackEnabled(true);
+    this.physicsBody.getCollisionObservable().add((event: BJS.IPhysicsCollisionEvent) => {
+      if (!this.mesh || !event.collidedAgainst || !event.point || !this.gameManager.scene) {
+        return;
+      }
+
+      const movement = this.playerMovement!;
+      const intendedVelocity = new BABYLON.Vector3(
+        movement.finalVelocity?.x || 0,
+        0,
+        movement.finalVelocity?.z || 0,
+      );
+
+      // Use forward direction if no intended velocity (fallback)
+      const moveDirection = intendedVelocity.length() > 0
+        ? intendedVelocity.normalize()
+        : BABYLON.Vector3.Forward().rotateByQuaternionToRef(
+          this.mesh.rotationQuaternion || BABYLON.Quaternion.Identity(),
+          new BABYLON.Vector3(),
+        ).set(0, 0, 1).normalize();
+
+      const halfHeight = this.currentCapsuleHeight / 2;
+      const baseY = this.mesh.position.y - halfHeight;
+
+      const footOrigin = new BABYLON.Vector3(
+        this.mesh.position.x,
+        baseY + this.stepHeightTolerance,
+        this.mesh.position.z,
+      );
+      const stepOrigin = new BABYLON.Vector3(
+        this.mesh.position.x,
+        baseY + this.maxStepHeight + this.stepHeightTolerance,
+        this.mesh.position.z,
+      );
+
+      // Cast rays in the intended movement direction
+      const rayLength = 0.75; // Short length for precise detection
+      const footRay = new BABYLON.Ray(footOrigin, moveDirection, rayLength);
+      const stepRay = new BABYLON.Ray(stepOrigin, moveDirection, rayLength);
+
+      const footHit = this.gameManager.scene.pickWithRay(footRay, (mesh) => mesh !== this.mesh);
+      const stepHit = this.gameManager.scene.pickWithRay(stepRay, (mesh) => mesh !== this.mesh);
+
+      // Check for valid step condition
+      if (footHit?.hit && footHit.pickedPoint && !stepHit?.hit) {
+        const obstacleHeight = footHit.pickedPoint.y - baseY;
+
+        if (obstacleHeight > 0 && obstacleHeight <= this.maxStepHeight) {
+          const plugin = this.gameManager.scene.getPhysicsEngine()!.getPhysicsPlugin() as BJS.HavokPlugin;
+          const bodyId = this.physicsBody!._pluginData.hpBodyId;
+          const newPosition = this.mesh.position.clone();
+          newPosition.y += 1;
+
+          plugin._hknp.HP_Body_SetPosition(bodyId, [newPosition.x, newPosition.y, newPosition.z]);
+        }
+      }
+    });
   }
 
   public async Load(player: PlayerProfile, charCreate: boolean = false) {
@@ -226,7 +375,7 @@ export default class Player extends AssetContainer {
       console.warn(`[Player] Failed to load container ${model}`);
       return;
     }
-    const rootNode = container.rootNodes[0];
+    const rootNode = container.rootNodes[0] as BJS.Mesh;
     rootNode.name = `Player`;
     rootNode.position.setAll(0);
     rootNode.scaling.set(1, 1, 1);
@@ -275,8 +424,12 @@ export default class Player extends AssetContainer {
     this.mesh.rotation.y = Math.PI;
     this.mesh.id = "Player";
     this.mesh.name = player.name;
-    console.log('Player xyz', player.x, player.y, player.z);
-    this.mesh.position= new BABYLON.Vector3((player.x ?? 0) * -1, player.z ?? 5, player.y ?? 0);
+    console.log("Player xyz", player.x, player.y, player.z);
+    this.mesh.position = new BABYLON.Vector3(
+      (player.x ?? 0) * -1,
+      player.z ?? 5,
+      player.y ?? 0,
+    );
     //this.mesh.position = new BABYLON.Vector3(0, 5, 0);
     if (this.usePhysics) {
       this.mesh.scaling.setAll(1.5);
@@ -290,16 +443,24 @@ export default class Player extends AssetContainer {
     if (this.usePhysics) {
       const capsuleRadius = 0.5;
       const capsuleHeight = 5.5;
-      const pointA = new BABYLON.Vector3(0, capsuleHeight / 2 - capsuleRadius, 0);
-      const pointB = new BABYLON.Vector3(0, -(capsuleHeight / 2 - capsuleRadius), 0);
-      
+      const pointA = new BABYLON.Vector3(
+        0,
+        capsuleHeight / 2 - capsuleRadius,
+        0,
+      );
+      const pointB = new BABYLON.Vector3(
+        0,
+        -(capsuleHeight / 2 - capsuleRadius),
+        0,
+      );
+
       const capsuleShape = new BABYLON.PhysicsShapeCapsule(
         pointA,
         pointB,
         capsuleRadius,
         this.gameManager.scene!,
       );
-    
+
       this.physicsBody = new BABYLON.PhysicsBody(
         this.mesh,
         BABYLON.PhysicsMotionType.DYNAMIC,
@@ -308,11 +469,11 @@ export default class Player extends AssetContainer {
       );
       this.physicsBody.shape = capsuleShape;
       this.physicsBody.setMassProperties({
-        mass: 5,
+        mass: 50,
         inertia: new BABYLON.Vector3(0, 0, 0),
-    
       });
       this.mesh.physicsBody = this.physicsBody;
+      this.setupStepClimbing();
       this.playerMovement = new PlayerMovement(this, this.gameManager.scene!);
     }
     createNameplate(
@@ -378,12 +539,14 @@ export default class Player extends AssetContainer {
       animationGroup.onAnimationGroupEndObservable.addOnce(() => {
         this.currentPlayToEnd = false;
         this.currentAnimation = ""; // Allow new animations
+        this.updateCapsuleHeightFromBounds(); // Update height when animation ends
       });
     }
 
     // Play the new animation
     animationGroup.start(loop);
     this.currentAnimation = animationName;
+    this.updateCapsuleHeightFromBounds(); // Update height when animation ends
 
     // Send animation update to server (if applicable)
     if (this.player) {
@@ -393,7 +556,6 @@ export default class Player extends AssetContainer {
       // });
     }
   }
-
 
   /**
    * Specific animation methods
