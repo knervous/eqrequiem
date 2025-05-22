@@ -6,7 +6,6 @@ import { WorldSocket } from "@ui/net/instances";
 import { OpCodes } from "@game/Net/opcodes";
 import { ChannelMessage } from "@game/Net/internal/api/capnp/common";
 import { AnimationDefinitions } from "@game/Animation/animation-constants";
-import { Animation } from "godot";
 
 export function command(name: string): MethodDecorator {
   return (target: object, propertyKey: string | symbol) => {
@@ -110,8 +109,8 @@ export class CommandHandler {
     const zone = args[0];
     if (zone) {
       addChatLine(`LOADING, PLEASE WAIT...`);
-      await GameManager.instance.loadZone(zone);
-      await GameManager.instance.instantiatePlayer({ x: 0, y: 10, z: 10 });
+      await GameManager.instance.loadZone(zone, true);
+      await GameManager.instance.instantiatePlayer({ x: 0, y: 10, z: 10, name: 'Soandso' });
       addChatLine(`You have entered ${zone}`);
     } else {
       addChatLine("No zone entered");
@@ -143,130 +142,119 @@ export class CommandHandler {
     this.setMode("character-select");
   }
 
-  @command("spawn")
-  commandSpawn(args: string[]) {
-    const spawn = args[0];
-    if (spawn) {
-      addChatLine(`Spawning ${spawn}`);
-      GameManager.instance.spawnModel(spawn);
-    } else {
-      addChatLine("No model entered");
-    }
-  }
-
   @command("nod")
   commandNod() {
-    Player.instance?.playAnimation(AnimationDefinitions.Nod, Animation.LoopMode.LOOP_NONE, true);
+    Player.instance?.playAnimation(AnimationDefinitions.Nod, true);
   }
 
   @command("amaze")
   commandAmaze() {
-    Player.instance?.playAnimation(AnimationDefinitions.Amaze, Animation.LoopMode.LOOP_NONE, true);
+    Player.instance?.playAnimation(AnimationDefinitions.Amaze,true);
   }
 
   @command("plead")
   commandPlead() {
-    Player.instance?.playAnimation(AnimationDefinitions.Plead, Animation.LoopMode.LOOP_NONE, true);
+    Player.instance?.playAnimation(AnimationDefinitions.Plead, true);
   }
 
   @command("clap")
   commandClap() {
-    Player.instance?.playAnimation(AnimationDefinitions.Clap, Animation.LoopMode.LOOP_NONE, true);
+    Player.instance?.playAnimation(AnimationDefinitions.Clap, true);
   }
 
   @command("hungry")
   commandHungry() {
-    Player.instance?.playAnimation(AnimationDefinitions.Hungry, Animation.LoopMode.LOOP_NONE, true);
+    Player.instance?.playAnimation(AnimationDefinitions.Hungry, true);
   }
 
   @command("blush")
   commandBlush() {
-    Player.instance?.playAnimation(AnimationDefinitions.Blush, Animation.LoopMode.LOOP_NONE, true);
+    Player.instance?.playAnimation(AnimationDefinitions.Blush,true);
   }
 
   @command("chuckle")
   commandChuckle() {
-    Player.instance?.playAnimation(AnimationDefinitions.Chuckle, Animation.LoopMode.LOOP_NONE, true);
+    Player.instance?.playAnimation(AnimationDefinitions.Chuckle, true);
   }
 
   @command("cough")
   commandCough() {
-    Player.instance?.playAnimation(AnimationDefinitions.Cough, Animation.LoopMode.LOOP_NONE, true);
+    Player.instance?.playAnimation(AnimationDefinitions.Cough,  true);
   }
 
   @command("duck")
   commandDuck() {
-    Player.instance?.playAnimation(AnimationDefinitions.Duck, Animation.LoopMode.LOOP_NONE, true);
+    Player.instance?.playAnimation(AnimationDefinitions.Duck,  true);
   }
 
   @command("puzzle")
   commandPuzzle() {
-    Player.instance?.playAnimation(AnimationDefinitions.Puzzle, Animation.LoopMode.LOOP_NONE, true);
+    Player.instance?.playAnimation(AnimationDefinitions.Puzzle,  true);
   }
 
   @command("dance")
   commandDance() {
-    Player.instance?.playAnimation(AnimationDefinitions.Dance, Animation.LoopMode.LOOP_NONE, true);
+    Player.instance?.playAnimation(AnimationDefinitions.Dance, true);
   }
 
   @command("blink")
   commandBlink() {
-    Player.instance?.playAnimation(AnimationDefinitions.Blink, Animation.LoopMode.LOOP_NONE, true);
+    Player.instance?.playAnimation(AnimationDefinitions.Blink,  true);
   }
 
   @command("glare")
   commandGlare() {
-    Player.instance?.playAnimation(AnimationDefinitions.Glare, Animation.LoopMode.LOOP_NONE, true);
+    Player.instance?.playAnimation(AnimationDefinitions.Glare, true);
   }
 
   @command("drool")
   commandDrool() {
-    Player.instance?.playAnimation(AnimationDefinitions.Drool, Animation.LoopMode.LOOP_NONE, true);
+    Player.instance?.playAnimation(AnimationDefinitions.Drool, true);
   }
 
   @command("kneel")
   commandKneel() {
-    Player.instance?.playAnimation(AnimationDefinitions.Kneel, Animation.LoopMode.LOOP_NONE, true);
+    Player.instance?.playAnimation(AnimationDefinitions.Kneel, true);
   }
 
   @command("laugh")
   commandLaugh() {
-    Player.instance?.playAnimation(AnimationDefinitions.Laugh, Animation.LoopMode.LOOP_NONE, true);
+    Player.instance?.playAnimation(AnimationDefinitions.Laugh, true);
   }
 
   @command("point")
   commandPoint() {
-    Player.instance?.playAnimation(AnimationDefinitions.Point, Animation.LoopMode.LOOP_NONE, true);
+    Player.instance?.playAnimation(AnimationDefinitions.Point, true);
   }
 
   @command("shrug")
   commandShrug() {
-    Player.instance?.playAnimation(AnimationDefinitions.Shrug, Animation.LoopMode.LOOP_NONE, true);
+    Player.instance?.playAnimation(AnimationDefinitions.Shrug,  true);
   }
 
   @command("ready")
   commandReady() {
-    Player.instance?.playAnimation(AnimationDefinitions.Ready, Animation.LoopMode.LOOP_NONE, true);
+    Player.instance?.playAnimation(AnimationDefinitions.Ready,  true);
   }
 
   @command("salute")
   commandSalute() {
-    Player.instance?.playAnimation(AnimationDefinitions.Salute, Animation.LoopMode.LOOP_NONE, true);
+    Player.instance?.playAnimation(AnimationDefinitions.Salute,  true);
   }
 
   @command("shiver")
   commandShiver() {
-    Player.instance?.playAnimation(AnimationDefinitions.Shiver, Animation.LoopMode.LOOP_NONE, true);
+    Player.instance?.playAnimation(AnimationDefinitions.Shiver,  true);
   }
 
   @command("tap")
   commandTap() {
-    Player.instance?.playAnimation(AnimationDefinitions.Tap, Animation.LoopMode.LOOP_NONE, true);
+    Player.instance?.playAnimation(AnimationDefinitions.Tap,  true);
   }
 
   @command("bow")
   commandBow() {
-    Player.instance?.playAnimation(AnimationDefinitions.Bow, Animation.LoopMode.LOOP_NONE, true);
+    Player.instance?.playAnimation(AnimationDefinitions.Bow,  true);
   }
 
 }

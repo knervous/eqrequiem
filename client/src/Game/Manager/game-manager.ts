@@ -1,36 +1,35 @@
-import {
-  Node3D,
-  Vector3,
-  deg_to_rad,
-  Camera3D,
-  Input,
-} from "godot";
-
+import BABYLON from "@bjs";
+import type * as BJS from "@babylonjs/core";
 import Player from "../Player/player";
-import Actor from "../Actor/actor";
 import CharacterSelect from "../Zone/character-select";
 import { supportedZones } from "../Constants/supportedZones";
 import MusicManager from "@game/Music/music-manager";
 import { ZoneManager } from "@game/Zone/zone-manager";
-import { DisplayServer } from "godot";
-import { InputEventMouseButton } from "godot";
-import { MouseButton } from "godot";
-import { InputEventMouseMotion } from "godot";
-import { InputEventPanGesture } from "godot";
 import { PlayerProfile } from "@game/Net/internal/api/capnp/player";
+import HavokPhysics from "@babylonjs/havok";
 import { NewZone } from "@game/Net/internal/api/capnp/zone";
 
 declare const window: Window;
 
-export default class GameManager extends Node3D {
+async function getInitializedHavok() {
+  return await HavokPhysics();
+}
+export default class GameManager {
+  engine: (BJS.Engine | BJS.WebGPUEngine | BJS.ThinEngine) | null = null;
+  engineInitialized: boolean = false;
+
+  canvas: HTMLCanvasElement | null = null;
+  loading: boolean = true;
+  scene: BJS.Scene | null = null;
+
   get MusicManager(): MusicManager | null {
     return this.musicManager;
   }
   private musicManager: MusicManager | null = null;
-
   private worldTickInterval: number = -1;
-  private lastPlayer: PlayerProfile | null = null;
+  private lastPlayer: Partial<PlayerProfile> | null = null;
   private player: Player | null = null;
+  public havokPlugin: BJS.HavokPlugin | null = null;
 
   public CurrentZone: NewZone | null = null;
 
@@ -44,27 +43,155 @@ export default class GameManager extends Node3D {
   }
   private zoneManager: ZoneManager | null = null;
 
-
-
-  private camera: Camera3D | null = null;
-  get Camera(): Camera3D | null {
+  private camera: BJS.UniversalCamera | null = null;
+  get Camera(): BJS.UniversalCamera | null {
     return this.camera;
   }
 
-  public static instance: GameManager;
+  private static _instance: GameManager | null = null;
+  public static get instance(): GameManager {
+    if (!this._instance) {
+      this._instance = new GameManager();
+      window.gm = this._instance;
+    }
+    return this._instance;
+  }
 
-  _ready(): void {
-    this.camera = new Camera3D();
-    this.get_tree().root.add_child(this.camera);
-    this.camera.cull_mask = 0xfffff;
-    this.set_name("GameManager");
+  constructor() {
     this.zoneManager = new ZoneManager(this);
-    GameManager.instance = this;
-    window.gm = this;
+    this.keyDown = this.keyDown.bind(this);
+    this.resize = this.resize.bind(this);
+    this.renderLoop = this.renderLoop.bind(this);
+  }
+
+  async loadPhysicsEngine() {
+    if (!this.scene) {
+      return false;
+    }
+    try {
+      const HK = await getInitializedHavok();
+      const havokPlugin = new BABYLON.HavokPlugin(true, HK);
+      this.havokPlugin = havokPlugin;
+      const worldGravity = new BABYLON.Vector3(0, -9.81 * 4, 0);
+      const didEnable = this.scene.enablePhysics(
+        worldGravity,
+        havokPlugin,
+      );
+      if (didEnable) {
+        this.scene._physicsEngine!.setGravity(worldGravity);
+      } else {
+        console.error("Failed to enable physics engine");
+      }
+      return didEnable;
+    } catch (error) {
+      console.error("Error initializing Havok physics:", error);
+      return false;
+    }
+  }
+
+  async loadEngine(canvas) {
+    if (this.engine) {
+      return;
+    }
+    if (this.scene) {
+      this.scene.dispose();
+    }
+    this.zoneManager?.dispose();
+    this.scene = null;
+    this.canvas = canvas;
+
+    if (navigator.gpu) {
+      this.engine = new BABYLON.WebGPUEngine(canvas);
+      await this.engine?.initAsync?.();
+      this.engineInitialized = true;
+    } else {
+      this.engine = new BABYLON.Engine(canvas);
+      this.engineInitialized = true;
+    }
+
+    if (!this.engine) {
+      console.error("[GameManager] Failed to create engine");
+      return;
+    }
+    this.scene = new BABYLON.Scene(this.engine);
+    this.scene.useRightHandedSystem = true;
+    this.canvas!.oncontextmenu = (e) => e.preventDefault();
+    this.scene.onPointerObservable.add(this.onPointerEvent.bind(this));
+
+    
+    this.engine.setHardwareScalingLevel(1 / window.devicePixelRatio);
+    this.engine.disableManifestCheck = true;
+    this.engine.enableOfflineSupport = false;
+    this.loading = false;
+
+    if (!(await this.loadPhysicsEngine())) {
+      console.error("[GameManager] Could not load physics engine");
+      return;
+    }
+
+    this.engine.runRenderLoop(this.renderLoop);
+  }
+
+  onPointerEvent(eventData: BJS.PointerInfo) {
+    switch(eventData.type) {
+      case BABYLON.PointerEventTypes.POINTERDOWN:
+        console.log('mouse down');
+        break;
+      case BABYLON.PointerEventTypes.POINTERUP:
+        console.log('mouse up');
+        break;
+      default:
+        break;
+    }
+  }
+
+  resize() {
+    if (!this.engine) {
+      return;
+    }
+    this.engine.resize();
+  }
+
+  renderLoop() {
+    if (this.scene && this.scene?.activeCamera && !this.loading) {
+      try {
+        this.scene.render();
+      } catch (e) {
+        console.warn(e);
+      }
+    }
+  }
+
+  async keyDown(e: BJS.IKeyboardEvent) {
+    switch (`${e?.key}`?.toLowerCase?.()) {
+      case "i": {
+        if (!this.scene || !(e.ctrlKey || e.metaKey)) {
+          break;
+        }
+        if (e?.target?.tagName === "INPUT") {
+          return;
+        }
+        let inspector;
+        await import("@babylonjs/inspector").then((i) => {
+          inspector = i.Inspector;
+        });
+        if (inspector.IsVisible) {
+          inspector.Hide();
+        } else {
+          inspector.Show(this.scene, {
+            embedMode: true,
+            overlay: true,
+            handleResize: true,
+          });
+        }
+        break;
+      }
+      default:
+        break;
+    }
   }
 
   public setLoading(value: boolean) {
-    this.get_tree().paused = value;
     if (window.setSplash) {
       window.setSplash(value);
     }
@@ -85,6 +212,10 @@ export default class GameManager extends Node3D {
       this.characterSelect.dispose();
       this.characterSelect = null;
     }
+    if (this.camera) {
+      this.camera.dispose();
+      this.camera = null;
+    }
   }
 
   public async loadCharacterSelect() {
@@ -92,6 +223,11 @@ export default class GameManager extends Node3D {
     if (this.characterSelect) {
       this.characterSelect.dispose();
     }
+    this.camera = new BABYLON.UniversalCamera(
+      "__camera__",
+      new BABYLON.Vector3(0, 0, 0),
+      this.scene!,
+    );
     this.characterSelect = new CharacterSelect(this);
   }
 
@@ -102,100 +238,37 @@ export default class GameManager extends Node3D {
 
   public async loadZoneId(zoneId: number): Promise<void> {
     const zoneName = supportedZones[zoneId?.toString()]?.shortName;
-    console.log('Loading zone: ', zoneId, zoneName);
+    console.log("Loading zone: ", zoneId, zoneName);
     if (zoneName) {
-      await this.loadZone(zoneName);
+      await this.loadZone(zoneName, true);
     } else {
       console.error(`Zone ID ${zoneId} not found in supported zones.`);
     }
   }
 
-  public async loadZone(zoneName: string, usePhysics = true): Promise<void> {
+  public async loadZone(zoneName: string, usePhysics = false): Promise<void> {
     this.dispose();
+    this.camera = new BABYLON.UniversalCamera(
+      "__camera__",
+      new BABYLON.Vector3(0, 0, 0),
+      this.scene!,
+    );
     this.zoneManager?.loadZone(zoneName, usePhysics);
-    this.worldTickInterval = setInterval(() => { 
+    this.worldTickInterval = setInterval(() => {
       this.zoneManager?.SkyManager?.worldTick?.();
     }, 1000);
   }
 
-  public async spawnModel(model: string) {
-    const objectModel = new Actor("models", model);
-    const instance = await objectModel.instantiate();
-    if (instance && this.player?.getNode() !== undefined) {
-      this.zoneManager?.ZoneContainer!.add_child(instance);
-      instance.position = this.player?.getPlayerPosition()!;
-      instance.scale = new Vector3(1, 1, 1);
-      instance.rotate_x(deg_to_rad(0));
-      instance.rotate_y(-deg_to_rad(0));
-      instance.rotate_z(deg_to_rad(0));
-    }
-  }
-
   public async instantiatePlayer(
-    player: Partial<PlayerProfile> = this.lastPlayer,
+    player: Partial<PlayerProfile> | null = this.lastPlayer,
   ) {
+    console.log("Inst player", player);
     this.lastPlayer = player;
     if (this.player) {
       this.player.dispose();
+      this.player = null;
     }
-
-    this.player = new Player(player, this.camera!);
-    const rootNode = await this.player.instantiate();
-    if (rootNode) {
-      this.player.Load("");
-      this.add_child(rootNode);
-      setTimeout(() => {
-        rootNode.position = new Vector3(-player.x, player.z + 10, player.y);
-        this.player?.playerCamera.updateCameraPosition(this.player.getNode());
-      }, 0);
-
-      //console.log("Setting position", position);
-      this.player.swapFace(player.face);
-      rootNode.scale = new Vector3(1.5, 1.5, 1.5);
-      rootNode.rotate_x(deg_to_rad(0));
-      rootNode.rotate_y(-deg_to_rad(0));
-      rootNode.rotate_z(deg_to_rad(0));
-    }
-  }
-
-  _input(event: InputEvent) {
-    if (!this.player) {
-      return;
-    }
-    switch (true) {
-      case event instanceof InputEventMouseButton: {
-        this.player.input(event.button_index);
-        this.zoneManager?.EntityPool?.mouseEvent(event);
-        if (event.button_index === MouseButton.MOUSE_BUTTON_RIGHT) {
-          DisplayServer.mouse_set_mode(
-            event.pressed
-              ? Input.MouseMode.MOUSE_MODE_CAPTURED
-              : Input.MouseMode.MOUSE_MODE_VISIBLE,
-          );
-        }
-        break;
-      }
-      case event instanceof InputEventMouseMotion: {
-        this.player.inputMouseMotion(event.relative.x, event.relative.y);
-        break;
-      }
-      case event instanceof InputEventPanGesture: {
-        this.player.input_pan(event.delta.y);
-        break;
-      }
-      default:
-        break;
-    }
-  }
-
-
-  _physics_process(delta: number): void {
-    if (this.player) {
-      this.player.tick(delta);
-    }
-  }
-
-  _process(delta: number): void {
-    this.zoneManager?.tick(delta);
+    this.player = new Player(this, this.Camera!);
+    this.player?.Load(player as PlayerProfile);
   }
 }

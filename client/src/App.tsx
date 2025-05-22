@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Home } from "./components/home";
-import GodotContainer from "./godot/container";
+import GameContainer from "@/Core/container";
 import './App.css';
 
 class ErrorBoundary extends Component {
@@ -39,7 +39,7 @@ export function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Home />} />
-          <Route path="/play" element={<GodotContainer />} />
+          <Route path="/play" element={<GameContainer />} />
         </Routes>
       </Router>
     </ErrorBoundary>

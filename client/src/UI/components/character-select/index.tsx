@@ -15,6 +15,7 @@ import { CharacterSelect, CharacterSelectEntry } from "@game/Net/internal/api/ca
 import { RequestClientZoneChange, ZoneChangeType, ZoneSession } from "@game/Net/internal/api/capnp/zone";
 
 import "./component.css";
+import { useDebouncedCallback } from "use-debounce";
 
 let splashed = false;
 
@@ -61,7 +62,7 @@ export const CharacterSelectUIComponent: React.FC = () => {
     MusicPlayer.play("character-select");
   }, []);
 
-  const enterWorld = useCallback(() => {
+  const enterWorld = useDebouncedCallback(() => {
     if (!selectedChar) {
       return;
     }
@@ -102,12 +103,13 @@ export const CharacterSelectUIComponent: React.FC = () => {
         }
       },
     );
+    console.log('Sending enter world');
     WorldSocket.sendMessage(
       OpCodes.EnterWorld,
       EnterWorld,
       { name: selectedChar.name, tutorial: 0, returnHome: 0 },
     );
-  }, [selectedChar]);
+  }, 100);
 
   useEffect(() => {
     const keyHandler = (e: KeyboardEvent) => {
@@ -193,7 +195,7 @@ export const CharacterSelectUIComponent: React.FC = () => {
           >
             {charInfo?.characters.map((c) => (
               <UiButtonComponent
-                selected={selectedChar === c}
+                selected={selectedChar?.name === c?.name}
                 buttonName="A_BigBtn"
                 text={c.name}
                 scale={1.5}

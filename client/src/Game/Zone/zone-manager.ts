@@ -1,14 +1,16 @@
+import BABYLON from "@bjs";
+import type * as BJS from "@babylonjs/core";
+
 import { FileSystem } from "@game/FileSystem/filesystem";
 import type GameManager from "@game/Manager/game-manager";
 import { RegionManager } from "@game/Regions/region-manager";
-import { Node3D } from "godot";
-import ZoneObjects from "./object-pool";
-import LightManager from "@game/Lights/light-manager";
+import { LightManager } from "@game/Lights/light-manager";
 import DayNightSkyManager from "@game/Sky/sky-manager";
-import ZoneMesh from "./zone-geometry";
 import { Spawns } from "@game/Net/internal/api/capnp/common";
 import EntityPool from "./entity-pool";
-
+import ObjectCache from "@/Game/Model/object-cache";
+import { ZoneMetadata } from "./zone-types";
+import { swapMaterialTexture } from "@game/Model/bjs-utils";
 
 export class ZoneManager {
   get RegionManager(): RegionManager {
@@ -26,17 +28,23 @@ export class ZoneManager {
   private skyManager: DayNightSkyManager;
 
   private regionManager: RegionManager;
-  get ZoneContainer (): Node3D | null {
+  get ZoneContainer (): BJS.TransformNode | null {
     return this.zoneContainer;
   }
-  private zoneContainer: Node3D | null = null;
+  private zoneContainer: BJS.TransformNode | null = null;
+  private objectContainer: BJS.TransformNode | null = null;
+  private lightContainer: BJS.TransformNode | null = null;
+  private entityContainer: BJS.TransformNode | null = null;
 
   get EntityPool(): EntityPool | null {
     return this.entityPool;
   }
   private entityPool: EntityPool | null = null;
-  private zoneObjects: ZoneObjects | null = null;
+  private zoneObjects: ObjectCache | null = null;
+  private metadata: ZoneMetadata | null = null;
   private usePhysics: boolean = true;
+
+  private disableWorldEnv: boolean = false;
   public zoneName = "qeynos2";
   public get CurrentZone() {
     return this.parent.CurrentZone;
@@ -47,34 +55,61 @@ export class ZoneManager {
   }
   private parent: GameManager;
 
+  private intervals: NodeJS.Timeout[] = [];
+
   constructor(parent: GameManager) {
     this.parent = parent;
     this.zoneContainer = null;
     this.regionManager = new RegionManager(this);
-    this.lightManager = new LightManager(this);
+    this.lightManager = new LightManager();
     this.skyManager = new DayNightSkyManager(this);
+    
   }
 
   dispose() {
     // Clean up resources if needed.
     if (this.zoneContainer) {
-      this.zoneContainer.queue_free();
+      this.zoneContainer.dispose();
       this.zoneContainer = null;
     }
+    if (this.objectContainer) {
+      this.objectContainer.dispose();
+      this.objectContainer = null;
+    }
+    if (this.lightContainer) {
+      this.lightContainer.dispose();
+      this.lightContainer = null;
+    }
+    if (this.entityContainer) {
+      this.entityContainer.dispose();
+      this.entityContainer = null;
+    }
+    this.intervals.forEach((i) => {
+      clearInterval(i);
+    });
+    this.zoneObjects?.disposeAll();
     this.regionManager.dispose();
     this.lightManager.dispose();
     this.skyManager.dispose();
+    this.parent.scene?.onBeforeRenderObservable.remove(this.tick.bind(this));
   }
 
-  public async loadZone(zoneName: string, usePhysics: boolean): Promise<void> {
+  public async loadZone(zoneName: string, usePhysics: boolean, disableWorldEnv: boolean = false): Promise<void> {
+    console.log('[ZoneManager] Loading zone:', zoneName);
     this.dispose();
     this.zoneName = zoneName;
-    this.zoneContainer = new Node3D();
-    this.zoneContainer.set_name(zoneName);
-    this.parent.add_child(this.zoneContainer);
+    this.disableWorldEnv = disableWorldEnv;
+    this.zoneContainer = new BABYLON.TransformNode('ZoneContainer', this.parent.scene);
+    this.objectContainer = new BABYLON.TransformNode('ZoneObjectContainer', this.parent.scene);
+    this.lightContainer = new BABYLON.TransformNode('LightContainer', this.parent.scene);
+    this.entityContainer = new BABYLON.TransformNode('EntityContainer', this.parent.scene);
     this.usePhysics = usePhysics;
-    this.entityPool = new EntityPool(this.zoneContainer);
-    this.entityPool?.Load();
+    this.entityPool = new EntityPool(this.entityContainer, this.parent.scene!);
+
+    if (this.zoneObjects) {
+      this.zoneObjects.disposeAll();
+    }
+    this.zoneObjects = new ObjectCache(usePhysics, this.objectContainer);
     this.instantiateZone();
   }
 
@@ -90,54 +125,148 @@ export class ZoneManager {
     if (!this.zoneContainer) {
       return;
     }
-    this.parent.setLoading(true);
-    const zoneModel = new ZoneMesh("zones", this.zoneName, this.usePhysics);
-    zoneModel.LoaderOptions.doCull = false;
-    const rootNode = await zoneModel.instantiate();
-    if (!this.zoneContainer) {
-      return;
-    }
-    if (rootNode) {
-      this.zoneContainer.add_child(rootNode);
-      rootNode.set_physics_process(true);
-    }
-    console.log('Zone name', this.zoneName);
+    this.parent.scene?.onBeforeRenderObservable.add(this.tick.bind(this));
+    this.parent.setLoading(true); 
+    const bytes = await FileSystem.getFileBytes(`eqrequiem/zones`, `${this.zoneName}.glb`);
+    const file = new File([bytes!], `${this.zoneName}.glb`, {
+      type: "model/gltf-binary",
+    });
+    const result = await BABYLON.ImportMeshAsync(
+      file, // Pass ArrayBuffer directly
+      this.parent.scene!,
+    );
+    result.meshes.forEach((mesh) => {
+      const materialExtras = mesh?.material?.metadata?.gltf?.extras;
+      if (materialExtras?.frames?.length && materialExtras?.animationDelay) {
+        const { frames, animationDelay } = materialExtras;
+        let currentFrameIndex = 0;
+        const intervalId = setInterval(() => {
+          try {
+            currentFrameIndex = (currentFrameIndex + 1) % frames.length;
+            const selectedFrame = frames[currentFrameIndex] as string;
+            swapMaterialTexture(mesh.material!, selectedFrame, true);
+          } catch (error) {
+            console.error(`[ZoneManager] Failed to swap texture for mesh ${mesh.name}:`, error);
+            clearInterval(intervalId);
+          }
+        }, animationDelay * 2);
+
+        this.intervals.push(intervalId);
+      }
+        
+      if (this.usePhysics) {
+        // Create physics body for static zone geometry
+        mesh.physicsBody = new BABYLON.PhysicsBody(
+          mesh,
+          BABYLON.PhysicsMotionType.STATIC,
+          false,
+          this.parent.scene!,
+        );
+        // Use PhysicsShapeMesh for complex geometry
+        mesh.physicsBody.shape = new BABYLON.PhysicsShapeMesh(
+          mesh as BJS.Mesh, // The mesh to base the shape on
+          this.parent.scene!,
+        );
+        mesh.physicsBody.setMassProperties({ mass: 0 }); // Static
+      }
+    });
+
+    result.transformNodes[0].parent = this.zoneContainer;
+    result.transformNodes[0].name = this.zoneName;
+    
+    console.log('res', result);
+    this.skyManager.createSky("sky1", this.disableWorldEnv);
+    this.parent.setLoading(false); 
+    
     const metadataByte = await FileSystem.getFileBytes(
       `eqrequiem/zones`, `${this.zoneName}.json`,
     );
     if (metadataByte) {
       try {
         const str = new TextDecoder("utf-8").decode(metadataByte);
-        const metadata = JSON.parse(str);
-        console.log("Got metadata", metadata);
+        const metadata = JSON.parse(str) as ZoneMetadata;
         this.metadata = metadata;
+        console.log("Got metadata", metadata);
         console.log("Version: ", metadata.version);
         console.log('Current zone', this.CurrentZone);
-        this.regionManager.instantiateRegions(metadata.regions, this.CurrentZone?.zonePoints);
-        this.zoneObjects = new ZoneObjects(this.zoneContainer, metadata.objects, this.usePhysics);
+        await this.instantiateObjects(metadata);
+        this.lightManager.loadLights(this.lightContainer!, this.parent.scene!, metadata.lights);
+        // this.regionManager.instantiateRegions(metadata.regions, this.CurrentZone?.zonePoints);
+        // this.zoneObjects = new ZoneObjects(this.zoneContainer, metadata.objects, this.usePhysics);
 
-        this.zoneObjects.Load().catch((e) => {
-          console.log("Failed to load zone objects", e);
-        });
+        // this.zoneObjects.Load().catch((e) => {
+        //   console.log("Failed to load zone objects", e);
+        // });
 
-        this.lightManager.instantiateLights(metadata.lights);
-        this.skyManager.createSky("sky1");
 
       } catch (e) {
         console.log("Error parsing zone metadata", e);
       }
     }
-    //await this.instantiatePlayer("bam");
-    this.parent.setLoading(false);
+
+    setTimeout(() => {
+      this.dedupeMaterialsByName();
+
+    }, 1000);
   }
 
-  public tick(delta: number) {
+
+  private dedupeMaterialsByName() {
+    if (!this.GameManager.scene) {
+      return;
+    }
+    const meshes: BJS.AbstractMesh[] = this.GameManager.scene.meshes;
+    const materials: BJS.Material[] = this.GameManager.scene.materials;
+
+    const nameMap = new Map<string, BJS.Material>();
+
+    for (const mat of materials.slice()) {
+      if (!mat.name) { continue; }
+      const key = mat.name;
+
+      if (!nameMap.has(key)) {
+      // first time we see this name → keep it
+        nameMap.set(key, mat);
+      } else {
+      // duplicate name → remap all references, then dispose
+        const canonical = nameMap.get(key)!;
+
+        for (const mesh of meshes) {
+          if (mesh.material === mat) {
+            mesh.material = canonical;
+          } else if (mesh.material instanceof BABYLON.MultiMaterial) {
+            const mm = mesh.material as BJS.MultiMaterial;
+            mm.subMaterials = mm.subMaterials.map((sub) => {
+              if (sub === mat) {
+                return canonical;
+              }
+              return sub;
+            });
+          }
+        }
+
+        mat.dispose(true, true);
+      }
+    }
+  }
+
+  private async instantiateObjects(metadata: ZoneMetadata) {
+    if (!this.zoneObjects) {
+      return;
+    }
+    for (const [key, values] of Object.entries(metadata.objects)) {
+      this.zoneObjects.addThinInstances(key, this.parent.scene!, values);
+    }
+  }
+
+  public tick() {
     if (!this.zoneContainer) {
       return;
     }
-    this.lightManager.tick(delta);
+    const delta = this.parent.scene?.getEngine().getDeltaTime() ?? 0;
     this.skyManager.tick(delta);
     this.entityPool?.process(delta);
+    this.lightManager.updateLights(delta);
 
   }
 }

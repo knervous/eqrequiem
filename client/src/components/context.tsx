@@ -3,7 +3,7 @@ import {
   PermissionStatusTypes,
   usePermissions,
 } from "sage-core/hooks/permissions";
-import { godotBindings } from "../godot/bindings";
+import { fsBindings } from "../Core/bindings";
 import { USE_SAGE } from "@game/Constants/constants";
 
 const MainContext = React.createContext({});
@@ -61,7 +61,7 @@ export const MainProvider = (props: ReactProps) => {
         alert('No file system available, please use a compatible browser');
         return;
       }
-      await godotBindings.initialize({
+      await fsBindings.initialize({
         rootFileSystemHandle: fsHandle,
         setLoading,
         setLoadingText,

@@ -17,7 +17,6 @@ export const CompassWindowComponent: React.FC = () => {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      // Get player rotation in radians from Godot
       try {
         const rotation =
       Player.instance?.getPlayerRotation()

@@ -3,26 +3,22 @@ import path from "node:path";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 
-const isLocalDev = process.env.LOCAL_DEV === "true";
+const isLocalDev = process.env.VITE_LOCAL_DEV === "true";
 
 export default defineConfig({
   base: "./",
   plugins: [
     react({
-      // pass SWC options directly
       tsDecorators: true,
       swcOptions: {
         jsc: {
           parser: {
             syntax: "typescript",
             tsx: true,
-            // ← turn on decorator parsing
             decorators: true,
           },
           transform: {
-            // ← compile legacy decorators
             legacyDecorator: true,
-            // ← (we already disabled emitDecoratorMetadata above)
             decoratorMetadata: false,
           },
         },
@@ -32,34 +28,29 @@ export default defineConfig({
       configureServer: ({ middlewares }) => {
         middlewares.use(async (req, res, next) => {
           if (req.url?.startsWith("/api/hash")) {
-            const params = new URLSearchParams(req.url?.split("?")[1]);
+            const params = new URLSearchParams(req.url.split("?")[1]);
             const port = params.get("port");
             const ip = params.get("ip");
             const hash = await fetch(`http://${ip}:${port}/hash`)
               .then((r) => r.text())
-              .catch((_) => "");
+              .catch(() => "");
             res.end(hash);
             return;
           }
-          if (req.url.includes("Test.wasm")) {
+          if (req.url?.includes("Test.wasm")) {
             res.setHeader("Content-Encoding", "br");
           }
           res.setHeader("Cross-Origin-Embedder-Policy", "require-corp");
           res.setHeader("Cross-Origin-Opener-Policy", "same-origin");
-
           next();
         });
       },
     },
   ],
-  optimizeDeps: {
-    esbuildOptions: {
-      target: "chrome90",
-    },
-  },
   resolve: {
     alias: {
-      //'@protobuf-ts/runtime': path.resolve(__dirname, '../ui/node_modules/@protobuf-ts/runtime'),
+      react: path.resolve(__dirname, "./node_modules/react"),
+      "react-dom": path.resolve(__dirname, "./node_modules/react-dom"),
       "react/jsx-runtime": path.resolve(
         __dirname,
         "./node_modules/react/jsx-runtime.js",
@@ -68,8 +59,6 @@ export default defineConfig({
         __dirname,
         "./node_modules/react-router-dom",
       ),
-      react: path.resolve(__dirname, "./node_modules/react"),
-      "react-dom": path.resolve(__dirname, "./node_modules/react-dom"),
       "@mui/material": path.resolve(__dirname, "./node_modules/@mui/material"),
       "use-debounce": path.resolve(__dirname, "./node_modules/use-debounce"),
       "use-context-selector": path.resolve(
@@ -77,55 +66,27 @@ export default defineConfig({
         "./node_modules/use-context-selector",
       ),
       "tga-js": path.resolve(__dirname, "./node_modules/tga-js"),
-      godot: path.resolve(__dirname, "./src/godot-module.ts"),
+      ...(isLocalDev
+        ? {
+          "sage-core": path.resolve(__dirname, "../../eqsage/sage/lib"),
+          classnames: path.resolve(__dirname, "./classnames.js"),
+        }
+        : {}),
       "@game": path.resolve(__dirname, "src/Game"),
       "@eqmessage": path.resolve(__dirname, "src/Game/Net/internal/api/capnp"),
       "@@opcode": path.resolve(__dirname, "src/Game/Net/opcodes.ts"),
       "@ui": path.resolve(__dirname, "src/UI"),
       "@": path.resolve(__dirname, "src"),
+      "@bjs": path.resolve(__dirname, "src/bjs/index.ts"),
     },
   },
-  ...(isLocalDev && {
-    resolve: {
-      alias: {
-        //'@protobuf-ts/runtime': path.resolve(__dirname, '../ui/node_modules/@protobuf-ts/runtime'),
-        "react/jsx-runtime": path.resolve(
-          __dirname,
-          "./node_modules/react/jsx-runtime.js",
-        ),
-        "react-router-dom": path.resolve(
-          __dirname,
-          "./node_modules/react-router-dom",
-        ),
-        "sage-core": path.resolve(__dirname, "../../eqsage/sage/lib"),
-        react: path.resolve(__dirname, "./node_modules/react"),
-        "react-dom": path.resolve(__dirname, "./node_modules/react-dom"),
-        "@mui/material": path.resolve(
-          __dirname,
-          "./node_modules/@mui/material",
-        ),
-        "use-debounce": path.resolve(__dirname, "./node_modules/use-debounce"),
-        "use-context-selector": path.resolve(
-          __dirname,
-          "./node_modules/use-context-selector",
-        ),
-        "tga-js": path.resolve(__dirname, "./node_modules/tga-js"),
-        godot: path.resolve(__dirname, "./src/godot-module.ts"),
-        classnames: path.resolve(__dirname, "./classnames.js"),
-        "@game": path.resolve(__dirname, "src/Game"),
-        "@eqmessage": path.resolve(__dirname, "src/Game/Net/internal/api/capnp"),
-        "@@opcode": path.resolve(__dirname, "src/Game/Net/opcodes.ts"),
-        "@ui": path.resolve(__dirname, "src/UI"),
-        "@": path.resolve(__dirname, "src"),
-      },
+  optimizeDeps: {
+    exclude: ["@babylonjs/havok"],
+    ...(isLocalDev ? { exclude: ["@babylonjs/havok", "sage-core"] } : {}),
+    esbuildOptions: {
+      target: "chrome90",
     },
-    optimizeDeps: {
-      exclude: ["sage-core"],
-      esbuildOptions: {
-        target: "chrome90",
-      },
-    },
-  }),
+  },
   build: {
     target: "chrome90",
     commonjsOptions: {

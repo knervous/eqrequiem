@@ -1,9 +1,9 @@
-import { godotBindings } from "@/godot/bindings";
+import { fsBindings } from "@/Core/bindings";
 
 export class StringTable {
   private static strings: Record<string, string> = {};
   public static async initialize(): Promise<void> {
-    const data = await godotBindings.getFile("", "eqstr_us.txt");
+    const data = await fsBindings.getFile("", "eqstr_us.txt");
     if (data) {
       const decoder = new TextDecoder("utf-8");
       const text = decoder.decode(data);

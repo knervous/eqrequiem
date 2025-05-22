@@ -1,131 +1,88 @@
+import React, { useEffect, useState } from 'react';
 import Player from '@game/Player/player';
-import { 
-  Box, 
-  Button, 
-  FormControl, 
-  InputLabel, 
-  MenuItem, 
-  Select, 
-  TextField, 
-  Typography, 
+import {
+  Box,
+  Stack,
+  TextField,
   Checkbox,
-  FormControlLabel, 
+  FormControlLabel,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Button,
+  Typography,
 } from '@mui/material';
-import React, { useState } from 'react';
-  
-export const DevPlayer: React.FC = () => {
-  const playerData = Player.instance;
-  const [speed, setSpeed] = useState(playerData?.playerMovement?.moveSpeed ?? 20);
-  const [selectedAnimation, setSelectedAnimation] = useState(playerData?.currentAnimation ?? '');
-  const [collisionEnabled, setCollisionEnabled] = useState(true); // Default value, adjust as needed
-  const [gravityEnabled, setGravityEnabled] = useState(true);    // Default value, adjust as needed
-    
-  const handleSpeedChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const newSpeed = Number(event.target.value);
-    setSpeed(newSpeed);
-    if (playerData) {
-      playerData.playerMovement.moveSpeed = newSpeed;
 
-    }
+export const DevPlayer: React.FC = () => {
+  const player = Player.instance!;
+  const [speed, setSpeed] = useState(player.playerMovement?.moveSpeed ?? 20);
+  const [anim, setAnim] = useState(player.currentAnimation || '');
+  const [collision, setCollision] = useState(true);
+  const [gravity, setGravity] = useState(true);
+  const onSpeed = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const v = +e.target.value;
+    setSpeed(v);
+    if (player?.playerMovement) {
+
+      player.playerMovement.moveSpeed = v;
+    } 
   };
-    
-  const handleAnimationChange = (event: React.ChangeEvent<{ value: unknown }>) => {
-    setSelectedAnimation(event.target.value as string);
+
+  const onAnim = (e: React.ChangeEvent<{ value: unknown }>) => {
+    setAnim(e.target.value as string);
   };
-    
-  const handlePlayAnimation = () => {
-    playerData?.playAnimation(selectedAnimation, 0, true);
+
+  const toggleCollision = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const checked = e.target.checked;
+    setCollision(checked);
+    player.setCollision(checked);
   };
-  
-  const handleCollisionChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const enabled = event.target.checked;
-    setCollisionEnabled(enabled);
-    Player.instance?.setUseCollision(enabled);
+
+  const toggleGravity = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const checked = e.target.checked;
+    setGravity(checked);
+    player.setGravity(checked);
   };
-  
-  const handleGravityChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const enabled = event.target.checked;
-    Player.instance!.playerMovement.gravity = enabled;
-    setGravityEnabled(enabled);
-  };
-    
+
   return (
-    <Box sx={{ 
-      p: 2, 
-      '*': {
-        color: 'white !important',
-      },
-    }}>
-      {/* Speed Input */}
-      <Box sx={{ mb: 2, mt: 0 }}>
+    <Box p={2} sx={{ '*': { color: 'white!important' } }}>
+      <Stack spacing={2}>
         <TextField
           label="Move Speed"
           type="number"
+          size="small"
           value={speed}
-          onChange={handleSpeedChange}
-          variant="outlined"
-          size="small"
-          sx={{ width: 220 }}
-          inputProps={{ min: 0, step: 1 }}
+          onChange={onSpeed}
+          InputProps={{ inputProps: { min: 0, step: 1 } }}
+          sx={{ width: 200 }}
         />
-      </Box>
-      {/* Collision and Gravity Checkboxes */}
-      <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1 }}>
-        <FormControlLabel
-          control={
-            <Checkbox
-              size='small'
 
-              checked={collisionEnabled}
-              onChange={handleCollisionChange}
-              color="primary"
-            />
-          }
-          label="Collision"
-        />
-        <FormControlLabel
-        
-          control={
-            <Checkbox
-              size='small'
-              checked={gravityEnabled}
-              onChange={handleGravityChange}
-              color="primary"
-            />
-          }
-          label="Gravity"
-        />
-      </Box>
+        <Stack direction="row" spacing={1}>
+          <FormControlLabel
+            control={<Checkbox size="small" checked={collision} onChange={toggleCollision}/>} 
+            label="Collision"
+          />
+          <FormControlLabel
+            control={<Checkbox size="small" checked={gravity} onChange={toggleGravity}/>} 
+            label="Gravity"
+          />
+        </Stack>
 
-    
-      {/* Animation Selector and Play Button */}
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-        <FormControl sx={{ minWidth: 200 }}>
-          <InputLabel id="animation-select-label">Animation</InputLabel>
-          <Select
-            labelId="animation-select-label"
-            value={selectedAnimation}
-            label="Animation"
-            onChange={handleAnimationChange}
-            size="small"
-          >
-            {playerData?.animations.map((anim) => (
-              <MenuItem key={anim} value={anim}>
-                {anim}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-        <Button
-          variant="contained"
-          onClick={handlePlayAnimation}
-          size="small"
-        >
+        <Stack direction="row" spacing={1} alignItems="center">
+          <FormControl size="small" sx={{ minWidth: 200 }}>
+            <InputLabel>Animation</InputLabel>
+            <Select value={anim} label="Animation" onChange={onAnim}>
+              {Object.keys(player.animations).map((a) => (
+                <MenuItem key={a} value={a}>{a}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <Button size="small" variant="contained" onClick={() => player.playAnimation(anim, 0, true)}>
             Play
-        </Button>
-      </Box>
-  
-
+          </Button>
+        </Stack>
+      </Stack>
     </Box>
   );
 };

@@ -1,7 +1,4 @@
-import { godotBindings } from '@/godot/bindings';
-import TgaLoader from 'tga-js';
-
-const tga = new TgaLoader();
+import { fsBindings } from '@/Core/bindings';
 
 function cropImage(base64Url: string, cropX: number, cropY: number, cropWidth: number, cropHeight: number) {
   return new Promise<string>((resolve, reject) => {
@@ -39,10 +36,15 @@ export class ImageCache {
     const cacheKey = `${folder}${path}${crop ? `_${cropX}_${cropY}_${cropWidth}_${cropHeight}` : ''}`;
     
     if (!this.cache[cacheKey]) {
-      const data = await godotBindings.getFile(folder, path);
+      const data = await fsBindings.getFile(folder, path);
       if (data instanceof ArrayBuffer) {
-        tga.load(new Uint8Array(data));
-        let imageUrl = tga.getDataURL('image/png');
+        // Convert WebP buffer to base64 data URL
+        const blob = new Blob([data], { type: 'image/webp' });
+        const imageUrl = await new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.readAsDataURL(blob);
+        });
 
         // Apply cropping if requested and parameters are provided
         if (crop) {
@@ -54,10 +56,10 @@ export class ImageCache {
           ) {
             throw new Error("Crop parameters (cropX, cropY, cropWidth, cropHeight) must be provided when crop is true");
           }
-          imageUrl = await cropImage(imageUrl, cropX, cropY, cropWidth, cropHeight);
+          this.cache[cacheKey] = await cropImage(imageUrl, cropX, cropY, cropWidth, cropHeight);
+        } else {
+          this.cache[cacheKey] = imageUrl;
         }
-
-        this.cache[cacheKey] = imageUrl;
       } else {
         this.cache[cacheKey] = ""; // Cache empty string if no data
       }

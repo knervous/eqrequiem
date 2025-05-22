@@ -1,8 +1,8 @@
-import { Camera3D, Color, Node3D, OmniLight3D, Vector3 } from "godot";
-import { OctreeNode } from "./light-octree";
-import { Extensions } from "../Util/extensions";
-import type { ZoneManager } from "@game/Zone/zone-manager";
+import BABYLON from "@bjs";
+import type * as BJS from "@babylonjs/core";
+import Player from "@game/Player/player";
 
+const MAX_LIGHTS = 4;
 
 export type LightData = {
   x: number;
@@ -13,143 +13,140 @@ export type LightData = {
   b: number;
 };
 
-function lerp(a: number, b: number, t: number): number {
-  return a + (b - a) * t;
-}
+export class LightManager {
+  private zoneLights: BJS.PointLight[] = [];
+  private ambientLight: BJS.HemisphericLight | null = null;
+  private playerLight: BJS.PointLight | null = null;
+  private previousLights: number[] = [];
+  private lastPosition: BJS.Vector3 = new BABYLON.Vector3(-1, 0, 0);
+  private accumTime: number = 0;
 
-export default class LightManager {
-  private zoneManager: ZoneManager;
-  private lights: OmniLight3D[] = [];
-  private camera: Camera3D;
-  private updateInterval = 0.2;
-  private timeSinceLastUpdate = 0.0;
-  private maxLightDistance = 600.0;
-  private maxActiveLights = 8;
-  private octree: OctreeNode | null = null;
-  private lightContainer: Node3D | null = null;
-
-  public constructor(parent: ZoneManager) {
-    this.zoneManager = parent;
+  dispose() {
+    this.zoneLights.forEach((l) => l.dispose());
+    this.previousLights = [];
+    this.zoneLights = [];
+    this.ambientLight?.dispose();
+    this.playerLight?.dispose();
   }
 
-  public instantiateLights(lights: LightData[]) {
-    this.lightContainer = new Node3D();
-    this.lightContainer.set_name("LightContainer");
-    this.zoneManager.ZoneContainer!.add_child(this.lightContainer);
-    this.camera = this.zoneManager.GameManager.Camera!;
-    this.createLights(lights);
-    this.octree = this.buildOctree();
-  }
-
-  public dispose() {
-    for (const light of this.lights) {
-      light.queue_free();
-    }
-    this.lights = [];
-  }
-
-
-  private createLights(lightData: LightData[]) {
-    let i = 0;
-    for (const light of lightData) {
-      const lightNode = new OmniLight3D();
-      this.lightContainer?.add_child(lightNode);
-      lightNode.position = new Vector3(-light.x, light.y, light.z);
-      const r = light.r > 1 ? light.r / 255 : light.r;
-      const g = light.g > 1 ? light.g / 255 : light.g;
-      const b = light.b > 1 ? light.b / 255 : light.b;
-      lightNode.light_color = new Color(r, g, b, 1.0);
-      lightNode.light_energy = 10.0;
-      lightNode.light_specular = 0;
-      lightNode.omni_range = 50.0;
-      lightNode.distance_fade_enabled = true;
-      lightNode.distance_fade_begin = 450.0;
-      lightNode.distance_fade_length = 550.0;
-      lightNode.distance_fade_shadow = 150;
-      lightNode.set_name("Light" + i++);
-      lightNode.layers = 1 << 0;
-      lightNode.visible = false;
-      lightNode.lightData = {
-        x: -light.x,
-        y: light.y,
-        z: light.z,
-      };
-      this.lights.push(lightNode);
+  setAmbientColor(hex: string) {
+    if (this.ambientLight) {
+      this.ambientLight.diffuse = BABYLON.Color3.FromHexString(hex);
+      this.ambientLight.groundColor = BABYLON.Color3.FromHexString(hex);
     }
   }
 
-  // Build an octree covering all light positions.
-  private buildOctree(): OctreeNode {
-    const min = new Vector3(Infinity, Infinity, Infinity);
-    const max = new Vector3(-Infinity, -Infinity, -Infinity);
-    for (const light of this.lights) {
-      const pos = light.global_position;
-      min.x = Math.min(min.x, pos.x);
-      min.y = Math.min(min.y, pos.y);
-      min.z = Math.min(min.z, pos.z);
-      max.x = Math.max(max.x, pos.x);
-      max.y = Math.max(max.y, pos.y);
-      max.z = Math.max(max.z, pos.z);
+  setIntensity(intensity: number) {
+    if (this.ambientLight) {
+      this.ambientLight.intensity = intensity;
     }
-    const center = min.add(max).multiplyScalar(0.5);
-    const halfSize = Math.max(
-      max.x - center.x,
-      max.y - center.y,
-      max.z - center.z,
-    );
-    const octree = new OctreeNode(center, halfSize);
-    for (const light of this.lights) {
-      octree.insert(light);
-    }
-    return octree;
   }
 
-  public tick(delta: number) {
-    if (!this.camera || !this.octree) return;
-
-    this.timeSinceLastUpdate += delta;
-    if (this.timeSinceLastUpdate < this.updateInterval) return;
-
-    this.timeSinceLastUpdate = 0.0;
-    const cameraPos = this.camera.global_position;
-
-    // Query the octree for nearby lights.
-    const nearbyLights = this.octree.querySphere(
-      cameraPos,
-      this.maxLightDistance,
-    );
-    const lightsWithDistance = nearbyLights.map((light) => {
-      const distance = Extensions.GetDistance(cameraPos, light.lightData);
-      return { light, distance };
+  async loadLights(container: BJS.Node, scene: BJS.Scene, zoneLights: LightData[]) {
+    // Allow up to MAX_LIGHTS influence per material
+    scene.materials.forEach((m) => {
+      m.maxSimultaneousLights = MAX_LIGHTS;
     });
-    lightsWithDistance.sort((a, b) => a.distance - b.distance);
 
-    const activeLights = new Set<OmniLight3D>();
-    for (let i = 0; i < lightsWithDistance.length; i++) {
-      const { light, distance } = lightsWithDistance[i];
-      if (i < this.maxActiveLights && distance <= this.maxLightDistance) {
-        activeLights.add(light);
-      }
+    // Create lights
+    zoneLights.forEach((data, idx) => {
+      const pos = new BABYLON.Vector3(-data.x, data.y, data.z);
+      const light = new BABYLON.PointLight(`zoneLight_${idx}`, pos, scene);
+      light.diffuse = new BABYLON.Color3(data.r, data.g, data.b);
+      light.intensity = 0.5;
+      light.radius = 25;
+      light.range = 100;
+      light.intensityMode = BABYLON.Light.INTENSITYMODE_LUMINANCE;
+      light.falloffType = BABYLON.Light.FALLOFF_GLTF;
+      light.specular.set(0, 0, 0);
+      light.setEnabled(false);
+      light.parent = container;
+      this.zoneLights.push(light);
+    });
+  }
+
+  updateLights(delta: number) {
+    const playerPosition = Player.instance?.mesh?.position;
+    if (!playerPosition) {
+      return;
     }
-
-    // Fade settings.
-    const fullEnergy = 10.0;
-    const fadeSpeed = 5.0;
-
-    for (const light of this.lights) {
-      if (activeLights.has(light)) {
-        light.visible = true;
-        light.light_energy = lerp(
-          light.light_energy,
-          fullEnergy,
-          fadeSpeed * delta,
-        );
-      } else {
-        light.light_energy = lerp(light.light_energy, 0, fadeSpeed * delta);
-        if (light.light_energy < 1.5) {
-          light.visible = false;
-        }
-      }
+    if (this.lastPosition.equals(playerPosition)) {
+      return;
     }
+    if (this.accumTime <= 100) {
+      this.accumTime += delta;
+      return;
+    }
+    const start = performance.now();
+    this.accumTime = 0;
+
+    // Compute distances to all lights and pick nearest
+    const hits = this.zoneLights.map((light, idx) => {
+      const distSq = BABYLON.Vector3.DistanceSquared(playerPosition, light.position);
+      return { idx, distSq };
+    });
+
+    const nearest = hits
+      .sort((a, b) => a.distSq - b.distSq)
+      .slice(0, Math.min(MAX_LIGHTS, this.zoneLights.length))
+      .map((h) => h.idx);
+
+    // Disable lights no longer needed
+    this.previousLights.forEach((oldIdx) => {
+      if (!nearest.includes(oldIdx)) {
+        this.zoneLights[oldIdx].setEnabled(false);
+      }
+    });
+
+    // Enable newly needed lights
+    nearest.forEach((idx) => {
+      this.zoneLights[idx].setEnabled(true);
+    });
+
+    this.previousLights = nearest;
+    this.lastPosition.copyFrom(playerPosition);
+    const next = performance.now() - start;
+    // console.log('[Performance] LightManager.updateLights, %c', 'green', next);
   }
 }
+// BABYLON.Effect.IncludesShadersStore.lightFragment = `
+// #ifdef LIGHT{X}
+//     // --- Pre-lighting for point lights only ---
+//     preInfo = computePointAndSpotPreLightingInfo(
+//         light{X}.vLightData,
+//         viewDirectionW,
+//         normalW
+//     );
+
+//     // --- GLTF distance falloff (soft, physically plausible) ---
+//     preInfo.attenuation = computeDistanceLightFalloff_GLTF(
+//         preInfo.lightDistanceSquared,
+//         light{X}.vLightFalloff.y
+//     );
+
+//     // --- Tweak roughness based on light properties ---
+//     preInfo.roughness = adjustRoughnessFromLightProperties(
+//         roughness,
+//         light{X}.vLightSpecular.a,
+//         preInfo.lightDistance
+//     );
+
+//     // --- Compute diffuse & specular contributions ---
+//     info.diffuse = computeDiffuseLighting(
+//         preInfo,
+//         light{X}.vLightDiffuse.rgb
+//     );
+//     info.specular = computeSpecularLighting(
+//         preInfo,
+//         normalW,
+//         clearcoatOut.specularEnvironmentR0,
+//         specularEnvironmentR90,
+//         AARoughnessFactors.x,
+//         light{X}.vLightDiffuse.rgb
+//     );
+
+//     // --- Accumulate into the final base colors (no manual clamp!) ---
+//     diffuseBase  += info.diffuse;
+//     specularBase += info.specular;
+// #endif
+// `;

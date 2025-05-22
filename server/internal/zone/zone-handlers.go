@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 
 	eq "github.com/knervous/eqgo/internal/api/capnp"
 	"github.com/knervous/eqgo/internal/api/opcodes"
@@ -222,7 +223,14 @@ func HandleRequestClientZoneChange(z *ZoneInstance, ses *session.Session, payloa
 		spawn.SetCellX(int32(c[0]))
 		spawn.SetCellY(int32(c[1]))
 		spawn.SetCellZ(int32(c[2]))
-		ses.SendStream(spawn.Message(), opcodes.ZoneSpawns)
+		if strings.Contains(npc.Name(), "Guard") {
+			// fmt.Println("Guard NPC sending:", npc.Name())
+		}
+		err = ses.SendStream(spawn.Message(), opcodes.ZoneSpawns)
+		if err != nil {
+			log.Printf("failed to send Spawn message: %v", err)
+			return
+		}
 	}
 	z.registerNewClientGrid(clientEntry.EntityId, entity.MobPosition{X: float32(charData.X), Y: float32(charData.Y), Z: float32(charData.Z), Heading: float32(charData.Heading)})
 

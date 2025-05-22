@@ -50,7 +50,7 @@ export class ZonePacketHandler {
 
   @opCodeHandler(OpCodes.ZoneSpawns, Spawn)
   loadZoneSpawns(spawn: Spawn) {
-    console.log("Got zone spawn", spawn.name);
+    // console.log("Got zone spawn", spawn.name);
     GameManager.instance.ZoneManager?.EntityPool?.AddSpawn(spawn);
   }
 

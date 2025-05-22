@@ -1,28 +1,25 @@
-import {
-  Node3D,
-  Vector3,
-  InputEventMouseButton,
-  MouseButton,
-  PhysicsRayQueryParameters3D,
-  StaticBody3D,
-} from "godot";
+
+import BABYLON from "@bjs";
+import type * as BJS from "@babylonjs/core";
+
 import { vec3 } from "gl-matrix";
 
 import ObjectMesh from "@game/Object/object-geometry";
 import { EntityAnimation, EntityPositionUpdate, Spawn } from "@game/Net/internal/api/capnp/common";
 import Player from "@game/Player/player";
-import EntityCache from "./entity-cache";
 import Entity from "@game/Entity/entity";
 import { Grid } from "./zone-grid";
+import EntityCache from "@game/Model/entity-cache";
+import RACE_DATA from "@game/Constants/race-data";
 
 type CellTriple = [number, number, number];
 type Vec3 = { x: number; y: number; z: number };
 
 export default class EntityPool {
-  parent: Node3D;
+  parent: BJS.Node;
   entities: Record<number, Entity> = {};
   entityContainer: Record<string, Promise<ObjectMesh>> = {};
-  entityObjectContainer: Node3D | null = null;
+  entityObjectContainer: BJS.Node | null = null;
   loadedPromiseResolve: () => void = () => {};
   loadedPromise: Promise<void> | null = null;
   actorPool: EntityCache | null = null;
@@ -31,43 +28,33 @@ export default class EntityPool {
   private spawns: Record<number, Spawn> = {};
   private maxInstantiated: number = 50;
   private accumulatedDelta: number = 0;
+  private scene: BJS.Scene;
 
-  constructor(parent: Node3D) {
+  constructor(parent: BJS.Node, scene: BJS.Scene) {
+    this.scene = scene;
     this.parent = parent;
     // Only cellSize is needed now; we use string-based keys internally
     this.grid = new Grid(300.0);
-    this.loadedPromise = new Promise((res) => {
-      this.loadedPromiseResolve = res;
-    });
+    this.actorPool = new EntityCache(this.parent as BJS.TransformNode);
   }
 
   dispose() {
     if (this.entityObjectContainer) {
-      this.entityObjectContainer.queue_free();
+      this.entityObjectContainer.dispose();
       this.entityObjectContainer = null;
     }
   }
 
-  async Load(): Promise<void> {
-    try {
-      this.entityObjectContainer = new Node3D();
-      this.entityObjectContainer.set_name("EntityPool");
-      this.parent.add_child(this.entityObjectContainer);
-      this.actorPool = new EntityCache();
-      this.loadedPromiseResolve();
-    } catch (e) {
-      console.log("Error loading objects", e);
-    }
-  }
 
   async process(delta: number) {
+    return;
     this.accumulatedDelta += delta;
-    if (this.accumulatedDelta < 1) return;
+    if (this.accumulatedDelta < 1000) return;
     this.accumulatedDelta = 0;
 
     if (!Player.instance) return;
 
-    const playerPos3D = Player.instance.getNode()?.global_position ?? Vector3.ZERO;
+    const playerPos3D = Player.instance.mesh!.position!;
     const logicalPlayer: Vec3 = {
       x: -playerPos3D.x,
       y: playerPos3D.z,
@@ -89,21 +76,21 @@ export default class EntityPool {
            - vec3.squaredDistance(pb, playerVec);
     });
 
-    // free distant entities
-    if (Object.keys(this.entities).length >= this.maxInstantiated) {
-      for (const sidStr in this.entities) {
-        const sid = Number(sidStr);
-        if (!nearbySpawnIds.includes(sid)) {
-          const ent = this.entities[sid];
-          const spawn = this.spawns[sid];
-          this.grid.removeSpawn(spawn);
-          ent.getNode()?.queue_free();
-          delete this.entities[sid];
-          this.AddSpawn(spawn);
-        }
-      }
-    }
-
+    // // free distant entities
+    // if (Object.keys(this.entities).length >= this.maxInstantiated) {
+    //   for (const sidStr in this.entities) {
+    //     const sid = Number(sidStr);
+    //     if (!nearbySpawnIds.includes(sid)) {
+    //       const ent = this.entities[sid];
+    //       const spawn = this.spawns[sid];
+    //       this.grid.removeSpawn(spawn);
+    //       ent.getNode()?.queue_free();
+    //       delete this.entities[sid];
+    //       this.AddSpawn(spawn);
+    //     }
+    //   }
+    // }
+    console.log('s spawns', this.spawnQueue);
 
     // instantiate new nearby
     const retried: Set<number> = new Set();
@@ -117,8 +104,10 @@ export default class EntityPool {
       }
 
       if (this.entities[spawn.spawnId]) continue;
-
-      const entity = await this.actorPool!.acquire(spawn, this.entityObjectContainer!);
+      const race = spawn?.race ?? 1;
+      const raceDataEntry = RACE_DATA[race];
+      const model = raceDataEntry[spawn.gender ?? 0] || raceDataEntry[2];
+      const entity = await this.actorPool!.getInstance(model, this.scene!);
       if (!entity) {
         console.error("Failed to acquire entity for spawn", spawn.spawnId);
         // fallback logic
@@ -126,51 +115,73 @@ export default class EntityPool {
         retried.add(spawn.spawnId);
         continue;
       }
-      console.log('Acquired entity', entity.data?.name);
-      entity.playIdle();
-      entity.setNPCTexture();
+      // console.log('Acquired entity', entity.data?.name);
+      // entity.playIdle();
+      // entity.setNPCTexture();
 
-      this.entities[spawn.spawnId] = entity;
+      // this.entities[spawn.spawnId] = entity;
       // remove from queue once we've successfully instantiated it
       this.spawnQueue.delete(spawn);
     }
     // re-queue any that we want to retry
-    for (const retryId of retried) {
-      const spawn = this.spawns[retryId];
-      if (spawn) this.spawnQueue.add(spawn);
-    }
+    // for (const retryId of retried) {
+    //   const spawn = this.spawns[retryId];
+    //   if (spawn) this.spawnQueue.add(spawn);
+    // }
 
     // free any entities that moved out of range, and re-add their spawns
-    for (const sidStr in this.entities) {
-      const sid = Number(sidStr);
-      if (!nearbySpawnIds.includes(sid)) {
-        const ent   = this.entities[sid];
-        const spawn = this.spawns[sid];
-        console.log('Freeing entity', ent.data?.name);
+    // for (const sidStr in this.entities) {
+    //   const sid = Number(sidStr);
+    //   if (!nearbySpawnIds.includes(sid)) {
+    //     const ent   = this.entities[sid];
+    //     const spawn = this.spawns[sid];
+    //     console.log('Freeing entity', ent.data?.name);
 
-        ent.getNode()?.queue_free();
-        delete this.entities[sid];
-        this.grid.removeSpawn(spawn);
+    //     ent.getNode()?.queue_free();
+    //     delete this.entities[sid];
+    //     this.grid.removeSpawn(spawn);
 
-        this.AddSpawn(spawn);
-      }
-    }
+    //     this.AddSpawn(spawn);
+    //   }
+    // }
   }
 
-  AddSpawn(spawn: Spawn) {
+  async AddSpawn(spawn: Spawn) {
     // Filter for dev
-    //if (!spawn.name.includes("Guard")) return;
-    this.loadedPromise?.then(() => {
-      console.log('Adding spawn', spawn.spawnId, spawn.name);
-      this.spawns[spawn.spawnId] = spawn;
-      this.grid.addSpawn(spawn);
-      this.spawnQueue.add(spawn);
+    if (!spawn.name.includes("Guard")) return;
+    console.log('Adding spawn', spawn.spawnId, spawn.name, {
+      x: spawn.x,
+      y: spawn.y,
+      z: spawn.z,
+      cellX: spawn.cellX,
+      cellY: spawn.cellY,
+      cellZ: spawn.cellZ,
     });
+    this.spawns[spawn.spawnId] = spawn;
+    this.grid.addSpawn(spawn);
+
+    const entity = await this.actorPool!.getInstance(spawn, this.scene!);
+    if (!entity) {
+      console.error("Failed to acquire entity for spawn", spawn.spawnId);
+      return;
+    }
+    //entity.parent = this.entityContainer!;
+    entity.position = new BABYLON.Vector3(-spawn.y, spawn.z, spawn.x);
+    entity.name = spawn.name;
+    //entity.scaling.setAll(10);
+    //entity.parent = this.entityContainer!;
+    //if (!spawn.name.includes("Guard")) return;
+    // this.loadedPromise?.then(() => {
+    //   console.log('Adding spawn', spawn.spawnId, spawn.name);
+    //   this.spawns[spawn.spawnId] = spawn;
+    //   this.grid.addSpawn(spawn);
+    //   this.spawnQueue.add(spawn);
+    // });
   }
 
   UpdateSpawnPosition(sp: EntityPositionUpdate) {
     // Disable this for NPC for now, work on it later
-
+    return;
     const sid = sp.spawnId;
     const spawn = this.spawns[sid];
     const entity = this.entities[sid];
@@ -202,14 +213,14 @@ export default class EntityPool {
     }
 
     // update visual
-    if (entity && entity.getNode() && entity.data) {
-      // entity.data.x = -spawn.x;
-      // entity.data.y = spawn.z;
-      // entity.data.z = spawn.y;
-      const node = entity.getNode()!;
-      // node.rotate_y(sp.heading * (360 / 512));
-      node.global_position = new Vector3(-spawn.x, spawn.z, spawn.y);
-    }
+    // if (entity && entity.getNode() && entity.data) {
+    //   // entity.data.x = -spawn.x;
+    //   // entity.data.y = spawn.z;
+    //   // entity.data.z = spawn.y;
+    //   const node = entity.getNode()!;
+    //   // node.rotate_y(sp.heading * (360 / 512));
+    //   node.global_position = new Vector3(-spawn.x, spawn.z, spawn.y);
+    // }
   }
 
   PlayAnimation(anim: EntityAnimation) {
@@ -219,40 +230,4 @@ export default class EntityPool {
     e.playAnimation(anim.animation as unknown as string);
   }
 
-  mouseEvent(event: InputEvent) {
-    if (
-      event instanceof InputEventMouseButton &&
-      event.button_index === MouseButton.MOUSE_BUTTON_LEFT &&
-      event.pressed
-    ) {
-      const cam = this.parent.get_viewport().get_camera_3d();
-      if (!cam) return;
-
-      const mp = this.parent.get_viewport().get_mouse_position();
-      const from = cam.project_ray_origin(mp);
-      const dir  = cam.project_ray_normal(mp).normalized();
-      const to   = from.addNoMutate(dir.multiplyScalar(1000));
-
-      const params = new PhysicsRayQueryParameters3D();
-      params.from = from;
-      params.to   = to;
-      params.collision_mask = (1<<1)|(1<<0);
-      params.collide_with_bodies = true;
-      params.collide_with_areas  = false;
-
-      const hit = this.parent.get_world_3d().direct_space_state.intersect_ray(params);
-      if (!hit) return;
-      const collider = hit.get("collider") as StaticBody3D | undefined;
-      if (collider?.get_parent() === this.entityObjectContainer) {
-        this.handleEntityClick(collider);
-      }
-    }
-  }
-
-  private handleEntityClick(node: StaticBody3D) {
-    const sid = node.get_meta("spawnId");
-    console.log('Clicked spawn', sid);
-    if (!Player.instance) return;
-    Player.instance.Target = this.entities[sid].data;
-  }
 }
