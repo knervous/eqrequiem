@@ -433,11 +433,11 @@ export default class Player extends AssetContainer {
     this.mesh.id = "Player";
     this.mesh.name = player.name;
     console.log("Player xyz", player.x, player.y, player.z);
-    this.mesh.position = new BABYLON.Vector3(
-      (player.x ?? 0) * -1,
-      player.z ?? 5,
-      player.y ?? 0,
-    );
+    // this.mesh.position = new BABYLON.Vector3(
+    //   (player.x ?? 0) * -1,
+    //   player.z ?? 5,
+    //   player.y ?? 0,
+    // );
     this.mesh.position = new BABYLON.Vector3(0, 15, 0);
     if (this.usePhysics) {
       this.mesh.scaling.setAll(1.5);
