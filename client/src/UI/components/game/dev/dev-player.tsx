@@ -36,16 +36,13 @@ export const DevPlayer: React.FC = () => {
   const toggleCollision = (e: React.ChangeEvent<HTMLInputElement>) => {
     const checked = e.target.checked;
     setCollision(checked);
-    player.setUseCollision(checked);
+    player.setCollision(checked);
   };
 
   const toggleGravity = (e: React.ChangeEvent<HTMLInputElement>) => {
     const checked = e.target.checked;
     setGravity(checked);
-    if (player?.playerMovement) {
-      player.playerMovement.gravity = checked;
-
-    }
+    player.setGravity(checked);
   };
 
   return (

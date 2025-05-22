@@ -3,8 +3,6 @@ import { convertDDS2Jimp } from "./image-processing.js";
 import { Jimp } from "jimp";
 import TgaLoader from "tga-js";
 
-const tga = new TgaLoader();
-
 const BUF_BMP = Buffer.from([0x42, 0x4d]); // "BM" file signature
 
 /**
@@ -42,6 +40,8 @@ function convertBGRAToRGBA(imageData, width, height, channels) {
  */
 function isTGA(buf) {
   try {
+    const tga = new TgaLoader();
+
     tga.load(new Uint8Array(buf));
     return tga.header.width > 0 && tga.header.height > 0; // Valid TGA with non-zero dimensions
   } catch (e) {
@@ -68,7 +68,7 @@ export async function convertToWebP(data, name) {
       })
         .webp({ quality: 80 })
         .toBuffer();
-      return webpBuffer.buffer;
+      return webpBuffer;
     } catch (e) {
       console.warn("Error processing BMP:", e, name);
       return null;
@@ -76,6 +76,8 @@ export async function convertToWebP(data, name) {
   } else if (isTGA(data)) {
     // Handle TGA
     try {
+      const tga = new TgaLoader();
+
       tga.load(new Uint8Array(data));
       const {
         header: { width, height, pixelDepth },
@@ -95,7 +97,7 @@ export async function convertToWebP(data, name) {
         .webp({ quality: 80 })
         .flip()
         .toBuffer();
-      return webpBuffer.buffer;
+      return webpBuffer;
     } catch (e) {
       console.warn("Error processing TGA:", e.message, name);
       return null;
@@ -112,13 +114,16 @@ export async function convertToWebP(data, name) {
     const w = dds.mipmaps[0].width;
     const h = dds.mipmaps[0].height;
     try {
-      const webpBuffer = await sharp(decompressed, {
+      const pixelCount = w * h * 4;
+      const imgBuffer = Buffer.from(decompressed.slice(0, pixelCount));
+
+      const webpBuffer = await sharp(imgBuffer, {
         raw: { width: w, height: h, channels: 4 },
       })
         .flip() // Flip Y-axis
         .webp({ quality: 80 })
         .toBuffer();
-      return webpBuffer.buffer;
+      return webpBuffer;
     } catch (e) {
       console.warn("Error processing DDS to WebP:", e, name);
       return null;

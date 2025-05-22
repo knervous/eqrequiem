@@ -1,6 +1,7 @@
 import BABYLON from "@bjs";
 import type * as BJS from "@babylonjs/core";
 import type { ZoneManager } from "@game/Zone/zone-manager";
+import { GradientMaterial } from '@babylonjs/materials/gradient/gradientMaterial';
 
 const skyUrl = "https://eqrequiem.blob.core.windows.net/assets/sky/";
 
@@ -170,17 +171,47 @@ export default class DayNightSkyManager {
     );
     this.#domeRoot.name = "__sky__";
 
+
     // Get child meshes (cloud and upper layers)
     const [cloudLayer, upperLayer] = this.#domeRoot.getChildMeshes();
+
+
+
+    const multimat = new BABYLON.MultiMaterial('multi', this.#scene);
+    const origMaterial = cloudLayer.material;
+  
+    const gradientMaterial = new GradientMaterial('grad', this.#scene);
+    gradientMaterial.topColor = new BABYLON.Color3(119 / 255, 46 / 255, 146 / 255);
+    gradientMaterial.bottomColor = new BABYLON.Color3(190 / 255, 26 / 255, 22 / 255);// 
+    gradientMaterial.offset = 0;
+    gradientMaterial.smoothness = 1;
+    gradientMaterial.scale = 5;
+    gradientMaterial.alpha = 1;
+    gradientMaterial.disableLighting = true;
+    gradientMaterial.topColorAlpha = 0.1;
+    gradientMaterial.bottomColorAlpha = 0.6;
+    gradientMaterial.transparencyMode = BABYLON.Material.MATERIAL_ALPHABLEND;
+    gradientMaterial.alphaMode = BABYLON.Engine.ALPHA_COMBINE;
+  
+    cloudLayer.material = multimat;
+  
+    multimat.subMaterials.push(origMaterial);
+    multimat.subMaterials.push(gradientMaterial);
+  
+    const verticesCount = cloudLayer.getTotalVertices();
+    const indc = cloudLayer.getTotalIndices();
+    new BABYLON.SubMesh(0, 0, verticesCount, 0, indc, cloudLayer);
+    new BABYLON.SubMesh(1, 0, verticesCount, 0, indc, cloudLayer);
 
     // Configure materials
     this.#layer1Mat = cloudLayer.material;
     this.#layer2Mat = upperLayer.material;
 
     [this.#layer1Mat, this.#layer2Mat].forEach((mat, i) => {
-      mat.transparencyMode = BABYLON.Material.MATERIAL_ALPHABLEND;
-      mat.alpha = 0.5;
+      // mat.transparencyMode = BABYLON.Material.MATERIAL_OPAQUE;
+      // mat.alpha =1.0;
       mat.emissiveColor = new BABYLON.Color3(1, 0.8, 0.7);
+      console.log('Sky mat info', mat, i);
       mat.backFaceCulling = false;
       mat.zOffset = i; // Layer order
     });
@@ -260,11 +291,13 @@ export default class DayNightSkyManager {
   }
 
   setTimeOfDay(time) {
+
     this.timeOfDay = ((time % 24) + 24) % 24;
     this.#updateSunAndSky();
   }
 
   #updateSkyDomeColor() {
+    if (!this.#layer1Mat || !this.#layer2Mat) return;
     const t = ((this.timeOfDay % 24) + 24) % 24;
     const h0 = Math.floor(t);
     const h1 = (h0 + 1) % 24;

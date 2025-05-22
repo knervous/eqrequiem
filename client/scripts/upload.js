@@ -28,7 +28,7 @@ const rootFolder = "eqrequiem";
 const rootPath = process.argv[2] || process.cwd();
 
 const zippedPrefixes = ["eqrequiem/textures"];
-const allowedFolders = new Set([
+let allowedFolders = new Set([
   "data",
   "models",
   "objects",
@@ -37,9 +37,13 @@ const allowedFolders = new Set([
   "zones",
   "sounds",
 ]);
+
+const onlyTextures = process.argv[3] && process.argv[3] === 'textures';
+
+
 const allowedRootFolders = new Set(["uifiles", "eqrequiem"]);
 const allowedRootFiles = new Set(["eqstr_us.txt"]);
-const allowedExtensions = new Set([
+let allowedExtensions = new Set([
   ".txt",
   ".json",
   ".glb",
@@ -50,7 +54,19 @@ const allowedExtensions = new Set([
   ".tga",
 ]);
 
-const limit = pLimit(500);
+if (onlyTextures) {
+  console.log('Only textures')
+  allowedFolders = new Set([
+    "textures",
+  ]);
+  allowedExtensions = new Set([
+    ".dds",
+    ".tga",
+  ]);
+}
+
+const limit = pLimit(20);
+const tasks = [];
 
 function getContentType(fileName) {
   if (fileName.endsWith(".json")) return "application/json";
@@ -121,7 +137,7 @@ async function convertToWebPFile(inputPath, outputDir) {
     outputDir,
     `${basename(inputPath, extname(inputPath))}.webp`,
   );
-  await writeFile(outputPath, Buffer.from(webp));
+  await writeFile(outputPath, webp);
   return outputPath;
 }
 
@@ -268,7 +284,6 @@ async function processDirectory(
     return;
   }
   const entries = await readdir(dirPath, { withFileTypes: true });
-  const tasks = [];
 
   for (const entry of entries) {
     if (entry.name === ".DS_Store") continue;
@@ -365,7 +380,6 @@ async function uploadFilesToAzure() {
     cred,
   );
   const container = service.getContainerClient(containerName);
-  const tasks = [];
 
   const rootName = basename(rootPath);
   const onlyRoot = process.argv[3] && process.argv[3] === 'skip';

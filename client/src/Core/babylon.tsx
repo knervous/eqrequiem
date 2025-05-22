@@ -46,7 +46,7 @@ export const BabylonWrapper = ({ splash }) => {
       }
       // Otherwise, forward the event to the canvas
       if (canvasRef.current) {
-        if (e.key === "F12") { 
+        if (e.key === "F12" || (e.metaKey && e.altKey)) { 
           return;
         }
         // Create a new event of the same type and dispatch it on the canvas
@@ -54,6 +54,15 @@ export const BabylonWrapper = ({ splash }) => {
         newEvent.handled = true;
         canvasRef.current.dispatchEvent(newEvent);
         // Optionally prevent default behavior so the event isn't processed twice
+        if (e.type === "mousedown") {
+          console.log('Click here', e.type);
+
+          if (![document.body, canvasRef.current].includes(document.activeElement)) {
+            console.log('Click wanna focus', e.type);
+            document.body.focus();
+            return;
+          }
+        }
         e.preventDefault();
       }
     };

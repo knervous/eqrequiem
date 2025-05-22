@@ -72,7 +72,6 @@ export default defineConfig({
           classnames: path.resolve(__dirname, "./classnames.js"),
         }
         : {}),
-      godot: path.resolve(__dirname, "./src/godot-module.ts"),
       "@game": path.resolve(__dirname, "src/Game"),
       "@eqmessage": path.resolve(__dirname, "src/Game/Net/internal/api/capnp"),
       "@@opcode": path.resolve(__dirname, "src/Game/Net/opcodes.ts"),

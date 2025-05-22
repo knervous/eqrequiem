@@ -159,11 +159,8 @@ export default class EntityPool {
     });
     this.spawns[spawn.spawnId] = spawn;
     this.grid.addSpawn(spawn);
-    const race = spawn?.race ?? 1;
-    const raceDataEntry = RACE_DATA[race];
-    const model = raceDataEntry[spawn.gender ?? 0] || raceDataEntry[2];
-    console.log('Need model', model);
-    const entity = await this.actorPool!.getInstance(model.toLowerCase(), this.scene!);
+
+    const entity = await this.actorPool!.getInstance(spawn, this.scene!);
     if (!entity) {
       console.error("Failed to acquire entity for spawn", spawn.spawnId);
       return;

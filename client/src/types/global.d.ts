@@ -4,14 +4,9 @@ declare namespace globalThis {
 	function callUnityMethod(type: number, payload: string) : string;
 	/**
 	 * Request a refresh callback request, the `callback` will be called every frame
-	 * @param callback The function to call when it's time to update your animation for the next repaint. The callback function is passed one single argument, a number similar to the one returned by `godot.OS.get_system_time_msecs()`, indicating the point in time when requestAnimationFrame() starts to execute callback functions.
 	 */
 	function requestAnimationFrame(callback: (time_stamp: number) => void): FrameRequetID;
 
-	/**
-	 * Cancel an frame request previously scheduled through a call to `godot.requestAnimationFrame()`.
-	 * @param request_id The ID value returned by the call to `godot.requestAnimationFrame()` that requested the callback.
-	 */
 	function cancelAnimationFrame(request_id: FrameRequetID): void;
 
 	/**
@@ -45,19 +40,6 @@ declare namespace globalThis {
 		LOG_OBJECT_TO_JSON: boolean;
 	};
 
-	/**
-	 * A worker is an object created using a constructor of `Worker` that runs a named JavaScript file â this file contains the code that will run in the worker thread;
-	 *
-	 * Workers run in another global context that is different from the current context.
-	 *
-	 * You can run whatever code you like inside the worker thread. All of the godot API are available inside workers.
-	 *
-	 * Data is sent between workers and the main thread via a system of messages â both sides send their messages using the `postMessage()` method, and respond to messages via the `onmessage` event handler (the message is contained within the Message event's data attribute.) The data is copied rather than shared.
-	 *
-	 * You can **transfer** value with `Worker.abandonValue` and `Worker.adoptValue`. After a value is abandoned you cannot using it anymore in the context.
-	 *
-	 * Workers may, in turn, spawn new workers, all sub-worker will be stopped when the host context stop.
-	 */
 	class Worker {
 
 	  /**
@@ -71,11 +53,6 @@ declare namespace globalThis {
 		 */
 	  onmessage(message: Event): void;
 
-	  /**
-		 * Sends a message to the worker's inner scope. This accepts a single parameter, which is the data to send to the worker.
-		 * @param message The object to deliver to the worker; this will be in the data field in the event delivered to the `onmessage` handler.
-		 * @note The data cannot be instance of `godot.Object` or any other JavaScript object contains functions.
-		 */
 	  postMessage(message: Event): void;
 
 	  /**

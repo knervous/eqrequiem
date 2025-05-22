@@ -87,7 +87,7 @@ class FileSystemBindings {
   private fetchPromises: Map<string, Promise<Uint8Array | null>> = new Map(); // Cache for pending fetch promises
   private unzipPromises: Map<string, Promise<void>> = new Map(); // New: Track ongoing unzip operations
   private models: Models = {};
-  private rootFileSystemHandle: FileSystemHandle | null = null;
+  public rootFileSystemHandle: FileSystemHandle | null = null;
   private queue: number[] = [];
   private candidates: number[][] = [];
   private wrappedWorker: Comlink.Remote<unknown> | null = null;

@@ -33,6 +33,7 @@ export default class Player extends AssetContainer {
   private readonly heightChangeThreshold: number = 0.01; // Tolerance for height matching
   private readonly maxStepHeight: number = 2.0; // Max height to step over (e.g., 0.3 meters)
   private readonly stepHeightTolerance: number = 0.01; // Tolerance for height comparisons
+  private originalCollisionFilter = 0;
 
   private animations: Record<string, BJS.AnimationGroup> = {};
   private physicsBody: BJS.PhysicsBody | null = null;
@@ -145,6 +146,18 @@ export default class Player extends AssetContainer {
     this.playerCamera.inputMouseMotion(x, y);
   }
 
+  public setGravity(on: boolean) {
+    if (this.physicsBody) {
+      this.physicsBody.setGravityFactor(on ? 1 : 0);
+    }
+  }
+
+  public setCollision(on: boolean) {
+    if (this.physicsBody?.shape) {
+      this.physicsBody.shape.filterCollideMask = on ? this.originalCollisionFilter : 8;
+    }
+  }
+
   public tick() {
     const delta =
       (this.gameManager.scene?.getEngine().getDeltaTime() ?? 0) / 1000;
@@ -153,12 +166,6 @@ export default class Player extends AssetContainer {
 
   public input_pan(delta: number) {
     this.playerCamera.adjustCameraDistance(delta < 0 ? -1 : 1);
-  }
-
-  public setUseCollision(val: boolean) {
-    if (this.mesh) {
-      this.mesh.checkCollisions = val;
-    }
   }
 
   private get headVariation(): number {
@@ -266,6 +273,7 @@ export default class Player extends AssetContainer {
           capsuleRadius,
           this.gameManager.scene,
         );
+        this.originalCollisionFilter = selectedShape.filterCollideMask;
         selectedShape.material.friction = 0.0;
         selectedShape.material.restitution = 0.0;
         this.capsuleShapePool.set(effectiveHeight, selectedShape);

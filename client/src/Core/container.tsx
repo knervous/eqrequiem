@@ -4,7 +4,6 @@ import { Box } from "@mui/material";
 import { MainProvider, useMainContext } from "../components/context.tsx";
 import { StatusDialog } from "../components/dialogs/status-dialog.tsx";
 
-// import GodotPlayer from "./player.tsx";
 import BabylonWrapper from "./babylon.tsx";
 import { SplashScreen } from "./splash.tsx";
 import { USE_SAGE } from "@game/Constants/constants.ts";

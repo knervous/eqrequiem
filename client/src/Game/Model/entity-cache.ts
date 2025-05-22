@@ -4,6 +4,8 @@ import type * as BJS from "@babylonjs/core";
 
 import { FileSystem } from "@game/FileSystem/filesystem";
 import { AnimationDefinitions } from "@game/Animation/animation-constants";
+import { Spawn } from "@game/Net/internal/api/capnp/common";
+import RACE_DATA from "@game/Constants/race-data";
 
 type ModelKey = string;
 
@@ -53,7 +55,10 @@ export default class EntityCache {
     return this.containers[model]!;
   }
 
-  async getInstance(model: ModelKey, scene: BJS.Scene) : (Promise<BJS.Mesh | null>) {
+  async getInstance(spawn: Spawn, scene: BJS.Scene) : (Promise<BJS.Mesh | null>) {
+    const race = spawn?.race ?? 1;
+    const raceDataEntry = RACE_DATA[race];
+    const model = raceDataEntry[spawn.gender ?? 0] || raceDataEntry[2];
     const container = await this.getContainer(model, scene);
     if (!container) { return null; }
     //console.log('Cont', container);

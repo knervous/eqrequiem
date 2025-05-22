@@ -109,44 +109,44 @@ export class LightManager {
     // console.log('[Performance] LightManager.updateLights, %c', 'green', next);
   }
 }
-BABYLON.Effect.IncludesShadersStore.lightFragment = `
-#ifdef LIGHT{X}
-    // --- Pre-lighting for point lights only ---
-    preInfo = computePointAndSpotPreLightingInfo(
-        light{X}.vLightData,
-        viewDirectionW,
-        normalW
-    );
+// BABYLON.Effect.IncludesShadersStore.lightFragment = `
+// #ifdef LIGHT{X}
+//     // --- Pre-lighting for point lights only ---
+//     preInfo = computePointAndSpotPreLightingInfo(
+//         light{X}.vLightData,
+//         viewDirectionW,
+//         normalW
+//     );
 
-    // --- GLTF distance falloff (soft, physically plausible) ---
-    preInfo.attenuation = computeDistanceLightFalloff_GLTF(
-        preInfo.lightDistanceSquared,
-        light{X}.vLightFalloff.y
-    );
+//     // --- GLTF distance falloff (soft, physically plausible) ---
+//     preInfo.attenuation = computeDistanceLightFalloff_GLTF(
+//         preInfo.lightDistanceSquared,
+//         light{X}.vLightFalloff.y
+//     );
 
-    // --- Tweak roughness based on light properties ---
-    preInfo.roughness = adjustRoughnessFromLightProperties(
-        roughness,
-        light{X}.vLightSpecular.a,
-        preInfo.lightDistance
-    );
+//     // --- Tweak roughness based on light properties ---
+//     preInfo.roughness = adjustRoughnessFromLightProperties(
+//         roughness,
+//         light{X}.vLightSpecular.a,
+//         preInfo.lightDistance
+//     );
 
-    // --- Compute diffuse & specular contributions ---
-    info.diffuse = computeDiffuseLighting(
-        preInfo,
-        light{X}.vLightDiffuse.rgb
-    );
-    info.specular = computeSpecularLighting(
-        preInfo,
-        normalW,
-        clearcoatOut.specularEnvironmentR0,
-        specularEnvironmentR90,
-        AARoughnessFactors.x,
-        light{X}.vLightDiffuse.rgb
-    );
+//     // --- Compute diffuse & specular contributions ---
+//     info.diffuse = computeDiffuseLighting(
+//         preInfo,
+//         light{X}.vLightDiffuse.rgb
+//     );
+//     info.specular = computeSpecularLighting(
+//         preInfo,
+//         normalW,
+//         clearcoatOut.specularEnvironmentR0,
+//         specularEnvironmentR90,
+//         AARoughnessFactors.x,
+//         light{X}.vLightDiffuse.rgb
+//     );
 
-    // --- Accumulate into the final base colors (no manual clamp!) ---
-    diffuseBase  += info.diffuse;
-    specularBase += info.specular;
-#endif
-`;
+//     // --- Accumulate into the final base colors (no manual clamp!) ---
+//     diffuseBase  += info.diffuse;
+//     specularBase += info.specular;
+// #endif
+// `;

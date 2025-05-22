@@ -239,11 +239,9 @@ export class EqSocket {
 
   private async sendDatagram(buf: Uint8Array) {
     if (!this.datagramWriter) return;
-    console.log('Call send datagram with opcode', buf[0], buf[1],  buf[2], buf[3]);
     this.writeQueue = this.writeQueue.then(() =>
       this.datagramWriter!.write(buf),
     );
-    console.log('writequeue', this.writeQueue);
     return this.writeQueue;
   }
 

@@ -36,7 +36,6 @@ export class PlayerCamera {
     this.cameraLight.intensity = 25.0;
     this.cameraLight.specular = new BABYLON.Color3(0, 0, 0); // No specular
     this.cameraLight.range = 100.0;
-    // Note: Babylon.js lights don't use layers like Godot; use includeOnlyMeshes if needed
 
     this.bindInputEvents();
     document.addEventListener(

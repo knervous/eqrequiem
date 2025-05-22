@@ -4,8 +4,9 @@ interface BabylonExportObject { initialize(): Promise<void> }
 
 type CoreAPI   = typeof import("@babylonjs/core");
 type LoaderAPI = typeof import("@babylonjs/loaders/glTF/2.0");
+type MaterialsAPI = typeof import("@babylonjs/materials");
 // 2) Union them into one big API
-export type BabylonAPI = CoreAPI & LoaderAPI & { initialize: () => Promise<void> };
+export type BabylonAPI = MaterialsAPI & CoreAPI & LoaderAPI & { initialize: () => Promise<void> };
 // Create the export object
 const exportObject: BabylonAPI = {
   async initialize() {
@@ -27,6 +28,8 @@ const exportObject: BabylonAPI = {
     importPromises.push(import('@babylonjs/core/Helpers/sceneHelpers'));
     importPromises.push(import('@babylonjs/core/Rendering/edgesRenderer'));
 
+    // Material exports
+    addImport(import('@babylonjs/materials/gradient/gradientMaterial'));
     // BJS exports
     addImport(import('@babylonjs/core/Materials/PBR/pbrMaterial'));
     addImport(import('@babylonjs/core/Meshes/subMesh'));
