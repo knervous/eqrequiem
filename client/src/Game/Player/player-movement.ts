@@ -16,7 +16,7 @@ export class PlayerMovement {
   private player: Player;
   private scene: BJS.Scene;
   private physicsBody: BJS.PhysicsBody;
-  public moveSpeed: number = 20;
+  public moveSpeed: number = import.meta.env.VITE_LOCAL_DEV ? 50 : 20;
   public turnSpeed: number = 1.5;
   public gravity: boolean = true;
   public jumpImpulseStrength: number = 15; // Jump impulse strength

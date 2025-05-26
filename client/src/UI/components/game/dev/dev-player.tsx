@@ -16,7 +16,7 @@ import {
 
 export const DevPlayer: React.FC = () => {
   const player = Player.instance!;
-  const [speed, setSpeed] = useState(player.playerMovement?.moveSpeed ?? 20);
+  const [speed, setSpeed] = useState(player.playerMovement?.moveSpeed ?? import.meta.env.VITE_LOCAL_DEV ? 50 : 20);
   const [anim, setAnim] = useState(player.currentAnimation || '');
   const [collision, setCollision] = useState(true);
   const [gravity, setGravity] = useState(true);

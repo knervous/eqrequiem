@@ -32,6 +32,8 @@ const exportObject: BabylonAPI = {
     addImport(import('@babylonjs/materials/gradient/gradientMaterial'));
     // BJS exports
     addImport(import('@babylonjs/core/Materials/PBR/pbrMaterial'));
+    addImport(import('@babylonjs/core/Materials/Textures/rawTexture'));
+    addImport(import('@babylonjs/core/Materials/shaderMaterial'));
     addImport(import('@babylonjs/core/Meshes/subMesh'));
     addImport(import('@babylonjs/core/Maths/math.vector'));
     addImport(import('@babylonjs/core/Maths/math.color'));
@@ -63,6 +65,7 @@ const exportObject: BabylonAPI = {
     addImport(import('@babylonjs/core/Misc/gradients'));
     addImport(import('@babylonjs/core/Layers/glowLayer'));
     addImport(import('@babylonjs/core/Materials/material'));
+    addImport(import('@babylonjs/core/Materials/Node'));
     addImport(import('@babylonjs/core/Materials/multiMaterial'));
     addImport(import('@babylonjs/core/Meshes/abstractMesh'));
     addImport(import('@babylonjs/core/Lights/pointLight'));
@@ -83,7 +86,10 @@ const exportObject: BabylonAPI = {
     addImport(import('@babylonjs/core/Materials/effect'));
     addImport(import('@babylonjs/core/Events/keyboardEvents'));
     addImport(import('@babylonjs/core/Debug/rayHelper'));
+    addImport(import('@babylonjs/core/Animations/animationRange'));
     addImport(import('@babylonjs/core/Engines/constants'));
+    addImport(import('@babylonjs/core/BakedVertexAnimation/vertexAnimationBaker'));
+    addImport(import('@babylonjs/core/BakedVertexAnimation/bakedVertexAnimationManager'));
 
     // Ray
     addImport(import('@babylonjs/core/Culling/ray'));

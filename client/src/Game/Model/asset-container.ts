@@ -72,13 +72,14 @@ export default class AssetContainer {
         true, // dispose source meshes
         true, // allow 32-bit indices
         undefined, // mesh subclass
-        true, // merge materials
+        false, // merge materials
         true, // multi-material
       );
       if (!mergedMesh) {
         throw new Error("MergeMeshes returned null");
       }
       mergedMesh.name = `merged_${container.rootNodes[0]?.name || "unknown"}`;
+
       return mergedMesh;
     } catch (e) {
       console.warn(`[ObjectCache] Warning merging object ${container.rootNodes[0]?.name}:`, e);

@@ -36,9 +36,9 @@ let allowedFolders = new Set([
   "textures",
   "zones",
   "sounds",
+  "vat",
 ]);
 
-const onlyTextures = process.argv[3] && process.argv[3] === 'textures';
 
 
 const allowedRootFolders = new Set(["uifiles", "eqrequiem"]);
@@ -52,8 +52,10 @@ let allowedExtensions = new Set([
   ".wav",
   ".mid",
   ".tga",
+  ".bin"
 ]);
 
+const onlyTextures = process.argv[3] && process.argv[3] === 'textures';
 if (onlyTextures) {
   console.log('Only textures')
   allowedFolders = new Set([
@@ -62,6 +64,17 @@ if (onlyTextures) {
   allowedExtensions = new Set([
     ".dds",
     ".tga",
+  ]);
+}
+
+const onlyVat = process.argv[3] && process.argv[3] === 'vat';
+if (onlyVat) {
+  console.log('Only vat')
+  allowedFolders = new Set([
+    "vat",
+  ]);
+  allowedExtensions = new Set([
+    ".bin",
   ]);
 }
 
@@ -249,7 +262,7 @@ async function processFile(fullPath, containerClient, relativeKey, prefix) {
       return;
     }
   } else if (prefix) {
-    if (ext === ".glb") {
+    if (ext === ".glb" || ext === '.bin') {
       targetName += ".gz";
       src = createReadStream(fullPath).pipe(createGzip());
     } else {
@@ -273,6 +286,9 @@ async function processDirectory(
   relativeBase,
   prefix,
 ) {
+  if (onlyVat && !dirPath.includes("vat")) {
+    //return;
+  }
   const relativeRoot = `${rootFolder}/${relativeBase}`;
   if (
     zippedPrefixes.some(

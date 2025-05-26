@@ -4,6 +4,8 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 
 const isLocalDev = process.env.VITE_LOCAL_DEV === "true";
+console.log('Local dev mode:', isLocalDev);
+console.log('Sage dev mode:', process.env.VITE_USE_SAGE === "true");
 
 export default defineConfig({
   base: "./",

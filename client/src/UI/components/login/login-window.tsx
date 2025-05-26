@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect } from "react";
+import BABYLON from "@bjs";
 import { useNavigate } from "react-router-dom";
 import { Box, Button, List, ListItem, Stack, Typography } from "@mui/material";
 import { WorldSocket } from "../../net/instances";
@@ -11,6 +12,7 @@ import GameManager from "@game/Manager/game-manager";
 import { USE_SAGE } from "@game/Constants/constants";
 import {
   getRootFiles,
+  getEQSageDir,
   getEQFileExists,
   getFilesRecursively,
 } from "sage-core/util/fileHandler";
@@ -326,19 +328,29 @@ export const LoginWindowComponent: React.FC = () => {
             onClick={async () => {
 
               // sky
-              console.log('Processing sky');
-              const skyFiles = ["sky.s3d"];
-              await fsBindings.processFiles('sky', skyFiles);
+              // console.log('Processing sky');
+              // const skyFiles = ["sky.s3d"];
+              // await fsBindings.processFiles('sky', skyFiles);
 
-              //load2
-              console.log('Processing load2');
-              const load2Files = ["load2.s3d","load2_obj.s3d"];
-              await fsBindings.processFiles('load2', load2Files);
+              // //load2
+              // console.log('Processing load2');
+              // const load2Files = ["load2.s3d","load2_obj.s3d"];
+              // await fsBindings.processFiles('load2', load2Files);
               // // First do global
               // console.log('Processing global');
               // const globalCharFiles = ["global_chr.s3d", "global3_chr.s3d", "global4_chr.s3d"];
               // await fsBindings.processFiles('global_chr', globalCharFiles);
 
+              // Armor packs for velious
+              console.log('Processing global armor packs');
+              let start = 17;
+              const globalArmorFiles: string[] = [];
+              while (start <= 24) {
+                globalArmorFiles.push(`global${start}_amr.s3d`);
+                start++;
+              }
+              await fsBindings.processFiles('global17_amr', globalArmorFiles);
+              return;
               // //Items
               // console.log('Processing items');
               // const itemFiles = ["gequip.s3d", "gequip2.s3d"];
