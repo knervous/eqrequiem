@@ -59,6 +59,7 @@ export default class ObjectCache {
       const hasAnimations = animationGroups.length > 0;
       let vatData: Float32Array | null = null;
       const animationRanges: BJS.AnimationRange[] = [];
+      result.rootNodes[0].setEnabled(false);
       if (hasAnimations && skeletons.length) {
         for (const ag of animationGroups) {
           const animationRange = new BABYLON.AnimationRange(ag.name, ag.from, ag.to);
@@ -72,6 +73,8 @@ export default class ObjectCache {
           vatData = new Float32Array(vatDataBytes);
         }
       }
+      result.rootNodes[0].setEnabled(true);
+
       this.dataContainers[model] = Promise.resolve({
         container: result,
         vatData,

@@ -7,6 +7,8 @@ import { EntityAnimation, EntityPositionUpdate, Spawn } from "@game/Net/internal
 import { Grid } from "./zone-grid";
 import EntityCache from "@game/Model/entity-cache";
 import { Entity } from "@game/Model/entity";
+import { capnpToPlainObject } from "@game/Constants/util";
+import { AnimationDefinitions } from "@game/Animation/animation-constants";
 
 export default class EntityPool {
   parent: BJS.Node;
@@ -44,7 +46,7 @@ export default class EntityPool {
 
   async AddSpawn(spawn: Spawn) {
     // Filter for dev
-    if (!spawn.name.includes("Guard")) return;
+    if (!spawn.name.includes("Guard") && !spawn.name.includes('Tubal')) return;
     console.log('Adding spawn', spawn.spawnId, spawn.name, {
       x: spawn.x,
       y: spawn.y,
@@ -61,6 +63,7 @@ export default class EntityPool {
       console.error("Failed to acquire entity for spawn", spawn.spawnId);
       return;
     }
+    entity.playAnimation(AnimationDefinitions.Idle2, true);
     this.entities[spawn.spawnId] = entity;
 
   }

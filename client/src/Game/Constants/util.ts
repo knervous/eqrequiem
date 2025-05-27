@@ -4,6 +4,42 @@ import { Classes, Deity, Races, StartingZones } from './constants';
 
 export const sleep = (ms) => new Promise((res) => setTimeout(res, ms));
 
+export function capnpToPlainObject(obj: any): any {
+  // Handle null or non-object types
+  if (obj === null || typeof obj !== 'object') {
+    return obj;
+  }
+
+  // Handle arrays/lists
+  if (Array.isArray(obj) || obj._capnp?.type === 'list') {
+    return obj.map((item: any) => capnpToPlainObject(item));
+  }
+
+  // Handle Cap'n Proto structs
+  const plainObj: any = {};
+  const proto = Object.getPrototypeOf(obj);
+  const properties = Object.getOwnPropertyNames(proto).filter(
+    (key) => {
+      const descriptor = Object.getOwnPropertyDescriptor(proto, key);
+      // Only include getter properties, exclude methods and internal Cap'n Proto fields
+      return descriptor?.get && typeof obj[key] !== 'function' && !key.startsWith('_');
+    },
+  );
+
+  for (const key of properties) {
+    try {
+      const value = obj[key];
+      // Recursively convert nested objects
+      plainObj[key] = capnpToPlainObject(value);
+    } catch (e) {
+      console.warn(`Failed to access property ${key}:`, e);
+      plainObj[key] = null; // Or handle error as needed
+    }
+  }
+
+  return plainObj;
+}
+
 const {
   HUMAN,
   BARBARIAN,

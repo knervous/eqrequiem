@@ -68,6 +68,7 @@ const exportObject: BabylonAPI = {
     addImport(import('@babylonjs/core/Materials/Node'));
     addImport(import('@babylonjs/core/Materials/multiMaterial'));
     addImport(import('@babylonjs/core/Meshes/abstractMesh'));
+    addImport(import('@babylonjs/core/Misc/dataStorage'));
     addImport(import('@babylonjs/core/Lights/pointLight'));
     addImport(import('@babylonjs/core/Lights/hemisphericLight'));
     addImport(import('@babylonjs/core/Lights/directionalLight'));

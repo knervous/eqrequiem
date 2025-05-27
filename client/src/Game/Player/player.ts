@@ -17,7 +17,6 @@ import { zoneData } from "@game/Constants/zone-data";
 import { CLASS_DATA_NAMES } from "@game/Constants/class-data";
 import { FileSystem } from "@game/FileSystem/filesystem";
 import { BabylonTextureCache } from "@game/Model/bjs-texture-cache";
-import { applyNodeMaterialsPerSubmesh } from "@game/Model/node-material";
 
 export default class Player extends AssetContainer {
   public playerMovement: PlayerMovement | null = null;
@@ -438,11 +437,11 @@ export default class Player extends AssetContainer {
 
 
     // Let's try using the atlas
-    const atlasWebp = await FileSystem.getFileBytes('eqrequiem/atlas', `${this.model}.webp`);
-    const atlasJson = await FileSystem.getFileJson('eqrequiem/atlas', `${this.model}.json`);
-    if (atlasWebp && atlasJson) {
-      await this.applyAtlasTexture(atlasWebp, atlasJson);
-    }
+    // const atlasWebp = await FileSystem.getFileBytes('eqrequiem/atlas', `${this.model}.webp`);
+    // const atlasJson = await FileSystem.getFileJson('eqrequiem/atlas', `${this.model}.json`);
+    // console.log('Atlas WebP:', atlasWebp);
+    // console.log('Atlas JSON:', atlasJson);
+   
     console.log("Player xyz", player.x, player.y, player.z);
     // this.mesh.position = new BABYLON.Vector3(
     //   (player.x ?? 0) * -1,
@@ -495,7 +494,6 @@ export default class Player extends AssetContainer {
       this.setupStepClimbing();
       this.playerMovement = new PlayerMovement(this, this.gameManager.scene!);
     }
-    
     createNameplate(
       this.gameManager.scene!,
       this.mesh,
@@ -517,31 +515,6 @@ export default class Player extends AssetContainer {
       });
     }
   }
-  // Atlas texture
-  private async applyAtlasTexture(atlasWebp: ArrayBuffer, atlasJson: any) {
-    if (!this.mesh || !this.mesh.material || !(this.mesh.material instanceof BABYLON.MultiMaterial)) {
-      console.warn("[Player] No valid mesh or MultiMaterial found for atlas texture application");
-      return;
-    }
-    // Create or retrieve cached texture
-    let texture = BabylonTextureCache.get(this.model);
-    if (!texture) {
-      const blob = new Blob([atlasWebp], { type: "image/webp" });
-      const url = URL.createObjectURL(blob);
-      texture = new BABYLON.Texture(
-        url,
-      this.gameManager.scene!,
-      true,
-      false,
-      BABYLON.Texture.TRILINEAR_SAMPLINGMODE,
-      );
-      texture.name = `${this.model}_atlas`;
-      BabylonTextureCache.set(this.model, texture);
-    }
-    applyNodeMaterialsPerSubmesh(this.mesh, atlasJson, texture);
-  }
-
-
 
   /**
    * Animations

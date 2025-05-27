@@ -4,8 +4,15 @@ import type * as BJS from "@babylonjs/core";
 export class BabylonTextureCache {
   static cache = new Map<string, BJS.Texture>();
 
-  static set(name: string, tex: BJS.Texture): void {
+  static async set(name: string, tex: BJS.Texture): Promise<void> {
     BabylonTextureCache.cache.set(name, tex);
+    await new Promise((resolve) => {
+      if (tex!.isReady()) {
+        resolve(null);
+      } else {
+              tex!.onLoadObservable.addOnce(() => resolve(null));
+      }
+    });
   }
 
   static get(name: string): BJS.Texture | undefined {

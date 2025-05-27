@@ -1,7 +1,6 @@
 // src/Game/Model/entity-cache.ts
 import BABYLON from "@bjs";
 import type * as BJS from "@babylonjs/core";
-
 import { FileSystem } from "@game/FileSystem/filesystem";
 import { Spawn } from "@game/Net/internal/api/capnp/common";
 import RACE_DATA from "@game/Constants/race-data";
@@ -14,20 +13,16 @@ export default class EntityCache {
   private physicsBodies: Record<ModelKey, BJS.PhysicsBody[] | null> = {};
   private intervals: NodeJS.Timeout[] = [];
 
-  protected getMergedMesh(container: BJS.AssetContainer): BJS.Mesh | null {
-    const meshes = [] as BJS.Mesh[];
-    for (const mesh of container.rootNodes[0]?.getChildMeshes() ?? []) {
-      if (mesh.getTotalVertices() > 0) {
-        meshes.push(mesh as BJS.Mesh);
-      }
-    }
+  // Merge meshes for the main model
+  protected getMergedMesh(container: BJS.AssetContainer, skeleton: BJS.Skeleton): BJS.Mesh | null {
+    const meshes = container.rootNodes[0]?.getChildMeshes().filter((mesh) => mesh.getTotalVertices() > 0) ?? [];
     if (meshes.length === 0) {
       console.warn(`No valid meshes found in container ${container.rootNodes[0]?.name}`);
       return null;
     }
     try {
       const mergedMesh = BABYLON.Mesh.MergeMeshes(
-        meshes,
+        meshes as BJS.Mesh[],
         true, // dispose source meshes
         true, // allow 32-bit indices
         undefined, // mesh subclass
@@ -38,116 +33,100 @@ export default class EntityCache {
         throw new Error("MergeMeshes returned null");
       }
       mergedMesh.name = `merged_${container.rootNodes[0]?.name || "unknown"}`;
+      mergedMesh.skeleton = skeleton;
       return mergedMesh;
     } catch (e) {
-      console.warn(`[ObjectCache] Warning merging object ${container.rootNodes[0]?.name}:`, e);
+      console.warn(`[EntityCache] Warning merging object ${container.rootNodes[0]?.name}:`, e);
       return null;
     }
   }
 
-
-  async getContainer(
-    spawn: Spawn,
-    scene: BJS.Scene,
-  ): Promise<EntityContainer | null> {
+  async getContainer(spawn: Spawn, scene: BJS.Scene): Promise<EntityContainer | null> {
     const race = spawn?.race ?? 1;
     const raceDataEntry = RACE_DATA[race];
     const model = raceDataEntry[spawn.gender ?? 0] || raceDataEntry[2];
+
     if (!this.containers[model]) {
       this.containers[model] = new Promise(async (res) => {
-        const bytes = await FileSystem.getFileBytes(
-          `eqrequiem/models`,
-          `${model}.glb`,
-        );
+        // Load main model
+        const bytes = await FileSystem.getFileBytes(`eqrequiem/models`, `${model}.glb`);
         if (!bytes) {
           console.warn(`[EntityCache] Failed to load model ${model}`);
-          return null;
+          res(null);
+          return;
         }
-        const file = new File([bytes!], `${model}.glb`, {
-          type: "model/gltf-binary",
-        });
-        const result = await BABYLON.LoadAssetContainerAsync(file, scene);
+        const file = new File([bytes!], `${model}.glb`, { type: "model/gltf-binary" });
+        const result = await BABYLON.SceneLoader.LoadAssetContainerAsync("", file, scene);
         if (!result) {
           console.error(`Failed to load model ${model}`);
-          return null;
+          res(null);
+          return;
         }
 
         result.rootNodes[0].name = `container_${model}`;
         const { animationGroups, skeletons } = result;
-        const ranges = result.animationGroups.map((group) => {
-          return {
-            name: group.name,
-            from: group.from,
-            to: group.to,
-          };
-        });
-        const hasAnimations = animationGroups.length > 0;
+        const skeleton = skeletons[0];
+        const ranges = [] as { name: string; from: number; to: number }[];
+        let startTime = 0;
+        for (const animGroup of animationGroups) {
+          ranges.push({
+            name: animGroup.name,
+            from: Math.floor(animGroup.from) + startTime,
+            to: Math.floor(animGroup.to) + startTime,
+          });
+          startTime += Math.round(animGroup.to);
+        }
+
+        // Load VAT data
+        const vatDataBytes = await FileSystem.getFileBytes("eqrequiem/vat", `${model}.bin`);
         let vatData: Float32Array | null = null;
-        const animationRanges: BJS.AnimationRange[] = [];
-        if (hasAnimations && skeletons.length) {
-          for (const ag of animationGroups) {
-            const animationRange = new BABYLON.AnimationRange(
-              ag.name,
-              ag.from,
-              ag.to,
-            );
-            animationRanges.push(animationRange);
-            ag.stop();
-            ag.dispose();
-          }
-          result.animationGroups = [];
-          const vatDataBytes = await FileSystem.getFileBytes(
-            "eqrequiem/vat",
-            `${model}.bin`,
-          );
-          if (vatDataBytes) {
-            vatData = new Float32Array(vatDataBytes);
-          }
-        }
-        if (!vatData) {
+        if (vatDataBytes) {
+          vatData = new Float32Array(vatDataBytes);
+        } else {
           console.warn(`No VAT data found for model ${model}`);
-          res({
-            manager: null,
-            meshes: [] as BJS.Mesh[],
-            animationRanges: ranges as BJS.Nullable<BJS.AnimationRange>[],
-          } as EntityContainer);
-          return null;
+          res(null);
+          return;
         }
-        const baker = new BABYLON.VertexAnimationBaker(scene, skeletons[0]);
-        const meshes = [] as BJS.Mesh[];
-        for (const mesh of result.rootNodes[0]?.getChildMeshes() ?? []) {
-          if (mesh.getTotalVertices() > 0) {
-            meshes.push(mesh as BJS.Mesh);
-          }
+
+        // Merge main model mesh
+        const mergedMesh = this.getMergedMesh(result, skeleton);
+        if (!mergedMesh) {
+          console.warn(`Failed to merge meshes for model ${model}`);
+          res(null);
+          return;
         }
-       
-        //const vData = await baker.bakeVertexData(ranges.slice(0, 4) as BJS.Nullable<BJS.AnimationRange>[]);
-        const vertexTexture = baker.textureFromBakedVertexData(vatData);
+
+        // Set up VAT for main mesh
+        mergedMesh.registerInstancedBuffer("bakedVertexAnimationSettingsInstanced", 4);
+        mergedMesh.instancedBuffers.bakedVertexAnimationSettingsInstanced = new BABYLON.Vector4(0, 0, 0, 0);
+        const baker = new BABYLON.VertexAnimationBaker(scene, mergedMesh);
         const manager = new BABYLON.BakedVertexAnimationManager(scene);
-        scene.removeSkeleton(skeletons[0]);
+        mergedMesh.bakedVertexAnimationManager = manager;
+ 
+        const vertexTexture = baker.textureFromBakedVertexData(vatData);
         manager.texture = vertexTexture;
+        mergedMesh.setEnabled(false); // Hide merged mesh
 
-        for (const mesh of meshes) {
-          mesh.registerInstancedBuffer("bakedVertexAnimationSettingsInstanced", 4);
-          mesh.instancedBuffers.bakedVertexAnimationSettingsInstanced = new BABYLON.Vector4(0, 0, 0, 0);
-          mesh.bakedVertexAnimationManager = manager;
-        }
-        result.animationGroups = [];
-
+        // Set up render observer for VAT time
         const renderObserver = scene.onAfterRenderObservable.add(() => {
           manager.time += scene.getEngine().getDeltaTime() / 1000.0;
         });
 
+        // Clean up
+        animationGroups.forEach((ag) => ag.dispose());
+        result.animationGroups = [];
+        scene.removeSkeleton(skeleton);
+
         const entityContainer: EntityContainer = {
           renderObserver,
           manager,
-          meshes,
-          animationRanges: ranges as BJS.Nullable<BJS.AnimationRange>[],
+          mesh: mergedMesh,
+          animationRanges: ranges,
         };
         res(entityContainer);
       });
     }
-    return this.containers[model]!;
+    return this.containers[model];
   }
 
   async getInstance(spawn: Spawn, scene: BJS.Scene, entityContainer: BJS.Node): Promise<Entity | null> {
@@ -161,24 +140,20 @@ export default class EntityCache {
   dispose(model: ModelKey): void {
     if (model in this.containers) {
       this.containers[model].then((container) => {
-        // Dispose of physics body if it exists
         if (this.physicsBodies[model]) {
           this.physicsBodies[model]?.forEach?.((p) => p.dispose());
           delete this.physicsBodies[model];
         }
-        // Dispose of the container
-        container.mesh.dispose();
-        container.mesh._scene.onAfterRenderObservable.remove(container.renderObserver);
+        container.mesh?.dispose();
         container.manager?.dispose();
+        container.mesh._scene.onAfterRenderObservable.remove(container.renderObserver);
       });
-      // Remove from cache
       delete this.containers[model];
     }
   }
 
   disposeAll(): void {
     this.intervals.forEach((interval) => clearInterval(interval));
-
     Object.keys(this.containers).forEach((model) => this.dispose(model));
   }
 }

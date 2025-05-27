@@ -18,6 +18,8 @@ import {
 } from "sage-core/util/fileHandler";
 import { supportedZones } from "@game/Constants/supportedZones";
 import { fsBindings } from "@/Core/bindings";
+import { qeynos2_spawns } from "@game/Constants/test-data";
+import { Spawn } from "@game/Net/internal/api/capnp/common";
 
 const defaultWorldName = "requiem";
 declare const window: Window;
@@ -39,6 +41,11 @@ export const LoginWindowComponent: React.FC = () => {
       charClass: 1,
       name: "Soandso",
     });
+    qeynos2_spawns.forEach((spawn) => { 
+      GameManager.instance.ZoneManager?.EntityPool?.AddSpawn(spawn as Spawn);
+    },
+    );
+    
   }, [setMode]);
 
   const servers = [
