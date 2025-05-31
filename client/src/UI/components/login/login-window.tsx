@@ -41,7 +41,6 @@ export const LoginWindowComponent: React.FC = () => {
 
   const servers = [
     { name: "EQ: Requiem", playersOnline: 42 },
-    { name: "EQ: Legacy", playersOnline: 15 },
   ];
 
   const connectToWorld = useCallback(
@@ -59,6 +58,27 @@ export const LoginWindowComponent: React.FC = () => {
       if (!storedDetails && !local) {
         const discordAuthUrl = `https://discord.com/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&response_type=${RESPONSE_TYPE}&redirect_uri=${REDIRECT_URI}&scope=${SCOPE}`;
         window.location.href = discordAuthUrl;
+      }
+      // First try an opaque ping to the world server
+      // With a 1s timeout
+      const controller = new AbortController();
+      const signal = controller.signal;
+      setTimeout(() => {
+        controller.abort();
+      }, 2000);
+      const serverOnline = await fetch("https://eqrequiem.ddns.net/eq", {
+        method: "GET",
+        mode: "no-cors",
+        cache: "no-cache",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        signal,
+        // timeout: 1000, // This is not supported in all browsers, so we handle it with a promise below  
+      }).then(() => true).catch(() => false);
+      if (!serverOnline) {
+        alert("World Server Offline");
+        return;
       }
       if (
         await WorldSocket.connect("eqrequiem.ddns.net", 443, () => {
