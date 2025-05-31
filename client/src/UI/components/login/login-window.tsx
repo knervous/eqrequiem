@@ -33,18 +33,24 @@ export const LoginWindowComponent: React.FC = () => {
   const [imageTiles, setImageTiles] = React.useState<string[]>([]);
   const [selectedServer, setSelectedServer] = React.useState<number>(0);
 
-  const enterSandbox = useCallback(() => {
+  const enterSandbox = useCallback(async () => {
     setMode("game");
-    GameManager.instance.loadZoneId(2);
-    GameManager.instance.instantiatePlayer({
+   
+    await  GameManager.instance.loadZone("emeraldjungle", true);
+    await GameManager.instance.instantiatePlayer({
       race: 1,
       charClass: 1,
       name: "Soandso",
     });
-    qeynos2_spawns.forEach((spawn) => { 
-      GameManager.instance.ZoneManager?.EntityPool?.AddSpawn(spawn as Spawn);
-    },
-    );
+
+    setTimeout(() => {
+      for (const spawn of qeynos2_spawns) {
+        GameManager.instance.ZoneManager?.EntityPool?.AddSpawn(
+        spawn as Spawn,
+        );
+      }
+    }, 2000);
+    
     
   }, [setMode]);
 
@@ -349,20 +355,24 @@ export const LoginWindowComponent: React.FC = () => {
               // await fsBindings.processFiles('global_chr', globalCharFiles);
 
               // Armor packs for velious
-              console.log('Processing global armor packs');
-              let start = 17;
-              const globalArmorFiles: string[] = [];
-              while (start <= 24) {
-                globalArmorFiles.push(`global${start}_amr.s3d`);
-                start++;
-              }
-              await fsBindings.processFiles('global17_amr', globalArmorFiles);
-              return;
+              // console.log('Processing global armor packs');
+              // let start = 17;
+              // const globalArmorFiles: string[] = [];
+              // while (start <= 24) {
+              //   globalArmorFiles.push(`global${start}_amr.s3d`);
+              //   start++;
+              // }
+              // await fsBindings.processFiles('global17_amr', globalArmorFiles);
+              // return;
               // //Items
               // console.log('Processing items');
               // const itemFiles = ["gequip.s3d", "gequip2.s3d"];
               // await fsBindings.processFiles('gequip', itemFiles);
-              for (const zone of Object.values(supportedZones)) {
+              //const zones = supportedZones;
+              const zones = {
+                1: { shortName: "emeraldjungle" },
+              };
+              for (const zone of Object.values(zones)) {
                 const name = zone.shortName;
                 const associatedFiles: string[] = [];
                 // temp short circuit

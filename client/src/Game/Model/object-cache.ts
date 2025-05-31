@@ -113,6 +113,7 @@ export default class ObjectCache {
       const vertexTexture = baker.textureFromBakedVertexData(vatData);
       scene.removeSkeleton(container.skeletons[0]);
       manager.texture = vertexTexture;
+      window.mm = manager;
       container.animationGroups = [];
       scene.registerBeforeRender(() => {
         manager.time += scene.getEngine().getDeltaTime() / 1000.0;

@@ -8,6 +8,17 @@ import { Entity, EntityContainer } from "./entity";
 
 type ModelKey = string;
 
+function calculateRanges(animationGroups) {
+  return animationGroups.reduce((acc, ag, index) => {
+    if (index === 0) {
+      acc.push({ name: ag.name, from: Math.floor(ag.from), to: Math.floor(ag.to) });
+    } else {
+      const prev = acc[index - 1];
+      acc.push({ name: ag.name, from: prev.to + 1, to: prev.to + 1 + Math.floor(ag.to) });
+    }
+    return acc;
+  }, []);
+}
 export default class EntityCache {
   public containers: Record<ModelKey, Promise<EntityContainer>> = {};
   private physicsBodies: Record<ModelKey, BJS.PhysicsBody[] | null> = {};
@@ -23,11 +34,7 @@ export default class EntityCache {
     try {
       const mergedMesh = BABYLON.Mesh.MergeMeshes(
         meshes as BJS.Mesh[],
-        true, // dispose source meshes
-        true, // allow 32-bit indices
-        undefined, // mesh subclass
-        true, // merge materials
-        true, // multi-material
+        false, true, undefined, undefined, true,
       );
       if (!mergedMesh) {
         throw new Error("MergeMeshes returned null");
@@ -66,20 +73,16 @@ export default class EntityCache {
         result.rootNodes[0].name = `container_${model}`;
         const { animationGroups, skeletons } = result;
         const skeleton = skeletons[0];
-        const ranges = [] as { name: string; from: number; to: number }[];
-        let startTime = 0;
-        for (const animGroup of animationGroups) {
-          ranges.push({
-            name: animGroup.name,
-            from: Math.floor(animGroup.from) + startTime,
-            to: Math.floor(animGroup.to) + startTime,
-          });
-          startTime += Math.round(animGroup.to);
-        }
+        let vatData: Float32Array | null = null;
 
+        const calculatedRanges = calculateRanges(animationGroups).slice(1, 5);
+        const baker = new BABYLON.VertexAnimationBaker(scene, skeleton);
+
+        // vatData = await baker.bakeVertexData(calculatedRanges);
+        console.log('Vat', vatData);
+        console.log('Calculated Ranges', calculatedRanges);
         // Load VAT data
         const vatDataBytes = await FileSystem.getFileBytes("eqrequiem/vat", `${model}.bin`);
-        let vatData: Float32Array | null = null;
         if (vatDataBytes) {
           vatData = new Float32Array(vatDataBytes);
         } else {
@@ -87,24 +90,25 @@ export default class EntityCache {
           res(null);
           return;
         }
-
-        // Merge main model mesh
         const mergedMesh = this.getMergedMesh(result, skeleton);
         if (!mergedMesh) {
           console.warn(`Failed to merge meshes for model ${model}`);
           res(null);
           return;
         }
-
-        // Set up VAT for main mesh
-        mergedMesh.registerInstancedBuffer("bakedVertexAnimationSettingsInstanced", 4);
-        mergedMesh.instancedBuffers.bakedVertexAnimationSettingsInstanced = new BABYLON.Vector4(0, 0, 0, 0);
-        const baker = new BABYLON.VertexAnimationBaker(scene, mergedMesh);
+      
         const manager = new BABYLON.BakedVertexAnimationManager(scene);
-        mergedMesh.bakedVertexAnimationManager = manager;
- 
         const vertexTexture = baker.textureFromBakedVertexData(vatData);
         manager.texture = vertexTexture;
+        mergedMesh.bakedVertexAnimationManager = manager;
+        mergedMesh.registerInstancedBuffer("bakedVertexAnimationSettingsInstanced", 4);
+        mergedMesh.instancedBuffers.bakedVertexAnimationSettingsInstanced = new BABYLON.Vector4(
+          0,
+          0,
+          0,
+          60,
+        );
+
         mergedMesh.setEnabled(false); // Hide merged mesh
 
         // Set up render observer for VAT time
@@ -112,16 +116,12 @@ export default class EntityCache {
           manager.time += scene.getEngine().getDeltaTime() / 1000.0;
         });
 
-        // Clean up
-        animationGroups.forEach((ag) => ag.dispose());
-        result.animationGroups = [];
-        scene.removeSkeleton(skeleton);
 
         const entityContainer: EntityContainer = {
           renderObserver,
           manager,
           mesh: mergedMesh,
-          animationRanges: ranges,
+          animationRanges: calculatedRanges,
         };
         res(entityContainer);
       });

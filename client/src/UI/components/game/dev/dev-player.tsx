@@ -16,8 +16,8 @@ import {
 
 export const DevPlayer: React.FC = () => {
   const player = Player.instance!;
-  const [speed, setSpeed] = useState(player.playerMovement?.moveSpeed ?? import.meta.env.VITE_LOCAL_DEV ? 50 : 20);
-  const [anim, setAnim] = useState(player.currentAnimation || '');
+  const [speed, setSpeed] = useState(player?.playerMovement?.moveSpeed ?? import.meta.env.VITE_LOCAL_DEV ? 50 : 20);
+  const [anim, setAnim] = useState(player?.currentAnimation || '');
   const [collision, setCollision] = useState(true);
   const [gravity, setGravity] = useState(true);
   const onSpeed = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -73,7 +73,7 @@ export const DevPlayer: React.FC = () => {
           <FormControl size="small" sx={{ minWidth: 200 }}>
             <InputLabel>Animation</InputLabel>
             <Select value={anim} label="Animation" onChange={onAnim}>
-              {Object.keys(player.animations).map((a) => (
+              {Object.keys(player?.animations ?? []).map((a) => (
                 <MenuItem key={a} value={a}>{a}</MenuItem>
               ))}
             </Select>

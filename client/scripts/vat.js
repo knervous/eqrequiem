@@ -7,7 +7,6 @@ import "@babylonjs/loaders/glTF/2.0/index.js";
 import fs from "fs-extra";
 import path from "path";
 import pLimit from "p-limit";
-
 const rootPath = process.argv[2] || process.cwd();
 const CONCURRENCY_LIMIT = 8;
 
@@ -15,6 +14,45 @@ if (!rootPath) {
   console.error("Please provide a root path.");
   process.exit(1);
 }
+
+const bakeVertexData = async function (mesh, ags) {
+  const s = mesh.skeleton;
+  const boneCount = s.bones.length;
+  /** total number of frames in our animations */
+  const frameCount = ags.reduce(
+    (acc, ag) => acc + (Math.floor(ag.to) - Math.floor(ag.from)) + 1,
+    0,
+  );
+
+  // reset our loop data
+  let textureIndex = 0;
+  const textureSize = (boneCount + 1) * 4 * 4 * frameCount;
+  const vertexData = new Float32Array(textureSize);
+
+  function* captureFrame() {
+    const skeletonMatrices = s.getTransformMatrices(mesh);
+    vertexData.set(skeletonMatrices, textureIndex * skeletonMatrices.length);
+  }
+
+  let ii = 0;
+  for (const ag of ags) {
+    ag.reset();
+    const from = Math.floor(ag.from);
+    const to = Math.floor(ag.to);
+    for (let frameIndex = from; frameIndex <= to; frameIndex++) {
+      if (ii++ === 0) continue;
+      // start anim for one frame
+      ag.start(false, 1, frameIndex, frameIndex, false);
+      // wait for finishing
+      await ag.onAnimationEndObservable.runCoroutineAsync(captureFrame());
+      textureIndex++;
+      // stop anim
+      ag.stop();
+    }
+  }
+
+  return vertexData;
+};
 
 const modelFolder = path.join(rootPath, "models");
 const objectsFolder = path.join(rootPath, "objects");
@@ -72,18 +110,17 @@ const processFiles = async () => {
 };
 
 async function outputVat(folder, file) {
+  console.log(`Processing file: ${file} from folder: ${folder}`);
   const modelPath = path.join(folder, file);
   const fileBuffer = fs.readFileSync(modelPath);
   const base64String = fileBuffer.toString("base64");
   const dataUrl = `data:model/gltf-binary;base64,${base64String}`;
-  
-  const { meshes, animationGroups, skeletons } =
-    await BABYLON.SceneLoader.ImportMeshAsync(
-      null, // Import all meshes
-      "", // Root URL (empty since we're using a data URI)
-      dataUrl, // Base64 data URI
-      scene,
-    );
+  const { meshes, animationGroups, skeletons } = await BABYLON.ImportMeshAsync(
+    dataUrl, // Base64 data URI
+    scene,
+  ).catch((e) => {
+    console.error(`Failed to load model ${file}:`, e);
+  });
 
   if (!animationGroups || animationGroups.length === 0) {
     console.log(`No animation groups found for model ${file}`);
@@ -94,38 +131,46 @@ async function outputVat(folder, file) {
     console.log(`No skeletons found for model ${file}`);
     return;
   }
-
-  const baker = new BABYLON.VertexAnimationBaker(scene, skeletons[0], {
-    bakeTransformations: true,
-  });
+  const mesh = BABYLON.Mesh.MergeMeshes(
+    meshes.filter((m) => m.getTotalVertices() > 0),
+    true,
+    true,
+    undefined,
+    true,
+    true,
+  );
+  mesh.skeleton = skeletons[0];
 
   // Process animation groups and normalize frame ranges
-  const ranges = animationGroups.map((group) => {
-    return {
+  const ranges = [];
+  for (const group of animationGroups) {
+    ranges.push({
       name: group.name,
       from: group.from,
       to: group.to,
-    };
-  });
+    });
+  }
 
   if (ranges.length === 0) {
     console.log(`No valid animation ranges found for model ${file}`);
     return;
   }
 
-  console.log(`Update static anim: ${file}`);
-  // Bake vertex data with the specified FPS
-  const vatData = await baker.bakeVertexData(ranges, targetFps);
-  const modelFile = file.replace(".glb", "");
-  console.log(`Exporting ${modelFile}...`);
+  return new Promise((res) => {
+    bakeVertexData(mesh, animationGroups).then(async (vatData) => {
+      const modelFile = file.replace(".glb", "");
+      console.log(`Exporting ${modelFile}...`);
 
-  await fs.ensureDir(outputDir);
-  await fs.writeFile(
-    path.join(outputDir, `${modelFile}.bin`),
-    Buffer.from(vatData.buffer),
-  );
+      await fs.ensureDir(outputDir);
+      await fs.writeFile(
+        path.join(outputDir, `${modelFile}.bin`),
+        Buffer.from(vatData.buffer),
+      );
 
-  console.log(`VAT export complete for ${modelFile}.`);
+      console.log(`VAT export complete for ${modelFile}.`);
+      res();
+    });
+  });
 }
 
 processFiles()
