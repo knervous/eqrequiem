@@ -23,8 +23,8 @@ var equalValue int32
 
 func init() {
 	mgr := NewSessionManager()
-	benchSession = mgr.CreateSession(noopMessenger{}, 1, "127.0.0.1")
-	benchDeserSession = mgr.CreateSession(noopMessenger{}, 2, "127.0.0.1")
+	benchSession = mgr.CreateSession(noopMessenger{}, 1, "127.0.0.1", nil)
+	benchDeserSession = mgr.CreateSession(noopMessenger{}, 2, "127.0.0.1", nil)
 	benchMessage, _ = NewMessage(benchSession, eq.NewRootJWTResponse)
 	benchMessage.SetStatus(1)
 	buffer = []byte{0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0}
@@ -62,7 +62,7 @@ func BenchmarkSendData(b *testing.B) {
 	for i := 0; i < count; i++ {
 		err := benchSession.SendData(benchMessage.Message(), opcodes.JWTResponse)
 		mgr := NewSessionManager()
-		benchSession = mgr.CreateSession(noopMessenger{}, i+4, "127.0.0.1")
+		benchSession = mgr.CreateSession(noopMessenger{}, i+4, "127.0.0.1", nil)
 		if err != nil {
 			b.Fatal(err)
 		}

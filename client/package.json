@@ -6,13 +6,14 @@
   "scripts": {
     "sage:dev": "cross-env VITE_USE_SAGE=true VITE_LOCAL_DEV=true vite",
     "v": "vercel dev",
+    "atlas": "node scripts/create-atlas.js ~/documents/everquest_rof2/eqrequiem/textures",
+    "vat": "node scripts/vat.js ~/documents/everquest_rof2/eqrequiem",
     "upload": "node scripts/upload.js ~/documents/everquest_rof2",
     "start": "cross-env VITE_LOCAL_DEV=true VITE_USE_SAGE=false LOCAL_DEV=true vite",
     "start:prod": "cross-env VITE_USE_SAGE=false LOCAL_DEV=true vite",
     "build": "vite build",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview",
-    "proto": "npx protoc --ts_out src/Game/Net/message --proto_path ../server/internal/api/proto ../server/internal/api/proto/**/*.proto ../server/internal/api/proto/*.proto"
+    "preview": "vite preview"
   },
   "dependencies": {
     "@babylonjs/core": "8.8.1",
@@ -59,6 +60,7 @@
     "@azure/storage-blob": "^12.27.0",
     "@babel/plugin-proposal-decorators": "^7.25.9",
     "@eslint/js": "^9.21.0",
+    "@itk-viewer/blosc-zarr": "^0.2.3",
     "@protobuf-ts/plugin": "^2.9.5",
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",

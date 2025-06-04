@@ -1,15 +1,67 @@
+run:
+  timeout: 5m # Reasonable timeout for large projects
+  modules-download-mode: readonly # Ensure reproducible builds
+
 linters:
   enable:
-    - staticcheck
-    - errcheck
-    - gosec
-  disable:
-    - golint
+    - staticcheck # Deep static analysis for bugs, performance, concurrency
+    - errcheck # Checks for unchecked errors
+    - gosec # Security vulnerability scanning
+    - revive # Replacement for golint, for style and best practices
+    - gocritic # Advanced checks for code quality and correctness
+    - ineffassign # Detects unused assignments
+    - govet # Official Go vet tool for suspicious constructs
+    - misspell # Catches common spelling mistakes
+    - unconvert # Detects unnecessary type conversions
+    - unparam # Finds unused function parameters
+    - gocyclo # Flags overly complex functions
+    - gocognit # Flags cognitively complex code
+    - nakedret # Detects naked returns in large functions
+
 linters-settings:
   staticcheck:
-    checks: ["all"]
-run:
-  timeout: 5m
+    checks: ["all"] # Run all staticcheck checks
+  errcheck:
+    check-unhandled: true # Ensure all errors are checked
+    check-blank: true # Flag assignments to blank identifier
+  gosec:
+    excludes:
+      - G204 # Allow subprocesses if needed, adjust based on project
+  revive:
+    rules:
+      - name: var-naming
+        severity: warning
+      - name: dot-imports
+        severity: warning
+      - name: unused-parameter
+        severity: warning
+    confidence: 0.8 # Adjust to reduce false positives
+  gocritic:
+    enabled-checks:
+      - badLock # Catches incorrect mutex usage
+      - rangeValCopy # Flags inefficient range loop copies
+    settings:
+      hugeParam:
+        sizeThreshold: 80 # Flag large parameters passed by value
+  gocyclo:
+    min-complexity: 15 # Flag functions with complexity > 15
+  gocognit:
+    min-complexity: 20 # Flag functions with cognitive complexity > 20
+  nakedret:
+    max-func-length: 30 # Flag naked returns in functions > 30 lines
+
 issues:
-  exclude:
-    - vendor
+  exclude-dirs:
+    - vendor # Skip vendor directory
+    - generated # Skip generated code directories (adjust as needed)
+  exclude-rules:
+    - path: _test\.go
+      linters:
+        - gocyclo
+        - gocognit
+        - nakedret # Relax complexity checks in tests
+    - linters:
+        - gosec
+      text: "G104" # Ignore G104 (unhandled errors in defer) if acceptable
+  max-issues-per-linter: 0 # No limit on issues per linter
+  max-same-issues: 0 # No limit on identical issues

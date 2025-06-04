@@ -60,21 +60,16 @@ export const LoginWindowComponent: React.FC = () => {
         window.location.href = discordAuthUrl;
       }
       // First try an opaque ping to the world server
-      // With a 1s timeout
+      // With a 2s timeout
       const controller = new AbortController();
       const signal = controller.signal;
       setTimeout(() => {
         controller.abort();
       }, 2000);
-      const serverOnline = await fetch("https://eqrequiem.ddns.net/eq", {
+      const serverOnline = await fetch("https://eqrequiem.ddns.net/online", {
         method: "GET",
-        mode: "no-cors",
-        cache: "no-cache",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        mode: "cors",
         signal,
-        // timeout: 1000, // This is not supported in all browsers, so we handle it with a promise below  
       }).then(() => true).catch(() => false);
       if (!serverOnline) {
         alert("World Server Offline");
