@@ -1,7 +1,7 @@
 
 interface BabylonExportObject { initialize(): Promise<void> }
 
-
+import "@babylonjs/core";
 type CoreAPI   = typeof import("@babylonjs/core");
 type LoaderAPI = typeof import("@babylonjs/loaders/glTF/2.0");
 type MaterialsAPI = typeof import("@babylonjs/materials");

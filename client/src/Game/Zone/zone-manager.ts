@@ -152,7 +152,7 @@ export class ZoneManager {
     this.parent.setLoading(true);
     const bytes = await FileSystem.getFileBytes(
       `eqrequiem/zones`,
-      `${this.zoneName}.glb`,
+      `${this.zoneName}.babylon`,
     );
     if (!bytes) {
       console.log(`[ZoneManager] Failed to load zone file: ${this.zoneName}`);
@@ -160,7 +160,7 @@ export class ZoneManager {
       return;
     }
     console.log('bytes', bytes);
-    const file = new File([bytes], `${this.zoneName}.glb`, {
+    const file = new File([bytes], `${this.zoneName}.babylon`, {
       type: "application/babylon",
     });
     const result = await BABYLON.LoadAssetContainerAsync(
