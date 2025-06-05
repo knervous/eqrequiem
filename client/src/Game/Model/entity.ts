@@ -45,7 +45,6 @@ export class Entity extends BABYLON.TransformNode {
   public async hide(): Promise<void> {
     if (this.isTearingDown || this.hidden) return;
     this.isTearingDown = true;
-    console.log(`[Entity] Tearing down entity ${this.spawn.name}`);
     for (const instance of this.bodyInstances) {
       instance.dispose();
     }

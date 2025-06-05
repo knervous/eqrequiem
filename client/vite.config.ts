@@ -80,8 +80,7 @@ export default defineConfig({
     },
   },
   optimizeDeps: {
-    exclude: ["@babylonjs/havok"],
-    ...(isLocalDev ? { exclude: ["@babylonjs/havok", "sage-core"] } : {}),
+    exclude: isLocalDev ? ["@babylonjs/havok", "sage-core"] : ["@babylonjs/havok"],
     esbuildOptions: {
       target: "chrome90",
     },

@@ -163,7 +163,7 @@ export class ZoneManager {
     const file = new File([bytes], `${this.zoneName}.babylon`, {
       type: "application/babylon",
     });
-    const result = await BABYLON.ImportMeshAsync(
+    const result = await BABYLON.LoadAssetContainerAsync(
       file,
       this.parent.scene!,
     ).catch((error) => {
@@ -176,6 +176,7 @@ export class ZoneManager {
       this.parent.setLoading(false);
       return;
     }
+    result.addAllToScene();
     console.log('Result', result);
     this.zoneContainer!.scaling.x = -1;
 

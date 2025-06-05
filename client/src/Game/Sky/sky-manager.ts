@@ -159,10 +159,11 @@ export default class DayNightSkyManager {
     this.#scene = this.parent.GameManager.scene!;
     this.#camera = this.parent.GameManager.Camera;
     // Create sky dome
-    const sky = await BABYLON.ImportMeshAsync(
+    const sky = await BABYLON.LoadAssetContainerAsync(
       skyUrl + `${name}.glb`,
       this.#scene,
     );
+    sky.addAllToScene();
     this.#domeRoot = sky.meshes[0];
     this.#domeRoot.scaling = new BABYLON.Vector3(
       this.scale,

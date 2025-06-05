@@ -55,10 +55,8 @@ export const BabylonWrapper = ({ splash }) => {
         canvasRef.current.dispatchEvent(newEvent);
         // Optionally prevent default behavior so the event isn't processed twice
         if (e.type === "mousedown") {
-          console.log('Click here', e.type);
 
           if (![document.body, canvasRef.current].includes(document.activeElement)) {
-            console.log('Click wanna focus', e.type);
             document.body.focus();
             return;
           }
