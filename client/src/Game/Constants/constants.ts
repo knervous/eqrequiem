@@ -3,6 +3,8 @@
 
 export const USE_SAGE = import.meta.env.VITE_USE_SAGE === 'true';
 
+export const charFileRegex = /^([a-z]{3})([a-z]{2})(\d{2})(\d{2})$/;
+
 export const VIEWS = {
     CHAR_SELECT: 1,
     CHAR_CREATE: 2,

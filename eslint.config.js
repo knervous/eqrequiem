@@ -45,5 +45,5 @@ export default tseslint.config(
       // Always require parens around arrow function arguments
       "arrow-parens": ["error", "always"],
     },
-  }
+  },
 );

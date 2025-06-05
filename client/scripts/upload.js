@@ -31,6 +31,7 @@ const zippedPrefixes = ["eqrequiem/textures"];
 let allowedFolders = new Set([
   "data",
   "models",
+  "babylon",
   "objects",
   "sky",
   "textures",
@@ -46,12 +47,13 @@ const allowedRootFiles = new Set(["eqstr_us.txt"]);
 let allowedExtensions = new Set([
   ".txt",
   ".json",
-  ".glb",
-  ".webp",
-  ".dds",
-  ".wav",
-  ".mid",
-  ".tga",
+  // ".glb", prefer .babylon
+  // ".webp",
+  // ".dds",
+  // ".wav", // only if it changes uncomment
+  // ".mid",
+  // ".tga",
+  ".babylon",
 ]);
 
 if (onlyTextures) {
@@ -249,7 +251,7 @@ async function processFile(fullPath, containerClient, relativeKey, prefix) {
       return;
     }
   } else if (prefix) {
-    if (ext === ".glb") {
+    if (ext === ".glb" || ext === ".babylon") {
       targetName += ".gz";
       src = createReadStream(fullPath).pipe(createGzip());
     } else {
@@ -311,6 +313,9 @@ async function processDirectory(
 }
 
 async function zipAndUploadDirectory(dirPath, containerClient, blobName) {
+  // This is for packed zip tetures specific to an s3d, they're already uploaded so returning for now
+  // TBD pipeline on this in the future;
+  return;
   const tempDir = await mkdtemp(join(tmpdir(), "zip-upload-"));
   console.log(`Created temp directory: ${tempDir}`);
 

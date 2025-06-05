@@ -449,6 +449,10 @@ class FileSystemBindings {
       fileName = fileName.toLowerCase();
       normalizedPath = normalizedPath.replace(".glb", ".glb.gz").toLowerCase();
     }
+    if (normalizedPath.endsWith(".babylon")) {
+      fileName = fileName.toLowerCase();
+      normalizedPath = normalizedPath.replace(".babylon", ".babylon.gz").toLowerCase();
+    }
   
     if (this.fetchPromises.has(normalizedPath)) {
       return this.fetchPromises.get(normalizedPath)!;

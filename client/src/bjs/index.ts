@@ -24,6 +24,7 @@ const exportObject: BabylonAPI = {
     importPromises.push(import('@babylonjs/core/Meshes/meshSimplification.js'));
     importPromises.push(import('@babylonjs/core/Meshes/meshSimplificationSceneComponent.js'));
     importPromises.push(import('@babylonjs/loaders/glTF'));
+    importPromises.push(import('@babylonjs/loaders'));
     importPromises.push(import('@babylonjs/core/Materials/Textures/Loaders/envTextureLoader'));
     importPromises.push(import('@babylonjs/core/Helpers/sceneHelpers'));
     importPromises.push(import('@babylonjs/core/Rendering/edgesRenderer'));
@@ -32,12 +33,18 @@ const exportObject: BabylonAPI = {
     addImport(import('@babylonjs/materials/gradient/gradientMaterial'));
     // BJS exports
     addImport(import('@babylonjs/core/Materials/PBR/pbrMaterial'));
+    addImport(import('@babylonjs/core/Materials/shaderMaterial'));
+    addImport(import('@babylonjs/core/Materials/Textures/rawTexture2DArray'));
+    addImport(import('@babylonjs/core/BakedVertexAnimation/bakedVertexAnimationManager'));
+    addImport(import('@babylonjs/core/BakedVertexAnimation/vertexAnimationBaker'));
     addImport(import('@babylonjs/core/Meshes/subMesh'));
     addImport(import('@babylonjs/core/Maths/math.vector'));
     addImport(import('@babylonjs/core/Maths/math.color'));
+    addImport(import('@babylonjs/core/Maths/ThinMaths/thinMath.matrix.functions'));
     addImport(import('@babylonjs/core/Buffers/buffer'));
     addImport(import('@babylonjs/core/Misc/tools'));
     addImport(import('@babylonjs/core/Misc/dataReader'));
+    addImport(import('@babylonjs/core/Misc/basis'));
     addImport(import('@babylonjs/core/Materials/Textures/texture'));
     addImport(import('@babylonjs/core/Meshes/mesh.vertexData'));
     addImport(import('@babylonjs/core/Meshes/transformNode'));
@@ -79,8 +86,8 @@ const exportObject: BabylonAPI = {
     addImport(import('@babylonjs/core/Materials/effect'));
     addImport(import('@babylonjs/core/PostProcesses/postProcess'));
     addImport(import('@babylonjs/core/Animations/animation'));
+    addImport(import('@babylonjs/core/Animations/animationRange'));
     addImport(import('@babylonjs/core/Cameras/'));
-    addImport(import('@babylonjs/core/Materials/effect'));
     addImport(import('@babylonjs/core/Events/keyboardEvents'));
     addImport(import('@babylonjs/core/Debug/rayHelper'));
     addImport(import('@babylonjs/core/Engines/constants'));
@@ -88,7 +95,8 @@ const exportObject: BabylonAPI = {
     // Ray
     addImport(import('@babylonjs/core/Culling/ray'));
 
-
+    // babylon loader
+    addImport(import('@babylonjs/core/Loading/Plugins/babylonFileLoader'));
     // Engine extensions
     addImport(import('@babylonjs/core/Engines/shaderStore'));
     addImport(import('@babylonjs/core/Engines/Extensions/engine.dynamicTexture'));
@@ -101,6 +109,7 @@ const exportObject: BabylonAPI = {
     addImport(import('@babylonjs/core/Physics/joinedPhysicsEngineComponent'));
 
     await Promise.all(importPromises);
+
   },
 } as BabylonExportObject;
 

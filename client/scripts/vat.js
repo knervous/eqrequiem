@@ -111,9 +111,6 @@ const processFiles = async () => {
 };
 
 async function outputVat(folder, file) {
-  if (!file.includes("bea.glb")) {
-    return;
-  }
   console.log(`Processing file: ${file} from folder: ${folder}`);
   const modelPath = path.join(folder, file);
   const fileBuffer = fs.readFileSync(modelPath);

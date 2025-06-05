@@ -32,13 +32,16 @@ export default class AssetContainer {
     scene: BJS.Scene,
   ): Promise<BJS.AssetContainer | null> {
     if (!this.containers[model]) {
-      const bytes = await FileSystem.getFileBytes(
+      let bytes = await FileSystem.getFileBytes(
         `eqrequiem/${this.assetPath}`,
         `${model}.glb`,
       );
       if (!bytes) {
         console.warn(`[ObjectCache] Failed to load model ${model}`);
-        return null;
+        bytes = await FileSystem.getFileBytes(
+          `eqrequiem/${this.assetPath}`,
+          `hum.glb`,
+        );
       }
       const file = new File([bytes!], `${model}.glb`, {
         type: "model/gltf-binary",

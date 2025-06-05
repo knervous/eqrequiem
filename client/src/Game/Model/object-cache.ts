@@ -1,4 +1,4 @@
-// src/game/Actor/ActorPool.ts
+// src/game/Model/object-cache.ts
 import BABYLON from "@bjs";
 import type * as BJS from "@babylonjs/core";
 
@@ -8,10 +8,17 @@ import { swapMaterialTexture } from "./bjs-utils";
 
 type ModelKey = string;
 
+type ContainerData = {
+  container: BJS.AssetContainer;
+  hasAnimations: boolean;
+  animationRanges: BJS.Nullable<BJS.AnimationRange>[];
+  physicsBodies: BJS.PhysicsBody[] | null;
+  vatData: Float32Array | null;
+};
+
 export default class ObjectCache {
   private usePhysics: boolean = true;
-  public containers: Record<ModelKey, Promise<BJS.AssetContainer>> = {};
-  private physicsBodies: Record<ModelKey, BJS.PhysicsBody[] | null> = {};
+  public dataContainers: Record<ModelKey, Promise<ContainerData>> = {};
   private objectContainer: BJS.TransformNode | null = null;
   private intervals: NodeJS.Timeout[] = [];
   constructor(usePhysics: boolean = true, zoneContainer: BJS.TransformNode | null = null) {
@@ -24,18 +31,18 @@ export default class ObjectCache {
   async getContainer(
     model: string,
     scene: BJS.Scene,
-  ): Promise<BJS.AssetContainer | null> {
-    if (!this.containers[model]) {
+  ): Promise<ContainerData | null> {
+    if (!this.dataContainers[model]) {
       const bytes = await FileSystem.getFileBytes(
         `eqrequiem/objects`,
-        `${model}.glb`,
+        `${model}.babylon`,
       );
       if (!bytes) {
         console.warn(`[ObjectCache] Failed to load model ${model}`);
         return null;
       }
-      const file = new File([bytes!], `${model}.glb`, {
-        type: "model/gltf-binary",
+      const file = new File([bytes!], `${model}.babylon`, {
+        type: "application/babylon",
       });
       const result = await BABYLON.LoadAssetContainerAsync(file, scene);
       if (!result) {
@@ -48,33 +55,78 @@ export default class ObjectCache {
         result.rootNodes[0].parent = this.objectContainer;
       }
       result.rootNodes[0].name = `container_${model}`;
-      //result.rootNodes[0].parent = this.objectContainer;
-      this.containers[model] = Promise.resolve(result);
+      const { animationGroups, skeletons } = result;
+      const hasAnimations = animationGroups.length > 0;
+      let vatData: Float32Array | null = null;
+      const animationRanges: BJS.AnimationRange[] = [];
+      result.rootNodes[0].setEnabled(false);
+      if (hasAnimations && skeletons.length) {
+        for (const ag of animationGroups) {
+          const animationRange = new BABYLON.AnimationRange(ag.name, ag.from, ag.to);
+          animationRanges.push(animationRange);
+          ag.stop();
+          ag.dispose();
+        }
+        result.animationGroups = [];
+        const vatDataBytes = await FileSystem.getFileBytes('eqrequiem/vat', `${model}.bin.gz`);
+        if (vatDataBytes) {
+          vatData = new Float32Array(vatDataBytes);
+        }
+      }
+      result.rootNodes[0].setEnabled(true);
+
+      this.dataContainers[model] = Promise.resolve({
+        container: result,
+        vatData,
+        hasAnimations,
+        animationRanges,
+        physicsBodies: [],
+      });
     }
-    return this.containers[model]!;
+    return this.dataContainers[model]!;
   }
+
   async addThinInstances(
     model: string,
     scene: BJS.Scene,
     instanceTranslations: Transform[],
     usePhysics: boolean = true,
   ): Promise<BJS.AbstractMesh[]> {
-    const container = await this.getContainer(model, scene);
-    if (!container) { return []; }
-  
+    const dataContainer = await this.getContainer(model, scene);
+    if (!dataContainer) { return []; }
+    const { container, vatData, hasAnimations, animationRanges } = dataContainer;
+
     const root = container.rootNodes[0] as BJS.TransformNode;
     const transforms = instanceTranslations;
     const count = transforms.length;
     const matrixData = new Float32Array(16 * count);
+    const animParameters = hasAnimations ? new Float32Array(count * 4) : null;
+
     // Store physics bodies for this model
     const physicsBodies: BJS.PhysicsBody[] = [];
-  
-    // Build the transformation matrices for thin instances
+
+    const meshes = root.getChildMeshes().filter((m) => m instanceof BABYLON.Mesh) as BJS.Mesh[];
+    const manager = new BABYLON.BakedVertexAnimationManager(scene);
+
+    if (hasAnimations && vatData) {
+      const baker = new BABYLON.VertexAnimationBaker(scene, container.skeletons[0]);
+      const vertexTexture = baker.textureFromBakedVertexData(vatData);
+      scene.removeSkeleton(container.skeletons[0]);
+      manager.texture = vertexTexture;
+      container.animationGroups = [];
+      scene.registerBeforeRender(() => {
+        manager.time += scene.getEngine().getDeltaTime() / 1000.0;
+      });
+    }
+
+    const params = new BABYLON.Vector4();
+
     for (let i = 0; i < count; i++) {
       const { x, y, z, rotateX, rotateY, rotateZ, scale } = transforms[i];
       if (x === 0 && y === 0 && z === 0) {
-        continue; // Skip invalid transforms
+        continue;
       }
+
       const translation = BABYLON.Matrix.Translation(-x, y, z);
       const rotation = BABYLON.Matrix.RotationYawPitchRoll(
         BABYLON.Tools.ToRadians(rotateY),
@@ -84,15 +136,22 @@ export default class ObjectCache {
       const scaling = BABYLON.Matrix.Scaling(scale, scale, scale);
       const transform = scaling.multiply(rotation).multiply(translation);
       transform.copyToArray(matrixData, i * 16);
+
+      if (animParameters && animationRanges.length) {
+        const [firstAnimationRange] = animationRanges;
+        params.set(firstAnimationRange?.from ?? 0, firstAnimationRange?.to ?? 0, 0, 60);
+        animParameters.set(params.asArray(), i * 4);
+      }
     }
-  
-    const meshes = root.getChildMeshes().filter((m) => m instanceof BABYLON.Mesh) as BJS.Mesh[];
+
     for (const mesh of meshes) {
-      // Apply thin instance buffer
       mesh.thinInstanceSetBuffer("matrix", matrixData, 16, false);
       mesh.alwaysSelectAsActiveMesh = false;
       mesh.thinInstanceRefreshBoundingInfo(true, false, false);
-      
+      if (vatData) {
+        mesh.bakedVertexAnimationManager = manager;
+        mesh.thinInstanceSetBuffer("bakedVertexAnimationSettingsInstanced", animParameters, 4);
+      }
       const materialExtras = mesh?.material?.metadata?.gltf?.extras;
       if (materialExtras?.frames?.length && materialExtras?.animationDelay) {
         const { frames, animationDelay } = materialExtras;
@@ -157,29 +216,29 @@ export default class ObjectCache {
     }
   
     // Store physics bodies for this model in the cache
-    this.physicsBodies[model] = physicsBodies.length > 0 ? physicsBodies : null;
+    dataContainer.physicsBodies = physicsBodies.length > 0 ? physicsBodies : null;
   
     return meshes;
   }
   dispose(model: ModelKey): void {
-    if (model in this.containers) {
-      this.containers[model].then((container) => {
+    if (model in this.dataContainers) {
+      this.dataContainers[model].then((container) => {
         // Dispose of physics body if it exists
-        if (this.physicsBodies[model]) {
-          this.physicsBodies[model]?.forEach?.((p) => p.dispose());
-          delete this.physicsBodies[model];
+        if (container.physicsBodies) {
+          container.physicsBodies[model]?.forEach?.((p) => p.dispose());
+          container.physicsBodies = [];
         }
         // Dispose of the container
-        container.dispose();
+        container.container.dispose();
       });
       // Remove from cache
-      delete this.containers[model];
+      delete this.dataContainers[model];
     }
   }
 
   disposeAll(): void {
     this.intervals.forEach((interval) => clearInterval(interval));
 
-    Object.keys(this.containers).forEach((model) => this.dispose(model));
+    Object.keys(this.dataContainers).forEach((model) => this.dispose(model));
   }
 }

@@ -69,7 +69,6 @@ export default defineConfig({
       ...(isLocalDev
         ? {
           "sage-core": path.resolve(__dirname, "../../eqsage/sage/lib"),
-          classnames: path.resolve(__dirname, "./classnames.js"),
         }
         : {}),
       "@game": path.resolve(__dirname, "src/Game"),

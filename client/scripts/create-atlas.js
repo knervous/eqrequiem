@@ -2,7 +2,6 @@
 
 import fs from "fs-extra";
 import path from "path";
-import sharp from "sharp";
 import pLimit from "p-limit";
 import { execSync } from "child_process";
 import { convertToSharp } from "./convert.js";
@@ -15,23 +14,7 @@ console.log(`Using root path: ${rootPath}`);
 const outputDir = path.join(rootPath, "basis");
 await fs.ensureDir(outputDir);
 
-// (3) Prefix map (unchanged; unused for packing but kept if you rely on it)
-const prefixes = {
-  Face: "he",
-  Chest: "ch",
-  Arms: "ua",
-  Wrists: "fa",
-  Legs: "lg",
-  Hands: "hn",
-  Feet: "ft",
-  Helm: "he",
-  Head: "hd",
-};
-
-// (4) Regex to match e.g. "humhe0107.dds" ⇒ model="hum", piece="he", variation="01", tex="07"
 const charFileRegex = /^([a-z]{3})([a-z]{2})(\d{2})(\d{2})\.dds$/;
-
-// (5) Data structure: models[model][piece][variation] = [ { texIdx, filePath }, ... ]
 const models = {};
 const seenBasenames = new Set();
 
@@ -70,13 +53,6 @@ for (const filePath of ddsFiles) {
     continue;
   }
 
-  const prefixExists = Object.values(prefixes).includes(piece);
-  if (!prefixExists) {
-    console.log(
-      `Warning: piece prefix "${piece}" in "${fileName}" not found in prefixes map.`
-    );
-  }
-
   models[model] ??= {};
   models[model][piece] ??= {};
   models[model][piece][varNum] ??= [];
@@ -100,11 +76,11 @@ function filePathsForModel(modelName) {
 async function processModel(modelName) {
   const srcList = filePathsForModel(modelName);
   if (srcList.length === 0) {
-    console.log(`⚠️  No files for model "${modelName}", skipping.`);
+    console.log(`No files for model "${modelName}", skipping.`);
     return;
   }
 
-  console.log(`🗂 Processing ${srcList.length} images for model "${modelName}"…`);
+  console.log(`Processing ${srcList.length} images for model "${modelName}"…`);
 
   const modelOutputDir = outputDir;
   await fs.ensureDir(modelOutputDir);
@@ -152,10 +128,9 @@ async function processModel(modelName) {
   // 4. Write the JSON file (array of strings)
   const jsonPath = path.join(modelOutputDir, `${modelName}.json`);
   await fs.writeJson(jsonPath, pathList, { spaces: 2 });
-  console.log(`✅  Generated JSON (paths only): ${jsonPath}`);
+  console.log(`Generated JSON (paths only): ${jsonPath}`);
 }
 
-// (7) Run through all models with a concurrency limit of 2
 (async () => {
   try {
     const limit = pLimit(2);
@@ -163,9 +138,9 @@ async function processModel(modelName) {
       limit(() => processModel(model))
     );
     await Promise.all(jobs);
-    console.log("🎉 All Basis blocks and JSON files generated under 'basis/'.");
+    console.log("All Basis blocks and JSON files generated under 'basis/'.");
   } catch (error) {
-    console.error(`❌ Error: ${error.message}`);
+    console.error(`Error: ${error.message}`);
     process.exit(1);
   }
 })();

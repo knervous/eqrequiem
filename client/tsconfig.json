@@ -14,32 +14,45 @@
       "dom.iterable"
     ],
     "module": "ESNext",
-    "typeRoots": [                                       /* Specify multiple folders that act like './node_modules/@types'. */
-      "./node_modules/@types","../game/typings"
+    "typeRoots": [ /* Specify multiple folders that act like './node_modules/@types'. */
+      "./node_modules/@types",
+      "../game/typings"
     ],
     "skipLibCheck": true,
     /* Bundler mode */
     "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
     "isolatedModules": true,
     "moduleDetection": "force",
-    "noEmit": true,
     "jsx": "react-jsx",
     /* Linting */
     "strict": true,
-    "noImplicitAny": false,        // …but allow implicit `any` everywhere
+    "noImplicitAny": false, // …but allow implicit `any` everywhere
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "baseUrl": ".",
     "paths": {
-      "@game/*": ["src/Game/*"], // Map @game/* to src/Game/*
-      "@ui/*": ["src/UI/*"], // Map @game/* to src/Game/*
-      "@/*": ["src/*"], // Map @game/* to src/Game/*
-      "@eqmessage": ["src/Game/Net/internal/api/capnp/*"],
-      "@opcodes": ["src/Game/Net/opcodes.ts"],
-      "sage-core/*": ["../../eqsage/sage/lib/*"], // Map sage core*
-      "@bjs": ["src/bjs/index.ts"],
+      "@game/*": [
+        "src/Game/*"
+      ], // Map @game/* to src/Game/*
+      "@ui/*": [
+        "src/UI/*"
+      ], // Map @game/* to src/Game/*
+      "@/*": [
+        "src/*"
+      ], // Map @game/* to src/Game/*
+      "@eqmessage": [
+        "src/Game/Net/internal/api/capnp/*"
+      ],
+      "@opcodes": [
+        "src/Game/Net/opcodes.ts"
+      ],
+      "sage-core/*": [
+        "../../eqsage/sage/lib/*"
+      ], // Map sage core*
+      "@bjs": [
+        "src/bjs/index.ts"
+      ],
     }
   },
   "include": [
@@ -49,6 +62,9 @@
   ],
   "typeAcquisition": {
     "enable": true,
-    "include": ["node", "jest"]
+    "include": [
+      "node",
+      "jest"
+    ]
   }
 }

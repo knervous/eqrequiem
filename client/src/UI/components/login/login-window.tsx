@@ -10,12 +10,14 @@ import { DISCORD_CLIENT_ID, REDIRECT_URI, RESPONSE_TYPE, SCOPE } from "./util";
 import GameManager from "@game/Manager/game-manager";
 import { USE_SAGE } from "@game/Constants/constants";
 import {
-  getRootFiles,
   getEQFileExists,
   getFilesRecursively,
 } from "sage-core/util/fileHandler";
 import { supportedZones } from "@game/Constants/supportedZones";
 import { fsBindings } from "@/Core/bindings";
+import { qeynos2_spawns } from "@game/Constants/test-data";
+import { Spawn } from "@game/Net/internal/api/capnp/common";
+
 
 const defaultWorldName = "requiem";
 declare const window: Window;
@@ -36,6 +38,9 @@ export const LoginWindowComponent: React.FC = () => {
       race: 1,
       charClass: 1,
       name: "Soandso",
+    });
+    qeynos2_spawns.forEach((spawn) => { 
+      GameManager.instance.ZoneManager?.EntityPool?.AddSpawn(spawn as Spawn);
     });
   }, [setMode]);
 
@@ -59,22 +64,26 @@ export const LoginWindowComponent: React.FC = () => {
         const discordAuthUrl = `https://discord.com/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&response_type=${RESPONSE_TYPE}&redirect_uri=${REDIRECT_URI}&scope=${SCOPE}`;
         window.location.href = discordAuthUrl;
       }
-      // First try an opaque ping to the world server
+
+      if (!local) {
+        // First try an opaque ping to the world server
       // With a 2s timeout
-      const controller = new AbortController();
-      const signal = controller.signal;
-      setTimeout(() => {
-        controller.abort();
-      }, 2000);
-      const serverOnline = await fetch("https://eqrequiem.ddns.net/online", {
-        method: "GET",
-        mode: "cors",
-        signal,
-      }).then(() => true).catch(() => false);
-      if (!serverOnline) {
-        alert("World Server Offline");
-        return;
+        const controller = new AbortController();
+        const signal = controller.signal;
+        setTimeout(() => {
+          controller.abort();
+        }, 2000);
+        const serverOnline = await fetch("https://eqrequiem.ddns.net/online", {
+          method: "GET",
+          mode: "cors",
+          signal,
+        }).then(() => true).catch(() => false);
+        if (!serverOnline) {
+          alert("World Server Offline");
+          return;
+        }
       }
+
       if (
         await WorldSocket.connect("eqrequiem.ddns.net", 443, () => {
           console.log("Disconnected");

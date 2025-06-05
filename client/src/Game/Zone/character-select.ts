@@ -8,6 +8,7 @@ import {
   PlayerProfile,
 } from "@game/Net/internal/api/capnp/player";
 import Player from "@game/Player/player";
+import { Nameplate } from "@game/Model/nameplate";
 
 export default class CharacterSelect {
   private cameraDistance: number = 15;
@@ -139,7 +140,7 @@ export default class CharacterSelect {
       inventoryItems: player.items,
       zoneId: player.zone,
       face: player.face,
-    } as unknown as PlayerProfile, charCreate).then(() => {
+    } as unknown as PlayerProfile, charCreate).then(async () => {
       const location =
       this.locations[player?.charClass ?? CLASS_DATA_ENUM.Shaman];
       this.character.mesh.position = new BABYLON.Vector3(
@@ -151,6 +152,17 @@ export default class CharacterSelect {
       this.updateCameraPosition(this.character.mesh);
       this.startOrbiting(this.character.mesh!);
       this.character.playIdle();
+      const nameplate = await Nameplate.createNameplate(this.gameManager.scene!);
+      
+      nameplate.addParagraph(player?.name || 'Soandso', {
+        lineHeight: 5,
+      });
+      nameplate.color = BABYLON.Color4.FromHexString("#00ffff");
+      const node = new BABYLON.TransformNode(`nameplate_${player.name}`, this.gameManager.scene!);
+      nameplate.parent = node;
+      node.parent = this.character.mesh;
+      node.position = new BABYLON.Vector3(0, 4.5, 0);
+
     });
 
     clearInterval(this.orbitIntervalId);
