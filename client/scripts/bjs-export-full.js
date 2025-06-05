@@ -51,6 +51,9 @@ import "@babylonjs/loaders/glTF/2.0/index.js";
   // Main processing loop
   const tasks = allGlbs.map((filePath) =>
     limit(async () => {
+      // if (!filePath.toLowerCase().includes("qeynos2")) {
+      //   return;
+      // }
       const relPath = path.relative(rootPath, filePath);
       console.log(`\n→ Processing: ${relPath}`);
 

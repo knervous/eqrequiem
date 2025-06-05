@@ -161,10 +161,8 @@ export class EntityCache {
           });
           
         }
-        console.log('[EntityCache] Animation Ranges:', 123);
 
         const animationRanges: BJS.AnimationRange[] = container.rootNodes[0]?.getChildTransformNodes()?.[0]?.metadata?.gltf?.extras?.animationRanges as BJS.AnimationRange[] || [];
-        console.log('[EntityCache] Animation Ranges:', animationRanges);
         
         let startTime = 0;
         const animations: AnimationEntry[] = [];
