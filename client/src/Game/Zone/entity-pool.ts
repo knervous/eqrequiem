@@ -40,7 +40,7 @@ export default class EntityPool {
 
   async AddSpawn(spawn: Spawn) {
     //if (!spawn.name.includes('rodent') && !spawn.name.includes('large')) return;
-    if (!spawn.name.includes('Moodoro')) return;
+    // if (!spawn.name.includes('Moodoro')) return;
     console.log('Adding spawn', spawn.spawnId, spawn.name, {
       x: spawn.x,
       y: spawn.y,
