@@ -117,11 +117,9 @@ export class Entity extends BABYLON.TransformNode {
   }
 
   private async instantiateSecondaryMesh(): Promise<void> {
-    console.log(`[Entity] Attempting to instantiate secondary mesh for ${this.spawn.name}`, this.entityContainer.secondaryMeshes);
     if (this.entityContainer.secondaryMeshes <= 0) return;
     const variation = this.spawn.helm.toString().padStart(2, '0');
     const secondaryModel = `${this.entityContainer.model}he${variation}`;
-    console.log(`[Entity] Secondary model for ${this.spawn.name}: ${secondaryModel}`);
     const secondaryMeshContainer = await this.entityCache.getContainer(secondaryModel, this.scene, this.entityContainer.model);
     if (!secondaryMeshContainer) {
       console.warn(`[Entity] Failed to load secondary mesh for ${this.entityContainer.model}${variation}`);
