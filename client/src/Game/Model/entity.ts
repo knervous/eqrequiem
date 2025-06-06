@@ -28,7 +28,6 @@ export class Entity extends BABYLON.TransformNode {
   private nameplate: TextRenderer | null = null;
   private nameplateNode: BJS.TransformNode | null = null;
   private hidden: boolean = true;
-  private currentSecondaryVariation: string = '';
 
   constructor(spawn: Spawn, scene: BJS.Scene, entityContainer: EntityContainer, entityCache: EntityCache, parent: BJS.Node) {
     super(`entity_${spawn.name}`, scene);
@@ -37,7 +36,7 @@ export class Entity extends BABYLON.TransformNode {
     this.setParent(parent);
     this.entityContainer = entityContainer;
     this.entityCache = entityCache;
-    this.spawnPosition = new BABYLON.Vector3(-spawn.y, spawn.z, spawn.x);
+    this.spawnPosition = new BABYLON.Vector3(-spawn.y, spawn.z + 5, spawn.x);
     
     this.playAnimation(AnimationDefinitions.Idle1);
   }
@@ -121,7 +120,6 @@ export class Entity extends BABYLON.TransformNode {
     console.log(`[Entity] Attempting to instantiate secondary mesh for ${this.spawn.name}`, this.entityContainer.secondaryMeshes);
     if (this.entityContainer.secondaryMeshes <= 0) return;
     const variation = this.spawn.helm.toString().padStart(2, '0');
-    this.currentSecondaryVariation = variation;
     const secondaryModel = `${this.entityContainer.model}he${variation}`;
     const secondaryMeshContainer = await this.entityCache.getContainer(secondaryModel, this.scene, this.entityContainer.model);
     if (!secondaryMeshContainer) {
@@ -134,7 +132,7 @@ export class Entity extends BABYLON.TransformNode {
       secondaryInstance.position = this.spawnPosition;
       secondaryInstance.scaling.setAll(1.5);
       secondaryInstance.instancedBuffers.bakedVertexAnimationSettingsInstanced = this.animationBuffer;
-      const idx = this.getTextureIndex(mesh.name, 2);
+      const idx = this.getTextureIndex(mesh.name, this.spawn.equipChest);
       let vec;
       if (bufferCache[idx]) {
         vec = bufferCache[idx];
@@ -155,12 +153,12 @@ export class Entity extends BABYLON.TransformNode {
     this.animationBuffer.set(match.from, match.to, 0, 60);
   }
 
-  private swapFace(face: number) {
-    for (const mesh of this.secondaryInstances) {
-      const newFace = mesh.name.replace(/(.*)(\d{2})(\d{2})$/, `$1${face.toString().padStart(2, '0')}$3`);
+  // private swapFace(face: number) {
+  //   for (const mesh of this.secondaryInstances) {
+  //     const newFace = mesh.name.replace(/(.*)(\d{2})(\d{2})$/, `$1${face.toString().padStart(2, '0')}$3`);
       
-    } 
-  }
+  //   } 
+  // }
 
   private getTextureIndex(originalName, variation) : number {
     const match = originalName.match(charFileRegex);
