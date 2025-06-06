@@ -118,24 +118,23 @@ export class Entity extends BABYLON.TransformNode {
   }
 
   private async instantiateSecondaryMesh(): Promise<void> {
+    console.log(`[Entity] Attempting to instantiate secondary mesh for ${this.spawn.name}`, this.entityContainer.secondaryMeshes);
     if (this.entityContainer.secondaryMeshes <= 0) return;
     const variation = this.spawn.helm.toString().padStart(2, '0');
     this.currentSecondaryVariation = variation;
-
     const secondaryModel = `${this.entityContainer.model}he${variation}`;
     const secondaryMeshContainer = await this.entityCache.getContainer(secondaryModel, this.scene, this.entityContainer.model);
     if (!secondaryMeshContainer) {
       console.warn(`[Entity] Failed to load secondary mesh for ${this.entityContainer.model}${variation}`);
       return;
     }
-    let i = 0;
     for (const mesh of secondaryMeshContainer.meshes) {
-      const secondaryInstance = mesh.createInstance(`instance_sec_${i++}`);
+      const secondaryInstance = mesh.createInstance(mesh.name);
       secondaryInstance.setParent(this);
       secondaryInstance.position = this.spawnPosition;
       secondaryInstance.scaling.setAll(1.5);
       secondaryInstance.instancedBuffers.bakedVertexAnimationSettingsInstanced = this.animationBuffer;
-      const idx = this.getTextureIndex(mesh.name, this.spawn.equipChest);
+      const idx = this.getTextureIndex(mesh.name, 2);
       let vec;
       if (bufferCache[idx]) {
         vec = bufferCache[idx];
@@ -145,6 +144,7 @@ export class Entity extends BABYLON.TransformNode {
         );
       }
       mesh.instancedBuffers.sliceIndex = vec;
+      secondaryInstance.instancedBuffers.sliceIndex = vec;
       this.secondaryInstances.push(secondaryInstance);
     }
 
@@ -153,6 +153,13 @@ export class Entity extends BABYLON.TransformNode {
     const match = this.entityContainer.animations.find((a) => a.name === name);
     if (!match) return;
     this.animationBuffer.set(match.from, match.to, 0, 60);
+  }
+
+  private swapFace(face: number) {
+    for (const mesh of this.secondaryInstances) {
+      const newFace = mesh.name.replace(/(.*)(\d{2})(\d{2})$/, `$1${face.toString().padStart(2, '0')}$3`);
+      
+    } 
   }
 
   private getTextureIndex(originalName, variation) : number {

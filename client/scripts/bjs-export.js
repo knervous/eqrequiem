@@ -162,7 +162,33 @@ import "@babylonjs/loaders/glTF/2.0/index.js";
 
             // Serialize the scene to .babylon format
             const serializedScene = BABYLON.SceneSerializer.Serialize(scene);
-
+            // Sometimes our secondaryMeshes number was lying to us, let's fix that
+            const rootMetadata = serializedScene.transformNodes[0]?.metadata;
+            const currentSecMesh = rootMetadata.gltf?.extras?.secondaryMeshes;
+            let realSecondaryMeshCount = 0;
+            const modelName = path.basename(relPath, ".glb");
+            const secondaryMeshRegex = /\w{3}he\d{2}$/;
+            const isSecondaryMesh = secondaryMeshRegex.test(modelName);
+            if (isSecondaryMesh) { 
+              realSecondaryMeshCount = 0;
+            } else {
+              const baseModelName = modelName.slice(0, 3);
+              // Now recurse through the models folder and look at names and pick the number of matches
+              // with secondaryMeshRegex from the filename.glb stripped of .glb
+              const allModels = await collectGlbFiles(rootPath);
+              for (const modelPath of allModels) {
+                const modelName = path.basename(modelPath, ".glb");
+                if (modelName.startsWith(baseModelName) && secondaryMeshRegex.test(modelName)) {
+                  realSecondaryMeshCount++;
+                }
+              }
+            }
+            if (currentSecMesh !== realSecondaryMeshCount) {
+              if (!isSecondaryMesh) {
+                console.log(`[SecondaryMesh] Updating secondaryMeshes count for ${modelName} from ${currentSecMesh} to ${realSecondaryMeshCount}`);
+              }
+              serializedScene.transformNodes[0].metadata.gltf.extras.secondaryMeshes = realSecondaryMeshCount;
+            }
             // Convert to JSON string
             const babylonJson = JSON.stringify(serializedScene, null, 2);
 

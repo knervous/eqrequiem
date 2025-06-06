@@ -36,6 +36,7 @@ export class Grid {
   /** Store the player's last known cell */
   private lastPlayerCell: CellTriple | null = null;
 
+
   /** Precompute the 27 neighbor offsets so we can compare cells quickly */
   private static neighborOffsets: CellTriple[] = (() => {
     const out: CellTriple[] = [];
@@ -50,11 +51,9 @@ export class Grid {
   })();
 
   private interval: number = -1;
-  private readonly cellSize: number;
-
-  constructor(cellSize: number) {
-    this.cellSize = cellSize;
+  constructor(private cellSize: number, private scene: BJS.Scene) {
     this.interval = window.setInterval(() => {
+      const now = performance.now();
       this.updatePlayerPosition();
     }, 250);
   }
@@ -109,7 +108,7 @@ export class Grid {
   /**
    * (Optional) If you ever need to unpack a key back into [x, y, z]:
    */
-  private static tripleFromKey(key: bigint): CellTriple {
+  public static tripleFromKey(key: bigint): CellTriple {
     const zb = key & MASK_21;
     const yb = (key >> 21n) & MASK_21;
     const xb = (key >> 42n) & MASK_21;
@@ -266,23 +265,56 @@ export class Grid {
     this.lastPlayerCell = newPlayerCell;
   }
 
-  private handleEntityVisibility(entity: Entity): void {
-    const playerCell = this.worldToCell(this.playerPosition);
-    const entCell =
-      this.entityToCell.get(entity) ?? this.computeCell(entity.spawnPosition);
+  private isOccludedByPhysics(entity: Entity): boolean {
+    const physics = this.scene.getPhysicsEngine();
+    const plugin  = physics?.getPhysicsPlugin() as BJS.HavokPlugin;
 
+    if (!physics || !plugin) {
+      return false;
+    }
+
+    const result = new BABYLON.PhysicsRaycastResult();
+    plugin.raycast(this.playerPosition, entity.spawnPosition, result);
+
+    const hitBody = result.body;
+    if (!hitBody) {
+      return false;
+    }
+    const toTarget = entity.spawnPosition.subtract(this.playerPosition);
+    const distanceToEntity = toTarget.length();
+
+    return result.hitDistance < distanceToEntity;
+  }
+
+  private handleEntityVisibility(entity: Entity): void {
+    // 1) Broad-phase: Is entity’s cell within ±1 of player’s cell? If not, hide:
+    const playerCell = this.worldToCell(this.playerPosition);
+    const entCell = this.entityToCell.get(entity) ?? this.worldToCell(entity.spawnPosition);
     const dx = Math.abs(playerCell[0] - entCell[0]);
     const dy = Math.abs(playerCell[1] - entCell[1]);
     const dz = Math.abs(playerCell[2] - entCell[2]);
 
-    if (dx <= 1 && dy <= 1 && dz <= 1) {
+    // If entity is outside the ±1 cell range, hide it
+    if (dx > 1 || dy > 1 || dz > 1) {
+      entity.hide();
+      return;
+    }
+
+    // 2) Check distance to entity
+    const playerPos = this.playerPosition;
+    const entityPos = entity.spawnPosition;
+    const distance = BABYLON.Vector3.Distance(playerPos, entityPos);
+
+    if (distance <= 200) {
+    // Entities within 200 units are always visible, no occlusion test needed
       entity.initialize();
     } else {
-      entity.hide();
+    // 3) For entities farther than 200 units, perform physics-based occlusion test
+      if (this.isOccludedByPhysics(entity)) {
+        entity.hide();
+      } else {
+        entity.initialize();
+      }
     }
-  }
-
-  private computeCell(p: BJS.Vector3): CellTriple {
-    return this.worldToCell(p);
   }
 }

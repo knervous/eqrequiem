@@ -1,7 +1,7 @@
 
 interface BabylonExportObject { initialize(): Promise<void> }
 
-import "@babylonjs/core";
+import * as b from "@babylonjs/core";
 type CoreAPI   = typeof import("@babylonjs/core");
 type LoaderAPI = typeof import("@babylonjs/loaders/glTF/2.0");
 type MaterialsAPI = typeof import("@babylonjs/materials");
@@ -109,6 +109,11 @@ const exportObject: BabylonAPI = {
     addImport(import('@babylonjs/core/Physics/joinedPhysicsEngineComponent'));
 
     await Promise.all(importPromises);
+    for (const[key, entry] of Object.entries(b)) {
+     
+      exportObject[key] = entry;
+   
+    }
 
   },
 } as BabylonExportObject;

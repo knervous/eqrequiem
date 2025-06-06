@@ -21,7 +21,7 @@ export default class EntityPool {
   constructor(parent: BJS.Node, scene: BJS.Scene) {
     this.scene = scene;
     this.parent = parent;
-    this.grid = new Grid(300.0);
+    this.grid = new Grid(300.0, scene);
     this.entityCache = new EntityCache(this.parent);
   }
 
@@ -39,6 +39,7 @@ export default class EntityPool {
   }
 
   async AddSpawn(spawn: Spawn) {
+    if (!spawn.name.includes('Fippy')) return;
     console.log('Adding spawn', spawn.spawnId, spawn.name, {
       x: spawn.x,
       y: spawn.y,

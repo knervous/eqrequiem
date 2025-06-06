@@ -68,7 +68,6 @@ export class EntityCache {
           console.log(`Failed to load model ${model}`);
           return null;
         }
-        console.log('COntainer:', container);
         container.rootNodes[0].name = `container_${model}`;
         container.rootNodes[0].setParent(this.parent);
         // VAT Textures
