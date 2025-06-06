@@ -205,7 +205,8 @@ export class EntityCache {
             console.log(
               `[Player] Sub-material name ${material.name} does not match expected format`,
             );
-            return;
+            // todo figure this out with leather chain helm etc.
+            continue;
           }
 
           const [, , piece, , texIdx] = match;
