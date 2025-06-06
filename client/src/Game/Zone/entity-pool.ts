@@ -39,7 +39,7 @@ export default class EntityPool {
   }
 
   async AddSpawn(spawn: Spawn) {
-    if (!spawn.name.includes('Fippy')) return;
+    // if (!spawn.name.includes('Fippy')) return;
     console.log('Adding spawn', spawn.spawnId, spawn.name, {
       x: spawn.x,
       y: spawn.y,
