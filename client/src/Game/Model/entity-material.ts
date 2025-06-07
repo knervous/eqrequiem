@@ -12,7 +12,7 @@ const VS_GL = `
 
         // Varyings → fragment
         varying vec2 vUV;
-        varying float vSlice;
+        flat out float vSlice;
 
         // Uniforms
         uniform mat4 worldViewProjection;
@@ -45,7 +45,7 @@ const FS_GL = `
 
         // Varyings from vertex
         varying vec2 vUV;
-        varying float vSlice;
+        flat in float vSlice;
 
         // On WebGPU, sampler2DArray is still bound as sampler2DArray in GLSL;
         // Babylon.js will transpile this to WGSL under the hood :contentReference[oaicite:2]{index=2}.
@@ -115,6 +115,6 @@ export function createVATShaderMaterial(scene, texArr, vatTexture): BJS.ShaderMa
     }
   };
 
-  shaderMat.backFaceCulling = false;
+  //shaderMat.backFaceCulling = false;
   return shaderMat;
 }

@@ -73,6 +73,8 @@ import "@babylonjs/loaders/glTF/2.0/index.js";
         {
           const engine = new NullEngine();
           const scene = new Scene(engine);
+          scene.useRightHandedSystem = true;
+
           const base64 = inputBuffer.toString("base64");
           const dataUrl = `data:model/gltf-binary;base64,${base64}`;
 

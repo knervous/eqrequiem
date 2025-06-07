@@ -192,6 +192,7 @@ export class EntityCache {
           mesh.parent = null; // remove any hierarchy offset
           mesh.computeWorldMatrix(true); // ensure worldMatrix is up to date
           mesh.bakeTransformIntoVertices(mesh.getWorldMatrix()); // bake transform into vertex data
+          mesh.flipFaces(true);
           mesh.position.set(0, 0, 0);
           mesh.rotation.set(0, 0, 0);
           mesh.scaling.set(1, 1, 1);
