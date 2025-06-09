@@ -1,5 +1,5 @@
-import BABYLON from '@bjs';
-import type * as BJS from '@babylonjs/core';
+import BABYLON from "@bjs";
+import type * as BJS from "@babylonjs/core";
 import type Player from "./player";
 import { WorldSocket } from "@ui/net/instances";
 import { OpCodes } from "@game/Net/opcodes";
@@ -106,6 +106,7 @@ export class PlayerMovement {
     };
 
     const mouseCaptured = this.scene.getEngine().isPointerLock;
+    const firstPerson = this.player.playerCamera.isFirstPerson;
     let didTurn = false;
     let didCrouch = false;
     let playWalk = false;
@@ -127,19 +128,37 @@ export class PlayerMovement {
     // Compute movement direction
     const movement = new BABYLON.Vector3(0, 0, 0);
     if (this.isActionPressed("move_forward")) {
-      movement.x = -1;
+      if (firstPerson) {
+        movement.z = -1;
+      } else {
+        // In third person, forward is negative Z
+        movement.x = -1;
+      }
       playWalk = true;
     }
     if (this.isActionPressed("move_backward")) {
-      movement.x = 1;
+      if (firstPerson) {
+        movement.z = 1;
+      } else {
+        // In third person, backward is positive Z
+        movement.x = 1;
+      }
       playWalk = true;
     }
     if (this.isActionPressed("turn_left") && mouseCaptured) {
-      movement.z = 1;
+      if (firstPerson) {
+        movement.x = -1;
+      } else {
+        movement.z = 1;
+      }
       playWalk = true;
     }
     if (this.isActionPressed("turn_right") && mouseCaptured) {
-      movement.z = -1;
+      if (firstPerson) {
+        movement.x = 1;
+      } else {
+        movement.z = -1;
+      }
       playWalk = true;
     }
     if (this.isActionPressed("move_down")) {
@@ -148,19 +167,32 @@ export class PlayerMovement {
     }
 
     // Compute forward and right vectors
-    const forward = BABYLON.Vector3.Forward()
-      .rotateByQuaternionToRef(mesh.absoluteRotationQuaternion, new BABYLON.Vector3());
+    const forward = BABYLON.Vector3.Forward().rotateByQuaternionToRef(
+      mesh.absoluteRotationQuaternion,
+      new BABYLON.Vector3(),
+    );
     const forwardXZ = new BABYLON.Vector3(forward.x, 0, forward.z).normalize();
-    const rightXZ = BABYLON.Vector3.Cross(new BABYLON.Vector3(0, 1, 0), forwardXZ).normalize();
+    const rightXZ = BABYLON.Vector3.Cross(
+      new BABYLON.Vector3(0, 1, 0),
+      forwardXZ,
+    ).normalize();
 
     // Handle jump
     const onFloor = this.isOnFloor();
-    if (this.isActionPressed("move_up") && this.jumpState === "idle" && onFloor) {
+    if (
+      this.isActionPressed("move_up") &&
+      this.jumpState === "idle" &&
+      onFloor
+    ) {
       this.jumpState = "leavingGround";
       const currentVelocity = this.physicsBody.getLinearVelocity();
       const jumpVelocity = new BABYLON.Vector3(0, this.jumpImpulseStrength, 0);
       this.physicsBody.setLinearVelocity(
-        new BABYLON.Vector3(currentVelocity.x, jumpVelocity.y, currentVelocity.z),
+        new BABYLON.Vector3(
+          currentVelocity.x,
+          jumpVelocity.y,
+          currentVelocity.z,
+        ),
       );
       this.player.playJump();
     }
@@ -177,7 +209,9 @@ export class PlayerMovement {
     }
 
     // Compute velocity
-    const speedMod = this.isActionPressed("sprint") ? this.sprintMultiplier : 1.0;
+    const speedMod = this.isActionPressed("sprint")
+      ? this.sprintMultiplier
+      : 1.0;
     const movementZScaled = movement.z * this.moveSpeed * speedMod;
     const movementXScaled = movement.x * this.moveSpeed * speedMod;
     const movementYScaled = movement.y * this.moveSpeed * speedMod;
@@ -187,7 +221,10 @@ export class PlayerMovement {
     const velocityY = new BABYLON.Vector3(0, 1, 0).scale(movementYScaled);
 
     const velocityXZ = velocityForward.add(velocityStrafe);
-    const velocity = velocityXZ.length() > 0 ? velocityXZ.normalize().scale(this.moveSpeed * speedMod) : velocityXZ;
+    const velocity =
+      velocityXZ.length() > 0
+        ? velocityXZ.normalize().scale(this.moveSpeed * speedMod)
+        : velocityXZ;
     this.finalVelocity = velocity.add(velocityY); // Store finalVelocity
     const finalVelocity = velocity.add(velocityY);
 
@@ -201,7 +238,11 @@ export class PlayerMovement {
     } else {
       const currentVelocity = this.physicsBody.getLinearVelocity();
       this.physicsBody.setLinearVelocity(
-        new BABYLON.Vector3(finalVelocity.x, currentVelocity.y, finalVelocity.z),
+        new BABYLON.Vector3(
+          finalVelocity.x,
+          currentVelocity.y,
+          finalVelocity.z,
+        ),
       );
     }
 
@@ -210,7 +251,11 @@ export class PlayerMovement {
     const currentVelocity = this.physicsBody.getLinearVelocity();
     if (currentVelocity.y < -maxVerticalSpeed) {
       this.physicsBody.setLinearVelocity(
-        new BABYLON.Vector3(currentVelocity.x, -maxVerticalSpeed, currentVelocity.z),
+        new BABYLON.Vector3(
+          currentVelocity.x,
+          -maxVerticalSpeed,
+          currentVelocity.z,
+        ),
       );
     }
 

@@ -6,7 +6,7 @@ export class PlayerCamera {
   private player: Player;
   private camera: BJS.UniversalCamera;
   private cameraLight: BJS.PointLight;
-  private isFirstPerson: boolean = false;
+  public isFirstPerson: boolean = false;
   private minCameraDistance: number = 1;
   private maxCameraDistance: number = 35;
   private cameraDistance: number = 13;
@@ -105,7 +105,11 @@ export class PlayerCamera {
     const pitchSensitivity = 0.005;
 
     this.cameraYaw -= x * yawSensitivity;
-    this.cameraPitch += y * pitchSensitivity;
+    if (this.isFirstPerson) {
+      this.cameraPitch -= y * pitchSensitivity; // Inverted Y-axis for first-person
+    } else {
+      this.cameraPitch += y * pitchSensitivity; // Normal Y-axis for third-person
+    }
 
     const maxPitch = Math.PI / 2 - 0.01;
     this.cameraPitch = Math.max(-maxPitch, Math.min(maxPitch, this.cameraPitch));
@@ -118,10 +122,12 @@ export class PlayerCamera {
   public updateCameraPosition() {
     const mesh = this.player.mesh;
     if (!mesh) return;
-    const playerPos = mesh.position;
+    const playerPos = mesh.position.clone(); // Clone to avoid modifying original
 
     if (this.isFirstPerson) {
+      // In first-person, position camera at player position + offset
       this.camera.position = playerPos.add(this.lookatOffset);
+      // Ensure camera rotation is strictly controlled (no roll)
       this.camera.rotation = new BABYLON.Vector3(this.cameraPitch, this.cameraYaw, 0);
     } else {
       const hDist = this.cameraDistance * Math.cos(this.cameraPitch);
@@ -136,6 +142,20 @@ export class PlayerCamera {
     }
 
     this.cameraLight.position = this.camera.position;
+    this.camera.rotation.z = 0;
+    // Debug logging for first-person mode
+    if (this.isFirstPerson) {
+      console.log("Camera Rotation:", {
+        pitch: this.camera.rotation.x,
+        yaw: this.camera.rotation.y,
+        roll: this.camera.rotation.z,
+      });
+      console.log("Player Mesh Rotation:", {
+        x: mesh.rotationQuaternion?.toEulerAngles().x ?? 0,
+        y: mesh.rotationQuaternion?.toEulerAngles().y ?? 0,
+        z: mesh.rotationQuaternion?.toEulerAngles().z ?? 0,
+      });
+    }
   }
 
   public dispose() {
