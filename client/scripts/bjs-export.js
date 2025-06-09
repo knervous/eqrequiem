@@ -33,7 +33,9 @@ import "@babylonjs/loaders/glTF/2.0/index.js";
   // Ensure the user passed a folder
   const inputRoot = process.argv[2];
   if (!inputRoot) {
-    console.error("Usage: node lean-glb-to-babylon.js <folder-containing-GLBs>");
+    console.error(
+      "Usage: node lean-glb-to-babylon.js <folder-containing-GLBs>",
+    );
     process.exit(1);
   }
 
@@ -63,16 +65,34 @@ import "@babylonjs/loaders/glTF/2.0/index.js";
     limit(async () => {
       const relPath = path.relative(rootPath, filePath);
       console.log(`\n→ Processing: ${relPath}`);
+    //  if (!relPath.toLowerCase().endsWith("qcm.glb")) return;
 
       try {
         // 1) Read the original GLB into a Buffer
         const inputBuffer = await fs.readFile(filePath);
+        let boundingBox = {
+          min: [
+            Number.POSITIVE_INFINITY,
+            Number.POSITIVE_INFINITY,
+            Number.POSITIVE_INFINITY,
+          ],
+          max: [
+            Number.NEGATIVE_INFINITY,
+            Number.NEGATIVE_INFINITY,
+            Number.NEGATIVE_INFINITY,
+          ],
+        };
 
         // 2) HEADLESS-BABYLON: extract animation-group ranges (“from”/“to”)
         let animationRanges = [];
         {
           const engine = new NullEngine();
           const scene = new Scene(engine);
+          const camera = new BABYLON.FreeCamera(
+            "camera",
+            new BABYLON.Vector3(0, 0, -10),
+            scene,
+          );
           scene.useRightHandedSystem = true;
 
           const base64 = inputBuffer.toString("base64");
@@ -88,6 +108,63 @@ import "@babylonjs/loaders/glTF/2.0/index.js";
                 from: ag.from,
                 to: ag.to,
               }));
+            }
+            const skeletons = result.skeletons || [];
+            const meshes = result.meshes || [];
+            if (animationGroups.length && skeletons.length) {
+              const idleGroup =
+                animationGroups.find((g) => g.name === "p01") ||
+                animationGroups[0];
+              const skel = skeletons[0];
+
+              // switch meshes to CPU skinning and bind the skeleton
+              meshes.forEach((m) => {
+                m.computeBonesUsingShaders = false;
+                m.skeleton = skel;
+              });
+
+              // jump to frame `idleGroup.from`
+              scene.beginAnimation(
+                skel,
+                idleGroup.from,
+                idleGroup.from + 1,
+                false,
+                1,
+              );
+              scene.render(); // force one CPU-skinning pass
+              scene.stopAnimation(skel);
+
+              const skelBB = {
+                min: new BABYLON.Vector3(
+                  Number.POSITIVE_INFINITY,
+                  Number.POSITIVE_INFINITY,
+                  Number.POSITIVE_INFINITY,
+                ),
+                max: new BABYLON.Vector3(
+                  Number.NEGATIVE_INFINITY,
+                  Number.NEGATIVE_INFINITY,
+                  Number.NEGATIVE_INFINITY,
+                ),
+              };
+              skel.computeAbsoluteMatrices(true);
+              // For each bone, grab its world‐space head position…
+              skel.bones.forEach((bone) => {
+                const absMat = bone.getAbsoluteMatrix(); // bone→world matrix
+                const headPos = absMat.getTranslation(); // origin of the bone in world space
+
+                skelBB.min.minimizeInPlace(headPos);
+                skelBB.max.maximizeInPlace(headPos);
+              });
+              boundingBox = {
+                min: [skelBB.min.x, skelBB.min.y, skelBB.min.z],
+                max: [skelBB.max.x, skelBB.max.y, skelBB.max.z],
+              };
+
+              // restore GPU skinning
+              meshes.forEach((m) => {
+                m.computeBonesUsingShaders = true;
+                m.skeleton = skel;
+              });
             }
           } catch (err) {
             console.warn(
@@ -125,7 +202,7 @@ import "@babylonjs/loaders/glTF/2.0/index.js";
             const existingExtras = root.listNodes()[0].getExtras() || {};
             root
               .listNodes()[0]
-              .setExtras({ animationRanges, ...existingExtras });
+              .setExtras({ animationRanges, boundingBox, ...existingExtras });
           }
 
           // 3b) Remove all animations (but keep skins/skeletons)
@@ -142,20 +219,26 @@ import "@babylonjs/loaders/glTF/2.0/index.js";
           // 4) Write the “lean” GLB to a buffer
           outputBuffer = await io.writeBinary(document);
 
-        //   // 5) Write the lean GLB to disk
-        //   const targetGlbPath = path.join(outputRoot, relPath);
-        //   await fs.ensureDir(path.dirname(targetGlbPath));
-        //   await fs.writeFile(targetGlbPath, outputBuffer);
+          //   // 5) Write the lean GLB to disk
+          //   const targetGlbPath = path.join(outputRoot, relPath);
+          //   await fs.ensureDir(path.dirname(targetGlbPath));
+          //   await fs.writeFile(targetGlbPath, outputBuffer);
 
-        //   console.log(
-        //     `  ✔ Wrote lean GLB to: ${path.relative(process.cwd(), targetGlbPath)}`,
-        //   );
+          //   console.log(
+          //     `  ✔ Wrote lean GLB to: ${path.relative(process.cwd(), targetGlbPath)}`,
+          //   );
         }
 
         // 6) BABYLON EXPORT: Load the modified GLB into Babylon.js and export as .babylon
         {
           const engine = new NullEngine();
           const scene = new Scene(engine);
+          const camera = new BABYLON.FreeCamera(
+            "camera",
+            new BABYLON.Vector3(0, 0, -10),
+            scene,
+          );
+          scene.activeCamera = camera;
           const base64 = Buffer.from(outputBuffer).toString("base64");
           const dataUrl = `data:model/gltf-binary;base64,${base64}`;
 
@@ -171,7 +254,7 @@ import "@babylonjs/loaders/glTF/2.0/index.js";
             const modelName = path.basename(relPath, ".glb");
             const secondaryMeshRegex = /\w{3}he\d{2}$/;
             const isSecondaryMesh = secondaryMeshRegex.test(modelName);
-            if (isSecondaryMesh) { 
+            if (isSecondaryMesh) {
               realSecondaryMeshCount = 0;
             } else {
               const baseModelName = modelName.slice(0, 3);
@@ -180,16 +263,22 @@ import "@babylonjs/loaders/glTF/2.0/index.js";
               const allModels = await collectGlbFiles(rootPath);
               for (const modelPath of allModels) {
                 const modelName = path.basename(modelPath, ".glb");
-                if (modelName.startsWith(baseModelName) && secondaryMeshRegex.test(modelName)) {
+                if (
+                  modelName.startsWith(baseModelName) &&
+                  secondaryMeshRegex.test(modelName)
+                ) {
                   realSecondaryMeshCount++;
                 }
               }
             }
             if (currentSecMesh !== realSecondaryMeshCount) {
               if (!isSecondaryMesh) {
-                console.log(`[SecondaryMesh] Updating secondaryMeshes count for ${modelName} from ${currentSecMesh} to ${realSecondaryMeshCount}`);
+                console.log(
+                  `[SecondaryMesh] Updating secondaryMeshes count for ${modelName} from ${currentSecMesh} to ${realSecondaryMeshCount}`,
+                );
               }
-              serializedScene.transformNodes[0].metadata.gltf.extras.secondaryMeshes = realSecondaryMeshCount;
+              serializedScene.transformNodes[0].metadata.gltf.extras.secondaryMeshes =
+                realSecondaryMeshCount;
             }
             // Convert to JSON string
             const babylonJson = JSON.stringify(serializedScene, null, 2);
@@ -223,5 +312,8 @@ import "@babylonjs/loaders/glTF/2.0/index.js";
 
   // Wait for all files to finish
   await Promise.all(tasks);
-  console.log("\nAll done! “Lean” GLBs and .babylon files are under:", outputRoot);
+  console.log(
+    "\nAll done! “Lean” GLBs and .babylon files are under:",
+    outputRoot,
+  );
 })();

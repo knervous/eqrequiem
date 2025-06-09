@@ -214,7 +214,8 @@ export class ZoneManager {
       }
       mesh.parent = this.zoneContainer;
 
-      if (this.usePhysics) {
+      const passThrough = mesh.metadata?.gltf?.extras?.passThrough ?? false;
+      if (this.usePhysics && !passThrough) {
         // Create physics body for static zone geometry
         mesh.physicsBody = new BABYLON.PhysicsBody(
           mesh,

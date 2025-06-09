@@ -21,6 +21,11 @@ export type EntityContainer = {
   textureAtlas: string[];
   animations: AnimationEntry[];
   secondaryMeshes: number;
+  boundingBox?: {
+    min: number[];
+    max: number[];
+    center: number[];
+  } | null;
 };
 
 export type AnimationEntry = {
@@ -31,6 +36,8 @@ export type AnimationEntry = {
 
 const SLICE_INDEX_BUFFER = new BABYLON.Vector2(0, 0);
 const ANIMATION_BUFFER = new BABYLON.Vector4(0, 1, 0, 60);
+
+
 export class EntityCache {
   private parent: BJS.Node;
   constructor(parent: BJS.Node) {
@@ -97,6 +104,7 @@ export class EntityCache {
             scene,
             container.skeletons[0],
           );
+ 
           manager = new BABYLON.BakedVertexAnimationManager(scene);
           const vertexTexture = baker.textureFromBakedVertexData(vatData);
           manager.texture = vertexTexture;
@@ -236,6 +244,7 @@ export class EntityCache {
           meshes: meshes,
           textureAtlas: textureAtlas,
           animations,
+          boundingBox: container.rootNodes[0]?.getChildTransformNodes()?.[0]?.metadata?.gltf?.extras?.boundingBox,
           secondaryMeshes: container.rootNodes[0]?.getChildTransformNodes()?.[0]?.metadata?.gltf?.extras?.secondaryMeshes ?? 0,
         };
         res(entityContainer);

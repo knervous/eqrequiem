@@ -5,39 +5,20 @@ import Player from "@game/Player/player";
 
 type CellTriple = [number, number, number];
 
-/**
- * We reserve 21 bits per coordinate. That lets each coordinate range
- * from –(2^20) … +((2^20)–1) = –1 048 576 … +1 048 575.
- * We bias each signed value by +2^20 (1 048 576) so that it fits into an
- * unsigned 21-bit range [0 .. (2^21–1)] = [0 .. 2 097 151].
- *
- * Layout (total 63 bits):
- *   [ x_bias (21 bits) ] [ y_bias (21 bits) ] [ z_bias (21 bits) ]
- *   ^                 ^                 ^
- *  bit  62           41               20                0
- *
- * Packing:   key = (x_bias << 42) | (y_bias << 21) | (z_bias)
- * Unpacking:
- *   z_bias =  (key & ((1n << 21n) - 1n))
- *   y_bias = ((key >> 21n) & ((1n << 21n) - 1n))
- *   x_bias =  (key >> 42n) & ((1n << 21n) - 1n)
- */
-
 const BIAS_21 = 1 << 20; // 2^20 = 1_048_576
 const MASK_21 = (1n << 21n) - 1n; // 0x1F_FFFF (21 bits of 1)
 
 export class Grid {
-  /** Map from packed BigInt key → Set of all entities in that cell */
   private cells = new Map<bigint, Set<Entity>>();
-
-  /** Map from Entity → its current cell triple; used to know where an entity “was” */
   private entityToCell = new Map<Entity, CellTriple>();
-
-  /** Store the player's last known cell */
   private lastPlayerCell: CellTriple | null = null;
+  private interval: number = -1;
 
+  // Debug visualization
+  private debugEnabled: boolean = false;
+  private debugMeshes: Map<bigint, BJS.Mesh> = new Map();
+  private playerCellMesh: BJS.Mesh | null = null;
 
-  /** Precompute the 27 neighbor offsets so we can compare cells quickly */
   private static neighborOffsets: CellTriple[] = (() => {
     const out: CellTriple[] = [];
     for (let dx = -1; dx <= 1; dx++) {
@@ -50,11 +31,15 @@ export class Grid {
     return out;
   })();
 
-  private interval: number = -1;
-  constructor(private cellSize: number, private scene: BJS.Scene) {
+  constructor(private cellSize: number, private scene: BJS.Scene, debug: boolean = false) {
+    this.debugEnabled = debug;
     this.interval = window.setInterval(() => {
-      const now = performance.now();
+      // const now = performance.now();
       this.updatePlayerPosition();
+      if (this.debugEnabled) {
+        this.updateDebugVisualization();
+      }
+    //  console.log(`Grid update took ${performance.now() - now} ms`);
     }, 250);
   }
 
@@ -66,6 +51,7 @@ export class Grid {
     this.cells.clear();
     this.entityToCell.clear();
     this.lastPlayerCell = null;
+    this.clearDebugVisualization();
   }
 
   private get playerPosition(): BJS.Vector3 {
@@ -80,18 +66,11 @@ export class Grid {
     ];
   }
 
-  /** 
-   * Packs a CellTriple [x, y, z] into a single BigInt key:
-   *   1) Bias each coordinate by +2^20 so that it’s in [0 .. 2^21–1].
-   *   2) Shift x_bias << 42, y_bias << 21, z_bias << 0, then OR them.
-   */
   private static keyFromTriple([x, y, z]: CellTriple): bigint {
-    // Step 1: bias
     const xb = BigInt(x + BIAS_21);
     const yb = BigInt(y + BIAS_21);
     const zb = BigInt(z + BIAS_21);
 
-    // Step 2: range‐check (optional but safer)
     if (xb < 0n || xb > MASK_21) {
       throw new Error(`X coordinate ${x} out of range [-2^20..2^20-1]`);
     }
@@ -105,15 +84,11 @@ export class Grid {
     return (xb << 42n) | (yb << 21n) | zb;
   }
 
-  /**
-   * (Optional) If you ever need to unpack a key back into [x, y, z]:
-   */
   public static tripleFromKey(key: bigint): CellTriple {
     const zb = key & MASK_21;
     const yb = (key >> 21n) & MASK_21;
     const xb = (key >> 42n) & MASK_21;
 
-    // Un-bias:
     const x = Number(xb) - BIAS_21;
     const y = Number(yb) - BIAS_21;
     const z = Number(zb) - BIAS_21;
@@ -133,6 +108,9 @@ export class Grid {
 
     this.entityToCell.set(entity, cell);
     this.handleEntityVisibility(entity);
+    if (this.debugEnabled) {
+      this.updateCellVisualization(cell, key);
+    }
   }
 
   public removeEntity(entity: Entity): void {
@@ -147,6 +125,9 @@ export class Grid {
       bucket.delete(entity);
       if (bucket.size === 0) {
         this.cells.delete(oldKey);
+        if (this.debugEnabled) {
+          this.removeCellVisualization(oldKey);
+        }
       }
     }
 
@@ -168,17 +149,18 @@ export class Grid {
       oldCell[2] === newCell[2];
 
     if (!sameCell) {
-      // Remove from old bucket
       const oldKey = Grid.keyFromTriple(oldCell);
       const oldBucket = this.cells.get(oldKey);
       if (oldBucket) {
         oldBucket.delete(entity);
         if (oldBucket.size === 0) {
           this.cells.delete(oldKey);
+          if (this.debugEnabled) {
+            this.removeCellVisualization(oldKey);
+          }
         }
       }
 
-      // Insert into new bucket
       const newKey = Grid.keyFromTriple(newCell);
       let newBucket = this.cells.get(newKey);
       if (!newBucket) {
@@ -187,13 +169,14 @@ export class Grid {
       }
       newBucket.add(entity);
 
-      // Update map
       this.entityToCell.set(entity, newCell);
 
-      // Check visibility once for this entity
+      if (this.debugEnabled) {
+        this.updateCellVisualization(newCell, newKey);
+      }
+
       this.handleEntityVisibility(entity);
     } else {
-      // If only the player moved, still re-check
       const playerCell = this.worldToCell(this.playerPosition);
       const lastCell = this.lastPlayerCell ?? playerCell;
       const moved =
@@ -228,16 +211,6 @@ export class Grid {
 
   updatePlayerPosition(): void {
     const newPlayerCell = this.worldToCell(this.playerPosition);
-
-    if (
-      this.lastPlayerCell &&
-      newPlayerCell[0] === this.lastPlayerCell[0] &&
-      newPlayerCell[1] === this.lastPlayerCell[1] &&
-      newPlayerCell[2] === this.lastPlayerCell[2]
-    ) {
-      return;
-    }
-
     const cellsToCheck = new Set<bigint>();
     const addCells = (baseCell: CellTriple | null) => {
       if (!baseCell) return;
@@ -267,7 +240,7 @@ export class Grid {
 
   private isOccludedByPhysics(entity: Entity): boolean {
     const physics = this.scene.getPhysicsEngine();
-    const plugin  = physics?.getPhysicsPlugin() as BJS.HavokPlugin;
+    const plugin = physics?.getPhysicsPlugin() as BJS.HavokPlugin;
 
     if (!physics || !plugin) {
       return false;
@@ -277,7 +250,7 @@ export class Grid {
     plugin.raycast(this.playerPosition, entity.spawnPosition, result);
 
     const hitBody = result.body;
-    if (!hitBody) {
+    if (!hitBody || hitBody.motionType !== BABYLON.PhysicsMotionType.STATIC) {
       return false;
     }
     const toTarget = entity.spawnPosition.subtract(this.playerPosition);
@@ -287,34 +260,135 @@ export class Grid {
   }
 
   private handleEntityVisibility(entity: Entity): void {
-    // 1) Broad-phase: Is entity’s cell within ±1 of player’s cell? If not, hide:
     const playerCell = this.worldToCell(this.playerPosition);
     const entCell = this.entityToCell.get(entity) ?? this.worldToCell(entity.spawnPosition);
     const dx = Math.abs(playerCell[0] - entCell[0]);
     const dy = Math.abs(playerCell[1] - entCell[1]);
     const dz = Math.abs(playerCell[2] - entCell[2]);
 
-    // If entity is outside the ±1 cell range, hide it
     if (dx > 1 || dy > 1 || dz > 1) {
       entity.hide();
       return;
     }
 
-    // 2) Check distance to entity
     const playerPos = this.playerPosition;
     const entityPos = entity.spawnPosition;
     const distance = BABYLON.Vector3.Distance(playerPos, entityPos);
 
     if (distance <= 200) {
-    // Entities within 200 units are always visible, no occlusion test needed
       entity.initialize();
     } else {
-    // 3) For entities farther than 200 units, perform physics-based occlusion test
       if (this.isOccludedByPhysics(entity)) {
         entity.hide();
       } else {
         entity.initialize();
       }
+    }
+  }
+
+  // Debug visualization methods
+  private createCellMesh(cell: CellTriple, color: BJS.Color3): BJS.Mesh {
+    const size = this.cellSize;
+    const box = BABYLON.MeshBuilder.CreateBox(
+      `cell_${cell[0]}_${cell[1]}_${cell[2]}`,
+      { size: size, updatable: true },
+      this.scene,
+    );
+    box.position = new BABYLON.Vector3(
+      cell[0] * size + size / 2,
+      cell[1] * size + size / 2,
+      cell[2] * size + size / 2,
+    );
+
+    const material = new BABYLON.StandardMaterial(`mat_${cell[0]}_${cell[1]}_${cell[2]}`, this.scene);
+    material.emissiveColor = color;
+    material.wireframe = true;
+    box.material = material;
+
+    return box;
+  }
+
+  private updateCellVisualization(cell: CellTriple, key: bigint): void {
+    if (!this.debugEnabled) return;
+
+    if (!this.debugMeshes.has(key)) {
+      const mesh = this.createCellMesh(cell, new BABYLON.Color3(0, 1, 0)); // Green for active cells
+      this.debugMeshes.set(key, mesh);
+    }
+  }
+
+  private removeCellVisualization(key: bigint): void {
+    if (!this.debugEnabled) return;
+
+    const mesh = this.debugMeshes.get(key);
+    if (mesh) {
+      mesh.dispose();
+      this.debugMeshes.delete(key);
+    }
+  }
+
+  private updateDebugVisualization(): void {
+    if (!this.debugEnabled) return;
+
+    // Update player cell visualization
+    const playerCell = this.worldToCell(this.playerPosition);
+    if (this.playerCellMesh) {
+      this.playerCellMesh.dispose();
+    }
+    this.playerCellMesh = this.createCellMesh(playerCell, new BABYLON.Color3(0, 0, 1)); // Blue for player cell
+
+    // Update neighbor cells visualization
+    const neighborKeys = new Set<bigint>();
+    for (const [dx, dy, dz] of Grid.neighborOffsets) {
+      const neighbor: CellTriple = [
+        playerCell[0] + dx,
+        playerCell[1] + dy,
+        playerCell[2] + dz,
+      ];
+      const key = Grid.keyFromTriple(neighbor);
+      neighborKeys.add(key);
+
+      if (!this.debugMeshes.has(key) && !this.cells.has(key)) {
+        const mesh = this.createCellMesh(neighbor, new BABYLON.Color3(1, 1, 0)); // Yellow for neighbors
+        this.debugMeshes.set(key, mesh);
+      }
+    }
+
+    // Remove outdated neighbor visualizations
+    for (const [key, mesh] of this.debugMeshes) {
+      if (!this.cells.has(key) && !neighborKeys.has(key)) {
+        mesh.dispose();
+        this.debugMeshes.delete(key);
+      }
+    }
+  }
+
+  private clearDebugVisualization(): void {
+    if (!this.debugEnabled) return;
+
+    for (const mesh of this.debugMeshes.values()) {
+      mesh.dispose();
+    }
+    this.debugMeshes.clear();
+    if (this.playerCellMesh) {
+      this.playerCellMesh.dispose();
+      this.playerCellMesh = null;
+    }
+  }
+
+  public setDebugEnabled(enabled: boolean): void {
+    this.debugEnabled = enabled;
+    if (!enabled) {
+      this.clearDebugVisualization();
+    } else {
+      // Update visualization for all active cells
+      for (const [key, bucket] of this.cells) {
+        if (bucket.size > 0) {
+          const cell = Grid.tripleFromKey(key);
+          this.updateCellVisualization(cell, key);
+        }
+      }
+      this.updateDebugVisualization();
     }
   }
 }

@@ -162,6 +162,7 @@ export default class Player extends AssetContainer {
     const delta =
       (this.gameManager.scene?.getEngine().getDeltaTime() ?? 0) / 1000;
     this.playerMovement?.movementTick?.(delta);
+    this.performStepClimb();
   }
 
   public input_pan(delta: number) {
@@ -295,73 +296,46 @@ export default class Player extends AssetContainer {
     });
   }
 
-  private setupStepClimbing() {
-    if (!this.physicsBody || !this.mesh) {
-      return;
-    }
+  private performStepClimb() {
+    if (!this.physicsBody || !this.mesh || !this.gameManager.scene) { return; }
 
-    if (this.physicsBody.shape) {
-      this.physicsBody.shape.material.friction = 0.1;
-      this.physicsBody.shape.material.restitution = 0.0;
-    }
+    const movement = this.playerMovement!;
+    const vel = movement.finalVelocity ?? BABYLON.Vector3.Zero();
+    const horizontalVel = new BABYLON.Vector3(vel.x, 0, vel.z);
+    if (horizontalVel.lengthSquared() < 1e-6) { return; } // not moving
 
-    this.physicsBody.setCollisionCallbackEnabled(true);
-    this.physicsBody.getCollisionObservable().add((event: BJS.IPhysicsCollisionEvent) => {
-      if (!this.mesh || !event.collidedAgainst || !event.point || !this.gameManager.scene) {
-        return;
+    // direction and ray parameters
+    const dir = horizontalVel.normalize();
+    const rayLen = 0.75;
+    const baseY = this.mesh.position.y;
+    const footY = baseY + this.stepHeightTolerance;
+    const stepY = baseY + this.maxStepHeight + this.stepHeightTolerance;
+
+    const footOrigin = new BABYLON.Vector3(this.mesh.position.x, footY, this.mesh.position.z);
+    const stepOrigin = new BABYLON.Vector3(this.mesh.position.x, stepY, this.mesh.position.z);
+
+    const plugin = this.gameManager.scene.getPhysicsEngine()!
+      .getPhysicsPlugin() as BJS.HavokPlugin;
+    const footResult = new BABYLON.PhysicsRaycastResult();
+    const stepResult = new BABYLON.PhysicsRaycastResult();
+
+    plugin.raycast(footOrigin, footOrigin.add(dir.scale(rayLen)), footResult);
+    plugin.raycast(stepOrigin, stepOrigin.add(dir.scale(rayLen)), stepResult);
+
+    // if we hit something at foot-level but nothing at step-level, it’s a step
+    if (footResult.hit && !stepResult.hit) {
+    // figure out how high the obstacle is
+      const hitPointY = footResult.hitPoint?.y ?? (footY);
+      const obstacleHeight = hitPointY - baseY;
+      if (obstacleHeight > 0 && obstacleHeight <= this.maxStepHeight) {
+      // preserve current velocity
+        const linVel = this.physicsBody.getLinearVelocity();
+        // bump the player up by exactly obstacleHeight
+        this.mesh.position.y += obstacleHeight + 0.001;
+        // re‐apply velocity
+        this.physicsBody.setLinearVelocity(linVel);
       }
-
-      const movement = this.playerMovement!;
-      const intendedVelocity = new BABYLON.Vector3(
-        movement.finalVelocity?.x || 0,
-        0,
-        movement.finalVelocity?.z || 0,
-      );
-
-      // Use forward direction if no intended velocity (fallback)
-      const moveDirection = intendedVelocity.length() > 0
-        ? intendedVelocity.normalize()
-        : BABYLON.Vector3.Forward().rotateByQuaternionToRef(
-          this.mesh.rotationQuaternion || BABYLON.Quaternion.Identity(),
-          new BABYLON.Vector3(),
-        ).set(0, 0, 1).normalize();
-
-      const halfHeight = this.currentCapsuleHeight / 2;
-      const baseY = this.mesh.position.y - halfHeight;
-
-      const footOrigin = new BABYLON.Vector3(
-        this.mesh.position.x,
-        baseY + this.stepHeightTolerance,
-        this.mesh.position.z,
-      );
-      const stepOrigin = new BABYLON.Vector3(
-        this.mesh.position.x,
-        baseY + this.maxStepHeight + this.stepHeightTolerance,
-        this.mesh.position.z,
-      );
-
-      // Cast rays in the intended movement direction
-      const rayLength = 0.75; // Short length for precise detection
-      const footRay = new BABYLON.Ray(footOrigin, moveDirection, rayLength);
-      const stepRay = new BABYLON.Ray(stepOrigin, moveDirection, rayLength);
-
-      const footHit = this.gameManager.scene.pickWithRay(footRay, (mesh) => mesh !== this.mesh);
-      const stepHit = this.gameManager.scene.pickWithRay(stepRay, (mesh) => mesh !== this.mesh);
-
-      // Check for valid step condition
-      if (footHit?.hit && footHit.pickedPoint && !stepHit?.hit) {
-        const obstacleHeight = footHit.pickedPoint.y - baseY;
-
-        if (obstacleHeight > 0 && obstacleHeight <= this.maxStepHeight) {
-          const plugin = this.gameManager.scene.getPhysicsEngine()!.getPhysicsPlugin() as BJS.HavokPlugin;
-          const bodyId = this.physicsBody!._pluginData.hpBodyId;
-          const newPosition = this.mesh.position.clone();
-          newPosition.y += 1;
-
-          plugin._hknp.HP_Body_SetPosition(bodyId, [newPosition.x, newPosition.y, newPosition.z]);
-        }
-      }
-    });
+    }
   }
 
   public async Load(player: PlayerProfile, charCreate: boolean = false) {
@@ -481,7 +455,7 @@ export default class Player extends AssetContainer {
         inertia: new BABYLON.Vector3(0, 0, 0),
       });
       this.mesh.physicsBody = this.physicsBody;
-      this.setupStepClimbing();
+      //this.setupStepClimbing();
       this.playerMovement = new PlayerMovement(this, this.gameManager.scene!);
     }
     createNameplate(
