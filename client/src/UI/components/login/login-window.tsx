@@ -35,7 +35,7 @@ export const LoginWindowComponent: React.FC = () => {
     setMode("game");
     GameManager.instance.loadZoneId(2);
     GameManager.instance.instantiatePlayer({
-      race: 2,
+      race: 1,
       charClass: 1,
       name: "Soandso",
     });

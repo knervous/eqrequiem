@@ -150,7 +150,7 @@ export class Entity extends BABYLON.TransformNode {
       bodyInst.scaling.setAll(scale);
       bodyInst.instancedBuffers.bakedVertexAnimationSettingsInstanced = this.animationBuffer;
       bodyInst.physicsBody = this.physicsBody; // Assign physics body to instance
-      const idx = this.getTextureIndex(mesh.name, 'equipChest' in this.spawn ? this.spawn?.equipChest : 1);
+      const idx = this.getTextureIndex(mesh.name, 'equipChest' in this.spawn ? this.spawn?.equipChest : 3);
       let vec;
       if (bufferCache[idx]) {
         vec = bufferCache[idx];
