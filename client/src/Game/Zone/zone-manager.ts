@@ -180,8 +180,7 @@ export class ZoneManager {
     console.log('Result', result);
     this.zoneContainer!.scaling.x = -1;
 
-    this.parent.scene.autoClear = false; 
-    this.parent.scene.autoClearDepthAndStencil = false;
+
     result.meshes.forEach((mesh) => {
 
       if (mesh instanceof BABYLON.Mesh) {
