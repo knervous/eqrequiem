@@ -3,25 +3,25 @@ import type * as BJS from "@babylonjs/core";
 import type GameManager from "@game/Manager/game-manager";
 
 import RACE_DATA from "../Constants/race-data";
-import { LoaderOptions } from "@game/GLTF/base";
 import { PlayerMovement } from "./player-movement";
 import { PlayerCamera } from "./player-cam";
 import { PlayerProfile } from "@game/Net/internal/api/capnp/player";
 import { Spawn } from "@game/Net/internal/api/capnp/common";
 import { ItemInstance } from "@game/Net/internal/api/capnp/item";
 import { InventorySlot, MaterialPrefixes } from "./player-constants";
-import AssetContainer from "@game/Model/asset-container";
 import { AnimationDefinitions } from "@game/Animation/animation-constants";
-import { createNameplate, swapMaterialTexture } from "@game/Model/bjs-utils";
+import { swapMaterialTexture } from "@game/Model/bjs-utils";
 import { zoneData } from "@game/Constants/zone-data";
 import { CLASS_DATA_NAMES } from "@game/Constants/class-data";
+import EntityCache from "@game/Model/entity-cache";
+import { Entity } from "@game/Model/entity";
 
-export default class Player extends AssetContainer {
+export default class Player {
   public playerMovement: PlayerMovement | null = null;
   public playerCamera: PlayerCamera;
   public player: PlayerProfile | null = null;
+  public playerEntity: Entity | null = null;
   public isPlayerMoving: boolean = false;
-  public mesh: BJS.Mesh | null = null;
   public gameManager: GameManager;
   public inventory: Map<InventorySlot, ItemInstance | null> = new Map();
   public model: string = "";
@@ -50,18 +50,11 @@ export default class Player extends AssetContainer {
 
   static instance: Player | null = null;
 
-  static playerOptions: Partial<LoaderOptions> = {
-    flipTextureY: true,
-    shadow: false,
-    useCapsulePhysics: true,
-  };
-
   constructor(
     gameManager: GameManager,
     camera: BJS.UniversalCamera,
     inGame: boolean = true,
   ) {
-    super("models", inGame);
     this.inGame = inGame;
     this.gameManager = gameManager;
     this.playerCamera = new PlayerCamera(this, camera);
@@ -87,52 +80,21 @@ export default class Player extends AssetContainer {
     }
   }
 
-  public async dispose(disposeContainer: boolean = true) {
-    if (this.physicsBody) {
-      this.physicsBody.dispose();
-      this.physicsBody = null;
-    }
-    for (const shape of this.capsuleShapePool.values()) {
-      shape.dispose();
-    }
-    this.cableShapePool.clear();
-    if (this.mesh) {
-      if (this.mesh.material) {
-        if (this.mesh.material instanceof BABYLON.MultiMaterial) {
-          this.mesh.material.subMaterials.forEach((subMaterial) => {
-            if (subMaterial) {
-              subMaterial.dispose();
-            }
-          });
-        } else {
-          this.mesh.material.dispose();
-        }
-        this.mesh.material.getActiveTextures();
-        this.mesh.material = null;
-      }
-      const nameplate = this.mesh
-        .getChildren(undefined, false)
-        .find((m) => m.name === "namePlate");
-      if (nameplate) {
-        nameplate?.dispose?.(false, true);
-      }
-      this.mesh.dispose();
-      this.mesh = null;
+  public async dispose() {
+    if (this.playerEntity) {
+      this.playerEntity.dispose();
     }
     if (this.playerCamera) {
       this.playerCamera.dispose();
     }
-    if (this.model && disposeContainer) {
-      super.disposeModel(this.model);
-    }
   }
 
   public getPlayerRotation() {
-    return this.mesh?.rotationQuaternion?.toEulerAngles() ?? BABYLON.Vector3.Zero();
+    return this.playerEntity?.rotationQuaternion?.toEulerAngles() ?? BABYLON.Vector3.Zero();
   }
 
   public getPlayerPosition() {
-    return this.mesh?.position;
+    return this.playerEntity?.position;
   }
 
   public inputMouseButton(buttonIndex: number) {
@@ -159,10 +121,6 @@ export default class Player extends AssetContainer {
     const delta =
       (this.gameManager.scene?.getEngine().getDeltaTime() ?? 0) / 1000;
     this.playerMovement?.movementTick?.(delta);
-    //this.performStepClimb();
-    // Ensure mesh rotation is constrained to Y-axis
-    // this.constrainRotation();
-   
   }
 
   public input_pan(delta: number) {
@@ -177,183 +135,70 @@ export default class Player extends AssetContainer {
   }
 
   private get headModelName(): string {
-    const variation = this.headVariation.toString().padStart(2, "0") ?? "00";
-    return `${this.model.slice(0, 3)}he${variation}`;
+    return this.headVariation.toString().padStart(2, "0") ?? "00";
   }
 
   public setRotation(yaw: number) {
-    if (!this.physicsBody || !this.mesh) {
+    if (!this.playerEntity) {
       return;
     }
+    console.log('[Player] Setting rotation to:', yaw);
+    const physicsBody = this.playerEntity.physicsBody!;
     const normalized = ((yaw % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
     const q = BABYLON.Quaternion.RotationYawPitchRoll(normalized, 0, 0);
-    this.mesh.rotationQuaternion = q;
+
+    this.playerEntity.rotationQuaternion = q;
     const plugin = this.gameManager
       .scene!.getPhysicsEngine()!
       .getPhysicsPlugin() as BJS.HavokPlugin;
 
     plugin._hknp.HP_Body_SetOrientation(
-      this.physicsBody._pluginData.hpBodyId,
+      physicsBody._pluginData.hpBodyId,
       q.asArray(),
     );
     // Lock angular motion to prevent physics-induced rotation
-    this.physicsBody.setAngularVelocity(BABYLON.Vector3.Zero());
-    this.physicsBody.setAngularDamping(1.0); // High damping to resist rotation
+    physicsBody.setAngularVelocity(BABYLON.Vector3.Zero());
+    physicsBody.setAngularDamping(1.0); // High damping to resist rotation
   }
 
   public SwapFace(index: number) {
-    if (!this.mesh) {
-      return;
-    }
-    if (this.mesh.material instanceof BABYLON.MultiMaterial) {
-      this.mesh.material.subMaterials.forEach((subMaterial) => {
-        if (subMaterial?.name.includes("he00")) {
-          const newTexture = subMaterial.name.replace(
-            /he00\d{1}/,
-            `${MaterialPrefixes.Face}00${index}`,
-          );
-          swapMaterialTexture(subMaterial, newTexture);
-        }
-      });
-    }
+    // if (!this.mesh) {
+    //   return;
+    // }
+    // if (this.mesh.material instanceof BABYLON.MultiMaterial) {
+    //   this.mesh.material.subMaterials.forEach((subMaterial) => {
+    //     if (subMaterial?.name.includes("he00")) {
+    //       const newTexture = subMaterial.name.replace(
+    //         /he00\d{1}/,
+    //         `${MaterialPrefixes.Face}00${index}`,
+    //       );
+    //       swapMaterialTexture(subMaterial, newTexture);
+    //     }
+    //   });
+    // }
   }
 
   public async UpdateNameplate(lines: string[]) {
-    if (!this.mesh) {
+    if (!this.playerEntity) {
+      console.warn("[Player] No player entity to update nameplate");
       return;
     }
-    const nameplate = this.mesh
-      .getChildren(undefined, false)
-      .find((m) => m.name === "namePlate");
-    if (nameplate) {
-      nameplate.dispose(false, true);
-    }
-    createNameplate(this.gameManager.scene!, this.mesh, lines);
+    await this.playerEntity.instantiateNameplate(lines);
   }
 
-  private updateCapsuleHeightFromBounds() {
-    if (!this.mesh || !this.physicsBody || !this.gameManager.scene) {
-      return;
+  /**
+   * Retrieves or creates a shared parent node on the scene
+   * under which all entities will be bucketed.
+   */
+  private getOrCreateNodeContainer(scene: BJS.Scene): BJS.Node {
+    const existing = scene.getNodeByName("playerNodeContainer");
+    if (existing) {
+      return existing as BJS.Node;
     }
-
-    this.gameManager.scene.onAfterRenderObservable.addOnce(() => {
-      if (!this.mesh || !this.physicsBody || !this.gameManager.scene) {
-        return;
-      }
-      this.mesh.computeWorldMatrix(true);
-      const { min, max } = this.mesh.getHierarchyBoundingVectors(true);
-      const newHeight = max.y - min.y;
-      const capsuleRadius = 1.5;
-      const effectiveHeight = Math.max(newHeight, capsuleRadius * 2);
-
-      let selectedShape: BJS.PhysicsShapeCapsule | null = null;
-      for (const [pooledHeight, shape] of this.capsuleShapePool) {
-        if (
-          Math.abs(effectiveHeight - pooledHeight) < this.heightChangeThreshold
-        ) {
-          selectedShape = shape;
-          break;
-        }
-      }
-
-      if (!selectedShape) {
-        const pointA = new BABYLON.Vector3(
-          0,
-          effectiveHeight / 2 - capsuleRadius,
-          0,
-        );
-        const pointB = new BABYLON.Vector3(
-          0,
-          -(effectiveHeight / 2 - capsuleRadius),
-          0,
-        );
-        selectedShape = new BABYLON.PhysicsShapeCapsule(
-          pointA,
-          pointB,
-          capsuleRadius,
-          this.gameManager.scene,
-        );
-        this.originalCollisionFilter = selectedShape.filterCollideMask;
-        selectedShape.material.friction = 0.0;
-        selectedShape.material.restitution = 0.0;
-        this.capsuleShapePool.set(effectiveHeight, selectedShape);
-      }
-
-      const currentPosition = this.mesh.position.clone();
-      const currentVelocity = this.physicsBody.getLinearVelocity();
-      const currentAngularVelocity = this.physicsBody.getAngularVelocity();
-
-      this.physicsBody.shape = selectedShape;
-      this.currentCapsuleHeight = effectiveHeight;
-
-      this.physicsBody.setLinearVelocity(currentVelocity);
-      this.physicsBody.setAngularVelocity(BABYLON.Vector3.Zero()); // Ensure no angular velocity
-      this.mesh.position = currentPosition;
-    });
+    return new BABYLON.TransformNode("playerNodeContainer", scene);
   }
 
-  private performStepClimb() {
-    if (!this.physicsBody || !this.mesh || !this.gameManager.scene) {
-      return;
-    }
-
-    const movement = this.playerMovement!;
-    const vel = movement.finalVelocity ?? BABYLON.Vector3.Zero();
-    const horizontalVel = new BABYLON.Vector3(vel.x, 0, vel.z);
-    if (horizontalVel.lengthSquared() < 1e-6) {
-      return;
-    }
-
-    const dir = horizontalVel.normalize();
-    const rayLen = 0.75;
-    const baseY = this.mesh.position.y;
-    const footY = baseY + this.stepHeightTolerance;
-    const stepY = baseY + this.maxStepHeight + this.stepHeightTolerance;
-
-    const footOrigin = new BABYLON.Vector3(this.mesh.position.x, footY, this.mesh.position.z);
-    const stepOrigin = new BABYLON.Vector3(this.mesh.position.x, stepY, this.mesh.position.z);
-
-    const plugin = this.gameManager.scene.getPhysicsEngine()!
-      .getPhysicsPlugin() as BJS.HavokPlugin;
-    const footResult = new BABYLON.PhysicsRaycastResult();
-    const stepResult = new BABYLON.PhysicsRaycastResult();
-
-    plugin.raycast(footOrigin, footOrigin.add(dir.scale(rayLen)), footResult);
-    plugin.raycast(stepOrigin, stepOrigin.add(dir.scale(rayLen)), stepResult);
-
-    if (footResult.hit && !stepResult.hit) {
-      const hitPointY = footResult.hitPoint?.y ?? footY;
-      const obstacleHeight = hitPointY - baseY;
-      if (obstacleHeight > 0 && obstacleHeight <= this.maxStepHeight) {
-        const linVel = this.physicsBody.getLinearVelocity();
-        this.mesh.position.y += obstacleHeight + 0.001;
-        this.physicsBody.setLinearVelocity(linVel);
-        // Ensure no angular velocity after step climb
-        this.physicsBody.setAngularVelocity(BABYLON.Vector3.Zero());
-      }
-    }
-  }
-
-  private constrainRotation() {
-    if (!this.mesh || !this.physicsBody) {
-      return;
-    }
-    // Ensure mesh rotation is only around Y-axis
-    const euler = this.mesh.rotationQuaternion?.toEulerAngles() ?? BABYLON.Vector3.Zero();
-    this.mesh.rotationQuaternion = BABYLON.Quaternion.RotationYawPitchRoll(euler.y, 0, 0);
-    // Lock physics body orientation
-    const plugin = this.gameManager
-      .scene!.getPhysicsEngine()!
-      .getPhysicsPlugin() as BJS.HavokPlugin;
-    plugin._hknp.HP_Body_SetOrientation(
-      this.physicsBody._pluginData.hpBodyId,
-      this.mesh.rotationQuaternion.asArray(),
-    );
-    this.physicsBody.setAngularVelocity(BABYLON.Vector3.Zero());
-    this.physicsBody.setAngularDamping(1.0);
-  }
-
-  public async Load(player: PlayerProfile, charCreate: boolean = false) {
+  public async Load(player: PlayerProfile) {
     this.player = player;
     this.currentAnimation = "";
     for (const item of this.player.inventoryItems?.toArray() ?? []) {
@@ -365,162 +210,34 @@ export default class Player extends AssetContainer {
     }
     const race = this.player?.race ?? 1;
     const raceDataEntry = RACE_DATA[race];
+
     const model = raceDataEntry[this.player?.gender ?? 0] || raceDataEntry[2];
     this.model = model;
-    const container = await this.getContainer(model, this.gameManager.scene!);
-    if (!container) {
-      console.warn(`[Player] Failed to load container ${model}`);
+    const container = this.getOrCreateNodeContainer(this.gameManager.scene!);
+    player.y = player.z = player.x = 15;
+    const playerEntity = await EntityCache.getInstance(player, this.gameManager.scene!, container);
+    if (!playerEntity) {
+      console.error("[Player] Failed to create player entity");
       return;
     }
-    const rootNode = container.rootNodes[0] as BJS.Mesh;
-    rootNode.name = `Player`;
-    rootNode.position.setAll(0);
-    rootNode.scaling.set(1, 1, 1);
-    rootNode.rotationQuaternion = BABYLON.Quaternion.RotationYawPitchRoll(0, 0, 0);
-    container.animationGroups.forEach((anim) => {
-      anim.name = anim.name.replace("Clone of ", "");
-      this.animations[anim.name] = anim;
-    });
-    const instanceSkeleton = container.skeletons[0];
-    const skeletonRoot = rootNode.getChildren(undefined, true)[0];
-
-    const secondaryContainer = await this.getContainer(
-      this.headModelName,
-      this.gameManager.scene!,
-    );
-    if (!secondaryContainer) {
-      console.warn(`[Player] Failed to load container ${this.headModelName}`);
-      return;
-    }
-    const secondaryModel = container.instantiateModelsToScene();
-    const secondaryRootNode = secondaryContainer.rootNodes[0];
-    secondaryRootNode.getChildMeshes().forEach((m) => {
-      m.parent = rootNode;
-    });
-
-    this.mesh = BABYLON.Mesh.MergeMeshes(
-      rootNode.getChildMeshes(false),
-      true,
-      true,
-      undefined,
-      true,
-      true,
-    );
-
-    secondaryModel.dispose();
-
-    if (!this.mesh) {
-      console.warn(`[Player] Failed to merge meshes`);
-      return;
-    }
-
-    skeletonRoot.parent = this.mesh;
-    this.mesh.skeleton = instanceSkeleton;
-    this.mesh.rotationQuaternion = BABYLON.Quaternion.RotationYawPitchRoll(Math.PI, 0, 0);
-    this.mesh.id = "Player";
-    this.mesh.name = player.name;
-    this.mesh.position = new BABYLON.Vector3(0, 15, 0);
-    if (this.usePhysics) {
-      this.mesh.scaling.setAll(1.5);
-    }
-
-    this.playerCamera.attachPlayerLight(this.mesh);
-    this.mesh.computeWorldMatrix(true);
-
-    if (this.usePhysics) {
-      const capsuleRadius = 0.5;
-      const capsuleHeight = 5.5;
-      const pointA = new BABYLON.Vector3(
-        0,
-        capsuleHeight / 2 - capsuleRadius,
-        0,
-      );
-      const pointB = new BABYLON.Vector3(
-        0,
-        -(capsuleHeight / 2 - capsuleRadius),
-        0,
-      );
-
-      const capsuleShape = new BABYLON.PhysicsShapeCapsule(
-        pointA,
-        pointB,
-        capsuleRadius,
-        this.gameManager.scene!,
-      );
-
-      this.physicsBody = new BABYLON.PhysicsBody(
-        this.mesh,
-        BABYLON.PhysicsMotionType.DYNAMIC,
-        false,
-        this.gameManager.scene!,
-      );
-      this.physicsBody.shape = capsuleShape;
-      this.physicsBody.setMassProperties({
-        mass: 50,
-        inertia: new BABYLON.Vector3(0, 0, 0),
-      });
-      this.physicsBody.setAngularDamping(1.0); // Lock rotation
-      this.physicsBody.setAngularVelocity(BABYLON.Vector3.Zero());
-      this.mesh.physicsBody = this.physicsBody;
-      this.playerMovement = new PlayerMovement(this, this.gameManager.scene!);
-    }
-    createNameplate(
-      this.gameManager.scene!,
-      this.mesh,
-      !this.usePhysics && charCreate
-        ? ["Soandso"]
-        : this.inGame
-          ? [this.player.name]
-          : [
-            this.player.name,
-            `Level ${this.player.level} ${CLASS_DATA_NAMES[this.player.charClass]}`,
-            `${zoneData.find((z) => z.zone === player?.zoneId)?.longName ?? "Unknown Zone"}`,
-          ],
-    );
-
+    this.playerEntity = playerEntity;
+    await playerEntity.initialize();
+    await playerEntity.instantiateSecondaryMesh(this.headModelName, 0);
+    this.playerMovement = new PlayerMovement(this, this.gameManager.scene!);
+    
     this.SwapFace(player.face);
-    if (this.usePhysics) {
-      this.gameManager.scene?.registerBeforeRender(() => {
-        this.tick();
-      });
-    }
+    this.gameManager.scene?.registerBeforeRender(() => {
+      this.tick();
+    });
+    
   }
 
   public playAnimation(
     animationName: string,
     loop: boolean = true,
-    playToEnd: boolean = false,
   ) {
-    if (
-      !this.animations ||
-      animationName === this.currentAnimation ||
-      this.currentPlayToEnd
-    ) {
-      return;
-    }
-
-    const animationGroup = this.animations[animationName];
-    if (!animationGroup) {
-      console.warn(`[Player] Animation ${animationName} not found`);
-      return;
-    }
-
-    if (this.currentAnimation && this.animations[this.currentAnimation]) {
-      this.animations[this.currentAnimation].stop();
-    }
-
-    if (playToEnd) {
-      this.currentPlayToEnd = true;
-      animationGroup.onAnimationGroupEndObservable.addOnce(() => {
-        this.currentPlayToEnd = false;
-        this.currentAnimation = "";
-        this.updateCapsuleHeightFromBounds();
-      });
-    }
-
-    animationGroup.start(loop);
-    this.currentAnimation = animationName;
-    this.updateCapsuleHeightFromBounds();
+    this.playerEntity?.playAnimation(animationName, loop);
+  
 
     if (this.player) {
       // WorldSocket.sendMessage(OpCodes.Animation, EntityAnimation, {
@@ -531,14 +248,14 @@ export default class Player extends AssetContainer {
   }
 
   public playPos() {
-    this.playAnimation(AnimationDefinitions.None, true, true);
+    this.playAnimation(AnimationDefinitions.None, true);
   }
   public playStationaryJump() {
-    this.playAnimation(AnimationDefinitions.StationaryJump, false, true);
+    this.playAnimation(AnimationDefinitions.StationaryJump, false);
   }
 
   public playJump() {
-    this.playAnimation(AnimationDefinitions.RunningJump, false, true);
+    this.playAnimation(AnimationDefinitions.RunningJump, false);
   }
 
   public playWalk() {

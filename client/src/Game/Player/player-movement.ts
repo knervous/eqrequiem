@@ -30,7 +30,7 @@ export class PlayerMovement {
   constructor(player: Player, scene: BJS.Scene) {
     this.player = player;
     this.scene = scene;
-    this.physicsBody = this.player.mesh!.physicsBody!;
+    this.physicsBody = this.player.playerEntity!.physicsBody!;
 
     // Register keyboard listeners
     this.scene.onKeyboardObservable.add((kbInfo) => {
@@ -70,7 +70,7 @@ export class PlayerMovement {
 
   private isOnFloor(): boolean {
     const ray = new BABYLON.Ray(
-      this.player.mesh!.position!,
+      this.player.playerEntity!.position!,
       new BABYLON.Vector3(0, -1, 0),
       2.1, // Slightly longer than capsule height
     );
@@ -79,15 +79,16 @@ export class PlayerMovement {
   }
 
   public movementTick(delta: number) {
-    const mesh = this.player.mesh;
-    if (!mesh || !this.physicsBody) return;
+    const playerEntity = this.player.playerEntity;
+    if (!playerEntity || !this.physicsBody) return;
 
     if (document.activeElement && document.activeElement !== document.body) {
       return;
     }
 
-    const currentPos = mesh.position;
-    const heading = mesh.rotation.y;
+    const currentPos = playerEntity.position;
+    const heading = playerEntity.rotation.y;
+    console.log('Headinfg:', heading);
     if (currentPos === undefined || heading === undefined) {
       return;
     }
@@ -167,16 +168,38 @@ export class PlayerMovement {
     }
 
     // Compute forward and right vectors
-    const forward = BABYLON.Vector3.Forward().rotateByQuaternionToRef(
-      mesh.absoluteRotationQuaternion,
-      new BABYLON.Vector3(),
-    );
-    const forwardXZ = new BABYLON.Vector3(forward.x, 0, forward.z).normalize();
+    let forward: BJS.Vector3;
+    if (firstPerson) {
+      // In first-person, use cameraYaw directly
+      const yaw = this.player.playerCamera.cameraYaw;
+      forward = new BABYLON.Vector3(-Math.sin(yaw), 0, -Math.cos(yaw)).normalize().scale(-1);
+    } else if (
+      playerEntity.absoluteRotationQuaternion &&
+  !playerEntity.absoluteRotationQuaternion.equals(BABYLON.Quaternion.Zero())
+    ) {
+      // In third-person, use quaternion if valid
+      forward = BABYLON.Vector3.Forward().rotateByQuaternionToRef(
+        playerEntity.absoluteRotationQuaternion,
+        new BABYLON.Vector3(),
+      );
+    } else {
+      // Fallback for third-person if quaternion is invalid
+      const yaw = playerEntity.rotation.y ?? this.player.playerCamera.cameraYaw;
+      forward = new BABYLON.Vector3(-Math.sin(yaw), 0, -Math.cos(yaw)).normalize();
+    }
+
+    const forwardXZ = new BABYLON.Vector3(forward.x, 0, forward.z);
+    if (forwardXZ.lengthSquared() > 0.0001) {
+      forwardXZ.normalize();
+    } else {
+      forwardXZ.set(0, 0, 1); // Default forward
+    }
+
     const rightXZ = BABYLON.Vector3.Cross(
       new BABYLON.Vector3(0, 1, 0),
       forwardXZ,
     ).normalize();
-
+    console.log("rightXZ:", rightXZ);
     // Handle jump
     const onFloor = this.isOnFloor();
     if (

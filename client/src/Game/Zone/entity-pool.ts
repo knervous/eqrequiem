@@ -1,8 +1,9 @@
-
-
 import type * as BJS from "@babylonjs/core";
-
-import { EntityAnimation, EntityPositionUpdate, Spawn } from "@game/Net/internal/api/capnp/common";
+import {
+  EntityAnimation,
+  EntityPositionUpdate,
+  Spawn,
+} from "@game/Net/internal/api/capnp/common";
 import { Entity } from "@game/Model/entity";
 import { Grid } from "./zone-grid";
 import EntityCache from "@game/Model/entity-cache";
@@ -22,7 +23,6 @@ export default class EntityPool {
     this.scene = scene;
     this.parent = parent;
     this.grid = new Grid(300.0, scene);
-    this.entityCache = new EntityCache(this.parent);
   }
 
   dispose() {
@@ -32,16 +32,13 @@ export default class EntityPool {
     }
   }
 
-
   async process() {
     return;
-  
   }
 
   async AddSpawn(spawn: Spawn) {
-    //if (!spawn.name.includes('rodent') && !spawn.name.includes('large')) return;
     // if (!spawn.name.includes('Moodoro')) return;
-    console.log('Adding spawn', spawn.spawnId, spawn.name, {
+    console.log("Adding spawn", spawn.spawnId, spawn.name, {
       x: spawn.x,
       y: spawn.y,
       z: spawn.z,
@@ -51,18 +48,13 @@ export default class EntityPool {
     });
     this.spawns[spawn.spawnId] = spawn;
 
-    const entity = await this.entityCache!.getInstance(spawn, this.scene!);
+    const entity = await EntityCache.getInstance(spawn, this.scene!, this.parent);
     if (!entity) {
       console.error("Failed to acquire entity for spawn", spawn.spawnId);
       return;
     }
     this.grid.addEntity(entity);
-
-    //await entity.initialize();
-    // Going to call this when syncing with grid system
-    // entity.hide();
     this.entities[spawn.spawnId] = entity;
-
   }
 
   UpdateSpawnPosition(sp: EntityPositionUpdate) {
@@ -75,5 +67,4 @@ export default class EntityPool {
     const e = this.entities[anim.spawnId];
     if (!e || !e.spawn) return;
   }
-
 }

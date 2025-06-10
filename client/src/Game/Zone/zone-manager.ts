@@ -60,7 +60,7 @@ export class ZoneManager {
   constructor(parent: GameManager) {
     this.parent = parent;
     this.zoneContainer = null;
-    this.regionManager = new RegionManager(this);
+    this.regionManager = new RegionManager();
     this.lightManager = new LightManager();
     this.skyManager = new DayNightSkyManager(this);
   }
@@ -231,8 +231,6 @@ export class ZoneManager {
       }
     });
 
-
-
     this.skyManager.createSky("sky1", this.disableWorldEnv);
     this.parent.setLoading(false);
 
@@ -327,7 +325,7 @@ export class ZoneManager {
     }
     const delta = this.parent.scene?.getEngine().getDeltaTime() ?? 0;
     this.skyManager.tick(delta);
-    this.entityPool?.process(delta);
+    this.entityPool?.process();
     this.lightManager.updateLights(delta);
   }
 }

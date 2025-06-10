@@ -100,7 +100,7 @@ export default class GameManager {
     this.scene = null;
     this.canvas = canvas;
 
-    if (navigator.gpu) {
+    if (false && navigator.gpu) {
       this.engine = new BABYLON.WebGPUEngine(canvas);
       await this.engine?.initAsync?.();
       this.engineInitialized = true;

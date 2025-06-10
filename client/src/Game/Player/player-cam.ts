@@ -7,7 +7,7 @@ export class PlayerCamera {
   private camera: BJS.UniversalCamera;
   private cameraLight: BJS.PointLight;
   public isFirstPerson: boolean = false;
-  private minCameraDistance: number = 1;
+  private minCameraDistance: number = 0.5;
   private maxCameraDistance: number = 35;
   private cameraDistance: number = 13;
   private cameraHeight: number = 5;
@@ -88,8 +88,8 @@ export class PlayerCamera {
   }
 
   public adjustCameraDistance(delta: number) {
-    if (!this.player.mesh) return;
-    const deltaCoefficient = 0.2;
+    if (!this.player.playerEntity) return;
+    const deltaCoefficient = 1.2;
     this.cameraDistance = Math.max(
       this.minCameraDistance,
       Math.min(this.maxCameraDistance, this.cameraDistance + delta * deltaCoefficient),
@@ -99,7 +99,7 @@ export class PlayerCamera {
   }
 
   public inputMouseMotion(x: number, y: number) {
-    if (!this.player.mesh || !this.isLocked) return;
+    if (!this.player.playerEntity || !this.isLocked) return;
 
     const yawSensitivity = 0.005;
     const pitchSensitivity = 0.005;
@@ -120,9 +120,9 @@ export class PlayerCamera {
   }
 
   public updateCameraPosition() {
-    const mesh = this.player.mesh;
-    if (!mesh) return;
-    const playerPos = mesh.position.clone(); // Clone to avoid modifying original
+    const entity = this.player.playerEntity;
+    if (!entity) return;
+    const playerPos = entity.spawnPosition.clone(); // Clone to avoid modifying original
 
     if (this.isFirstPerson) {
       // In first-person, position camera at player position + offset
@@ -132,7 +132,7 @@ export class PlayerCamera {
     } else {
       const hDist = this.cameraDistance * Math.cos(this.cameraPitch);
       const vDist = this.cameraDistance * Math.sin(this.cameraPitch);
-      const forward = mesh.getDirection(BABYLON.Axis.X).scale(hDist);
+      const forward = entity.getDirection(BABYLON.Axis.X).scale(hDist);
       this.cameraPosition
         .copyFrom(playerPos)
         .addInPlace(new BABYLON.Vector3(0, this.cameraHeight + vDist, 0))
@@ -143,19 +143,6 @@ export class PlayerCamera {
 
     this.cameraLight.position = this.camera.position;
     this.camera.rotation.z = 0;
-    // Debug logging for first-person mode
-    if (this.isFirstPerson) {
-      console.log("Camera Rotation:", {
-        pitch: this.camera.rotation.x,
-        yaw: this.camera.rotation.y,
-        roll: this.camera.rotation.z,
-      });
-      console.log("Player Mesh Rotation:", {
-        x: mesh.rotationQuaternion?.toEulerAngles().x ?? 0,
-        y: mesh.rotationQuaternion?.toEulerAngles().y ?? 0,
-        z: mesh.rotationQuaternion?.toEulerAngles().z ?? 0,
-      });
-    }
   }
 
   public dispose() {

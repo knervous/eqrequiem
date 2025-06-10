@@ -7,6 +7,7 @@ import { AnimationDefinitions } from "@game/Animation/animation-constants";
 import { Nameplate } from "./nameplate";
 import type { TextRenderer } from '@babylonjs/addons';
 import { sleep } from "@game/Constants/util";
+import { PlayerProfile } from "@game/Net/internal/api/capnp/player";
 
 type BufferCache = {
   [key: number]: BJS.Vector2;
@@ -14,21 +15,19 @@ type BufferCache = {
 
 const bufferCache: BufferCache = {};
 
-
 const modelOffset = {
   'rat': 2.5,
   'bat': -7,
   'bet': -2,
   'sne': -1,
 };
-
-
 export class Entity extends BABYLON.TransformNode {
-  public spawn: Spawn;
+  public spawn: Spawn | PlayerProfile;
   public entityContainer: EntityContainer;
   public entityCache: EntityCache;
   public spawnPosition: BJS.Vector3 = new BABYLON.Vector3(0, 0, 0);
   private scene: BJS.Scene;
+  private nodeContainer: BJS.TransformNode | null = null;
   private animationBuffer: BJS.Vector4 = new BABYLON.Vector4(0, 1, 0, 60);
   private bodyInstances: BJS.InstancedMesh[] = [];
   private secondaryInstances: BJS.InstancedMesh[] = [];
@@ -39,7 +38,7 @@ export class Entity extends BABYLON.TransformNode {
   private hidden: boolean = true;
   private capsuleShape: BJS.PhysicsShapeCapsule | null = null;
   // private debugWireframe: DebugWireframe | null = null;
-  constructor(spawn: Spawn, scene: BJS.Scene, entityContainer: EntityContainer, entityCache: EntityCache, parent: BJS.Node) {
+  constructor(spawn: Spawn | PlayerProfile, scene: BJS.Scene, entityContainer: EntityContainer, entityCache: EntityCache, parent: BJS.Node) {
     super(`entity_${spawn.name}`, scene);
     this.spawn = spawn;
     this.scene = scene;
@@ -49,6 +48,10 @@ export class Entity extends BABYLON.TransformNode {
     this.spawnPosition = new BABYLON.Vector3(-spawn.y, spawn.z + 5, spawn.x);
     // this.debugWireframe = new DebugWireframe(this, scene);
     this.playAnimation(AnimationDefinitions.Idle1);
+  }
+
+  public meshes(): BJS.InstancedMesh[] {
+    return this.bodyInstances.concat(this.secondaryInstances);
   }
 
   public async hide(): Promise<void> {
@@ -74,13 +77,17 @@ export class Entity extends BABYLON.TransformNode {
     }
     this.secondaryInstances = [];
     Nameplate.removeNameplate(this.nameplate!);
+    if (this.nodeContainer) {
+      this.nodeContainer.dispose();
+      this.nodeContainer = null;
+    }
     this.nameplate = null;
     this.nameplateNode?.dispose();
     this.nameplateNode = null;
     this.isTearingDown = false;
     this.hidden = true;
   }
-
+  
   public async initialize() {
     if (!this.hidden) { 
       return;
@@ -104,7 +111,6 @@ export class Entity extends BABYLON.TransformNode {
 
       const extents = max.subtract(min).scale(0.5);
       capsuleHeight = (extents.z * 2) * 1.5; // Scale height by 1.5 to match entity scaling
-      console.log(`[Entity] Using bounding box for ${this.spawn.name} with height ${capsuleHeight}`);
     } else {
       //      console.warn(`[Entity] No bounding box found for ${this.spawn.name}, using default height ${height}`);
     }
@@ -122,10 +128,10 @@ export class Entity extends BABYLON.TransformNode {
     );
     this.capsuleShape.material.friction = 0.0;
     this.capsuleShape.material.restitution = 0.0;
-    const node = new BABYLON.TransformNode(`capsuleShape_${this.spawn.name}`, this.scene);
-    node.position = this.spawnPosition;
+    this.nodeContainer = new BABYLON.TransformNode(`${this.spawn.name}`, this.scene);
+    this.nodeContainer.position = this.spawnPosition;
     this.physicsBody = new BABYLON.PhysicsBody(
-      node, // Use the TransformNode as the root
+      this.nodeContainer, // Use the TransformNode as the root
       BABYLON.PhysicsMotionType.DYNAMIC,
       false,
       this.scene,
@@ -135,17 +141,16 @@ export class Entity extends BABYLON.TransformNode {
       mass: 500,
       inertia: new BABYLON.Vector3(0, 0, 0),
     });
-    //    this.physicsBody.setGravityFactor(0.01);
     const scale = 1.5;
     // Create body instances and assign physics body
     for (const mesh of this.entityContainer.meshes) {
       const bodyInst = mesh.createInstance(`instance_${this.spawn.name}_${this.spawn.spawnId}_${meshIdx++}`);
-      bodyInst.setParent(node);
+      bodyInst.setParent(this.nodeContainer);
       bodyInst.position = new BABYLON.Vector3(0, scale * (modelOffset[this.entityContainer.model] ?? 0.5), 0); //this.spawnPosition;
       bodyInst.scaling.setAll(scale);
       bodyInst.instancedBuffers.bakedVertexAnimationSettingsInstanced = this.animationBuffer;
       bodyInst.physicsBody = this.physicsBody; // Assign physics body to instance
-      const idx = this.getTextureIndex(mesh.name, this.spawn.equipChest);
+      const idx = this.getTextureIndex(mesh.name, 'equipChest' in this.spawn ? this.spawn?.equipChest : 1);
       let vec;
       if (bufferCache[idx]) {
         vec = bufferCache[idx];
@@ -155,48 +160,60 @@ export class Entity extends BABYLON.TransformNode {
       bodyInst.instancedBuffers.sliceIndex = vec;
       this.bodyInstances.push(bodyInst);
     }
-
-    await this.instantiateSecondaryMesh(node);
-    await this.instantiateNameplate();
+    if ('equipChest' in this.spawn) {
+      const variation = this.spawn.helm.toString().padStart(2, '0');
+      await this.instantiateSecondaryMesh(variation, this.spawn.equipChest);
+    }
+    await this.instantiateNameplate([this.spawn.name.replaceAll('_', ' ')]);
     // this.debugWireframe?.createWireframe();
     this.isInitializing = false;
     this.hidden = false;
   }
 
-  private async instantiateNameplate(): Promise<void> {
+  public async instantiateNameplate(textLines: string[]): Promise<void> {
+    this.nameplate?.dispose();
+    this.nameplateNode?.dispose();
     this.nameplate = await Nameplate.createNameplate(this.scene);
     if (!this.nameplate) {
-      console.warn(`[Entity] Failed to create nameplate for ${this.spawn.name}`); 
+      console.warn(`[Entity] Failed to create nameplate for ${textLines.join(', ')}`); 
       return; 
     }
-    this.nameplate.addParagraph(this.spawn.name.replaceAll('_', ' '), {
-      lineHeight: 15,
-    });
+    for (const line of textLines) {
+      this.nameplate.addParagraph(line, {
+        lineHeight: 15,
+      });
+    }
     this.nameplate.color = BABYLON.Color4.FromHexString("#00ffff");
     this.nameplateNode = new BABYLON.TransformNode(`nameplate_${this.spawn.name}`, this.scene);
     this.nameplateNode.parent = this.bodyInstances[0];
     this.nameplateNode.position = new BABYLON.Vector3(0, 4, 0);
     this.nameplate.parent = this.nameplateNode;
   }
+  
 
-  private async instantiateSecondaryMesh(node: BJS.TransformNode): Promise<void> {
+  public async instantiateSecondaryMesh(variation: string, textureVariation: number): Promise<void> {
     if (this.entityContainer.secondaryMeshes <= 0) return;
-    const variation = this.spawn.helm.toString().padStart(2, '0');
-    const secondaryModel = `${this.entityContainer.model}he${variation}`;
+    for (const instance of this.secondaryInstances) {
+      instance.dispose();
+    }
+    this.secondaryInstances = [];
+    const secondaryModel = `${this.entityContainer.model.slice(0, 3)}he${variation}`;
     const secondaryMeshContainer = await this.entityCache.getContainer(secondaryModel, this.scene, this.entityContainer.model);
     if (!secondaryMeshContainer) {
       console.warn(`[Entity] Failed to load secondary mesh for ${this.entityContainer.model}${variation}`);
       return;
     }
     const scale = 1.5;
+
+
     for (const mesh of secondaryMeshContainer.meshes) {
       const secondaryInstance = mesh.createInstance(mesh.name);
-      secondaryInstance.setParent(node);
+      secondaryInstance.setParent(this.nodeContainer);
       secondaryInstance.position = new BABYLON.Vector3(0, scale * (modelOffset[this.entityContainer.model] ?? 0.5), 0); //this.spawnPosition;
       secondaryInstance.scaling.setAll(scale);
       secondaryInstance.instancedBuffers.bakedVertexAnimationSettingsInstanced = this.animationBuffer;
       secondaryInstance.physicsBody = this.physicsBody; // Assign physics body to instance
-      const idx = this.getTextureIndex(mesh.name, this.spawn.equipChest);
+      const idx = this.getTextureIndex(mesh.name, textureVariation);
       let vec;
       if (bufferCache[idx]) {
         vec = bufferCache[idx];
@@ -209,13 +226,18 @@ export class Entity extends BABYLON.TransformNode {
     }
   }
 
-  public playAnimation(name: string): void {
+  public playAnimation(name: string, loop: boolean = false): void {
     const match = this.entityContainer.animations.find((a) => a.name === name);
     if (!match) return;
-    this.animationBuffer.set(match.from, match.to, 0, 60);
+    const manager = this.entityContainer.manager;
+    if (!manager) {
+      console.warn(`[Entity] No animation manager found for ${this.entityContainer.model}`);
+      return;
+    }
+    this.animationBuffer.set(match.from + 0, match.to, 0, 60);
   }
 
-  private getTextureIndex(originalName: string, variation: number): number {
+  private getTextureIndex(originalName: string, variation: number = 1): number {
     const match = originalName.match(charFileRegex);
     if (!match) {
       console.log(`[SwapTexture] Sub-material name ${originalName} does not match expected format`);
@@ -226,65 +248,3 @@ export class Entity extends BABYLON.TransformNode {
   }
 }
 
-
-export class DebugWireframe {
-  private wireframeMesh: BJS.Mesh | null = null;
-  private scene: BJS.Scene;
-  private entity: Entity;
-  private static enabled: boolean = true;
-
-  constructor(entity: Entity, scene: BJS.Scene) {
-    this.entity = entity;
-    this.scene = scene;
-  }
-
-  public static toggleDebugWireframes(): void {
-    DebugWireframe.enabled = !DebugWireframe.enabled;
-    console.log(`[DebugWireframe] Wireframes ${DebugWireframe.enabled ? 'enabled' : 'disabled'}`);
-  }
-
-  public createWireframe(): void {
-    if (!DebugWireframe.enabled || this.wireframeMesh || !this.entity.entityContainer.boundingBox) {
-      return;
-    }
-
-    const boundingBox = this.entity.entityContainer.boundingBox;
-    const min = new BABYLON.Vector3(boundingBox.min[0], boundingBox.min[1], boundingBox.min[2]);
-    const max = new BABYLON.Vector3(boundingBox.max[0], boundingBox.max[1], boundingBox.max[2]);
-
-    // Calculate center and extents
-    const center = BABYLON.Vector3.Center(min, max);
-    const extents = max.subtract(min).scale(0.5);
-
-    // Create wireframe box
-    this.wireframeMesh = BABYLON.MeshBuilder.CreateBox(
-      `wireframe_${this.entity.spawn.name}_${this.entity.spawn.spawnId}`,
-      {
-        width: extents.x * 2,
-        height: extents.z * 2,
-        depth: extents.y,
-      },
-      this.scene,
-    );
-
-    // Set wireframe material
-    const material = new BABYLON.StandardMaterial(`wireframe_mat_${this.entity.spawn.name}`, this.scene);
-    material.wireframe = true;
-    material.emissiveColor = new BABYLON.Color3(0, 1, 0); // Green wireframe
-    this.wireframeMesh.material = material;
-
-    // Parent to the physics node's transform and position at the center
-    this.wireframeMesh.parent = this.entity.physicsBody?.transformNode || null;
-    this.wireframeMesh.position = center;
-    //this.wireframeMesh.position.y += 5; // Adjust height to match entity's position
-    // Apply scaling to match entity
-    this.wireframeMesh.scaling.setAll(1.5); // Match the entity's scaling
-  }
-
-  public dispose(): void {
-    if (this.wireframeMesh) {
-      this.wireframeMesh.dispose();
-      this.wireframeMesh = null;
-    }
-  }
-}
