@@ -88,7 +88,6 @@ export class PlayerMovement {
 
     const currentPos = playerEntity.position;
     const heading = playerEntity.rotation.y;
-    console.log('Headinfg:', heading);
     if (currentPos === undefined || heading === undefined) {
       return;
     }
@@ -199,7 +198,6 @@ export class PlayerMovement {
       new BABYLON.Vector3(0, 1, 0),
       forwardXZ,
     ).normalize();
-    console.log("rightXZ:", rightXZ);
     // Handle jump
     const onFloor = this.isOnFloor();
     if (
