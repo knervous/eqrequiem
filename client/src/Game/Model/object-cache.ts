@@ -5,6 +5,7 @@ import type * as BJS from "@babylonjs/core";
 import { FileSystem } from "@game/FileSystem/filesystem";
 import { Transform } from "@game/Zone/zone-types";
 import { swapMaterialTexture } from "./bjs-utils";
+import { textureFromBakedVertexDataHalfFloat } from "./vat-texture";
 
 type ModelKey = string;
 
@@ -57,7 +58,7 @@ export default class ObjectCache {
       result.rootNodes[0].name = `container_${model}`;
       const { animationGroups, skeletons } = result;
       const hasAnimations = animationGroups.length > 0;
-      let vatData: Float32Array | null = null;
+      let vatData: Uint16Array | null = null;
       const animationRanges: BJS.AnimationRange[] = [];
       result.rootNodes[0].setEnabled(false);
       if (hasAnimations && skeletons.length) {
@@ -70,7 +71,7 @@ export default class ObjectCache {
         result.animationGroups = [];
         const vatDataBytes = await FileSystem.getFileBytes('eqrequiem/vat', `${model}.bin.gz`);
         if (vatDataBytes) {
-          vatData = new Float32Array(vatDataBytes);
+          vatData = new Uint16Array(vatDataBytes);
         }
       }
       result.rootNodes[0].setEnabled(true);
@@ -109,8 +110,7 @@ export default class ObjectCache {
     const manager = new BABYLON.BakedVertexAnimationManager(scene);
 
     if (hasAnimations && vatData) {
-      const baker = new BABYLON.VertexAnimationBaker(scene, container.skeletons[0]);
-      const vertexTexture = baker.textureFromBakedVertexData(vatData);
+      const vertexTexture = textureFromBakedVertexDataHalfFloat(vatData, container.skeletons[0], scene);
       scene.removeSkeleton(container.skeletons[0]);
       manager.texture = vertexTexture;
       container.animationGroups = [];

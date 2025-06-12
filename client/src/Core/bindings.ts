@@ -7,11 +7,22 @@ import {
   getRootFiles,
   getRootEQFile,
   writeRootEQFile,
-  deleteEqFileOrFolder,
 } from "sage-core/util/fileHandler";
 import * as Comlink from "comlink";
 import { USE_SAGE } from "@game/Constants/constants";
 import JSZip from "jszip";
+
+
+async function deleteFolderRecursively(handle) {
+  for await (const [name, entry] of handle.entries()) {
+    if (entry.kind === 'file') {
+      await handle.removeEntry(name);
+    } else if (entry.kind === 'directory') {
+      await deleteFolderRecursively(entry);
+      await handle.removeEntry(name, { recursive: true });
+    }
+  }
+}
 
 type Models = {
   [key: string]: number[] | string[];
@@ -33,7 +44,7 @@ type CacheEntry = {
 
 const baseUrl = "https://eqrequiem.blob.core.windows.net/requiem";
 const zippedPrefixes = ["eqrequiem/textures"];
-const REQUIEM_FILE_VERSION = '1.0.6';
+const REQUIEM_FILE_VERSION = '1.1.15';
 
 function selectMinimalFiles(candidateArrays: number[][]): number[] {
   let remaining = candidateArrays.slice();
@@ -148,12 +159,15 @@ class FileSystemBindings {
     const stringFileVersion = new TextDecoder('utf-8').decode(requiemFileVersion);
     console.log('Str', stringFileVersion);
     if (stringFileVersion !== REQUIEM_FILE_VERSION) {
-      console.log('DELETING OPFS');
-      await deleteEqFileOrFolder('eqrequiem', 'data');
-      await deleteEqFileOrFolder('eqrequiem', 'items');
-      await deleteEqFileOrFolder('eqrequiem', 'models');
-      await deleteEqFileOrFolder('eqrequiem', 'objects');
-      await deleteEqFileOrFolder('eqrequiem', 'zones');
+      const root = await this.rootFileSystemHandle.getDirectoryHandle('eqrequiem', { create: true });
+      for (const folder of ['data', 'babylon', 'basis', 'vat', 'items', 'models', 'objects', 'zones']) {
+        const handle = await root.getDirectoryHandle(folder, { create: false }).catch(() => {});
+        if (!handle) continue;
+        await deleteFolderRecursively(handle).catch((e) => {
+          console.error(`Error deleting folder ${folder}:`, e);
+        });
+      }
+      console.log('Deleted old files, writing new version', REQUIEM_FILE_VERSION);
       await writeRootEQFile('eqrequiem', 'requiem_version.txt', new TextEncoder().encode(REQUIEM_FILE_VERSION));
     }
     /**
