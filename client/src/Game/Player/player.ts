@@ -94,7 +94,7 @@ export default class Player {
   }
 
   public getPlayerPosition() {
-    return this.playerEntity?.position;
+    return this.playerEntity?.spawnPosition;
   }
 
   public inputMouseButton(buttonIndex: number) {
