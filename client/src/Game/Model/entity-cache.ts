@@ -10,6 +10,7 @@ import { loadBasisTexture } from "./basis-texture";
 import { createVATShaderMaterial } from "./entity-material";
 import { charFileRegex } from "@game/Constants/constants";
 import { PlayerProfile } from "@game/Net/internal/api/capnp/player";
+import { textureFromBakedVertexDataHalfFloat } from "./vat-texture";
 
 type ModelKey = string;
 
@@ -35,7 +36,8 @@ const SLICE_INDEX_BUFFER = new BABYLON.Vector2(0, 0);
 const ANIMATION_BUFFER = new BABYLON.Vector4(0, 1, 0, 60);
 
 export class EntityCache {
-  private static containers: Record<ModelKey, Promise<EntityContainer | null>> = {};
+  private static containers: Record<ModelKey, Promise<EntityContainer | null>> =
+    {};
 
   /**
    * Retrieves or creates a shared parent node on the scene
@@ -77,12 +79,16 @@ export class EntityCache {
           console.log(`[EntityCache] Failed to load model ${model}`);
           return null;
         }
-        const file = new File([bytes], `${model}.babylon`, { type: "application/babylon" });
-        const container = await BABYLON.LoadAssetContainerAsync(
-          file,
-          scene,
-          { name: `${model}.babylon`, pluginExtension: '.babylon' },
-        ).catch((e) => { console.log(`[EntityCache] Error loading model ${model}:`, e); return null; });
+        const file = new File([bytes], `${model}.babylon`, {
+          type: "application/babylon",
+        });
+        const container = await BABYLON.LoadAssetContainerAsync(file, scene, {
+          name: `${model}.babylon`,
+          pluginExtension: ".babylon",
+        }).catch((e) => {
+          console.log(`[EntityCache] Error loading model ${model}:`, e);
+          return null;
+        });
         if (!container) return null;
 
         // Attach to bucket
@@ -102,51 +108,116 @@ export class EntityCache {
           textureAtlas = reused?.textureAtlas ?? [];
         } else {
           // Vertex animation data
-          const vatBytes = await FileSystem.getFileBytes(`eqrequiem/vat`, `${model}.bin.gz`);
-          if (!vatBytes) { console.warn(`[EntityCache] VAT data missing for ${model}`); return null; }
-          const vatData = new Float32Array(vatBytes);
-          const baker = new BABYLON.VertexAnimationBaker(scene, container.skeletons[0]);
+          const vatBytes = await FileSystem.getFileBytes(
+            `eqrequiem/vat`,
+            `${model}.bin.gz`,
+          );
+          if (!vatBytes) {
+            console.warn(`[EntityCache] VAT data missing for ${model}`);
+            return null;
+          }
+          const vatData = new Uint16Array(vatBytes);
           manager = new BABYLON.BakedVertexAnimationManager(scene);
-          manager.texture = baker.textureFromBakedVertexData(vatData);
+          manager.texture = textureFromBakedVertexDataHalfFloat(
+            vatData,
+            container.skeletons[0],
+            scene,
+          );
+          manager.texture.name = `vatTexture16_${model}`;
 
           // Basis textures
-          const basisBytes = await FileSystem.getFileBytes(`eqrequiem/basis`, `${model}.basis`);
-          if (!basisBytes) { console.warn(`[EntityCache] Basis texture missing for ${model}`); return null; }
-          const { data, layerCount, format } = await loadBasisTexture(scene.getEngine(), basisBytes);
-          const rawArr = new BABYLON.RawTexture2DArray(null, 128, 128, layerCount, format, scene, false, false, BABYLON.Constants.TEXTURE_TRILINEAR_SAMPLINGMODE);
+          const basisBytes = await FileSystem.getFileBytes(
+            `eqrequiem/basis`,
+            `${model}.basis`,
+          );
+          if (!basisBytes) {
+            console.warn(`[EntityCache] Basis texture missing for ${model}`);
+            return null;
+          }
+          const { data, layerCount, format } = await loadBasisTexture(
+            scene.getEngine(),
+            basisBytes,
+          );
+          const rawArr = new BABYLON.RawTexture2DArray(
+            null,
+            128,
+            128,
+            layerCount,
+            format,
+            scene,
+            false,
+            false,
+            BABYLON.Constants.TEXTURE_TRILINEAR_SAMPLINGMODE,
+          );
           rawArr.update(data);
 
           // Shader material
-          shaderMaterial = createVATShaderMaterial(scene, rawArr, manager.texture!);
+          shaderMaterial = createVATShaderMaterial(
+            scene,
+            rawArr,
+            manager.texture!,
+          );
           shaderMaterial.name = `vatShader_${model}`;
 
           // Atlas
-          textureAtlas = await FileSystem.getFileJSON<string[]>(`eqrequiem/basis`, `${model}.json`) ?? [];
-          if (!textureAtlas.length) { console.warn(`[EntityCache] VAT atlas missing for ${model}`); return null; }
+          textureAtlas =
+            (await FileSystem.getFileJSON<string[]>(
+              `eqrequiem/basis`,
+              `${model}.json`,
+            )) ?? [];
+          if (!textureAtlas.length) {
+            console.warn(`[EntityCache] VAT atlas missing for ${model}`);
+            return null;
+          }
 
           // Animate
-          const frameUpdate = () => { manager!.time += scene.getEngine().getDeltaTime()/1000; };
+          const frameUpdate = () => {
+            manager!.time += scene.getEngine().getDeltaTime() / 1000;
+          };
           scene.registerBeforeRender(frameUpdate);
-          bucket.onDisposeObservable.add(() => scene.unregisterBeforeRender(frameUpdate));
+          bucket.onDisposeObservable.add(() =>
+            scene.unregisterBeforeRender(frameUpdate),
+          );
         }
 
         // Gather animations
+        let animations: BJS.AnimationRange[] = [];
         const infoNode = root.getChildTransformNodes()?.[0];
-        const ranges: BJS.AnimationRange[] = infoNode?.metadata?.gltf?.extras?.animationRanges ?? [];
-        let offset = 0;
-        const animations: AnimationEntry[] = ranges.map((r) => {
-          const entry = { from: r.from + offset, to: Math.max(1, r.to + offset), name: r.name };
-          offset += r.to;
-          return entry;
-        });
+
+        const json = await FileSystem.getFileJSON(
+          `eqrequiem/vat`,
+          `${model}.json`,
+        );
+        if (json) {
+          animations = json.animations as BJS.AnimationRange[];
+          console.log('JSON animations found:', animations);
+        } else {
+          const ranges = infoNode?.metadata?.gltf?.extras?.animationRanges ?? [];
+          let offset = 0;
+          animations  = ranges.map((r) => {
+            const entry = {
+              from: r.from + offset,
+              to: Math.max(0, r.to + offset),
+              name: r.name,
+            };
+            offset += r.to;
+            return entry;
+          });
+        }
 
         // Process meshes
-        const meshes = container.rootNodes[0].getChildMeshes(false).filter((m) => m.getTotalVertices() > 0) as BJS.Mesh[];
+        const meshes = container.rootNodes[0]
+          .getChildMeshes(false)
+          .filter((m) => m.getTotalVertices() > 0) as BJS.Mesh[];
         for (const mesh of meshes) {
           mesh.parent = bucket;
           mesh.name = mesh.material?.name ?? "";
-          mesh.registerInstancedBuffer("bakedVertexAnimationSettingsInstanced", 4);
-          mesh.instancedBuffers.bakedVertexAnimationSettingsInstanced = ANIMATION_BUFFER;
+          mesh.registerInstancedBuffer(
+            "bakedVertexAnimationSettingsInstanced",
+            4,
+          );
+          mesh.instancedBuffers.bakedVertexAnimationSettingsInstanced =
+            ANIMATION_BUFFER;
           mesh.registerInstancedBuffer("sliceIndex", 2);
           mesh.instancedBuffers.sliceIndex = SLICE_INDEX_BUFFER;
           mesh.bakedVertexAnimationManager = manager!;
@@ -166,7 +237,11 @@ export class EntityCache {
           const match = mat.name.match(charFileRegex);
           if (!match) continue;
           const [, , piece, , texIdx] = match;
-          mesh.metadata = { ...(mesh.metadata || {}), piece, texIdx: +texIdx.trim() };
+          mesh.metadata = {
+            ...(mesh.metadata || {}),
+            piece,
+            texIdx: +texIdx.trim(),
+          };
           mat.dispose();
           mesh.material = shaderMaterial!;
         }
@@ -183,7 +258,8 @@ export class EntityCache {
           meshes,
           textureAtlas,
           animations,
-          secondaryMeshes: infoNode?.metadata?.gltf?.extras?.secondaryMeshes ?? 0,
+          secondaryMeshes:
+            infoNode?.metadata?.gltf?.extras?.secondaryMeshes ?? 0,
           boundingBox: infoNode?.metadata?.gltf?.extras?.boundingBox ?? null,
         };
       })();
@@ -199,7 +275,6 @@ export class EntityCache {
     scene: BJS.Scene,
     parentNode?: BJS.Node,
   ): Promise<Entity | null> {
-
     const race = spawn.race ?? 1;
     const entry = RACE_DATA[race];
     const model = entry[spawn.gender ?? 0] || entry[2];
@@ -213,7 +288,9 @@ export class EntityCache {
   }
 
   public static disposeAll(): void {
-    Object.keys(EntityCache.containers).forEach((m) => delete EntityCache.containers[m]);
+    Object.keys(EntityCache.containers).forEach(
+      (m) => delete EntityCache.containers[m],
+    );
   }
 }
 

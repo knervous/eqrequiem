@@ -142,7 +142,6 @@ export default class Player {
     if (!this.playerEntity) {
       return;
     }
-    console.log('[Player] Setting rotation to:', yaw);
     const physicsBody = this.playerEntity.physicsBody!;
     const normalized = ((yaw % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
     const q = BABYLON.Quaternion.RotationYawPitchRoll(normalized, 0, 0);

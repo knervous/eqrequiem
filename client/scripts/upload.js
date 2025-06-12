@@ -37,6 +37,7 @@ let allowedFolders = new Set([
   "textures",
   "zones",
   "sounds",
+  "vat",
 ]);
 
 const onlyTextures = process.argv[3] && process.argv[3] === 'textures';
@@ -53,7 +54,8 @@ let allowedExtensions = new Set([
   // ".wav", // only if it changes uncomment
   // ".mid",
   // ".tga",
-  ".babylon",
+  // ".babylon",
+  ".bin"
 ]);
 
 if (onlyTextures) {
@@ -251,7 +253,7 @@ async function processFile(fullPath, containerClient, relativeKey, prefix) {
       return;
     }
   } else if (prefix) {
-    if (ext === ".glb" || ext === ".babylon") {
+    if (ext === ".glb" || ext === ".babylon" || ext === ".bin") {
       targetName += ".gz";
       src = createReadStream(fullPath).pipe(createGzip());
     } else {

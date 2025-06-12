@@ -229,12 +229,13 @@ export class Entity extends BABYLON.TransformNode {
   public playAnimation(name: string, loop: boolean = false): void {
     const match = this.entityContainer.animations.find((a) => a.name === name);
     if (!match) return;
+    const idx = this.entityContainer.animations.indexOf(match);
     const manager = this.entityContainer.manager;
     if (!manager) {
       console.warn(`[Entity] No animation manager found for ${this.entityContainer.model}`);
       return;
     }
-    this.animationBuffer.set(match.from + 0, match.to, 0, 60);
+    this.animationBuffer.set(match.from, match.to, 0, 60);
   }
 
   private getTextureIndex(originalName: string, variation: number = 1): number {

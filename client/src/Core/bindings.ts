@@ -33,7 +33,7 @@ type CacheEntry = {
 
 const baseUrl = "https://eqrequiem.blob.core.windows.net/requiem";
 const zippedPrefixes = ["eqrequiem/textures"];
-const REQUIEM_FILE_VERSION = '1.0.5';
+const REQUIEM_FILE_VERSION = '1.0.6';
 
 function selectMinimalFiles(candidateArrays: number[][]): number[] {
   let remaining = candidateArrays.slice();
