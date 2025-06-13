@@ -39,7 +39,10 @@ func (wh *WorldHandler) HandlePacket(session *session.Session, data []byte) {
 		log.Printf("unauthenticated opcode %d from session %d – dropping", op, session.SessionID)
 		return
 	}
-
+	if session.ZoneID == -1 {
+		log.Printf("session %d has no zone assigned, cannot handle packet", session.SessionID)
+		return
+	}
 	// Route to the zone from the session and create if it doesn't exist
 	zone, _ := wh.zoneManager.GetOrCreate(session.ZoneID, session.InstanceID)
 	zone.HandleClientPacket(session, data)

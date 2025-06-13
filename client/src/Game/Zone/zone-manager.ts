@@ -42,7 +42,6 @@ export class ZoneManager {
   private entityPool: EntityPool | null = null;
   private zoneObjects: ObjectCache | null = null;
   private metadata: ZoneMetadata | null = null;
-  private usePhysics: boolean = true;
 
   private disableWorldEnv: boolean = false;
   public zoneName = "qeynos2";
@@ -95,13 +94,10 @@ export class ZoneManager {
 
   public async loadZone(
     zoneName: string,
-    usePhysics: boolean,
-    disableWorldEnv: boolean = false,
   ): Promise<void> {
     console.log("[ZoneManager] Loading zone:", zoneName);
     this.dispose();
     this.zoneName = zoneName;
-    this.disableWorldEnv = disableWorldEnv;
     this.zoneContainer = new BABYLON.TransformNode(
       "ZoneContainer",
       this.parent.scene,
@@ -118,7 +114,6 @@ export class ZoneManager {
       "EntityContainer",
       this.parent.scene,
     );
-    this.usePhysics = usePhysics;
     this.entityPool = new EntityPool(
       this.entityContainerNode,
       this.parent.scene!,
@@ -127,7 +122,7 @@ export class ZoneManager {
     if (this.zoneObjects) {
       this.zoneObjects.disposeAll();
     }
-    this.zoneObjects = new ObjectCache(usePhysics, this.objectContainer);
+    this.zoneObjects = new ObjectCache(this.objectContainer);
     this.instantiateZone();
   }
 
@@ -214,7 +209,7 @@ export class ZoneManager {
       mesh.parent = this.zoneContainer;
 
       const passThrough = mesh.metadata?.gltf?.extras?.passThrough ?? false;
-      if (this.usePhysics && !passThrough) {
+      if (!passThrough) {
         // Create physics body for static zone geometry
         mesh.physicsBody = new BABYLON.PhysicsBody(
           mesh,

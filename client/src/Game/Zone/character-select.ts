@@ -75,8 +75,7 @@ export default class CharacterSelect {
   }
 
   // This function updates the camera position based on the current orbit angle.
-  private updateCameraPosition(node: BJS.AbstractMesh) {
-    const playerPos = node.position;
+  private updateCameraPosition(playerPos: BJS.Vector3) {
     const horizontalDistance = this.cameraDistance * Math.cos(this.cameraPitch);
     const verticalDistance = this.cameraDistance * Math.sin(this.cameraPitch);
     const offsetX = Math.sin(this.orbitAngle) * horizontalDistance;
@@ -96,7 +95,7 @@ export default class CharacterSelect {
   }
 
   // Starts a setInterval loop that updates the orbit angle and camera position.
-  public startOrbiting(node: BJS.Mesh) {
+  public startOrbiting(position: BJS.Vector3) {
     const interval = 16; // Interval in milliseconds (roughly 60 FPS)
     clearInterval(this.orbitIntervalId); // Clear any existing interval
     this.orbitIntervalId = setInterval(() => {
@@ -104,14 +103,14 @@ export default class CharacterSelect {
       this.orbitAngle += this.rotationSpeed * delta;
       try {
         if (this.faceCam) {
-          this.cameraPosition = node.position.add(
+          this.cameraPosition = position.add(
             new BABYLON.Vector3(5, 5, 0),
           ); // Move to the right of the head
           if (this.camera !== null) {
             this.camera.position = this.cameraPosition;
           }
         } else {
-          this.updateCameraPosition(node);
+          this.updateCameraPosition(position);
         }
       } catch (e) {
         this.dispose();
@@ -120,7 +119,7 @@ export default class CharacterSelect {
     }, interval);
   }
 
-  public async loadModel(player: CharacterSelectEntry, charCreate: boolean = false) {
+  public async loadModel(player: CharacterSelectEntry) {
     if (this.character) {
       await this.character?.dispose();
       this.character = null;
@@ -131,6 +130,9 @@ export default class CharacterSelect {
       this.gameManager.Camera!,
       false,
     );
+    const location =
+      this.locations[player?.charClass ?? CLASS_DATA_ENUM.Shaman];
+
     this.character?.Load({
       ...player,
       name: player.name,
@@ -140,17 +142,18 @@ export default class CharacterSelect {
       inventoryItems: player.items,
       zoneId: player.zone,
       face: player.face,
-    } as unknown as PlayerProfile, charCreate).then(async () => {
-      const location =
-      this.locations[player?.charClass ?? CLASS_DATA_ENUM.Shaman];
-      this.character.mesh.position = new BABYLON.Vector3(
-        location.x,
-        location.y + 3,
-        location.z,
-      );
-      this.character.mesh.computeWorldMatrix(true);
-      this.updateCameraPosition(this.character.mesh);
-      this.startOrbiting(this.character.mesh!);
+      x: location.z,
+      y: -location.x,
+      z: location.y,
+      scale: 1.0,
+    } as unknown as PlayerProfile).then(async () => {
+      if (!this.character || !this.character.playerEntity) {
+        console.error("Character not loaded properly");
+        return;
+      }
+
+      this.updateCameraPosition(this.character.playerEntity.spawnPosition);
+      this.startOrbiting(this.character.playerEntity.spawnPosition);
       this.character.playIdle();
       const nameplate = await Nameplate.createNameplate(this.gameManager.scene!);
       
@@ -160,7 +163,7 @@ export default class CharacterSelect {
       nameplate.color = BABYLON.Color4.FromHexString("#00ffff");
       const node = new BABYLON.TransformNode(`nameplate_${player.name}`, this.gameManager.scene!);
       nameplate.parent = node;
-      node.parent = this.character.mesh;
+      node.parent = this.character.playerEntity;
       node.position = new BABYLON.Vector3(0, 4.5, 0);
 
     });

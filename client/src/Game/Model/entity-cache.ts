@@ -190,7 +190,6 @@ export class EntityCache {
         );
         if (json) {
           animations = json.animations as BJS.AnimationRange[];
-          console.log('JSON animations found:', animations);
         } else {
           const ranges = infoNode?.metadata?.gltf?.extras?.animationRanges ?? [];
           let offset = 0;

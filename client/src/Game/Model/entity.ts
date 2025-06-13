@@ -26,6 +26,7 @@ export class Entity extends BABYLON.TransformNode {
   public entityContainer: EntityContainer;
   public entityCache: EntityCache;
   public spawnPosition: BJS.Vector3 = new BABYLON.Vector3(0, 0, 0);
+  public spawnScale: number = 1.5; // Default scaling factor for entities
   private scene: BJS.Scene;
   private nodeContainer: BJS.TransformNode | null = null;
   private animationBuffer: BJS.Vector4 = new BABYLON.Vector4(0, 1, 0, 60);
@@ -45,6 +46,7 @@ export class Entity extends BABYLON.TransformNode {
     this.setParent(parent);
     this.entityContainer = entityContainer;
     this.entityCache = entityCache;
+    this.spawnScale = spawn.scale || 1.5; // Use spawn scale if available, otherwise default to 1.5
     this.spawnPosition = new BABYLON.Vector3(-spawn.y, spawn.z + 5, spawn.x);
     // this.debugWireframe = new DebugWireframe(this, scene);
     this.playAnimation(AnimationDefinitions.Idle1);
@@ -52,6 +54,51 @@ export class Entity extends BABYLON.TransformNode {
 
   public meshes(): BJS.InstancedMesh[] {
     return this.bodyInstances.concat(this.secondaryInstances);
+  }
+
+  public dispose() {
+    if (this.isTearingDown || this.hidden) return;
+    this.isTearingDown = true;
+
+    // Dispose all instances
+    for (const instance of this.bodyInstances) {
+      instance.dispose();
+    }
+    this.bodyInstances = [];
+    for (const instance of this.secondaryInstances) {
+      instance.dispose();
+    }
+    this.secondaryInstances = [];
+    
+    // Dispose nameplate and its node
+    Nameplate.removeNameplate(this.nameplate!);
+    this.nameplate?.dispose();
+    this.nameplateNode?.dispose();
+    
+    // Dispose node container
+    if (this.nodeContainer) {
+      this.nodeContainer.dispose();
+      this.nodeContainer = null;
+    }
+
+    // Dispose physics body and shape
+    if (this.physicsBody) {
+      this.physicsBody.dispose();
+      this.physicsBody = null;
+    }
+    if (this.capsuleShape) {
+      this.capsuleShape.dispose();
+      this.capsuleShape = null;
+    }
+
+    // Clear references
+    this.nameplate = null;
+    this.nameplateNode = null;
+    
+    // Set flags
+    this.isTearingDown = false;
+    this.hidden = true;
+    super.dispose();
   }
 
   public async hide(): Promise<void> {
@@ -110,9 +157,8 @@ export class Entity extends BABYLON.TransformNode {
       const max = new BABYLON.Vector3(boundingBox.max[0], boundingBox.max[1], boundingBox.max[2]);
 
       const extents = max.subtract(min).scale(0.5);
-      capsuleHeight = (extents.z * 2) * 1.5; // Scale height by 1.5 to match entity scaling
+      capsuleHeight = (extents.z * 2) * this.spawnScale; // Scale height by spawnScale
     } else {
-      //      console.warn(`[Entity] No bounding box found for ${this.spawn.name}, using default height ${height}`);
     }
 
     // Setup physics body with capsule shape
@@ -141,13 +187,12 @@ export class Entity extends BABYLON.TransformNode {
       mass: 500,
       inertia: new BABYLON.Vector3(0, 0, 0),
     });
-    const scale = 1.5;
     // Create body instances and assign physics body
     for (const mesh of this.entityContainer.meshes) {
       const bodyInst = mesh.createInstance(`instance_${this.spawn.name}_${this.spawn.spawnId}_${meshIdx++}`);
       bodyInst.setParent(this.nodeContainer);
-      bodyInst.position = new BABYLON.Vector3(0, scale * (modelOffset[this.entityContainer.model] ?? 0.5), 0); //this.spawnPosition;
-      bodyInst.scaling.setAll(scale);
+      bodyInst.position = new BABYLON.Vector3(0, this.spawnScale * (modelOffset[this.entityContainer.model] ?? 0.5), 0); //this.spawnPosition;
+      bodyInst.scaling.setAll(this.spawnScale);
       bodyInst.instancedBuffers.bakedVertexAnimationSettingsInstanced = this.animationBuffer;
       bodyInst.physicsBody = this.physicsBody; // Assign physics body to instance
       const idx = this.getTextureIndex(mesh.name, 'equipChest' in this.spawn ? this.spawn?.equipChest : 3);
@@ -203,14 +248,12 @@ export class Entity extends BABYLON.TransformNode {
       console.warn(`[Entity] Failed to load secondary mesh for ${this.entityContainer.model}${variation}`);
       return;
     }
-    const scale = 1.5;
-
 
     for (const mesh of secondaryMeshContainer.meshes) {
       const secondaryInstance = mesh.createInstance(mesh.name);
       secondaryInstance.setParent(this.nodeContainer);
-      secondaryInstance.position = new BABYLON.Vector3(0, scale * (modelOffset[this.entityContainer.model] ?? 0.5), 0); //this.spawnPosition;
-      secondaryInstance.scaling.setAll(scale);
+      secondaryInstance.position = new BABYLON.Vector3(0, this.spawnScale * (modelOffset[this.entityContainer.model] ?? 0.5), 0); //this.spawnPosition;
+      secondaryInstance.scaling.setAll(this.spawnScale);
       secondaryInstance.instancedBuffers.bakedVertexAnimationSettingsInstanced = this.animationBuffer;
       secondaryInstance.physicsBody = this.physicsBody; // Assign physics body to instance
       const idx = this.getTextureIndex(mesh.name, textureVariation);

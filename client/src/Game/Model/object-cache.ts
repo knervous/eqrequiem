@@ -18,12 +18,10 @@ type ContainerData = {
 };
 
 export default class ObjectCache {
-  private usePhysics: boolean = true;
   public dataContainers: Record<ModelKey, Promise<ContainerData>> = {};
   private objectContainer: BJS.TransformNode | null = null;
   private intervals: NodeJS.Timeout[] = [];
-  constructor(usePhysics: boolean = true, zoneContainer: BJS.TransformNode | null = null) {
-    this.usePhysics = usePhysics;
+  constructor(zoneContainer: BJS.TransformNode | null = null) {
     if (zoneContainer) {
       this.objectContainer = zoneContainer;
     }
@@ -170,48 +168,46 @@ export default class ObjectCache {
         this.intervals.push(intervalId);
       }
   
-      if (usePhysics && this.usePhysics) {
-        // Create a physics shape for the mesh (shared across instances)
-        const physicsShape = new BABYLON.PhysicsShapeMesh(mesh as BJS.Mesh, scene!);
+      // Create a physics shape for the mesh (shared across instances)
+      const physicsShape = new BABYLON.PhysicsShapeMesh(mesh as BJS.Mesh, scene!);
   
-        // Create individual physics bodies for each instance
-        for (let i = 0; i < count; i++) {
-          const { x, y, z, rotateX, rotateY, rotateZ, scale } = transforms[i];
-          if (x === 0 && y === 0 && z === 0) {
-            continue; // Skip invalid transforms
-          }
-  
-          // Create a new transform node for the physics body to hold its position
-          const physicsTransformNode = new BABYLON.TransformNode(
-            `${mesh.name}_physics_${i}`,
-            scene!,
-          );
-          physicsTransformNode.parent = container.rootNodes[0].parent;
-  
-          // Apply the transformation to the transform node
-          const translation = BABYLON.Matrix.Translation(-x, y, z);
-          const rotation = BABYLON.Matrix.RotationYawPitchRoll(
-            BABYLON.Tools.ToRadians(rotateY),
-            BABYLON.Tools.ToRadians(rotateX),
-            BABYLON.Tools.ToRadians(rotateZ),
-          );
-          const scaling = BABYLON.Matrix.Scaling(scale, scale, scale);
-          const transformMatrix = scaling.multiply(rotation).multiply(translation);
-          physicsTransformNode.setPreTransformMatrix(transformMatrix);
-  
-          // Create a new physics body for this instance
-          const physicsBody = new BABYLON.PhysicsBody(
-            physicsTransformNode,
-            BABYLON.PhysicsMotionType.STATIC,
-            false,
-            scene!,
-          );
-          physicsBody.shape = physicsShape; // Reuse the same shape for efficiency
-          physicsBody.setMassProperties({ mass: 0 }); // Static body
-  
-          // Store the physics body
-          physicsBodies.push(physicsBody);
+      // Create individual physics bodies for each instance
+      for (let i = 0; i < count; i++) {
+        const { x, y, z, rotateX, rotateY, rotateZ, scale } = transforms[i];
+        if (x === 0 && y === 0 && z === 0) {
+          continue; // Skip invalid transforms
         }
+  
+        // Create a new transform node for the physics body to hold its position
+        const physicsTransformNode = new BABYLON.TransformNode(
+          `${mesh.name}_physics_${i}`,
+            scene!,
+        );
+        physicsTransformNode.parent = container.rootNodes[0].parent;
+  
+        // Apply the transformation to the transform node
+        const translation = BABYLON.Matrix.Translation(-x, y, z);
+        const rotation = BABYLON.Matrix.RotationYawPitchRoll(
+          BABYLON.Tools.ToRadians(rotateY),
+          BABYLON.Tools.ToRadians(rotateX),
+          BABYLON.Tools.ToRadians(rotateZ),
+        );
+        const scaling = BABYLON.Matrix.Scaling(scale, scale, scale);
+        const transformMatrix = scaling.multiply(rotation).multiply(translation);
+        physicsTransformNode.setPreTransformMatrix(transformMatrix);
+  
+        // Create a new physics body for this instance
+        const physicsBody = new BABYLON.PhysicsBody(
+          physicsTransformNode,
+          BABYLON.PhysicsMotionType.STATIC,
+          false,
+            scene!,
+        );
+        physicsBody.shape = physicsShape; // Reuse the same shape for efficiency
+        physicsBody.setMassProperties({ mass: 0 }); // Static body
+  
+        // Store the physics body
+        physicsBodies.push(physicsBody);
       }
     }
   

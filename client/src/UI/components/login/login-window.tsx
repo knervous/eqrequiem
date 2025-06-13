@@ -38,6 +38,9 @@ export const LoginWindowComponent: React.FC = () => {
       race: 1,
       charClass: 1,
       name: "Soandso",
+      x: 15,
+      y: 15,
+      z: 15,
     });
     qeynos2_spawns.forEach((spawn) => { 
       GameManager.instance.ZoneManager?.EntityPool?.AddSpawn(spawn as Spawn);

@@ -246,14 +246,14 @@ export default class GameManager {
     }
   }
 
-  public async loadZone(zoneName: string, usePhysics = false): Promise<void> {
+  public async loadZone(zoneName: string): Promise<void> {
     this.dispose();
     this.camera = new BABYLON.UniversalCamera(
       "__camera__",
       new BABYLON.Vector3(0, 0, 0),
       this.scene!,
     );
-    this.zoneManager?.loadZone(zoneName, usePhysics);
+    this.zoneManager?.loadZone(zoneName);
     this.worldTickInterval = setInterval(() => {
       this.zoneManager?.SkyManager?.worldTick?.();
     }, 1000);

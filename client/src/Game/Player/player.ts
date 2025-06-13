@@ -106,8 +106,11 @@ export default class Player {
   }
 
   public setGravity(on: boolean) {
-    if (this.physicsBody) {
-      this.physicsBody.setGravityFactor(on ? 1 : 0);
+    if (this.playerEntity?.physicsBody) {
+      this.playerEntity.physicsBody.setGravityFactor(on ? 1 : 0);
+      console.log(
+        `[Player] Gravity set to ${on ? "enabled" : "disabled"} for player ${this.player?.name}`,
+      );
     }
   }
 
@@ -198,6 +201,10 @@ export default class Player {
   }
 
   public async Load(player: PlayerProfile) {
+    if (this.playerEntity) {
+      await this.playerEntity.dispose();
+      this.playerEntity = null;
+    }
     this.player = player;
     this.currentAnimation = "";
     for (const item of this.player.inventoryItems?.toArray() ?? []) {
@@ -213,7 +220,7 @@ export default class Player {
     const model = raceDataEntry[this.player?.gender ?? 0] || raceDataEntry[2];
     this.model = model;
     const container = this.getOrCreateNodeContainer(this.gameManager.scene!);
-    player.y = player.z = player.x = 15;
+    //player.y = player.z = player.x = 15;
     const playerEntity = await EntityCache.getInstance(player, this.gameManager.scene!, container);
     if (!playerEntity) {
       console.error("[Player] Failed to create player entity");
@@ -222,8 +229,9 @@ export default class Player {
     this.playerEntity = playerEntity;
     await playerEntity.initialize();
     await playerEntity.instantiateSecondaryMesh(this.headModelName, 0);
-    this.playerMovement = new PlayerMovement(this, this.gameManager.scene!);
-    
+    if (this.inGame) {
+      this.playerMovement = new PlayerMovement(this, this.gameManager.scene!);
+    }
     this.SwapFace(player.face);
     this.gameManager.scene?.registerBeforeRender(() => {
       this.tick();
