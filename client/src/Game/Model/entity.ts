@@ -101,6 +101,10 @@ export class Entity extends BABYLON.TransformNode {
     super.dispose();
   }
 
+  public toggleVisibility(visible: boolean): void {
+    this.nodeContainer!.setEnabled(visible);
+  }
+
   public async hide(): Promise<void> {
     if (this.isTearingDown || this.hidden) return;
     this.isTearingDown = true;

@@ -95,6 +95,7 @@ export class PlayerCamera {
       Math.min(this.maxCameraDistance, this.cameraDistance + delta * deltaCoefficient),
     );
     this.isFirstPerson = this.cameraDistance <= this.minCameraDistance;
+    this.player.playerEntity.toggleVisibility(!this.isFirstPerson);
     this.updateCameraPosition();
   }
 
