@@ -495,14 +495,15 @@ struct BecomeCorpse {
   z @3 :Float32;
 }
 
-struct EntityPositionUpdate {
+struct EntityPositionUpdateBase {
   spawnId @0 :Int32;
   position @1: Vector3;
   velocity @2: Vector3;
   heading @3 :Float32;
-  cellX     @4 :Int32;
-  cellY     @5 :Int32;
-  cellZ     @6 :Int32;
+}
+
+struct EntityPositionUpdate {
+  updates @0 :List(EntityPositionUpdateBase);
 }
 
 struct EntityAnimation {

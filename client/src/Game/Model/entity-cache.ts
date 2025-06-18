@@ -11,6 +11,7 @@ import { createVATShaderMaterial } from "./entity-material";
 import { charFileRegex } from "@game/Constants/constants";
 import { PlayerProfile } from "@game/Net/internal/api/capnp/player";
 import { textureFromBakedVertexDataHalfFloat } from "./vat-texture";
+import type GameManager from "@game/Manager/game-manager";
 
 type ModelKey = string;
 
@@ -271,6 +272,7 @@ export class EntityCache {
    * Instantiates an Entity under the given parent (or shared container).
    */
   public static async getInstance(
+    gameManager: GameManager,
     spawn: Spawn | PlayerProfile,
     scene: BJS.Scene,
     parentNode?: BJS.Node,
@@ -280,7 +282,7 @@ export class EntityCache {
     const model = entry[spawn.gender ?? 0] || entry[2];
     const container = await EntityCache.getContainer(model, scene);
     if (!container) return null;
-    return new Entity(spawn, scene, container, this, parentNode!);
+    return new Entity(gameManager, spawn, scene, container, this, parentNode!);
   }
 
   public static dispose(model: ModelKey): void {

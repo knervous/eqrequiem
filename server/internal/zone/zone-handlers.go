@@ -48,12 +48,27 @@ func HandleClientUpdate(z *ZoneInstance, ses *session.Session, payload []byte) {
 		log.Printf("failed to read JWTLogin struct: %v", err)
 		return
 	}
+	// 1) get old position
+	oldPos := ses.Client.GetPosition()
+
+	// 2) parse new position from request
 	newPosition := entity.MobPosition{
 		X:       req.X(),
 		Y:       req.Y(),
 		Z:       req.Z(),
 		Heading: req.Heading(),
 	}
+
+	// 3) compute velocity as delta position
+	vel := entity.Velocity{
+		X: newPosition.X - oldPos.X,
+		Y: newPosition.Y - oldPos.Y,
+		Z: newPosition.Z - oldPos.Z,
+	}
+
+	// 4) update session client state
+	ses.Client.SetVelocity(vel)
+
 	clientSession := z.ClientEntries[ses.SessionID]
 	ses.Client.SetPosition(newPosition)
 	z.markMoved(clientSession.EntityId, newPosition)
@@ -202,6 +217,10 @@ func HandleRequestClientZoneChange(z *ZoneInstance, ses *session.Session, payloa
 
 	// Send all zone spawns
 	for _, npc := range z.Npcs {
+		if npc.ID() == clientEntry.EntityId {
+			// Skip the player character spawn
+			continue
+		}
 		spawn, err := session.NewMessage(ses, eq.NewRootSpawn)
 		if err != nil {
 			log.Printf("failed to create Spawn message: %v", err)

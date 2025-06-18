@@ -18,11 +18,13 @@ const (
 // cellSize is the edge length (in world units) of each grid cell.
 const cellSize = 300.0
 
-// packCell encodes a 3D cell coordinate into a single int64 key.
+const cellOffset = 1 << 20 // must be > max |cell index| you’ll ever see
+
 func packCell(c [3]int) int64 {
-	return (int64(uint32(c[0])) << 42) |
-		(int64(uint32(c[1])) << 21) |
-		int64(uint32(c[2]))
+	ux := int64(c[0] + cellOffset)
+	uy := int64(c[1] + cellOffset)
+	uz := int64(c[2] + cellOffset)
+	return (ux << 42) | (uy << 21) | uz
 }
 
 // worldToCell computes the 3D cell indices for a world position.
@@ -36,8 +38,13 @@ func worldToCell(x, y, z float32) [3]int {
 
 // markMoved flags an entity for broadcast and rebuckets it if its cell changed.
 func (z *ZoneInstance) markMoved(id int, pos entity.MobPosition) {
-	// 1) always flag for broadcast
-	z.dirtyEntities = append(z.dirtyEntities, id)
+	m := z.Entities[id].GetMob()
+
+	// 1) only enqueue once, via its own flag
+	if !m.IsDirty() {
+		m.MarkDirty()
+		z.dirtyEntities = append(z.dirtyEntities, id)
+	}
 
 	// 2) rebucket on cell change
 	newCell := worldToCell(pos.X, pos.Y, pos.Z)
@@ -64,11 +71,6 @@ func (z *ZoneInstance) rebucket(id int, oldKey, newKey int64, cell [3]int) {
 
 // resubscribe rebuilds the subscriber list by scanning the 3×3×3 neighborhood of cells.
 func (z *ZoneInstance) resubscribe(id int, cell [3]int) {
-	// only keep subscriptions for *player* entities—nothing else
-	ent, exists := z.Entities[id]
-	if !exists || ent.Type() != EntityTypePlayer {
-		return
-	}
 	old := z.subs[id]
 	if old == nil {
 		old = make(map[int]struct{})
@@ -82,6 +84,9 @@ func (z *ZoneInstance) resubscribe(id int, cell [3]int) {
 				nb := [3]int{cell[0] + di, cell[1] + dj, cell[2] + dk}
 				key := packCell(nb)
 				for sid := range z.bucketMap[key] {
+					if sid == id {
+						continue
+					}
 					if ce, ok := z.ClientEntriesByEntityID[sid]; ok && ce.ClientSession != nil {
 						newSubs[sid] = struct{}{}
 					}
@@ -149,52 +154,59 @@ func (z *ZoneInstance) subscribeExistingToNew(newID int, pos entity.MobPosition)
 	}
 }
 
-// FlushUpdates sends all pending position updates to subscribers.
 func (z *ZoneInstance) FlushUpdates() {
-	for _, id := range z.dirtyEntities {
-		entity := z.Entities[id]
-		if entity.Type() == EntityTypeNPC {
-			continue
-		}
-		pkt := func(m eq.EntityPositionUpdate) error {
-			posBuilder, _ := m.NewPosition()
-			entity := z.Entities[id]
-			if entity == nil {
-				return nil
-			}
-			m.SetSpawnId(int32(entity.ID()))
-			pos := entity.GetPosition()
-			if entity.Type() == EntityTypeNPC {
-				posBuilder.SetX(pos.X)
-				posBuilder.SetY(pos.Y)
-				posBuilder.SetZ(pos.Z)
-			} else {
-				posBuilder.SetX(pos.X)
-				posBuilder.SetY(pos.Y)
-				posBuilder.SetZ(pos.Z)
-			}
+	// 1) clear last tick’s data (no allocation)
+	for clientID, slice := range z.updatesByClient {
+		z.updatesByClient[clientID] = slice[:0]
+	}
 
-			m.SetHeading(pos.Heading)
-			c := worldToCell(pos.X, pos.Y, pos.Z)
-			m.SetCellX(int32(c[0]))
-			m.SetCellY(int32(c[1]))
-			m.SetCellZ(int32(c[2]))
-			return nil
-		}
-
-		for entityId := range z.subs[id] {
-			if entityId == id {
+	// 2) scatter each dirty entity into its subscribers
+	for _, eid := range z.dirtyEntities {
+		for clientID := range z.subs[eid] {
+			// validate client…
+			if ce, ok := z.ClientEntriesByEntityID[clientID]; !ok || ce.ClientSession == nil {
 				continue
 			}
-			if cs := z.ClientEntriesByEntityID[entityId].ClientSession; cs != nil {
-				session.QueueMessage(
-					cs,
-					eq.NewRootEntityPositionUpdate,
-					opcodes.SpawnPositionUpdate,
-					pkt,
-				)
-			}
+			z.updatesByClient[clientID] = append(z.updatesByClient[clientID], eid)
 		}
+		z.Entities[eid].GetMob().ClearDirty()
 	}
+
+	// 3) send one batch per client with non-empty list
+	for clientID, eids := range z.updatesByClient {
+		if len(eids) == 0 {
+			continue
+		}
+		ce := z.ClientEntriesByEntityID[clientID]
+		session.QueueMessage(
+			ce.ClientSession,
+			eq.NewRootEntityPositionUpdate,
+			opcodes.SpawnPositionUpdate,
+			func(b eq.EntityPositionUpdate) error {
+				updates, _ := b.NewUpdates(int32(len(eids)))
+				for i, eid := range eids {
+					m := updates.At(i)
+					p, _ := m.NewPosition()
+					ent := z.Entities[eid]
+					pos := ent.GetPosition()
+					m.SetSpawnId(int32(eid))
+					p.SetX(pos.X)
+					p.SetY(pos.Y)
+					p.SetZ(pos.Z)
+					m.SetHeading(pos.Heading)
+					v, _ := m.NewVelocity()
+					vel := ent.GetMob().GetVelocity()
+					v.SetX(vel.X)
+					v.SetY(vel.Y)
+					v.SetZ(vel.Z)
+				}
+				return nil
+			},
+		)
+		// clear for next tick
+		z.updatesByClient[clientID] = eids[:0]
+	}
+
+	// 4) reset the dirty‐entity list
 	z.dirtyEntities = z.dirtyEntities[:0]
 }

@@ -2,11 +2,13 @@ import type * as BJS from "@babylonjs/core";
 import {
   EntityAnimation,
   EntityPositionUpdate,
+  EntityPositionUpdateBase,
   Spawn,
 } from "@game/Net/internal/api/capnp/common";
 import { Entity } from "@game/Model/entity";
 import { Grid } from "./zone-grid";
 import EntityCache from "@game/Model/entity-cache";
+import type GameManager from "@game/Manager/game-manager";
 
 export default class EntityPool {
   parent: BJS.Node;
@@ -19,7 +21,7 @@ export default class EntityPool {
   private spawns: Record<number, Spawn> = {};
   private scene: BJS.Scene;
 
-  constructor(parent: BJS.Node, scene: BJS.Scene) {
+  constructor(private gameManager: GameManager, parent: BJS.Node, scene: BJS.Scene) {
     this.scene = scene;
     this.parent = parent;
     this.grid = new Grid(300.0, scene);
@@ -48,7 +50,7 @@ export default class EntityPool {
     });
     this.spawns[spawn.spawnId] = spawn;
 
-    const entity = await EntityCache.getInstance(spawn, this.scene!, this.parent);
+    const entity = await EntityCache.getInstance(this.gameManager, spawn, this.scene!, this.parent);
     if (!entity) {
       console.error("Failed to acquire entity for spawn", spawn.spawnId);
       return;
@@ -57,9 +59,18 @@ export default class EntityPool {
     this.entities[spawn.spawnId] = entity;
   }
 
-  UpdateSpawnPosition(sp: EntityPositionUpdate) {
+  UpdateSpawnPosition(sp: EntityPositionUpdateBase) {
     // Disable this for NPC for now, work on it later
-    console.log(sp);
+    const entity = this.entities[sp.spawnId];
+    if (!entity || !entity.spawn) {
+      console.warn("Entity not found for spawnId", sp.spawnId);
+    }
+    // console.log("Updating spawn position", entity.name, sp.spawnId, {
+    //   x: sp.position.x,
+    //   y: sp.position.y,
+    //   z: sp.position.z,
+    // });
+    entity.setPosition(sp.position.x, sp.position.y, sp.position.z);
     return;
   }
 

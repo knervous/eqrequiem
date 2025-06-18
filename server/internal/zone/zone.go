@@ -44,11 +44,11 @@ type ZoneInstance struct {
 	Entities   map[int]entity.Entity
 
 	// spatial-grid bookkeeping:
-	entityCell map[int]int64
-	bucketMap  map[int64]map[int]struct{}
-	subs       map[int]map[int]struct{} // still per‐entity subscriber lists
-
-	dirtyEntities []int // list of npcIDs that moved this tick
+	entityCell      map[int]int64
+	bucketMap       map[int64]map[int]struct{}
+	subs            map[int]map[int]struct{} // still per‐entity subscriber lists
+	updatesByClient map[int][]int            // clientID → list of entityIDs that need updates for this client
+	dirtyEntities   []int                    // list of npcIDs that moved this tick
 
 	// Grid
 	gridEntries map[int64][]*model.GridEntries
@@ -111,10 +111,11 @@ func NewZoneInstance(zoneID, instanceID int) *ZoneInstance {
 		npcsByName:              make(map[string]*entity.NPC),
 
 		// Grid processing
-		entityCell:    make(map[int]int64),
-		subs:          make(map[int]map[int]struct{}),
-		bucketMap:     make(map[int64]map[int]struct{}),
-		dirtyEntities: make([]int, 0, 256),
+		entityCell:      make(map[int]int64),
+		subs:            make(map[int]map[int]struct{}),
+		bucketMap:       make(map[int64]map[int]struct{}),
+		dirtyEntities:   make([]int, 0, 10000), // Preallocate for performance
+		updatesByClient: make(map[int][]int),   // pre-size if you know roughly how many clients
 
 		gridEntries:  gridEntries,
 		spawnTimers:  spawnTimers,
@@ -247,6 +248,8 @@ func (z *ZoneInstance) run() {
 	defer z.wg.Done()
 	zoneLoop := time.NewTicker(50 * time.Millisecond)
 	defer zoneLoop.Stop()
+	movementLoop := time.NewTicker(250 * time.Millisecond)
+	defer movementLoop.Stop()
 	worldTick := time.NewTicker(6 * time.Second)
 	defer worldTick.Stop()
 	fmt.Printf("[Zone %d·Inst %d] started\n", z.ZoneID, z.InstanceID)
@@ -257,6 +260,8 @@ func (z *ZoneInstance) run() {
 			// World tick tasks (e.g., global updates)
 		case <-zoneLoop.C:
 			z.processSpawns()
+		case <-movementLoop.C:
+			// Process entity movements
 			z.FlushUpdates()
 		case <-z.Quit:
 			fmt.Printf("[Zone %d·Inst %d] shutting down\n", z.ZoneID, z.InstanceID)

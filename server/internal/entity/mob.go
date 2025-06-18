@@ -17,8 +17,11 @@ type Mob struct {
 	MobID    int
 	MobName  string
 	Position MobPosition
+	Velocity Velocity
 	Zone     ZoneAccess
 	Speed    float32
+
+	dirty bool
 }
 
 func (m *Mob) ID() int      { return m.MobID }
@@ -40,16 +43,32 @@ func (m *Mob) GetPosition() MobPosition {
 func (m *Mob) SetPosition(pos MobPosition) {
 	m.Position = pos
 }
+func (m *Mob) SetVelocity(vel Velocity) {
+	m.Velocity = vel
+}
+func (m *Mob) GetVelocity() Velocity {
+	return m.Velocity
+}
 
 func (m *Mob) GetMob() *Mob {
 	return m
 }
+
+func (m *Mob) MarkDirty()    { m.dirty = true }
+func (m *Mob) ClearDirty()   { m.dirty = false }
+func (m *Mob) IsDirty() bool { return m.dirty }
 
 type MobPosition struct {
 	X       float32
 	Y       float32
 	Z       float32
 	Heading float32
+}
+
+type Velocity struct {
+	X float32
+	Y float32
+	Z float32
 }
 
 type Entity interface {

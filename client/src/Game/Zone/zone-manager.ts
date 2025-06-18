@@ -115,6 +115,7 @@ export class ZoneManager {
       this.parent.scene,
     );
     this.entityPool = new EntityPool(
+      this.GameManager,
       this.entityContainerNode,
       this.parent.scene!,
     );

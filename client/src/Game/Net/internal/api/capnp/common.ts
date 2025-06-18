@@ -2622,11 +2622,11 @@ export class BecomeCorpse extends $.Struct {
     return "BecomeCorpse_" + super.toString();
   }
 }
-export class EntityPositionUpdate extends $.Struct {
+export class EntityPositionUpdateBase extends $.Struct {
   static readonly _capnp = {
-    displayName: "EntityPositionUpdate",
-    id: "93bff6bb5eecbc2a",
-    size: new $.ObjectSize(24, 2)
+    displayName: "EntityPositionUpdateBase",
+    id: "a51c9c2dfa1a6cca",
+    size: new $.ObjectSize(8, 2)
   };
   get spawnId(): number {
     return $.utils.getInt32(0, this);
@@ -2676,23 +2676,34 @@ export class EntityPositionUpdate extends $.Struct {
   set heading(value: number) {
     $.utils.setFloat32(4, value, this);
   }
-  get cellX(): number {
-    return $.utils.getInt32(8, this);
+  toString(): string {
+    return "EntityPositionUpdateBase_" + super.toString();
   }
-  set cellX(value: number) {
-    $.utils.setInt32(8, value, this);
+}
+export class EntityPositionUpdate extends $.Struct {
+  static readonly _capnp = {
+    displayName: "EntityPositionUpdate",
+    id: "93bff6bb5eecbc2a",
+    size: new $.ObjectSize(0, 1)
+  };
+  static _Updates: $.ListCtor<EntityPositionUpdateBase>;
+  _adoptUpdates(value: $.Orphan<$.List<EntityPositionUpdateBase>>): void {
+    $.utils.adopt(value, $.utils.getPointer(0, this));
   }
-  get cellY(): number {
-    return $.utils.getInt32(12, this);
+  _disownUpdates(): $.Orphan<$.List<EntityPositionUpdateBase>> {
+    return $.utils.disown(this.updates);
   }
-  set cellY(value: number) {
-    $.utils.setInt32(12, value, this);
+  get updates(): $.List<EntityPositionUpdateBase> {
+    return $.utils.getList(0, EntityPositionUpdate._Updates, this);
   }
-  get cellZ(): number {
-    return $.utils.getInt32(16, this);
+  _hasUpdates(): boolean {
+    return !$.utils.isNull($.utils.getPointer(0, this));
   }
-  set cellZ(value: number) {
-    $.utils.setInt32(16, value, this);
+  _initUpdates(length: number): $.List<EntityPositionUpdateBase> {
+    return $.utils.initList(0, EntityPositionUpdate._Updates, length, this);
+  }
+  set updates(value: $.List<EntityPositionUpdateBase>) {
+    $.utils.copyFrom(value, $.utils.getPointer(0, this));
   }
   toString(): string {
     return "EntityPositionUpdate_" + super.toString();
@@ -11615,6 +11626,7 @@ export class String extends $.Struct {
 Spawns._Spawns = $.CompositeList(Spawn);
 Bandolier._Items = $.CompositeList(BandolierItem);
 PotionBelt._Items = $.CompositeList(PotionBeltItem);
+EntityPositionUpdate._Updates = $.CompositeList(EntityPositionUpdateBase);
 MultiMoveItem._Moves = $.CompositeList(MultiMoveItemSub);
 GuildsList._Guilds = $.CompositeList(StringList);
 GroupUpdate._Membername = $.CompositeList(StringList);

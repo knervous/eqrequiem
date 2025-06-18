@@ -274,16 +274,16 @@ export class Grid {
     const playerPos = this.playerPosition;
     const entityPos = entity.spawnPosition;
     const distance = BABYLON.Vector3.Distance(playerPos, entityPos);
-
-    if (distance <= 200) {
-      entity.initialize();
-    } else {
-      if (this.isOccludedByPhysics(entity)) {
-        entity.hide();
-      } else {
-        entity.initialize();
-      }
-    }
+    entity.initialize();
+    // if (distance <= 200) {
+    //   entity.initialize();
+    // } else {
+    //   if (this.isOccludedByPhysics(entity)) {
+    //     entity.hide();
+    //   } else {
+    //     entity.initialize();
+    //   }
+    // }
   }
 
   // Debug visualization methods

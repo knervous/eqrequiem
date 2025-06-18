@@ -237,7 +237,7 @@ export default class Player {
     this.model = model;
     const container = this.getOrCreateNodeContainer(this.gameManager.scene!);
     //player.y = player.z = player.x = 15;
-    const playerEntity = await EntityCache.getInstance(player, this.gameManager.scene!, container);
+    const playerEntity = await EntityCache.getInstance(this.gameManager, player, this.gameManager.scene!, container);
     if (!playerEntity) {
       console.error("[Player] Failed to create player entity");
       return;

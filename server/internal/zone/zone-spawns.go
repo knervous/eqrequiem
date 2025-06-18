@@ -14,7 +14,8 @@ import (
 	"github.com/knervous/eqgo/internal/session"
 )
 
-// processSpawns handles the spawning and pathing of NPCs in the zone.
+// spawnTick handles NPC movement along its pathgrid, updates its velocity,
+// and ensures a final update when transitioning from moving to stopped.
 func (z *ZoneInstance) spawnTick(now time.Time, npc *entity.NPC) {
 	if len(npc.GridEntries) == 0 {
 		return
@@ -25,10 +26,11 @@ func (z *ZoneInstance) spawnTick(now time.Time, npc *entity.NPC) {
 		return
 	}
 
-	// 2) save old pos for movement check
+	// 2) save old pos and velocity for movement and transition check
 	oldX, oldY, oldZ := npc.Position.X, npc.Position.Y, npc.Position.Z
+	oldVel := npc.GetVelocity()
 
-	// 3) interpolation logic (as before)…
+	// 3) interpolation logic
 	target := npc.GridEntries[npc.GridIndex]
 	tx, ty, tz := float32(target.X), float32(target.Y), float32(target.Z)
 	delta := now.Sub(npc.LastUpdate).Seconds()
@@ -36,17 +38,18 @@ func (z *ZoneInstance) spawnTick(now time.Time, npc *entity.NPC) {
 
 	dx := tx - oldX
 	dy := ty - oldY
-	dz := float32(0.0) //tz - oldZ
+	dz := tz - oldZ
 	distSq := dx*dx + dy*dy + dz*dz
 
 	if distSq == 0 {
-		// arrived → schedule pause & advance index
+		// arrived → zero velocity, schedule pause, advance index
+		npc.SetVelocity(entity.Velocity{X: 0, Y: 0, Z: 0})
 		pause := npc.GridEntries[npc.GridIndex].Pause
 		npc.PauseUntil = now.Add(time.Duration(pause) * time.Second)
 		npc.GridIndex = (npc.GridIndex + 1) % len(npc.GridEntries)
 	} else {
 		dist := float32(math.Sqrt(float64(distSq)))
-		moveAmt := npc.Speed * float32(delta)
+		moveAmt := npc.Speed * 5 * float32(delta)
 		if moveAmt >= dist {
 			npc.Position.X, npc.Position.Y, npc.Position.Z = tx, ty, tz
 			pause := npc.GridEntries[npc.GridIndex].Pause
@@ -58,12 +61,31 @@ func (z *ZoneInstance) spawnTick(now time.Time, npc *entity.NPC) {
 			npc.Position.Y += dy * frac
 			npc.Position.Z += dz * frac
 		}
+		// compute and set velocity based on movement
+		vx := (npc.Position.X - oldX) / float32(delta)
+		vy := (npc.Position.Y - oldY) / float32(delta)
+		vz := (npc.Position.Z - oldZ) / float32(delta)
+		npc.SetVelocity(entity.Velocity{X: vx, Y: vy, Z: vz})
+
+		// update heading
 		npc.Position.Heading = float32(math.Atan2(
 			float64(npc.Position.Y-oldY),
 			float64(npc.Position.X-oldX),
 		) * (180.0 / math.Pi))
 	}
 
+	// Todo don't need to send NPC updates if velocity hasn't changed
+	// and bucket hasn't changed, do this in zone-movement.go
+
+	// 4) if velocity transitioned from moving to stopped, emit one final update
+	newVel := npc.GetVelocity()
+	wasMoving := oldVel.X != 0 || oldVel.Y != 0 || oldVel.Z != 0
+	stoppedNow := newVel.X == 0 && newVel.Y == 0 && newVel.Z == 0
+	if wasMoving && stoppedNow {
+		z.markMoved(npc.MobID, npc.Position)
+	}
+
+	// 5) mark moved if position changed
 	if npc.Position.X != oldX || npc.Position.Y != oldY || npc.Position.Z != oldZ {
 		z.markMoved(npc.MobID, npc.Position)
 	}
@@ -150,6 +172,10 @@ func (z *ZoneInstance) processSpawns() {
 				return nil
 			}
 			for _, client := range z.ClientEntries {
+				if npc.ID() == client.EntityId {
+					// Skip the player character spawn
+					continue
+				}
 				err := session.QueueMessage(
 					client.ClientSession,
 					eq.NewRootSpawn,
