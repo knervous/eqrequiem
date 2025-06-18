@@ -142,10 +142,8 @@ export default class CharacterSelect {
       inventoryItems: player.items,
       zoneId: player.zone,
       face: player.face,
-      x: location.z,
-      y: -location.x,
-      z: location.y,
       scale: 1.0,
+      ...location,
     } as unknown as PlayerProfile).then(async () => {
       if (!this.character || !this.character.playerEntity) {
         console.error("Character not loaded properly");

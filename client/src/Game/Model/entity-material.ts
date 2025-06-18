@@ -8,11 +8,11 @@ const VS_GL = `
         // Attributes
         attribute vec3 position;
         attribute vec2 uv;
-        attribute vec2 sliceIndex;
+        attribute vec2 textureAttributes;
 
         // Varyings → fragment
         varying vec2 vUV;
-        flat out float vSlice;
+        flat out int vSlice;
 
         // Uniforms
         uniform mat4 worldViewProjection;
@@ -36,7 +36,7 @@ const VS_GL = `
 
             // Pass through to fragment
             vUV = uv;
-            vSlice = sliceIndex.x;
+            vSlice = int(textureAttributes.x);
         }
     `;
 
@@ -45,14 +45,14 @@ const FS_GL = `
 
         // Varyings from vertex
         varying vec2 vUV;
-        flat in float vSlice;
+        flat in int vSlice;
 
         // On WebGPU, sampler2DArray is still bound as sampler2DArray in GLSL;
         // Babylon.js will transpile this to WGSL under the hood :contentReference[oaicite:2]{index=2}.
         uniform highp sampler2DArray uAtlasArray;
 
         void main() {
-            int slice = int(floor(vSlice));
+            int slice = vSlice;
             vec4 c = texture(uAtlasArray, vec3(vUV, float(slice)));
             gl_FragColor = vec4(c.rgb, 1.0);
         }
@@ -75,7 +75,7 @@ export function createVATShaderMaterial(scene, texArr, vatTexture): BJS.ShaderMa
       attributes: [
         "position",
         "uv",
-        "sliceIndex",
+        "textureAttributes",
         "bakedVertexAnimationSettingsInstanced",
       ],
       uniforms: ["worldViewProjection"],

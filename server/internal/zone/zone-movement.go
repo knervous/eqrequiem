@@ -64,6 +64,11 @@ func (z *ZoneInstance) rebucket(id int, oldKey, newKey int64, cell [3]int) {
 
 // resubscribe rebuilds the subscriber list by scanning the 3×3×3 neighborhood of cells.
 func (z *ZoneInstance) resubscribe(id int, cell [3]int) {
+	// only keep subscriptions for *player* entities—nothing else
+	ent, exists := z.Entities[id]
+	if !exists || ent.Type() != EntityTypePlayer {
+		return
+	}
 	old := z.subs[id]
 	if old == nil {
 		old = make(map[int]struct{})
@@ -77,7 +82,9 @@ func (z *ZoneInstance) resubscribe(id int, cell [3]int) {
 				nb := [3]int{cell[0] + di, cell[1] + dj, cell[2] + dk}
 				key := packCell(nb)
 				for sid := range z.bucketMap[key] {
-					newSubs[sid] = struct{}{}
+					if ce, ok := z.ClientEntriesByEntityID[sid]; ok && ce.ClientSession != nil {
+						newSubs[sid] = struct{}{}
+					}
 				}
 			}
 		}
@@ -125,11 +132,14 @@ func (z *ZoneInstance) subscribeExistingToNew(newID int, pos entity.MobPosition)
 					if otherID == newID {
 						continue
 					}
-					// ensure the map exists
+					// only subscribe *players* (i.e. ones with a live session)
+					if ce, isPlayer := z.ClientEntriesByEntityID[otherID]; !isPlayer || ce.ClientSession == nil {
+						continue
+					}
+					// add new client as subscriber
 					if z.subs[otherID] == nil {
 						z.subs[otherID] = make(map[int]struct{})
 					}
-					// add new client as subscriber
 					z.subs[otherID][newID] = struct{}{}
 					// flag for immediate update
 					z.dirtyEntities = append(z.dirtyEntities, otherID)

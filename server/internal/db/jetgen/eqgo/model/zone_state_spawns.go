@@ -34,9 +34,9 @@ type ZoneStateSpawns struct {
 	ConditionMinValue *int16
 	Enabled           *int16
 	Anim              *uint16
-	LootData          *string
-	EntityVariables   *string
-	Buffs             *string
+	LootData          string
+	EntityVariables   string
+	Buffs             string
 	Hp                *int64
 	Mana              *int64
 	Endurance         *int64

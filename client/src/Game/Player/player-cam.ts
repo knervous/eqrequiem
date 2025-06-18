@@ -48,7 +48,7 @@ export class PlayerCamera {
     this.canvas = canvas;
 
     canvas.addEventListener("mousedown", (e) => {
-      this.mouseInputButton(e.button);
+      this.mouseInputButton(e.button, false, e.clientX, e.clientY);
     });
     canvas.addEventListener("mouseup", (e) => {
       this.mouseInputButton(e.button, true);
@@ -67,8 +67,18 @@ export class PlayerCamera {
     this.isLocked = !!document.pointerLockElement;
   };
 
-  public mouseInputButton(buttonIndex: number, up: boolean = false) {
+  public mouseInputButton(buttonIndex: number, up: boolean = false, x: number = 0, y: number = 0) {
     if (!this.canvas) return;
+    const scene = this.player.gameManager.scene!;
+    if (!up && buttonIndex === 0 && scene) {
+      const pickResult = scene.pick(x, y);
+      if (pickResult?.hit && pickResult.pickedMesh) {
+        console.log(`Picked mesh: ${pickResult.pickedMesh.name}`, pickResult.pickedMesh);
+        // TODO: add custom logic for mesh interaction
+      } else {
+        console.log("No mesh picked");
+      }
+    }
     if (up && buttonIndex === 2) {
       document.exitPointerLock();
     } else if (buttonIndex === 2 && !this.isLocked && this.canvas.requestPointerLock) {

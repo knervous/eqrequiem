@@ -10,7 +10,7 @@ package model
 type DataBuckets struct {
 	ID          uint64 `sql:"primary_key"`
 	Key         *string
-	Value       *string
+	Value       string
 	Expires     *uint32
 	AccountID   *uint64
 	CharacterID uint64

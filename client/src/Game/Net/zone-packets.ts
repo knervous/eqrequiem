@@ -61,6 +61,14 @@ export class ZonePacketHandler {
 
   @opCodeHandler(OpCodes.SpawnPositionUpdate, EntityPositionUpdate)
   updateSpawnPosition(spawnUpdate: EntityPositionUpdate) {
+    console.log("Updating spawn position", spawnUpdate.spawnId, {
+      x: spawnUpdate.position.x,
+      y: spawnUpdate.position.y,
+      z: spawnUpdate.position.z,
+      cellX: spawnUpdate.cellX,
+      cellY: spawnUpdate.cellY,
+      cellZ: spawnUpdate.cellZ,
+    });
     GameManager.instance.ZoneManager?.EntityPool?.UpdateSpawnPosition(spawnUpdate);
   }
 

@@ -2,6 +2,7 @@ package db_zone
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	"github.com/knervous/eqgo/internal/cache"
@@ -13,10 +14,10 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-// GetZoneGridEntries loads every Grid and its GridEntries for a zone.
-// Returns a map: gridID → slice of entries (ordered by entry.Sequence).
+// GetZoneGridEntries loads every Grid and its pruned GridEntries for a zone using jet-go against grid_paths.
+// Returns a map: gridID → slice of entries (ordered by original sequence).
 func GetZoneGridEntries(zoneID int32) (map[int64][]*model.GridEntries, error) {
-	cacheKey := fmt.Sprintf("zone:grid_entries:%d", zoneID)
+	cacheKey := fmt.Sprintf("zone:grid_paths:%d", zoneID)
 	if val, found, err := cache.GetCache().Get(cacheKey); err == nil && found {
 		if m, ok := val.(map[int64][]*model.GridEntries); ok {
 			return m, nil
@@ -25,42 +26,48 @@ func GetZoneGridEntries(zoneID int32) (map[int64][]*model.GridEntries, error) {
 
 	ctx := context.Background()
 
-	// We'll pull both Grid.* and GridEntries.* in one JOIN-ed query.
-	// Jet will unmarshal into this helper struct.
-	var rows []struct {
-		Grid      model.Grid
-		GridEntry model.GridEntries
-	}
-	err := table.Grid.
+	// Query gridid and JSON points via jet-go
+	var paths []model.GridPaths
+	err := table.GridPaths.
 		SELECT(
-			table.Grid.AllColumns,
-			table.GridEntries.AllColumns,
+			table.GridPaths.AllColumns,
 		).
-		FROM(
-			table.Grid.
-				INNER_JOIN(
-					table.GridEntries,
-					table.Grid.ID.EQ(table.GridEntries.Gridid),
-				),
-		).
-		WHERE(
-			table.Grid.Zoneid.EQ(mysql.Int32(zoneID)).AND(table.GridEntries.Zoneid.EQ(mysql.Int32(zoneID))),
-		).ORDER_BY(
-		table.Grid.ID,
-		table.GridEntries.Number,
-	).
-		QueryContext(ctx, db.GlobalWorldDB.DB, &rows)
+		FROM(table.GridPaths).
+		WHERE(table.GridPaths.Zoneid.EQ(mysql.Int32(zoneID))).
+		ORDER_BY(table.GridPaths.Gridid).
+		QueryContext(ctx, db.GlobalWorldDB.DB, &paths)
 	if err != nil {
-		return nil, fmt.Errorf("query grid + entries: %w", err)
+		return nil, fmt.Errorf("query grid_paths: %w", err)
 	}
 
-	gridMap := make(map[int64][]*model.GridEntries, len(rows))
-	for i := range rows {
-		gID := int64(rows[i].Grid.ID)
-		entry := rows[i].GridEntry
-		gridMap[gID] = append(gridMap[gID], &entry)
+	// Prepare result map
+	gridMap := make(map[int64][]*model.GridEntries, len(paths))
+
+	for _, p := range paths {
+		// Unmarshal JSON array of [x,y,z,heading,pause]
+		var pts [][]float64
+		if err := json.Unmarshal([]byte(p.Points), &pts); err != nil {
+			return nil, fmt.Errorf("unmarshal points for grid %d: %w", p.Gridid, err)
+		}
+
+		entries := make([]*model.GridEntries, len(pts))
+		for i, arr := range pts {
+			entries[i] = &model.GridEntries{
+				Zoneid:      zoneID,
+				Gridid:      p.Gridid,
+				Number:      int32(i),
+				X:           arr[0],
+				Y:           arr[1],
+				Z:           arr[2],
+				Heading:     arr[3],
+				Pause:       int32(arr[4]),
+				Centerpoint: 0,
+			}
+		}
+		gridMap[int64(p.Gridid)] = entries
 	}
 
+	// Cache and return
 	if ok, err := cache.GetCache().Set(cacheKey, gridMap); err != nil || !ok {
 		return nil, fmt.Errorf("cache set error: %w", err)
 	}

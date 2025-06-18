@@ -12,4 +12,5 @@ type Grid struct {
 	Zoneid int32 `sql:"primary_key"`
 	Type   int32
 	Type2  int32
+	Points *string
 }

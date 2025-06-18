@@ -7,14 +7,8 @@
 
 package model
 
-import (
-	"time"
-)
-
-type SpireAnalyticEventCounts struct {
-	ID        uint64 `sql:"primary_key"`
-	EventName *string
-	EventKey  *string
-	Count     *int64
-	UpdatedAt *time.Time
+type GridPaths struct {
+	Zoneid int32 `sql:"primary_key"`
+	Gridid int32 `sql:"primary_key"`
+	Points string
 }

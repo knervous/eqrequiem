@@ -88,7 +88,7 @@ func NewZoneInstance(zoneID, instanceID int) *ZoneInstance {
 	}
 
 	// Grid entries
-	gridEntries, err := db_zone.GetZoneGridEntries(zone.ID)
+	gridEntries, err := db_zone.GetZoneGridEntries(zone.Zoneidnumber)
 	if err != nil {
 		fmt.Println("Error getting grid entries:", err)
 		return nil
@@ -198,9 +198,48 @@ func (z *ZoneInstance) RemoveClient(sessionID int) {
 	z.mutex.Lock()
 	defer z.mutex.Unlock()
 	fmt.Println("Removing client session", sessionID)
-	clientSession := z.ClientEntries[sessionID]
+	clientEntry, exists := z.ClientEntries[sessionID]
+	if !exists {
+		return
+	}
+
+	entityID := clientEntry.EntityId
+	if clientEntry.ClientSession != nil {
+		savePlayerData(clientEntry.ClientSession)
+	}
+	// Remove from core maps
 	delete(z.ClientEntries, sessionID)
-	delete(z.Entities, clientSession.EntityId)
+	delete(z.ClientEntriesByEntityID, entityID)
+	delete(z.Entities, entityID)
+
+	// Remove from spatial grid
+	if cellKey, ok := z.entityCell[entityID]; ok {
+		delete(z.bucketMap[cellKey], entityID)
+		if len(z.bucketMap[cellKey]) == 0 {
+			delete(z.bucketMap, cellKey)
+		}
+		delete(z.entityCell, entityID)
+	}
+
+	// Remove subscriptions
+	if subs, ok := z.subs[entityID]; ok {
+		for subscriberID := range subs {
+			// Remove this entity from other entities' subscriber lists
+			if otherSubs, exists := z.subs[subscriberID]; exists {
+				delete(otherSubs, entityID)
+			}
+		}
+		delete(z.subs, entityID)
+	}
+
+	// Remove from dirty entities (if present)
+	for i, id := range z.dirtyEntities {
+		if id == entityID {
+			z.dirtyEntities[i] = z.dirtyEntities[len(z.dirtyEntities)-1]
+			z.dirtyEntities = z.dirtyEntities[:len(z.dirtyEntities)-1]
+			break
+		}
+	}
 }
 
 // run is the main loop for the zone instance.

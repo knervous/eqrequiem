@@ -15,7 +15,7 @@ type TradeskillRecipe struct {
 	Trivial              int16
 	Nofail               bool
 	ReplaceContainer     bool
-	Notes                *string
+	Notes                string
 	MustLearn            int8
 	LearnedByItemID      int32
 	Quest                bool

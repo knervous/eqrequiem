@@ -21,6 +21,7 @@ type gridTable struct {
 	Zoneid mysql.ColumnInteger
 	Type   mysql.ColumnInteger
 	Type2  mysql.ColumnInteger
+	Points mysql.ColumnString
 
 	AllColumns     mysql.ColumnList
 	MutableColumns mysql.ColumnList
@@ -66,8 +67,9 @@ func newGridTableImpl(schemaName, tableName, alias string) gridTable {
 		ZoneidColumn   = mysql.IntegerColumn("zoneid")
 		TypeColumn     = mysql.IntegerColumn("type")
 		Type2Column    = mysql.IntegerColumn("type2")
-		allColumns     = mysql.ColumnList{IDColumn, ZoneidColumn, TypeColumn, Type2Column}
-		mutableColumns = mysql.ColumnList{TypeColumn, Type2Column}
+		PointsColumn   = mysql.StringColumn("points")
+		allColumns     = mysql.ColumnList{IDColumn, ZoneidColumn, TypeColumn, Type2Column, PointsColumn}
+		mutableColumns = mysql.ColumnList{TypeColumn, Type2Column, PointsColumn}
 		defaultColumns = mysql.ColumnList{IDColumn, ZoneidColumn, TypeColumn, Type2Column}
 	)
 
@@ -79,6 +81,7 @@ func newGridTableImpl(schemaName, tableName, alias string) gridTable {
 		Zoneid: ZoneidColumn,
 		Type:   TypeColumn,
 		Type2:  Type2Column,
+		Points: PointsColumn,
 
 		AllColumns:     allColumns,
 		MutableColumns: mutableColumns,

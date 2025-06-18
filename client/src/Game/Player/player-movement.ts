@@ -86,7 +86,7 @@ export class PlayerMovement {
       return;
     }
 
-    const currentPos = playerEntity.position;
+    const currentPos = playerEntity.spawnPosition;
     const heading = playerEntity.rotation.y;
     if (currentPos === undefined || heading === undefined) {
       return;
@@ -299,10 +299,11 @@ export class PlayerMovement {
     this.updateDelta += delta;
     if (this.updateDelta > 0.5) {
       this.updateDelta = 0;
+
       WorldSocket.sendMessage(OpCodes.ClientUpdate, ClientPositionUpdate, {
-        x: -currentPos.x,
-        y: currentPos.z,
-        z: currentPos.y,
+        x: currentPos.x,
+        y: currentPos.y,
+        z: currentPos.z,
         heading,
         animation: 0,
       });

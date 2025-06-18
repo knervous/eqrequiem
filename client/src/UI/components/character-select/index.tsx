@@ -66,6 +66,7 @@ export const CharacterSelectUIComponent: React.FC = () => {
     if (!selectedChar) {
       return;
     }
+    GameManager.instance.CharacterSelect?.dispose();
 
     WorldSocket.registerOpCodeHandler(
       OpCodes.ZoneSessionValid,

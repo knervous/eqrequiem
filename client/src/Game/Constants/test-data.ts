@@ -14,10 +14,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: -131,
-    y: 354,
+    x: -354,
+
+    y: 3,
+
     animation: 0,
-    z: 3,
+    z: -131,
+
     deltaY: 0,
     deltaX: 0,
     heading: 461,
@@ -84,10 +87,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 94,
-    y: 216,
+    x: -216,
+
+    y: 3,
+
     animation: 0,
-    z: 3,
+    z: 94,
+
     deltaY: 0,
     deltaX: 0,
     heading: 45,
@@ -154,10 +160,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: -68,
-    y: -89,
+    x: 89,
+
+    y: 3,
+
     animation: 0,
-    z: 3,
+    z: -68,
+
     deltaY: 0,
     deltaX: 0,
     heading: 469,
@@ -224,10 +233,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: -49,
-    y: 998,
+    x: -998,
+
+    y: 1,
+
     animation: 0,
-    z: 1,
+    z: -49,
+
     deltaY: 0,
     deltaX: 0,
     heading: 385,
@@ -294,10 +306,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: -133,
-    y: -84,
+    x: 84,
+
+    y: 3,
+
     animation: 0,
-    z: 3,
+    z: -133,
+
     deltaY: 0,
     deltaX: 0,
     heading: 509,
@@ -364,10 +379,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: -33,
-    y: -120,
+    x: 120,
+
+    y: 0,
+
     animation: 0,
-    z: 0,
+    z: -33,
+
     deltaY: 0,
     deltaX: 0,
     heading: 504,
@@ -434,10 +452,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: -352,
-    y: 1156,
+    x: -1156,
+
+    y: 5,
+
     animation: 0,
-    z: 5,
+    z: -352,
+
     deltaY: 0,
     deltaX: 0,
     heading: 240,
@@ -504,10 +525,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: -928,
-    y: 1279,
+    x: -1279,
+
+    y: 9,
+
     animation: 0,
-    z: 9,
+    z: -928,
+
     deltaY: 0,
     deltaX: 0,
     heading: 0,
@@ -574,10 +598,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 383,
-    y: 988,
+    x: -988,
+
+    y: 9,
+
     animation: 0,
-    z: 9,
+    z: 383,
+
     deltaY: 0,
     deltaX: 0,
     heading: 0,
@@ -644,10 +671,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 149,
-    y: 31,
+    x: -31,
+
+    y: -27,
+
     animation: 0,
-    z: -27,
+    z: 149,
+
     deltaY: 0,
     deltaX: 0,
     heading: 126,
@@ -714,10 +744,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: -391,
-    y: -113,
+    x: 113,
+
+    y: -10,
+
     animation: 0,
-    z: -10,
+    z: -391,
+
     deltaY: 0,
     deltaX: 0,
     heading: 125,
@@ -784,10 +817,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 741,
-    y: 999,
+    x: -999,
+
+    y: 1,
+
     animation: 0,
-    z: 1,
+    z: 741,
+
     deltaY: 0,
     deltaX: 0,
     heading: 350,
@@ -854,10 +890,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 37,
-    y: 313,
+    x: -313,
+
+    y: 1,
+
     animation: 0,
-    z: 1,
+    z: 37,
+
     deltaY: 0,
     deltaX: 0,
     heading: 26,
@@ -924,10 +963,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 185,
-    y: 72,
+    x: -72,
+
+    y: -29,
+
     animation: 0,
-    z: -29,
+    z: 185,
+
     deltaY: 0,
     deltaX: 0,
     heading: 350,
@@ -994,10 +1036,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: -454,
-    y: -54,
+    x: 54,
+
+    y: -5,
+
     animation: 0,
-    z: -5,
+    z: -454,
+
     deltaY: 0,
     deltaX: 0,
     heading: 129,
@@ -1064,10 +1109,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 303,
-    y: 154,
+    x: -154,
+
+    y: 2,
+
     animation: 0,
-    z: 2,
+    z: 303,
+
     deltaY: 0,
     deltaX: 0,
     heading: 0,
@@ -1134,10 +1182,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 667,
-    y: 743,
+    x: -743,
+
+    y: 1,
+
     animation: 0,
-    z: 1,
+    z: 667,
+
     deltaY: 0,
     deltaX: 0,
     heading: 494,
@@ -1204,10 +1255,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 729,
-    y: 846,
+    x: -846,
+
+    y: 9,
+
     animation: 0,
-    z: 9,
+    z: 729,
+
     deltaY: 0,
     deltaX: 0,
     heading: 0,
@@ -1274,10 +1328,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: -86,
-    y: 115,
+    x: -115,
+
+    y: 4,
+
     animation: 0,
-    z: 4,
+    z: -86,
+
     deltaY: 0,
     deltaX: 0,
     heading: 0,
@@ -1344,10 +1401,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: -240,
-    y: -228,
+    x: 228,
+
+    y: 3,
+
     animation: 0,
-    z: 3,
+    z: -240,
+
     deltaY: 0,
     deltaX: 0,
     heading: 36,
@@ -1414,10 +1474,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 1083,
-    y: 979,
+    x: -979,
+
+    y: 1,
+
     animation: 0,
-    z: 1,
+    z: 1083,
+
     deltaY: 0,
     deltaX: 0,
     heading: 235,
@@ -1484,10 +1547,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 495,
-    y: 1225,
+    x: -1225,
+
+    y: 9,
+
     animation: 0,
-    z: 9,
+    z: 495,
+
     deltaY: 0,
     deltaX: 0,
     heading: 0,
@@ -1554,10 +1620,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 65,
-    y: 342,
+    x: -342,
+
+    y: 5,
+
     animation: 0,
-    z: 5,
+    z: 65,
+
     deltaY: 0,
     deltaX: 0,
     heading: 116,
@@ -1624,10 +1693,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: -956,
-    y: 1122,
+    x: -1122,
+
+    y: 9,
+
     animation: 0,
-    z: 9,
+    z: -956,
+
     deltaY: 0,
     deltaX: 0,
     heading: 0,
@@ -1694,10 +1766,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: -423,
-    y: 1086,
+    x: -1086,
+
+    y: 9,
+
     animation: 0,
-    z: 9,
+    z: -423,
+
     deltaY: 0,
     deltaX: 0,
     heading: 0,
@@ -1764,10 +1839,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 200,
-    y: 310,
+    x: -310,
+
+    y: 47,
+
     animation: 0,
-    z: 47,
+    z: 200,
+
     deltaY: 0,
     deltaX: 0,
     heading: 327,
@@ -1834,10 +1912,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: -116,
-    y: -128,
+    x: 128,
+
+    y: 3,
+
     animation: 0,
-    z: 3,
+    z: -116,
+
     deltaY: 0,
     deltaX: 0,
     heading: 395,
@@ -1904,10 +1985,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: -347,
-    y: 160,
+    x: -160,
+
+    y: 3,
+
     animation: 0,
-    z: 3,
+    z: -347,
+
     deltaY: 0,
     deltaX: 0,
     heading: 35,
@@ -1974,10 +2058,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 243,
-    y: 89,
+    x: -89,
+
+    y: 1,
+
     animation: 0,
-    z: 1,
+    z: 243,
+
     deltaY: 0,
     deltaX: 0,
     heading: 126,
@@ -2044,10 +2131,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 235,
-    y: 6,
+    x: -6,
+
+    y: 2,
+
     animation: 0,
-    z: 2,
+    z: 235,
+
     deltaY: 0,
     deltaX: 0,
     heading: 500,
@@ -2114,10 +2204,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 406,
-    y: 935,
+    x: -935,
+
+    y: 1,
+
     animation: 0,
-    z: 1,
+    z: 406,
+
     deltaY: 0,
     deltaX: 0,
     heading: 399,
@@ -2184,10 +2277,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 377,
-    y: 233,
+    x: -233,
+
+    y: 4,
+
     animation: 0,
-    z: 4,
+    z: 377,
+
     deltaY: 0,
     deltaX: 0,
     heading: 0,
@@ -2254,10 +2350,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: -255,
-    y: -106,
+    x: 106,
+
+    y: 2,
+
     animation: 0,
-    z: 2,
+    z: -255,
+
     deltaY: 0,
     deltaX: 0,
     heading: 200,
@@ -2324,10 +2423,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 199,
-    y: 363,
+    x: -363,
+
+    y: 2,
+
     animation: 0,
-    z: 2,
+    z: 199,
+
     deltaY: 0,
     deltaX: 0,
     heading: 0,
@@ -2394,10 +2496,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: -629,
-    y: -180,
+    x: 180,
+
+    y: -11,
+
     animation: 0,
-    z: -11,
+    z: -629,
+
     deltaY: 0,
     deltaX: 0,
     heading: 452,
@@ -2464,10 +2569,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: -121,
-    y: -137,
+    x: 137,
+
+    y: 3,
+
     animation: 0,
-    z: 3,
+    z: -121,
+
     deltaY: 0,
     deltaX: 0,
     heading: 451,
@@ -2534,10 +2642,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: -840,
-    y: 1139,
+    x: -1139,
+
+    y: 9,
+
     animation: 0,
-    z: 9,
+    z: -840,
+
     deltaY: 0,
     deltaX: 0,
     heading: 0,
@@ -2604,10 +2715,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 332,
-    y: 39,
+    x: -39,
+
+    y: 2,
+
     animation: 0,
-    z: 2,
+    z: 332,
+
     deltaY: 0,
     deltaX: 0,
     heading: 31,
@@ -2674,10 +2788,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: -80,
-    y: 1040,
+    x: -1040,
+
+    y: 1,
+
     animation: 0,
-    z: 1,
+    z: -80,
+
     deltaY: 0,
     deltaX: 0,
     heading: 234,
@@ -2744,10 +2861,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: -676,
-    y: -205,
+    x: 205,
+
+    y: -10,
+
     animation: 0,
-    z: -10,
+    z: -676,
+
     deltaY: 0,
     deltaX: 0,
     heading: 500,
@@ -2814,10 +2934,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: -666,
-    y: 1248,
+    x: -1248,
+
+    y: 1,
+
     animation: 0,
-    z: 1,
+    z: -666,
+
     deltaY: 0,
     deltaX: 0,
     heading: 303,
@@ -2884,10 +3007,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 101,
-    y: 47,
+    x: -47,
+
+    y: -32,
+
     animation: 0,
-    z: -32,
+    z: 101,
+
     deltaY: 0,
     deltaX: 0,
     heading: 1,
@@ -2954,10 +3080,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 314,
-    y: 118,
+    x: -118,
+
+    y: 3,
+
     animation: 0,
-    z: 3,
+    z: 314,
+
     deltaY: 0,
     deltaX: 0,
     heading: 135,
@@ -3024,10 +3153,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 130,
-    y: 312,
+    x: -312,
+
+    y: 3,
+
     animation: 0,
-    z: 3,
+    z: 130,
+
     deltaY: 0,
     deltaX: 0,
     heading: 0,
@@ -3094,10 +3226,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: -213,
-    y: 1199,
+    x: -1199,
+
+    y: 1,
+
     animation: 0,
-    z: 1,
+    z: -213,
+
     deltaY: 0,
     deltaX: 0,
     heading: 0,
@@ -3164,10 +3299,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 106,
-    y: 1291,
+    x: -1291,
+
+    y: 1,
+
     animation: 0,
-    z: 1,
+    z: 106,
+
     deltaY: 0,
     deltaX: 0,
     heading: 282,
@@ -3234,10 +3372,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 96,
-    y: 862,
+    x: -862,
+
+    y: 1,
+
     animation: 0,
-    z: 1,
+    z: 96,
+
     deltaY: 0,
     deltaX: 0,
     heading: 356,
@@ -3304,10 +3445,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 189,
-    y: 106,
+    x: -106,
+
+    y: 18,
+
     animation: 0,
-    z: 18,
+    z: 189,
+
     deltaY: 0,
     deltaX: 0,
     heading: 118,
@@ -3374,10 +3518,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: -268,
-    y: 616,
+    x: -616,
+
+    y: 9,
+
     animation: 0,
-    z: 9,
+    z: -268,
+
     deltaY: 0,
     deltaX: 0,
     heading: 0,
@@ -3444,10 +3591,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: -1,
-    y: -4,
+    x: 4,
+
+    y: 5,
+
     animation: 0,
-    z: 5,
+    z: -1,
+
     deltaY: 0,
     deltaX: 0,
     heading: 465,
@@ -3514,10 +3664,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 484,
-    y: 726,
+    x: -726,
+
+    y: 1,
+
     animation: 0,
-    z: 1,
+    z: 484,
+
     deltaY: 0,
     deltaX: 0,
     heading: 283,
@@ -3584,10 +3737,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 559,
-    y: 1067,
+    x: -1067,
+
+    y: 1,
+
     animation: 0,
-    z: 1,
+    z: 559,
+
     deltaY: 0,
     deltaX: 0,
     heading: 180,
@@ -3654,10 +3810,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: -470,
-    y: 868,
+    x: -868,
+
+    y: 1,
+
     animation: 0,
-    z: 1,
+    z: -470,
+
     deltaY: 0,
     deltaX: 0,
     heading: 0,
@@ -3724,10 +3883,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 160,
-    y: 1216,
+    x: -1216,
+
+    y: 1,
+
     animation: 0,
-    z: 1,
+    z: 160,
+
     deltaY: 0,
     deltaX: 0,
     heading: 219,
@@ -3794,10 +3956,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 398,
-    y: -21,
+    x: 21,
+
+    y: 0,
+
     animation: 0,
-    z: 0,
+    z: 398,
+
     deltaY: 0,
     deltaX: 0,
     heading: 256,
@@ -3864,10 +4029,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: -464,
-    y: 943,
+    x: -943,
+
+    y: 1,
+
     animation: 0,
-    z: 1,
+    z: -464,
+
     deltaY: 0,
     deltaX: 0,
     heading: 383,
@@ -3934,10 +4102,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 1062,
-    y: 839,
+    x: -839,
+
+    y: 3,
+
     animation: 0,
-    z: 3,
+    z: 1062,
+
     deltaY: 0,
     deltaX: 0,
     heading: 344,
@@ -4004,10 +4175,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: -4,
-    y: 107,
+    x: -107,
+
+    y: 19,
+
     animation: 0,
-    z: 19,
+    z: -4,
+
     deltaY: 0,
     deltaX: 0,
     heading: 337,
@@ -4074,10 +4248,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: -425,
-    y: -228,
+    x: 228,
+
+    y: 23,
+
     animation: 0,
-    z: 23,
+    z: -425,
+
     deltaY: 0,
     deltaX: 0,
     heading: 70,
@@ -4144,10 +4321,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: -807,
-    y: 977,
+    x: -977,
+
+    y: 1,
+
     animation: 0,
-    z: 1,
+    z: -807,
+
     deltaY: 0,
     deltaX: 0,
     heading: 175,
@@ -4214,10 +4394,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 190,
-    y: 53,
+    x: -53,
+
+    y: 2,
+
     animation: 0,
-    z: 2,
+    z: 190,
+
     deltaY: 0,
     deltaX: 0,
     heading: 129,
@@ -4284,10 +4467,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: -80,
-    y: 1283,
+    x: -1283,
+
+    y: 1,
+
     animation: 0,
-    z: 1,
+    z: -80,
+
     deltaY: 0,
     deltaX: 0,
     heading: 501,
@@ -4354,10 +4540,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 187,
-    y: 16,
+    x: -16,
+
+    y: -30,
+
     animation: 0,
-    z: -30,
+    z: 187,
+
     deltaY: 0,
     deltaX: 0,
     heading: 410,
@@ -4424,10 +4613,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 343,
-    y: 231,
+    x: -231,
+
+    y: 1,
+
     animation: 0,
-    z: 1,
+    z: 343,
+
     deltaY: 0,
     deltaX: 0,
     heading: 230,
@@ -4494,10 +4686,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 20,
-    y: 108,
+    x: -108,
+
+    y: 1,
+
     animation: 0,
-    z: 1,
+    z: 20,
+
     deltaY: 0,
     deltaX: 0,
     heading: 0,
@@ -4564,10 +4759,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: -604,
-    y: -133,
+    x: 133,
+
+    y: -10,
+
     animation: 0,
-    z: -10,
+    z: -604,
+
     deltaY: 0,
     deltaX: 0,
     heading: 387,
@@ -4634,10 +4832,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 90,
-    y: 280,
+    x: -280,
+
+    y: 4,
+
     animation: 0,
-    z: 4,
+    z: 90,
+
     deltaY: 0,
     deltaX: 0,
     heading: 124,
@@ -4704,10 +4905,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 378,
-    y: 1113,
+    x: -1113,
+
+    y: 9,
+
     animation: 0,
-    z: 9,
+    z: 378,
+
     deltaY: 0,
     deltaX: 0,
     heading: 0,
@@ -4774,10 +4978,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 118,
-    y: 177,
+    x: -177,
+
+    y: 0,
+
     animation: 0,
-    z: 0,
+    z: 118,
+
     deltaY: 0,
     deltaX: 0,
     heading: 3,
@@ -4844,10 +5051,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: -458,
-    y: -173,
+    x: 173,
+
+    y: 31,
+
     animation: 0,
-    z: 31,
+    z: -458,
+
     deltaY: 0,
     deltaX: 0,
     heading: 450,
@@ -4914,10 +5124,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 338,
-    y: 164,
+    x: -164,
+
+    y: 2,
+
     animation: 0,
-    z: 2,
+    z: 338,
+
     deltaY: 0,
     deltaX: 0,
     heading: 0,
@@ -4984,10 +5197,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 19,
-    y: -64,
+    x: 64,
+
+    y: 3,
+
     animation: 0,
-    z: 3,
+    z: 19,
+
     deltaY: 0,
     deltaX: 0,
     heading: 347,
@@ -5054,10 +5270,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: -35,
-    y: -127,
+    x: 127,
+
+    y: 2,
+
     animation: 0,
-    z: 2,
+    z: -35,
+
     deltaY: 0,
     deltaX: 0,
     heading: 0,
@@ -5124,10 +5343,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 1031,
-    y: 1290,
+    x: -1290,
+
+    y: 1,
+
     animation: 0,
-    z: 1,
+    z: 1031,
+
     deltaY: 0,
     deltaX: 0,
     heading: 235,
@@ -5194,10 +5416,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 128,
-    y: 292,
+    x: -292,
+
+    y: 45,
+
     animation: 0,
-    z: 45,
+    z: 128,
+
     deltaY: 0,
     deltaX: 0,
     heading: 508,
@@ -5264,10 +5489,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 530,
-    y: 1026,
+    x: -1026,
+
+    y: 1,
+
     animation: 0,
-    z: 1,
+    z: 530,
+
     deltaY: 0,
     deltaX: 0,
     heading: 271,
@@ -5334,10 +5562,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: -52,
-    y: 454,
+    x: -454,
+
+    y: 3,
+
     animation: 0,
-    z: 3,
+    z: -52,
+
     deltaY: 0,
     deltaX: 0,
     heading: 0,
@@ -5404,10 +5635,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: -161,
-    y: -161,
+    x: 161,
+
+    y: 3,
+
     animation: 0,
-    z: 3,
+    z: -161,
+
     deltaY: 0,
     deltaX: 0,
     heading: 0,
@@ -5474,10 +5708,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: -227,
-    y: -205,
+    x: 205,
+
+    y: 3,
+
     animation: 0,
-    z: 3,
+    z: -227,
+
     deltaY: 0,
     deltaX: 0,
     heading: 384,
@@ -5544,10 +5781,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 685,
-    y: 953,
+    x: -953,
+
+    y: 1,
+
     animation: 0,
-    z: 1,
+    z: 685,
+
     deltaY: 0,
     deltaX: 0,
     heading: 233,
@@ -5614,10 +5854,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 763,
-    y: 970,
+    x: -970,
+
+    y: 1,
+
     animation: 0,
-    z: 1,
+    z: 763,
+
     deltaY: 0,
     deltaX: 0,
     heading: 242,
@@ -5684,10 +5927,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: -942,
-    y: 1133,
+    x: -1133,
+
+    y: 1,
+
     animation: 0,
-    z: 1,
+    z: -942,
+
     deltaY: 0,
     deltaX: 0,
     heading: 231,
@@ -5754,10 +6000,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 101,
-    y: 310,
+    x: -310,
+
+    y: 3,
+
     animation: 0,
-    z: 3,
+    z: 101,
+
     deltaY: 0,
     deltaX: 0,
     heading: 0,
@@ -5824,10 +6073,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 416,
-    y: 106,
+    x: -106,
+
+    y: 2,
+
     animation: 0,
-    z: 2,
+    z: 416,
+
     deltaY: 0,
     deltaX: 0,
     heading: 387,
@@ -5894,10 +6146,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 236,
-    y: 766,
+    x: -766,
+
+    y: 1,
+
     animation: 0,
-    z: 1,
+    z: 236,
+
     deltaY: 0,
     deltaX: 0,
     heading: 323,
@@ -5964,10 +6219,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 206,
-    y: 217,
+    x: -217,
+
+    y: 3,
+
     animation: 0,
-    z: 3,
+    z: 206,
+
     deltaY: 0,
     deltaX: 0,
     heading: 265,
@@ -6034,10 +6292,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 161,
-    y: 272,
+    x: -272,
+
+    y: 45,
+
     animation: 0,
-    z: 45,
+    z: 161,
+
     deltaY: 0,
     deltaX: 0,
     heading: 254,
@@ -6104,10 +6365,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 346,
-    y: 83,
+    x: -83,
+
+    y: 3,
+
     animation: 0,
-    z: 3,
+    z: 346,
+
     deltaY: 0,
     deltaX: 0,
     heading: 0,
@@ -6174,10 +6438,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 651,
-    y: 923,
+    x: -923,
+
+    y: 1,
+
     animation: 0,
-    z: 1,
+    z: 651,
+
     deltaY: 0,
     deltaX: 0,
     heading: 257,
@@ -6244,10 +6511,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: -448,
-    y: 1241,
+    x: -1241,
+
+    y: 1,
+
     animation: 0,
-    z: 1,
+    z: -448,
+
     deltaY: 0,
     deltaX: 0,
     heading: 307,
@@ -6314,10 +6584,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 217,
-    y: 1229,
+    x: -1229,
+
+    y: 1,
+
     animation: 0,
-    z: 1,
+    z: 217,
+
     deltaY: 0,
     deltaX: 0,
     heading: 250,
@@ -6384,10 +6657,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: -1085,
-    y: 918,
+    x: -918,
+
+    y: 9,
+
     animation: 0,
-    z: 9,
+    z: -1085,
+
     deltaY: 0,
     deltaX: 0,
     heading: 0,
@@ -6454,10 +6730,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 243,
-    y: 132,
+    x: -132,
+
+    y: 3,
+
     animation: 0,
-    z: 3,
+    z: 243,
+
     deltaY: 0,
     deltaX: 0,
     heading: 264,
@@ -6524,10 +6803,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 245,
-    y: 164,
+    x: -164,
+
+    y: 2,
+
     animation: 0,
-    z: 2,
+    z: 245,
+
     deltaY: 0,
     deltaX: 0,
     heading: 104,
@@ -6594,10 +6876,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 204,
-    y: 125,
+    x: -125,
+
+    y: 3,
+
     animation: 0,
-    z: 3,
+    z: 204,
+
     deltaY: 0,
     deltaX: 0,
     heading: 190,
@@ -6664,10 +6949,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 127,
-    y: 304,
+    x: -304,
+
+    y: 47,
+
     animation: 0,
-    z: 47,
+    z: 127,
+
     deltaY: 0,
     deltaX: 0,
     heading: 510,
@@ -6734,10 +7022,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 686,
-    y: 460,
+    x: -460,
+
+    y: 9,
+
     animation: 0,
-    z: 9,
+    z: 686,
+
     deltaY: 0,
     deltaX: 0,
     heading: 0,
@@ -6804,10 +7095,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 313,
-    y: 243,
+    x: -243,
+
+    y: 17,
+
     animation: 0,
-    z: 17,
+    z: 313,
+
     deltaY: 0,
     deltaX: 0,
     heading: 254,
@@ -6874,10 +7168,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: -935,
-    y: 1194,
+    x: -1194,
+
+    y: 9,
+
     animation: 0,
-    z: 9,
+    z: -935,
+
     deltaY: 0,
     deltaX: 0,
     heading: 0,
@@ -6944,10 +7241,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 135,
-    y: 202,
+    x: -202,
+
+    y: 3,
+
     animation: 0,
-    z: 3,
+    z: 135,
+
     deltaY: 0,
     deltaX: 0,
     heading: 434,
@@ -7014,10 +7314,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 195,
-    y: 157,
+    x: -157,
+
+    y: -29,
+
     animation: 0,
-    z: -29,
+    z: 195,
+
     deltaY: 0,
     deltaX: 0,
     heading: 0,
@@ -7084,10 +7387,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 300,
-    y: 283,
+    x: -283,
+
+    y: 15,
+
     animation: 0,
-    z: 15,
+    z: 300,
+
     deltaY: 0,
     deltaX: 0,
     heading: 68,
@@ -7154,10 +7460,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: -679,
-    y: -109,
+    x: 109,
+
+    y: -10,
+
     animation: 0,
-    z: -10,
+    z: -679,
+
     deltaY: 0,
     deltaX: 0,
     heading: 2,
@@ -7224,10 +7533,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 286,
-    y: 89,
+    x: -89,
+
+    y: 1,
+
     animation: 0,
-    z: 1,
+    z: 286,
+
     deltaY: 0,
     deltaX: 0,
     heading: 255,
@@ -7294,10 +7606,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 37,
-    y: -83,
+    x: 83,
+
+    y: 3,
+
     animation: 0,
-    z: 3,
+    z: 37,
+
     deltaY: 0,
     deltaX: 0,
     heading: 326,
@@ -7364,10 +7679,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 267,
-    y: 76,
+    x: -76,
+
+    y: -16,
+
     animation: 0,
-    z: -16,
+    z: 267,
+
     deltaY: 0,
     deltaX: 0,
     heading: 510,
@@ -7434,10 +7752,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 34,
-    y: 60,
+    x: -60,
+
+    y: 3,
+
     animation: 0,
-    z: 3,
+    z: 34,
+
     deltaY: 0,
     deltaX: 0,
     heading: 254,
@@ -7504,10 +7825,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: -638,
-    y: 854,
+    x: -854,
+
+    y: 1,
+
     animation: 0,
-    z: 1,
+    z: -638,
+
     deltaY: 0,
     deltaX: 0,
     heading: 268,
@@ -7574,9 +7898,12 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 15,
-    y: 15,
-    z: 5,
+    x: -15,
+
+    y: 5,
+
+    z: 15,
+
     animation: 0,
     deltaY: 0,
     deltaX: 0,
@@ -7644,10 +7971,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: -693,
-    y: -156,
+    x: 156,
+
+    y: -11,
+
     animation: 0,
-    z: -11,
+    z: -693,
+
     deltaY: 0,
     deltaX: 0,
     heading: 439,
@@ -7714,10 +8044,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 49,
-    y: 294,
+    x: -294,
+
+    y: 47,
+
     animation: 0,
-    z: 47,
+    z: 49,
+
     deltaY: 0,
     deltaX: 0,
     heading: 0,
@@ -7784,10 +8117,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 368,
-    y: 81,
+    x: -81,
+
+    y: 3,
+
     animation: 0,
-    z: 3,
+    z: 368,
+
     deltaY: 0,
     deltaX: 0,
     heading: 322,
@@ -7854,10 +8190,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 86,
-    y: 50,
+    x: -50,
+
+    y: 3,
+
     animation: 0,
-    z: 3,
+    z: 86,
+
     deltaY: 0,
     deltaX: 0,
     heading: 272,
@@ -7924,10 +8263,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 329,
-    y: 300,
+    x: -300,
+
+    y: 17,
+
     animation: 0,
-    z: 17,
+    z: 329,
+
     deltaY: 0,
     deltaX: 0,
     heading: 400,
@@ -7994,10 +8336,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: -163,
-    y: 439,
+    x: -439,
+
+    y: 3,
+
     animation: 0,
-    z: 3,
+    z: -163,
+
     deltaY: 0,
     deltaX: 0,
     heading: 258,
@@ -8064,10 +8409,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 370,
-    y: 774,
+    x: -774,
+
+    y: 1,
+
     animation: 0,
-    z: 1,
+    z: 370,
+
     deltaY: 0,
     deltaX: 0,
     heading: 361,
@@ -8134,10 +8482,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 96,
-    y: 890,
+    x: -890,
+
+    y: 9,
+
     animation: 0,
-    z: 9,
+    z: 96,
+
     deltaY: 0,
     deltaX: 0,
     heading: 0,
@@ -8204,10 +8555,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 377,
-    y: 879,
+    x: -879,
+
+    y: 9,
+
     animation: 0,
-    z: 9,
+    z: 377,
+
     deltaY: 0,
     deltaX: 0,
     heading: 0,
@@ -8274,10 +8628,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 251,
-    y: 1225,
+    x: -1225,
+
+    y: 1,
+
     animation: 0,
-    z: 1,
+    z: 251,
+
     deltaY: 0,
     deltaX: 0,
     heading: 402,
@@ -8344,10 +8701,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 707,
-    y: 1309,
+    x: -1309,
+
+    y: 9,
+
     animation: 0,
-    z: 9,
+    z: 707,
+
     deltaY: 0,
     deltaX: 0,
     heading: 0,
@@ -8414,10 +8774,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: -74,
-    y: -88,
+    x: 88,
+
+    y: 3,
+
     animation: 0,
-    z: 3,
+    z: -74,
+
     deltaY: 0,
     deltaX: 0,
     heading: 31,
@@ -8484,10 +8847,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 395,
-    y: 243,
+    x: -243,
+
+    y: 4,
+
     animation: 0,
-    z: 4,
+    z: 395,
+
     deltaY: 0,
     deltaX: 0,
     heading: 205,
@@ -8554,10 +8920,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: -261,
-    y: -232,
+    x: 232,
+
+    y: 3,
+
     animation: 0,
-    z: 3,
+    z: -261,
+
     deltaY: 0,
     deltaX: 0,
     heading: 8,
@@ -8624,10 +8993,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 196,
-    y: 700,
+    x: -700,
+
+    y: 1,
+
     animation: 0,
-    z: 1,
+    z: 196,
+
     deltaY: 0,
     deltaX: 0,
     heading: 218,
@@ -8694,10 +9066,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 1085,
-    y: 1097,
+    x: -1097,
+
+    y: 9,
+
     animation: 0,
-    z: 9,
+    z: 1085,
+
     deltaY: 0,
     deltaX: 0,
     heading: 0,
@@ -8764,10 +9139,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 166,
-    y: 259,
+    x: -259,
+
+    y: 1,
+
     animation: 0,
-    z: 1,
+    z: 166,
+
     deltaY: 0,
     deltaX: 0,
     heading: 10,
@@ -8834,10 +9212,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: -132,
-    y: -162,
+    x: 162,
+
+    y: 1,
+
     animation: 0,
-    z: 1,
+    z: -132,
+
     deltaY: 0,
     deltaX: 0,
     heading: 2,
@@ -8904,10 +9285,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 358,
-    y: 91,
+    x: -91,
+
+    y: 3,
+
     animation: 0,
-    z: 3,
+    z: 358,
+
     deltaY: 0,
     deltaX: 0,
     heading: 362,
@@ -8974,10 +9358,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 10,
-    y: 939,
+    x: -939,
+
+    y: 3,
+
     animation: 0,
-    z: 3,
+    z: 10,
+
     deltaY: 0,
     deltaX: 0,
     heading: 0,
@@ -9044,10 +9431,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 359,
-    y: 115,
+    x: -115,
+
+    y: 3,
+
     animation: 0,
-    z: 3,
+    z: 359,
+
     deltaY: 0,
     deltaX: 0,
     heading: 206,
@@ -9114,10 +9504,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: -374,
-    y: -34,
+    x: 34,
+
+    y: 4,
+
     animation: 0,
-    z: 4,
+    z: -374,
+
     deltaY: 0,
     deltaX: 0,
     heading: 128,
@@ -9184,10 +9577,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: -470,
-    y: -175,
+    x: 175,
+
+    y: 33,
+
     animation: 0,
-    z: 33,
+    z: -470,
+
     deltaY: 0,
     deltaX: 0,
     heading: 122,
@@ -9254,10 +9650,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 65,
-    y: 250,
+    x: -250,
+
+    y: 3,
+
     animation: 0,
-    z: 3,
+    z: 65,
+
     deltaY: 0,
     deltaX: 0,
     heading: 152,
@@ -9324,10 +9723,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: -295,
-    y: 665,
+    x: -665,
+
+    y: 1,
+
     animation: 0,
-    z: 1,
+    z: -295,
+
     deltaY: 0,
     deltaX: 0,
     heading: 230,
@@ -9394,10 +9796,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: -146,
-    y: -161,
+    x: 161,
+
+    y: 3,
+
     animation: 0,
-    z: 3,
+    z: -146,
+
     deltaY: 0,
     deltaX: 0,
     heading: 352,
@@ -9464,10 +9869,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: -854,
-    y: 1117,
+    x: -1117,
+
+    y: 3,
+
     animation: 0,
-    z: 3,
+    z: -854,
+
     deltaY: 0,
     deltaX: 0,
     heading: 0,
@@ -9534,10 +9942,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: -1022,
-    y: 863,
+    x: -863,
+
+    y: 1,
+
     animation: 0,
-    z: 1,
+    z: -1022,
+
     deltaY: 0,
     deltaX: 0,
     heading: 258,
@@ -9604,10 +10015,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 384,
-    y: 8,
+    x: -8,
+
+    y: 1,
+
     animation: 0,
-    z: 1,
+    z: 384,
+
     deltaY: 0,
     deltaX: 0,
     heading: 408,
@@ -9674,10 +10088,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 72,
-    y: 313,
+    x: -313,
+
+    y: 2,
+
     animation: 0,
-    z: 2,
+    z: 72,
+
     deltaY: 0,
     deltaX: 0,
     heading: 3,
@@ -9744,10 +10161,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 160,
-    y: 69,
+    x: -69,
+
+    y: -29,
+
     animation: 0,
-    z: -29,
+    z: 160,
+
     deltaY: 0,
     deltaX: 0,
     heading: 126,
@@ -9814,10 +10234,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 596,
-    y: 877,
+    x: -877,
+
+    y: 9,
+
     animation: 0,
-    z: 9,
+    z: 596,
+
     deltaY: 0,
     deltaX: 0,
     heading: 0,
@@ -9884,10 +10307,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: -456,
-    y: 706,
+    x: -706,
+
+    y: 9,
+
     animation: 0,
-    z: 9,
+    z: -456,
+
     deltaY: 0,
     deltaX: 0,
     heading: 0,
@@ -9954,10 +10380,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: -678,
-    y: -59,
+    x: 59,
+
+    y: -10,
+
     animation: 0,
-    z: -10,
+    z: -678,
+
     deltaY: 0,
     deltaX: 0,
     heading: 253,
@@ -10024,10 +10453,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: -125,
-    y: -144,
+    x: 144,
+
+    y: 3,
+
     animation: 0,
-    z: 3,
+    z: -125,
+
     deltaY: 0,
     deltaX: 0,
     heading: 510,
@@ -10094,10 +10526,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: -712,
-    y: 1111,
+    x: -1111,
+
+    y: 1,
+
     animation: 0,
-    z: 1,
+    z: -712,
+
     deltaY: 0,
     deltaX: 0,
     heading: 393,
@@ -10164,10 +10599,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 383,
-    y: 912,
+    x: -912,
+
+    y: 1,
+
     animation: 0,
-    z: 1,
+    z: 383,
+
     deltaY: 0,
     deltaX: 0,
     heading: 300,
@@ -10234,10 +10672,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: -1096,
-    y: 1262,
+    x: -1262,
+
+    y: 3,
+
     animation: 0,
-    z: 3,
+    z: -1096,
+
     deltaY: 0,
     deltaX: 0,
     heading: 0,
@@ -10304,10 +10745,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 206,
-    y: 140,
+    x: -140,
+
+    y: -29,
+
     animation: 0,
-    z: -29,
+    z: 206,
+
     deltaY: 0,
     deltaX: 0,
     heading: 420,
@@ -10374,10 +10818,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: -260,
-    y: 1178,
+    x: -1178,
+
+    y: 9,
+
     animation: 0,
-    z: 9,
+    z: -260,
+
     deltaY: 0,
     deltaX: 0,
     heading: 0,
@@ -10444,10 +10891,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: -7,
-    y: -89,
+    x: 89,
+
+    y: 17,
+
     animation: 0,
-    z: 17,
+    z: -7,
+
     deltaY: 0,
     deltaX: 0,
     heading: 5,
@@ -10514,10 +10964,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: -400,
-    y: 1096,
+    x: -1096,
+
+    y: 1,
+
     animation: 0,
-    z: 1,
+    z: -400,
+
     deltaY: 0,
     deltaX: 0,
     heading: 252,
@@ -10584,10 +11037,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: -561,
-    y: 964,
+    x: -964,
+
+    y: 1,
+
     animation: 0,
-    z: 1,
+    z: -561,
+
     deltaY: 0,
     deltaX: 0,
     heading: 388,
@@ -10654,10 +11110,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: -680,
-    y: 1058,
+    x: -1058,
+
+    y: 1,
+
     animation: 0,
-    z: 1,
+    z: -680,
+
     deltaY: 0,
     deltaX: 0,
     heading: 406,
@@ -10724,10 +11183,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 29,
-    y: 14,
+    x: -14,
+
+    y: 5,
+
     animation: 0,
-    z: 5,
+    z: 29,
+
     deltaY: 0,
     deltaX: 0,
     heading: 0,
@@ -10794,10 +11256,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 20,
-    y: 1089,
+    x: -1089,
+
+    y: 1,
+
     animation: 0,
-    z: 1,
+    z: 20,
+
     deltaY: 0,
     deltaX: 0,
     heading: 0,
@@ -10864,10 +11329,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 163,
-    y: 144,
+    x: -144,
+
+    y: -29,
+
     animation: 0,
-    z: -29,
+    z: 163,
+
     deltaY: 0,
     deltaX: 0,
     heading: 165,
@@ -10934,10 +11402,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 470,
-    y: 210,
+    x: -210,
+
+    y: 3,
+
     animation: 0,
-    z: 3,
+    z: 470,
+
     deltaY: 0,
     deltaX: 0,
     heading: 0,
@@ -11004,10 +11475,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 3,
-    y: 9,
+    x: -9,
+
+    y: 5,
+
     animation: 0,
-    z: 5,
+    z: 3,
+
     deltaY: 0,
     deltaX: 0,
     heading: 0,
@@ -11074,10 +11548,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: -798,
-    y: 1182,
+    x: -1182,
+
+    y: 9,
+
     animation: 0,
-    z: 9,
+    z: -798,
+
     deltaY: 0,
     deltaX: 0,
     heading: 0,
@@ -11144,10 +11621,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: -270,
-    y: -231,
+    x: 231,
+
+    y: 3,
+
     animation: 0,
-    z: 3,
+    z: -270,
+
     deltaY: 0,
     deltaX: 0,
     heading: 11,
@@ -11214,10 +11694,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: -228,
-    y: -221,
+    x: 221,
+
+    y: 3,
+
     animation: 0,
-    z: 3,
+    z: -228,
+
     deltaY: 0,
     deltaX: 0,
     heading: 470,
@@ -11284,10 +11767,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: -131,
-    y: -161,
+    x: 161,
+
+    y: 3,
+
     animation: 0,
-    z: 3,
+    z: -131,
+
     deltaY: 0,
     deltaX: 0,
     heading: 16,
@@ -11354,10 +11840,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 301,
-    y: 342,
+    x: -342,
+
+    y: 3,
+
     animation: 0,
-    z: 3,
+    z: 301,
+
     deltaY: 0,
     deltaX: 0,
     heading: 344,
@@ -11424,10 +11913,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: -749,
-    y: -132,
+    x: 132,
+
+    y: -10,
+
     animation: 0,
-    z: -10,
+    z: -749,
+
     deltaY: 0,
     deltaX: 0,
     heading: 122,
@@ -11494,10 +11986,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 50,
-    y: 20,
+    x: -20,
+
+    y: 3,
+
     animation: 0,
-    z: 3,
+    z: 50,
+
     deltaY: 0,
     deltaX: 0,
     heading: 110,
@@ -11564,10 +12059,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 56,
-    y: 290,
+    x: -290,
+
+    y: 47,
+
     animation: 0,
-    z: 47,
+    z: 56,
+
     deltaY: 0,
     deltaX: 0,
     heading: 98,
@@ -11634,10 +12132,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 17,
-    y: 328,
+    x: -328,
+
+    y: 0,
+
     animation: 0,
-    z: 0,
+    z: 17,
+
     deltaY: 0,
     deltaX: 0,
     heading: 261,
@@ -11704,10 +12205,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 270,
-    y: 115,
+    x: -115,
+
+    y: 18,
+
     animation: 0,
-    z: 18,
+    z: 270,
+
     deltaY: 0,
     deltaX: 0,
     heading: 384,
@@ -11774,10 +12278,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 160,
-    y: 148,
+    x: -148,
+
+    y: 1,
+
     animation: 0,
-    z: 1,
+    z: 160,
+
     deltaY: 0,
     deltaX: 0,
     heading: 175,
@@ -11844,10 +12351,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: -492,
-    y: 1294,
+    x: -1294,
+
+    y: 9,
+
     animation: 0,
-    z: 9,
+    z: -492,
+
     deltaY: 0,
     deltaX: 0,
     heading: 0,
@@ -11914,10 +12424,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 669,
-    y: 794,
+    x: -794,
+
+    y: 1,
+
     animation: 0,
-    z: 1,
+    z: 669,
+
     deltaY: 0,
     deltaX: 0,
     heading: 134,
@@ -11984,10 +12497,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: -76,
-    y: -145,
+    x: 145,
+
+    y: 3,
+
     animation: 0,
-    z: 3,
+    z: -76,
+
     deltaY: 0,
     deltaX: 0,
     heading: 127,
@@ -12054,10 +12570,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: -338,
-    y: 848,
+    x: -848,
+
+    y: 1,
+
     animation: 0,
-    z: 1,
+    z: -338,
+
     deltaY: 0,
     deltaX: 0,
     heading: 376,
@@ -12124,10 +12643,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 481,
-    y: 1035,
+    x: -1035,
+
+    y: 1,
+
     animation: 0,
-    z: 1,
+    z: 481,
+
     deltaY: 0,
     deltaX: 0,
     heading: 122,
@@ -12194,10 +12716,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 60,
-    y: 53,
+    x: -53,
+
+    y: 3,
+
     animation: 0,
-    z: 3,
+    z: 60,
+
     deltaY: 0,
     deltaX: 0,
     heading: 5,
@@ -12264,10 +12789,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: -518,
-    y: 1131,
+    x: -1131,
+
+    y: 1,
+
     animation: 0,
-    z: 1,
+    z: -518,
+
     deltaY: 0,
     deltaX: 0,
     heading: 340,
@@ -12334,10 +12862,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: -191,
-    y: 1125,
+    x: -1125,
+
+    y: 9,
+
     animation: 0,
-    z: 9,
+    z: -191,
+
     deltaY: 0,
     deltaX: 0,
     heading: 0,
@@ -12404,10 +12935,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 730,
-    y: 1104,
+    x: -1104,
+
+    y: 9,
+
     animation: 0,
-    z: 9,
+    z: 730,
+
     deltaY: 0,
     deltaX: 0,
     heading: 0,
@@ -12474,10 +13008,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 165,
-    y: 309,
+    x: -309,
+
+    y: 47,
+
     animation: 0,
-    z: 47,
+    z: 165,
+
     deltaY: 0,
     deltaX: 0,
     heading: 320,
@@ -12544,10 +13081,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 270,
-    y: 143,
+    x: -143,
+
+    y: 3,
+
     animation: 0,
-    z: 3,
+    z: 270,
+
     deltaY: 0,
     deltaX: 0,
     heading: 319,
@@ -12614,10 +13154,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 60,
-    y: 374,
+    x: -374,
+
+    y: 1,
+
     animation: 0,
-    z: 1,
+    z: 60,
+
     deltaY: 0,
     deltaX: 0,
     heading: 60,
@@ -12684,10 +13227,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 302,
-    y: 257,
+    x: -257,
+
+    y: 17,
+
     animation: 0,
-    z: 17,
+    z: 302,
+
     deltaY: 0,
     deltaX: 0,
     heading: 490,
@@ -12754,10 +13300,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 136,
-    y: 216,
+    x: -216,
+
+    y: 3,
+
     animation: 0,
-    z: 3,
+    z: 136,
+
     deltaY: 0,
     deltaX: 0,
     heading: 0,
@@ -12824,10 +13373,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: -503,
-    y: -236,
+    x: 236,
+
+    y: 4,
+
     animation: 0,
-    z: 4,
+    z: -503,
+
     deltaY: 0,
     deltaX: 0,
     heading: 0,
@@ -12894,10 +13446,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 392,
-    y: 289,
+    x: -289,
+
+    y: 3,
+
     animation: 0,
-    z: 3,
+    z: 392,
+
     deltaY: 0,
     deltaX: 0,
     heading: 382,
@@ -12964,10 +13519,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: -77,
-    y: -109,
+    x: 109,
+
+    y: 3,
+
     animation: 0,
-    z: 3,
+    z: -77,
+
     deltaY: 0,
     deltaX: 0,
     heading: 127,
@@ -13034,10 +13592,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: -373,
-    y: 1001,
+    x: -1001,
+
+    y: 1,
+
     animation: 0,
-    z: 1,
+    z: -373,
+
     deltaY: 0,
     deltaX: 0,
     heading: 231,
@@ -13104,10 +13665,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 313,
-    y: 257,
+    x: -257,
+
+    y: 17,
+
     animation: 0,
-    z: 17,
+    z: 313,
+
     deltaY: 0,
     deltaX: 0,
     heading: 22,
@@ -13174,10 +13738,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 202,
-    y: 270,
+    x: -270,
+
+    y: 3,
+
     animation: 0,
-    z: 3,
+    z: 202,
+
     deltaY: 0,
     deltaX: 0,
     heading: 354,
@@ -13244,10 +13811,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 923,
-    y: 1255,
+    x: -1255,
+
+    y: 9,
+
     animation: 0,
-    z: 9,
+    z: 923,
+
     deltaY: 0,
     deltaX: 0,
     heading: 0,
@@ -13314,10 +13884,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 91,
-    y: 244,
+    x: -244,
+
+    y: 1,
+
     animation: 0,
-    z: 1,
+    z: 91,
+
     deltaY: 0,
     deltaX: 0,
     heading: 392,
@@ -13384,10 +13957,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 199,
-    y: 94,
+    x: -94,
+
+    y: 18,
+
     animation: 0,
-    z: 18,
+    z: 199,
+
     deltaY: 0,
     deltaX: 0,
     heading: 30,
@@ -13454,10 +14030,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 875,
-    y: 1057,
+    x: -1057,
+
+    y: 4,
+
     animation: 0,
-    z: 4,
+    z: 875,
+
     deltaY: 0,
     deltaX: 0,
     heading: 0,
@@ -13524,10 +14103,13 @@ export const qeynos2_spawns = [
     maxHp: 0,
     findable: 0,
     deltaHeading: 0,
-    x: 875,
-    y: 1057,
+    x: -1057,
+
+    y: 4,
+
     animation: 0,
-    z: 4,
+    z: 875,
+
     deltaY: 0,
     deltaX: 0,
     heading: 0,

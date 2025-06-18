@@ -163,6 +163,22 @@ export default class Player {
     physicsBody.setAngularDamping(1.0); // High damping to resist rotation
   }
 
+  public setPosition(x: number, y: number, z: number) {
+    if (!this.playerEntity) {
+      return;
+    }
+    const physicsBody = this.playerEntity.physicsBody!;
+
+    const plugin = this.gameManager
+      .scene!.getPhysicsEngine()!
+      .getPhysicsPlugin() as BJS.HavokPlugin;
+
+    plugin._hknp.HP_Body_SetPosition(
+      physicsBody._pluginData.hpBodyId,
+      [x, y, z],
+    );
+  }
+
   public SwapFace(index: number) {
     // if (!this.mesh) {
     //   return;

@@ -257,4 +257,17 @@ export class CommandHandler {
     Player.instance?.playAnimation(AnimationDefinitions.Bow,  true);
   }
 
+  @command("goto")
+  commandGoto(args: string[]) {
+    if (args.length < 3) {
+      addChatLine("Usage: /goto x y z");
+      return;
+    }
+    const x = parseFloat(args[0]);
+    const y = parseFloat(args[1]);
+    const z = parseFloat(args[2]);
+
+    Player.instance?.setPosition(x, y, z);
+  }
+
 }

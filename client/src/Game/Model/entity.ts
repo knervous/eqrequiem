@@ -47,7 +47,7 @@ export class Entity extends BABYLON.TransformNode {
     this.entityContainer = entityContainer;
     this.entityCache = entityCache;
     this.spawnScale = spawn.scale || 1.5; // Use spawn scale if available, otherwise default to 1.5
-    this.spawnPosition = new BABYLON.Vector3(-spawn.y, spawn.z + 5, spawn.x);
+    this.spawnPosition = new BABYLON.Vector3(spawn.x, spawn.y + 5, spawn.z);
     // this.debugWireframe = new DebugWireframe(this, scene);
     this.playAnimation(AnimationDefinitions.Idle1);
   }
@@ -206,7 +206,7 @@ export class Entity extends BABYLON.TransformNode {
       } else {
         vec = bufferCache[idx] = new BABYLON.Vector2(idx, 0);
       }
-      bodyInst.instancedBuffers.sliceIndex = vec;
+      bodyInst.instancedBuffers.textureAttributes = vec;
       this.bodyInstances.push(bodyInst);
     }
     if ('equipChest' in this.spawn) {
@@ -267,8 +267,8 @@ export class Entity extends BABYLON.TransformNode {
       } else {
         vec = bufferCache[idx] = new BABYLON.Vector2(idx, 0);
       }
-      mesh.instancedBuffers.sliceIndex = vec;
-      secondaryInstance.instancedBuffers.sliceIndex = vec;
+      mesh.instancedBuffers.textureAttributes = vec;
+      secondaryInstance.instancedBuffers.textureAttributes = vec;
       this.secondaryInstances.push(secondaryInstance);
     }
   }

@@ -9,7 +9,7 @@ package model
 
 type NpcSpells struct {
 	ID                   uint32 `sql:"primary_key"`
-	Name                 *string
+	Name                 string
 	ParentList           uint32
 	AttackProc           int16
 	ProcChance           int8

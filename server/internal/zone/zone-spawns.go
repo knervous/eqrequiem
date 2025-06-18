@@ -76,9 +76,9 @@ func (z *ZoneInstance) processSpawns() {
 	now := time.Now()
 	for spawn2ID, entry := range z.ZonePool {
 		if npcID, exists := z.spawn2ToNpc[spawn2ID]; exists {
-			_, ok := z.Npcs[npcID]
+			npc, ok := z.Npcs[npcID]
 			if ok {
-				// z.spawnTick(now, npc)
+				z.spawnTick(now, npc)
 			}
 			continue
 		}

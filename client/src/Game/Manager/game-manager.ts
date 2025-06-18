@@ -133,15 +133,27 @@ export default class GameManager {
   }
 
   onPointerEvent(eventData: BJS.PointerInfo) {
-    switch(eventData.type) {
-      case BABYLON.PointerEventTypes.POINTERDOWN:
-        console.log('mouse down');
-        break;
-      case BABYLON.PointerEventTypes.POINTERUP:
-        console.log('mouse up');
-        break;
-      default:
-        break;
+    //console.log("Pointer event:", eventData);
+    if (eventData.type === BABYLON.PointerEventTypes.POINTERDOWN && this.scene) {
+    // Only handle left-click (button 0)
+      if (eventData.event.button === 0) {
+      // Perform a picking operation at the pointer's position
+        const pickResult = this.scene.pick(this.scene.pointerX, this.scene.pointerY);
+      
+        if (pickResult?.hit && pickResult.pickedMesh) {
+          const mesh = pickResult.pickedMesh;
+          console.log(`Clicked mesh: ${mesh.name}`, mesh);
+
+          // Optional: Add custom logic based on the mesh
+          // Example: Check if the mesh has a specific metadata or tag
+          if (mesh.metadata?.type === "interactive") {
+            console.log(`Interacting with ${mesh.name}`);
+          // Trigger custom interaction logic here
+          }
+        } else {
+          console.log("No mesh hit");
+        }
+      }
     }
   }
 

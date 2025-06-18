@@ -32,7 +32,8 @@ export type AnimationEntry = {
   name: string;
 };
 
-const SLICE_INDEX_BUFFER = new BABYLON.Vector2(0, 0);
+// Texture attributes are defined as x: texture index, y: rgba mask
+const TEXTURE_ATTRIBUTE_BUFFER = new Int32Array([0, 0]);
 const ANIMATION_BUFFER = new BABYLON.Vector4(0, 1, 0, 60);
 
 export class EntityCache {
@@ -64,7 +65,7 @@ export class EntityCache {
     reuseMaterial: string | null = null,
   ): Promise<EntityContainer | null> {
     model = model.toLowerCase();
-    console.log(`[EntityCache] Loading model ${model}`);
+    // console.log(`[EntityCache] Loading model ${model}`);
 
     const bucket = EntityCache.getOrCreateNodeContainer(scene);
 
@@ -217,8 +218,8 @@ export class EntityCache {
           );
           mesh.instancedBuffers.bakedVertexAnimationSettingsInstanced =
             ANIMATION_BUFFER;
-          mesh.registerInstancedBuffer("sliceIndex", 2);
-          mesh.instancedBuffers.sliceIndex = SLICE_INDEX_BUFFER;
+          mesh.registerInstancedBuffer("textureAttributes", 2);
+          mesh.instancedBuffers.textureAttributes = TEXTURE_ATTRIBUTE_BUFFER;
           mesh.bakedVertexAnimationManager = manager!;
           mesh.parent = null;
           mesh.computeWorldMatrix(true);

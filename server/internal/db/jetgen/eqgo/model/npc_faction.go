@@ -9,7 +9,7 @@ package model
 
 type NpcFaction struct {
 	ID                  int32 `sql:"primary_key"`
-	Name                *string
+	Name                string
 	Primaryfaction      int32
 	IgnorePrimaryAssist int8
 }

@@ -9,6 +9,6 @@ package model
 
 type NpcSpellsEffects struct {
 	ID         uint32 `sql:"primary_key"`
-	Name       *string
+	Name       string
 	ParentList uint32
 }

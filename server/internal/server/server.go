@@ -235,17 +235,9 @@ func (s *Server) SendDatagram(sessionID int, data []byte) error {
 
 // handleSessionClose schedules removal after gracePeriod.
 func (s *Server) handleSessionClose(sessionID int) {
-	if s.debugMode {
-		return
-	}
-	time.AfterFunc(s.gracePeriod, func() {
-		if _, exists := s.sessions[sessionID]; exists {
-			return
-		}
-		s.sessionManager.RemoveSession(sessionID)
-		s.worldHandler.RemoveSession(sessionID)
-		log.Printf("Cleaned up session %d", sessionID)
-	})
+	s.sessionManager.RemoveSession(sessionID)
+	s.worldHandler.RemoveSession(sessionID)
+	log.Printf("Cleaned up session %d", sessionID)
 }
 
 // StopServer tears down all listeners and connections.
