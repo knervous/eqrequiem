@@ -109,7 +109,6 @@ func UseSchema(schema string) {
 	GmIps = GmIps.FromSchema(schema)
 	Graveyard = Graveyard.FromSchema(schema)
 	Grid = Grid.FromSchema(schema)
-	GridEntries = GridEntries.FromSchema(schema)
 	GridPaths = GridPaths.FromSchema(schema)
 	GroundSpawns = GroundSpawns.FromSchema(schema)
 	GroupID = GroupID.FromSchema(schema)
