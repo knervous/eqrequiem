@@ -90,6 +90,7 @@ func (s *Server) StartServer() {
 			TLSConfig:       tlsConf,
 			EnableDatagrams: true,
 			QUICConfig:      quicConf,
+			Handler:         corsMiddleware(http.DefaultServeMux),
 		},
 		CheckOrigin: func(_ *http.Request) bool { return true },
 	}
@@ -274,6 +275,13 @@ func startHTTPServer(tlsConf *tls.Config) {
 	mux := http.NewServeMux()
 	mux.Handle("/code", corsMiddleware(http.HandlerFunc(discord.DiscordAuthHandler)))
 	mux.HandleFunc("/register", registerHandler)
+
+	mux.Handle("/online", corsMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("Received /online request from %s", r.RemoteAddr)
+		w.Header().Set("Content-Type", "text/plain")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("Server is online"))
+	})))
 
 	listener, err := net.Listen("tcp", ":443")
 	if err != nil {
