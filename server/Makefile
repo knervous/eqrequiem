@@ -5,6 +5,8 @@
 SERVER_SRC = ./cmd/server
 SERVER_NAME = server
 DAEMON_SRC = ./cmd/daemon
+DUMP_SRC = ./cmd/dump
+IMPORT_SRC = ./cmd/import
 DAEMON_NAME = daemon
 CAPNP_SRC = ./cmd/capnp
 JET_SRC = ./cmd/jetgen
@@ -13,6 +15,14 @@ LOG_FILE = server.log
 
 # Default target
 all: build
+
+dump:
+	@echo "Dumping DB..."
+	@go run $(DUMP_SRC) dump
+
+import:
+	@echo "Importing DB..."
+	@go run $(IMPORT_SRC) import
 
 server:
 	@echo "Starting server..."

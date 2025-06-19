@@ -51,7 +51,7 @@ type ZoneInstance struct {
 	dirtyEntities   []int                    // list of npcIDs that moved this tick
 
 	// Grid
-	gridEntries map[int64][]*model.GridEntries
+	gridEntries map[int64][]db_zone.GridEntries
 
 	spawnTimers  map[int64]time.Time // Maps Spawn2.ID to next spawn time
 	spawn2ToNpc  map[int64]int       // Maps Spawn2.ID to NPC ID (if spawned)

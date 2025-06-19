@@ -1,6 +1,7 @@
 package main
 
 import (
+	"io"
 	"log"
 	"os"
 	"os/exec"
@@ -26,43 +27,62 @@ func main() {
 		log.Fatal("Binary is not executable: ", err)
 	}
 
-	// Configure daemon
+	// Configure daemon: NO log file specified → no .log will be created
 	cntxt := &daemon.Context{
-		PidFileName: "server.pid", // Use .pid extension for clarity
+		PidFileName: "server.pid",
 		PidFilePerm: 0644,
-		LogFileName: "server.log",
-		LogFilePerm: 0640,
 		WorkDir:     workDir,
 		Umask:       027,
 	}
 
-	// Start daemon
 	d, err := cntxt.Reborn()
 	if err != nil {
 		log.Fatal("Unable to run daemon: ", err)
 	}
 	if d != nil {
+		// parent exits
 		return
 	}
 	defer cntxt.Release()
 
-	// Main loop to run and restart binary
+	// *** Child process from here on ***
+
+	// Silence the Go logger entirely
+	log.SetOutput(io.Discard)
+
+	// Pre-open /dev/null for redirecting stdout/stderr
+	devNull, err := os.OpenFile(os.DevNull, os.O_RDWR, 0)
+	if err != nil {
+		// fallback: keep using discarded logger
+		devNull = nil
+	}
+	defer func() {
+		if devNull != nil {
+			devNull.Close()
+		}
+	}()
+
 	for {
 		cmd := exec.Command(binaryPath)
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
 
-		log.Printf("Starting %s...", binaryPath)
-		err := cmd.Start()
-		if err != nil {
-			log.Printf("Failed to start: %v", err)
-			time.Sleep(5 * time.Second)
-			continue
+		// Redirect both stdout and stderr to /dev/null
+		if devNull != nil {
+			cmd.Stdout = devNull
+			cmd.Stderr = devNull
+		} else {
+			// as fallback, still discard via logger
+			cmd.Stdout = io.Discard
+			cmd.Stderr = io.Discard
 		}
 
-		// Wait for process to exit
-		err = cmd.Wait()
-		log.Printf("Process exited with error: %v", err)
+		// start and wait
+		if err := cmd.Start(); err != nil {
+			// even though logger is discarded, we can fallback to panic
+			panic("Failed to start server: " + err.Error())
+		}
+
+		_ = cmd.Wait()
+		// simple back-off before restart
 		time.Sleep(5 * time.Second)
 	}
 }

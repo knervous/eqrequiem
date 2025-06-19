@@ -14,12 +14,24 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
+type GridEntries struct {
+	Zoneid      int32
+	Gridid      int64
+	Number      int32
+	X           float64
+	Y           float64
+	Z           float64
+	Heading     float64
+	Pause       int32
+	Centerpoint int32
+}
+
 // GetZoneGridEntries loads every Grid and its pruned GridEntries for a zone using jet-go against grid_paths.
 // Returns a map: gridID → slice of entries (ordered by original sequence).
-func GetZoneGridEntries(zoneID int32) (map[int64][]*model.GridEntries, error) {
+func GetZoneGridEntries(zoneID int32) (map[int64][]GridEntries, error) {
 	cacheKey := fmt.Sprintf("zone:grid_paths:%d", zoneID)
 	if val, found, err := cache.GetCache().Get(cacheKey); err == nil && found {
-		if m, ok := val.(map[int64][]*model.GridEntries); ok {
+		if m, ok := val.(map[int64][]GridEntries); ok {
 			return m, nil
 		}
 	}
@@ -41,7 +53,7 @@ func GetZoneGridEntries(zoneID int32) (map[int64][]*model.GridEntries, error) {
 	}
 
 	// Prepare result map
-	gridMap := make(map[int64][]*model.GridEntries, len(paths))
+	gridMap := make(map[int64][]GridEntries, len(paths))
 
 	for _, p := range paths {
 		// Unmarshal JSON array of [x,y,z,heading,pause]
@@ -50,11 +62,11 @@ func GetZoneGridEntries(zoneID int32) (map[int64][]*model.GridEntries, error) {
 			return nil, fmt.Errorf("unmarshal points for grid %d: %w", p.Gridid, err)
 		}
 
-		entries := make([]*model.GridEntries, len(pts))
+		entries := make([]GridEntries, len(pts))
 		for i, arr := range pts {
-			entries[i] = &model.GridEntries{
+			entries[i] = GridEntries{
 				Zoneid:      zoneID,
-				Gridid:      p.Gridid,
+				Gridid:      int64(p.Gridid),
 				Number:      int32(i),
 				X:           arr[0],
 				Y:           arr[1],
