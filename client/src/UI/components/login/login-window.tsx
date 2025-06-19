@@ -318,8 +318,8 @@ export const LoginWindowComponent: React.FC = () => {
 
           <UiButtonComponent
             buttonName="A_EQLS_LargeBtn"
-            isDisabled={import.meta.env.VITE_LOCAL_DEV !== 'true'}
-            text={import.meta.env.VITE_LOCAL_DEV !== 'true' ? "Server Offline" : "Enter World"}
+            //isDisabled={import.meta.env.VITE_LOCAL_DEV !== 'true'}
+            text={"Enter World"}
             onClick={connectToWorld}
             icon={
               <DiscordIcon
