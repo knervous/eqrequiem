@@ -49,7 +49,7 @@ export class Nameplate {
     await Nameplate.initPromise;
     const tr = await TextRenderer.CreateTextRendererAsync(Nameplate.fontAsset!, scene.getEngine());
     tr.isBillboard = true;
-    tr.thicknessControl;
+
     Nameplate.textRenderers.push(tr);
     return tr;
   }

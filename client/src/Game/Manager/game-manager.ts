@@ -252,7 +252,7 @@ export default class GameManager {
     const zoneName = supportedZones[zoneId?.toString()]?.shortName;
     console.log("Loading zone: ", zoneId, zoneName);
     if (zoneName) {
-      await this.loadZone(zoneName, true);
+      await this.loadZone(zoneName);
     } else {
       console.error(`Zone ID ${zoneId} not found in supported zones.`);
     }

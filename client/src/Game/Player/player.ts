@@ -8,14 +8,10 @@ import { PlayerCamera } from "./player-cam";
 import { PlayerProfile } from "@game/Net/internal/api/capnp/player";
 import { Spawn } from "@game/Net/internal/api/capnp/common";
 import { ItemInstance } from "@game/Net/internal/api/capnp/item";
-import { InventorySlot, MaterialPrefixes } from "./player-constants";
+import { InventorySlot } from "./player-constants";
 import { AnimationDefinitions } from "@game/Animation/animation-constants";
-import { swapMaterialTexture } from "@game/Model/bjs-utils";
-import { zoneData } from "@game/Constants/zone-data";
-import { CLASS_DATA_NAMES } from "@game/Constants/class-data";
 import EntityCache from "@game/Model/entity-cache";
 import { Entity } from "@game/Model/entity";
-
 export default class Player {
   public playerMovement: PlayerMovement | null = null;
   public playerCamera: PlayerCamera;
@@ -28,14 +24,8 @@ export default class Player {
   public currentAnimation: string = "";
   public currentPlayToEnd: boolean = false;
   private inGame: boolean = true;
-  private capsuleShapePool: Map<number, BJS.PhysicsShapeCapsule> = new Map();
-  private currentCapsuleHeight: number = 5.5;
-  private readonly heightChangeThreshold: number = 0.01;
-  private readonly maxStepHeight: number = 2.0;
-  private readonly stepHeightTolerance: number = 0.01;
+
   private originalCollisionFilter = 0;
-  private camera: BJS.UniversalCamera;
-  private animations: Record<string, BJS.AnimationGroup> = {};
   private physicsBody: BJS.PhysicsBody | null = null;
   public get Target() {
     return this.target;
@@ -49,6 +39,9 @@ export default class Player {
   private target: Spawn | null = null;
 
   static instance: Player | null = null;
+
+  private raycastTickCounter: number = 0;
+  private readonly raycastCheckInterval: number = 10;
 
   constructor(
     gameManager: GameManager,
@@ -124,6 +117,53 @@ export default class Player {
     const delta =
       (this.gameManager.scene?.getEngine().getDeltaTime() ?? 0) / 1000;
     this.playerMovement?.movementTick?.(delta);
+
+    // New raycast logic
+    this.raycastTickCounter++;
+    if (this.raycastTickCounter >= this.raycastCheckInterval) {
+      this.raycastTickCounter = 0; // Reset counter
+      this.checkBelowAndReposition();
+    }
+  }
+
+  // Updated method using physics raycast
+  private checkBelowAndReposition() {
+    if (!this.playerEntity || !this.gameManager.scene) {
+      return;
+    }
+
+    const physics = this.gameManager.scene.getPhysicsEngine();
+    const plugin = physics?.getPhysicsPlugin() as BJS.HavokPlugin;
+    if (!physics || !plugin) {
+      console.warn("[Player] Physics engine or Havok plugin not available");
+      return;
+    }
+
+    const position = this.playerEntity.spawnPosition;
+    if (!position) {
+      return;
+    }
+    const rayOrigin = new BABYLON.Vector3(position.x, position.y, position.z);
+    const result = new BABYLON.PhysicsRaycastResult();
+
+    // Downward raycast
+    const downEnd = rayOrigin.add(new BABYLON.Vector3(0, -1000, 0)); // 10 units down
+    plugin.raycast(rayOrigin, downEnd, result);
+
+    if (!result.hasHit) {
+      // No static body below, cast upward
+      const upEnd = rayOrigin.add(new BABYLON.Vector3(0, 10000, 0)); // 100 units up
+      result.reset();
+      plugin.raycast(rayOrigin, upEnd, result);
+
+      if (result.hasHit && result.body?.motionType === BABYLON.PhysicsMotionType.STATIC) {
+        // Reposition player just below the hit point
+        const hitPoint = result.hitPoint;
+        const newPosition = new BABYLON.Vector3(hitPoint.x, hitPoint.y - 0.1, hitPoint.z);
+        this.setPosition(newPosition.x, newPosition.y + 5, newPosition.z);
+        console.log(`[Player] Repositioned to ${newPosition.toString()} due to no ground below`);
+      }
+    }
   }
 
   public input_pan(delta: number) {
@@ -167,7 +207,10 @@ export default class Player {
     if (!this.playerEntity) {
       return;
     }
-    const physicsBody = this.playerEntity.physicsBody!;
+    const physicsBody = this.playerEntity.physicsBody;
+    if (!physicsBody) {
+      return;
+    }
 
     const plugin = this.gameManager
       .scene!.getPhysicsEngine()!
@@ -180,20 +223,7 @@ export default class Player {
   }
 
   public SwapFace(index: number) {
-    // if (!this.mesh) {
-    //   return;
-    // }
-    // if (this.mesh.material instanceof BABYLON.MultiMaterial) {
-    //   this.mesh.material.subMaterials.forEach((subMaterial) => {
-    //     if (subMaterial?.name.includes("he00")) {
-    //       const newTexture = subMaterial.name.replace(
-    //         /he00\d{1}/,
-    //         `${MaterialPrefixes.Face}00${index}`,
-    //       );
-    //       swapMaterialTexture(subMaterial, newTexture);
-    //     }
-    //   });
-    // }
+
   }
 
   public async UpdateNameplate(lines: string[]) {
@@ -257,28 +287,23 @@ export default class Player {
 
   public playAnimation(
     animationName: string,
-    loop: boolean = true,
+    playThrough: boolean = true,
   ) {
-    this.playerEntity?.playAnimation(animationName, loop);
+    this.playerEntity?.playAnimation(animationName, playThrough);
   
 
-    if (this.player) {
-      // WorldSocket.sendMessage(OpCodes.Animation, EntityAnimation, {
-      //   spawnId: this.data?.spawnId,
-      //   animation: animationName,
-      // });
-    }
+
   }
 
   public playPos() {
     this.playAnimation(AnimationDefinitions.None, true);
   }
   public playStationaryJump() {
-    this.playAnimation(AnimationDefinitions.StationaryJump, false);
+    this.playAnimation(AnimationDefinitions.StationaryJump, true);
   }
 
   public playJump() {
-    this.playAnimation(AnimationDefinitions.RunningJump, false);
+    this.playAnimation(AnimationDefinitions.RunningJump, true);
   }
 
   public playWalk() {
@@ -298,6 +323,6 @@ export default class Player {
   }
 
   public playIdle() {
-    this.playAnimation(AnimationDefinitions.Idle2, true);
+    this.playAnimation(AnimationDefinitions.Idle2, false);
   }
 }

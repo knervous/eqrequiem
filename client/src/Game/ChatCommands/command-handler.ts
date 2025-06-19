@@ -93,6 +93,16 @@ export class CommandHandler {
     `);
   }
 
+  @command("location")
+  commandLocation() {
+    if (Player.instance?.getPlayerPosition() !== undefined) {
+      const { x, y, z } = Player.instance.getPlayerPosition()!;
+      addChatLine(`Your current location is: X: ${x.toFixed(2)}, Y: ${y.toFixed(2)}, Z: ${z.toFixed(2)}`);
+    } else {
+      addChatLine("You are not in the game or your player entity is not initialized.");
+    }
+  }
+
   @command("controls")
   commandControls() {
     addChatLines([

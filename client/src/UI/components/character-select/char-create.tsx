@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { nameByRace } from "fantasy-name-generator";
 import {
   Divider,
@@ -87,6 +87,7 @@ export const CharacterCreate = ({ setView, charInfo }) => {
   const [baseCharacter, setBaseCharacter] = useState({});
   const [initialLength] = useState(charInfo?.characters?.length);
   const [description, setDescription] = useState(CharClassStrings[1]);
+  const refreshNameplate = useRef(() => {});
 
   const createCharacter = useCallback(() => {
     const char = {
@@ -175,7 +176,9 @@ export const CharacterCreate = ({ setView, charInfo }) => {
         }
       }
     }
-    GameManager.instance?.CharacterSelect?.loadModel(newCharacter, true);
+    GameManager.instance?.CharacterSelect?.loadModel(newCharacter, true, () => {
+      refreshNameplate.current?.();
+    });
 
     const classStats = baseClassStats[selectedClass - 1];
     const raceStats = baseStats[selectedRace - 1];
@@ -254,6 +257,11 @@ export const CharacterCreate = ({ setView, charInfo }) => {
 
   useEffect(() => {
     Player.instance?.UpdateNameplate([name || 'Soandso']);
+    refreshNameplate.current = () => {
+      console.log("Refreshing nameplate with name", name);
+      Player.instance?.UpdateNameplate([name || 'Soandso']);
+    };
+
   },[name]);
 
   const toggleFaceIdx = useCallback((val) => () => {

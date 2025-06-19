@@ -158,11 +158,20 @@ func transformPaths(db *sql.DB) error {
 				log.Printf("unexpected point length %d in %d:%d, skipping", len(p), zoneid, gridid)
 				continue
 			}
-			x, y, z := p[0], p[1], p[2]
-			// newX = -y, newY = z, newZ = x; preserve heading,pause
-			pts[i][0] = -y
-			pts[i][1] = z
-			pts[i][2] = x
+			// unpack old values
+			_, _, _, heading, pause := p[0], p[1], p[2], p[3], p[4]
+
+			// rotation: newX = -y, newY = z, newZ = x
+			// pts[i][0] = -y
+			// pts[i][1] = z
+			// pts[i][2] = x
+
+			// convert heading from [0..512) units → radians
+			pts[i][3] = heading * (2 * math.Pi / 512.0)
+
+			// preserve pause
+			pts[i][4] = pause
+
 		}
 
 		// re-marshal and update

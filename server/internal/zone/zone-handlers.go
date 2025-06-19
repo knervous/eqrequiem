@@ -72,6 +72,39 @@ func HandleClientUpdate(z *ZoneInstance, ses *session.Session, payload []byte) {
 	clientSession := z.ClientEntries[ses.SessionID]
 	ses.Client.SetPosition(newPosition)
 	z.markMoved(clientSession.EntityId, newPosition)
+
+	anim, err := req.Animation()
+	if err != nil {
+		return
+	}
+
+	if ses.Client.GetMob().Animation != anim {
+		ses.Client.GetMob().Animation = anim
+		pkt := func(m eq.EntityAnimation) error {
+			err := m.SetAnimation(anim)
+			if err != nil {
+				log.Printf("failed to set animation: %v", err)
+				return err
+			}
+			m.SetSpawnId(int32(ses.Client.GetMob().ID()))
+			return nil
+		}
+		spawnId := int32(ses.Client.GetMob().ID())
+		for entityId := range z.subs[int(spawnId)] {
+			if entityId == int(spawnId) {
+				continue
+			}
+			if cs := z.ClientEntriesByEntityID[entityId].ClientSession; cs != nil && cs != ses {
+				session.QueueDatagram(
+					cs,
+					eq.NewRootEntityAnimation,
+					opcodes.Animation,
+					pkt,
+				)
+			}
+		}
+
+	}
 }
 
 func HandleClientAnimation(z *ZoneInstance, ses *session.Session, payload []byte) {

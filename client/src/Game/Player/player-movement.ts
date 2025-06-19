@@ -4,6 +4,7 @@ import type Player from "./player";
 import { WorldSocket } from "@ui/net/instances";
 import { OpCodes } from "@game/Net/opcodes";
 import { ClientPositionUpdate } from "@game/Net/internal/api/capnp/common";
+import { AnimationDefinitions } from "@game/Animation/animation-constants";
 
 type SimpleVector4 = {
   x: number;
@@ -87,7 +88,7 @@ export class PlayerMovement {
     }
 
     const currentPos = playerEntity.spawnPosition;
-    const heading = playerEntity.rotation.y;
+    const heading = playerEntity.getHeading();
     if (currentPos === undefined || heading === undefined) {
       return;
     }
@@ -128,37 +129,27 @@ export class PlayerMovement {
     // Compute movement direction
     const movement = new BABYLON.Vector3(0, 0, 0);
     if (this.isActionPressed("move_forward")) {
-      if (firstPerson) {
-        movement.z = -1;
-      } else {
-        // In third person, forward is negative Z
-        movement.x = -1;
-      }
+ 
+      movement.x = -1;
+      
       playWalk = true;
     }
     if (this.isActionPressed("move_backward")) {
-      if (firstPerson) {
-        movement.z = 1;
-      } else {
-        // In third person, backward is positive Z
-        movement.x = 1;
-      }
+ 
+      movement.x = 1;
+      
       playWalk = true;
     }
     if (this.isActionPressed("turn_left") && mouseCaptured) {
-      if (firstPerson) {
-        movement.x = -1;
-      } else {
-        movement.z = 1;
-      }
+
+      movement.z = 1;
+      
       playWalk = true;
     }
     if (this.isActionPressed("turn_right") && mouseCaptured) {
-      if (firstPerson) {
-        movement.x = 1;
-      } else {
-        movement.z = -1;
-      }
+
+      movement.z = -1;
+      
       playWalk = true;
     }
     if (this.isActionPressed("move_down")) {
@@ -200,10 +191,11 @@ export class PlayerMovement {
     ).normalize();
     // Handle jump
     const onFloor = this.isOnFloor();
+    const notJumping = this.jumpState === "idle" &&  onFloor;
     if (
       this.isActionPressed("move_up") &&
-      this.jumpState === "idle" &&
-      onFloor
+      // this.jumpState === "idle" &&
+      true //onFloor
     ) {
       this.jumpState = "leavingGround";
       const currentVelocity = this.physicsBody.getLinearVelocity();
@@ -281,6 +273,7 @@ export class PlayerMovement {
     }
 
     // Play animations
+ 
     if (playWalk) {
       if (didCrouch) {
         this.player.playDuckWalk();
@@ -294,19 +287,25 @@ export class PlayerMovement {
     } else {
       this.player.playIdle();
     }
+    
+    
 
     // Network update
     this.updateDelta += delta;
     if (this.updateDelta > 0.5) {
       this.updateDelta = 0;
-
-      WorldSocket.sendMessage(OpCodes.ClientUpdate, ClientPositionUpdate, {
-        x: currentPos.x,
-        y: currentPos.y,
-        z: currentPos.z,
-        heading,
-        animation: 0,
-      });
+      try {
+        WorldSocket.sendMessage(OpCodes.ClientUpdate, ClientPositionUpdate, {
+          x: currentPos.x,
+          y: currentPos.y,
+          z: currentPos.z,
+          heading,
+          animation: this.player.playerEntity?.currentAnimation ?? AnimationDefinitions.Idle1,
+        });
+      } catch (e) {
+        console.error("[PlayerMovement] Error sending position update:", e);
+      }
+     
     }
 
     // Update camera

@@ -32,7 +32,6 @@ export const CharacterSelectUIComponent: React.FC = () => {
 
   const charSelectHandler = useCallback(
     async (serverCharInfo: CharacterSelect) => {
-      console.log('here??');
       if (!gotCharInfo.current) {
         await GameManager.instance.loadCharacterSelect();
       }

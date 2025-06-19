@@ -248,7 +248,7 @@ func (z *ZoneInstance) run() {
 	defer z.wg.Done()
 	zoneLoop := time.NewTicker(50 * time.Millisecond)
 	defer zoneLoop.Stop()
-	movementLoop := time.NewTicker(250 * time.Millisecond)
+	movementLoop := time.NewTicker(50 * time.Millisecond)
 	defer movementLoop.Stop()
 	worldTick := time.NewTicker(6 * time.Second)
 	defer worldTick.Stop()

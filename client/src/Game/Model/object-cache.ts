@@ -143,6 +143,7 @@ export default class ObjectCache {
     }
 
     for (const mesh of meshes) {
+      mesh.isPickable = false;
       mesh.thinInstanceSetBuffer("matrix", matrixData, 16, false);
       mesh.alwaysSelectAsActiveMesh = false;
       mesh.thinInstanceRefreshBoundingInfo(true, false, false);

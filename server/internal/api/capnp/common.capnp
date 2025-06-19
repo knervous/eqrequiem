@@ -500,6 +500,7 @@ struct EntityPositionUpdateBase {
   position @1: Vector3;
   velocity @2: Vector3;
   heading @3 :Float32;
+  animation @4 :Text;
 }
 
 struct EntityPositionUpdate {
@@ -517,7 +518,7 @@ struct ClientPositionUpdate {
   y @2 :Float32;
   z @3 :Float32;
   heading @4 :Float32;
-  animation @5 :Int32;
+  animation @5 :Text;
 }
 
 struct SpawnHPUpdate {

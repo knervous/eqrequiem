@@ -235,7 +235,6 @@ func (s *Server) SendDatagram(sessionID int, data []byte) error {
 
 // handleSessionClose schedules removal after gracePeriod.
 func (s *Server) handleSessionClose(sessionID int) {
-	s.sessionManager.RemoveSession(sessionID)
 	s.worldHandler.RemoveSession(sessionID)
 	log.Printf("Cleaned up session %d", sessionID)
 }

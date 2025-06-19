@@ -313,7 +313,6 @@ BABYLON.WebGPUEngine.prototype.updateRawTexture2DArrayCompressed = function (
     (bufferOrArr).byteOffset,
     (bufferOrArr).byteLength,
   );
-  console.log('All bytes', allBytes);
   const blocksInRow = Math.ceil(width / blockWidth);
   const blocksInCol = Math.ceil(height / blockHeight);
   const bytesPerRow = blocksInRow * blockByteLen;

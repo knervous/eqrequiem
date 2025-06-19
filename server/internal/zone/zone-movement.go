@@ -199,6 +199,16 @@ func (z *ZoneInstance) FlushUpdates() {
 					v.SetX(vel.X)
 					v.SetY(vel.Y)
 					v.SetZ(vel.Z)
+					if ent.GetMob().Type() == EntityTypeNPC {
+						if vel.X == 0 && vel.Y == 0 && vel.Z == 0 {
+							m.SetAnimation(Idle1)
+						} else {
+							m.SetAnimation(Walking)
+						}
+					} else {
+						m.SetAnimation("")
+					}
+
 				}
 				return nil
 			},

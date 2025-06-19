@@ -17,6 +17,7 @@ export class PlayerCamera {
   private cameraPosition = new BABYLON.Vector3(0, 0, 0);
   private cameraPitch: number = 0;
   public cameraYaw: number = 0;
+  private eventListeners: Array<{ element: HTMLElement | Document; type: string; listener: EventListenerOrEventListenerObject }> = [];
 
   constructor(player: Player, camera: BJS.UniversalCamera) {
     this.player = player;
@@ -27,41 +28,60 @@ export class PlayerCamera {
       this.player.gameManager.scene!,
     );
     this.onChangePointerLock = this.onChangePointerLock.bind(this);
+    this.handleMouseDown = this.handleMouseDown.bind(this);
+    this.handleMouseUp = this.handleMouseUp.bind(this);
+    this.handleMouseMove = this.handleMouseMove.bind(this);
+    this.handleWheel = this.handleWheel.bind(this);
 
     this.cameraLight.radius = 100;
     this.cameraLight.diffuse = new BABYLON.Color3(1.0, 0.85, 0.6);
     this.cameraLight.intensity = 25.0;
     this.cameraLight.specular = new BABYLON.Color3(0, 0, 0);
     this.cameraLight.range = 100.0;
-
     this.bindInputEvents();
-    document.addEventListener(
-      "pointerlockchange",
-      this.onChangePointerLock,
-      false,
-    );
   }
 
   private bindInputEvents() {
     const canvas = this.player.gameManager.scene!.getEngine().getRenderingCanvas();
     if (!canvas) return;
+
     this.canvas = canvas;
 
-    canvas.addEventListener("mousedown", (e) => {
-      this.mouseInputButton(e.button, false, e.clientX, e.clientY);
-    });
-    canvas.addEventListener("mouseup", (e) => {
-      this.mouseInputButton(e.button, true);
-    });
-    canvas.addEventListener("mousemove", (e) => {
-      this.inputMouseMotion(e.movementX, e.movementY);
-    });
-    canvas.addEventListener("wheel", (e) => {
-      const delta = e.deltaY > 0 ? 1 : -1;
-      this.adjustCameraDistance(delta);
-      e.preventDefault();
+    // Store event listeners for later removal
+    this.eventListeners.push(
+      { element: canvas, type: "mousedown", listener: this.handleMouseDown },
+      { element: canvas, type: "mouseup", listener: this.handleMouseUp },
+      { element: canvas, type: "mousemove", listener: this.handleMouseMove },
+      { element: canvas, type: "wheel", listener: this.handleWheel },
+      { element: document, type: "pointerlockchange", listener: this.onChangePointerLock },
+    );
+
+    // Add event listeners
+    this.eventListeners.forEach(({ element, type, listener }) => {
+      element.addEventListener(type, listener, false);
     });
   }
+
+  private handleMouseDown = (e: MouseEvent) => {
+    this.mouseInputButton(e.button, false, e.clientX, e.clientY);
+  };
+
+  private handleMouseUp = (e: MouseEvent) => {
+    this.mouseInputButton(e.button, true);
+  };
+
+  private handleMouseMove = (e: MouseEvent) => {
+    this.inputMouseMotion(e.movementX, e.movementY);
+  };
+
+  private handleWheel = (e: WheelEvent) => {
+    const charSelect = !!this.player.gameManager.CharacterSelect?.character;
+    if (charSelect) {
+      return;
+    }
+    const delta = e.deltaY > 0 ? 1 : -1;
+    this.adjustCameraDistance(delta);
+  };
 
   private onChangePointerLock = () => {
     this.isLocked = !!document.pointerLockElement;
@@ -69,12 +89,24 @@ export class PlayerCamera {
 
   public mouseInputButton(buttonIndex: number, up: boolean = false, x: number = 0, y: number = 0) {
     if (!this.canvas) return;
+    const charSelect = !!this.player.gameManager.CharacterSelect?.character;
+    if (charSelect) {
+      return;
+    }
     const scene = this.player.gameManager.scene!;
-    if (!up && buttonIndex === 0 && scene) {
-      const pickResult = scene.pick(x, y);
+    if (!up && buttonIndex === 0 && scene && !this.isLocked) {
+      const pickResult = scene.pick(
+        x,
+        y,
+        (mesh) => {
+          if (!mesh.isPickable) return false;
+          return true;
+        },
+        true,
+        this.camera,
+      );
       if (pickResult?.hit && pickResult.pickedMesh) {
         console.log(`Picked mesh: ${pickResult.pickedMesh.name}`, pickResult.pickedMesh);
-        // TODO: add custom logic for mesh interaction
       } else {
         console.log("No mesh picked");
       }
@@ -111,15 +143,19 @@ export class PlayerCamera {
 
   public inputMouseMotion(x: number, y: number) {
     if (!this.player.playerEntity || !this.isLocked) return;
+    const charSelect = !!this.player.gameManager.CharacterSelect?.character;
+    if (charSelect) {
+      return;
+    }
 
     const yawSensitivity = 0.005;
     const pitchSensitivity = 0.005;
 
     this.cameraYaw -= x * yawSensitivity;
     if (this.isFirstPerson) {
-      this.cameraPitch -= y * pitchSensitivity; // Inverted Y-axis for first-person
+      this.cameraPitch -= y * pitchSensitivity;
     } else {
-      this.cameraPitch += y * pitchSensitivity; // Normal Y-axis for third-person
+      this.cameraPitch += y * pitchSensitivity;
     }
 
     const maxPitch = Math.PI / 2 - 0.01;
@@ -133,13 +169,11 @@ export class PlayerCamera {
   public updateCameraPosition() {
     const entity = this.player.playerEntity;
     if (!entity) return;
-    const playerPos = entity.spawnPosition.clone(); // Clone to avoid modifying original
+    const playerPos = entity.spawnPosition.clone();
 
     if (this.isFirstPerson) {
-      // In first-person, position camera at player position + offset
       this.camera.position = playerPos.add(this.lookatOffset);
-      // Ensure camera rotation is strictly controlled (no roll)
-      this.camera.rotation = new BABYLON.Vector3(this.cameraPitch, this.cameraYaw, 0);
+      this.camera.rotation = new BABYLON.Vector3(this.cameraPitch, this.cameraYaw + BABYLON.Tools.ToRadians(90), 0);
     } else {
       const hDist = this.cameraDistance * Math.cos(this.cameraPitch);
       const vDist = this.cameraDistance * Math.sin(this.cameraPitch);
@@ -157,7 +191,16 @@ export class PlayerCamera {
   }
 
   public dispose() {
+    // Remove all event listeners
+    this.eventListeners.forEach(({ element, type, listener }) => {
+      element.removeEventListener(type, listener, false);
+    });
+    this.eventListeners = [];
+    
+    // Dispose of the camera light
     this.cameraLight.dispose();
-    document.removeEventListener("pointerlockchange", this.onChangePointerLock, false);
+    
+    // Clear canvas reference
+    this.canvas = null;
   }
 }

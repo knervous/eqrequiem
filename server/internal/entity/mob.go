@@ -14,14 +14,14 @@ const (
 
 type Mob struct {
 	model.Spawn2
-	MobID    int
-	MobName  string
-	Position MobPosition
-	Velocity Velocity
-	Zone     ZoneAccess
-	Speed    float32
-
-	dirty bool
+	MobID     int
+	MobName   string
+	Position  MobPosition
+	Velocity  Velocity
+	Zone      ZoneAccess
+	Speed     float32
+	Animation string
+	dirty     bool
 }
 
 func (m *Mob) ID() int      { return m.MobID }

@@ -70,10 +70,11 @@ func UpdateCharacter(charData *model.CharacterData, accountID int64) error {
 		).
 		WHERE(table.CharacterData.ID.EQ(mysql.Int32(int32(charData.ID))))
 
-	if _, err := stmt.Exec(db.GlobalWorldDB.DB); err != nil {
-		return fmt.Errorf("failed to update inventory slot: %v", err)
+	if result, err := stmt.Exec(db.GlobalWorldDB.DB); err != nil {
+		return fmt.Errorf("failed to update character: %v", err)
+	} else {
+		fmt.Println("UpdateCharacter result:", result)
 	}
-
 	return nil
 }
 

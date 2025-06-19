@@ -66,7 +66,7 @@ export class LightManager {
   }
 
   updateLights(delta: number) {
-    const playerPosition = Player.instance?.mesh?.position;
+    const playerPosition = Player.instance?.getPlayerPosition();
     if (!playerPosition) {
       return;
     }

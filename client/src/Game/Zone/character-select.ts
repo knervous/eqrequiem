@@ -1,7 +1,7 @@
 import BABYLON from "@bjs";
 import type * as BJS from "@babylonjs/core";
 import type GameManager from "../Manager/game-manager";
-import { CLASS_DATA_ENUM } from "../Constants/class-data";
+import { CLASS_DATA_ENUM, CLASS_DATA_NAMES } from "../Constants/class-data";
 import { ZoneManager } from "./zone-manager";
 import {
   CharacterSelectEntry,
@@ -9,9 +9,10 @@ import {
 } from "@game/Net/internal/api/capnp/player";
 import Player from "@game/Player/player";
 import { Nameplate } from "@game/Model/nameplate";
+import { supportedZones } from "@game/Constants/supportedZones";
 
 export default class CharacterSelect {
-  private cameraDistance: number = 15;
+  private cameraDistance: number = 25;
   private cameraHeight: number = 3;
   private lookatOffset = new BABYLON.Vector3(0, 1, 0);
   private cameraPosition = new BABYLON.Vector3(0, 0, 0);
@@ -53,7 +54,7 @@ export default class CharacterSelect {
     this.zoneManager = new ZoneManager(this.gameManager);
     this.zoneManager?.loadZone("load2", false, true);
     this.worldTickInterval = setInterval(() => {
-      this.zoneManager?.SkyManager?.worldTick?.();
+      // this.zoneManager?.SkyManager?.worldTick?.();
     }, 500);
   }
 
@@ -119,7 +120,7 @@ export default class CharacterSelect {
     }, interval);
   }
 
-  public async loadModel(player: CharacterSelectEntry) {
+  public async loadModel(player: CharacterSelectEntry, fromCharCreate = false, onLoaded: () => void = () => {}) {
     if (this.character) {
       await this.character?.dispose();
       this.character = null;
@@ -145,6 +146,7 @@ export default class CharacterSelect {
       scale: 1.0,
       ...location,
     } as unknown as PlayerProfile).then(async () => {
+      onLoaded();
       if (!this.character || !this.character.playerEntity) {
         console.error("Character not loaded properly");
         return;
@@ -153,16 +155,14 @@ export default class CharacterSelect {
       this.updateCameraPosition(this.character.playerEntity.spawnPosition);
       this.startOrbiting(this.character.playerEntity.spawnPosition);
       this.character.playIdle();
-      const nameplate = await Nameplate.createNameplate(this.gameManager.scene!);
-      
-      nameplate.addParagraph(player?.name || 'Soandso', {
-        lineHeight: 5,
-      });
-      nameplate.color = BABYLON.Color4.FromHexString("#00ffff");
-      const node = new BABYLON.TransformNode(`nameplate_${player.name}`, this.gameManager.scene!);
-      nameplate.parent = node;
-      node.parent = this.character.playerEntity;
-      node.position = new BABYLON.Vector3(0, 4.5, 0);
+      if (!fromCharCreate) {
+        this.character.UpdateNameplate([
+          (player?.name || "Soandso") + ` [Level ${player?.level} ${CLASS_DATA_NAMES[player?.charClass] || ""}]`,
+          supportedZones[player?.zone]?.longName ?? "Unknown Zone",
+        ].filter(Boolean));
+      }
+    }).catch((err) => {
+      console.error("Error loading character model:", err);
 
     });
 

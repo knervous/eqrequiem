@@ -2626,7 +2626,7 @@ export class EntityPositionUpdateBase extends $.Struct {
   static readonly _capnp = {
     displayName: "EntityPositionUpdateBase",
     id: "a51c9c2dfa1a6cca",
-    size: new $.ObjectSize(8, 2)
+    size: new $.ObjectSize(8, 3)
   };
   get spawnId(): number {
     return $.utils.getInt32(0, this);
@@ -2675,6 +2675,12 @@ export class EntityPositionUpdateBase extends $.Struct {
   }
   set heading(value: number) {
     $.utils.setFloat32(4, value, this);
+  }
+  get animation(): string {
+    return $.utils.getText(2, this);
+  }
+  set animation(value: string) {
+    $.utils.setText(2, value, this);
   }
   toString(): string {
     return "EntityPositionUpdateBase_" + super.toString();
@@ -2735,7 +2741,7 @@ export class ClientPositionUpdate extends $.Struct {
   static readonly _capnp = {
     displayName: "ClientPositionUpdate",
     id: "971031099b134c74",
-    size: new $.ObjectSize(24, 0)
+    size: new $.ObjectSize(24, 1)
   };
   get clientId(): number {
     return $.utils.getInt32(0, this);
@@ -2767,11 +2773,11 @@ export class ClientPositionUpdate extends $.Struct {
   set heading(value: number) {
     $.utils.setFloat32(16, value, this);
   }
-  get animation(): number {
-    return $.utils.getInt32(20, this);
+  get animation(): string {
+    return $.utils.getText(0, this);
   }
-  set animation(value: number) {
-    $.utils.setInt32(20, value, this);
+  set animation(value: string) {
+    $.utils.setText(0, value, this);
   }
   toString(): string {
     return "ClientPositionUpdate_" + super.toString();

@@ -39,15 +39,18 @@ export default class EntityPool {
   }
 
   async AddSpawn(spawn: Spawn) {
+    if (spawn.isNpc) {
+      //   return;
+    }
     // if (!spawn.name.includes('Moodoro')) return;
-    console.log("Adding spawn", spawn.spawnId, spawn.name, {
-      x: spawn.x,
-      y: spawn.y,
-      z: spawn.z,
-      cellX: spawn.cellX,
-      cellY: spawn.cellY,
-      cellZ: spawn.cellZ,
-    });
+    // console.log("Adding spawn", spawn.spawnId, spawn.name, {
+    //   x: spawn.x,
+    //   y: spawn.y,
+    //   z: spawn.z,
+    //   cellX: spawn.cellX,
+    //   cellY: spawn.cellY,
+    //   cellZ: spawn.cellZ,
+    // });
     this.spawns[spawn.spawnId] = spawn;
 
     const entity = await EntityCache.getInstance(this.gameManager, spawn, this.scene!, this.parent);
@@ -58,24 +61,39 @@ export default class EntityPool {
     this.grid.addEntity(entity);
     this.entities[spawn.spawnId] = entity;
   }
-
   UpdateSpawnPosition(sp: EntityPositionUpdateBase) {
-    // Disable this for NPC for now, work on it later
-    const entity = this.entities[sp.spawnId];
-    if (!entity || !entity.spawn) {
-      console.warn("Entity not found for spawnId", sp.spawnId);
+    const e = this.entities[sp.spawnId];
+    if (!e || !e.spawn) return;
+
+    const { x, y, z } = sp.position;
+    e.setPosition(x, y, z);
+
+    const vx = sp.velocity.x;
+    const vy = sp.velocity.y;
+    const vz = sp.velocity.z;
+    e.setVelocity(vx, vy, vz);
+
+    const speed2 = vx*vx + vz*vz;
+    if (speed2 > 1e-6) {
+    // compute, then flip 180°
+      const raw = Math.atan2(vz, vx);
+      const yawFromVel = raw + Math.PI;
+      e.setRotation(yawFromVel);
+    } else {
+      e.setRotation(sp.heading);
     }
-    // console.log("Updating spawn position", entity.name, sp.spawnId, {
-    //   x: sp.position.x,
-    //   y: sp.position.y,
-    //   z: sp.position.z,
-    // });
-    entity.setPosition(sp.position.x, sp.position.y, sp.position.z);
-    return;
+
+    if (sp.animation) {
+      e.playAnimation(sp.animation);
+    }
   }
+
+
+
 
   PlayAnimation(anim: EntityAnimation) {
     const e = this.entities[anim.spawnId];
     if (!e || !e.spawn) return;
+    e.playAnimation(anim.animation);
   }
 }

@@ -67,6 +67,53 @@ export class Entity extends BABYLON.TransformNode {
     return this.bodyInstances.concat(this.secondaryInstances);
   }
 
+  public getHeading() : number {
+    const physicsBody = this.physicsBody;
+    if (!physicsBody) {
+      return 0;
+    }
+
+    const plugin = this.gameManager
+      .scene!.getPhysicsEngine()!
+      .getPhysicsPlugin() as BJS.HavokPlugin;
+
+
+    const [,outQuat] = plugin._hknp.HP_Body_GetOrientation(
+      physicsBody._pluginData.hpBodyId,
+    );
+    const eulers = BABYLON.Quaternion.FromArray(outQuat).toEulerAngles();
+
+    return eulers.y;
+  }
+
+  public setVelocity(x: number, y: number, z: number) {
+    const physicsBody = this.physicsBody;
+    if (!physicsBody) {
+      return;
+    }
+    physicsBody.setLinearVelocity(new BABYLON.Vector3(x, y, z));
+  }
+
+  public setRotation(yaw: number) {
+    const physicsBody = this.physicsBody;
+    if (!physicsBody) {
+      return;
+    }
+    const normalized = ((yaw % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+    const q = BABYLON.Quaternion.RotationYawPitchRoll(normalized, 0, 0);
+
+    this.rotationQuaternion = q;
+    const plugin = this.gameManager
+      .scene!.getPhysicsEngine()!
+      .getPhysicsPlugin() as BJS.HavokPlugin;
+
+    plugin._hknp.HP_Body_SetOrientation(
+      physicsBody._pluginData.hpBodyId,
+      q.asArray(),
+    );
+
+  }
+
   public setPosition(x: number, y: number, z: number) {
     const physicsBody = this.physicsBody;
     if (!physicsBody) {
@@ -129,7 +176,7 @@ export class Entity extends BABYLON.TransformNode {
   }
 
   public toggleVisibility(visible: boolean): void {
-    this.nodeContainer!.setEnabled(visible);
+    this.nodeContainer?.setEnabled(visible);
   }
 
   public async hide(): Promise<void> {
@@ -201,7 +248,7 @@ export class Entity extends BABYLON.TransformNode {
     }
 
     // Setup physics body with capsule shape
-    const capsuleRadius = 0.5;
+    const capsuleRadius = 2.0;
     const pointA = new BABYLON.Vector3(0, capsuleHeight / 2 - capsuleRadius, 0);
     const pointB = new BABYLON.Vector3(
       0,
@@ -228,6 +275,11 @@ export class Entity extends BABYLON.TransformNode {
       false,
       this.scene,
     );
+    // Lock angular motion to prevent physics-induced rotation
+    this.physicsBody.setAngularVelocity(BABYLON.Vector3.Zero());
+    this.physicsBody.setAngularDamping(1.0); // High damping to resist rotation
+    this.physicsBody.setLinearDamping(0);
+
     this.physicsBody.shape = this.capsuleShape;
     this.physicsBody.setMassProperties({
       mass: 500,
@@ -236,7 +288,7 @@ export class Entity extends BABYLON.TransformNode {
     // Create body instances and assign physics body
     for (const mesh of this.entityContainer.meshes) {
       const bodyInst = mesh.createInstance(
-        `instance_${this.spawn.name}_${this.spawn.spawnId}_${meshIdx++}`,
+        `instance_${this.spawn.name}_${this.spawn.spawnId ?? ''}_${meshIdx++}`,
       );
       bodyInst.setParent(this.nodeContainer);
       bodyInst.position = new BABYLON.Vector3(
@@ -282,17 +334,15 @@ export class Entity extends BABYLON.TransformNode {
       return;
     }
     for (const line of textLines) {
-      this.nameplate.addParagraph(line, {
-        lineHeight: 15,
-      });
+      this.nameplate.addParagraph(line);
     }
     this.nameplate.color = BABYLON.Color4.FromHexString("#00ffff");
     this.nameplateNode = new BABYLON.TransformNode(
       `nameplate_${this.spawn.name}`,
       this.scene,
     );
-    this.nameplateNode.parent = this.bodyInstances[0];
-    this.nameplateNode.position = new BABYLON.Vector3(0, 4, 0);
+    this.nameplateNode.parent = this.bodyInstances[0].parent;
+    this.nameplateNode.position = new BABYLON.Vector3(0, 4 + (textLines.length * 1.5 * this.spawnScale), 0);
     this.nameplate.parent = this.nameplateNode;
   }
 
@@ -343,10 +393,19 @@ export class Entity extends BABYLON.TransformNode {
     }
   }
 
-  public playAnimation(name: string, loop: boolean = false): void {
+  public currentAnimation: string | null = null;
+
+  public playAnimation(name: string, playThrough: boolean = false): void {
     const match = this.entityContainer.animations.find((a) => a.name === name);
-    if (!match) return;
-    const idx = this.entityContainer.animations.indexOf(match);
+    if (!match) {
+      // console.warn(
+      //   `[Entity] Animation ${name} not found in ${this.entityContainer.model}`,
+      // );
+      if (name === AnimationDefinitions.Walking) {
+        this.playAnimation(AnimationDefinitions.Running, playThrough);
+      }
+      return;
+    };
     const manager = this.entityContainer.manager;
     if (!manager) {
       console.warn(
@@ -354,13 +413,17 @@ export class Entity extends BABYLON.TransformNode {
       );
       return;
     }
+    if (this.currentAnimation === name && !playThrough) {
+      return;
+    }
+    this.currentAnimation = name;
     this.animationBuffer.set(match.from, match.to, 0, 60);
   }
 
   private getTextureIndex(originalName: string, variation: number = 1): number {
     const match = originalName.match(charFileRegex);
     if (!match) {
-      console.log(
+      console.warn(
         `[SwapTexture] Sub-material name ${originalName} does not match expected format`,
       );
       return -1;

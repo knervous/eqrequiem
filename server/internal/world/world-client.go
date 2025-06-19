@@ -192,27 +192,27 @@ func CharacterCreate(ses *session.Session, accountId int64, cc eq.CharCreate) bo
 	SetClassLanguages(&pp)
 
 	startZone, err := GetStartZone(ctx, uint8(pp.CharClass()), uint32(pp.Deity()), uint32(pp.Race()))
-	setLoc := false
 	if err == nil {
 		pp.SetZoneId(int32(startZone.ZoneID))
 		cc.SetStartZone(int32(pp.ZoneId()))
 		pp.SetX(float32(startZone.X))
 		pp.SetY(float32(startZone.Y))
 		pp.SetZ(float32(startZone.Z))
-		setLoc = true
+	} else {
+		zone, err := GetZone(ctx, pp.ZoneId())
+		if err != nil {
+			pp.SetX(float32(zone.SafeX))
+			pp.SetY(float32(zone.SafeY))
+			pp.SetZ(float32(zone.SafeZ))
+		} else {
+			pp.SetX(-1)
+			pp.SetY(-1)
+			pp.SetZ(-1)
+		}
 	}
 
-	zone, err := GetZone(ctx, pp.ZoneId())
-	if err != nil {
-		pp.SetX(float32(zone.SafeX))
-		pp.SetY(float32(zone.SafeY))
-		pp.SetZ(float32(zone.SafeZ))
-	} else if !setLoc {
-		pp.SetX(-1)
-		pp.SetY(-1)
-		pp.SetZ(-1)
-	}
 	binds, _ := pp.Binds()
+
 	// Set bind points
 	for i := range 5 {
 		bind, _ := eq.NewBind(segment)

@@ -155,7 +155,6 @@ export class ZoneManager {
       this.parent.setLoading(false);
       return;
     }
-    console.log('bytes', bytes);
     const file = new File([bytes], `${this.zoneName}.babylon`, {
       type: "application/babylon",
     });
@@ -248,6 +247,9 @@ export class ZoneManager {
           this.parent.scene!,
           metadata.lights,
         );
+        if (this.CurrentZone?.zonePoints) {
+          this.regionManager.instantiateRegions(this.GameManager.scene!, metadata, this.GameManager.CurrentZone?.zonePoints);
+        }
         // this.regionManager.instantiateRegions(metadata.regions, this.CurrentZone?.zonePoints);
         // this.zoneObjects = new ZoneObjects(this.zoneContainer, metadata.objects, this.usePhysics);
 
@@ -282,12 +284,13 @@ export class ZoneManager {
       if (!nameMap.has(key)) {
         // first time we see this name → keep it
         nameMap.set(key, mat);
-        mat.freeze();
+        // mat.freeze();
       } else {
         // duplicate name → remap all references, then dispose
         const canonical = nameMap.get(key)!;
 
         for (const mesh of meshes) {
+          mesh.isPickable = false;
           if (mesh.material === mat) {
             mesh.material = canonical;
           } else if (mesh.material instanceof BABYLON.MultiMaterial) {
