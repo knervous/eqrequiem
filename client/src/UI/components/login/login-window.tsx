@@ -80,7 +80,10 @@ export const LoginWindowComponent: React.FC = () => {
           method: "GET",
           mode: "cors",
           signal,
-        }).then(() => true).catch(() => false);
+        }).then(() => true).catch((e) => {
+          console.log("World server offline", e);
+          return false;
+        });
         if (!serverOnline) {
           alert("World Server Offline");
           return;

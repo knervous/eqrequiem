@@ -150,6 +150,11 @@ export const CharacterSelectUIComponent: React.FC = () => {
           setMode("login");
           GameManager.instance.dispose();
           WorldSocket.close();
+        } else if (e.status === -100) {
+          localStorage.removeItem("requiem");
+          alert("Your session has expired, please login again.");
+          setMode("login");
+          GameManager.instance.dispose();
         } else {
           WorldSocket.setSessionId(e.status);
         }
