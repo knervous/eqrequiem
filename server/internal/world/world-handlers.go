@@ -43,6 +43,13 @@ func HandleJWTLogin(ses *session.Session, payload []byte, wh *WorldHandler) {
 		discordID, err = discord.ValidateJWT(token)
 		if err != nil {
 			log.Printf("failed to validate JWT token: %v", err)
+			jwtResponse, err := session.NewMessage(ses, eq.NewRootJWTResponse)
+			if err != nil {
+				log.Printf("failed to create JWTResponse: %v", err)
+				return
+			}
+			jwtResponse.SetStatus(-100)
+			err = ses.SendData(jwtResponse.Message(), opcodes.JWTResponse)
 			return
 		}
 	} else {
