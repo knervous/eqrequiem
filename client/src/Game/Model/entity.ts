@@ -9,6 +9,7 @@ import type { TextRenderer } from "@babylonjs/addons";
 import { sleep } from "@game/Constants/util";
 import { PlayerProfile } from "@game/Net/internal/api/capnp/player";
 import type GameManager from "@game/Manager/game-manager";
+import { createTargetRingMaterial } from "./entity-select-ring";
 
 type BufferCache = {
   [key: number]: BJS.Vector2;
@@ -31,9 +32,9 @@ export class Entity extends BABYLON.TransformNode {
   public hidden: boolean = true;
 
   private static pickerPrototype: BJS.Mesh;
-  private static selectionTorus: BJS.Mesh;
+  private static targetRing: BJS.Mesh;
   private static currentlySelected: Entity | null = null;
-
+  private static targetTexture: BJS.ProceduralTexture | null = null;
 
   private gameManager: GameManager;
   private scene: BJS.Scene;
@@ -81,35 +82,31 @@ export class Entity extends BABYLON.TransformNode {
       const pickMat = new BABYLON.StandardMaterial("pickerMat", this.scene);
       pickMat.alpha = 0;
       Entity.pickerPrototype.material = pickMat;
-      // we’ll only pick on the instances, never this one
       Entity.pickerPrototype.isPickable = false;
-      // keep it out of view & raycast results
       Entity.pickerPrototype.setEnabled(false);
     }
 
-    // Selection torus
-    if (!Entity.selectionTorus) {
-      const proto = BABYLON.MeshBuilder.CreateTorus(
-        "selectionTorusProto",
+    if (!Entity.targetRing) {
+      const targetRing = BABYLON.MeshBuilder.CreateGround(
+        "selectionRing",
         {
-          diameter: 4,      // outer diameter of the ring
-          thickness: 1,   // ring thickness
-          tessellation: 16, // smoothness
+          width: 10, height: 10, 
         },
         this.scene,
       );
-
-      const mat = new BABYLON.StandardMaterial("selectionTorusMat", this.scene);
-      mat.diffuseColor = new BABYLON.Color3(0, 1, 1); // yellow
-      mat.alpha = 0.4;                               // semi-transparent
-      proto.material = mat;
-
-      proto.isPickable = false;
-      proto.setEnabled(false);
-      Entity.selectionTorus = proto;
+      const [mat, texture] = createTargetRingMaterial(this.scene);
+      Entity.targetTexture = texture;
+      targetRing.material = mat;
+      targetRing.isPickable = false;
+      targetRing.setEnabled(false);
+      Entity.targetRing = targetRing;
     }
-
-
+  }
+  
+  private get physicsPlugin(): BJS.HavokPlugin {
+    return this.gameManager
+      .scene!.getPhysicsEngine()!
+      .getPhysicsPlugin() as BJS.HavokPlugin;
   }
 
   public meshes(): BJS.InstancedMesh[] {
@@ -122,12 +119,7 @@ export class Entity extends BABYLON.TransformNode {
       return 0;
     }
 
-    const plugin = this.gameManager
-      .scene!.getPhysicsEngine()!
-      .getPhysicsPlugin() as BJS.HavokPlugin;
-
-
-    const [,outQuat] = plugin._hknp.HP_Body_GetOrientation(
+    const [,outQuat] = this.physicsPlugin._hknp.HP_Body_GetOrientation(
       physicsBody._pluginData.hpBodyId,
     );
     const eulers = BABYLON.Quaternion.FromArray(outQuat).toEulerAngles();
@@ -179,8 +171,8 @@ export class Entity extends BABYLON.TransformNode {
     ]);
   }
 
-  public setSelected(selected: boolean): void {
-    const torus = Entity.selectionTorus!;
+  public setSelected(selected: boolean, color?: BJS.Color4): void {
+    const targetRing = Entity.targetRing!;
     if (selected) {
       // deselect any previous entity
       if (Entity.currentlySelected && Entity.currentlySelected !== this) {
@@ -189,13 +181,26 @@ export class Entity extends BABYLON.TransformNode {
       Entity.currentlySelected = this;
 
       // move & show
-      torus.setParent(this.nodeContainer!);
-      torus.position.set(0, -3, 0);
-      torus.setEnabled(true);
+      targetRing.setParent(this.nodeContainer!);
+      const result = new BABYLON.PhysicsRaycastResult();
+      const rayOrigin = this.nodeContainer!.position;
+      const downEnd = rayOrigin.add(new BABYLON.Vector3(0, -1000, 0)); // 10 units down
+      this.physicsPlugin.raycast(rayOrigin, downEnd, result);
+      let offset = -3;
+      if (result.hasHit) {
+        const hitPoint = result.hitPoint;
+        offset = hitPoint.y - rayOrigin.y; // Calculate offset based on hit point
+      }
+  
+      if (color) {
+        Entity.targetTexture?.setColor4("color", color);
+      }
+      targetRing.position.set(0, offset + 0.1, 0);
+      targetRing.setEnabled(true);
     } else {
       // only hide if *this* entity is the one that owns it
       if (Entity.currentlySelected === this) {
-        torus.setEnabled(false);
+        targetRing.setEnabled(false);
         Entity.currentlySelected = null;
       }
     }
@@ -388,6 +393,7 @@ export class Entity extends BABYLON.TransformNode {
     });
     // Create body instances and assign physics body
     for (const mesh of this.entityContainer.meshes) {
+      mesh.isPickable = false;
       const bodyInst = mesh.createInstance(
         `instance_${this.spawn.name}_${this.spawn.spawnId ?? ''}_${meshIdx++}`,
       );
@@ -470,7 +476,11 @@ export class Entity extends BABYLON.TransformNode {
     }
 
     for (const mesh of secondaryMeshContainer.meshes) {
+      mesh.isPickable = false;
+
       const secondaryInstance = mesh.createInstance(mesh.name);
+      secondaryInstance.isPickable = false;
+
       secondaryInstance.setParent(this.nodeContainer);
       secondaryInstance.position = new BABYLON.Vector3(
         0,

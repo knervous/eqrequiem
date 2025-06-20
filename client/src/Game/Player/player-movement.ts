@@ -5,6 +5,7 @@ import { WorldSocket } from "@ui/net/instances";
 import { OpCodes } from "@game/Net/opcodes";
 import { ClientPositionUpdate } from "@game/Net/internal/api/capnp/common";
 import { AnimationDefinitions } from "@game/Animation/animation-constants";
+import emitter from "@game/Events/events";
 
 type SimpleVector4 = {
   x: number;
@@ -261,6 +262,8 @@ export class PlayerMovement {
       );
     } else {
       const currentVelocity = this.physicsBody.getLinearVelocity();
+      emitter.emit("playerMovement", currentPos);
+
       this.physicsBody.setLinearVelocity(
         new BABYLON.Vector3(
           finalVelocity.x,

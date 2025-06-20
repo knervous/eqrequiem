@@ -1,6 +1,7 @@
 import BABYLON from "@bjs";
 import type * as BJS from "@babylonjs/core";
 import type Player from "./player";
+import emitter from "@game/Events/events";
 
 export class PlayerKeyboard {
   private player: Player;
@@ -34,10 +35,17 @@ export class PlayerKeyboard {
     };
     // Register keyboard listeners
     this.scene.onKeyboardObservable.add(this.handler.bind(this));
+    emitter.on('playerMovement', this.resetIndex.bind(this)); // Reset index on player movement
+  }
+
+  private resetIndex() {
+    this.currentSelectionIndex = -1; // Reset selection index
+    this.closestEntities = []; // Clear closest entities
   }
 
   public dispose() {
     this.scene.onKeyboardObservable.removeCallback(this.handler);
+    emitter.off('playerMovement', this.resetIndex);
     this.handler = () => {}; // Clear the handler to prevent memory leaks
   }
 
@@ -58,7 +66,7 @@ export class PlayerKeyboard {
         entity,
         dist: Math.sqrt(BABYLON.Vector3.DistanceSquared(myPos, entity.spawnPosition)),
       }))
-      .filter((entry) => entry.dist <= 150) // Limit to 150 units
+      .filter((entry) => entry.dist <= 350) // Limit to 150 units
       .sort((a, b) => a.dist - b.dist) // Sort by distance
       .slice(0, 5); // Take the 5 closest
 

@@ -177,7 +177,7 @@ export class ZoneManager {
 
 
     result.meshes.forEach((mesh) => {
-      mesh.isPickable = false;
+      mesh.isPickable = true;
 
       const materialExtras = mesh?.material?.metadata?.gltf?.extras;
       if (materialExtras?.frames?.length && materialExtras?.animationDelay) {

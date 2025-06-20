@@ -164,7 +164,8 @@ export class PlayerCamera {
 
     if (buttonIndex === 0) {
       this.leftButtonDown = !up;
-    } else if (buttonIndex === 2) {
+    } 
+    if (buttonIndex === 2) {
       this.rightButtonDown = !up;
     }
 
@@ -184,7 +185,7 @@ export class PlayerCamera {
       );
       const pickResult = this.player.gameManager.scene!.pickWithRay(
         pickRay,
-        (mesh) => mesh.isPickable,
+        (mesh) => !!mesh.metadata?.entity,
         true,
       );
       // For debugging

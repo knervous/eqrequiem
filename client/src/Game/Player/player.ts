@@ -40,7 +40,28 @@ export default class Player {
     this.target = target;
     emitter.emit("target", target);
     if (this.target) {
-      this.target.setSelected(true);
+      let color = new BABYLON.Color4(1, 1, 1, 1);
+      const levelDifference = this.target.spawn.level - this.player!.level;
+      switch(true) {
+        case levelDifference > 3:
+          color = new BABYLON.Color4(1, 0, 0, 1); // Red for too high
+          break;
+        case levelDifference > 0 && levelDifference < 3:
+          color = new BABYLON.Color4(1, 1, 0, 1); // Yellow for slightly higher
+          break;
+        case levelDifference === 0:
+          color = new BABYLON.Color4(1, 1, 1, 1); // White for same level
+          break;
+        case levelDifference < 0 && levelDifference > -3:
+          color = new BABYLON.Color4(0, 0, 1, 1); // Blue for slightly lower
+          break;
+        case levelDifference <= -3:
+          color = new BABYLON.Color4(0, 1, 0, 1); // Green for too low
+          break;
+        default:
+          break;
+      }
+      this.target.setSelected(true, color);
     }
   }
   private target: Entity | null = null;
