@@ -29,6 +29,7 @@ export class Entity extends BABYLON.TransformNode {
   public spawnPosition: BJS.Vector3 = new BABYLON.Vector3(0, 0, 0);
   public spawnScale: number = 1.5; // Default scaling factor for entities
 
+  private static pickerPrototype: BJS.Mesh;
   private gameManager: GameManager;
   private scene: BJS.Scene;
   private nodeContainer: BJS.TransformNode | null = null;
@@ -41,6 +42,8 @@ export class Entity extends BABYLON.TransformNode {
   private nameplateNode: BJS.TransformNode | null = null;
   private hidden: boolean = true;
   private capsuleShape: BJS.PhysicsShapeCapsule | null = null;
+  private pickInst: BJS.InstancedMesh | null = null;
+  private isPlayer = false;
   // private debugWireframe: DebugWireframe | null = null;
   constructor(
     gameManager: GameManager,
@@ -51,6 +54,7 @@ export class Entity extends BABYLON.TransformNode {
     parent: BJS.Node,
   ) {
     super(`entity_${spawn.name}`, scene);
+    this.isPlayer = spawn instanceof PlayerProfile;
     this.gameManager = gameManager;
     this.spawn = spawn;
     this.scene = scene;
@@ -61,6 +65,24 @@ export class Entity extends BABYLON.TransformNode {
     this.spawnPosition = new BABYLON.Vector3(spawn.x, spawn.y + 5, spawn.z);
     // this.debugWireframe = new DebugWireframe(this, scene);
     this.playAnimation(AnimationDefinitions.Idle1);
+
+    if (!Entity.pickerPrototype) {
+      // create a unit cube at the world origin
+      Entity.pickerPrototype = BABYLON.MeshBuilder.CreateBox(
+        "pickerProto", 
+        { size: 1 }, 
+        this.scene,
+      );
+      // one totally transparent material
+      const pickMat = new BABYLON.StandardMaterial("pickerMat", this.scene);
+      pickMat.alpha = 0;
+      Entity.pickerPrototype.material = pickMat;
+      // we’ll only pick on the instances, never this one
+      Entity.pickerPrototype.isPickable = false;
+      // keep it out of view & raycast results
+      Entity.pickerPrototype.setEnabled(false);
+    }
+
   }
 
   public meshes(): BJS.InstancedMesh[] {
@@ -164,6 +186,11 @@ export class Entity extends BABYLON.TransformNode {
       this.capsuleShape.dispose();
       this.capsuleShape = null;
     }
+    // Dispose pick instance
+    if (this.pickInst) {
+      this.pickInst.dispose();
+      this.pickInst = null;
+    }
 
     // Clear references
     this.nameplate = null;
@@ -191,6 +218,9 @@ export class Entity extends BABYLON.TransformNode {
     if (this.capsuleShape) {
       this.capsuleShape.dispose();
       this.capsuleShape = null;
+    }
+    if (this.pickInst) {
+      this.pickInst.dispose();
     }
 
     for (const instance of this.bodyInstances) {
@@ -244,7 +274,29 @@ export class Entity extends BABYLON.TransformNode {
 
       const extents = max.subtract(min).scale(0.5);
       capsuleHeight = extents.z * 2 * this.spawnScale; // Scale height by spawnScale
+      
+      // For entities other than self create a pick instance here.. maybe later just
+      // disable pick when in first person, it gets annoying.
+      if (!this.isPlayer) {
+        const pickInst = Entity.pickerPrototype.createInstance(
+          `pickBox_${this.spawn.name}_${this.spawn.spawnId ?? ""}`,
+        );
+        this.pickInst = pickInst;
+        pickInst.setParent(this);
+        pickInst.position = this.spawnPosition;
+        pickInst.scaling.set(
+          extents.x * 4,
+          extents.y * 4,
+          extents.z * 4,
+        );
+        pickInst.isPickable = true;
+        pickInst.showBoundingBox = false;
+        pickInst.metadata = { entity: this };
+      }
     } else {
+      console.warn(
+        `[Entity] No bounding box found for ${this.entityContainer.model}, using default capsule height`,
+      );
     }
 
     // Setup physics body with capsule shape
@@ -390,6 +442,7 @@ export class Entity extends BABYLON.TransformNode {
       mesh.instancedBuffers.textureAttributes = vec;
       secondaryInstance.instancedBuffers.textureAttributes = vec;
       this.secondaryInstances.push(secondaryInstance);
+
     }
   }
 

@@ -17,7 +17,11 @@ export class PlayerCamera {
   private cameraPosition = new BABYLON.Vector3(0, 0, 0);
   private cameraPitch: number = 0;
   public cameraYaw: number = 0;
-  private eventListeners: Array<{ element: HTMLElement | Document; type: string; listener: EventListenerOrEventListenerObject }> = [];
+  private eventListeners: Array<{
+    element: HTMLElement | Document;
+    type: string;
+    listener: EventListenerOrEventListenerObject;
+  }> = [];
 
   constructor(player: Player, camera: BJS.UniversalCamera) {
     this.player = player;
@@ -42,7 +46,9 @@ export class PlayerCamera {
   }
 
   private bindInputEvents() {
-    const canvas = this.player.gameManager.scene!.getEngine().getRenderingCanvas();
+    const canvas = this.player.gameManager
+      .scene!.getEngine()
+      .getRenderingCanvas();
     if (!canvas) return;
 
     this.canvas = canvas;
@@ -53,7 +59,11 @@ export class PlayerCamera {
       { element: canvas, type: "mouseup", listener: this.handleMouseUp },
       { element: canvas, type: "mousemove", listener: this.handleMouseMove },
       { element: canvas, type: "wheel", listener: this.handleWheel },
-      { element: document, type: "pointerlockchange", listener: this.onChangePointerLock },
+      {
+        element: document,
+        type: "pointerlockchange",
+        listener: this.onChangePointerLock,
+      },
     );
 
     // Add event listeners
@@ -63,7 +73,7 @@ export class PlayerCamera {
   }
 
   private handleMouseDown = (e: MouseEvent) => {
-    this.mouseInputButton(e.button, false, e.clientX, e.clientY);
+    this.mouseInputButton(e.button, false, e.offsetX, e.offsetY);
   };
 
   private handleMouseUp = (e: MouseEvent) => {
@@ -87,7 +97,62 @@ export class PlayerCamera {
     this.isLocked = !!document.pointerLockElement;
   };
 
-  public mouseInputButton(buttonIndex: number, up: boolean = false, x: number = 0, y: number = 0) {
+  private visualizeRay(ray: BJS.Ray, pickResult: BJS.PickingInfo | null) {
+    const scene = this.player.gameManager.scene!;
+    const rayLength = 100; // Adjust based on your scene scale
+    const origin = ray.origin.clone();
+    let endPoint: BJS.Vector3;
+    const hit = pickResult?.hit && pickResult.pickedPoint;
+
+    if (hit) {
+      // If there's a hit, end the ray at the hit point
+      endPoint = pickResult!.pickedPoint!.clone();
+    } else {
+      // Otherwise, extend the ray to the maximum length
+      endPoint = origin.add(ray.direction.scale(rayLength));
+    }
+    // Create a line to represent the ray
+    const points = [origin, endPoint];
+    const color = hit
+      ? new BABYLON.Color4(0, 1, 0, 0)
+      : new BABYLON.Color4(1, 0, 0, 0); // Green for hit, red for miss
+    const line = BABYLON.MeshBuilder.CreateLines(
+      `ray_${Date.now()}`, // Unique name
+      { points, colors: [color, color] },
+      scene,
+    );
+
+    if (hit) {
+      const sphere = BABYLON.MeshBuilder.CreateSphere(
+        `hit_${Date.now()}`,
+        { diameter: 0.5 * 2 }, // Scale with entity
+        scene,
+      );
+      sphere.position = pickResult!.pickedPoint!.clone();
+      sphere.material = new BABYLON.StandardMaterial(
+        `hitMat_${Date.now()}`,
+        scene,
+      );
+      (sphere.material as BJS.StandardMaterial).diffuseColor =
+        new BABYLON.Color3(0, 1, 0);
+      setTimeout(() => {
+        sphere.dispose();
+        (sphere.material as BJS.StandardMaterial).dispose();
+      }, 10000);
+    }
+
+    // Dispose of the line after 1 second
+    setTimeout(() => {
+      line.dispose();
+    }, 10000);
+  }
+
+  public mouseInputButton(
+    buttonIndex: number,
+    up: boolean = false,
+    x: number = 0,
+    y: number = 0,
+  ) {
     if (!this.canvas) return;
     const charSelect = !!this.player.gameManager.CharacterSelect?.character;
     if (charSelect) {
@@ -95,25 +160,31 @@ export class PlayerCamera {
     }
     const scene = this.player.gameManager.scene!;
     if (!up && buttonIndex === 0 && scene && !this.isLocked) {
-      const pickResult = scene.pick(
+      const pickRay = this.player.gameManager.scene!.createPickingRay(
         x,
         y,
-        (mesh) => {
-          if (!mesh.isPickable) return false;
-          return true;
-        },
-        true,
+        BABYLON.Matrix.Identity(),
         this.camera,
+        false,
       );
-      if (pickResult?.hit && pickResult.pickedMesh) {
-        console.log(`Picked mesh: ${pickResult.pickedMesh.name}`, pickResult.pickedMesh);
-      } else {
-        console.log("No mesh picked");
+      const pickResult = this.player.gameManager.scene!.pickWithRay(
+        pickRay,
+        (mesh) => mesh.isPickable,
+        true,
+      );
+      // For debugging
+      // this.visualizeRay(pickRay, pickResult);
+      if (pickResult?.hit && pickResult.pickedMesh?.metadata?.entity) {
+        this.player.Target = pickResult.pickedMesh.metadata.entity;
       }
     }
     if (up && buttonIndex === 2) {
       document.exitPointerLock();
-    } else if (buttonIndex === 2 && !this.isLocked && this.canvas.requestPointerLock) {
+    } else if (
+      buttonIndex === 2 &&
+      !this.isLocked &&
+      this.canvas.requestPointerLock
+    ) {
       try {
         this.canvas.requestPointerLock();
       } catch {}
@@ -134,7 +205,10 @@ export class PlayerCamera {
     const deltaCoefficient = 1.2;
     this.cameraDistance = Math.max(
       this.minCameraDistance,
-      Math.min(this.maxCameraDistance, this.cameraDistance + delta * deltaCoefficient),
+      Math.min(
+        this.maxCameraDistance,
+        this.cameraDistance + delta * deltaCoefficient,
+      ),
     );
     this.isFirstPerson = this.cameraDistance <= this.minCameraDistance;
     this.player.playerEntity.toggleVisibility(!this.isFirstPerson);
@@ -159,7 +233,10 @@ export class PlayerCamera {
     }
 
     const maxPitch = Math.PI / 2 - 0.01;
-    this.cameraPitch = Math.max(-maxPitch, Math.min(maxPitch, this.cameraPitch));
+    this.cameraPitch = Math.max(
+      -maxPitch,
+      Math.min(maxPitch, this.cameraPitch),
+    );
 
     this.player.isPlayerMoving = true;
     this.player.setRotation(this.cameraYaw);
@@ -173,7 +250,11 @@ export class PlayerCamera {
 
     if (this.isFirstPerson) {
       this.camera.position = playerPos.add(this.lookatOffset);
-      this.camera.rotation = new BABYLON.Vector3(this.cameraPitch, this.cameraYaw + BABYLON.Tools.ToRadians(90), 0);
+      this.camera.rotation = new BABYLON.Vector3(
+        this.cameraPitch,
+        this.cameraYaw + BABYLON.Tools.ToRadians(90),
+        0,
+      );
     } else {
       const hDist = this.cameraDistance * Math.cos(this.cameraPitch);
       const vDist = this.cameraDistance * Math.sin(this.cameraPitch);
@@ -196,10 +277,10 @@ export class PlayerCamera {
       element.removeEventListener(type, listener, false);
     });
     this.eventListeners = [];
-    
+
     // Dispose of the camera light
     this.cameraLight.dispose();
-    
+
     // Clear canvas reference
     this.canvas = null;
   }

@@ -177,15 +177,8 @@ export class ZoneManager {
 
 
     result.meshes.forEach((mesh) => {
+      mesh.isPickable = false;
 
-      if (mesh instanceof BABYLON.Mesh) {
-        //mesh.flipFaces();
-      }
-
-      // (mesh as BJS.Mesh).convertToUnIndexedMesh();
-      // mesh.cullingStrategy =
-      //   BABYLON.AbstractMesh.CULLINGSTRATEGY_BOUNDINGSPHERE_ONLY;
-      // mesh.freezeWorldMatrix();
       const materialExtras = mesh?.material?.metadata?.gltf?.extras;
       if (materialExtras?.frames?.length && materialExtras?.animationDelay) {
         const { frames, animationDelay } = materialExtras;
@@ -290,7 +283,7 @@ export class ZoneManager {
         const canonical = nameMap.get(key)!;
 
         for (const mesh of meshes) {
-          mesh.isPickable = false;
+          // mesh.isPickable = false;
           if (mesh.material === mat) {
             mesh.material = canonical;
           } else if (mesh.material instanceof BABYLON.MultiMaterial) {

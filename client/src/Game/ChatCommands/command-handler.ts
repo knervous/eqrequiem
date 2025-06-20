@@ -139,7 +139,7 @@ export class CommandHandler {
       addChatLine(`You say, '${message}'`, { type: 1 });
       WorldSocket.sendMessage(OpCodes.ChannelMessage, ChannelMessage, {
         sender: Player.instance?.player?.name ?? "",
-        targetname: Player.instance?.Target?.name,
+        targetname: Player.instance?.Target?.spawn?.name,
         chanNum: 0,
         message,
       });

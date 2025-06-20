@@ -171,6 +171,12 @@ export default class DayNightSkyManager {
       this.scale,
     );
     this.#domeRoot.name = "__sky__";
+    sky.meshes.forEach((mesh) => {
+      mesh.isPickable = false; // Disable picking on sky meshes
+      mesh.receiveShadows = false; // Disable shadows on sky meshes
+      mesh.checkCollisions = false; // Disable collisions on sky meshes
+      mesh.renderingGroupId = 0; // Ensure sky renders first
+    });
 
 
     // Get child meshes (cloud and upper layers)
@@ -292,7 +298,6 @@ export default class DayNightSkyManager {
   }
 
   setTimeOfDay(time) {
-
     this.timeOfDay = ((time % 24) + 24) % 24;
     this.#updateSunAndSky();
   }

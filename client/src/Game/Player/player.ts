@@ -12,6 +12,7 @@ import { InventorySlot } from "./player-constants";
 import { AnimationDefinitions } from "@game/Animation/animation-constants";
 import EntityCache from "@game/Model/entity-cache";
 import { Entity } from "@game/Model/entity";
+import emitter from "@game/Events/events";
 export default class Player {
   public playerMovement: PlayerMovement | null = null;
   public playerCamera: PlayerCamera;
@@ -30,13 +31,11 @@ export default class Player {
   public get Target() {
     return this.target;
   }
-  public set Target(target: Spawn | null) {
+  public set Target(target: Entity | null) {
     this.target = target;
-    if (target) {
-      this.observers["target"].forEach((obs) => obs(target));
-    }
+    emitter.emit("target", target);
   }
-  private target: Spawn | null = null;
+  private target: Entity | null = null;
 
   static instance: Player | null = null;
 
@@ -282,7 +281,10 @@ export default class Player {
     this.gameManager.scene?.registerBeforeRender(() => {
       this.tick();
     });
-    
+
+
+    // Emit events
+    emitter.emit("playerName", this.player.name);
   }
 
   public playAnimation(
