@@ -28,6 +28,8 @@ export class PlayerMovement {
   private lastPlayerPosition: SimpleVector4 = { x: 0, y: 0, z: 0, heading: 0 };
   private keyStates: { [key: string]: boolean } = {};
 
+  public moveForward: boolean = false;
+
   constructor(player: Player, scene: BJS.Scene) {
     this.player = player;
     this.scene = scene;
@@ -65,7 +67,8 @@ export class PlayerMovement {
       this.isActionPressed("move_forward") ||
       this.isActionPressed("move_backward") ||
       this.isActionPressed("turn_left") ||
-      this.isActionPressed("turn_right")
+      this.isActionPressed("turn_right") ||
+      this.moveForward
     );
   }
 
@@ -83,7 +86,13 @@ export class PlayerMovement {
     const playerEntity = this.player.playerEntity;
     if (!playerEntity || !this.physicsBody) return;
 
-    if (document.activeElement && document.activeElement !== document.body) {
+    if (
+      document.activeElement &&
+      !(
+        document.activeElement === document.body ||
+        document.activeElement === this.player.gameManager.canvas
+      )
+    ) {
       return;
     }
 
@@ -128,28 +137,24 @@ export class PlayerMovement {
 
     // Compute movement direction
     const movement = new BABYLON.Vector3(0, 0, 0);
-    if (this.isActionPressed("move_forward")) {
- 
+    if (this.isActionPressed("move_forward") || this.moveForward) {
       movement.x = -1;
-      
+
       playWalk = true;
     }
     if (this.isActionPressed("move_backward")) {
- 
       movement.x = 1;
-      
+
       playWalk = true;
     }
     if (this.isActionPressed("turn_left") && mouseCaptured) {
-
       movement.z = 1;
-      
+
       playWalk = true;
     }
     if (this.isActionPressed("turn_right") && mouseCaptured) {
-
       movement.z = -1;
-      
+
       playWalk = true;
     }
     if (this.isActionPressed("move_down")) {
@@ -162,10 +167,12 @@ export class PlayerMovement {
     if (firstPerson) {
       // In first-person, use cameraYaw directly
       const yaw = this.player.playerCamera.cameraYaw;
-      forward = new BABYLON.Vector3(-Math.sin(yaw), 0, -Math.cos(yaw)).normalize().scale(-1);
+      forward = new BABYLON.Vector3(-Math.sin(yaw), 0, -Math.cos(yaw))
+        .normalize()
+        .scale(-1);
     } else if (
       playerEntity.absoluteRotationQuaternion &&
-  !playerEntity.absoluteRotationQuaternion.equals(BABYLON.Quaternion.Zero())
+      !playerEntity.absoluteRotationQuaternion.equals(BABYLON.Quaternion.Zero())
     ) {
       // In third-person, use quaternion if valid
       forward = BABYLON.Vector3.Forward().rotateByQuaternionToRef(
@@ -175,7 +182,11 @@ export class PlayerMovement {
     } else {
       // Fallback for third-person if quaternion is invalid
       const yaw = playerEntity.rotation.y ?? this.player.playerCamera.cameraYaw;
-      forward = new BABYLON.Vector3(-Math.sin(yaw), 0, -Math.cos(yaw)).normalize();
+      forward = new BABYLON.Vector3(
+        -Math.sin(yaw),
+        0,
+        -Math.cos(yaw),
+      ).normalize();
     }
 
     const forwardXZ = new BABYLON.Vector3(forward.x, 0, forward.z);
@@ -191,7 +202,7 @@ export class PlayerMovement {
     ).normalize();
     // Handle jump
     const onFloor = this.isOnFloor();
-    const notJumping = this.jumpState === "idle" &&  onFloor;
+    const notJumping = this.jumpState === "idle" && onFloor;
     if (
       this.isActionPressed("move_up") &&
       // this.jumpState === "idle" &&
@@ -273,7 +284,7 @@ export class PlayerMovement {
     }
 
     // Play animations
- 
+
     if (playWalk) {
       if (didCrouch) {
         this.player.playDuckWalk();
@@ -287,8 +298,6 @@ export class PlayerMovement {
     } else {
       this.player.playIdle();
     }
-    
-    
 
     // Network update
     this.updateDelta += delta;
@@ -300,12 +309,13 @@ export class PlayerMovement {
           y: currentPos.y,
           z: currentPos.z,
           heading,
-          animation: this.player.playerEntity?.currentAnimation ?? AnimationDefinitions.Idle1,
+          animation:
+            this.player.playerEntity?.currentAnimation ??
+            AnimationDefinitions.Idle1,
         });
       } catch (e) {
         console.error("[PlayerMovement] Error sending position update:", e);
       }
-     
     }
 
     // Update camera

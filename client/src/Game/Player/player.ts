@@ -13,9 +13,11 @@ import { AnimationDefinitions } from "@game/Animation/animation-constants";
 import EntityCache from "@game/Model/entity-cache";
 import { Entity } from "@game/Model/entity";
 import emitter from "@game/Events/events";
+import { PlayerKeyboard } from "./player-keyboard";
 export default class Player {
   public playerMovement: PlayerMovement | null = null;
   public playerCamera: PlayerCamera;
+  public playerKeyboard: PlayerKeyboard;
   public player: PlayerProfile | null = null;
   public playerEntity: Entity | null = null;
   public isPlayerMoving: boolean = false;
@@ -32,8 +34,14 @@ export default class Player {
     return this.target;
   }
   public set Target(target: Entity | null) {
+    if (this.target) {
+      this.target.setSelected(false);
+    }
     this.target = target;
     emitter.emit("target", target);
+    if (this.target) {
+      this.target.setSelected(true);
+    }
   }
   private target: Entity | null = null;
 
@@ -50,6 +58,7 @@ export default class Player {
     this.inGame = inGame;
     this.gameManager = gameManager;
     this.playerCamera = new PlayerCamera(this, camera);
+    this.playerKeyboard = new PlayerKeyboard(this, gameManager.scene!);
     this.camera = camera;
     Player.instance = this;
     (window as any).player = this;
@@ -78,6 +87,9 @@ export default class Player {
     }
     if (this.playerCamera) {
       this.playerCamera.dispose();
+    }
+    if (this.playerKeyboard) {
+      this.playerKeyboard.dispose();
     }
   }
 

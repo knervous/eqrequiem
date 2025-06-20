@@ -28,8 +28,13 @@ export class Entity extends BABYLON.TransformNode {
   public entityCache: EntityCache;
   public spawnPosition: BJS.Vector3 = new BABYLON.Vector3(0, 0, 0);
   public spawnScale: number = 1.5; // Default scaling factor for entities
+  public hidden: boolean = true;
 
   private static pickerPrototype: BJS.Mesh;
+  private static selectionTorus: BJS.Mesh;
+  private static currentlySelected: Entity | null = null;
+
+
   private gameManager: GameManager;
   private scene: BJS.Scene;
   private nodeContainer: BJS.TransformNode | null = null;
@@ -40,7 +45,6 @@ export class Entity extends BABYLON.TransformNode {
   private isInitializing: boolean = false;
   private nameplate: TextRenderer | null = null;
   private nameplateNode: BJS.TransformNode | null = null;
-  private hidden: boolean = true;
   private capsuleShape: BJS.PhysicsShapeCapsule | null = null;
   private pickInst: BJS.InstancedMesh | null = null;
   private isPlayer = false;
@@ -82,6 +86,29 @@ export class Entity extends BABYLON.TransformNode {
       // keep it out of view & raycast results
       Entity.pickerPrototype.setEnabled(false);
     }
+
+    // Selection torus
+    if (!Entity.selectionTorus) {
+      const proto = BABYLON.MeshBuilder.CreateTorus(
+        "selectionTorusProto",
+        {
+          diameter: 4,      // outer diameter of the ring
+          thickness: 1,   // ring thickness
+          tessellation: 16, // smoothness
+        },
+        this.scene,
+      );
+
+      const mat = new BABYLON.StandardMaterial("selectionTorusMat", this.scene);
+      mat.diffuseColor = new BABYLON.Color3(0, 1, 1); // yellow
+      mat.alpha = 0.4;                               // semi-transparent
+      proto.material = mat;
+
+      proto.isPickable = false;
+      proto.setEnabled(false);
+      Entity.selectionTorus = proto;
+    }
+
 
   }
 
@@ -150,6 +177,28 @@ export class Entity extends BABYLON.TransformNode {
       y,
       z,
     ]);
+  }
+
+  public setSelected(selected: boolean): void {
+    const torus = Entity.selectionTorus!;
+    if (selected) {
+      // deselect any previous entity
+      if (Entity.currentlySelected && Entity.currentlySelected !== this) {
+        Entity.currentlySelected.setSelected(false);
+      }
+      Entity.currentlySelected = this;
+
+      // move & show
+      torus.setParent(this.nodeContainer!);
+      torus.position.set(0, -3, 0);
+      torus.setEnabled(true);
+    } else {
+      // only hide if *this* entity is the one that owns it
+      if (Entity.currentlySelected === this) {
+        torus.setEnabled(false);
+        Entity.currentlySelected = null;
+      }
+    }
   }
 
   public dispose() {

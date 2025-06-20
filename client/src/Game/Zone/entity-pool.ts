@@ -42,15 +42,7 @@ export default class EntityPool {
     if (spawn.isNpc) {
       //   return;
     }
-    // if (!spawn.name.includes('Moodoro')) return;
-    // console.log("Adding spawn", spawn.spawnId, spawn.name, {
-    //   x: spawn.x,
-    //   y: spawn.y,
-    //   z: spawn.z,
-    //   cellX: spawn.cellX,
-    //   cellY: spawn.cellY,
-    //   cellZ: spawn.cellZ,
-    // });
+
     this.spawns[spawn.spawnId] = spawn;
 
     const entity = await EntityCache.getInstance(this.gameManager, spawn, this.scene!, this.parent);
@@ -61,6 +53,7 @@ export default class EntityPool {
     this.grid.addEntity(entity);
     this.entities[spawn.spawnId] = entity;
   }
+  
   UpdateSpawnPosition(sp: EntityPositionUpdateBase) {
     const e = this.entities[sp.spawnId];
     if (!e || !e.spawn) return;

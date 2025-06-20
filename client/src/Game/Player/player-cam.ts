@@ -73,6 +73,7 @@ export class PlayerCamera {
   }
 
   private handleMouseDown = (e: MouseEvent) => {
+    console.log('BUTTON', e.button);
     this.mouseInputButton(e.button, false, e.offsetX, e.offsetY);
   };
 
@@ -146,7 +147,8 @@ export class PlayerCamera {
       line.dispose();
     }, 10000);
   }
-
+  leftButtonDown: boolean = false;
+  rightButtonDown: boolean = false;
   public mouseInputButton(
     buttonIndex: number,
     up: boolean = false,
@@ -159,6 +161,19 @@ export class PlayerCamera {
       return;
     }
     const scene = this.player.gameManager.scene!;
+
+    if (buttonIndex === 0) {
+      this.leftButtonDown = !up;
+    } else if (buttonIndex === 2) {
+      this.rightButtonDown = !up;
+    }
+
+    if (this.leftButtonDown && this.rightButtonDown) {
+      this.player.playerMovement!.moveForward = true;
+      return;
+    }
+    this.player.playerMovement!.moveForward = false;
+
     if (!up && buttonIndex === 0 && scene && !this.isLocked) {
       const pickRay = this.player.gameManager.scene!.createPickingRay(
         x,
