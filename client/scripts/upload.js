@@ -38,6 +38,7 @@ let allowedFolders = new Set([
   "zones",
   "sounds",
   "vat",
+  "basis",
 ]);
 
 const onlyTextures = process.argv[3] && process.argv[3] === 'textures';
@@ -48,6 +49,7 @@ const allowedRootFiles = new Set(["eqstr_us.txt"]);
 let allowedExtensions = new Set([
   ".txt",
   ".json",
+  ".basis",
   // ".glb", prefer .babylon
   // ".webp",
   // ".dds",
@@ -55,7 +57,7 @@ let allowedExtensions = new Set([
   // ".mid",
   // ".tga",
   // ".babylon",
-  ".bin"
+  // ".bin"
 ]);
 
 if (onlyTextures) {

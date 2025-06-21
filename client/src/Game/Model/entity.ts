@@ -2,7 +2,11 @@ import BABYLON from "@bjs";
 import type * as BJS from "@babylonjs/core";
 import { Spawn } from "@game/Net/internal/api/capnp/common";
 import type { EntityContainer, EntityCache } from "./entity-cache";
-import { charFileRegex, MaterialPrefixes } from "@game/Constants/constants";
+import {
+  charFileRegex,
+  clkRegex,
+  MaterialPrefixes,
+} from "@game/Constants/constants";
 import { AnimationDefinitions } from "@game/Animation/animation-constants";
 import { Nameplate } from "./nameplate";
 import type { TextRenderer } from "@babylonjs/addons";
@@ -10,6 +14,7 @@ import { sleep } from "@game/Constants/util";
 import { PlayerProfile } from "@game/Net/internal/api/capnp/player";
 import type GameManager from "@game/Manager/game-manager";
 import { createTargetRingMaterial } from "./entity-select-ring";
+import { InventorySlot } from "@game/Player/player-constants";
 
 type BufferCache = {
   [key: number]: BJS.Vector2;
@@ -366,6 +371,7 @@ export class Entity extends BABYLON.TransformNode {
   public updateModelTextures() {
     for (const mesh of this.bodyInstances.concat(this.secondaryInstances)) {
       const name = mesh.metadata.name;
+      const hasRobe = this.entityContainer.model.endsWith("01");
       let idx = this.getTextureIndex(
         name,
         !this.isPlayer ? (this.spawn as Spawn).equipChest : 1,
@@ -379,8 +385,26 @@ export class Entity extends BABYLON.TransformNode {
         }
       }
       if (this.textureBuffers[name]) {
-        this.textureBuffers[name].x = idx;
+        if (hasRobe && name.startsWith("clk")) {
+          let material = 10;
+          if (this.spawn instanceof Spawn) {
+            material = this.spawn.isNpc
+              ? this.spawn.equipChest
+              : this.spawn.equipment.chest;
+          } else {
+            material =
+              this.spawn.inventoryItems
+                .toArray()
+                .find((item) => item.slot === InventorySlot.Chest)?.item
+                ?.material ?? 10;
+          }
+          //material -= 6; // Adjust index for robe textures
+          idx = this.getTextureIndex(name, material);
+        }
+      } else {
+        idx = this.getTextureIndex(name, 1); // Default to 1 if not found for now
       }
+      this.textureBuffers[name].x = idx;
     }
   }
 
@@ -531,13 +555,13 @@ export class Entity extends BABYLON.TransformNode {
       secondaryInstance.instancedBuffers.bakedVertexAnimationSettingsInstanced =
         this.animationBuffer;
       secondaryInstance.physicsBody = this.physicsBody; // Assign physics body to instance
-      const idx = this.getTextureIndex(mesh.name, textureVariation);
-      let vec;
-      if (bufferCache[idx]) {
-        vec = bufferCache[idx];
-      } else {
-        vec = bufferCache[idx] = new BABYLON.Vector2(idx, 0);
+      let idx = this.getTextureIndex(mesh.name, textureVariation);
+      const [, , piece] = mesh.name.match(charFileRegex) || [];
+      if (piece === MaterialPrefixes.Face && this.isHumanoid) {
+        idx = this.getTextureIndex(mesh.name, this.spawn.face);
       }
+      const vec = this.textureBuffers[mesh.name] || new BABYLON.Vector2(idx, 0);
+      this.textureBuffers[mesh.name] = vec;
       mesh.instancedBuffers.textureAttributes = vec;
       secondaryInstance.instancedBuffers.textureAttributes = vec;
       this.secondaryInstances.push(secondaryInstance);
@@ -572,18 +596,57 @@ export class Entity extends BABYLON.TransformNode {
   }
 
   private getTextureIndex(originalName: string, variation: number = 1): number {
+    originalName = originalName.toLowerCase();
+    let model, piece, texIdx;
     const match = originalName.match(charFileRegex);
     if (!match) {
       console.warn(
         `[SwapTexture] Sub-material name ${originalName} does not match expected format`,
       );
-      return -1;
+      // Next try robe
+      const clkMatch = originalName.match(clkRegex);
+      if (clkMatch) {
+        model = "clk";
+        texIdx = clkMatch[2];
+        return (
+          this.entityContainer?.textureAtlas.indexOf(
+            `${model}${(variation - 6).toString().padStart(2, "0")}${texIdx}`,
+          ) ?? -1
+        );
+      } else {
+        console.warn(
+          `[SwapTexture] Sub-material name ${originalName} does not match expected format`,
+        );
+        return -1;
+      }
+    } else {
+      model = match[1];
+      piece = match[2];
+      texIdx = match[4];
+
+      if (piece === MaterialPrefixes.Face && this.isHumanoid) {
+        // For humanoids, use the face texture variation
+        variation = this.spawn.face;
+        const faceVariation = texIdx[0];
+        const pieceNumber = texIdx[1];
+        const baseIndex = this.entityContainer?.textureAtlas.indexOf(
+          `${model}${piece}00${faceVariation}${pieceNumber}`,
+        );
+        if (baseIndex !== undefined && baseIndex >= 0) {
+          return baseIndex; // Adjust index based on variation
+        } else {
+          return this.entityContainer?.textureAtlas.indexOf(
+            `${model}${piece}00${+faceVariation + 1}${pieceNumber}`,
+          ) ?? -1;
+        }
+      } else  {
+        return (
+          this.entityContainer?.textureAtlas.indexOf(
+            `${model}${piece}${variation.toString().padStart(2, "0")}${texIdx}`,
+          ) ?? -1
+        );
+      }
+      
     }
-    const [, model, piece, , texIdx] = match;
-    return (
-      this.entityContainer?.textureAtlas.indexOf(
-        `${model}${piece}${variation.toString().padStart(2, "0")}${texIdx}`,
-      ) ?? -1
-    );
   }
 }

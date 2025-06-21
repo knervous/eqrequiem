@@ -237,14 +237,14 @@ export class EntityCache {
             console.warn(`[EntityCache] Mesh ${mesh.name} has no material`);
             continue;
           }
-          const match = mat.name.match(charFileRegex);
-          if (!match) continue;
-          const [, , piece, , texIdx] = match;
-          mesh.metadata = {
-            ...(mesh.metadata || {}),
-            piece,
-            texIdx: +texIdx.trim(),
-          };
+          // const match = mat.name.match(charFileRegex);
+          // if (!match) continue;
+          // const [, , piece, , texIdx] = match;
+          // mesh.metadata = {
+          //   ...(mesh.metadata || {}),
+          //   piece,
+          //   texIdx: +texIdx.trim(),
+          // };
           mat.dispose();
           mesh.material = shaderMaterial!;
         }

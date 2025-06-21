@@ -43,7 +43,7 @@ export default class EntityPool {
     }
 
     if (!spawn.name.includes('Connie')) {
-      return;
+      //   return;
     }
 
     this.spawns[spawn.spawnId] = spawn;

@@ -38,6 +38,9 @@ func worldToCell(x, y, z float32) [3]int {
 
 // markMoved flags an entity for broadcast and rebuckets it if its cell changed.
 func (z *ZoneInstance) markMoved(id int, pos entity.MobPosition) {
+	if (z.Entities[id] == nil) || (z.Entities[id].GetMob() == nil) {
+		return // entity not found or not a mob
+	}
 	m := z.Entities[id].GetMob()
 
 	// 1) only enqueue once, via its own flag
