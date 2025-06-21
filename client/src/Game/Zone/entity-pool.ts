@@ -1,7 +1,6 @@
 import type * as BJS from "@babylonjs/core";
 import {
   EntityAnimation,
-  EntityPositionUpdate,
   EntityPositionUpdateBase,
   Spawn,
 } from "@game/Net/internal/api/capnp/common";
@@ -43,8 +42,8 @@ export default class EntityPool {
       //   return;
     }
 
-    if (!spawn.name.includes('Westrider')) {
-      //return;
+    if (!spawn.name.includes('Connie')) {
+      return;
     }
 
     this.spawns[spawn.spawnId] = spawn;

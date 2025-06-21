@@ -14,7 +14,47 @@ console.log(`Using root path: ${rootPath}`);
 const outputDir = path.join(rootPath, "basis");
 await fs.ensureDir(outputDir);
 
-const charFileRegex = /^([a-z]{3})([a-z]{2})(\d{2})(\d{2})\.dds$/;
+// your regexes
+const charFileRegex      = /^([a-z]{3})([a-z]{2})(\d{2})(\d{2})\.dds$/;
+const clkRegex           = /clk\d{4}\.dds/;        // “robe” files
+const helmLeatherRegex   = /helmleather\d{2}\.dds/;
+
+// PC‐model list & robes
+const pcModels = [
+  'bam','baf','erm','erf','elf','elm','gnf','gnm',
+  'trf','trm','hum','huf','daf','dam','dwf','dwm',
+  'haf','ikf','ikm','ham','hif','him','hof','hom',
+  'ogm','ogf','kef','kem',
+];
+function wearsRobe(modelName) {
+  return [
+    'daf','dam','erf','erm','gnf','gnm',
+    'huf','hum','ikf','ikm','hif','him'
+  ].includes(modelName);
+}
+
+// Recursively collect **all** DDS files matching a regex
+async function collectExtraFiles(regex) {
+  let out = [];
+  async function walk(dir) {
+    for (const ent of await fs.readdir(dir, { withFileTypes: true })) {
+      const full = path.join(dir, ent.name);
+      if (ent.isDirectory()) {
+        await walk(full);
+      } else if (ent.isFile() && regex.test(ent.name)) {
+        out.push(full);
+      }
+    }
+  }
+  await walk(rootPath);
+  return out;
+}
+
+//— startup: prebuild the two extras lists once —//
+const allClkFiles         = await collectExtraFiles(clkRegex);
+const allHelmLeatherFiles = await collectExtraFiles(helmLeatherRegex);
+
+//— now collect your normal char‐files —//
 const models = {};
 const seenBasenames = new Set();
 
@@ -27,41 +67,38 @@ async function collectDDSFiles(dir) {
     if (entry.isDirectory()) {
       files = files.concat(await collectDDSFiles(fullPath));
     } else if (entry.isFile() && charFileRegex.test(entry.name)) {
-      const basename = path.basename(fullPath);
+      const basename = entry.name;
       if (!seenBasenames.has(basename)) {
         seenBasenames.add(basename);
         files.push(fullPath);
       }
     }
   }
-
   return files;
 }
 
-// Scan & group DDS files
 const ddsFiles = await collectDDSFiles(rootPath);
 for (const filePath of ddsFiles) {
-  const fileName = path.basename(filePath);
-  const m = fileName.match(charFileRegex);
+  const m = path.basename(filePath).match(charFileRegex);
   if (!m) continue;
-
   const [, model, piece, variation, texNum] = m;
   const varNum = parseInt(variation, 10);
   const texIdx = parseInt(texNum, 10);
   if (isNaN(varNum) || isNaN(texIdx)) {
-    console.warn(`Skipping invalid file: ${fileName}`);
+    console.warn(`Skipping invalid file: ${filePath}`);
     continue;
   }
-
   models[model] ??= {};
-  models[model][piece] ??= {};
+  models[model][piece]  ??= {};
   models[model][piece][varNum] ??= [];
   models[model][piece][varNum].push({ texIdx, filePath });
 }
 
-// Helper: build a flat, ordered list of file‐paths for a given model
+// Helper: flat, ordered list **plus** extras
 function filePathsForModel(modelName) {
   const arr = [];
+
+  // (a) all the char‐files you already collected
   for (const piece of Object.keys(models[modelName] || {})) {
     for (const variation of Object.keys(models[modelName][piece])) {
       for (const { filePath } of models[modelName][piece][variation]) {
@@ -69,78 +106,90 @@ function filePathsForModel(modelName) {
       }
     }
   }
-  return arr;
+
+  // (b) if they wear robes, append all CLK files
+  if (wearsRobe(modelName)) {
+    arr.push(...allClkFiles);
+  }
+
+  // (c) if they’re a PC model, append all helm-leather
+  if (pcModels.includes(modelName)) {
+    arr.push(...allHelmLeatherFiles);
+  }
+
+  // (d) dedupe in case of overlap
+  return Array.from(new Set(arr));
 }
 
-// (6) Process one model: decode each DDS → PNG → Basis, concatenate into .basis
+// … then your existing processModel & main loop untouched …
 async function processModel(modelName) {
   const srcList = filePathsForModel(modelName);
   if (srcList.length === 0) {
     console.log(`No files for model "${modelName}", skipping.`);
     return;
   }
-
   console.log(`Processing ${srcList.length} images for model "${modelName}"…`);
 
   const modelOutputDir = outputDir;
   await fs.ensureDir(modelOutputDir);
 
-  // Hardcode dimensions to match desired output (adjust if needed)
-  const maxWidth = 128;
+  const maxWidth  = 128;
   const maxHeight = 128;
+  const pngPaths  = [];
+  const pathList  = [];
 
-  const pathList = [];
-  const pngPaths = [];
-
-  // 1. Convert all DDS files to PNGs
+  // 1) DDS → PNG
   for (const filePath of srcList) {
-    const sharpImage = await convertToSharp(await fs.readFile(filePath), path.basename(filePath));
-    const resizedImage = sharpImage.resize({
-      width: maxWidth,
+    const sharpImage = await convertToSharp(
+      await fs.readFile(filePath),
+      path.basename(filePath)
+    );
+    const resized = sharpImage.resize({
+      width:  maxWidth,
       height: maxHeight,
-      fit: "fill",
+      fit:   "fill",
     }).removeAlpha();
 
-    const fileName = path.basename(filePath, ".dds");
-    const pngPath = path.join(modelOutputDir, `${fileName}.png`);
-    await resizedImage.png().toFile(pngPath);
-    pngPaths.push(pngPath);
-    pathList.push(fileName);
+    const base = path.basename(filePath, ".dds");
+    const png  = path.join(modelOutputDir, `${base}.png`);
+    await resized.png().toFile(png);
+    pngPaths.push(png);
+    pathList.push(base);
   }
 
-  // 2. Run npx basisu with all PNGs for this model
-  if (pngPaths.length > 0) {
-    const basisOutputDir = modelOutputDir;
-    const basisCommand = `npx basisu ${pngPaths.join(" ")} -output_file ${basisOutputDir}/${modelName}.basis  -tex_type 2darray`;
+  // 2) basisu → .basis
+  if (pngPaths.length) {
     try {
-      execSync(basisCommand);
-    } catch (error) {
-      console.warn(`Failed to convert PNGs to basis for model ${modelName}: ${error.message}`);
+      execSync(
+        `npx basisu ${pngPaths.join(" ")} ` +
+        `-output_file ${modelOutputDir}/${modelName}.basis ` +
+        `-tex_type 2darray`
+      );
+    } catch (err) {
+      console.warn(`basisu failed for ${modelName}: ${err.message}`);
     }
-
-
-    // 3. Clean up all PNGs
-    for (const pngPath of pngPaths) {
-      await fs.remove(pngPath);
-    }
+    // 3) cleanup PNGs
+    await Promise.all(pngPaths.map(p => fs.remove(p)));
   }
 
-  // 4. Write the JSON file (array of strings)
-  const jsonPath = path.join(modelOutputDir, `${modelName}.json`);
-  await fs.writeJson(jsonPath, pathList, { spaces: 2 });
-  console.log(`Generated JSON (paths only): ${jsonPath}`);
+  // 4) write JSON list
+  await fs.writeJson(
+    path.join(modelOutputDir, `${modelName}.json`),
+    pathList,
+    { spaces: 2 }
+  );
+  console.log(`Wrote ${modelName}.json`);
 }
 
 (async () => {
   try {
     const limit = pLimit(2);
-    const jobs = Object.keys(models).map((model) =>
-      limit(() => processModel(model))
+    await Promise.all(
+      Object.keys(models).map(name => limit(() => processModel(name)))
     );
-    await Promise.all(jobs);
-    console.log("All Basis blocks and JSON files generated under 'basis/'.");
-  } catch (error) {
-    console.error(`Error: ${error.message}`);
+    console.log("All .basis and .json files under 'basis/'.");
+  } catch (err) {
+    console.error(err);
     process.exit(1);
   }
 })();

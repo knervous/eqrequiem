@@ -12,6 +12,7 @@ import { charFileRegex } from "@game/Constants/constants";
 import { PlayerProfile } from "@game/Net/internal/api/capnp/player";
 import { textureFromBakedVertexDataHalfFloat } from "./vat-texture";
 import type GameManager from "@game/Manager/game-manager";
+import { InventorySlot } from "@game/Player/player-constants";
 
 type ModelKey = string;
 
@@ -69,7 +70,7 @@ export class EntityCache {
     // console.log(`[EntityCache] Loading model ${model}`);
 
     const bucket = EntityCache.getOrCreateNodeContainer(scene);
-
+    const baseModel = model.slice(0, 3);
     if (!EntityCache.containers[model]) {
       EntityCache.containers[model] = (async () => {
         // Load .babylon
@@ -130,7 +131,7 @@ export class EntityCache {
           // Basis textures
           const basisBytes = await FileSystem.getFileBytes(
             `eqrequiem/basis`,
-            `${model}.basis`,
+            `${baseModel}.basis`,
           );
           if (!basisBytes) {
             console.warn(`[EntityCache] Basis texture missing for ${model}`);
@@ -165,7 +166,7 @@ export class EntityCache {
           textureAtlas =
             (await FileSystem.getFileJSON<string[]>(
               `eqrequiem/basis`,
-              `${model}.json`,
+              `${baseModel}.json`,
             )) ?? [];
           if (!textureAtlas.length) {
             console.warn(`[EntityCache] VAT atlas missing for ${model}`);
@@ -193,9 +194,10 @@ export class EntityCache {
         if (json) {
           animations = json.animations as BJS.AnimationRange[];
         } else {
-          const ranges = infoNode?.metadata?.gltf?.extras?.animationRanges ?? [];
+          const ranges =
+            infoNode?.metadata?.gltf?.extras?.animationRanges ?? [];
           let offset = 0;
-          animations  = ranges.map((r) => {
+          animations = ranges.map((r) => {
             const entry = {
               from: r.from + offset,
               to: Math.max(0, r.to + offset),
@@ -279,7 +281,20 @@ export class EntityCache {
   ): Promise<Entity | null> {
     const race = spawn.race ?? 1;
     const entry = RACE_DATA[race];
-    const model = entry[spawn.gender ?? 0] || entry[2];
+    let model = entry[spawn.gender ?? 0] || entry[2];
+    let robed = false;
+    if (spawn instanceof Spawn) {
+      robed =  (spawn.isNpc ? spawn.equipChest : spawn.equipment.chest) >= 10;
+    } else if (spawn instanceof PlayerProfile) {
+      robed =
+        (spawn.inventoryItems
+          ?.toArray()
+          .find((i) => i.slot === InventorySlot.Chest)?.item.material ?? 0) >= 10;
+    }
+    if (robed) {
+      model += "01";
+    }
+    model = model.toLowerCase();
     const container = await EntityCache.getContainer(model, scene);
     if (!container) return null;
     return new Entity(gameManager, spawn, scene, container, this, parentNode!);

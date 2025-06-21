@@ -3592,12 +3592,9 @@ export const qeynos2_spawns = [
     findable: 0,
     deltaHeading: 0,
     x: 4,
-
     y: 5,
-
     animation: 0,
     z: -1,
-
     deltaY: 0,
     deltaX: 0,
     heading: 465,
