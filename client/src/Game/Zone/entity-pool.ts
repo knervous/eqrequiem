@@ -43,6 +43,10 @@ export default class EntityPool {
       //   return;
     }
 
+    if (!spawn.name.includes('Westrider')) {
+      //return;
+    }
+
     this.spawns[spawn.spawnId] = spawn;
 
     const entity = await EntityCache.getInstance(this.gameManager, spawn, this.scene!, this.parent);

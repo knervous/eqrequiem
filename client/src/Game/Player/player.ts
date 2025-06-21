@@ -6,7 +6,6 @@ import RACE_DATA from "../Constants/race-data";
 import { PlayerMovement } from "./player-movement";
 import { PlayerCamera } from "./player-cam";
 import { PlayerProfile } from "@game/Net/internal/api/capnp/player";
-import { Spawn } from "@game/Net/internal/api/capnp/common";
 import { ItemInstance } from "@game/Net/internal/api/capnp/item";
 import { InventorySlot } from "./player-constants";
 import { AnimationDefinitions } from "@game/Animation/animation-constants";
@@ -254,10 +253,6 @@ export default class Player {
     );
   }
 
-  public SwapFace(index: number) {
-
-  }
-
   public async UpdateNameplate(lines: string[]) {
     if (!this.playerEntity) {
       console.warn("[Player] No player entity to update nameplate");
@@ -310,7 +305,7 @@ export default class Player {
     if (this.inGame) {
       this.playerMovement = new PlayerMovement(this, this.gameManager.scene!);
     }
-    this.SwapFace(player.face);
+ 
     this.gameManager.scene?.registerBeforeRender(() => {
       this.tick();
     });

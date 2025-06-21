@@ -1,13 +1,4 @@
-export const MaterialPrefixes = {
-  Face: 'he',
-  Chest: 'ch',
-  Arms: 'ua',
-  Wrists: 'fa',
-  Legs: 'lg',
-  Hands: 'hn',
-  Feet: 'ft',
-  Helm: 'he',
-};
+
 
 export enum InventorySlot {
     Charm,
