@@ -6,6 +6,8 @@ import { WorldSocket } from "@ui/net/instances";
 import { OpCodes } from "@game/Net/opcodes";
 import { ChannelMessage } from "@game/Net/internal/api/capnp/common";
 import { AnimationDefinitions } from "@game/Animation/animation-constants";
+import { supportedZones } from "@game/Constants/supportedZones";
+import { RequestClientZoneChange, ZoneChangeType } from "@game/Net/internal/api/capnp/zone";
 
 export function command(name: string): MethodDecorator {
   return (target: object, propertyKey: string | symbol) => {
@@ -118,10 +120,18 @@ export class CommandHandler {
   async commandZone(args: string[]) {
     const zone = args[0];
     if (zone) {
-      addChatLine(`LOADING, PLEASE WAIT...`);
-      await GameManager.instance.loadZone(zone, true);
-      await GameManager.instance.instantiatePlayer({ x: 0, y: 10, z: 10, name: 'Soandso' });
-      addChatLine(`You have entered ${zone}`);
+      const supportedZone = Object.entries(supportedZones).find(([, value]) => value.shortName.toLowerCase() === zone.toLowerCase());
+      WorldSocket.sendMessage(
+        OpCodes.RequestClientZoneChange,
+        RequestClientZoneChange,
+        {
+          type: ZoneChangeType.FROM_ZONE,
+          x: 5,
+          y: 5,
+          z: 5,
+          zoneId: supportedZone ? supportedZone[0] : 0,
+        },
+      );
     } else {
       addChatLine("No zone entered");
     }

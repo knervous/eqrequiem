@@ -795,12 +795,12 @@ type ZonePoint capnp.Struct
 const ZonePoint_TypeID = 0xc644c15adcdd09cb
 
 func NewZonePoint(s *capnp.Segment) (ZonePoint, error) {
-	st, err := capnp.NewStruct(s, capnp.ObjectSize{DataSize: 32, PointerCount: 0})
+	st, err := capnp.NewStruct(s, capnp.ObjectSize{DataSize: 48, PointerCount: 0})
 	return ZonePoint(st), err
 }
 
 func NewRootZonePoint(s *capnp.Segment) (ZonePoint, error) {
-	st, err := capnp.NewRootStruct(s, capnp.ObjectSize{DataSize: 32, PointerCount: 0})
+	st, err := capnp.NewRootStruct(s, capnp.ObjectSize{DataSize: 48, PointerCount: 0})
 	return ZonePoint(st), err
 }
 
@@ -844,19 +844,19 @@ func (s ZonePoint) SetIterator(v int32) {
 	capnp.Struct(s).SetUint32(0, uint32(v))
 }
 
-func (s ZonePoint) Y() float32 {
+func (s ZonePoint) X() float32 {
 	return math.Float32frombits(capnp.Struct(s).Uint32(4))
 }
 
-func (s ZonePoint) SetY(v float32) {
+func (s ZonePoint) SetX(v float32) {
 	capnp.Struct(s).SetUint32(4, math.Float32bits(v))
 }
 
-func (s ZonePoint) X() float32 {
+func (s ZonePoint) Y() float32 {
 	return math.Float32frombits(capnp.Struct(s).Uint32(8))
 }
 
-func (s ZonePoint) SetX(v float32) {
+func (s ZonePoint) SetY(v float32) {
 	capnp.Struct(s).SetUint32(8, math.Float32bits(v))
 }
 
@@ -900,12 +900,36 @@ func (s ZonePoint) SetNumber(v int32) {
 	capnp.Struct(s).SetUint32(28, uint32(v))
 }
 
+func (s ZonePoint) TargetX() float32 {
+	return math.Float32frombits(capnp.Struct(s).Uint32(32))
+}
+
+func (s ZonePoint) SetTargetX(v float32) {
+	capnp.Struct(s).SetUint32(32, math.Float32bits(v))
+}
+
+func (s ZonePoint) TargetY() float32 {
+	return math.Float32frombits(capnp.Struct(s).Uint32(36))
+}
+
+func (s ZonePoint) SetTargetY(v float32) {
+	capnp.Struct(s).SetUint32(36, math.Float32bits(v))
+}
+
+func (s ZonePoint) TargetZ() float32 {
+	return math.Float32frombits(capnp.Struct(s).Uint32(40))
+}
+
+func (s ZonePoint) SetTargetZ(v float32) {
+	capnp.Struct(s).SetUint32(40, math.Float32bits(v))
+}
+
 // ZonePoint_List is a list of ZonePoint.
 type ZonePoint_List = capnp.StructList[ZonePoint]
 
 // NewZonePoint creates a new list of ZonePoint.
 func NewZonePoint_List(s *capnp.Segment, sz int32) (ZonePoint_List, error) {
-	l, err := capnp.NewCompositeList(s, capnp.ObjectSize{DataSize: 32, PointerCount: 0}, sz)
+	l, err := capnp.NewCompositeList(s, capnp.ObjectSize{DataSize: 48, PointerCount: 0}, sz)
 	return capnp.StructList[ZonePoint](l), err
 }
 

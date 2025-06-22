@@ -111,6 +111,11 @@ export default class Player {
     if (this.playerKeyboard) {
       this.playerKeyboard.dispose();
     }
+    if (this.playerMovement) {
+      this.playerMovement.dispose();
+      this.playerMovement = null;
+    }
+    this.gameManager.scene?.unregisterBeforeRender(this.tick.bind(this));
   }
 
   public getPlayerRotation() {
@@ -145,6 +150,9 @@ export default class Player {
   }
 
   public tick() {
+    if (!this.playerEntity || !this.gameManager.scene || !this.playerMovement) {
+      return;
+    }
     const delta =
       (this.gameManager.scene?.getEngine().getDeltaTime() ?? 0) / 1000;
     this.playerMovement?.movementTick?.(delta);
@@ -306,9 +314,7 @@ export default class Player {
       this.playerMovement = new PlayerMovement(this, this.gameManager.scene!);
     }
  
-    this.gameManager.scene?.registerBeforeRender(() => {
-      this.tick();
-    });
+    this.gameManager.scene?.registerBeforeRender(this.tick.bind(this));
 
 
     // Emit events

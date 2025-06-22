@@ -30,8 +30,9 @@ func NewWorldHandler(zoneManager *ZoneManager, sessionManager *session.SessionMa
 func (wh *WorldHandler) HandlePacket(session *session.Session, data []byte) {
 	// Check if the message should be handled globally (e.g., login)
 	if wh.globalRegistry.ShouldHandleGlobally(data) {
-		wh.globalRegistry.HandleWorldPacket(session, data)
-		return
+		if !wh.globalRegistry.HandleWorldPacket(session, data) {
+			return
+		}
 	}
 
 	if !session.Authenticated {
@@ -43,6 +44,7 @@ func (wh *WorldHandler) HandlePacket(session *session.Session, data []byte) {
 		log.Printf("session %d has no zone assigned, cannot handle packet", session.SessionID)
 		return
 	}
+
 	// Route to the zone from the session and create if it doesn't exist
 	zone, _ := wh.zoneManager.GetOrCreate(session.ZoneID, session.InstanceID)
 	zone.HandleClientPacket(session, data)

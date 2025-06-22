@@ -217,9 +217,6 @@ export default class GameManager {
     if (this.musicManager) {
       this.musicManager.dispose();
     }
-    if (this.player) {
-      this.player.dispose();
-    }
     if (this.characterSelect) {
       this.characterSelect.dispose();
       this.characterSelect = null;
@@ -258,7 +255,7 @@ export default class GameManager {
     }
   }
 
-  public async loadZone(zoneName: string): Promise<void> {
+  public loadZone(zoneName: string): void {
     this.dispose();
     this.camera = new BABYLON.UniversalCamera(
       "__camera__",
@@ -280,7 +277,7 @@ export default class GameManager {
       this.player.dispose();
       this.player = null;
     }
-    this.player = new Player(this, this.Camera!);
+    this.player = new Player(this, this.Camera!, true);
     this.player?.Load(player as PlayerProfile);
   }
 }

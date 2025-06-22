@@ -4,14 +4,12 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"strings"
 
 	eq "github.com/knervous/eqgo/internal/api/capnp"
 	"github.com/knervous/eqgo/internal/api/opcodes"
 	entity "github.com/knervous/eqgo/internal/entity"
 	"github.com/knervous/eqgo/internal/quest"
 
-	db_character "github.com/knervous/eqgo/internal/db/character"
 	db_zone "github.com/knervous/eqgo/internal/db/zone"
 	"github.com/knervous/eqgo/internal/session"
 )
@@ -142,7 +140,6 @@ func HandleClientAnimation(z *ZoneInstance, ses *session.Session, payload []byte
 			)
 		}
 	}
-
 }
 
 func HandleRequestClientZoneChange(z *ZoneInstance, ses *session.Session, payload []byte) {
@@ -158,28 +155,7 @@ func HandleRequestClientZoneChange(z *ZoneInstance, ses *session.Session, payloa
 		return
 	}
 	clientEntry := z.ClientEntries[ses.SessionID]
-	if req.Type() == 0 {
-		req.SetX(float32(charData.X))
-		req.SetY(float32(charData.Y))
-		req.SetZ(float32(charData.Z))
-		req.SetHeading(float32(charData.Heading))
-		req.SetInstanceId(int32(charData.ZoneInstance))
-		req.SetZoneId(int32(charData.ZoneID))
-
-	} else {
-		// We are zoning from another zone
-		// Get validation logic later for this zone request, for now save off and bust cache
-
-		charData.X = float64(req.X())
-		charData.Y = float64(req.Y())
-		charData.Z = float64(req.Z())
-		charData.Heading = float64(req.Heading())
-		charData.ZoneID = uint32(req.ZoneId())
-		charData.ZoneInstance = uint32(req.InstanceId())
-		db_character.UpdateCharacter(charData, ses.AccountID)
-
-	}
-	dbZone, err := db_zone.GetZoneById(context.Background(), int(req.ZoneId()))
+	dbZone, err := db_zone.GetZoneById(context.Background(), int(charData.ZoneID))
 	if err != nil {
 		log.Printf("failed to get zone %d: %v", req.ZoneId, err)
 		return
@@ -210,9 +186,9 @@ func HandleRequestClientZoneChange(z *ZoneInstance, ses *session.Session, payloa
 	}
 	for i, zonePoint := range zonePoints {
 		zonePointProto := zp.At(i)
-		zonePointProto.SetX(float32(zonePoint.X))
-		zonePointProto.SetY(float32(zonePoint.Y))
-		zonePointProto.SetZ(float32(zonePoint.Z))
+		zonePointProto.SetX(float32(zonePoint.TargetX))
+		zonePointProto.SetY(float32(zonePoint.TargetY))
+		zonePointProto.SetZ(float32(zonePoint.TargetZ))
 		zonePointProto.SetZoneId(int32(zonePoint.TargetZoneID))
 		zonePointProto.SetZoneInstance(int32(zonePoint.TargetInstance))
 		zonePointProto.SetHeading(float32(zonePoint.Heading))
@@ -263,6 +239,7 @@ func HandleRequestClientZoneChange(z *ZoneInstance, ses *session.Session, payloa
 		spawn.SetCharClass(int32(npc.NpcData.Class))
 		spawn.SetLevel(int32(npc.NpcData.Level))
 		spawn.SetName(npc.Name())
+		spawn.SetFace(int32(npc.NpcData.Face))
 		spawn.SetSpawnId(int32(npc.ID()))
 		spawn.SetIsNpc(1)
 		spawn.SetGender(int32(npc.NpcData.Gender))
@@ -277,9 +254,6 @@ func HandleRequestClientZoneChange(z *ZoneInstance, ses *session.Session, payloa
 		spawn.SetCellX(int32(c[0]))
 		spawn.SetCellY(int32(c[1]))
 		spawn.SetCellZ(int32(c[2]))
-		if strings.Contains(npc.Name(), "Guard") {
-			// fmt.Println("Guard NPC sending:", npc.Name())
-		}
 		err = ses.SendStream(spawn.Message(), opcodes.ZoneSpawns)
 		if err != nil {
 			log.Printf("failed to send Spawn message: %v", err)

@@ -419,7 +419,7 @@ export class ZonePoint extends $.Struct {
   static readonly _capnp = {
     displayName: "ZonePoint",
     id: "c644c15adcdd09cb",
-    size: new $.ObjectSize(32, 0)
+    size: new $.ObjectSize(48, 0)
   };
   get iterator(): number {
     return $.utils.getInt32(0, this);
@@ -427,16 +427,16 @@ export class ZonePoint extends $.Struct {
   set iterator(value: number) {
     $.utils.setInt32(0, value, this);
   }
-  get y(): number {
+  get x(): number {
     return $.utils.getFloat32(4, this);
   }
-  set y(value: number) {
+  set x(value: number) {
     $.utils.setFloat32(4, value, this);
   }
-  get x(): number {
+  get y(): number {
     return $.utils.getFloat32(8, this);
   }
-  set x(value: number) {
+  set y(value: number) {
     $.utils.setFloat32(8, value, this);
   }
   get z(): number {
@@ -468,6 +468,24 @@ export class ZonePoint extends $.Struct {
   }
   set number(value: number) {
     $.utils.setInt32(28, value, this);
+  }
+  get targetX(): number {
+    return $.utils.getFloat32(32, this);
+  }
+  set targetX(value: number) {
+    $.utils.setFloat32(32, value, this);
+  }
+  get targetY(): number {
+    return $.utils.getFloat32(36, this);
+  }
+  set targetY(value: number) {
+    $.utils.setFloat32(36, value, this);
+  }
+  get targetZ(): number {
+    return $.utils.getFloat32(40, this);
+  }
+  set targetZ(value: number) {
+    $.utils.setFloat32(40, value, this);
   }
   toString(): string {
     return "ZonePoint_" + super.toString();

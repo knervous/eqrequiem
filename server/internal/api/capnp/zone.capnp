@@ -62,13 +62,16 @@ struct RequestClientZoneChange {
 
 struct ZonePoint {
   iterator     @0 :Int32;
-  y            @1 :Float32;
-  x            @2 :Float32;
+  x            @1 :Float32;
+  y            @2 :Float32;
   z            @3 :Float32;
   heading      @4 :Float32;
   zoneId       @5 :Int32;
   zoneInstance @6 :Int32;
   number       @7 :Int32;
+  targetX     @8 :Float32;
+  targetY     @9 :Float32;
+  targetZ     @10 :Float32;
 }
 
 struct ZoneSession {

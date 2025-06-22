@@ -12,7 +12,6 @@ import type GameManager from "@game/Manager/game-manager";
 export default class EntityPool {
   parent: BJS.Node;
   entities: Record<number, Entity> = {};
-  entityObjectContainer: BJS.Node | null = null;
   loadedPromiseResolve: () => void = () => {};
   loadedPromise: Promise<void> | null = null;
   entityCache: EntityCache | null = null;
@@ -27,10 +26,16 @@ export default class EntityPool {
   }
 
   dispose() {
-    if (this.entityObjectContainer) {
-      this.entityObjectContainer.dispose();
-      this.entityObjectContainer = null;
+    for (const entity of Object.values(this.entities)) {
+      entity.dispose();
     }
+    this.entities = {};
+    this.grid.dispose();
+    this.entities = {};
+    this.spawns = {};
+    this.loadedPromise = null;
+    this.loadedPromiseResolve = () => {};
+
   }
 
   async process() {
@@ -43,7 +48,7 @@ export default class EntityPool {
     }
 
     if (!spawn.name.includes('Connie')) {
-      //   return;
+    //  return;
     }
 
     this.spawns[spawn.spawnId] = spawn;

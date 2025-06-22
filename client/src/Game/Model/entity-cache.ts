@@ -8,7 +8,6 @@ import RACE_DATA from "@game/Constants/race-data";
 import { Entity } from "./entity";
 import { loadBasisTexture } from "./basis-texture";
 import { createVATShaderMaterial } from "./entity-material";
-import { charFileRegex } from "@game/Constants/constants";
 import { PlayerProfile } from "@game/Net/internal/api/capnp/player";
 import { textureFromBakedVertexDataHalfFloat } from "./vat-texture";
 import type GameManager from "@game/Manager/game-manager";
@@ -237,16 +236,9 @@ export class EntityCache {
             console.warn(`[EntityCache] Mesh ${mesh.name} has no material`);
             continue;
           }
-          // const match = mat.name.match(charFileRegex);
-          // if (!match) continue;
-          // const [, , piece, , texIdx] = match;
-          // mesh.metadata = {
-          //   ...(mesh.metadata || {}),
-          //   piece,
-          //   texIdx: +texIdx.trim(),
-          // };
           mat.dispose();
           mesh.material = shaderMaterial!;
+          mesh.parent = bucket;
         }
 
         // Clean up skeletons

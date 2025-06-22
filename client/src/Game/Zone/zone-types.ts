@@ -20,8 +20,13 @@ export interface Transform {
   }
   
   interface ZoneLineInfo {
-    type: number;
-    index: number;
+    type?: number;
+    index?: number;
+    rot?: number;
+    x?: number;
+    y?: number;
+    z?: number;
+    zoneIndex?: number;
   }
   
   interface Region {

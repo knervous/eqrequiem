@@ -8,7 +8,6 @@ import {
   PlayerProfile,
 } from "@game/Net/internal/api/capnp/player";
 import Player from "@game/Player/player";
-import { Nameplate } from "@game/Model/nameplate";
 import { supportedZones } from "@game/Constants/supportedZones";
 
 export default class CharacterSelect {
@@ -105,7 +104,7 @@ export default class CharacterSelect {
       try {
         if (this.faceCam) {
           this.cameraPosition = position.add(
-            new BABYLON.Vector3(5, 5, 0),
+            new BABYLON.Vector3(-7, 5, 0),
           ); // Move to the right of the head
           if (this.camera !== null) {
             this.camera.position = this.cameraPosition;

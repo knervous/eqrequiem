@@ -109,12 +109,9 @@ func (z *ZoneInstance) processSpawns() {
 		// Respawning
 		if !exists || now.After(nextSpawnTime) {
 			npcType, err := respawnNpc(*entry)
-
 			if err != nil {
-				fmt.Printf("Failed to respawn NPC for Spawn2 %d: %v\n", spawn2ID, err)
 				continue
 			}
-			//fmt.Println("Spawning NPC", npcType.Name)
 			npcID := z.nextEntityID
 			z.nextEntityID++
 			npc := &entity.NPC{
@@ -161,6 +158,7 @@ func (z *ZoneInstance) processSpawns() {
 				spawn.SetY(int32(entry.Spawn2.Y))
 				spawn.SetGender(int32(npcType.Gender))
 				spawn.SetZ(int32(entry.Spawn2.Z))
+				spawn.SetFace(int32(npcType.Face))
 				spawn.SetHelm(int32(npcType.Helmtexture))
 				spawn.SetBodytype(int32(npcType.Bodytype))
 				spawn.SetEquipChest(int32(npcType.Texture))

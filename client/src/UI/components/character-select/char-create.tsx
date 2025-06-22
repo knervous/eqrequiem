@@ -267,7 +267,7 @@ export const CharacterCreate = ({ setView, charInfo }) => {
   const toggleFaceIdx = useCallback((val) => () => {
     setFace((prev) => (prev + val < 0 ? 0 : prev + val > 7 ? 7 : prev + val));
     if (GameManager.instance?.CharacterSelect) {
-      GameManager.instance.CharacterSelect.character?.SwapFace(
+      GameManager.instance.CharacterSelect.character?.playerEntity?.setFace(
         face + val,
       );
     }

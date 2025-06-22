@@ -49,6 +49,12 @@ export class PlayerMovement {
       }
     });
   }
+  public dispose(){
+    this.scene.onKeyboardObservable.clear();
+    this.scene = null as any;
+    this.player = null as any;
+    this.physicsBody = null as any;
+  }
 
   private isActionPressed(action: string): boolean {
     const keyMap: Record<string, string> = {

@@ -11,18 +11,27 @@ export function capnpToPlainObject(obj: any): any {
   }
 
   // Handle arrays/lists
-  if (Array.isArray(obj) || obj._capnp?.type === 'list') {
-    return obj.map((item: any) => capnpToPlainObject(item));
+  if (typeof obj?.toArray === 'function') {
+    return obj.toArray().map((item: any) => capnpToPlainObject(item));
   }
 
   // Handle Cap'n Proto structs
   const plainObj: any = {};
   const proto = Object.getPrototypeOf(obj);
-  const properties = Object.getOwnPropertyNames(proto).filter(
+  const properties = Object.getOwnPropertyNames(proto).concat(Object.keys(obj)).filter(
     (key) => {
       const descriptor = Object.getOwnPropertyDescriptor(proto, key);
+      if (key.startsWith('_')) {
+        return false;
+      }
+      if (['byteOffset', 'segment'].includes(key)) {
+        return false; // Exclude internal Cap'n Proto fields
+      }
+      if (descriptor?.get) {
+        return true;
+      }
       // Only include getter properties, exclude methods and internal Cap'n Proto fields
-      return descriptor?.get && typeof obj[key] !== 'function' && !key.startsWith('_');
+      return typeof obj[key] !== 'function' && !key.startsWith('_');
     },
   );
 

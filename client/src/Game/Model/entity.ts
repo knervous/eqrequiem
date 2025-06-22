@@ -10,17 +10,11 @@ import {
 import { AnimationDefinitions } from "@game/Animation/animation-constants";
 import { Nameplate } from "./nameplate";
 import type { TextRenderer } from "@babylonjs/addons";
-import { sleep } from "@game/Constants/util";
+import { capnpToPlainObject, sleep } from "@game/Constants/util";
 import { PlayerProfile } from "@game/Net/internal/api/capnp/player";
 import type GameManager from "@game/Manager/game-manager";
 import { createTargetRingMaterial } from "./entity-select-ring";
 import { InventorySlot } from "@game/Player/player-constants";
-
-type BufferCache = {
-  [key: number]: BJS.Vector2;
-};
-
-const bufferCache: BufferCache = {};
 
 const modelOffset = {
   rat: 2.5,
@@ -570,6 +564,14 @@ export class Entity extends BABYLON.TransformNode {
 
   public currentAnimation: string | null = null;
 
+  public setFace(variation: number): void {  
+    if (!this.isHumanoid) {
+      return;
+    }
+    this.spawn.face = variation;
+    this.updateModelTextures();
+  } 
+
   public playAnimation(name: string, playThrough: boolean = false): void {
     const match = this.entityContainer.animations.find((a) => a.name === name);
     if (!match) {
@@ -600,9 +602,9 @@ export class Entity extends BABYLON.TransformNode {
     let model, piece, texIdx;
     const match = originalName.match(charFileRegex);
     if (!match) {
-      console.warn(
-        `[SwapTexture] Sub-material name ${originalName} does not match expected format`,
-      );
+      // console.warn(
+      //   `[SwapTexture] Sub-material name ${originalName} does not match expected format`,
+      // );
       // Next try robe
       const clkMatch = originalName.match(clkRegex);
       if (clkMatch) {
@@ -614,9 +616,9 @@ export class Entity extends BABYLON.TransformNode {
           ) ?? -1
         );
       } else {
-        console.warn(
-          `[SwapTexture] Sub-material name ${originalName} does not match expected format`,
-        );
+        // console.warn(
+        //   `[SwapTexture] Sub-material name ${originalName} does not match expected format`,
+        // );
         return -1;
       }
     } else {
@@ -627,16 +629,15 @@ export class Entity extends BABYLON.TransformNode {
       if (piece === MaterialPrefixes.Face && this.isHumanoid) {
         // For humanoids, use the face texture variation
         variation = this.spawn.face;
-        const faceVariation = texIdx[0];
         const pieceNumber = texIdx[1];
         const baseIndex = this.entityContainer?.textureAtlas.indexOf(
-          `${model}${piece}00${faceVariation}${pieceNumber}`,
+          `${model}${piece}00${variation}${pieceNumber}`,
         );
         if (baseIndex !== undefined && baseIndex >= 0) {
           return baseIndex; // Adjust index based on variation
         } else {
           return this.entityContainer?.textureAtlas.indexOf(
-            `${model}${piece}00${+faceVariation + 1}${pieceNumber}`,
+            `${model}${piece}00${+variation + 1}${pieceNumber}`,
           ) ?? -1;
         }
       } else  {
