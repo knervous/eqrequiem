@@ -161,49 +161,11 @@ export default class Player {
     this.raycastTickCounter++;
     if (this.raycastTickCounter >= this.raycastCheckInterval) {
       this.raycastTickCounter = 0; // Reset counter
-      this.checkBelowAndReposition();
+      this.playerEntity.checkBelowAndReposition();
     }
   }
 
-  // Updated method using physics raycast
-  private checkBelowAndReposition() {
-    if (!this.playerEntity || !this.gameManager.scene) {
-      return;
-    }
-
-    const physics = this.gameManager.scene.getPhysicsEngine();
-    const plugin = physics?.getPhysicsPlugin() as BJS.HavokPlugin;
-    if (!physics || !plugin) {
-      console.warn("[Player] Physics engine or Havok plugin not available");
-      return;
-    }
-
-    const position = this.playerEntity.spawnPosition;
-    if (!position) {
-      return;
-    }
-    const rayOrigin = new BABYLON.Vector3(position.x, position.y, position.z);
-    const result = new BABYLON.PhysicsRaycastResult();
-
-    // Downward raycast
-    const downEnd = rayOrigin.add(new BABYLON.Vector3(0, -1000, 0)); // 10 units down
-    plugin.raycast(rayOrigin, downEnd, result);
-
-    if (!result.hasHit) {
-      // No static body below, cast upward
-      const upEnd = rayOrigin.add(new BABYLON.Vector3(0, 10000, 0)); // 100 units up
-      result.reset();
-      plugin.raycast(rayOrigin, upEnd, result);
-
-      if (result.hasHit && result.body?.motionType === BABYLON.PhysicsMotionType.STATIC) {
-        // Reposition player just below the hit point
-        const hitPoint = result.hitPoint;
-        const newPosition = new BABYLON.Vector3(hitPoint.x, hitPoint.y - 0.1, hitPoint.z);
-        this.setPosition(newPosition.x, newPosition.y + 5, newPosition.z);
-        console.log(`[Player] Repositioned to ${newPosition.toString()} due to no ground below`);
-      }
-    }
-  }
+  
 
   public input_pan(delta: number) {
     this.playerCamera.adjustCameraDistance(delta < 0 ? -1 : 1);

@@ -30,7 +30,7 @@ export class Nameplate {
     if (!camera) return;
 
     Nameplate.textRenderers.forEach((renderer) => {
-      renderer.render(camera?.getViewMatrix(), camera?.getProjectionMatrix());
+      renderer.render(camera!.getViewMatrix(), camera!.getProjectionMatrix());
     });
   }
 

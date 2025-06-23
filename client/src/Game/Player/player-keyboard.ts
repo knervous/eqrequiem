@@ -2,7 +2,8 @@ import BABYLON from "@bjs";
 import type * as BJS from "@babylonjs/core";
 import type Player from "./player";
 import emitter from "@game/Events/events";
-
+import type { Entity } from "@game/Model/entity";
+import { CommandHandler } from "@game/ChatCommands/command-handler";
 export class PlayerKeyboard {
   private player: Player;
   private scene: BJS.Scene;
@@ -12,14 +13,18 @@ export class PlayerKeyboard {
     ctrl: false,
     shift: false,
   };
-  private closestEntities: Array<{ entity: typeof this.player.playerEntity; dist: number }> = [];
+  private closestEntities: Array<{ entity: Entity; dist: number }> = [];
   private currentSelectionIndex: number = -1;
+  private boundHandler: (kbInfo: BJS.KeyboardInfo) => void;
 
   constructor(player: Player, scene: BJS.Scene) {
     console.log('CTOR PlayerKeyboard');
     this.player = player;
     this.scene = scene;
     this.handler = (kbInfo) => {
+      if (kbInfo.event.repeat) {
+        return; // Ignore repeated key events
+      }
       const code = kbInfo.event.key.toLowerCase();
       switch (kbInfo.type) {
         case BABYLON.KeyboardEventTypes.KEYDOWN:
@@ -33,8 +38,9 @@ export class PlayerKeyboard {
       this.modifierKeys.ctrl = kbInfo.event.ctrlKey;
       this.modifierKeys.shift = kbInfo.event.shiftKey;
     };
+    this.boundHandler = this.handler.bind(this);
     // Register keyboard listeners
-    this.scene.onKeyboardObservable.add(this.handler.bind(this));
+    this.scene.onKeyboardObservable.add(this.boundHandler);
     emitter.on('playerMovement', this.resetIndex.bind(this)); // Reset index on player movement
   }
 
@@ -44,7 +50,10 @@ export class PlayerKeyboard {
   }
 
   public dispose() {
-    this.scene.onKeyboardObservable.removeCallback(this.handler);
+    if (!this.scene.onKeyboardObservable.removeCallback(this.boundHandler)) {
+      console.warn('Failed to remove keyboard handler from scene');
+    }
+    console.log('DTOR PlayerKeyboard');
     emitter.off('playerMovement', this.resetIndex);
     this.handler = () => {}; // Clear the handler to prevent memory leaks
   }
@@ -79,6 +88,10 @@ export class PlayerKeyboard {
 
   private handleKeyDownEvent(key: string) {
     switch (key) {
+      case 'h': {
+        CommandHandler.instance.commandHail();
+        break;
+      }
       case 'tab': {
         console.log("Tab key pressed");
         // Prevent default tab behavior (e.g., browser focus change)

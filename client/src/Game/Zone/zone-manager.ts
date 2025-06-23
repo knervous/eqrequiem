@@ -252,11 +252,11 @@ export class ZoneManager {
         console.log("Version: ", metadata.version);
         console.log("Current zone", this.CurrentZone);
         await this.instantiateObjects(metadata);
-        this.lightManager.loadLights(
-          this.lightContainer!,
-          this.parent.scene!,
-          metadata.lights,
-        );
+        // this.lightManager.loadLights(
+        //   this.lightContainer!,
+        //   this.parent.scene!,
+        //   metadata.lights,
+        // );
         if (this.CurrentZone?.zonePoints) {
           this.regionManager.instantiateRegions(this.GameManager.scene!, metadata, this.GameManager.CurrentZone?.zonePoints);
         }

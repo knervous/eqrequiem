@@ -27,21 +27,24 @@ export function createTargetRingMaterial(scene: BJS.Scene): [BJS.StandardMateria
   const texture = new BABYLON.ProceduralTexture("circles", 512, "circles", scene);
   texture.hasAlpha = true;
 
-  texture.setFloat("numCircles", 2);
+  texture.setFloat("numCircles", 4);
   texture.setFloat("radius", 0.5);
-  texture.setFloat("width", 1.0);
-  texture.setFloat("intensity", 0.1);
+  texture.setFloat("width", 0.75);
+  texture.setFloat("intensity", 0.3);
   texture.setColor4("color", new BABYLON.Color4(1, 0, 1, 1));
   texture.setFloat("time", time);
 
-  //
-
   const material = new BABYLON.StandardMaterial("mat");
-  material.diffuseTexture = texture;
-
+  material.emissiveTexture = texture;
+  // *also* drive transparency
+  material.opacityTexture = texture;
+  // ensure we're alpha-blending
+  material.transparencyMode = BABYLON.Material.MATERIAL_ALPHABLEND;
+  material.disableLighting = true;
+  material.diffuseTexture = null;
   scene.onReadyObservable.addOnce(() => {
     scene.onBeforeRenderObservable.add(() => {
-      time += 0.01 * scene.getAnimationRatio();
+      time -= 0.01 * scene.getAnimationRatio();
       texture.setFloat("time", time);
     });
   });

@@ -30,6 +30,10 @@ export class Entity extends BABYLON.TransformNode {
   public spawnScale: number = 1.5; // Default scaling factor for entities
   public hidden: boolean = true;
 
+  public get cleanName(): string {
+    return this.spawn.name.replaceAll("_", " ");
+  }
+
   private static pickerPrototype: BJS.Mesh;
   private static targetRing: BJS.Mesh;
   private static currentlySelected: Entity | null = null;
@@ -95,14 +99,25 @@ export class Entity extends BABYLON.TransformNode {
     }
 
     if (!Entity.targetRing) {
-      const targetRing = BABYLON.MeshBuilder.CreateGround(
+      const targetRing = BABYLON.MeshBuilder.CreateTorus(
         "selectionRing",
         {
-          width: 10,
-          height: 10,
+          diameter: 5,       // outer diameter = 2 × your desired radius (5 × 2)
+          thickness: 4,     // tube thickness — make this as big as you like to “fill” the hole
+          tessellation: 64,   // smoothness
+          updatable: true,    // if you ever want to tweak it at runtime
         },
         this.scene,
       );
+      const positions = targetRing.getVerticesData(BABYLON.VertexBuffer.PositionKind)!;
+      const uvs = new Array(positions.length/3*2);
+      for (let i = 0, j = 0; i < positions.length; i += 3, j += 2) {
+        const x = positions[i];    // ring’s local X
+        const z = positions[i+2];  // ring’s local Z
+        uvs[j]   = (x / 10) + 0.5;  // x∈[-5..+5] → [0..1]
+        uvs[j+1] = (z / 10) + 0.5;  // z∈[-5..+5] → [0..1]
+      }
+      targetRing.setVerticesData(BABYLON.VertexBuffer.UVKind, uvs, true);
       const [mat, texture] = createTargetRingMaterial(this.scene);
       Entity.targetTexture = texture;
       targetRing.material = mat;
@@ -177,6 +192,23 @@ export class Entity extends BABYLON.TransformNode {
     ]);
   }
 
+  public getClosestSpawns(n: number= 1, filter: (spawn: Entity) => boolean = () => true): Entity[] {
+    const entities = this.gameManager.ZoneManager?.EntityPool?.entities ?? {};
+    const myPos = this.spawnPosition;
+    // Create an array of entities with their distances
+    return Object.values(entities)
+      .filter((entity) => !entity.hidden && entity !== this)
+      .map((entity) => ({
+        entity,
+        dist: Math.sqrt(BABYLON.Vector3.DistanceSquared(myPos, entity.spawnPosition)),
+      })).
+      filter((entity) => filter(entity.entity))
+      .sort((a, b) => a.dist - b.dist) // Sort by distance
+      .slice(0, n) // Take the 5 closest
+      .map((entry) => entry.entity);
+  }
+
+
   public setSelected(selected: boolean, color?: BJS.Color4): void {
     const targetRing = Entity.targetRing!;
     if (selected) {
@@ -196,13 +228,18 @@ export class Entity extends BABYLON.TransformNode {
       if (result.hasHit) {
         const hitPoint = result.hitPoint;
         offset = hitPoint.y - rayOrigin.y; // Calculate offset based on hit point
+
+        // Then half the width
+        offset -= 1.75;
       }
 
       if (color) {
+        color.a = 0.5;
         Entity.targetTexture?.setColor4("color", color);
       }
       targetRing.position.set(0, offset + 0.1, 0);
       targetRing.setEnabled(true);
+      console.log('Set target ring', targetRing);
     } else {
       // only hide if *this* entity is the one that owns it
       if (Entity.currentlySelected === this) {
@@ -213,9 +250,6 @@ export class Entity extends BABYLON.TransformNode {
   }
 
   public dispose() {
-    if (this.isTearingDown || this.hidden) return;
-    this.isTearingDown = true;
-
     // Dispose all instances
     for (const instance of this.bodyInstances) {
       instance.dispose();
@@ -256,9 +290,6 @@ export class Entity extends BABYLON.TransformNode {
     this.nameplate = null;
     this.nameplateNode = null;
 
-    // Set flags
-    this.isTearingDown = false;
-    this.hidden = true;
     super.dispose();
   }
 
@@ -329,7 +360,7 @@ export class Entity extends BABYLON.TransformNode {
     await this.instantiateNameplate([this.spawn.name.replaceAll("_", " ")]);
 
     this.updateModelTextures();
-
+    this.checkBelowAndReposition();
     // this.debugWireframe?.createWireframe();
     this.isInitializing = false;
     this.hidden = false;
@@ -482,7 +513,7 @@ export class Entity extends BABYLON.TransformNode {
   }
 
   public async instantiateNameplate(textLines: string[]): Promise<void> {
-    this.nameplate?.dispose();
+    Nameplate.removeNameplate(this.nameplate!);
     this.nameplateNode?.dispose();
     this.nameplate = await Nameplate.createNameplate(this.scene);
     if (!this.nameplate) {
@@ -559,6 +590,35 @@ export class Entity extends BABYLON.TransformNode {
       mesh.instancedBuffers.textureAttributes = vec;
       secondaryInstance.instancedBuffers.textureAttributes = vec;
       this.secondaryInstances.push(secondaryInstance);
+    }
+  }
+
+  public checkBelowAndReposition() {
+    const plugin = this.physicsPlugin;
+    const position = this.spawnPosition;
+    if (!position) {
+      return;
+    }
+    const rayOrigin = new BABYLON.Vector3(position.x, position.y, position.z);
+    const result = new BABYLON.PhysicsRaycastResult();
+
+    // Downward raycast
+    const downEnd = rayOrigin.add(new BABYLON.Vector3(0, -1000, 0)); // 10 units down
+    plugin.raycast(rayOrigin, downEnd, result);
+
+    if (!result.hasHit) {
+      // No static body below, cast upward
+      const upEnd = rayOrigin.add(new BABYLON.Vector3(0, 10000, 0)); // 100 units up
+      result.reset();
+      plugin.raycast(rayOrigin, upEnd, result);
+
+      if (result.hasHit && result.body?.motionType === BABYLON.PhysicsMotionType.STATIC) {
+        // Reposition player just below the hit point
+        const hitPoint = result.hitPoint;
+        const newPosition = new BABYLON.Vector3(hitPoint.x, hitPoint.y - 0.1, hitPoint.z);
+        this.setPosition(newPosition.x, newPosition.y + 5, newPosition.z);
+        console.log(`[Player] Repositioned to ${newPosition.toString()} due to no ground below`);
+      }
     }
   }
 

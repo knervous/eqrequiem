@@ -1,6 +1,5 @@
 // src/hooks/use-chat-input.tsx
-import { useState, useRef, useCallback, useMemo } from "react";
-import { useUIContext } from "@ui/components/context";
+import { useState, useRef, useCallback } from "react";
 import { CommandHandler } from "@game/ChatCommands/command-handler";
 
 export const useChatInput = () => {
@@ -9,8 +8,6 @@ export const useChatInput = () => {
   const [historyIndex, setHistoryIndex] = useState<number>(-1);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const setMode = useUIContext((state) => state.setMode);
-  const commandHandler = useMemo(() => new CommandHandler(setMode), [setMode]);
 
   const handleInputChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -32,7 +29,7 @@ export const useChatInput = () => {
           if (!inputValue.startsWith('/')) {
             cmd = `/say ${cmd}`;
           }
-          commandHandler.parseCommand(cmd.slice(1));
+          CommandHandler.instance.parseCommand(cmd.slice(1));
           setInputValue("");
           setTimeout(() => inputRef.current?.blur(), 10);
         }
@@ -56,7 +53,7 @@ export const useChatInput = () => {
         }
       }
     },
-    [inputValue, historyStack, historyIndex, commandHandler],
+    [inputValue, historyStack, historyIndex],
   );
 
   return {

@@ -12,7 +12,7 @@ const VS_GL = `
 
         // Varyings → fragment
         varying vec2 vUV;
-        flat out int vSlice;
+        flat varying int vSlice;
 
         // Uniforms
         uniform mat4 worldViewProjection;
@@ -45,7 +45,7 @@ const FS_GL = `
 
         // Varyings from vertex
         varying vec2 vUV;
-        flat in int vSlice;
+        flat varying int vSlice;
 
         // On WebGPU, sampler2DArray is still bound as sampler2DArray in GLSL;
         // Babylon.js will transpile this to WGSL under the hood :contentReference[oaicite:2]{index=2}.
