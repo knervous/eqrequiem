@@ -3,15 +3,24 @@ import { convertDDS2Jimp } from "./image-processing.js";
 import { Jimp } from "jimp";
 import TgaLoader from "tga-js";
 
-const BUF_BMP = Buffer.from([0x42, 0x4d]); // "BM" file signature
+// File signatures
+const BUF_BMP = Buffer.from([0x42, 0x4d]);       // "BM"
+const BUF_PNG = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
 
 /**
- *
- * @param {ArrayBuffer} buf
- * @returns
+ * @param {Uint8Array|Buffer} buf
+ * @returns {boolean}
  */
 function isBitmap(buf) {
-  return Buffer.compare(BUF_BMP, buf.slice(0, 2)) === 0;
+  return Buffer.compare(BUF_BMP, Buffer.from(buf.slice(0, 2))) === 0;
+}
+
+/**
+ * @param {Uint8Array|Buffer} buf
+ * @returns {boolean}
+ */
+function isPng(buf) {
+  return Buffer.compare(BUF_PNG, Buffer.from(buf.slice(0, 8))) === 0;
 }
 
 /**
@@ -23,10 +32,9 @@ function isBitmap(buf) {
  * @returns {Buffer}
  */
 function convertBGRAToRGBA(imageData, width, height, channels) {
-  if (channels !== 4) return imageData; // Only convert for RGBA (32-bit)
+  if (channels !== 4) return imageData;
   const buffer = Buffer.from(imageData);
   for (let i = 0; i < width * height * 4; i += 4) {
-    // Swap red (index i) and blue (index i+2)
     const red = buffer[i];
     buffer[i] = buffer[i + 2];
     buffer[i + 2] = red;
@@ -41,10 +49,9 @@ function convertBGRAToRGBA(imageData, width, height, channels) {
 function isTGA(buf) {
   try {
     const tga = new TgaLoader();
-
     tga.load(new Uint8Array(buf));
-    return tga.header.width > 0 && tga.header.height > 0; // Valid TGA with non-zero dimensions
-  } catch (e) {
+    return tga.header.width > 0 && tga.header.height > 0;
+  } catch {
     return false;
   }
 }
@@ -52,154 +59,125 @@ function isTGA(buf) {
 /**
  * @param {ArrayBuffer} data
  * @param {string} name
- * @returns {Promise<sharp.Sharp>}
+ * @returns {Promise<sharp.Sharp|null>}
  */
 export async function convertToSharp(data, name) {
-  if (isBitmap(new Uint8Array(data))) {
-    // header for bitmap
+  const buf = new Uint8Array(data);
+
+  if (isBitmap(buf)) {
     try {
       const jimpBmp = await Jimp.read(data);
-      return await sharp(jimpBmp.bitmap.data, {
+      return sharp(jimpBmp.bitmap.data, {
         raw: {
           width: jimpBmp.bitmap.width,
           height: jimpBmp.bitmap.height,
           channels: 4,
         },
-      })
+      });
     } catch (e) {
       console.warn("Error processing BMP:", e, name);
       return null;
     }
+
+  } else if (isPng(buf)) {
+    try {
+      // Let sharp auto-detect PNG
+      return sharp(Buffer.from(data));
+    } catch (e) {
+      console.warn("Error processing PNG:", e, name);
+      return null;
+    }
+
   } else if (isTGA(data)) {
-    // Handle TGA
     try {
       const tga = new TgaLoader();
-
       tga.load(new Uint8Array(data));
-      const {
-        header: { width, height, pixelDepth },
-        imageData,
-      } = tga;
+      const { header: { width, height, pixelDepth }, imageData } = tga;
       const channels = pixelDepth === 32 ? 4 : 3;
-      // Convert BGRA to RGBA for TGA images
-      const correctedImageData = convertBGRAToRGBA(imageData, width, height, channels);
-      return await sharp(correctedImageData, {
-        raw: {
-          width,
-          height,
-          channels,
-        },
-      })
-        .ensureAlpha() // Add alpha channel if missing
+      const corrected = convertBGRAToRGBA(imageData, width, height, channels);
+      return sharp(corrected, { raw: { width, height, channels } })
+        .ensureAlpha()
         .flip();
     } catch (e) {
       console.warn("Error processing TGA:", e.message, name);
       return null;
     }
+
   } else {
-    // otherwise DDS
-    let decompressed, dds;
+    // DDS fallback
     try {
-      [decompressed, dds] = convertDDS2Jimp(new Uint8Array(data), name);
-    } catch (e) {
-      console.log("Error decompressing DDS", e);
-      return null;
-    }
-    const w = dds.mipmaps[0].width;
-    const h = dds.mipmaps[0].height;
-    try {
+      const [decompressed, dds] = convertDDS2Jimp(new Uint8Array(data), name);
+      const w = dds.mipmaps[0].width;
+      const h = dds.mipmaps[0].height;
       const pixelCount = w * h * 4;
       const imgBuffer = Buffer.from(decompressed.slice(0, pixelCount));
-
-      return await sharp(imgBuffer, {
-        raw: { width: w, height: h, channels: 4 },
-      })
-        .flip() // Flip Y-axis
+      return sharp(imgBuffer, { raw: { width: w, height: h, channels: 4 } }).flip();
     } catch (e) {
-      console.warn("Error processing DDS to WebP:", e, name);
+      console.warn("Error processing DDS:", e, name);
       return null;
     }
   }
 }
 
-
 /**
  * @param {ArrayBuffer} data
  * @param {string} name
- * @returns {Promise<ArrayBuffer>}
+ * @returns {Promise<ArrayBuffer|null>}
  */
 export async function convertToWebP(data, name) {
-  if (isBitmap(new Uint8Array(data))) {
-    // header for bitmap
+  const buf = new Uint8Array(data);
+
+  if (isBitmap(buf)) {
     try {
       const jimpBmp = await Jimp.read(data);
-      const webpBuffer = await sharp(jimpBmp.bitmap.data, {
-        raw: {
-          width: jimpBmp.bitmap.width,
-          height: jimpBmp.bitmap.height,
-          channels: 4,
-        },
-      })
-        .webp({ quality: 80 })
-        .toBuffer();
-      return webpBuffer;
+      return await sharp(jimpBmp.bitmap.data, {
+        raw: { width: jimpBmp.bitmap.width, height: jimpBmp.bitmap.height, channels: 4 }
+      }).webp({ quality: 80 }).toBuffer();
     } catch (e) {
       console.warn("Error processing BMP:", e, name);
       return null;
     }
+
+  } else if (isPng(buf)) {
+    try {
+      return await sharp(Buffer.from(data))
+        .webp({ quality: 80 })
+        .toBuffer();
+    } catch (e) {
+      console.warn("Error processing PNG:", e, name);
+      return null;
+    }
+
   } else if (isTGA(data)) {
-    // Handle TGA
     try {
       const tga = new TgaLoader();
-
       tga.load(new Uint8Array(data));
-      const {
-        header: { width, height, pixelDepth },
-        imageData,
-      } = tga;
+      const { header: { width, height, pixelDepth }, imageData } = tga;
       const channels = pixelDepth === 32 ? 4 : 3;
-      // Convert BGRA to RGBA for TGA images
-      const correctedImageData = convertBGRAToRGBA(imageData, width, height, channels);
-      const webpBuffer = await sharp(correctedImageData, {
-        raw: {
-          width,
-          height,
-          channels,
-        },
-      })
-        .ensureAlpha() // Add alpha channel if missing
-        .webp({ quality: 80 })
+      const corrected = convertBGRAToRGBA(imageData, width, height, channels);
+      return await sharp(corrected, { raw: { width, height, channels } })
+        .ensureAlpha()
         .flip()
+        .webp({ quality: 80 })
         .toBuffer();
-      return webpBuffer;
     } catch (e) {
       console.warn("Error processing TGA:", e.message, name);
       return null;
     }
+
   } else {
-    // otherwise DDS
-    let decompressed, dds;
     try {
-      [decompressed, dds] = convertDDS2Jimp(new Uint8Array(data), name);
-    } catch (e) {
-      console.log("Error decompressing DDS", e);
-      return null;
-    }
-    const w = dds.mipmaps[0].width;
-    const h = dds.mipmaps[0].height;
-    try {
+      const [decompressed, dds] = convertDDS2Jimp(new Uint8Array(data), name);
+      const w = dds.mipmaps[0].width;
+      const h = dds.mipmaps[0].height;
       const pixelCount = w * h * 4;
       const imgBuffer = Buffer.from(decompressed.slice(0, pixelCount));
-
-      const webpBuffer = await sharp(imgBuffer, {
-        raw: { width: w, height: h, channels: 4 },
-      })
-        .flip() // Flip Y-axis
+      return await sharp(imgBuffer, { raw: { width: w, height: h, channels: 4 } })
+        .flip()
         .webp({ quality: 80 })
         .toBuffer();
-      return webpBuffer;
     } catch (e) {
-      console.warn("Error processing DDS to WebP:", e, name);
+      console.warn("Error processing DDS:", e, name);
       return null;
     }
   }

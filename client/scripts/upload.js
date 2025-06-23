@@ -47,15 +47,16 @@ const onlyTextures = process.argv[3] && process.argv[3] === 'textures';
 const allowedRootFolders = new Set(["uifiles", "eqrequiem"]);
 const allowedRootFiles = new Set(["eqstr_us.txt"]);
 let allowedExtensions = new Set([
-  ".txt",
-  ".json",
-  ".basis",
+  //".txt",
+  // ".json",
+  // ".basis",
   // ".glb", prefer .babylon
-  // ".webp",
-  // ".dds",
+  ".webp",
+  ".dds",
   // ".wav", // only if it changes uncomment
   // ".mid",
-  // ".tga",
+  ".tga",
+  ".png",
   // ".babylon",
   // ".bin"
 ]);
@@ -71,7 +72,7 @@ if (onlyTextures) {
   ]);
 }
 
-const limit = pLimit(20);
+const limit = pLimit(250);
 const tasks = [];
 
 function getContentType(fileName) {
@@ -159,7 +160,7 @@ async function prepareStagingDir(srcDir, stagingDir) {
       await prepareStagingDir(srcPath, destPath);
     } else {
       const ext = extname(entry.name).toLowerCase();
-      if (ext === ".dds" || ext === ".tga") {
+      if (ext === ".dds" || ext === ".tga" || ext === ".png") {
         await convertToWebPFile(srcPath, stagingDir);
       } else {
         await copyFile(srcPath, destPath);
@@ -197,7 +198,9 @@ async function uploadStreamed(
   await blobClient.uploadStream(sourceStream, 4 * 1024 * 1024, 5, {
     metadata,
     blobHTTPHeaders: headers,
-  });
+  }).catch(e => {
+    console.error(`Failed to upload ${blobName}:`, e.message);
+  })
   console.log(`Uploaded → ${blobName}`);
 }
 
@@ -224,7 +227,7 @@ async function processFile(fullPath, containerClient, relativeKey, prefix) {
   }
   targetName = targetName.toLowerCase();
   console.log('Process file', fullPath)
-  if (ext === ".dds" || ext === ".tga") {
+  if (ext === ".dds" || ext === ".tga" || ext === ".png") {
     const tempDir = await mkdtemp(join(tmpdir(), "image-webp-"));
     try {
       const webpPath = await convertToWebPFile(fullPath, tempDir);
@@ -426,8 +429,13 @@ async function uploadFilesToAzure() {
       }
     }
   }
-
+  const initialTaskCount = tasks.length;
   await Promise.all(tasks);
+  // Check if any new tasks were queued after the initial batch
+  while (tasks.length > initialTaskCount) {
+    const currentTasks = tasks.splice(initialTaskCount);
+    await Promise.all(currentTasks);
+  }
   console.log("All uploads complete.");
 }
 
