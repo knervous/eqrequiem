@@ -339,13 +339,22 @@ export class CommandHandler {
 
   @command("goto")
   commandGoto(args: string[]) {
-    if (args.length < 3) {
-      addChatLine("Usage: /goto x y z");
-      return;
+    let x, y, z;
+    if (args.length !== 3) {
+      if (Player.instance?.Target) {
+        const targetPosition = Player.instance.Target.spawnPosition;
+        x = targetPosition.x;
+        y = targetPosition.y;
+        z = targetPosition.z;
+      } else {
+        addChatLine("Usage: /goto x y z");
+        return;
+      }
+    } else {
+      x = parseFloat(args[0]);
+      y = parseFloat(args[1]);
+      z = parseFloat(args[2]);
     }
-    const x = parseFloat(args[0]);
-    const y = parseFloat(args[1]);
-    const z = parseFloat(args[2]);
 
     Player.instance?.setPosition(x, y, z);
   }
