@@ -11,9 +11,9 @@ import EntityPool from "./entity-pool";
 import ObjectCache from "@/Game/Model/object-cache";
 import { ZoneMetadata } from "./zone-types";
 import { swapMaterialTexture } from "@game/Model/bjs-utils";
-import { UIEvents } from "@ui/events/ui-events";
 import { supportedZones } from "@game/Constants/supportedZones";
 import { ChatMessage } from "@ui/components/game/chat/chat-types";
+import emitter from "@game/Events/events";
 
 export class ZoneManager {
   get RegionManager(): RegionManager {
@@ -109,9 +109,10 @@ export class ZoneManager {
       message: `You have entered ${longName}`,
       chanNum: 0,
       color: "#ddd",
+      type: 0,
     };
     setTimeout(() => {
-      UIEvents.emit("chat", msg);
+      emitter.emit("chatMessage", msg);
     }, 500);
     console.log(`You have entered ${longName}`);
     this.zoneName = zoneName;

@@ -1,4 +1,3 @@
-import { UIEvents } from "@ui/events/ui-events";
 import { Trie } from "./trie";
 import Player from "@game/Player/player";
 import GameManager from "@game/Manager/game-manager";
@@ -11,6 +10,7 @@ import {
   RequestClientZoneChange,
   ZoneChangeType,
 } from "@game/Net/internal/api/capnp/zone";
+import emitter from "@game/Events/events";
 
 export function command(name: string): MethodDecorator {
   return (target: object, propertyKey: string | symbol) => {
@@ -22,18 +22,18 @@ export function command(name: string): MethodDecorator {
   };
 }
 
-const addChatLine = (message: string, options: object = {}) => {
-  UIEvents.emit("chat", { type: 0, message, color: "#ddd", ...options });
+const addChatLine = (message: string) => {
+  emitter.emit("chatMessage", { type: 0, message, color: "#ddd", chanNum: 0 });
 };
 
-const addChatLines = (lines: string | string[], options: object = {}) => {
+const addChatLines = (lines: string | string[]) => {
   const lineArray = Array.isArray(lines)
     ? lines
     : lines
       .trim()
       .split("\n")
       .map((line) => line.trim());
-  lineArray.forEach((line) => addChatLine(line, options));
+  lineArray.forEach((line) => addChatLine(line));
 };
 
 export class CommandHandler {

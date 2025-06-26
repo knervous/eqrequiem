@@ -1,0 +1,104 @@
+import React, { useEffect, useState, useRef } from "react";
+import { Allotment, AllotmentHandle } from "allotment";
+import "allotment/dist/style.css";
+import { StoneLeft } from "./left/stone-left";
+import { Box } from "@mui/material";
+import { StoneRight } from "./right/stone-right";
+import {  StoneMiddle } from "./middle/stone-middle";
+import GameManager from "@game/Manager/game-manager";
+
+export const StoneUIBase: React.FC = () => {
+  const [leftPaneWidth, setLeftPaneWidth] = useState(130);
+  const [rightPaneWidth, setRightPaneWidth] = useState(130);
+  const [chatHeight, setChatHeight] = useState(200); // Default chat height
+  const viewportRef = useRef<HTMLDivElement>(null);
+  const allotmentRef = useRef<AllotmentHandle>(null);
+  const isDraggingRef = useRef(false); // Track if user is dragging
+
+  useEffect(() => {
+    const onResize = () => {
+      if (isDraggingRef.current) return; //
+
+      const scaleFactor = window.innerHeight / 930;
+      const newLeftPaneWidth = Math.max(50, Math.min(120, 130 * scaleFactor));
+      const newRightPaneWidth = Math.max(50, Math.min(125, 130 * scaleFactor));
+
+      setLeftPaneWidth(newLeftPaneWidth);
+      setRightPaneWidth(newRightPaneWidth);
+
+      if (allotmentRef.current) {
+        allotmentRef.current.resize([
+          newLeftPaneWidth,
+          window.innerWidth - newLeftPaneWidth - newRightPaneWidth,
+          newRightPaneWidth,
+        ]);
+      }
+    };
+
+    onResize();
+
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  return (
+    <Box sx={{ width: "100vw", height: "100vh", background: "transparent", position: "fixed" }}>
+      <Allotment
+        vertical={false}
+        defaultSizes={[130, window.innerWidth - 130 - 130, 130]}
+        ref={allotmentRef}
+        onDragStart={() => {
+          isDraggingRef.current = true; // Set dragging flag
+        }}
+        onDragEnd={() => {
+          isDraggingRef.current = false; // Clear dragging flag
+        }}
+        onChange={(sizes) => {
+          setLeftPaneWidth(sizes[0]);
+          setRightPaneWidth(sizes[2]);
+        }}
+      >
+        {/* Left pane */}
+        <Allotment.Pane minSize={50} preferredSize={130} maxSize={120}>
+          <StoneLeft width={leftPaneWidth} />
+        </Allotment.Pane>
+
+        {/* Center pane with vertical split */}
+        <Allotment.Pane minSize={100}>
+          <Allotment
+            vertical={true}
+            defaultSizes={[window.innerHeight - 200, 200]}
+            onChange={(sizes) => {
+              setChatHeight(sizes[1]);
+              console.log('Change size', sizes);
+              if (viewportRef.current) {
+                // Get bounding rect relative to the window
+                const rect = viewportRef.current.getBoundingClientRect();
+                GameManager.instance.setNewViewport(
+                  rect.x, rect.y, rect.width, rect.height,
+                );
+              }
+            }}
+          >
+            {/* Top pane (passthrough) */}
+            <Allotment.Pane minSize={100}>
+              <div ref={viewportRef} style={{ background: "transparent", height: "100%" }} />
+            </Allotment.Pane>
+
+            {/* Bottom pane (container) */}
+            <Allotment.Pane minSize={100} preferredSize={200}>
+              <StoneMiddle
+                width={window.innerWidth - leftPaneWidth - rightPaneWidth}
+              />
+            </Allotment.Pane>
+          </Allotment>
+        </Allotment.Pane>
+
+        {/* Right pane */}
+        <Allotment.Pane minSize={50} preferredSize={125} maxSize={125}>
+          <StoneRight width={rightPaneWidth} />
+        </Allotment.Pane>
+      </Allotment>
+    </Box>
+  );
+};

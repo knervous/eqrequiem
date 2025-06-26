@@ -14,6 +14,7 @@ type Props = {
   doClose?: () => void;
   closable?: boolean;
   draggable?: boolean;
+  useMargin?: boolean;
 };
 
 export const UiTitleComponent: React.FC<Props> = (props: Props) => {
@@ -24,7 +25,7 @@ export const UiTitleComponent: React.FC<Props> = (props: Props) => {
         userSelect: "none",
         position: "absolute",
         width: "100%",
-        marginTop: "-7px",
+        marginTop: props.useMargin === false ? 0 : "-7px",
         zIndex: 10,
       }}
       onMouseDown={props.draggable ? props.handleDragMouseDown : undefined}

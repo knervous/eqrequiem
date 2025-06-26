@@ -9,6 +9,7 @@ import { useDrag } from "../hooks/use-drag";
 import { useResize } from "../hooks/use-resize";
 import { UiTitleComponent } from "./ui-title";
 import "./ui-window.css";
+import { useStoneImage } from "@ui/hooks/use-image";
 
 type Props = {
   state: UiWindow;
@@ -19,6 +20,7 @@ type Props = {
   draggable?: boolean;
   closable?: boolean;
   doClose?: () => void;
+  background?: string; // Background image path
 };
 
 export const UiWindowComponent: React.FC<Props> = ({
@@ -30,6 +32,7 @@ export const UiWindowComponent: React.FC<Props> = ({
   closable,
   doClose,
   draggable = true,
+  background = '',
 }) => {
   const dispatcher = useDispatch();
   const { fixed, fixedWidth = 200, fixedHeight = 200 } = state;
@@ -81,6 +84,11 @@ export const UiWindowComponent: React.FC<Props> = ({
     dispatcher(actions.setWindowCollapsed(windowName, minimized, index));
   }, [minimized, dispatcher, windowName, index]);
   // Memoized window styles with minimize behavior
+
+
+  const bg = useStoneImage(background, true);
+
+  //console.log("Background image for bg", background, bg);
   const windowStyles = useMemo(() => {
     const baseHeight = minimized ? 0 : title ? 30 : 10; // Title bar height or drag handle height
     return {
@@ -89,10 +97,11 @@ export const UiWindowComponent: React.FC<Props> = ({
       left: `${x}px`,
       width: `${width}px`,
       height: minimized ? `${baseHeight}px` : `${height}px`,
+      backgroundImage: bg ? `url(${bg.image})` : undefined,
       backgroundColor: "rgba(0, 0, 0, 0.7)",
       transition: resize.isResizing ? "" : "height 0.2s ease-in-out", // Smooth height transition
     };
-  }, [x, y, width, height, minimized, title, resize]);
+  }, [x, y, width, height, minimized, title, resize, bg]);
 
   return (
     <Box className="ui-window" style={windowStyles} data-ui-window>

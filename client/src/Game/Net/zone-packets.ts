@@ -3,10 +3,9 @@ import { WorldSocket } from "@ui/net/instances";
 import { OpCodes } from "./opcodes";
 import { NewZone } from "./internal/api/capnp/zone";
 import { PlayerProfile } from "./internal/api/capnp/player";
-import { ChannelMessage, EntityAnimation, EntityPositionUpdate, Spawn, Spawns } from "./internal/api/capnp/common";
-import { UIEvents } from "@ui/events/ui-events";
-import { ChatMessage } from "@ui/components/game/chat/chat-types";
+import { ChannelMessage, EntityAnimation, EntityPositionUpdate, Spawn } from "./internal/api/capnp/common";
 import Player from "@game/Player/player";
+import emitter from "@game/Events/events";
 
 
 export function opCodeHandler(opCode: OpCodes, type: any): MethodDecorator {
@@ -68,10 +67,11 @@ export class ZonePacketHandler {
 
   @opCodeHandler(OpCodes.ChannelMessage, ChannelMessage)
   processChannelMessage(channelMessage: ChannelMessage) {
-    const msg: ChatMessage = {
+    const msg = {
       message: channelMessage.message,
       chanNum: channelMessage.chanNum,
       color: "#ddd",
+      type: 0,
     };
     switch(channelMessage.chanNum) { 
       case -1:
@@ -87,6 +87,6 @@ export class ZonePacketHandler {
       default:
         break;
     }
-    UIEvents.emit("chat", msg);
+    emitter.emit("chatMessage", msg);
   }
 }

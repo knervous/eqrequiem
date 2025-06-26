@@ -4,6 +4,14 @@ import { UiWindowComponent } from "../../../common/ui-window";
 import { useUIContext } from "../../context";
 import { DevPlayer } from "./dev-player";
 import GameManager from "@game/Manager/game-manager";
+import atlas from "../../../util/atlas";
+import stoneAtlas from "../../../util/atlas-stone";
+import sakAtlas from "../../../util/atlas-sak";
+import { useImage, useSakImage, useStoneImage } from "../../../hooks/use-image";
+import { AtlasGallery } from "./dev-ui-gallery";
+
+
+
 
 // TabPanel component to handle tab content
 interface TabPanelProps {
@@ -50,7 +58,7 @@ export const DevWindowComponent: React.FC = () => {
   const tabStyle = {
     color: "white",
     fontSize: "13px",
-    width: "50%",
+    width: "20%",
     minHeight: "24px", // Override MUI default min-height
     padding: "0 8px", // Reduce padding for a tighter look
     margin: 0, // Remove any margin
@@ -99,6 +107,24 @@ export const DevWindowComponent: React.FC = () => {
               id="dev-tab-1"
               aria-controls="dev-tabpanel-1"
             />
+            <Tab
+              sx={tabStyle}
+              label="UI Gallery"
+              id="dev-tab-2"
+              aria-controls="dev-tabpanel-2"
+            />
+            <Tab
+              sx={tabStyle}
+              label="Stone UI Gallery"
+              id="dev-tab-3"
+              aria-controls="dev-tabpanel-3"
+            />
+            <Tab
+              sx={tabStyle}
+              label="Sak UI Gallery"
+              id="dev-tab-4"
+              aria-controls="dev-tabpanel-4"
+            />
           </Tabs>
         </Box>
 
@@ -124,6 +150,15 @@ export const DevWindowComponent: React.FC = () => {
               max={24}
             />
           </FormControl>
+        </TabPanel>
+        <TabPanel value={tabValue} index={2}>
+          <AtlasGallery atlasData={atlas} useImageHook={useImage} title="Default UI" />
+        </TabPanel>
+        <TabPanel value={tabValue} index={3}>
+          <AtlasGallery atlasData={stoneAtlas} useImageHook={useStoneImage} title="Stone UI" />
+        </TabPanel>
+        <TabPanel value={tabValue} index={4}>
+          <AtlasGallery atlasData={sakAtlas} useImageHook={useSakImage} title="Sak UI" />
         </TabPanel>
       </Box>
     </UiWindowComponent>

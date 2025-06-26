@@ -3,14 +3,14 @@ import { Box } from "@mui/material";
 
 import { UiWindowComponent } from "../../../common/ui-window";
 import { useUIContext } from "../../context";
-import { useImage } from "../../../hooks/use-image";
+import { useImage, useStoneImage } from "../../../hooks/use-image";
 import Player from "@game/Player/player";
 
 // Atlas entries for the compass components
 export const CompassWindowComponent: React.FC = () => {
   const state = useUIContext((state) => state.ui.compassWindow);
-  const overlay = useImage("A_CompassOverlay");
-  const strip = useImage("A_CompassStrip", true);
+  const overlay = useStoneImage("A_CompassOverlay");
+  const strip = useStoneImage("A_CompassStrip", true);
   const [offset, setOffset] = useState(0);
   const prevRotationRef = useRef(0); // Track previous rotation
   const totalDegreesRef = useRef(0); // Accumulate total degrees for continuity

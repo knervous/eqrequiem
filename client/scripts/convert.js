@@ -32,15 +32,19 @@ function isPng(buf) {
  * @returns {Buffer}
  */
 function convertBGRAToRGBA(imageData, width, height, channels) {
-  if (channels !== 4) return imageData;
+  // only images with 3 or 4 channels need swapping
+  if (channels < 3) return imageData;
   const buffer = Buffer.from(imageData);
-  for (let i = 0; i < width * height * 4; i += 4) {
-    const red = buffer[i];
-    buffer[i] = buffer[i + 2];
-    buffer[i + 2] = red;
+  // step by the number of channels (3 for BGR, 4 for BGRA)
+  for (let i = 0; i < width * height * channels; i += channels) {
+    // swap byte 0 (blue) with byte 2 (red)
+    const blue = buffer[i];
+    buffer[i]     = buffer[i + 2];
+    buffer[i + 2] = blue;
   }
   return buffer;
 }
+
 
 /**
  * @param {ArrayBuffer} buf
@@ -153,7 +157,7 @@ export async function convertToWebP(data, name) {
       const tga = new TgaLoader();
       tga.load(new Uint8Array(data));
       const { header: { width, height, pixelDepth }, imageData } = tga;
-      const channels = pixelDepth === 32 ? 4 : 3;
+      const channels = pixelDepth === 32 ? 4 : pixelDepth === 24 ? 3 : 2;
       const corrected = convertBGRAToRGBA(imageData, width, height, channels);
       return await sharp(corrected, { raw: { width, height, channels } })
         .ensureAlpha()

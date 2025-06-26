@@ -185,6 +185,7 @@ export const CharacterSelectUIComponent: React.FC = () => {
       {view === VIEWS.CHAR_SELECT ? (
         <UiWindowComponent
           title="Characters"
+          background="TrackingBG_TX"
           state={{
             fixed: true,
             x: 30,

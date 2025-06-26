@@ -55,6 +55,7 @@ let allowedExtensions = new Set([
   ".dds",
   // ".wav", // only if it changes uncomment
   // ".mid",
+  ".gif",
   ".tga",
   ".png",
   // ".babylon",
@@ -72,7 +73,7 @@ if (onlyTextures) {
   ]);
 }
 
-const limit = pLimit(250);
+const limit = pLimit(200);
 const tasks = [];
 
 function getContentType(fileName) {
@@ -216,6 +217,9 @@ function wavToMp3Stream(filePath) {
 }
 
 async function processFile(fullPath, containerClient, relativeKey, prefix) {
+  if (!fullPath.includes('sakui')) {
+    return;
+  }
   const ext = extname(fullPath).toLowerCase();
   let targetName;
   let src;

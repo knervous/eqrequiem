@@ -11,10 +11,10 @@ import { GameUIComponent } from "./game";
 import { CharacterSelectUIComponent } from "./character-select";
 import { StringTable } from "../util/string-table";
 import { fsBindings } from "@/Core/bindings";
-import { UIEvents } from "@ui/events/ui-events";
 
 import "./overlay.css";
 import { ZonePacketHandler } from "@game/Net/zone-packets";
+import emitter from "@game/Events/events";
 
 
 let storedState: UiState | string | null = localStorage.getItem(stateKey);
@@ -45,9 +45,9 @@ export const Overlay: React.FC<Props> = (props: Props) => {
 
   useEffect(() => {
     if (mode === 'game') {
-      UIEvents.emit("chat", { type: 0, message: 'Welcome to EQ Requiem!', color: '#ddd' });
-      UIEvents.emit("chat", { type: 0, message: 'This is currently a demo sandbox with development features.', color: '#ddd' });
-      UIEvents.emit("chat", { type: 0, message: 'Type /help to get started.', color: '#ddd' });
+      emitter.emit("chatMessage", { chanNum: 0, type: 0, message: 'Welcome to EQ Requiem!', color: '#ddd' });
+      emitter.emit("chatMessage", { chanNum: 0, type: 0, message: 'This is currently a demo sandbox with development features.', color: '#ddd' });
+      emitter.emit("chatMessage", { chanNum: 0, type: 0, message: 'Type /help to get started.', color: '#ddd' });
     }
 
   }, [mode]);

@@ -1,19 +1,19 @@
 import { Box } from "@mui/material";
 import React, { useMemo } from "react";
-import { useImage } from "../hooks/use-image";
+import { useImage, useSakImage } from "../hooks/use-image";
 
 type Props = {
   children?: React.ReactNode;
 };
 
 export const Theme: React.FC<Props> = ({ children }) => {
-  const defaultCursor = useImage("A_DefaultCursor", true);
-  const resizeEWCursor = useImage("A_CursorResizeEW", true);
-  const resizeNESWCursor = useImage("A_CursorResizeNESW", true);
-  const resizeNSCursor = useImage("A_CursorResizeNS", true);
-  const resizeNWSECursor = useImage("A_CursorResizeNWSE", true);
-  const dragCursor = useImage("A_CursorDrag", true);
-  const caretCursor = useImage("A_CursorCaret", true);
+  const defaultCursor = useSakImage("A_DefaultCursor", true);
+  const resizeEWCursor = useSakImage("A_CursorResizeEW", true);
+  const resizeNESWCursor = useSakImage("A_CursorResizeNESW", true);
+  const resizeNSCursor = useSakImage("A_CursorResizeNS", true);
+  const resizeNWSECursor = useSakImage("A_CursorResizeNWSE", true);
+  const dragCursor = useSakImage("A_CursorDrag", true);
+  const caretCursor = useSakImage("A_CursorCaret", true);
   const sxStyles = useMemo(
     () => ({
       cursor: defaultCursor.image

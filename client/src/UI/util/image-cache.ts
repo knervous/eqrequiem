@@ -24,6 +24,29 @@ function cropImage(base64Url: string, cropX: number, cropY: number, cropWidth: n
 export class ImageCache {
   private static cache: { [key: string]: string } = {};
 
+  public static async getRawImageUrl(
+    folder: string,
+    path: string,
+    type: string) : Promise<string> {
+    const cacheKey = `${folder}${path}`;
+    if (!this.cache[cacheKey]) {
+      const data = await fsBindings.getFile(folder, path);
+      if (data instanceof ArrayBuffer) {
+        // Convert WebP buffer to base64 data URL
+        const blob = new Blob([data], { type });
+        const imageUrl = await new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.readAsDataURL(blob);
+        });
+        this.cache[cacheKey] = imageUrl;
+      } else {
+        this.cache[cacheKey] = ""; // Cache empty string if no data
+      }
+    }
+    return this.cache[cacheKey] ?? "";
+  }
+
   public static async getImageUrl(
     folder: string,
     path: string,

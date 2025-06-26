@@ -29,6 +29,7 @@ export default class GameManager {
   private worldTickInterval: number = -1;
   private lastPlayer: Partial<PlayerProfile> | null = null;
   private player: Player | null = null;
+  private cameraViewport: BJS.Viewport | null = null;
   public havokPlugin: BJS.HavokPlugin | null = null;
 
   public CurrentZone: NewZone | null = null;
@@ -63,6 +64,29 @@ export default class GameManager {
     this.resize = this.resize.bind(this);
     this.renderLoop = this.renderLoop.bind(this);
   }
+  public setNewViewport(x: number, y: number, width: number, height: number) {
+    if (!this.scene || !this.camera) return;
+
+    const engine       = this.scene.getEngine();
+    const rw           = engine.getRenderWidth();   // full internal pixel width
+    const rh           = engine.getRenderHeight();  // full internal pixel height
+
+    // Convert CSS pixels → normalized [0,1]
+    // NOTE: you may need to translate your rect.x/y
+    // so that (0,0) is bottom‐left of the canvas.
+    const xNorm        = x / rw;
+    const yNorm        = (rh - y - height) / rh;    // invert Y from top‐origin to bottom‐origin
+    const widthNorm    = width  / rw;
+    const heightNorm   = height / rh;
+
+    this.camera.viewport = new BABYLON.Viewport(
+      xNorm,
+      yNorm,
+      widthNorm,
+      heightNorm,
+    );
+  }
+
 
   async loadPhysicsEngine() {
     if (!this.scene) {

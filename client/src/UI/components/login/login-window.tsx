@@ -310,6 +310,9 @@ export const LoginWindowComponent: React.FC = () => {
         >
           <UiButtonComponent
             buttonName="A_EQLS_LargeBtn"
+            textSx={{
+              color: 'white !important',
+            }}
             text={"Logout"}
             onClick={() => {
               document.cookie =
@@ -324,6 +327,9 @@ export const LoginWindowComponent: React.FC = () => {
             buttonName="A_EQLS_LargeBtn"
             //isDisabled={import.meta.env.VITE_LOCAL_DEV !== 'true'}
             text={"Enter World"}
+            textSx={{
+              color: 'white !important',
+            }}
             onClick={connectToWorld}
             icon={
               <DiscordIcon
@@ -336,6 +342,9 @@ export const LoginWindowComponent: React.FC = () => {
           sx={{ float: "right", marginRight: "60px", marginTop: "-10px" }}
           buttonName="A_EQLS_LargeBtn"
           text={"Offline Mode"}
+          textSx={{
+            color: 'white !important',
+          }}
           onClick={enterSandbox}
         />
       </Box>
