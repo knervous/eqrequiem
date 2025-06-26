@@ -73,7 +73,6 @@ export class PlayerCamera {
   }
 
   private handleMouseDown = (e: MouseEvent) => {
-    console.log('BUTTON', e.button);
     this.mouseInputButton(e.button, false, e.offsetX, e.offsetY);
   };
 

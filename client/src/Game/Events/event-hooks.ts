@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import emitter from "./events";
 import type { Entity } from "@game/Model/entity";
+import Player from "@game/Player/player";
 
 export const usePlayerName = () => {
-  const [playerName, setPlayerName] = useState<string>("Soandso");
+  const [playerName, setPlayerName] = useState<string>(Player.instance?.player?.name ?? "Soandso");
   useEffect(() => {
     const cb = (name: string) => {
       setPlayerName(name);

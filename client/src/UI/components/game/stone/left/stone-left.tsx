@@ -1,11 +1,11 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Box, Stack, Typography } from "@mui/material";
-import {
-  useRawImage,
-  useSakImage,
-  useSakImages,
-} from "@ui/hooks/use-image";
+import { useRawImage, useSakImage, useSakImages } from "@ui/hooks/use-image";
 import { UiButtonComponent } from "@ui/common/ui-button";
+import { PlayerProfile } from "@game/Net/internal/api/capnp/player";
+import { CLASS_DATA_NAMES } from "@game/Constants/class-data";
+import emitter from "@game/Events/events";
+import Player from "@game/Player/player";
 
 // Configuration for all stone frame pieces
 const stoneConfigs = [
@@ -48,6 +48,7 @@ const StoneRow: React.FC<{
 const imageNames = stoneConfigs.map(({ name }) => `${name}`);
 export const StoneLeft: React.FC<{ width: number }> = ({ width }) => {
   const bgImages = useSakImages(imageNames, true);
+  const [playerClass, setPlayerClass] = useState(CLASS_DATA_NAMES[Player.instance?.player?.charClass ?? 1]);
   const stoneImages = useMemo(
     () =>
       stoneConfigs.reduce(
@@ -64,21 +65,23 @@ export const StoneLeft: React.FC<{ width: number }> = ({ width }) => {
     [bgImages],
   );
   // Other assets
-  const classGif = useRawImage("uifiles/stone", "druid.gif", "image/gif");
+  const classGif = useRawImage(
+    "uifiles/stone",
+    `${playerClass}.gif`,
+    "image/gif",
+  );
   const spellGem = useSakImage("Jib_SpellGemBG", true);
   const invImage = useSakImage("HBW_BG_TXUP", true);
   const hbImage = useSakImage("HBW_BG_TXDN", true);
 
-  const bottomHeight = (invImage.entry.height * 2) + (hbImage.entry.height * 2) + 30; // Scale down to match other elements
-
-
+  const bottomHeight =
+    invImage.entry.height * 2 + hbImage.entry.height * 2 + 30; // Scale down to match other elements
 
   // Calculate scale factor (clamped)
   const scale = useMemo(() => {
     const sW = width / 300;
     return sW;
   }, [width]);
-
 
   // Frame row heights
   const topHeight = stoneImages.topLeft.entry.height * scale;
@@ -102,6 +105,15 @@ export const StoneLeft: React.FC<{ width: number }> = ({ width }) => {
     [spellGem],
   );
 
+  useEffect(() => {
+    const cb = (player: PlayerProfile) => {
+      setPlayerClass(CLASS_DATA_NAMES[player.charClass] || "warrior");
+    };
+    emitter.on("setPlayer", cb);
+    return () => {
+      emitter.off("setPlayer", cb);
+    };
+  }, []);
 
   return (
     <Box
@@ -109,7 +121,6 @@ export const StoneLeft: React.FC<{ width: number }> = ({ width }) => {
         width: "100%",
         height: "100%",
         overflow: "hidden",
-        //opacity: isActive ? 1 : 0.5,
         transition: "opacity 0.5s ease",
       }}
     >
@@ -149,7 +160,11 @@ export const StoneLeft: React.FC<{ width: number }> = ({ width }) => {
           {/* Top half: buttons & gems */}
           <Stack
             direction="row"
-            sx={{ width: "100%", height: `calc(100% - ${bottomHeight}px)`, ml: "12px" }}
+            sx={{
+              width: "100%",
+              height: `calc(100% - ${bottomHeight}px)`,
+              ml: "12px",
+            }}
           >
             {/* Left buttons */}
             <Stack
@@ -188,16 +203,18 @@ export const StoneLeft: React.FC<{ width: number }> = ({ width }) => {
                   mt: 2,
                 }}
               >
-                <UiButtonComponent
-                  onClick={() => console.log("Spells")}
-                  sx={{
-                    position: "absolute",
-                    top: 300,
-                    left: "50%",
-                    transform: "translateX(-50%) scale(1.1)",
-                  }}
-                  buttonName="A_BTN_SPELLS"
-                />
+                {!["warrior", "rogue", "monk"].includes(playerClass) && (
+                  <UiButtonComponent
+                    onClick={() => console.log("Spells")}
+                    sx={{
+                      position: "absolute",
+                      top: 315,
+                      left: "50%",
+                      transform: "translateX(-50%) scale(1.1)",
+                    }}
+                    buttonName="A_BTN_SPELLS"
+                  />
+                )}
               </Box>
             </Stack>
 
@@ -226,7 +243,7 @@ export const StoneLeft: React.FC<{ width: number }> = ({ width }) => {
                 //transform: `scale(${2})`,
               }}
             />
-          
+
             <Box
               sx={{
                 width: hbImage.entry.width * 2,
@@ -248,7 +265,7 @@ export const StoneLeft: React.FC<{ width: number }> = ({ width }) => {
                   buttonName="A_LeftArrowBtn"
                 />
                 <Typography sx={{ fontSize: 35, color: "white", mx: 3 }}>
-                1
+                  1
                 </Typography>
                 <UiButtonComponent
                   scale={0.75 / scale}

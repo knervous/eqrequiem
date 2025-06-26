@@ -69,7 +69,6 @@ export default class Player {
 
   private raycastTickCounter: number = 0;
   private readonly raycastCheckInterval: number = 10;
-
   constructor(
     gameManager: GameManager,
     camera: BJS.UniversalCamera,
@@ -79,7 +78,6 @@ export default class Player {
     this.gameManager = gameManager;
     this.playerCamera = new PlayerCamera(this, camera);
     this.playerKeyboard = new PlayerKeyboard(this, gameManager.scene!);
-    this.camera = camera;
     Player.instance = this;
     (window as any).player = this;
   }
@@ -281,6 +279,7 @@ export default class Player {
 
     // Emit events
     emitter.emit("playerName", this.player.name);
+    emitter.emit("setPlayer", this.player);
   }
 
   public playAnimation(
