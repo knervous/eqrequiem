@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect, useMemo } from "react";
+import React, { useMemo } from "react";
 import { Box, Stack, Typography } from "@mui/material";
 import {
   useRawImage,
@@ -19,29 +19,6 @@ const stoneConfigs = [
   { key: "bot", name: "A_ClassicBottom", bgSize: "repeat-x" },
   { key: "botRight", name: "A_ClassicBottomRight", bgSize: "cover" },
 ];
-
-// Hook for hover/fade behavior
-const useIdle = (timeout = 2000) => {
-  const [active, setActive] = useState(true);
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const onMouseEnter = () => {
-    if (timer.current) clearTimeout(timer.current);
-    setActive(true);
-  };
-
-  const onMouseLeave = () => {
-    timer.current = setTimeout(() => setActive(false), timeout);
-  };
-
-  useEffect(() => {
-    return () => {
-      if (timer.current) clearTimeout(timer.current);
-    };
-  }, []);
-
-  return { active, handlers: { onMouseEnter, onMouseLeave } };
-};
 
 // Component to render a row of stone pieces
 const StoneRow: React.FC<{
@@ -102,8 +79,6 @@ export const StoneLeft: React.FC<{ width: number }> = ({ width }) => {
     return sW;
   }, [width]);
 
-  // Hover/fade handlers
-  const { active: isActive, handlers } = useIdle(2000);
 
   // Frame row heights
   const topHeight = stoneImages.topLeft.entry.height * scale;
@@ -137,7 +112,6 @@ export const StoneLeft: React.FC<{ width: number }> = ({ width }) => {
         //opacity: isActive ? 1 : 0.5,
         transition: "opacity 0.5s ease",
       }}
-      {...handlers}
     >
       {/* Frame */}
       <StoneRow
@@ -161,8 +135,6 @@ export const StoneLeft: React.FC<{ width: number }> = ({ width }) => {
 
       {/* Overlay UI */}
       <Box
-        onMouseEnter={handlers.onMouseEnter}
-        onMouseLeave={handlers.onMouseLeave}
         sx={{ position: "absolute", top: 0, left: 0, width, height: "100vh" }}
       >
         <Box

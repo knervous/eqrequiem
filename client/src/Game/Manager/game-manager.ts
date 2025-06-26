@@ -8,6 +8,7 @@ import { ZoneManager } from "@game/Zone/zone-manager";
 import { PlayerProfile } from "@game/Net/internal/api/capnp/player";
 import HavokPhysics from "@babylonjs/havok";
 import { NewZone } from "@game/Net/internal/api/capnp/zone";
+import type { Inspector } from '@babylonjs/inspector';
 
 declare const window: Window;
 
@@ -200,6 +201,8 @@ export default class GameManager {
     }
   }
 
+  private inspector: Inspector | null = null;
+  private instantiatingInspector: boolean = false;
   async keyDown(e: BJS.IKeyboardEvent) {
     switch (`${e?.key}`?.toLowerCase?.()) {
       case "i": {
@@ -209,14 +212,18 @@ export default class GameManager {
         if (e?.target?.tagName === "INPUT") {
           return;
         }
-        let inspector;
-        await import("@babylonjs/inspector").then((i) => {
-          inspector = i.Inspector;
-        });
-        if (inspector.IsVisible) {
-          inspector.Hide();
+        if (this.instantiatingInspector) {
+          return;
+        }
+        if (this.inspector?.IsVisible) {
+          this.inspector.Hide();
         } else {
-          inspector.Show(this.scene, {
+          this.instantiatingInspector = true;
+          await import("@babylonjs/inspector").then((i) => {
+            this.inspector = i.Inspector;
+          });
+          this.instantiatingInspector = false;
+          this.inspector.Show(this.scene, {
             embedMode: true,
             overlay: true,
             handleResize: true,

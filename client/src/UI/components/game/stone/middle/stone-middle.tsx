@@ -1,14 +1,10 @@
 // src/components/ChatWindowComponent.tsx
 import React, { useEffect, useMemo, useState } from "react";
 import { Box, Stack, TextField } from "@mui/material";
-import { ChatWindow } from "../../../../state/initial-state";
-import { UiAction } from "../../../../state/reducer";
 import { useChatInput } from "../../../../hooks/use-chat-input";
-import { useChatFocus } from "../../../../hooks/use-chat-focus";
-import { ChatMessage } from "../../chat/chat-types";
 import { UiTitleComponent } from "@ui/common/ui-title";
-import emitter from "@game/Events/events";
-import { useSakImage, useStoneImage } from "@ui/hooks/use-image";
+import emitter, { ChatMessage } from "@game/Events/events";
+import { useSakImage } from "@ui/hooks/use-image";
 
 export const StoneMiddle: React.FC<{ width: number }> = ({ width }) => {
   const {
@@ -30,11 +26,21 @@ export const StoneMiddle: React.FC<{ width: number }> = ({ width }) => {
     };
   }, []);
 
-  useChatFocus(true, inputRef, inputValue, handleInputChange);
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "/" && inputRef.current !== document.activeElement) {
+        inputRef.current?.focus();
+        handleInputChange({ target: { value: e.key } } as React.ChangeEvent<HTMLInputElement>);
+      } else if (e.key === "Enter" && inputRef.current !== document.activeElement) {
+        inputRef.current?.focus();
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [inputRef, handleInputChange]);
 
   const bg = useSakImage("BG_Dark2", true);
   console.log("bg", bg);
-  // Scroll to the latest message
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
   }, [messages, messagesEndRef]);

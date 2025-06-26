@@ -10,7 +10,6 @@ import GameManager from "@game/Manager/game-manager";
 export const StoneUIBase: React.FC = () => {
   const [leftPaneWidth, setLeftPaneWidth] = useState(130);
   const [rightPaneWidth, setRightPaneWidth] = useState(130);
-  const [chatHeight, setChatHeight] = useState(200); // Default chat height
   const viewportRef = useRef<HTMLDivElement>(null);
   const allotmentRef = useRef<AllotmentHandle>(null);
   const isDraggingRef = useRef(false); // Track if user is dragging
@@ -68,9 +67,7 @@ export const StoneUIBase: React.FC = () => {
           <Allotment
             vertical={true}
             defaultSizes={[window.innerHeight - 200, 200]}
-            onChange={(sizes) => {
-              setChatHeight(sizes[1]);
-              console.log('Change size', sizes);
+            onChange={() => {
               if (viewportRef.current) {
                 // Get bounding rect relative to the window
                 const rect = viewportRef.current.getBoundingClientRect();
