@@ -90,6 +90,10 @@ export class PlayerKeyboard {
         CommandHandler.instance.commandHail();
         break;
       }
+      case 'i': {
+        emitter.emit('toggleInventory');
+        break;
+      }
       case 'tab': {
         console.log("Tab key pressed");
         // Prevent default tab behavior (e.g., browser focus change)

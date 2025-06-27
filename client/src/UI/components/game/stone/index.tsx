@@ -4,12 +4,15 @@ import "allotment/dist/style.css";
 import { StoneLeft } from "./left/stone-left";
 import { Box } from "@mui/material";
 import { StoneRight } from "./right/stone-right";
-import { StoneMiddle } from "./middle/stone-middle";
+import { StoneMiddleBottom } from "./middle/stone-middle-bottom";
 import GameManager from "@game/Manager/game-manager";
+import { StoneMiddleTop } from "./middle/top/stone-middle-top";
 
 export const StoneUIBase: React.FC = () => {
   const [leftPaneWidth, setLeftPaneWidth] = useState(130);
   const [rightPaneWidth, setRightPaneWidth] = useState(130);
+  const [viewportHeight, setViewportHeight] = useState(window.innerHeight - 200);
+  const [scaleFactor, setScaleFactor] = useState(1);
   const viewportRef = useRef<HTMLDivElement>(null);
   const allotmentRef = useRef<AllotmentHandle>(null);
   const isDraggingRef = useRef(false); // Track if user is dragging
@@ -19,6 +22,7 @@ export const StoneUIBase: React.FC = () => {
       if (isDraggingRef.current) return; //
 
       const scaleFactor = window.innerHeight / 930;
+      setScaleFactor(scaleFactor);
       const newLeftPaneWidth = Math.max(50, Math.min(120, 130 * scaleFactor));
       const newRightPaneWidth = Math.max(50, Math.min(125, 130 * scaleFactor));
 
@@ -74,8 +78,12 @@ export const StoneUIBase: React.FC = () => {
           <Allotment
             vertical={true}
             defaultSizes={[window.innerHeight - 200, 200]}
-            onChange={() => {
+            onChange={(sizes) => {
               if (viewportRef.current) {
+                // Update viewport height based on the center pane size
+                setViewportHeight(
+                  sizes[0], // Subtract height of bottom pane
+                );
                 // Get bounding rect relative to the window
                 const rect = viewportRef.current.getBoundingClientRect();
                 GameManager.instance.setNewViewport(
@@ -93,16 +101,19 @@ export const StoneUIBase: React.FC = () => {
                 id={'ui-viewport'}
                 ref={viewportRef}
                 sx={{
+                  // position: "absolute",
+                  //zIndex: 1, 
                   pointerEvents: "none",
                   background: "transparent",
                   height: "100%",
                 }}
               />
+              <StoneMiddleTop scale={scaleFactor} width={window.innerWidth - leftPaneWidth - rightPaneWidth} height={viewportHeight} />
             </Allotment.Pane>
 
             {/* Bottom pane (container) */}
             <Allotment.Pane minSize={100} preferredSize={200}>
-              <StoneMiddle
+              <StoneMiddleBottom
                 width={window.innerWidth - leftPaneWidth - rightPaneWidth}
               />
             </Allotment.Pane>

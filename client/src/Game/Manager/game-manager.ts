@@ -30,7 +30,6 @@ export default class GameManager {
   private worldTickInterval: number = -1;
   private lastPlayer: Partial<PlayerProfile> | null = null;
   private player: Player | null = null;
-  private cameraViewport: BJS.Viewport | null = null;
   public havokPlugin: BJS.HavokPlugin | null = null;
 
   public CurrentZone: NewZone | null = null;
@@ -50,6 +49,11 @@ export default class GameManager {
     return this.camera;
   }
 
+  private secondaryCamera: BJS.UniversalCamera | null = null;
+  get SecondaryCamera(): BJS.UniversalCamera | null {
+    return this.secondaryCamera;
+  } 
+
   private static _instance: GameManager | null = null;
   public static get instance(): GameManager {
     if (!this._instance) {
@@ -65,16 +69,64 @@ export default class GameManager {
     this.resize = this.resize.bind(this);
     this.renderLoop = this.renderLoop.bind(this);
   }
+
+  public initializeSecondaryCamera() {
+    if (!this.scene) {
+      console.error("Scene is not initialized");
+      return;
+    }
+    if (this.secondaryCamera) {
+      this.secondaryCamera.dispose();
+    }
+    this.secondaryCamera = new BABYLON.UniversalCamera(
+      "__secondary_camera__",
+      new BABYLON.Vector3(0, 0, 0),
+      this.scene,
+    );
+    this.secondaryCamera.viewport = new BABYLON.Viewport(0, 0, 1, 1);
+    this.secondaryCamera.attachControl(this.canvas!, true);
+    this.scene.activeCameras = [this.Camera!, this.secondaryCamera];
+  }
+
+  public removeSecondaryCamera() {
+    if (this.secondaryCamera) {
+      this.secondaryCamera.dispose();
+      this.secondaryCamera = null;
+    }
+    if (this.scene) {
+      this.scene.activeCameras = [this.Camera!];
+    }
+  }
+
+  public setInventoryViewport(
+    x: number,
+    y: number,
+    width: number,
+    height: number) {
+    if (!this.scene || !this.secondaryCamera) return;
+    const engine       = this.scene.getEngine();
+    const rw           = engine.getRenderWidth();   // full internal pixel width
+    const rh           = engine.getRenderHeight();  // full internal pixel height
+
+    const xNorm        = x / rw;
+    const yNorm        = (rh - y - height) / rh;    // invert Y from top‐origin to bottom‐origin
+    const widthNorm    = width  / rw;
+    const heightNorm   = height / rh;
+
+    this.secondaryCamera.viewport = new BABYLON.Viewport(
+      xNorm,
+      yNorm,
+      widthNorm,
+      heightNorm,
+    );
+
+  }
   public setNewViewport(x: number, y: number, width: number, height: number) {
     if (!this.scene || !this.camera) return;
 
     const engine       = this.scene.getEngine();
     const rw           = engine.getRenderWidth();   // full internal pixel width
     const rh           = engine.getRenderHeight();  // full internal pixel height
-
-    // Convert CSS pixels → normalized [0,1]
-    // NOTE: you may need to translate your rect.x/y
-    // so that (0,0) is bottom‐left of the canvas.
     const xNorm        = x / rw;
     const yNorm        = (rh - y - height) / rh;    // invert Y from top‐origin to bottom‐origin
     const widthNorm    = width  / rw;

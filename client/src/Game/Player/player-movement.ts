@@ -308,6 +308,8 @@ export class PlayerMovement {
       this.player.playIdle();
     }
 
+    emitter.emit("playerPosition", this.player.getPlayerPosition()!);
+    emitter.emit("playerRotation", this.player.getPlayerRotation());
     // Network update
     this.updateDelta += delta;
     if (this.updateDelta > 0.5) {

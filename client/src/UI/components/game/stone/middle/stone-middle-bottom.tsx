@@ -6,7 +6,7 @@ import { UiTitleComponent } from "@ui/common/ui-title";
 import emitter, { ChatMessage } from "@game/Events/events";
 import { useSakImage } from "@ui/hooks/use-image";
 
-export const StoneMiddle: React.FC<{ width: number }> = ({ width }) => {
+export const StoneMiddleBottom: React.FC<{ width: number }> = ({ width }) => {
   const {
     inputValue,
     inputRef,

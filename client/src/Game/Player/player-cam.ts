@@ -167,7 +167,7 @@ export class PlayerCamera {
     if (buttonIndex === 2) {
       this.rightButtonDown = !up;
     }
-
+    if (!this.player.playerMovement) return;
     if (this.leftButtonDown && this.rightButtonDown) {
       this.player.playerMovement!.moveForward = true;
       return;

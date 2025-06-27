@@ -186,7 +186,9 @@ export const StoneLeft: React.FC<{ width: number }> = ({ width }) => {
                 scale={1.1}
               />
               <UiButtonComponent
-                onClick={() => console.log("Persona")}
+                onClick={() => {
+                  emitter.emit('toggleInventory');
+                }}
                 sx={{ mt: 12 }}
                 scale={1.1}
                 buttonName="A_BTN_PERSONA"

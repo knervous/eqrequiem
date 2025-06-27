@@ -1,7 +1,6 @@
 import React, { useMemo } from "react";
 import { Box, Stack, Typography } from "@mui/material";
 import { useSakImage, useSakImages } from "@ui/hooks/use-image";
-import { UiButtonComponent } from "@ui/common/ui-button";
 import { usePlayerName } from "@game/Events/event-hooks";
 import { UiImageComponent } from "@ui/common/ui-image";
 import { StoneTarget } from "./stone-target";

@@ -17,6 +17,20 @@ export const usePlayerName = () => {
   return playerName;
 };
 
+export const useInventoryOpen = () => {
+  const [open, setOpen] = useState<boolean>(false);
+  useEffect(() => {
+    const cb = () => {
+      setOpen((open) => !open);
+    };
+    emitter.on("toggleInventory", cb);
+    return () => {
+      emitter.off("toggleInventory", cb);
+    };
+  }, []);
+  return open;
+};
+
 export const useTarget = () => {
   const [target, setTarget] = useState<Entity | null>(null);
   useEffect(() => {
