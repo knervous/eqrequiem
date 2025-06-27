@@ -59,11 +59,11 @@ export const initialUiState: UiState = {
   },
   devWindow: {
     ...defaultWindow,
-    x: 5,
+    x: (window.innerWidth / 2) - 225,
     y: 5,
     collapsed: false,
-    width: 300,
-    height: 200,
+    width: 450,
+    height: 100,
     //x: window.
   },
   targetWindow: {

@@ -4,7 +4,7 @@ import "allotment/dist/style.css";
 import { StoneLeft } from "./left/stone-left";
 import { Box } from "@mui/material";
 import { StoneRight } from "./right/stone-right";
-import {  StoneMiddle } from "./middle/stone-middle";
+import { StoneMiddle } from "./middle/stone-middle";
 import GameManager from "@game/Manager/game-manager";
 
 export const StoneUIBase: React.FC = () => {
@@ -41,7 +41,14 @@ export const StoneUIBase: React.FC = () => {
   }, []);
 
   return (
-    <Box sx={{ width: "100vw", height: "100vh", background: "transparent", position: "fixed" }}>
+    <Box
+      sx={{
+        width: "100vw",
+        height: "100vh",
+        background: "transparent",
+        position: "fixed",
+      }}
+    >
       <Allotment
         vertical={false}
         defaultSizes={[130, window.innerWidth - 130 - 130, 130]}
@@ -72,14 +79,25 @@ export const StoneUIBase: React.FC = () => {
                 // Get bounding rect relative to the window
                 const rect = viewportRef.current.getBoundingClientRect();
                 GameManager.instance.setNewViewport(
-                  rect.x, rect.y, rect.width, rect.height,
+                  rect.x,
+                  rect.y,
+                  rect.width,
+                  rect.height,
                 );
               }
             }}
           >
             {/* Top pane (passthrough) */}
             <Allotment.Pane minSize={100}>
-              <div ref={viewportRef} style={{ background: "transparent", height: "100%" }} />
+              <Box
+                id={'ui-viewport'}
+                ref={viewportRef}
+                sx={{
+                  pointerEvents: "none",
+                  background: "transparent",
+                  height: "100%",
+                }}
+              />
             </Allotment.Pane>
 
             {/* Bottom pane (container) */}

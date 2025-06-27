@@ -18,7 +18,6 @@ export class PlayerKeyboard {
   private boundHandler: (kbInfo: BJS.KeyboardInfo) => void;
 
   constructor(player: Player, scene: BJS.Scene) {
-    console.log('CTOR PlayerKeyboard');
     this.player = player;
     this.scene = scene;
     this.handler = (kbInfo) => {
@@ -53,7 +52,6 @@ export class PlayerKeyboard {
     if (!this.scene.onKeyboardObservable.removeCallback(this.boundHandler)) {
       console.warn('Failed to remove keyboard handler from scene');
     }
-    console.log('DTOR PlayerKeyboard');
     emitter.off('playerMovement', this.resetIndex);
     this.handler = () => {}; // Clear the handler to prevent memory leaks
   }

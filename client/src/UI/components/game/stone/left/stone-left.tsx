@@ -121,7 +121,6 @@ export const StoneLeft: React.FC<{ width: number }> = ({ width }) => {
         width: "100%",
         height: "100%",
         overflow: "hidden",
-        transition: "opacity 0.5s ease",
       }}
     >
       {/* Frame */}
@@ -192,7 +191,6 @@ export const StoneLeft: React.FC<{ width: number }> = ({ width }) => {
                 scale={1.1}
                 buttonName="A_BTN_PERSONA"
               />
-
               <Box
                 sx={{
                   backgroundImage: `url(${classGif})`,
@@ -232,7 +230,7 @@ export const StoneLeft: React.FC<{ width: number }> = ({ width }) => {
             direction="column"
             alignItems="center"
             justifyContent={"center"}
-            sx={{ width: "100%", height: bottomHeight, ml: `-${16 * scale}px` }}
+            sx={{ width: "100%", height: bottomHeight }}
           >
             <Box
               sx={{
@@ -240,7 +238,6 @@ export const StoneLeft: React.FC<{ width: number }> = ({ width }) => {
                 height: invImage.entry.height * 2,
                 backgroundImage: `url(${invImage.image})`,
                 backgroundSize: "cover",
-                //transform: `scale(${2})`,
               }}
             />
 
@@ -250,7 +247,6 @@ export const StoneLeft: React.FC<{ width: number }> = ({ width }) => {
                 height: hbImage.entry.height * 2,
                 backgroundImage: `url(${hbImage.image})`,
                 backgroundSize: "cover",
-                //transform: `scale(${2})`,
               }}
             >
               <Stack

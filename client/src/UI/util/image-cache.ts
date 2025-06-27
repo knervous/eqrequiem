@@ -13,8 +13,16 @@ function cropImage(base64Url: string, cropX: number, cropY: number, cropWidth: n
         return;
       }
       ctx.drawImage(img, cropX, cropY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
-      const croppedDataUrl = canvas.toDataURL("image/png");
-      resolve(croppedDataUrl);
+      
+      // Convert canvas to Blob and create a Blob URL
+      canvas.toBlob((blob) => {
+        if (!blob) {
+          reject(new Error("Failed to create blob"));
+          return;
+        }
+        const blobUrl = URL.createObjectURL(blob);
+        resolve(blobUrl);
+      }, "image/png"); // Specify the output format
     };
     img.onerror = reject;
     img.src = base64Url;
@@ -34,11 +42,7 @@ export class ImageCache {
       if (data instanceof ArrayBuffer) {
         // Convert WebP buffer to base64 data URL
         const blob = new Blob([data], { type });
-        const imageUrl = await new Promise<string>((resolve) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result as string);
-          reader.readAsDataURL(blob);
-        });
+        const imageUrl = URL.createObjectURL(blob);
         this.cache[cacheKey] = imageUrl;
       } else {
         this.cache[cacheKey] = ""; // Cache empty string if no data
@@ -63,12 +67,7 @@ export class ImageCache {
       if (data instanceof ArrayBuffer) {
         // Convert WebP buffer to base64 data URL
         const blob = new Blob([data], { type: 'image/webp' });
-        const imageUrl = await new Promise<string>((resolve) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result as string);
-          reader.readAsDataURL(blob);
-        });
-
+        const imageUrl = URL.createObjectURL(blob);
         // Apply cropping if requested and parameters are provided
         if (crop) {
           if (

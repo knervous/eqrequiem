@@ -239,7 +239,6 @@ export class Entity extends BABYLON.TransformNode {
       }
       targetRing.position.set(0, offset + 0.1, 0);
       targetRing.setEnabled(true);
-      console.log('Set target ring', targetRing);
     } else {
       // only hide if *this* entity is the one that owns it
       if (Entity.currentlySelected === this) {

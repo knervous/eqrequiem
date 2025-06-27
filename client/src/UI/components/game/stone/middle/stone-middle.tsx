@@ -40,7 +40,6 @@ export const StoneMiddle: React.FC<{ width: number }> = ({ width }) => {
   }, [inputRef, handleInputChange]);
 
   const bg = useSakImage("BG_Dark2", true);
-  console.log("bg", bg);
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
   }, [messages, messagesEndRef]);

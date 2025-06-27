@@ -1,9 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import Player from '@game/Player/player';
 import {
   Box,
   Stack,
-  TextField,
   Checkbox,
   FormControlLabel,
   FormControl,
@@ -11,6 +10,8 @@ import {
   Select,
   MenuItem,
   Button,
+  Typography,
+  Slider,
 } from '@mui/material';
 
 export const DevPlayer: React.FC = () => {
@@ -45,18 +46,25 @@ export const DevPlayer: React.FC = () => {
   };
 
   return (
-    <Box p={2} sx={{ '*': { color: 'white!important' } }}>
+    <Box p={0} sx={{ '*': { color: 'white!important' } }}>
       <Stack spacing={2}>
-        <TextField
-          label="Move Speed"
-          type="number"
-          size="small"
-          value={speed}
-          onChange={onSpeed}
-          InputProps={{ inputProps: { min: 0, step: 1 } }}
-          sx={{ width: 200 }}
-        />
-
+        <FormControl sx={{ width: "300px", color: "white" }}>
+          <Typography
+            sx={{ fontSize: 14, marginTop: 2, width: "80%" }}
+            color="text.secondary"
+            gutterBottom
+          >
+              Move Speed: {speed}
+          </Typography>
+          <Slider
+            value={speed}
+            onChange={onSpeed}
+            step={1}
+            min={1}
+            max={300}
+          />
+        </FormControl>
+        
         <Stack direction="row" spacing={1}>
           <FormControlLabel
             control={<Checkbox size="small" checked={collision} onChange={toggleCollision}/>} 

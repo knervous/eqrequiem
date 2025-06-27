@@ -29,8 +29,9 @@ export const BabylonWrapper = ({ splash }) => {
 
   useEffect(() => {
     const handleEvent = (e) => {
-      // If the event target is within a UI component (e.g. a div with a specific class),
-      // then do nothing (or call e.stopPropagation() if needed)
+      if (e.handled) {
+        return;
+      }
       if (
         e.target instanceof HTMLElement &&
         (e.target.closest(".ui-window") ||
@@ -41,7 +42,9 @@ export const BabylonWrapper = ({ splash }) => {
         // Do not forward the event so that interactive UI elements can function normally.
         return;
       }
-      if (e.handled) {
+      const uiViewport = document.getElementById("ui-viewport");
+      const mouseEvents = ["mousedown", "mouseup", "mousemove", "wheel"];
+      if (mouseEvents.includes(e.type) && !e.target?.contains(uiViewport)) {
         return;
       }
       // Otherwise, forward the event to the canvas
@@ -55,7 +58,6 @@ export const BabylonWrapper = ({ splash }) => {
         canvasRef.current.dispatchEvent(newEvent);
         // Optionally prevent default behavior so the event isn't processed twice
         if (e.type === "mousedown") {
-
           if (![document.body, canvasRef.current].includes(document.activeElement)) {
             document.body.focus();
             return;
@@ -80,7 +82,6 @@ export const BabylonWrapper = ({ splash }) => {
       document.addEventListener(eventName, handleEvent);
     });
 
-    // Cleanup on unmount
     return () => {
       events.forEach((eventName) => {
         document.removeEventListener(eventName, handleEvent);
@@ -99,9 +100,9 @@ export const BabylonWrapper = ({ splash }) => {
       />
 
       <Box
-        as="canvas"
         tabIndex={0}
-        sx={{ flexGrow: "1", position: "fixed" }}
+        component={"canvas"}
+        //sx={{ flexGrow: "1", position: "fixed" }}
         ref={canvasRef}
         id="renderCanvas"
         width="100vw"

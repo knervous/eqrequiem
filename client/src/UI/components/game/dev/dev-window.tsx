@@ -33,7 +33,7 @@ function TabPanel(props: TabPanelProps) {
       {...other}
     >
       {value === index && (
-        <Box sx={{ p: 2, color: "white", "*": { color: "white" } }}>
+        <Box sx={{ p: '0 10px', color: "white", "*": { color: "white" } }}>
           {children}
         </Box>
       )}
@@ -115,13 +115,13 @@ export const DevWindowComponent: React.FC = () => {
             />
             <Tab
               sx={tabStyle}
-              label="Stone UI Gallery"
+              label="Stone UI"
               id="dev-tab-3"
               aria-controls="dev-tabpanel-3"
             />
             <Tab
               sx={tabStyle}
-              label="Sak UI Gallery"
+              label="Sak UI"
               id="dev-tab-4"
               aria-controls="dev-tabpanel-4"
             />
