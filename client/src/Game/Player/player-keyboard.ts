@@ -24,6 +24,14 @@ export class PlayerKeyboard {
       if (kbInfo.event.repeat) {
         return; // Ignore repeated key events
       }
+      this.modifierKeys.alt = kbInfo.event.altKey;
+      this.modifierKeys.ctrl = kbInfo.event.ctrlKey;
+      this.modifierKeys.shift = kbInfo.event.shiftKey;
+      this.modifierKeys.meta = kbInfo.event.metaKey;
+      if (this.modifierKeys.alt || this.modifierKeys.ctrl || this.modifierKeys.shift || this.modifierKeys.meta) {
+        // If any modifier key is pressed, do not process other keys
+        return;
+      }
       const code = kbInfo.event.key.toLowerCase();
       switch (kbInfo.type) {
         case BABYLON.KeyboardEventTypes.KEYDOWN:
@@ -33,9 +41,7 @@ export class PlayerKeyboard {
           this.handleKeyUpEvent(code);
           break;
       }
-      this.modifierKeys.alt = kbInfo.event.altKey;
-      this.modifierKeys.ctrl = kbInfo.event.ctrlKey;
-      this.modifierKeys.shift = kbInfo.event.shiftKey;
+
     };
     this.boundHandler = this.handler.bind(this);
     // Register keyboard listeners

@@ -1,5 +1,6 @@
 import type * as BJS from "@babylonjs/core";
 import { TextRenderer, FontAsset } from '@babylonjs/addons';
+import GameManager from "@game/Manager/game-manager";
 
 export class Nameplate {
   private static fontAsset: FontAsset | null = null;
@@ -26,7 +27,7 @@ export class Nameplate {
 
   private static render() {
     if (!Nameplate.scene || !Nameplate.fontAsset) return;
-    const camera = Nameplate.scene.activeCamera;
+    const camera = GameManager.instance.scene?.activeCamera;
     if (!camera) return;
 
     Nameplate.textRenderers.forEach((renderer) => {

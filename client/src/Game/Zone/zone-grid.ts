@@ -247,7 +247,7 @@ export class Grid {
     }
 
     const result = new BABYLON.PhysicsRaycastResult();
-    plugin.raycast(this.playerPosition, entity.spawnPosition, result);
+    plugin.raycast(this.playerPosition, entity.spawnPosition, result, { collideWith: 0x00000DAD1  });
 
     const hitBody = result.body;
     if (!hitBody || hitBody.motionType !== BABYLON.PhysicsMotionType.STATIC) {
@@ -274,16 +274,17 @@ export class Grid {
     const playerPos = this.playerPosition;
     const entityPos = entity.spawnPosition;
     const distance = BABYLON.Vector3.Distance(playerPos, entityPos);
-    entity.initialize();
-    // if (distance <= 200) {
-    //   entity.initialize();
-    // } else {
-    //   if (this.isOccludedByPhysics(entity)) {
-    //     entity.hide();
-    //   } else {
-    //     entity.initialize();
-    //   }
-    // }
+
+    if (distance <= 200) {
+      entity.initialize();
+    } else {
+      if (this.isOccludedByPhysics(entity)) {
+        //console.log(`Entity ${entity.id} - ${entity.cleanName} is occluded by physics`);
+        entity.hide();
+      } else {
+        entity.initialize();
+      }
+    }
   }
 
   // Debug visualization methods

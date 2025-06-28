@@ -103,9 +103,9 @@ export const StoneInventory: React.FC<{ width: number; height: number, scale: nu
 
     GameManager.instance.setInventoryViewport(
       clientRect.right - (132 * scale),
-      clientRect.top + (18 * scale),
-      116 * scale,
-      223 * scale,
+      clientRect.top + (14 * scale),
+      118 * scale,
+      225 * scale,
     );
   }, [width, height, scale]);
 

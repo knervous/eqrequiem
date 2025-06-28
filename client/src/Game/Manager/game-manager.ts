@@ -104,6 +104,11 @@ export default class GameManager {
     width: number,
     height: number) {
     if (!this.scene || !this.secondaryCamera) return;
+    const dpi = window.devicePixelRatio || 1;
+    x *= dpi;
+    y *= dpi;
+    width *= dpi;
+    height *= dpi;
     const engine       = this.scene.getEngine();
     const rw           = engine.getRenderWidth();   // full internal pixel width
     const rh           = engine.getRenderHeight();  // full internal pixel height
@@ -123,7 +128,11 @@ export default class GameManager {
   }
   public setNewViewport(x: number, y: number, width: number, height: number) {
     if (!this.scene || !this.camera) return;
-
+    const dpi = window.devicePixelRatio || 1;
+    x *= dpi;
+    y *= dpi;
+    width *= dpi;
+    height *= dpi;
     const engine       = this.scene.getEngine();
     const rw           = engine.getRenderWidth();   // full internal pixel width
     const rh           = engine.getRenderHeight();  // full internal pixel height
@@ -132,6 +141,9 @@ export default class GameManager {
     const widthNorm    = width  / rw;
     const heightNorm   = height / rh;
 
+    // Need to scale by DPI
+    const dpiScale = window.devicePixelRatio || 1;
+    
     this.camera.viewport = new BABYLON.Viewport(
       xNorm,
       yNorm,
@@ -178,7 +190,7 @@ export default class GameManager {
     this.canvas = canvas;
 
     if (navigator.gpu) {
-      this.engine = new BABYLON.WebGPUEngine(canvas);
+      this.engine = new BABYLON.WebGPUEngine(canvas, { deviceDescriptor: { requiredFeatures: ["timestamp-query", 'occlusion-query'] } });
       await this.engine?.initAsync?.();
       this.engineInitialized = true;
 

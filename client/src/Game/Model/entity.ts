@@ -398,7 +398,7 @@ export class Entity extends BABYLON.TransformNode {
       const hasRobe = this.entityContainer.model.endsWith("01");
       let idx = this.getTextureIndex(
         name,
-        !this.isPlayer ? (this.spawn as Spawn).equipChest : 1,
+        !this.isPlayer ? (this.spawn as Spawn).equipChest : 22,
       );
       const nameMatch = name.match(charFileRegex);
       if (nameMatch) {
@@ -426,7 +426,7 @@ export class Entity extends BABYLON.TransformNode {
           idx = this.getTextureIndex(name, material);
         }
       } else {
-        idx = this.getTextureIndex(name, 1); // Default to 1 if not found for now
+        idx = this.getTextureIndex(name, 22); // Default to 1 if not found for now
       }
       this.textureBuffers[name].x = idx;
     }
@@ -656,7 +656,7 @@ export class Entity extends BABYLON.TransformNode {
     this.animationBuffer.set(match.from, match.to, 0, 60);
   }
 
-  private getTextureIndex(originalName: string, variation: number = 1): number {
+  private getTextureIndex(originalName: string, variation: number = 22): number {
     originalName = originalName.toLowerCase();
     let model, piece, texIdx;
     const match = originalName.match(charFileRegex);

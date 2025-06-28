@@ -196,7 +196,7 @@ export class ZoneManager {
 
     result.meshes.forEach((mesh) => {
       mesh.isPickable = true;
-
+      mesh.collisionMask = 0x0000DAD1;
       const materialExtras = mesh?.material?.metadata?.gltf?.extras;
       if (materialExtras?.frames?.length && materialExtras?.animationDelay) {
         const { frames, animationDelay } = materialExtras;
