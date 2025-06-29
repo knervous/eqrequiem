@@ -325,6 +325,8 @@ export class ZoneManager {
           mesh as BJS.Mesh, // The mesh to base the shape on
           this.parent.scene!,
         );
+        mesh.physicsBody.shape.material.friction = 1;
+        mesh.physicsBody.shape.material.restitution = 0;
         mesh.physicsBody.setMassProperties({ mass: 0 }); // Static
       }
     });

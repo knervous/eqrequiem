@@ -180,6 +180,12 @@ export default class Player {
     return this.headVariation.toString().padStart(2, "0") ?? "00";
   }
 
+  public get physicsPlugin(): BJS.HavokPlugin {
+    return this.gameManager
+      .scene!.getPhysicsEngine()!
+      .getPhysicsPlugin() as BJS.HavokPlugin;
+  }
+
   public setRotation(yaw: number) {
     if (!this.playerEntity) {
       return;

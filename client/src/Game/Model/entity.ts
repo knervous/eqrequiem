@@ -486,8 +486,8 @@ export class Entity extends BABYLON.TransformNode {
       capsuleRadius,
       this.scene,
     );
-    this.capsuleShape.material.friction = 0.0;
-    this.capsuleShape.material.restitution = 0.0;
+    this.capsuleShape.material.friction = 1.0;
+    this.capsuleShape.material.restitution = 0;
     this.nodeContainer = new BABYLON.TransformNode(
       `${this.spawn.name}`,
       this.scene,
@@ -502,11 +502,11 @@ export class Entity extends BABYLON.TransformNode {
     // Lock angular motion to prevent physics-induced rotation
     this.physicsBody.setAngularVelocity(BABYLON.Vector3.Zero());
     this.physicsBody.setAngularDamping(1.0); // High damping to resist rotation
-    this.physicsBody.setLinearDamping(0);
+    this.physicsBody.setLinearDamping(0.9);
 
     this.physicsBody.shape = this.capsuleShape;
     this.physicsBody.setMassProperties({
-      mass: 500,
+      mass: 5,
       inertia: new BABYLON.Vector3(0, 0, 0),
     });
   }
