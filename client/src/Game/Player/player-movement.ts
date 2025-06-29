@@ -321,18 +321,21 @@ export class PlayerMovement {
       this.physicsBody.setLinearVelocity(
         new BABYLON.Vector3(0, currentVelocity.y, 0),
       );
-      if (onFloor) {
-        this.physicsBody.setLinearVelocity(
-          new BABYLON.Vector3(0, 0, 0),
-        );
-        this.player.playerEntity?.setPosition(
-          this.lastPlayerPosition.x,
-          this.lastPlayerPosition.y,
-          this.lastPlayerPosition.z,
-        );
-      }
-      this.player.playerCamera.updateCameraPosition();
-      return;
+      // if (onFloor) {
+      //   this.physicsBody.setLinearVelocity(
+      //     new BABYLON.Vector3(0, 0, 0),
+      //   );
+      //   // calculate diff and move the other way
+      //   const diffX = currentPos.x - this.lastPlayerPosition.x;
+      //   const diffY = currentPos.y - this.lastPlayerPosition.y;
+      //   const diffZ = currentPos.z - this.lastPlayerPosition.z;
+      //   this.player.playerEntity?.setPosition(
+      //     diffX,
+      //     diffY,
+      //     diffZ,
+      //   );
+      // }
+      //return;
     } else {
       const currentVelocity = this.physicsBody.getLinearVelocity();
       emitter.emit("playerMovement", currentPos);
