@@ -357,7 +357,7 @@ export default class DayNightSkyManager {
     }
 
     this.#sun.diffuse = col;
-    this.#sun.intensity = (heightNorm * 2) + 0.2;a;
+    this.#sun.intensity = (heightNorm * 2) + 0.2;
 
     // Update sky material
     if (this.#skyMat) {
