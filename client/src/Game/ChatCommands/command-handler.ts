@@ -168,6 +168,20 @@ export class CommandHandler {
   @command("zone")
   async commandZone(args: string[]) {
     const zone = args[0];
+
+    if (!WorldSocket.isConnected) {
+      GameManager.instance.loadZone(zone);
+      GameManager.instance.instantiatePlayer({
+        race: 1,
+        charClass: 1,
+        name: "Soandso",
+        x: 15,
+        y: 15,
+        z: 15,
+        face: 4,
+      });
+      return;
+    }
     if (zone) {
       const supportedZone = Object.entries(supportedZones).find(
         ([, value]) => value.shortName.toLowerCase() === zone.toLowerCase(),

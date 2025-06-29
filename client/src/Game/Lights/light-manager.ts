@@ -2,7 +2,7 @@ import BABYLON from "@bjs";
 import type * as BJS from "@babylonjs/core";
 import Player from "@game/Player/player";
 
-const MAX_LIGHTS = 4;
+const MAX_LIGHTS = 8;
 
 export type LightData = {
   x: number;
@@ -45,7 +45,7 @@ export class LightManager {
   async loadLights(container: BJS.Node, scene: BJS.Scene, zoneLights: LightData[]) {
     // Allow up to MAX_LIGHTS influence per material
     scene.materials.forEach((m) => {
-      m.maxSimultaneousLights = MAX_LIGHTS;
+      m.maxSimultaneousLights = 8;
     });
 
     // Create lights
@@ -106,47 +106,6 @@ export class LightManager {
     this.previousLights = nearest;
     this.lastPosition.copyFrom(playerPosition);
     const next = performance.now() - start;
-    // console.log('[Performance] LightManager.updateLights, %c', 'green', next);
+    //console.log('[Performance] LightManager.updateLights, %c', 'green', next);
   }
 }
-// BABYLON.Effect.IncludesShadersStore.lightFragment = `
-// #ifdef LIGHT{X}
-//     // --- Pre-lighting for point lights only ---
-//     preInfo = computePointAndSpotPreLightingInfo(
-//         light{X}.vLightData,
-//         viewDirectionW,
-//         normalW
-//     );
-
-//     // --- GLTF distance falloff (soft, physically plausible) ---
-//     preInfo.attenuation = computeDistanceLightFalloff_GLTF(
-//         preInfo.lightDistanceSquared,
-//         light{X}.vLightFalloff.y
-//     );
-
-//     // --- Tweak roughness based on light properties ---
-//     preInfo.roughness = adjustRoughnessFromLightProperties(
-//         roughness,
-//         light{X}.vLightSpecular.a,
-//         preInfo.lightDistance
-//     );
-
-//     // --- Compute diffuse & specular contributions ---
-//     info.diffuse = computeDiffuseLighting(
-//         preInfo,
-//         light{X}.vLightDiffuse.rgb
-//     );
-//     info.specular = computeSpecularLighting(
-//         preInfo,
-//         normalW,
-//         clearcoatOut.specularEnvironmentR0,
-//         specularEnvironmentR90,
-//         AARoughnessFactors.x,
-//         light{X}.vLightDiffuse.rgb
-//     );
-
-//     // --- Accumulate into the final base colors (no manual clamp!) ---
-//     diffuseBase  += info.diffuse;
-//     specularBase += info.specular;
-// #endif
-// `;

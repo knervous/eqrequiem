@@ -39,7 +39,7 @@ export class PlayerCamera {
 
     this.cameraLight.radius = 100;
     this.cameraLight.diffuse = new BABYLON.Color3(1.0, 0.85, 0.6);
-    this.cameraLight.intensity = 25.0;
+    this.cameraLight.intensity = 1200;
     this.cameraLight.specular = new BABYLON.Color3(0, 0, 0);
     this.cameraLight.range = 100.0;
     this.bindInputEvents();

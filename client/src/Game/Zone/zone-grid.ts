@@ -279,7 +279,6 @@ export class Grid {
       entity.initialize();
     } else {
       if (this.isOccludedByPhysics(entity)) {
-        //console.log(`Entity ${entity.id} - ${entity.cleanName} is occluded by physics`);
         entity.hide();
       } else {
         entity.initialize();

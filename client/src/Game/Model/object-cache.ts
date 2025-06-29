@@ -120,6 +120,7 @@ export default class ObjectCache {
     const params = new BABYLON.Vector4();
 
     for (let i = 0; i < count; i++) {
+      transforms[i].rotateY *= -1; // Invert Y rotation for correct orientation
       const { x, y, z, rotateX, rotateY, rotateZ, scale } = transforms[i];
       if (x === 0 && y === 0 && z === 0) {
         continue;

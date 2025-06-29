@@ -4,7 +4,7 @@ import type * as BJS from "@babylonjs/core";
 import { FileSystem } from "@game/FileSystem/filesystem";
 import type GameManager from "@game/Manager/game-manager";
 import { RegionManager } from "@game/Regions/region-manager";
-import { LightManager } from "@game/Lights/light-manager";
+import { LightData, LightManager } from "@game/Lights/light-manager";
 import DayNightSkyManager from "@game/Sky/sky-manager";
 import { Spawns } from "@game/Net/internal/api/capnp/common";
 import EntityPool from "./entity-pool";
@@ -98,13 +98,104 @@ export class ZoneManager {
     this.skyManager.dispose();
     this.parent.scene?.onBeforeRenderObservable.remove(this.tick.bind(this));
   }
+  private bakeZoneVertexColors(
+    lights: LightData[],
+    constantAtt: number = 0.5,
+    linearAtt: number = 0.02,
+    quadAtt: number = 0.001,
+    ambientTerm: number = 0.1,    // ← base light so nothing goes pitch-black
+  ): void {
+    const scene = this.parent.scene!;
 
-  public async loadZone(
-    zoneName: string,
-  ): Promise<void> {
+    scene.meshes.forEach((mesh) => {
+      if (mesh.parent !== this.zoneContainer || !(mesh as BJS.Mesh).geometry) {
+        return;
+      }
+
+      // 1) (Optional) ensure normals are smooth / shared before baking:
+      //    mesh.forceSharedVertices();
+      //    // or for a flat-shaded look:
+      //    // (mesh as BJS.Mesh).convertToFlatShadedMesh();
+
+      const positions    = mesh.getVerticesData(BABYLON.VertexBuffer.PositionKind)!;
+      const normals      = mesh.getVerticesData(BABYLON.VertexBuffer.NormalKind)!;
+      const worldMat     = mesh.getWorldMatrix();
+
+      // 2) Inverse-transpose for correct normal transforms under negative scale
+      const normalMatrix = worldMat.clone().invert().transpose();
+
+      const wPos   = new BABYLON.Vector3();
+      const wNorm  = new BABYLON.Vector3();
+      const tmpCol = new BABYLON.Color3();
+      const toLight= new BABYLON.Vector3();
+
+      const colorArray = new Float32Array(positions.length);
+
+      for (let i = 0; i < positions.length; i += 3) {
+      // world-space position
+        BABYLON.Vector3.TransformCoordinatesFromFloatsToRef(
+          positions[i], positions[i + 1], positions[i + 2],
+          worldMat, wPos,
+        );
+
+        // world-space normal via inverse-transpose
+        BABYLON.Vector3.TransformNormalFromFloatsToRef(
+          normals[i], normals[i + 1], normals[i + 2],
+          normalMatrix, wNorm,
+        );
+        wNorm.normalize();
+
+        // 4) ambient base
+        tmpCol.set(ambientTerm, ambientTerm, ambientTerm);
+
+        // accumulate each light
+        for (const L of lights) {
+          toLight.set(-L.x, L.y, L.z).subtractInPlace(wPos);
+          const dist = toLight.length();
+          toLight.normalize();
+
+          const NdotL = Math.max(0, BABYLON.Vector3.Dot(wNorm, toLight));
+          if (NdotL <= 0) { continue; }
+
+          const att = 1.0 / (constantAtt + linearAtt * dist + quadAtt * dist * dist);
+
+          tmpCol.r += L.r * NdotL * att;
+          tmpCol.g += L.g * NdotL * att;
+          tmpCol.b += L.b * NdotL * att;
+        }
+
+        // → gamma-correct into sRGB (so your eye sees linear light properly)
+        tmpCol.r = Math.pow(tmpCol.r, 1 / 2.2);
+        tmpCol.g = Math.pow(tmpCol.g, 1 / 2.2);
+        tmpCol.b = Math.pow(tmpCol.b, 1 / 2.2);
+
+        // → clamp to [0,1] to avoid HDR “leaks”
+        tmpCol.r = Math.min(1, Math.max(0, tmpCol.r));
+        tmpCol.g = Math.min(1, Math.max(0, tmpCol.g));
+        tmpCol.b = Math.min(1, Math.max(0, tmpCol.b));
+
+        colorArray[i]     = tmpCol.r;
+        colorArray[i + 1] = tmpCol.g;
+        colorArray[i + 2] = tmpCol.b;
+      }
+
+      // upload & enable
+      (mesh as BJS.Mesh).setVerticesData(
+        BABYLON.VertexBuffer.ColorKind,
+        colorArray,
+        false,
+      );
+      mesh.useVertexColors = true;
+    });
+  }
+
+
+  public async loadZone(zoneName: string): Promise<void> {
     console.log("[ZoneManager] Loading zone:", zoneName);
     this.dispose();
-    const longName = Object.values(supportedZones).find((z) => z.shortName.toLowerCase() === zoneName.toLowerCase())?.longName;
+    const longName = Object.values(supportedZones).find(
+      (z) => z.shortName.toLowerCase() === zoneName.toLowerCase(),
+    )?.longName;
     const msg: ChatMessage = {
       message: `You have entered ${longName}`,
       chanNum: 0,
@@ -185,18 +276,19 @@ export class ZoneManager {
       return null;
     });
     if (!result) {
-      console.error(`[ZoneManager] Failed to import zone mesh: ${this.zoneName}`);
+      console.error(
+        `[ZoneManager] Failed to import zone mesh: ${this.zoneName}`,
+      );
       this.parent.setLoading(false);
       return;
     }
     result.addAllToScene();
-    console.log('Result', result);
+    console.log("Result", result);
     this.zoneContainer!.scaling.x = -1;
-
 
     result.meshes.forEach((mesh) => {
       mesh.isPickable = true;
-      mesh.collisionMask = 0x0000DAD1;
+      mesh.collisionMask = 0x0000dad1;
       const materialExtras = mesh?.material?.metadata?.gltf?.extras;
       if (materialExtras?.frames?.length && materialExtras?.animationDelay) {
         const { frames, animationDelay } = materialExtras;
@@ -253,20 +345,19 @@ export class ZoneManager {
         console.log("Version: ", metadata.version);
         console.log("Current zone", this.CurrentZone);
         await this.instantiateObjects(metadata);
-        // this.lightManager.loadLights(
-        //   this.lightContainer!,
-        //   this.parent.scene!,
-        //   metadata.lights,
-        // );
+        this.lightManager.loadLights(
+          this.lightContainer!,
+          this.parent.scene!,
+          metadata.lights,
+        );
+        //this.bakeZoneVertexColors(metadata.lights);
         if (this.CurrentZone?.zonePoints) {
-          this.regionManager.instantiateRegions(this.GameManager.scene!, metadata, this.GameManager.CurrentZone?.zonePoints);
+          this.regionManager.instantiateRegions(
+            this.GameManager.scene!,
+            metadata,
+            this.GameManager.CurrentZone?.zonePoints,
+          );
         }
-        // this.regionManager.instantiateRegions(metadata.regions, this.CurrentZone?.zonePoints);
-        // this.zoneObjects = new ZoneObjects(this.zoneContainer, metadata.objects, this.usePhysics);
-
-        // this.zoneObjects.Load().catch((e) => {
-        //   console.log("Failed to load zone objects", e);
-        // });
       } catch (e) {
         console.log("Error parsing zone metadata", e);
       }

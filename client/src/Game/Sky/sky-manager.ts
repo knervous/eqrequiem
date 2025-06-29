@@ -232,7 +232,7 @@ export default class DayNightSkyManager {
         new BABYLON.Vector3(0, 1, 0),
         this.#scene,
       );
-      this.#worldEnv.intensity = 0.5;
+      this.#worldEnv.intensity = 0.1;
     }
 
 
