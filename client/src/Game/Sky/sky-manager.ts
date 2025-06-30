@@ -200,7 +200,6 @@ export default class DayNightSkyManager {
     upperLayer.renderingGroupId = 0; // Render first
     cloudLayer.renderingGroupId = 0; // Render second
 
-
     this.#layer1Mat = createSkyLayerMaterial(cloudLayer, this.#scene, this.scale);
     this.#layer2Mat = createSkyLayerMaterial(upperLayer, this.#scene, this.scale);
 
