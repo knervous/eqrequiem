@@ -1,9 +1,10 @@
 import BABYLON from "@bjs";
 import type * as BJS from "@babylonjs/core";
 import type { ZoneManager } from "@game/Zone/zone-manager";
-import { GradientMaterial } from '@babylonjs/materials/gradient/gradientMaterial';
+import { FileSystem } from "@game/FileSystem/filesystem";
+import { createSkyLayerMaterial } from "./sky-material";
 
-const skyUrl = "https://eqrequiem.blob.core.windows.net/assets/sky/";
+
 
 export default class DayNightSkyManager {
   private readonly domeGradientTable: {
@@ -133,19 +134,18 @@ export default class DayNightSkyManager {
       },
     ];
   // Configurable Fields
-  scale = 5000;
-  scrollSpeed = 0.0001;
+  scale = 7000;
+  scrollSpeed = 0.00001;
   dayLengthSeconds = 120;
   timeOfDay = 12.0;
 
   // Internal properties
-  #scene;
   #camera;
+  #scene;
   #domeRoot;
-  #layer1Mat;
-  #layer2Mat;
+  #layer1Mat: BJS.ShaderMaterial | null = null;
+  #layer2Mat: BJS.ShaderMaterial | null = null;
   #sun;
-  #skyMat;
   #worldEnv;
   #uvOffsetLayer1 = new BABYLON.Vector2(0, 0);
   #uvOffsetLayer2 = new BABYLON.Vector2(0, 0);
@@ -158,72 +158,51 @@ export default class DayNightSkyManager {
   async createSky(name, noWorldEnv: boolean = false) {
     this.#scene = this.parent.GameManager.scene!;
     this.#camera = this.parent.GameManager.Camera;
-    // Create sky dome
-    const sky = await BABYLON.LoadAssetContainerAsync(
-      skyUrl + `${name}.glb`,
-      this.#scene,
+    const bytes = await FileSystem.getFileBytes(
+      `eqrequiem/sky`,
+      `${name}.babylon`,
     );
+    if (!bytes) {
+      console.log(`[SkyManager] Failed to load sky file: ${name}`);
+      return;
+    }
+    const file = new File([bytes], `${name}.babylon`, {
+      type: "application/babylon",
+    });
+    const sky = await BABYLON.LoadAssetContainerAsync(
+      file,
+          this.#scene!,
+    ).catch((error) => {
+      console.error(`[SkyManager] Error importing sky mesh: ${error}`);
+      return null;
+    });
+    if (!sky) {
+      console.error(`[SkyManager] Failed to load sky mesh: ${name}`);
+      return;
+    }
+    // Create sky dome
+    console.log(`[SkyManager] Sky mesh loaded: ${name}`, sky);
     sky.addAllToScene();
     this.#domeRoot = sky.meshes[0];
+    //this.scale = 100;
     this.#domeRoot.scaling = new BABYLON.Vector3(
       this.scale,
       this.scale,
       this.scale,
     );
     this.#domeRoot.name = "__sky__";
-    sky.meshes.forEach((mesh) => {
-      mesh.isPickable = false; // Disable picking on sky meshes
-      mesh.receiveShadows = false; // Disable shadows on sky meshes
-      mesh.checkCollisions = false; // Disable collisions on sky meshes
-      mesh.renderingGroupId = 0; // Ensure sky renders first
-    });
+    this.#domeRoot.position = this.#camera.position.clone();
+    this.#domeRoot.position.y += this.scale * 0.25; // Adjust height to match camera
+    // These two are treated separately and are the entrypoint for manipulations for time of day
+    // Cloud layer is seen first, then upperLayer
 
-
-    // Get child meshes (cloud and upper layers)
     const [cloudLayer, upperLayer] = this.#domeRoot.getChildMeshes();
+    upperLayer.renderingGroupId = 0; // Render first
+    cloudLayer.renderingGroupId = 0; // Render second
 
 
-
-    const multimat = new BABYLON.MultiMaterial('multi', this.#scene);
-    const origMaterial = cloudLayer.material;
-  
-    const gradientMaterial = new GradientMaterial('grad', this.#scene);
-    gradientMaterial.topColor = new BABYLON.Color3(119 / 255, 46 / 255, 146 / 255);
-    gradientMaterial.bottomColor = new BABYLON.Color3(190 / 255, 26 / 255, 22 / 255);// 
-    gradientMaterial.offset = 0;
-    gradientMaterial.smoothness = 1;
-    gradientMaterial.scale = 5;
-    gradientMaterial.alpha = 1;
-    gradientMaterial.disableLighting = true;
-    gradientMaterial.topColorAlpha = 0.1;
-    gradientMaterial.bottomColorAlpha = 0.6;
-    gradientMaterial.transparencyMode = BABYLON.Material.MATERIAL_ALPHABLEND;
-    gradientMaterial.alphaMode = BABYLON.Engine.ALPHA_COMBINE;
-  
-    cloudLayer.material = multimat;
-  
-    multimat.subMaterials.push(origMaterial);
-    multimat.subMaterials.push(gradientMaterial);
-  
-    const verticesCount = cloudLayer.getTotalVertices();
-    const indc = cloudLayer.getTotalIndices();
-    new BABYLON.SubMesh(0, 0, verticesCount, 0, indc, cloudLayer);
-    new BABYLON.SubMesh(1, 0, verticesCount, 0, indc, cloudLayer);
-
-    // Configure materials
-    this.#layer1Mat = cloudLayer.material;
-    this.#layer2Mat = upperLayer.material;
-
-    [this.#layer1Mat, this.#layer2Mat].forEach((mat, i) => {
-      // mat.transparencyMode = BABYLON.Material.MATERIAL_OPAQUE;
-      // mat.alpha =1.0;
-      mat.emissiveColor = new BABYLON.Color3(1, 0.8, 0.7);
-      console.log('Sky mat info', mat, i);
-      mat.backFaceCulling = false;
-      mat.zOffset = i; // Layer order
-    });
-
-    // Create sky material
+    this.#layer1Mat = createSkyLayerMaterial(cloudLayer, this.#scene, this.scale);
+    this.#layer2Mat = createSkyLayerMaterial(upperLayer, this.#scene, this.scale);
 
     // Create world environment
     if (!noWorldEnv) {
@@ -249,6 +228,7 @@ export default class DayNightSkyManager {
 
     // Update initial state
     this.#updateSunAndSky();
+    this.#updateSkydomeColors();
   }
 
   worldTick() {
@@ -280,51 +260,51 @@ export default class DayNightSkyManager {
     if (!this.#domeRoot) return;
 
     // Move dome to camera
-    this.#domeRoot.position = this.#camera.position;
-
+    this.#domeRoot.position = this.#camera.position.clone();
+    this.#domeRoot.position.y += this.scale * 0.25; // Adjust height to match camera
+    if (!this.#layer1Mat || !this.#layer2Mat) {
+      return;
+    }
     // Update UV offsets
     this.#uvOffsetLayer1.x += this.scrollSpeed * delta;
     this.#uvOffsetLayer2.y += this.scrollSpeed * delta;
 
-    // Apply UV offsets
-    if (this.#layer1Mat && this.#layer1Mat.diffuseTexture) {
-      this.#layer1Mat.diffuseTexture.uOffset = this.#uvOffsetLayer1.x;
-      this.#layer1Mat.diffuseTexture.vOffset = this.#uvOffsetLayer1.y;
-    }
-    if (this.#layer2Mat && this.#layer2Mat.diffuseTexture) {
-      this.#layer2Mat.diffuseTexture.uOffset = this.#uvOffsetLayer2.x;
-      this.#layer2Mat.diffuseTexture.vOffset = this.#uvOffsetLayer2.y;
-    }
+
+    this.#layer1Mat.setVector2("uUVOffset", this.#uvOffsetLayer1);
+    this.#layer2Mat.setVector2("uUVOffset", this.#uvOffsetLayer2);
+
+
   }
 
   setTimeOfDay(time) {
     this.timeOfDay = ((time % 24) + 24) % 24;
     this.#updateSunAndSky();
+    this.#updateSkydomeColors();
+
+    // compute your two gradient stops on the CPU:
+
   }
-
-  #updateSkyDomeColor() {
-    if (!this.#layer1Mat || !this.#layer2Mat) return;
-    const t = ((this.timeOfDay % 24) + 24) % 24;
-    const h0 = Math.floor(t);
-    const h1 = (h0 + 1) % 24;
-    const frac = t - h0;
-
+  #updateSkydomeColors() {
+    if (!this.#layer1Mat || !this.#layer2Mat) {
+      return;
+    }
+    const t = (this.timeOfDay % 24 + 24) % 24;
+    const h0 = Math.floor(t), h1 = (h0 + 1) % 24, f = t - h0;
     const e0 = this.domeGradientTable[h0];
     const e1 = this.domeGradientTable[h1];
 
-    // Interpolate colors
-    const low = BABYLON.Color3.Lerp(e0.low, e1.low, frac);
-    const mid = BABYLON.Color3.Lerp(e0.mid, e1.mid, frac);
-    // const high = BABYLON.Color3.Lerp(e0.high, e1.high, frac);
+    const low  = BABYLON.Color3.Lerp(e0.low,  e1.low,  f);
+    const mid  = BABYLON.Color3.Lerp(e0.mid,  e1.mid,  f);
+    const high = BABYLON.Color3.Lerp(e0.high, e1.high, f);
 
-    if (this.#layer1Mat) {
-      this.#layer1Mat.emissiveColor = low;
-      this.#layer1Mat.alpha = 0.5;
-    }
-    if (this.#layer2Mat) {
-      this.#layer2Mat.emissiveColor = mid;
-      this.#layer2Mat.alpha = 0.5;
-    }
+    // push those into the shader:
+    this.#layer1Mat.setColor3("uLowColor",  low);
+    this.#layer1Mat.setColor3("uMidColor",  mid);
+    this.#layer1Mat.setColor3("uHighColor", high);
+
+    this.#layer2Mat.setColor3("uLowColor",  low);
+    this.#layer2Mat.setColor3("uMidColor",  mid);
+    this.#layer2Mat.setColor3("uHighColor", high);
   }
 
   #updateSunAndSky() {
@@ -359,22 +339,6 @@ export default class DayNightSkyManager {
     this.#sun.diffuse = col;
     this.#sun.intensity = (heightNorm * 2) + 0.2;
 
-    // Update sky material
-    if (this.#skyMat) {
-      this.#skyMat.luminance = this.#sun.intensity;
-      this.#skyMat.inclination = elev / Math.PI;
-      this.#skyMat.azimuth = az / (Math.PI * 2);
-      // Update turbidity and scattering
-      const turbNoon = 2,
-        turbDawn = 20;
-      this.#skyMat.turbidity = turbDawn + (turbNoon - turbDawn) * heightNorm;
-      const rayNoon = 1,
-        rayDawn = 4;
-      this.#skyMat.rayleigh = rayDawn + (rayNoon - rayDawn) * heightNorm;
-    }
 
-
-
-    this.#updateSkyDomeColor();
   }
 }

@@ -114,7 +114,9 @@ export const StoneUIBase: React.FC = () => {
             {/* Bottom pane (container) */}
             <Allotment.Pane minSize={100} preferredSize={200}>
               <StoneMiddleBottom
+                scale={scaleFactor}
                 width={window.innerWidth - leftPaneWidth - rightPaneWidth}
+                height={window.innerHeight - viewportHeight}
               />
             </Allotment.Pane>
           </Allotment>

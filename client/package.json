@@ -64,12 +64,14 @@
     "react-dom": "$react-dom"
   },
   "devDependencies": {
+    "@aaronhayes/hasura-cli": "^2.42.0",
     "@azure/identity": "^4.9.0",
     "@azure/storage-blob": "^12.27.0",
     "@babel/plugin-proposal-decorators": "^7.25.9",
     "@eslint/js": "^9.21.0",
     "@itk-viewer/blosc-zarr": "^0.2.3",
     "@protobuf-ts/plugin": "^2.9.5",
+    "@swc/react-compiler": "^1.12.7",
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",
     "@vercel/node": "^5.1.14",

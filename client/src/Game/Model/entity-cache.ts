@@ -212,6 +212,7 @@ export class EntityCache {
           .getChildMeshes(false)
           .filter((m) => m.getTotalVertices() > 0) as BJS.Mesh[];
         for (const mesh of meshes) {
+          mesh.addLODLevel(500, null);
           mesh.parent = bucket;
           mesh.name = mesh.material?.name ?? "";
           mesh.registerInstancedBuffer(

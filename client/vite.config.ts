@@ -4,7 +4,6 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 
 const isLocalDev = process.env.VITE_LOCAL_DEV === "true";
-
 export default defineConfig({
   base: "./",
   plugins: [
