@@ -228,17 +228,25 @@ func HandleRequestClientZoneChange(z *ZoneInstance, ses *session.Session, payloa
 	playerProfile.SetZ(float32(charData.Z))
 	playerProfile.SetHeading(float32(charData.Heading))
 	playerProfile.SetSpawnId(int32(clientEntry.EntityId))
-	// stats, err := playerProfile.NewStats()
-	// if err != nil {
-	// 	log.Printf("failed to create PlayerProfile stats message: %v", err)
-	// 	return
-	// }
-	// stats.SetAaPoints(int32(*charStats.AaPoints))
-	// stats.SetAc(int32(*charStats.Ac))
-	// stats.SetHp(*charStats.Hp)
-	// stats.SetMana(*charStats.Mana)
-	// stats.SetEndurance(*charStats.Endurance)
-	// TODO fill this out later
+	stats, err := playerProfile.NewStats()
+	if err != nil {
+		log.Printf("failed to create PlayerProfile stats message: %v", err)
+		return
+	}
+	mob := ses.Client.GetMob()
+	stats.SetAaPoints(int32(*charStats.AaPoints))
+	stats.SetAc(int32(mob.AC))
+	stats.SetMana(int64(mob.CurrentMana))
+	stats.SetMagicResist(mob.MR)
+	stats.SetFireResist(mob.FR)
+	stats.SetColdResist(mob.CR)
+	stats.SetPoisonResist(mob.PR)
+	stats.SetDiseaseResist(mob.DR)
+	stats.SetAttack(int32(mob.ATK))
+	stats.SetHp(int64(mob.CurrentHp))
+	stats.SetMana(int64(mob.MaxMana))
+
+	// TODO stats fill the rest of this out
 
 	ses.SendStream(playerProfile.Message(), opcodes.PlayerProfile)
 

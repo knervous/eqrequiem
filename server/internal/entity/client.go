@@ -1,6 +1,8 @@
 package entity
 
-import "github.com/knervous/eqgo/internal/db/jetgen/eqgo/model"
+import (
+	"github.com/knervous/eqgo/internal/db/jetgen/eqgo/model"
+)
 
 type Client struct {
 	Mob
@@ -26,3 +28,14 @@ func (c *Client) SetPosition(pos MobPosition) {
 }
 
 func (n *Client) Type() int32 { return EntityTypePlayer }
+
+func (client *Client) UpdateStats() {
+	client.CalcBonuses()
+	charStats := client.CharStats
+	*charStats.Status = 0
+	*charStats.Name = client.CharData.Name
+	*charStats.AaPoints = int32(client.CharData.AaPoints) - int32(client.CharData.AaPointsSpent)
+	*charStats.Level = int32(client.CharData.Level)
+	*charStats.Class = int32(client.CharData.Class)
+	*charStats.Race = int32(client.CharData.Race)
+}

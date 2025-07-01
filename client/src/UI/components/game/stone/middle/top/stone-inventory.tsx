@@ -260,23 +260,24 @@ export const StoneInventory: React.FC<{
           direction="column"
           sx={{
             top: 400,
-            left: 40,
-            width: "60px",
+            left: 30,
+            width: "90px",
             height: "300px",
           }}
           spacing={0}
         >
           <Stack spacing={1} direction="row" justifyContent={"space-between"}>
             <Typography className="uistat">POISON</Typography>
-            <Typography className="uistat">{0}</Typography>
+            <Typography className="uistat">{player?.stats?.poisonResist ?? 0}</Typography>
+
           </Stack>
           <Stack spacing={1} direction="row" justifyContent={"space-between"}>
             <Typography className="uistat">MAGIC</Typography>
-            <Typography className="uistat">{player?.stats?.poisonResist ?? 0}</Typography>
+            <Typography className="uistat">{player?.stats?.magicResist ?? 0}</Typography>
           </Stack>
           <Stack spacing={1} direction="row" justifyContent={"space-between"}>
             <Typography className="uistat">DISEASE</Typography>
-            <Typography className="uistat">{player?.stats?.magicResist ?? 0}</Typography>
+            <Typography className="uistat">{player?.stats?.diseaseResist ?? 0}</Typography>
           </Stack>
           <Stack spacing={1} direction="row" justifyContent={"space-between"}>
             <Typography className="uistat">FIRE</Typography>

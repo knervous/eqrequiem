@@ -3,6 +3,7 @@ package entity
 import (
 	"strings"
 
+	"github.com/knervous/eqgo/internal/constants"
 	"github.com/knervous/eqgo/internal/db/jetgen/eqgo/model"
 )
 
@@ -22,6 +23,42 @@ type Mob struct {
 	Speed     float32
 	Animation string
 	dirty     bool
+
+	AC           int
+	MitigationAc int
+	ATK          int32
+	STR          int32
+	STA          int32
+	DEX          int32
+	AGI          int32
+	INT          int32
+	WIS          int32
+	CHA          int32
+	MR           int32
+	FR           int32
+	CR           int32
+	DR           int32
+	PR           int32
+
+	CurrentHp   int
+	MaxHp       int
+	BaseHp      int
+	CurrentMana int
+	MaxMana     int
+	HpRegen     int
+	ManaRegen   int
+
+	ItemBonuses  *constants.StatBonuses
+	SpellBonuses *constants.StatBonuses
+	AABonuses    *constants.StatBonuses
+
+	PetID   uint16
+	OwnerId uint16
+
+	Moving    bool
+	Targeted  int
+	Findable  bool
+	Trackable bool
 }
 
 func (m *Mob) ID() int      { return m.MobID }
@@ -78,4 +115,30 @@ type Entity interface {
 	Type() int32
 	Say(msg string)
 	GetPosition() MobPosition
+}
+
+// Functions
+
+func (m *Mob) CalcItemBonuses() {
+	// Stubbed out for now
+}
+
+func (m *Mob) CalcEdibleBonuses() {
+	// Stubbed out for now
+}
+
+func (m *Mob) CalcSpellBonuses() {
+	// Stubbed out for now
+}
+
+func (m *Mob) CalcAABonuses() {
+	// Stubbed out for now
+}
+
+func (m *Mob) CalcAC() {
+	// Stubbed out for now
+}
+
+func (m *Mob) ProcessItemCaps() {
+
 }

@@ -1,0 +1,51 @@
+package constants
+
+const (
+	Class_None                      uint8 = 0
+	Class_Warrior                   uint8 = 1
+	Class_Cleric                    uint8 = 2
+	Class_Paladin                   uint8 = 3
+	Class_Ranger                    uint8 = 4
+	Class_ShadowKnight              uint8 = 5
+	Class_Druid                     uint8 = 6
+	Class_Monk                      uint8 = 7
+	Class_Bard                      uint8 = 8
+	Class_Rogue                     uint8 = 9
+	Class_Shaman                    uint8 = 10
+	Class_Necromancer               uint8 = 11
+	Class_Wizard                    uint8 = 12
+	Class_Magician                  uint8 = 13
+	Class_Enchanter                 uint8 = 14
+	Class_Beastlord                 uint8 = 15
+	Class_Berserker                 uint8 = 16
+	Class_WarriorGM                 uint8 = 20
+	Class_ClericGM                  uint8 = 21
+	Class_PaladinGM                 uint8 = 22
+	Class_RangerGM                  uint8 = 23
+	Class_ShadowKnightGM            uint8 = 24
+	Class_DruidGM                   uint8 = 25
+	Class_MonkGM                    uint8 = 26
+	Class_BardGM                    uint8 = 27
+	Class_RogueGM                   uint8 = 28
+	Class_ShamanGM                  uint8 = 29
+	Class_NecromancerGM             uint8 = 30
+	Class_WizardGM                  uint8 = 31
+	Class_MagicianGM                uint8 = 32
+	Class_EnchanterGM               uint8 = 33
+	Class_BeastlordGM               uint8 = 34
+	Class_BerserkerGM               uint8 = 35
+	Class_Banker                    uint8 = 40
+	Class_Merchant                  uint8 = 41
+	Class_DiscordMerchant           uint8 = 59
+	Class_AdventureRecruiter        uint8 = 60
+	Class_AdventureMerchant         uint8 = 61
+	Class_LDoNTreasure              uint8 = 62
+	Class_TributeMaster             uint8 = 63
+	Class_GuildTributeMaster        uint8 = 64
+	Class_GuildBanker               uint8 = 66
+	Class_NorrathsKeepersMerchant   uint8 = 67
+	Class_DarkReignMerchant         uint8 = 68
+	Class_FellowshipMaster          uint8 = 69
+	Class_AlternateCurrencyMerchant uint8 = 70
+	Class_MercenaryLiaison          uint8 = 71
+)
