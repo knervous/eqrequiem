@@ -508,18 +508,668 @@ func (f CharacterSelect_Future) Struct() (CharacterSelect, error) {
 	return CharacterSelect(p.Struct()), err
 }
 
+type CharacterStatsRecord capnp.Struct
+
+// CharacterStatsRecord_TypeID is the unique identifier for the type CharacterStatsRecord.
+const CharacterStatsRecord_TypeID = 0xef73278a0e5d89af
+
+func NewCharacterStatsRecord(s *capnp.Segment) (CharacterStatsRecord, error) {
+	st, err := capnp.NewStruct(s, capnp.ObjectSize{DataSize: 296, PointerCount: 1})
+	return CharacterStatsRecord(st), err
+}
+
+func NewRootCharacterStatsRecord(s *capnp.Segment) (CharacterStatsRecord, error) {
+	st, err := capnp.NewRootStruct(s, capnp.ObjectSize{DataSize: 296, PointerCount: 1})
+	return CharacterStatsRecord(st), err
+}
+
+func ReadRootCharacterStatsRecord(msg *capnp.Message) (CharacterStatsRecord, error) {
+	root, err := msg.Root()
+	return CharacterStatsRecord(root.Struct()), err
+}
+
+func (s CharacterStatsRecord) String() string {
+	str, _ := text.Marshal(0xef73278a0e5d89af, capnp.Struct(s))
+	return str
+}
+
+func (s CharacterStatsRecord) EncodeAsPtr(seg *capnp.Segment) capnp.Ptr {
+	return capnp.Struct(s).EncodeAsPtr(seg)
+}
+
+func (CharacterStatsRecord) DecodeFromPtr(p capnp.Ptr) CharacterStatsRecord {
+	return CharacterStatsRecord(capnp.Struct{}.DecodeFromPtr(p))
+}
+
+func (s CharacterStatsRecord) ToPtr() capnp.Ptr {
+	return capnp.Struct(s).ToPtr()
+}
+func (s CharacterStatsRecord) IsValid() bool {
+	return capnp.Struct(s).IsValid()
+}
+
+func (s CharacterStatsRecord) Message() *capnp.Message {
+	return capnp.Struct(s).Message()
+}
+
+func (s CharacterStatsRecord) Segment() *capnp.Segment {
+	return capnp.Struct(s).Segment()
+}
+func (s CharacterStatsRecord) CharacterId() int32 {
+	return int32(capnp.Struct(s).Uint32(0))
+}
+
+func (s CharacterStatsRecord) SetCharacterId(v int32) {
+	capnp.Struct(s).SetUint32(0, uint32(v))
+}
+
+func (s CharacterStatsRecord) Name() (string, error) {
+	p, err := capnp.Struct(s).Ptr(0)
+	return p.Text(), err
+}
+
+func (s CharacterStatsRecord) HasName() bool {
+	return capnp.Struct(s).HasPtr(0)
+}
+
+func (s CharacterStatsRecord) NameBytes() ([]byte, error) {
+	p, err := capnp.Struct(s).Ptr(0)
+	return p.TextBytes(), err
+}
+
+func (s CharacterStatsRecord) SetName(v string) error {
+	return capnp.Struct(s).SetText(0, v)
+}
+
+func (s CharacterStatsRecord) Status() int32 {
+	return int32(capnp.Struct(s).Uint32(4))
+}
+
+func (s CharacterStatsRecord) SetStatus(v int32) {
+	capnp.Struct(s).SetUint32(4, uint32(v))
+}
+
+func (s CharacterStatsRecord) Level() int32 {
+	return int32(capnp.Struct(s).Uint32(8))
+}
+
+func (s CharacterStatsRecord) SetLevel(v int32) {
+	capnp.Struct(s).SetUint32(8, uint32(v))
+}
+
+func (s CharacterStatsRecord) Class() int32 {
+	return int32(capnp.Struct(s).Uint32(12))
+}
+
+func (s CharacterStatsRecord) SetClass(v int32) {
+	capnp.Struct(s).SetUint32(12, uint32(v))
+}
+
+func (s CharacterStatsRecord) Race() int32 {
+	return int32(capnp.Struct(s).Uint32(16))
+}
+
+func (s CharacterStatsRecord) SetRace(v int32) {
+	capnp.Struct(s).SetUint32(16, uint32(v))
+}
+
+func (s CharacterStatsRecord) AaPoints() int32 {
+	return int32(capnp.Struct(s).Uint32(20))
+}
+
+func (s CharacterStatsRecord) SetAaPoints(v int32) {
+	capnp.Struct(s).SetUint32(20, uint32(v))
+}
+
+func (s CharacterStatsRecord) Hp() int64 {
+	return int64(capnp.Struct(s).Uint64(24))
+}
+
+func (s CharacterStatsRecord) SetHp(v int64) {
+	capnp.Struct(s).SetUint64(24, uint64(v))
+}
+
+func (s CharacterStatsRecord) Mana() int64 {
+	return int64(capnp.Struct(s).Uint64(32))
+}
+
+func (s CharacterStatsRecord) SetMana(v int64) {
+	capnp.Struct(s).SetUint64(32, uint64(v))
+}
+
+func (s CharacterStatsRecord) Endurance() int64 {
+	return int64(capnp.Struct(s).Uint64(40))
+}
+
+func (s CharacterStatsRecord) SetEndurance(v int64) {
+	capnp.Struct(s).SetUint64(40, uint64(v))
+}
+
+func (s CharacterStatsRecord) Ac() int32 {
+	return int32(capnp.Struct(s).Uint32(48))
+}
+
+func (s CharacterStatsRecord) SetAc(v int32) {
+	capnp.Struct(s).SetUint32(48, uint32(v))
+}
+
+func (s CharacterStatsRecord) Strength() int32 {
+	return int32(capnp.Struct(s).Uint32(52))
+}
+
+func (s CharacterStatsRecord) SetStrength(v int32) {
+	capnp.Struct(s).SetUint32(52, uint32(v))
+}
+
+func (s CharacterStatsRecord) Stamina() int32 {
+	return int32(capnp.Struct(s).Uint32(56))
+}
+
+func (s CharacterStatsRecord) SetStamina(v int32) {
+	capnp.Struct(s).SetUint32(56, uint32(v))
+}
+
+func (s CharacterStatsRecord) Dexterity() int32 {
+	return int32(capnp.Struct(s).Uint32(60))
+}
+
+func (s CharacterStatsRecord) SetDexterity(v int32) {
+	capnp.Struct(s).SetUint32(60, uint32(v))
+}
+
+func (s CharacterStatsRecord) Agility() int32 {
+	return int32(capnp.Struct(s).Uint32(64))
+}
+
+func (s CharacterStatsRecord) SetAgility(v int32) {
+	capnp.Struct(s).SetUint32(64, uint32(v))
+}
+
+func (s CharacterStatsRecord) Intelligence() int32 {
+	return int32(capnp.Struct(s).Uint32(68))
+}
+
+func (s CharacterStatsRecord) SetIntelligence(v int32) {
+	capnp.Struct(s).SetUint32(68, uint32(v))
+}
+
+func (s CharacterStatsRecord) Wisdom() int32 {
+	return int32(capnp.Struct(s).Uint32(72))
+}
+
+func (s CharacterStatsRecord) SetWisdom(v int32) {
+	capnp.Struct(s).SetUint32(72, uint32(v))
+}
+
+func (s CharacterStatsRecord) Charisma() int32 {
+	return int32(capnp.Struct(s).Uint32(76))
+}
+
+func (s CharacterStatsRecord) SetCharisma(v int32) {
+	capnp.Struct(s).SetUint32(76, uint32(v))
+}
+
+func (s CharacterStatsRecord) MagicResist() int32 {
+	return int32(capnp.Struct(s).Uint32(80))
+}
+
+func (s CharacterStatsRecord) SetMagicResist(v int32) {
+	capnp.Struct(s).SetUint32(80, uint32(v))
+}
+
+func (s CharacterStatsRecord) FireResist() int32 {
+	return int32(capnp.Struct(s).Uint32(84))
+}
+
+func (s CharacterStatsRecord) SetFireResist(v int32) {
+	capnp.Struct(s).SetUint32(84, uint32(v))
+}
+
+func (s CharacterStatsRecord) ColdResist() int32 {
+	return int32(capnp.Struct(s).Uint32(88))
+}
+
+func (s CharacterStatsRecord) SetColdResist(v int32) {
+	capnp.Struct(s).SetUint32(88, uint32(v))
+}
+
+func (s CharacterStatsRecord) PoisonResist() int32 {
+	return int32(capnp.Struct(s).Uint32(92))
+}
+
+func (s CharacterStatsRecord) SetPoisonResist(v int32) {
+	capnp.Struct(s).SetUint32(92, uint32(v))
+}
+
+func (s CharacterStatsRecord) DiseaseResist() int32 {
+	return int32(capnp.Struct(s).Uint32(96))
+}
+
+func (s CharacterStatsRecord) SetDiseaseResist(v int32) {
+	capnp.Struct(s).SetUint32(96, uint32(v))
+}
+
+func (s CharacterStatsRecord) CorruptionResist() int32 {
+	return int32(capnp.Struct(s).Uint32(100))
+}
+
+func (s CharacterStatsRecord) SetCorruptionResist(v int32) {
+	capnp.Struct(s).SetUint32(100, uint32(v))
+}
+
+func (s CharacterStatsRecord) HeroicStrength() int32 {
+	return int32(capnp.Struct(s).Uint32(104))
+}
+
+func (s CharacterStatsRecord) SetHeroicStrength(v int32) {
+	capnp.Struct(s).SetUint32(104, uint32(v))
+}
+
+func (s CharacterStatsRecord) HeroicStamina() int32 {
+	return int32(capnp.Struct(s).Uint32(108))
+}
+
+func (s CharacterStatsRecord) SetHeroicStamina(v int32) {
+	capnp.Struct(s).SetUint32(108, uint32(v))
+}
+
+func (s CharacterStatsRecord) HeroicDexterity() int32 {
+	return int32(capnp.Struct(s).Uint32(112))
+}
+
+func (s CharacterStatsRecord) SetHeroicDexterity(v int32) {
+	capnp.Struct(s).SetUint32(112, uint32(v))
+}
+
+func (s CharacterStatsRecord) HeroicAgility() int32 {
+	return int32(capnp.Struct(s).Uint32(116))
+}
+
+func (s CharacterStatsRecord) SetHeroicAgility(v int32) {
+	capnp.Struct(s).SetUint32(116, uint32(v))
+}
+
+func (s CharacterStatsRecord) HeroicIntelligence() int32 {
+	return int32(capnp.Struct(s).Uint32(120))
+}
+
+func (s CharacterStatsRecord) SetHeroicIntelligence(v int32) {
+	capnp.Struct(s).SetUint32(120, uint32(v))
+}
+
+func (s CharacterStatsRecord) HeroicWisdom() int32 {
+	return int32(capnp.Struct(s).Uint32(124))
+}
+
+func (s CharacterStatsRecord) SetHeroicWisdom(v int32) {
+	capnp.Struct(s).SetUint32(124, uint32(v))
+}
+
+func (s CharacterStatsRecord) HeroicCharisma() int32 {
+	return int32(capnp.Struct(s).Uint32(128))
+}
+
+func (s CharacterStatsRecord) SetHeroicCharisma(v int32) {
+	capnp.Struct(s).SetUint32(128, uint32(v))
+}
+
+func (s CharacterStatsRecord) HeroicMagicResist() int32 {
+	return int32(capnp.Struct(s).Uint32(132))
+}
+
+func (s CharacterStatsRecord) SetHeroicMagicResist(v int32) {
+	capnp.Struct(s).SetUint32(132, uint32(v))
+}
+
+func (s CharacterStatsRecord) HeroicFireResist() int32 {
+	return int32(capnp.Struct(s).Uint32(136))
+}
+
+func (s CharacterStatsRecord) SetHeroicFireResist(v int32) {
+	capnp.Struct(s).SetUint32(136, uint32(v))
+}
+
+func (s CharacterStatsRecord) HeroicColdResist() int32 {
+	return int32(capnp.Struct(s).Uint32(140))
+}
+
+func (s CharacterStatsRecord) SetHeroicColdResist(v int32) {
+	capnp.Struct(s).SetUint32(140, uint32(v))
+}
+
+func (s CharacterStatsRecord) HeroicPoisonResist() int32 {
+	return int32(capnp.Struct(s).Uint32(144))
+}
+
+func (s CharacterStatsRecord) SetHeroicPoisonResist(v int32) {
+	capnp.Struct(s).SetUint32(144, uint32(v))
+}
+
+func (s CharacterStatsRecord) HeroicDiseaseResist() int32 {
+	return int32(capnp.Struct(s).Uint32(148))
+}
+
+func (s CharacterStatsRecord) SetHeroicDiseaseResist(v int32) {
+	capnp.Struct(s).SetUint32(148, uint32(v))
+}
+
+func (s CharacterStatsRecord) HeroicCorruptionResist() int32 {
+	return int32(capnp.Struct(s).Uint32(152))
+}
+
+func (s CharacterStatsRecord) SetHeroicCorruptionResist(v int32) {
+	capnp.Struct(s).SetUint32(152, uint32(v))
+}
+
+func (s CharacterStatsRecord) Haste() int32 {
+	return int32(capnp.Struct(s).Uint32(156))
+}
+
+func (s CharacterStatsRecord) SetHaste(v int32) {
+	capnp.Struct(s).SetUint32(156, uint32(v))
+}
+
+func (s CharacterStatsRecord) Accuracy() int32 {
+	return int32(capnp.Struct(s).Uint32(160))
+}
+
+func (s CharacterStatsRecord) SetAccuracy(v int32) {
+	capnp.Struct(s).SetUint32(160, uint32(v))
+}
+
+func (s CharacterStatsRecord) Attack() int32 {
+	return int32(capnp.Struct(s).Uint32(164))
+}
+
+func (s CharacterStatsRecord) SetAttack(v int32) {
+	capnp.Struct(s).SetUint32(164, uint32(v))
+}
+
+func (s CharacterStatsRecord) Avoidance() int32 {
+	return int32(capnp.Struct(s).Uint32(168))
+}
+
+func (s CharacterStatsRecord) SetAvoidance(v int32) {
+	capnp.Struct(s).SetUint32(168, uint32(v))
+}
+
+func (s CharacterStatsRecord) Clairvoyance() int32 {
+	return int32(capnp.Struct(s).Uint32(172))
+}
+
+func (s CharacterStatsRecord) SetClairvoyance(v int32) {
+	capnp.Struct(s).SetUint32(172, uint32(v))
+}
+
+func (s CharacterStatsRecord) CombatEffects() int32 {
+	return int32(capnp.Struct(s).Uint32(176))
+}
+
+func (s CharacterStatsRecord) SetCombatEffects(v int32) {
+	capnp.Struct(s).SetUint32(176, uint32(v))
+}
+
+func (s CharacterStatsRecord) DamageShieldMitigation() int32 {
+	return int32(capnp.Struct(s).Uint32(180))
+}
+
+func (s CharacterStatsRecord) SetDamageShieldMitigation(v int32) {
+	capnp.Struct(s).SetUint32(180, uint32(v))
+}
+
+func (s CharacterStatsRecord) DamageShield() int32 {
+	return int32(capnp.Struct(s).Uint32(184))
+}
+
+func (s CharacterStatsRecord) SetDamageShield(v int32) {
+	capnp.Struct(s).SetUint32(184, uint32(v))
+}
+
+func (s CharacterStatsRecord) DotShielding() int32 {
+	return int32(capnp.Struct(s).Uint32(188))
+}
+
+func (s CharacterStatsRecord) SetDotShielding(v int32) {
+	capnp.Struct(s).SetUint32(188, uint32(v))
+}
+
+func (s CharacterStatsRecord) HpRegen() int32 {
+	return int32(capnp.Struct(s).Uint32(192))
+}
+
+func (s CharacterStatsRecord) SetHpRegen(v int32) {
+	capnp.Struct(s).SetUint32(192, uint32(v))
+}
+
+func (s CharacterStatsRecord) ManaRegen() int32 {
+	return int32(capnp.Struct(s).Uint32(196))
+}
+
+func (s CharacterStatsRecord) SetManaRegen(v int32) {
+	capnp.Struct(s).SetUint32(196, uint32(v))
+}
+
+func (s CharacterStatsRecord) EnduranceRegen() int32 {
+	return int32(capnp.Struct(s).Uint32(200))
+}
+
+func (s CharacterStatsRecord) SetEnduranceRegen(v int32) {
+	capnp.Struct(s).SetUint32(200, uint32(v))
+}
+
+func (s CharacterStatsRecord) Shielding() int32 {
+	return int32(capnp.Struct(s).Uint32(204))
+}
+
+func (s CharacterStatsRecord) SetShielding(v int32) {
+	capnp.Struct(s).SetUint32(204, uint32(v))
+}
+
+func (s CharacterStatsRecord) SpellDamage() int32 {
+	return int32(capnp.Struct(s).Uint32(208))
+}
+
+func (s CharacterStatsRecord) SetSpellDamage(v int32) {
+	capnp.Struct(s).SetUint32(208, uint32(v))
+}
+
+func (s CharacterStatsRecord) SpellShielding() int32 {
+	return int32(capnp.Struct(s).Uint32(212))
+}
+
+func (s CharacterStatsRecord) SetSpellShielding(v int32) {
+	capnp.Struct(s).SetUint32(212, uint32(v))
+}
+
+func (s CharacterStatsRecord) Strikethrough() int32 {
+	return int32(capnp.Struct(s).Uint32(216))
+}
+
+func (s CharacterStatsRecord) SetStrikethrough(v int32) {
+	capnp.Struct(s).SetUint32(216, uint32(v))
+}
+
+func (s CharacterStatsRecord) StunResist() int32 {
+	return int32(capnp.Struct(s).Uint32(220))
+}
+
+func (s CharacterStatsRecord) SetStunResist(v int32) {
+	capnp.Struct(s).SetUint32(220, uint32(v))
+}
+
+func (s CharacterStatsRecord) Backstab() int32 {
+	return int32(capnp.Struct(s).Uint32(224))
+}
+
+func (s CharacterStatsRecord) SetBackstab(v int32) {
+	capnp.Struct(s).SetUint32(224, uint32(v))
+}
+
+func (s CharacterStatsRecord) Wind() int32 {
+	return int32(capnp.Struct(s).Uint32(228))
+}
+
+func (s CharacterStatsRecord) SetWind(v int32) {
+	capnp.Struct(s).SetUint32(228, uint32(v))
+}
+
+func (s CharacterStatsRecord) Brass() int32 {
+	return int32(capnp.Struct(s).Uint32(232))
+}
+
+func (s CharacterStatsRecord) SetBrass(v int32) {
+	capnp.Struct(s).SetUint32(232, uint32(v))
+}
+
+func (s CharacterStatsRecord) String_() int32 {
+	return int32(capnp.Struct(s).Uint32(236))
+}
+
+func (s CharacterStatsRecord) SetString_(v int32) {
+	capnp.Struct(s).SetUint32(236, uint32(v))
+}
+
+func (s CharacterStatsRecord) Percussion() int32 {
+	return int32(capnp.Struct(s).Uint32(240))
+}
+
+func (s CharacterStatsRecord) SetPercussion(v int32) {
+	capnp.Struct(s).SetUint32(240, uint32(v))
+}
+
+func (s CharacterStatsRecord) Singing() int32 {
+	return int32(capnp.Struct(s).Uint32(244))
+}
+
+func (s CharacterStatsRecord) SetSinging(v int32) {
+	capnp.Struct(s).SetUint32(244, uint32(v))
+}
+
+func (s CharacterStatsRecord) Baking() int32 {
+	return int32(capnp.Struct(s).Uint32(248))
+}
+
+func (s CharacterStatsRecord) SetBaking(v int32) {
+	capnp.Struct(s).SetUint32(248, uint32(v))
+}
+
+func (s CharacterStatsRecord) Alchemy() int32 {
+	return int32(capnp.Struct(s).Uint32(252))
+}
+
+func (s CharacterStatsRecord) SetAlchemy(v int32) {
+	capnp.Struct(s).SetUint32(252, uint32(v))
+}
+
+func (s CharacterStatsRecord) Tailoring() int32 {
+	return int32(capnp.Struct(s).Uint32(256))
+}
+
+func (s CharacterStatsRecord) SetTailoring(v int32) {
+	capnp.Struct(s).SetUint32(256, uint32(v))
+}
+
+func (s CharacterStatsRecord) Blacksmithing() int32 {
+	return int32(capnp.Struct(s).Uint32(260))
+}
+
+func (s CharacterStatsRecord) SetBlacksmithing(v int32) {
+	capnp.Struct(s).SetUint32(260, uint32(v))
+}
+
+func (s CharacterStatsRecord) Fletching() int32 {
+	return int32(capnp.Struct(s).Uint32(264))
+}
+
+func (s CharacterStatsRecord) SetFletching(v int32) {
+	capnp.Struct(s).SetUint32(264, uint32(v))
+}
+
+func (s CharacterStatsRecord) Brewing() int32 {
+	return int32(capnp.Struct(s).Uint32(268))
+}
+
+func (s CharacterStatsRecord) SetBrewing(v int32) {
+	capnp.Struct(s).SetUint32(268, uint32(v))
+}
+
+func (s CharacterStatsRecord) Jewelry() int32 {
+	return int32(capnp.Struct(s).Uint32(272))
+}
+
+func (s CharacterStatsRecord) SetJewelry(v int32) {
+	capnp.Struct(s).SetUint32(272, uint32(v))
+}
+
+func (s CharacterStatsRecord) Pottery() int32 {
+	return int32(capnp.Struct(s).Uint32(276))
+}
+
+func (s CharacterStatsRecord) SetPottery(v int32) {
+	capnp.Struct(s).SetUint32(276, uint32(v))
+}
+
+func (s CharacterStatsRecord) Research() int32 {
+	return int32(capnp.Struct(s).Uint32(280))
+}
+
+func (s CharacterStatsRecord) SetResearch(v int32) {
+	capnp.Struct(s).SetUint32(280, uint32(v))
+}
+
+func (s CharacterStatsRecord) Alcohol() int32 {
+	return int32(capnp.Struct(s).Uint32(284))
+}
+
+func (s CharacterStatsRecord) SetAlcohol(v int32) {
+	capnp.Struct(s).SetUint32(284, uint32(v))
+}
+
+func (s CharacterStatsRecord) Fishing() int32 {
+	return int32(capnp.Struct(s).Uint32(288))
+}
+
+func (s CharacterStatsRecord) SetFishing(v int32) {
+	capnp.Struct(s).SetUint32(288, uint32(v))
+}
+
+func (s CharacterStatsRecord) Tinkering() int32 {
+	return int32(capnp.Struct(s).Uint32(292))
+}
+
+func (s CharacterStatsRecord) SetTinkering(v int32) {
+	capnp.Struct(s).SetUint32(292, uint32(v))
+}
+
+// CharacterStatsRecord_List is a list of CharacterStatsRecord.
+type CharacterStatsRecord_List = capnp.StructList[CharacterStatsRecord]
+
+// NewCharacterStatsRecord creates a new list of CharacterStatsRecord.
+func NewCharacterStatsRecord_List(s *capnp.Segment, sz int32) (CharacterStatsRecord_List, error) {
+	l, err := capnp.NewCompositeList(s, capnp.ObjectSize{DataSize: 296, PointerCount: 1}, sz)
+	return capnp.StructList[CharacterStatsRecord](l), err
+}
+
+// CharacterStatsRecord_Future is a wrapper for a CharacterStatsRecord promised by a client call.
+type CharacterStatsRecord_Future struct{ *capnp.Future }
+
+func (f CharacterStatsRecord_Future) Struct() (CharacterStatsRecord, error) {
+	p, err := f.Future.Ptr()
+	return CharacterStatsRecord(p.Struct()), err
+}
+
 type PlayerProfile capnp.Struct
 
 // PlayerProfile_TypeID is the unique identifier for the type PlayerProfile.
 const PlayerProfile_TypeID = 0xb8375f7f6b27403c
 
 func NewPlayerProfile(s *capnp.Segment) (PlayerProfile, error) {
-	st, err := capnp.NewStruct(s, capnp.ObjectSize{DataSize: 416, PointerCount: 24})
+	st, err := capnp.NewStruct(s, capnp.ObjectSize{DataSize: 416, PointerCount: 25})
 	return PlayerProfile(st), err
 }
 
 func NewRootPlayerProfile(s *capnp.Segment) (PlayerProfile, error) {
-	st, err := capnp.NewRootStruct(s, capnp.ObjectSize{DataSize: 416, PointerCount: 24})
+	st, err := capnp.NewRootStruct(s, capnp.ObjectSize{DataSize: 416, PointerCount: 25})
 	return PlayerProfile(st), err
 }
 
@@ -1914,12 +2564,36 @@ func (s PlayerProfile) SetSpawnId(v int32) {
 	capnp.Struct(s).SetUint32(412, uint32(v))
 }
 
+func (s PlayerProfile) Stats() (CharacterStatsRecord, error) {
+	p, err := capnp.Struct(s).Ptr(24)
+	return CharacterStatsRecord(p.Struct()), err
+}
+
+func (s PlayerProfile) HasStats() bool {
+	return capnp.Struct(s).HasPtr(24)
+}
+
+func (s PlayerProfile) SetStats(v CharacterStatsRecord) error {
+	return capnp.Struct(s).SetPtr(24, capnp.Struct(v).ToPtr())
+}
+
+// NewStats sets the stats field to a newly
+// allocated CharacterStatsRecord struct, preferring placement in s's segment.
+func (s PlayerProfile) NewStats() (CharacterStatsRecord, error) {
+	ss, err := NewCharacterStatsRecord(capnp.Struct(s).Segment())
+	if err != nil {
+		return CharacterStatsRecord{}, err
+	}
+	err = capnp.Struct(s).SetPtr(24, capnp.Struct(ss).ToPtr())
+	return ss, err
+}
+
 // PlayerProfile_List is a list of PlayerProfile.
 type PlayerProfile_List = capnp.StructList[PlayerProfile]
 
 // NewPlayerProfile creates a new list of PlayerProfile.
 func NewPlayerProfile_List(s *capnp.Segment, sz int32) (PlayerProfile_List, error) {
-	l, err := capnp.NewCompositeList(s, capnp.ObjectSize{DataSize: 416, PointerCount: 24}, sz)
+	l, err := capnp.NewCompositeList(s, capnp.ObjectSize{DataSize: 416, PointerCount: 25}, sz)
 	return capnp.StructList[PlayerProfile](l), err
 }
 
@@ -1947,4 +2621,7 @@ func (p PlayerProfile_Future) PvpLastKill() PVPStatsEntry_Future {
 }
 func (p PlayerProfile_Future) PvpLastDeath() PVPStatsEntry_Future {
 	return PVPStatsEntry_Future{Future: p.Future.Field(21, nil)}
+}
+func (p PlayerProfile_Future) Stats() CharacterStatsRecord_Future {
+	return CharacterStatsRecord_Future{Future: p.Future.Field(24, nil)}
 }

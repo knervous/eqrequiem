@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import emitter from "./events";
 import type { Entity } from "@game/Model/entity";
 import Player from "@game/Player/player";
+import { PlayerProfile } from "@game/Net/internal/api/capnp/player";
 
 export const usePlayerName = () => {
   const [playerName, setPlayerName] = useState<string>(Player.instance?.player?.name ?? "Soandso");
@@ -15,6 +16,20 @@ export const usePlayerName = () => {
     };
   }, []);
   return playerName;
+};
+
+export const usePlayerProfile = () => {
+  const [profile, setProfile] = useState<PlayerProfile | null>(Player.instance?.player ?? null);
+  useEffect(() => {
+    const cb = (p: PlayerProfile | null) => {
+      setProfile(p);
+    };
+    emitter.on("setPlayer", cb);
+    return () => {
+      emitter.off("setPlayer", cb);
+    };
+  }, []);
+  return profile; 
 };
 
 export const useInventoryOpen = () => {

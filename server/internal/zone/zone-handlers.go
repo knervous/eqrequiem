@@ -154,6 +154,11 @@ func HandleRequestClientZoneChange(z *ZoneInstance, ses *session.Session, payloa
 		log.Printf("client session %d has no character data", ses.SessionID)
 		return
 	}
+	charStats := ses.Client.CharStats
+	if charStats == nil {
+		log.Printf("client session %d has no character stats", ses.SessionID)
+		//return
+	}
 	clientEntry := z.ClientEntries[ses.SessionID]
 	dbZone, err := db_zone.GetZoneById(context.Background(), int(charData.ZoneID))
 	if err != nil {
@@ -208,6 +213,7 @@ func HandleRequestClientZoneChange(z *ZoneInstance, ses *session.Session, payloa
 	playerProfile.SetLevel(int32(charData.Level))
 	playerProfile.SetRace(int32(charData.Race))
 	playerProfile.SetCharClass(int32(charData.Class))
+	playerProfile.SetExp(int32(charData.Exp))
 	playerProfile.SetStr(int32(charData.Str))
 	playerProfile.SetSta(int32(charData.Sta))
 	playerProfile.SetDex(int32(charData.Dex))
@@ -222,6 +228,18 @@ func HandleRequestClientZoneChange(z *ZoneInstance, ses *session.Session, payloa
 	playerProfile.SetZ(float32(charData.Z))
 	playerProfile.SetHeading(float32(charData.Heading))
 	playerProfile.SetSpawnId(int32(clientEntry.EntityId))
+	// stats, err := playerProfile.NewStats()
+	// if err != nil {
+	// 	log.Printf("failed to create PlayerProfile stats message: %v", err)
+	// 	return
+	// }
+	// stats.SetAaPoints(int32(*charStats.AaPoints))
+	// stats.SetAc(int32(*charStats.Ac))
+	// stats.SetHp(*charStats.Hp)
+	// stats.SetMana(*charStats.Mana)
+	// stats.SetEndurance(*charStats.Endurance)
+	// TODO fill this out later
+
 	ses.SendStream(playerProfile.Message(), opcodes.PlayerProfile)
 
 	// Send all zone spawns

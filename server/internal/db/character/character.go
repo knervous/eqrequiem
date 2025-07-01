@@ -17,6 +17,31 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
+func GetCharacterStatsByID(id int32) (*model.CharacterStatsRecord, error) {
+	cacheKey := fmt.Sprintf("character:stats:id:%d", id)
+	if val, found, err := cache.GetCache().Get(cacheKey); err == nil && found {
+		if stats, ok := val.(*model.CharacterStatsRecord); ok {
+			return stats, nil
+		}
+	}
+
+	var stats model.CharacterStatsRecord
+	ctx := context.Background()
+	err := table.CharacterStatsRecord.
+		SELECT(table.CharacterStatsRecord.AllColumns).
+		FROM(table.CharacterStatsRecord).
+		WHERE(
+			table.CharacterStatsRecord.CharacterID.EQ(mysql.Int32(id)),
+		).
+		QueryContext(ctx, db.GlobalWorldDB.DB, &stats)
+	if err != nil {
+		return nil, fmt.Errorf("query character_stats_record: %w", err)
+	}
+
+	cache.GetCache().Set(cacheKey, &stats)
+	return &stats, nil
+}
+
 func GetCharacterByName(name string) (*model.CharacterData, error) {
 	cacheKey := fmt.Sprintf("character:name:%s", name)
 	if val, found, err := cache.GetCache().Get(cacheKey); err == nil && found {

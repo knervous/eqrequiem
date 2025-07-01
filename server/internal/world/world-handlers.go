@@ -132,8 +132,14 @@ func HandleZoneSession(ses *session.Session, payload []byte, wh *WorldHandler) b
 		log.Printf("failed to get character %q for accountID %d: %v", ses.CharacterName, ses.AccountID, err)
 		return false
 	}
+	charStats, err := db_character.GetCharacterStatsByID(int32(charData.ID))
+	if err != nil {
+		log.Printf("failed to get character stats for character %q: %v", ses.CharacterName, err)
+		//return false
+	}
 	ses.Client = &entity.Client{
-		CharData: charData,
+		CharData:  charData,
+		CharStats: charStats,
 	}
 	ses.ZoneID = int(req.ZoneId())
 	ses.InstanceID = int(req.InstanceId())

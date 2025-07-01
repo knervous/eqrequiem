@@ -13,6 +13,7 @@ import EntityCache from "@game/Model/entity-cache";
 import { Entity } from "@game/Model/entity";
 import emitter from "@game/Events/events";
 import { PlayerKeyboard } from "./player-keyboard";
+import { capnpToPlainObject } from "@game/Constants/util";
 export default class Player {
   public playerMovement: PlayerMovement | null = null;
   public playerCamera: PlayerCamera;
@@ -252,9 +253,10 @@ export default class Player {
       await this.playerEntity.dispose();
       this.playerEntity = null;
     }
-    this.player = player;
+    this.player = capnpToPlainObject(player) as PlayerProfile;
+    console.log('player', this.player, player);
     this.currentAnimation = "";
-    for (const item of this.player.inventoryItems?.toArray() ?? []) {
+    for (const item of this.player.inventoryItems ?? []) {
       this.inventory.set(item.slot, item);
     }
     if (!this.player) {

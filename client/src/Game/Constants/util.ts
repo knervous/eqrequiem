@@ -86,6 +86,10 @@ const {
   Veeshan,
 } = Deity;
 
+export const getDeityName= (deity: number) => {
+  return Object.values(Deity).find((d) => d[0]=== deity)?.[1] || 'Unknown';
+};
+
 
 const {
   SouthQeynos,

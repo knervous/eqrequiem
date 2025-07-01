@@ -5,6 +5,7 @@ import "github.com/knervous/eqgo/internal/db/jetgen/eqgo/model"
 type Client struct {
 	Mob
 	CharData     *model.CharacterData
+	CharStats    *model.CharacterStatsRecord
 	ConnectionID string
 }
 
