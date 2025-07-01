@@ -28,6 +28,7 @@ const rootFolder = "eqrequiem";
 const rootPath = process.argv[2] || process.cwd();
 
 const zippedPrefixes = ["eqrequiem/textures"];
+const skipZip = true;
 let allowedFolders = new Set([
   "data",
   "models",
@@ -48,18 +49,18 @@ const allowedRootFolders = new Set(["uifiles", "eqrequiem"]);
 const allowedRootFiles = new Set(["eqstr_us.txt"]);
 let allowedExtensions = new Set([
   //".txt",
-  // ".json",
-  // ".basis",
+  ".json",
+  ".basis",
   // ".glb", prefer .babylon
-  ".webp",
-  ".dds",
+  // ".webp",
+  // ".dds",
   // ".wav", // only if it changes uncomment
   // ".mid",
-  ".gif",
-  ".tga",
-  ".png",
-  // ".babylon",
-  // ".bin"
+  // ".gif",
+  // ".tga",
+  // ".png",
+  ".babylon",
+  ".bin"
 ]);
 
 if (onlyTextures) {
@@ -217,9 +218,6 @@ function wavToMp3Stream(filePath) {
 }
 
 async function processFile(fullPath, containerClient, relativeKey, prefix) {
-  if (!fullPath.includes('sakui')) {
-    return;
-  }
   const ext = extname(fullPath).toLowerCase();
   let targetName;
   let src;
@@ -293,6 +291,10 @@ async function processDirectory(
     )
   ) {
     const zipName = `${relativeRoot}.zip`;
+    // Skip zip
+    if (skipZip) {
+      return;
+    }
     await zipAndUploadDirectory(dirPath, containerClient, zipName);
     return;
   }
@@ -326,7 +328,7 @@ async function processDirectory(
 async function zipAndUploadDirectory(dirPath, containerClient, blobName) {
   // This is for packed zip tetures specific to an s3d, they're already uploaded so returning for now
   // TBD pipeline on this in the future;
-  return;
+  // return;
   const tempDir = await mkdtemp(join(tmpdir(), "zip-upload-"));
   console.log(`Created temp directory: ${tempDir}`);
 

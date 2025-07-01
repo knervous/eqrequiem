@@ -10,17 +10,15 @@ import {
 import { AnimationDefinitions } from "@game/Animation/animation-constants";
 import { Nameplate } from "./nameplate";
 import type { TextRenderer } from "@babylonjs/addons";
-import { capnpToPlainObject, sleep } from "@game/Constants/util";
+import { sleep } from "@game/Constants/util";
 import { PlayerProfile } from "@game/Net/internal/api/capnp/player";
 import type GameManager from "@game/Manager/game-manager";
 import { createTargetRingMaterial } from "./entity-select-ring";
 import { InventorySlot } from "@game/Player/player-constants";
+// import { DebugWireframe } from "./entity-debug";
 
-const modelOffset = {
-  rat: 2.5,
-  bat: -7,
-  bet: -2,
-  sne: -1,
+const modelYOffset = {
+  gnn: 0.5,
 };
 export class Entity extends BABYLON.TransformNode {
   public spawn: Spawn | PlayerProfile;
@@ -375,7 +373,7 @@ export class Entity extends BABYLON.TransformNode {
       bodyInst.setParent(this.nodeContainer);
       bodyInst.position = new BABYLON.Vector3(
         0,
-        this.spawnScale * (modelOffset[this.entityContainer.model] ?? 0.5),
+        this.spawnScale * (0.5),
         0,
       ); //this.spawnPosition;
       bodyInst.scaling.setAll(this.spawnScale);
@@ -435,6 +433,7 @@ export class Entity extends BABYLON.TransformNode {
   private setupPhysics() {
     // Get BB for physics capsule height
     const boundingBox = this.entityContainer.boundingBox;
+    const yOffset = this.entityContainer.boundingBox?.yOffset ?? 0;
     let capsuleHeight = 5.5;
     if (boundingBox) {
       const min = new BABYLON.Vector3(
@@ -447,9 +446,8 @@ export class Entity extends BABYLON.TransformNode {
         boundingBox.max[1],
         boundingBox.max[2],
       );
-
       const extents = max.subtract(min).scale(0.5);
-      capsuleHeight = extents.z * 2 * this.spawnScale; // Scale height by spawnScale
+      capsuleHeight = extents.y * 2 * this.spawnScale;
 
       // For entities other than self create a pick instance here.. maybe later just
       // disable pick when in first person, it gets annoying.
@@ -473,12 +471,21 @@ export class Entity extends BABYLON.TransformNode {
 
     // Setup physics body with capsule shape
     const capsuleRadius = 2.0;
-    const pointA = new BABYLON.Vector3(0, capsuleHeight / 2 - capsuleRadius, 0);
+    const pointA = new BABYLON.Vector3(0, (capsuleHeight / 2 - capsuleRadius), 0);
     const pointB = new BABYLON.Vector3(
       0,
       -(capsuleHeight / 2 - capsuleRadius),
       0,
     );
+    pointA.y += yOffset / 2;
+    pointB.y += yOffset / 2;
+    // Slight adjustment to ensure the capsule is centered
+    //pointA.y -= 0.5;
+    pointB.y -= 0.3;
+
+    if (modelYOffset[this.entityContainer.model]) {
+      pointB.y += modelYOffset[this.entityContainer.model];
+    }
 
     this.capsuleShape = new BABYLON.PhysicsShapeCapsule(
       pointA,
@@ -569,7 +576,7 @@ export class Entity extends BABYLON.TransformNode {
       secondaryInstance.setParent(this.nodeContainer);
       secondaryInstance.position = new BABYLON.Vector3(
         0,
-        this.spawnScale * (modelOffset[this.entityContainer.model] ?? 0.5),
+        this.spawnScale * (0.5),
         0,
       );
       secondaryInstance.metadata = {

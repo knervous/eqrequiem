@@ -181,7 +181,6 @@ export default class DayNightSkyManager {
       return;
     }
     // Create sky dome
-    console.log(`[SkyManager] Sky mesh loaded: ${name}`, sky);
     sky.addAllToScene();
     this.#domeRoot = sky.meshes[0];
     //this.scale = 100;

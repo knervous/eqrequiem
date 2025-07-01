@@ -52,6 +52,7 @@ export class DebugWireframe {
     // Parent to the physics node's transform and position at the center
     this.wireframeMesh.parent = this.entity.physicsBody?.transformNode || null;
     this.wireframeMesh.position = center;
+    this.wireframeMesh.position.y += boundingBox.yOffset;
     //this.wireframeMesh.position.y += 5; // Adjust height to match entity's position
     // Apply scaling to match entity
     this.wireframeMesh.scaling.setAll(1.5); // Match the entity's scaling

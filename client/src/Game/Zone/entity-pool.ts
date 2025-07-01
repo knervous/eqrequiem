@@ -43,12 +43,13 @@ export default class EntityPool {
   }
 
   async AddSpawn(spawn: Spawn) {
+    
     if (spawn.isNpc) {
       //   return;
     }
 
-    if (!spawn.name.includes('Connie')) {
-    //  return;
+    if (!spawn.name.includes('rodent')) {
+      //return;
     }
 
     this.spawns[spawn.spawnId] = spawn;

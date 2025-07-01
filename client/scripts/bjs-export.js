@@ -2,7 +2,7 @@ import fs from "fs-extra";
 import path from "path";
 import pLimit from "p-limit";
 import { NodeIO } from "@gltf-transform/core";
-import { EXTTextureWebP } from "@gltf-transform/extensions";
+import { EXTTextureWebP, KHRMaterialsSpecular } from "@gltf-transform/extensions";
 import { NullEngine } from "@babylonjs/core/Engines/nullEngine.js";
 import { Scene } from "@babylonjs/core/scene.js";
 import * as BABYLON from "@babylonjs/core/index.js";
@@ -65,7 +65,7 @@ import "@babylonjs/loaders/glTF/2.0/index.js";
     limit(async () => {
       const relPath = path.relative(rootPath, filePath);
       console.log(`\n→ Processing: ${relPath}`);
-    //  if (!relPath.toLowerCase().endsWith("qcm.glb")) return;
+      //if (!relPath.toLowerCase().endsWith("rat.glb")) return;
 
       try {
         // 1) Read the original GLB into a Buffer
@@ -113,7 +113,7 @@ import "@babylonjs/loaders/glTF/2.0/index.js";
             const meshes = result.meshes || [];
             if (animationGroups.length && skeletons.length) {
               const idleGroup =
-                animationGroups.find((g) => g.name === "p01") ||
+                animationGroups.find((g) => g.name === "pos") ||
                 animationGroups[0];
               const skel = skeletons[0];
 
@@ -127,7 +127,7 @@ import "@babylonjs/loaders/glTF/2.0/index.js";
               scene.beginAnimation(
                 skel,
                 idleGroup.from,
-                idleGroup.from + 1,
+                idleGroup.from,
                 false,
                 1,
               );
@@ -146,6 +146,15 @@ import "@babylonjs/loaders/glTF/2.0/index.js";
                   Number.NEGATIVE_INFINITY,
                 ),
               };
+              const rootMesh = BABYLON.Mesh.MergeMeshes(
+                meshes.filter(m => m.getTotalVertices() > 0),
+                true,
+                true,
+                undefined,
+                false,
+                true,
+              );
+
               skel.computeAbsoluteMatrices(true);
               // For each bone, grab its world‐space head position…
               skel.bones.forEach((bone) => {
@@ -155,10 +164,43 @@ import "@babylonjs/loaders/glTF/2.0/index.js";
                 skelBB.min.minimizeInPlace(headPos);
                 skelBB.max.maximizeInPlace(headPos);
               });
+
+                            // Get PE offset and normalize
+              const peBone = skel.bones.find((b) => b.name === "pe");
+              let yOffset = 0;
+              if (peBone) { 
+                const localY = peBone._localPosition.y;
+                skelBB.min.y -= localY;
+                skelBB.max.y -= localY;
+                yOffset = localY;
+              }
+              rootMesh.refreshBoundingInfo(true);
+               const bb = rootMesh.getBoundingInfo().boundingBox;
+               const center  = bb.center.asArray();
+              const min = bb.minimum.asArray().map((v, i) => v - center[i]); 
+              const max = bb.maximum.asArray().map((v, i) => v - center[i]);
               boundingBox = {
-                min: [skelBB.min.x, skelBB.min.y, skelBB.min.z],
-                max: [skelBB.max.x, skelBB.max.y, skelBB.max.z],
-              };
+                min,
+                max,
+                yOffset,
+              }
+               
+              // Compute bounding box for the root mesh
+              // meshes.forEach((m) => {
+              //   // Compute bounding box for each mesh
+              //   const meshBB = m.refreshBoundingInfo(true);
+              //   const bb = meshBB.getBoundingInfo().boundingBox;
+              //   const stop = 123;
+              // });
+              
+
+              // boundingBox = {
+              //   min: [skelBB.min.x, skelBB.min.y, skelBB.min.z],
+              //   max: [skelBB.max.x, skelBB.max.y, skelBB.max.z],
+              //   yOffset,
+              // };
+
+
 
               // restore GPU skinning
               meshes.forEach((m) => {
@@ -182,7 +224,7 @@ import "@babylonjs/loaders/glTF/2.0/index.js";
         let outputBuffer;
         {
           // Initialize NodeIO and register EXTTextureWebP
-          const io = new NodeIO().registerExtensions([EXTTextureWebP]);
+          const io = new NodeIO().registerExtensions([EXTTextureWebP, KHRMaterialsSpecular]);
 
           // Read the GLB from the buffer
           const document = await io.readBinary(new Uint8Array(inputBuffer));

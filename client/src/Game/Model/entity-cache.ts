@@ -9,7 +9,6 @@ import { Entity } from "./entity";
 import { loadBasisTexture } from "./basis-texture";
 import { createVATShaderMaterial } from "./entity-material";
 import { PlayerProfile } from "@game/Net/internal/api/capnp/player";
-import { textureFromBakedVertexDataHalfFloat } from "./vat-texture";
 import type GameManager from "@game/Manager/game-manager";
 import { InventorySlot } from "@game/Player/player-constants";
 
@@ -24,7 +23,7 @@ export type EntityContainer = {
   textureAtlas: string[];
   animations: AnimationEntry[];
   secondaryMeshes: number;
-  boundingBox?: { min: number[]; max: number[]; center: number[] } | null;
+  boundingBox?: { min: number[]; max: number[]; center: number[], yOffset: number } | null;
 };
 
 export type AnimationEntry = {
@@ -110,21 +109,21 @@ export class EntityCache {
           textureAtlas = reused?.textureAtlas ?? [];
         } else {
           // Vertex animation data
+          const canUseFloat16 = scene.getEngine().getCaps().textureHalfFloat;
+          const vat16 = `${model}.bin.gz`;
+          const vat32 = `${model}_32.bin.gz`;
           const vatBytes = await FileSystem.getFileBytes(
             `eqrequiem/vat`,
-            `${model}.bin.gz`,
+            canUseFloat16 ? vat16 : vat32,
           );
           if (!vatBytes) {
             console.warn(`[EntityCache] VAT data missing for ${model}`);
             return null;
           }
-          const vatData = new Uint16Array(vatBytes);
+          const vatData = canUseFloat16 ? new Uint16Array(vatBytes) : new Float32Array(vatBytes);
           manager = new BABYLON.BakedVertexAnimationManager(scene);
-          manager.texture = textureFromBakedVertexDataHalfFloat(
-            vatData,
-            container.skeletons[0],
-            scene,
-          );
+          const baker = new BABYLON.VertexAnimationBaker(scene, container.skeletons[0]);
+          manager.texture = baker.textureFromBakedVertexData(vatData);
           manager.texture.name = `vatTexture16_${model}`;
 
           // Basis textures
@@ -241,7 +240,6 @@ export class EntityCache {
           mesh.material = shaderMaterial!;
           mesh.parent = bucket;
         }
-
         // Clean up skeletons
         container.skeletons.forEach((s) => s.bones.forEach((b) => b.dispose()));
         container.skeletons.forEach((s) => s.dispose());

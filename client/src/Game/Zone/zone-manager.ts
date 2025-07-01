@@ -283,7 +283,6 @@ export class ZoneManager {
       return;
     }
     result.addAllToScene();
-    console.log("Result", result);
     this.zoneContainer!.scaling.x = -1;
 
     result.meshes.forEach((mesh) => {

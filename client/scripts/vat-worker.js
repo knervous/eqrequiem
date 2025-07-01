@@ -64,6 +64,7 @@ import path from "path";
   const floatsPerFrame = (skeleton.bones.length + 1) * 16;
   const totalFrames = ranges.reduce((sum, r) => sum + (r.to - r.from + 1), 0);
   const vertexData = new Uint16Array(floatsPerFrame * totalFrames);
+  const vertexData32 = new Float32Array(floatsPerFrame * totalFrames);
 
   let frameIdx = 0;
   for (const ag of animationGroups) {
@@ -80,6 +81,7 @@ import path from "path";
       const base = frameIdx * floatsPerFrame;
       matrices.forEach((val, i) => {
         vertexData[base + i] = BABYLON.ToHalfFloat(val);
+        vertexData32[base + i] = val;
       });
       frameIdx++;
     }
@@ -94,6 +96,12 @@ import path from "path";
   await fs.writeFile(
     path.join(outputDir, `${baseName}.bin`),
     Buffer.from(vertexData.buffer),
+  );
+
+  // Binary VAT32
+  await fs.writeFile(
+    path.join(outputDir, `${baseName}_32.bin`),
+    Buffer.from(vertexData32.buffer),
   );
 
   // JSON ranges

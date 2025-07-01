@@ -10,12 +10,6 @@ export async function swapMaterialTexture(
   flipY: boolean = false,
 ): Promise<BJS.Texture | null> {
 
-  const cached = BabylonTextureCache.get(newTextureName);
-  if (cached) {
-    applyToMaterial(material, cached, flipY);
-    return cached;
-  }
-
   // First try to find in the scene
   const fileName = material.metadata?.gltf?.extras?.file;
   if (!fileName) {
@@ -25,6 +19,16 @@ export async function swapMaterialTexture(
     );
     return null;
   }
+
+  const cacheKey = `${fileName}-${newTextureName}`;
+
+
+  const cached = BabylonTextureCache.get(cacheKey);
+  if (cached) {
+    applyToMaterial(material, cached, flipY);
+    return cached;
+  }
+
 
   const bytes = await FileSystem.getFileBytes(
     `eqrequiem/textures/${fileName}`,
@@ -51,8 +55,8 @@ export async function swapMaterialTexture(
       console.error("Texture load error:", msg, ex);
     },
   );
-  newTex.name = newTextureName;
-  BabylonTextureCache.set(newTextureName, newTex);
+  newTex.name = cacheKey;
+  BabylonTextureCache.set(cacheKey, newTex);
   applyToMaterial(material, newTex, flipY);
   return newTex;
 }

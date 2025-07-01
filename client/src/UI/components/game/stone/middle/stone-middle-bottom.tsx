@@ -120,18 +120,34 @@ export const StoneMiddleBottom: React.FC<{
         width: `100%`,
         fontFamily: "Arial, sans-serif",
         zIndex: 100,
-        background: `url(${chatBg.image})`,
-        backgroundSize: "cover",
         m: '7px',
         p: '5px',
         height: `${height - 24}px`,
         boxShadow: [
-          "inset 0 0 10px rgba(0,0,0,0.4)",   // overall darkening
-          "inset 0 5px 8px rgba(0,0,0,0.2)",   // top shadow
-          "inset 5px 0 8px rgba(0,0,0,0.2)",   // left shadow
-          "inset -5px 0 8px rgba(0,0,0,0.2)",  // right shadow
-          "inset 0 -5px 8px rgba(0,0,0,0.2)",  // bottom shadow
+          "inset 0 0 12px rgba(0,0,0,0.15)", // Soft overall shadow
+          "inset 0 6px 10px rgba(0,0,0,0.1)", // Top shadow
+          "inset 6px 0 10px rgba(0,0,0,0.1)", // Left shadow
+          "inset -6px 0 10px rgba(0,0,0,0.1)", // Right shadow
+          "inset 0 -6px 10px rgba(0,0,0,0.1)", // Bottom shadow
         ].join(","),
+        background: `
+        linear-gradient(
+      to right,
+      rgba(0,0,0,0.3) 0%,
+      transparent 15%,
+      transparent 85%,
+      rgba(0,0,0,0.3) 100%
+    ),
+    linear-gradient(
+      to bottom,
+      rgba(0,0,0,0.3) 0%,
+      transparent 15%,
+      transparent 85%,
+      rgba(0,0,0,0.3) 100%
+    ), url(${chatBg.image})
+  `,
+        backgroundSize: "cover",
+
       },
       messages: {
         userSelect: "none" as const,
@@ -144,22 +160,26 @@ export const StoneMiddleBottom: React.FC<{
         "&::-webkit-scrollbar": { width: "4px" },
         "&::-webkit-scrollbar-thumb": { backgroundColor: "#555" },
       },
-      inputBox: { p: 0.5 },
+      inputBox: { },
       textField: {
         "& .MuiOutlinedInput-root": {
           "& fieldset": { border: "none" },
           "&:hover fieldset": { border: "none" },
           "&.Mui-focused fieldset": { border: "none" },
         },
+        margin: 0,
+        padding: 0,
       },
       inputProps: {
         className: "cursor-caret",
         style: {
-          border: "1px solid gray",
-          color: "#ffffff",
+          //border: "1px solid gray",
+          color: "#dedede",
           backgroundColor: "rgba(0, 0, 0, 0.5)",
           fontSize: "14px",
           height: "24px",
+          margin: 0,
+          padding: '0px !important',
         },
       },
     }),
@@ -210,6 +230,8 @@ export const StoneMiddleBottom: React.FC<{
                 key={idx}
                 sx={{
                   wordBreak: "break-word",
+                  fontSize: "16px",
+                  fontFamily: "Arial, sans-serif",
                   color: "#222", //chatMessage.color ?? "black",
                 }}
               >
@@ -234,14 +256,7 @@ export const StoneMiddleBottom: React.FC<{
             />
           </Box>
         </Stack>
-        {/* <Box
-          sx={{
-            width: chatBgRight.entry.width * 2,
-            height: "100%",
-            backgroundImage: `url(${chatBgRight.image})`,
-            backgroundSize: "cover",
-          }}
-        /> */}
+
       </Stack>
     </Box>
   );
