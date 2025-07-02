@@ -27,12 +27,12 @@ func (z *ZoneInstance) spawnTick(now time.Time, npc *entity.NPC) {
 	}
 
 	// 2) save old pos and velocity for movement and transition check
-	oldX, oldY, oldZ := npc.Position.X, npc.Position.Y, npc.Position.Z
+	oldX, oldY, oldZ := npc.Mob.X, npc.Mob.Y, npc.Mob.Z
 	oldVel := npc.GetVelocity()
 
 	// 3) interpolation logic
 	target := npc.GridEntries[npc.GridIndex]
-	tx, ty, tz := float32(target.X), float32(target.Y), float32(target.Z)
+	tx, ty, tz := target.X, target.Y, target.Z
 	delta := now.Sub(npc.LastUpdate).Seconds()
 	npc.LastUpdate = now
 
@@ -48,30 +48,30 @@ func (z *ZoneInstance) spawnTick(now time.Time, npc *entity.NPC) {
 		npc.PauseUntil = now.Add(time.Duration(pause) * time.Second)
 		npc.GridIndex = (npc.GridIndex + 1) % len(npc.GridEntries)
 	} else {
-		dist := float32(math.Sqrt(float64(distSq)))
-		moveAmt := npc.Speed * 5 * float32(delta)
+		dist := math.Sqrt(float64(distSq))
+		moveAmt := float64(npc.Speed) * 5 * delta
 		if moveAmt >= dist {
-			npc.Position.X, npc.Position.Y, npc.Position.Z = tx, ty, tz
+			npc.Mob.X, npc.Mob.Y, npc.Mob.Z = tx, ty, tz
 			pause := npc.GridEntries[npc.GridIndex].Pause
 			npc.PauseUntil = now.Add(time.Duration(pause) * time.Second)
 			npc.GridIndex = (npc.GridIndex + 1) % len(npc.GridEntries)
 		} else {
 			frac := moveAmt / dist
-			npc.Position.X += dx * frac
-			npc.Position.Y += dy * frac
-			npc.Position.Z += dz * frac
+			npc.Mob.X += dx * frac
+			npc.Mob.Y += dy * frac
+			npc.Mob.Z += dz * frac
 		}
 		// compute and set velocity based on movement
-		vx := (npc.Position.X - oldX) / float32(delta)
-		vy := (npc.Position.Y - oldY) / float32(delta)
-		vz := (npc.Position.Z - oldZ) / float32(delta)
+		vx := (npc.Mob.X - oldX) / (delta)
+		vy := (npc.Mob.Y - oldY) / (delta)
+		vz := (npc.Mob.Z - oldZ) / (delta)
 		npc.SetVelocity(entity.Velocity{X: vx, Y: vy, Z: vz})
 
 		// update heading
-		npc.Position.Heading = float32(math.Atan2(
-			float64(npc.Position.Y-oldY),
-			float64(npc.Position.X-oldX),
-		) * (180.0 / math.Pi))
+		npc.Mob.Heading = math.Atan2(
+			npc.Mob.Y-oldY,
+			npc.Mob.X-oldX,
+		) * (180.0 / math.Pi)
 	}
 
 	// Todo don't need to send NPC updates if velocity hasn't changed
@@ -82,12 +82,12 @@ func (z *ZoneInstance) spawnTick(now time.Time, npc *entity.NPC) {
 	wasMoving := oldVel.X != 0 || oldVel.Y != 0 || oldVel.Z != 0
 	stoppedNow := newVel.X == 0 && newVel.Y == 0 && newVel.Z == 0
 	if wasMoving && stoppedNow {
-		z.markMoved(npc.MobID, npc.Position)
+		z.markMoved(npc.MobID, npc.Position())
 	}
 
 	// 5) mark moved if position changed
-	if npc.Position.X != oldX || npc.Position.Y != oldY || npc.Position.Z != oldZ {
-		z.markMoved(npc.MobID, npc.Position)
+	if npc.Mob.X != oldX || npc.Mob.Y != oldY || npc.Mob.Z != oldZ {
+		z.markMoved(npc.MobID, npc.Position())
 	}
 }
 
@@ -114,27 +114,21 @@ func (z *ZoneInstance) processSpawns() {
 			}
 			npcID := z.nextEntityID
 			z.nextEntityID++
-			npc := &entity.NPC{
-				GridEntries:  z.gridEntries[int64(entry.Spawn2.Pathgrid)],
-				GridIndex:    1,
-				NextGridMove: now.Add(time.Duration(entry.Spawn2.Respawntime) * time.Millisecond),
-				NpcData:      *npcType,
-				PauseUntil:   now,
-				LastUpdate:   now, // for interpolation deltas
-				Mob: entity.Mob{
+			npc := entity.NewNPC(
+				entity.Mob{
 					Speed:   1,
 					Zone:    z,
 					Spawn2:  *entry.Spawn2,
 					MobID:   npcID,
 					MobName: npcType.Name,
-					Position: entity.MobPosition{
-						X:       float32(entry.Spawn2.X),
-						Y:       float32(entry.Spawn2.Y),
-						Z:       float32(entry.Spawn2.Z),
-						Heading: float32(entry.Spawn2.Heading),
-					},
 				},
-			}
+				npcType,
+				z.gridEntries[int64(entry.Spawn2.Pathgrid)],
+				1, // Start at the first grid entry
+				now.Add(time.Duration(entry.Spawn2.Respawntime)*time.Millisecond),
+				now, // Pause until now, will be updated in spawnTick
+				now, // Last update time
+			)
 
 			z.Npcs[npcID] = npc
 			z.Entities[npcID] = npc
@@ -142,7 +136,7 @@ func (z *ZoneInstance) processSpawns() {
 			z.spawn2ToNpc[spawn2ID] = npcID
 			z.spawnTimers[spawn2ID] = now.Add(24 * time.Hour)
 
-			z.registerNewClientGrid(npcID, npc.Mob.Position)
+			z.registerNewClientGrid(npcID, npc.Position())
 
 			// fmt.Printf("Spawned NPC %s (ID: %d) at Spawn2 %d (%.2f, %.2f, %.2f)\n",
 			// 	npcType.Name, npcID, spawn2ID, entry.Spawn2.X, entry.Spawn2.Y, entry.Spawn2.Z)
@@ -163,7 +157,7 @@ func (z *ZoneInstance) processSpawns() {
 				spawn.SetBodytype(int32(npcType.Bodytype))
 				spawn.SetEquipChest(int32(npcType.Texture))
 				spawn.SetHeading(int32(entry.Spawn2.Heading))
-				c := worldToCell(npc.Position.X, npc.Position.Y, npc.Position.Z)
+				c := worldToCell(npc.Mob.X, npc.Mob.Y, npc.Mob.Z)
 				spawn.SetCellX(int32(c[0]))
 				spawn.SetCellY(int32(c[1]))
 				spawn.SetCellZ(int32(c[2]))

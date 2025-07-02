@@ -11,20 +11,45 @@ type Client struct {
 	ConnectionID string
 }
 
-func (c *Client) GetPosition() MobPosition {
+func NewClient(charData *model.CharacterData, charStats *model.CharacterStatsRecord) *Client {
+	client := &Client{
+		CharData:  charData,
+		CharStats: charStats,
+	}
+	client.Mob.CurrentHp = int(charData.CurHp)
+	client.Mob.DataSource = client
+
+	// In values for ctor
+	client.Mob.CurrentHp = int(charData.CurHp)
+	client.Mob.CurrentMana = int(charData.Mana)
+
+	client.UpdateStats()
+
+	return client
+}
+
+func (c *Client) Level() uint8 {
+	return uint8(c.CharData.Level)
+}
+
+func (c *Client) Class() uint8 {
+	return uint8(c.CharData.Class)
+}
+
+func (c *Client) Position() MobPosition {
 	return MobPosition{
-		X:       float32(c.CharData.X),
-		Y:       float32(c.CharData.Y),
-		Z:       float32(c.CharData.Z),
-		Heading: float32(c.CharData.Heading),
+		X:       c.CharData.X,
+		Y:       c.CharData.Y,
+		Z:       c.CharData.Z,
+		Heading: c.CharData.Heading,
 	}
 }
 
 func (c *Client) SetPosition(pos MobPosition) {
-	c.CharData.X = float64(pos.X)
-	c.CharData.Y = float64(pos.Y)
-	c.CharData.Z = float64(pos.Z)
-	c.CharData.Heading = float64(pos.Heading)
+	c.CharData.X = pos.X
+	c.CharData.Y = pos.Y
+	c.CharData.Z = pos.Z
+	c.CharData.Heading = pos.Heading
 }
 
 func (n *Client) Type() int32 { return EntityTypePlayer }

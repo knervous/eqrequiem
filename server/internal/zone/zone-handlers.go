@@ -47,14 +47,14 @@ func HandleClientUpdate(z *ZoneInstance, ses *session.Session, payload []byte) {
 		return
 	}
 	// 1) get old position
-	oldPos := ses.Client.GetPosition()
+	oldPos := ses.Client.Position()
 
 	// 2) parse new position from request
 	newPosition := entity.MobPosition{
-		X:       req.X(),
-		Y:       req.Y(),
-		Z:       req.Z(),
-		Heading: req.Heading(),
+		X:       float64(req.X()),
+		Y:       float64(req.Y()),
+		Z:       float64(req.Z()),
+		Heading: float64(req.Heading()),
 	}
 
 	// 3) compute velocity as delta position
@@ -76,8 +76,8 @@ func HandleClientUpdate(z *ZoneInstance, ses *session.Session, payload []byte) {
 		return
 	}
 
-	if ses.Client.GetMob().Animation != anim {
-		ses.Client.GetMob().Animation = anim
+	if ses.Client.Mob.Animation != anim {
+		ses.Client.Mob.Animation = anim
 		pkt := func(m eq.EntityAnimation) error {
 			err := m.SetAnimation(anim)
 			if err != nil {
@@ -228,15 +228,15 @@ func HandleRequestClientZoneChange(z *ZoneInstance, ses *session.Session, payloa
 	playerProfile.SetZ(float32(charData.Z))
 	playerProfile.SetHeading(float32(charData.Heading))
 	playerProfile.SetSpawnId(int32(clientEntry.EntityId))
+	playerProfile.SetDeity(int32(charData.Deity))
 	stats, err := playerProfile.NewStats()
 	if err != nil {
 		log.Printf("failed to create PlayerProfile stats message: %v", err)
 		return
 	}
-	mob := ses.Client.GetMob()
+	mob := ses.Client.Mob
 	stats.SetAaPoints(int32(*charStats.AaPoints))
 	stats.SetAc(int32(mob.AC))
-	stats.SetMana(int64(mob.CurrentMana))
 	stats.SetMagicResist(mob.MR)
 	stats.SetFireResist(mob.FR)
 	stats.SetColdResist(mob.CR)
@@ -244,7 +244,9 @@ func HandleRequestClientZoneChange(z *ZoneInstance, ses *session.Session, payloa
 	stats.SetDiseaseResist(mob.DR)
 	stats.SetAttack(int32(mob.ATK))
 	stats.SetHp(int64(mob.CurrentHp))
-	stats.SetMana(int64(mob.MaxMana))
+	stats.SetMana(int64(mob.CurrentMana))
+	stats.SetMaxHp(int64(mob.MaxHp))
+	stats.SetMaxMana(int64(mob.MaxMana))
 
 	// TODO stats fill the rest of this out
 
@@ -276,7 +278,7 @@ func HandleRequestClientZoneChange(z *ZoneInstance, ses *session.Session, payloa
 		spawn.SetHelm(int32(npc.NpcData.Helmtexture))
 		spawn.SetEquipChest(int32(npc.NpcData.Texture))
 		spawn.SetHeading(int32(npc.Heading))
-		c := worldToCell(npc.Position.X, npc.Position.Y, npc.Position.Z)
+		c := worldToCell(npc.Mob.X, npc.Mob.Y, npc.Mob.Z)
 		spawn.SetCellX(int32(c[0]))
 		spawn.SetCellY(int32(c[1]))
 		spawn.SetCellZ(int32(c[2]))
@@ -286,7 +288,9 @@ func HandleRequestClientZoneChange(z *ZoneInstance, ses *session.Session, payloa
 			return
 		}
 	}
-	z.registerNewClientGrid(clientEntry.EntityId, entity.MobPosition{X: float32(charData.X), Y: float32(charData.Y), Z: float32(charData.Z), Heading: float32(charData.Heading)})
+	z.registerNewClientGrid(clientEntry.EntityId, entity.MobPosition{
+		X: charData.X, Y: charData.Y, Z: charData.Z, Heading: charData.Heading,
+	})
 
 	// Send all client entities
 	for sessionId, client := range z.ClientEntries {

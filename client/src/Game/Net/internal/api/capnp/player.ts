@@ -223,7 +223,7 @@ export class CharacterStatsRecord extends $.Struct {
   static readonly _capnp = {
     displayName: "CharacterStatsRecord",
     id: "ef73278a0e5d89af",
-    size: new $.ObjectSize(296, 1)
+    size: new $.ObjectSize(272, 1)
   };
   get characterId(): number {
     return $.utils.getInt32(0, this);
@@ -369,293 +369,233 @@ export class CharacterStatsRecord extends $.Struct {
   set corruptionResist(value: number) {
     $.utils.setInt32(100, value, this);
   }
-  get heroicStrength(): number {
+  get haste(): number {
     return $.utils.getInt32(104, this);
   }
-  set heroicStrength(value: number) {
+  set haste(value: number) {
     $.utils.setInt32(104, value, this);
   }
-  get heroicStamina(): number {
+  get accuracy(): number {
     return $.utils.getInt32(108, this);
   }
-  set heroicStamina(value: number) {
+  set accuracy(value: number) {
     $.utils.setInt32(108, value, this);
   }
-  get heroicDexterity(): number {
+  get attack(): number {
     return $.utils.getInt32(112, this);
   }
-  set heroicDexterity(value: number) {
+  set attack(value: number) {
     $.utils.setInt32(112, value, this);
   }
-  get heroicAgility(): number {
+  get avoidance(): number {
     return $.utils.getInt32(116, this);
   }
-  set heroicAgility(value: number) {
+  set avoidance(value: number) {
     $.utils.setInt32(116, value, this);
   }
-  get heroicIntelligence(): number {
+  get clairvoyance(): number {
     return $.utils.getInt32(120, this);
   }
-  set heroicIntelligence(value: number) {
+  set clairvoyance(value: number) {
     $.utils.setInt32(120, value, this);
   }
-  get heroicWisdom(): number {
+  get combatEffects(): number {
     return $.utils.getInt32(124, this);
   }
-  set heroicWisdom(value: number) {
+  set combatEffects(value: number) {
     $.utils.setInt32(124, value, this);
   }
-  get heroicCharisma(): number {
+  get damageShieldMitigation(): number {
     return $.utils.getInt32(128, this);
   }
-  set heroicCharisma(value: number) {
+  set damageShieldMitigation(value: number) {
     $.utils.setInt32(128, value, this);
   }
-  get heroicMagicResist(): number {
+  get damageShield(): number {
     return $.utils.getInt32(132, this);
   }
-  set heroicMagicResist(value: number) {
+  set damageShield(value: number) {
     $.utils.setInt32(132, value, this);
   }
-  get heroicFireResist(): number {
+  get dotShielding(): number {
     return $.utils.getInt32(136, this);
   }
-  set heroicFireResist(value: number) {
+  set dotShielding(value: number) {
     $.utils.setInt32(136, value, this);
   }
-  get heroicColdResist(): number {
+  get hpRegen(): number {
     return $.utils.getInt32(140, this);
   }
-  set heroicColdResist(value: number) {
+  set hpRegen(value: number) {
     $.utils.setInt32(140, value, this);
   }
-  get heroicPoisonResist(): number {
+  get manaRegen(): number {
     return $.utils.getInt32(144, this);
   }
-  set heroicPoisonResist(value: number) {
+  set manaRegen(value: number) {
     $.utils.setInt32(144, value, this);
   }
-  get heroicDiseaseResist(): number {
+  get enduranceRegen(): number {
     return $.utils.getInt32(148, this);
   }
-  set heroicDiseaseResist(value: number) {
+  set enduranceRegen(value: number) {
     $.utils.setInt32(148, value, this);
   }
-  get heroicCorruptionResist(): number {
+  get shielding(): number {
     return $.utils.getInt32(152, this);
   }
-  set heroicCorruptionResist(value: number) {
+  set shielding(value: number) {
     $.utils.setInt32(152, value, this);
   }
-  get haste(): number {
+  get spellDamage(): number {
     return $.utils.getInt32(156, this);
   }
-  set haste(value: number) {
+  set spellDamage(value: number) {
     $.utils.setInt32(156, value, this);
   }
-  get accuracy(): number {
+  get spellShielding(): number {
     return $.utils.getInt32(160, this);
   }
-  set accuracy(value: number) {
+  set spellShielding(value: number) {
     $.utils.setInt32(160, value, this);
   }
-  get attack(): number {
+  get strikethrough(): number {
     return $.utils.getInt32(164, this);
   }
-  set attack(value: number) {
+  set strikethrough(value: number) {
     $.utils.setInt32(164, value, this);
   }
-  get avoidance(): number {
+  get stunResist(): number {
     return $.utils.getInt32(168, this);
   }
-  set avoidance(value: number) {
+  set stunResist(value: number) {
     $.utils.setInt32(168, value, this);
   }
-  get clairvoyance(): number {
+  get backstab(): number {
     return $.utils.getInt32(172, this);
   }
-  set clairvoyance(value: number) {
+  set backstab(value: number) {
     $.utils.setInt32(172, value, this);
   }
-  get combatEffects(): number {
+  get wind(): number {
     return $.utils.getInt32(176, this);
   }
-  set combatEffects(value: number) {
+  set wind(value: number) {
     $.utils.setInt32(176, value, this);
   }
-  get damageShieldMitigation(): number {
+  get brass(): number {
     return $.utils.getInt32(180, this);
   }
-  set damageShieldMitigation(value: number) {
+  set brass(value: number) {
     $.utils.setInt32(180, value, this);
   }
-  get damageShield(): number {
+  get string(): number {
     return $.utils.getInt32(184, this);
   }
-  set damageShield(value: number) {
+  set string(value: number) {
     $.utils.setInt32(184, value, this);
   }
-  get dotShielding(): number {
+  get percussion(): number {
     return $.utils.getInt32(188, this);
   }
-  set dotShielding(value: number) {
+  set percussion(value: number) {
     $.utils.setInt32(188, value, this);
   }
-  get hpRegen(): number {
+  get singing(): number {
     return $.utils.getInt32(192, this);
   }
-  set hpRegen(value: number) {
+  set singing(value: number) {
     $.utils.setInt32(192, value, this);
   }
-  get manaRegen(): number {
+  get baking(): number {
     return $.utils.getInt32(196, this);
   }
-  set manaRegen(value: number) {
+  set baking(value: number) {
     $.utils.setInt32(196, value, this);
   }
-  get enduranceRegen(): number {
+  get alchemy(): number {
     return $.utils.getInt32(200, this);
   }
-  set enduranceRegen(value: number) {
+  set alchemy(value: number) {
     $.utils.setInt32(200, value, this);
   }
-  get shielding(): number {
+  get tailoring(): number {
     return $.utils.getInt32(204, this);
   }
-  set shielding(value: number) {
+  set tailoring(value: number) {
     $.utils.setInt32(204, value, this);
   }
-  get spellDamage(): number {
+  get blacksmithing(): number {
     return $.utils.getInt32(208, this);
   }
-  set spellDamage(value: number) {
+  set blacksmithing(value: number) {
     $.utils.setInt32(208, value, this);
   }
-  get spellShielding(): number {
+  get fletching(): number {
     return $.utils.getInt32(212, this);
   }
-  set spellShielding(value: number) {
+  set fletching(value: number) {
     $.utils.setInt32(212, value, this);
   }
-  get strikethrough(): number {
+  get brewing(): number {
     return $.utils.getInt32(216, this);
   }
-  set strikethrough(value: number) {
+  set brewing(value: number) {
     $.utils.setInt32(216, value, this);
   }
-  get stunResist(): number {
+  get jewelry(): number {
     return $.utils.getInt32(220, this);
   }
-  set stunResist(value: number) {
+  set jewelry(value: number) {
     $.utils.setInt32(220, value, this);
   }
-  get backstab(): number {
+  get pottery(): number {
     return $.utils.getInt32(224, this);
   }
-  set backstab(value: number) {
+  set pottery(value: number) {
     $.utils.setInt32(224, value, this);
   }
-  get wind(): number {
+  get research(): number {
     return $.utils.getInt32(228, this);
   }
-  set wind(value: number) {
+  set research(value: number) {
     $.utils.setInt32(228, value, this);
   }
-  get brass(): number {
+  get alcohol(): number {
     return $.utils.getInt32(232, this);
   }
-  set brass(value: number) {
+  set alcohol(value: number) {
     $.utils.setInt32(232, value, this);
   }
-  get string(): number {
+  get fishing(): number {
     return $.utils.getInt32(236, this);
   }
-  set string(value: number) {
+  set fishing(value: number) {
     $.utils.setInt32(236, value, this);
   }
-  get percussion(): number {
+  get tinkering(): number {
     return $.utils.getInt32(240, this);
   }
-  set percussion(value: number) {
+  set tinkering(value: number) {
     $.utils.setInt32(240, value, this);
   }
-  get singing(): number {
-    return $.utils.getInt32(244, this);
+  get maxHp(): bigint {
+    return $.utils.getInt64(248, this);
   }
-  set singing(value: number) {
-    $.utils.setInt32(244, value, this);
+  set maxHp(value: bigint) {
+    $.utils.setInt64(248, value, this);
   }
-  get baking(): number {
-    return $.utils.getInt32(248, this);
+  get maxMana(): bigint {
+    return $.utils.getInt64(256, this);
   }
-  set baking(value: number) {
-    $.utils.setInt32(248, value, this);
+  set maxMana(value: bigint) {
+    $.utils.setInt64(256, value, this);
   }
-  get alchemy(): number {
-    return $.utils.getInt32(252, this);
+  get maxEndurance(): bigint {
+    return $.utils.getInt64(264, this);
   }
-  set alchemy(value: number) {
-    $.utils.setInt32(252, value, this);
-  }
-  get tailoring(): number {
-    return $.utils.getInt32(256, this);
-  }
-  set tailoring(value: number) {
-    $.utils.setInt32(256, value, this);
-  }
-  get blacksmithing(): number {
-    return $.utils.getInt32(260, this);
-  }
-  set blacksmithing(value: number) {
-    $.utils.setInt32(260, value, this);
-  }
-  get fletching(): number {
-    return $.utils.getInt32(264, this);
-  }
-  set fletching(value: number) {
-    $.utils.setInt32(264, value, this);
-  }
-  get brewing(): number {
-    return $.utils.getInt32(268, this);
-  }
-  set brewing(value: number) {
-    $.utils.setInt32(268, value, this);
-  }
-  get jewelry(): number {
-    return $.utils.getInt32(272, this);
-  }
-  set jewelry(value: number) {
-    $.utils.setInt32(272, value, this);
-  }
-  get pottery(): number {
-    return $.utils.getInt32(276, this);
-  }
-  set pottery(value: number) {
-    $.utils.setInt32(276, value, this);
-  }
-  get research(): number {
-    return $.utils.getInt32(280, this);
-  }
-  set research(value: number) {
-    $.utils.setInt32(280, value, this);
-  }
-  get alcohol(): number {
-    return $.utils.getInt32(284, this);
-  }
-  set alcohol(value: number) {
-    $.utils.setInt32(284, value, this);
-  }
-  get fishing(): number {
-    return $.utils.getInt32(288, this);
-  }
-  set fishing(value: number) {
-    $.utils.setInt32(288, value, this);
-  }
-  get tinkering(): number {
-    return $.utils.getInt32(292, this);
-  }
-  set tinkering(value: number) {
-    $.utils.setInt32(292, value, this);
+  set maxEndurance(value: bigint) {
+    $.utils.setInt64(264, value, this);
   }
   toString(): string {
     return "CharacterStatsRecord_" + super.toString();

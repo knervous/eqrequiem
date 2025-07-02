@@ -40,7 +40,7 @@ func init() {
 	questInterface = GetQuestInterface("qeynos")
 	questEvent = &quest.QuestEvent{}
 	npc = &entity.NPC{
-		NpcData: model.NpcTypes{
+		NpcData: &model.NpcTypes{
 			Name: "Captaaaain Tillin",
 		},
 	}

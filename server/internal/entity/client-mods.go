@@ -41,25 +41,115 @@ func (client *Client) CalcHaste() {
 
 // Core stats
 func (client *Client) CalcSTR() {
-
+	client.Mob.STR = int32(client.CharData.Str)
+	if client.Mob.ItemBonuses != nil {
+		client.Mob.STR += client.Mob.ItemBonuses.STR
+	}
+	if client.Mob.SpellBonuses != nil {
+		client.Mob.STR += client.Mob.SpellBonuses.STR
+	}
+	if client.Mob.AABonuses != nil {
+		client.Mob.STR += client.Mob.AABonuses.STR
+	}
+	if client.Mob.STR < 1 {
+		client.Mob.STR = 1
+	}
 }
 
 func (client *Client) CalcSTA() {
+	client.Mob.STA = int32(client.CharData.Sta)
+	if client.Mob.ItemBonuses != nil {
+		client.Mob.STA += client.Mob.ItemBonuses.STA
+	}
+	if client.Mob.SpellBonuses != nil {
+		client.Mob.STA += client.Mob.SpellBonuses.STA
+	}
+	if client.Mob.AABonuses != nil {
+		client.Mob.STA += client.Mob.AABonuses.STA
+	}
+	if client.Mob.STA < 1 {
+		client.Mob.STA = 1
+	}
 
 }
 func (client *Client) CalcDEX() {
+	client.Mob.DEX = int32(client.CharData.Dex)
+	if client.Mob.ItemBonuses != nil {
+		client.Mob.DEX += client.Mob.ItemBonuses.DEX
+	}
+	if client.Mob.SpellBonuses != nil {
+		client.Mob.DEX += client.Mob.SpellBonuses.DEX
+	}
+	if client.Mob.AABonuses != nil {
+		client.Mob.DEX += client.Mob.AABonuses.DEX
+	}
+	if client.Mob.DEX < 1 {
+		client.Mob.DEX = 1
+	}
 
 }
 func (client *Client) CalcAGI() {
+	client.Mob.AGI = int32(client.CharData.Agi)
+	if client.Mob.ItemBonuses != nil {
+		client.Mob.AGI += client.Mob.ItemBonuses.AGI
+	}
+	if client.Mob.SpellBonuses != nil {
+		client.Mob.AGI += client.Mob.SpellBonuses.AGI
+	}
+	if client.Mob.AABonuses != nil {
+		client.Mob.AGI += client.Mob.AABonuses.AGI
+	}
+	if client.Mob.AGI < 1 {
+		client.Mob.AGI = 1
+	}
 
 }
 func (client *Client) CalcINT() {
+	client.Mob.INT = int32(client.CharData.Int)
+	if client.Mob.ItemBonuses != nil {
+		client.Mob.INT += client.Mob.ItemBonuses.INT
+	}
+	if client.Mob.SpellBonuses != nil {
+		client.Mob.INT += client.Mob.SpellBonuses.INT
+	}
+	if client.Mob.AABonuses != nil {
+		client.Mob.INT += client.Mob.AABonuses.INT
+	}
+	if client.Mob.INT < 1 {
+		client.Mob.INT = 1
+	}
 
 }
 func (client *Client) CalcWIS() {
+	client.Mob.WIS = int32(client.CharData.Wis)
+	if client.Mob.ItemBonuses != nil {
+		client.Mob.WIS += client.Mob.ItemBonuses.WIS
+	}
+	if client.Mob.SpellBonuses != nil {
+		client.Mob.WIS += client.Mob.SpellBonuses.WIS
+	}
+	if client.Mob.AABonuses != nil {
+		client.Mob.WIS += client.Mob.AABonuses.WIS
+	}
+	if client.Mob.WIS < 1 {
+		client.Mob.WIS = 1
+	}
 
 }
 func (client *Client) CalcCHA() {
+	client.Mob.CHA = int32(client.CharData.Cha)
+	if client.Mob.ItemBonuses != nil {
+		client.Mob.CHA += client.Mob.ItemBonuses.CHA
+	}
+	if client.Mob.SpellBonuses != nil {
+		client.Mob.CHA += client.Mob.SpellBonuses.CHA
+	}
+	if client.Mob.AABonuses != nil {
+		client.Mob.CHA += client.Mob.AABonuses.CHA
+	}
+	if client.Mob.CHA < 1 {
+		client.Mob.CHA = 1
+	}
 
 }
 
@@ -356,9 +446,86 @@ func (c *Client) CalcPR() {
 
 // Hp / mana
 func (client *Client) CalcMaxHP() {
+	maxHp := client.CalcBaseHP()
+	if client.Mob.ItemBonuses != nil {
+		maxHp += int(client.Mob.ItemBonuses.HP)
+	}
+	if client.Mob.SpellBonuses != nil {
+		maxHp += int(client.Mob.SpellBonuses.HP)
+	}
+	if client.Mob.AABonuses != nil {
+		maxHp += int(client.Mob.AABonuses.HP)
+	}
+	if client.Mob.CurrentHp > maxHp {
+		client.Mob.CurrentHp = maxHp
+	}
+	client.Mob.MaxHp = maxHp
+}
+
+func (client *Client) CalcBaseHP() int {
+	baseHp := 5
+	var post255 uint32 = 0
+	lm := client.Mob.GetClassLevelFactor()
+	if (client.Mob.STA-255)/2 > 0 {
+		post255 = uint32((client.Mob.STA - 255) / 2)
+	} else {
+		post255 = 0
+	}
+	baseHp += (int(client.CharData.Level) * int(lm) / 10) +
+		((int(client.Mob.STA) - int(post255)) * int(client.CharData.Level) * int(lm) / 3000) +
+		((int(post255) * int(client.CharData.Level)) * int(lm) / 6000)
+	return baseHp
+}
+
+func (c *Client) CalcBaseMana() int32 {
+	mindLesserFactor := int32(0)
+	mindFactor := int32(0)
+	baseMana := int32(0)
+	switch c.Mob.GetCasterClass() {
+	case CasterClassWisdom, CasterClassIntelligence:
+		wisInt := int32(0)
+		if c.Mob.GetCasterClass() == CasterClassWisdom {
+			wisInt = c.Mob.WIS
+		} else {
+			wisInt = c.Mob.INT
+		}
+		if (wisInt-199)/2 > 0 {
+			mindLesserFactor = (wisInt - 199) / 2
+		} else {
+			mindLesserFactor = 0
+		}
+		mindFactor = wisInt - mindLesserFactor
+		if wisInt > 100 {
+			baseMana = (((5 * (mindFactor + 20)) / 2) * 3 * int32(c.CharData.Level)) / 40
+		} else {
+			baseMana = (((5 * (mindFactor + 200)) / 2) * 3 * int32(c.CharData.Level)) / 100
+		}
+	case CasterClassNone:
+		baseMana = 0
+
+	}
+	return baseMana
 
 }
 
-func (client *Client) CalcMaxMana() {
+func (c *Client) CalcMaxMana() {
+	spellBonusMana := int32(0)
+	itemBonusMana := int32(0)
+	m := &c.Mob
+	if m.SpellBonuses != nil {
+		spellBonusMana = int32(m.SpellBonuses.Mana)
+	}
+	if m.ItemBonuses != nil {
+		itemBonusMana = int32(m.ItemBonuses.Mana)
+	}
+	switch m.GetCasterClass() {
+	case CasterClassIntelligence, CasterClassWisdom:
+		m.MaxMana = int(c.CalcBaseMana() + spellBonusMana + itemBonusMana)
+	default:
+		m.MaxMana = 0
+	}
 
+	if m.MaxMana < 0 {
+		m.MaxMana = 0
+	}
 }

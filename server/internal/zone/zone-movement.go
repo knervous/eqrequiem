@@ -28,11 +28,11 @@ func packCell(c [3]int) int64 {
 }
 
 // worldToCell computes the 3D cell indices for a world position.
-func worldToCell(x, y, z float32) [3]int {
+func worldToCell(x, y, z float64) [3]int {
 	return [3]int{
-		int(math.Floor(float64(x) / cellSize)),
-		int(math.Floor(float64(y) / cellSize)),
-		int(math.Floor(float64(z) / cellSize)),
+		int(math.Floor(x / cellSize)),
+		int(math.Floor(y / cellSize)),
+		int(math.Floor(z / cellSize)),
 	}
 }
 
@@ -191,17 +191,17 @@ func (z *ZoneInstance) FlushUpdates() {
 					m := updates.At(i)
 					p, _ := m.NewPosition()
 					ent := z.Entities[eid]
-					pos := ent.GetPosition()
+					pos := ent.Position()
 					m.SetSpawnId(int32(eid))
-					p.SetX(pos.X)
-					p.SetY(pos.Y)
-					p.SetZ(pos.Z)
-					m.SetHeading(pos.Heading)
+					p.SetX(float32(pos.X))
+					p.SetY(float32(pos.Y))
+					p.SetZ(float32(pos.Z))
+					m.SetHeading(float32(pos.Heading))
 					v, _ := m.NewVelocity()
 					vel := ent.GetMob().GetVelocity()
-					v.SetX(vel.X)
-					v.SetY(vel.Y)
-					v.SetZ(vel.Z)
+					v.SetX(float32(vel.X))
+					v.SetY(float32(vel.Y))
+					v.SetZ(float32(vel.Z))
 					if ent.GetMob().Type() == EntityTypeNPC {
 						if vel.X == 0 && vel.Y == 0 && vel.Z == 0 {
 							m.SetAnimation(Idle1)

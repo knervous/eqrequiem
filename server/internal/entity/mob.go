@@ -13,17 +13,23 @@ const (
 	EntityTypeCorpse
 )
 
+type EntityDataSource interface {
+	Level() uint8
+	Class() uint8
+}
+
 type Mob struct {
 	model.Spawn2
 	MobID     int
 	MobName   string
-	Position  MobPosition
 	Velocity  Velocity
 	Zone      ZoneAccess
 	Speed     float32
+	Size      float32
 	Animation string
 	dirty     bool
 
+	DataSource   EntityDataSource
 	AC           int
 	MitigationAc int
 	ATK          int32
@@ -56,6 +62,7 @@ type Mob struct {
 	OwnerId uint16
 
 	Moving    bool
+	Running   bool
 	Targeted  int
 	Findable  bool
 	Trackable bool
@@ -73,13 +80,6 @@ func (m *Mob) Say(msg string) {
 	m.Zone.BroadcastChannelMessage(m.CleanName(), msg, 0)
 }
 
-func (m *Mob) GetPosition() MobPosition {
-	return m.Position
-}
-
-func (m *Mob) SetPosition(pos MobPosition) {
-	m.Position = pos
-}
 func (m *Mob) SetVelocity(vel Velocity) {
 	m.Velocity = vel
 }
@@ -96,16 +96,16 @@ func (m *Mob) ClearDirty()   { m.dirty = false }
 func (m *Mob) IsDirty() bool { return m.dirty }
 
 type MobPosition struct {
-	X       float32
-	Y       float32
-	Z       float32
-	Heading float32
+	X       float64
+	Y       float64
+	Z       float64
+	Heading float64
 }
 
 type Velocity struct {
-	X float32
-	Y float32
-	Z float32
+	X float64
+	Y float64
+	Z float64
 }
 
 type Entity interface {
@@ -114,7 +114,8 @@ type Entity interface {
 	Name() string
 	Type() int32
 	Say(msg string)
-	GetPosition() MobPosition
+	Position() MobPosition
+	SetPosition(pos MobPosition)
 }
 
 // Functions
@@ -141,4 +142,30 @@ func (m *Mob) CalcAC() {
 
 func (m *Mob) ProcessItemCaps() {
 
+}
+
+type CasterClass uint8
+
+const (
+	CasterClassWisdom CasterClass = iota // Wisdom casters
+	CasterClassIntelligence
+	CasterClassNone
+)
+
+func (m *Mob) GetCasterClass() CasterClass {
+	switch m.DataSource.Class() {
+	case constants.Class_Cleric, constants.Class_Paladin, constants.Class_Ranger, constants.Class_Druid,
+		constants.Class_Shaman, constants.Class_Beastlord, constants.Class_ClericGM, constants.Class_PaladinGM,
+		constants.Class_RangerGM, constants.Class_DruidGM, constants.Class_ShamanGM, constants.Class_BeastlordGM:
+		return CasterClassWisdom // Wisdom casters
+
+	case constants.Class_ShadowKnight, constants.Class_Bard, constants.Class_Necromancer,
+		constants.Class_Wizard, constants.Class_Magician, constants.Class_Enchanter,
+		constants.Class_ShadowKnightGM, constants.Class_BardGM, constants.Class_NecromancerGM,
+		constants.Class_WizardGM, constants.Class_MagicianGM, constants.Class_EnchanterGM:
+		return CasterClassIntelligence // Intelligence casters
+
+	default:
+		return CasterClassNone // Non-casters
+	}
 }

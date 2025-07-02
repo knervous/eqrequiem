@@ -194,7 +194,7 @@ export const StoneInventory: React.FC<{
           className="invui"
           sx={{ top: 114, left: 65, color: "lightgray !important" }}
         >
-          100/100{/* HP placeholder */}
+          {player?.stats?.hp ?? 0}/{player?.stats?.maxHp ?? 0}{/* HP placeholder */}
         </Typography>
         <Typography
           className="invui"
@@ -219,8 +219,8 @@ export const StoneInventory: React.FC<{
           direction="column"
           sx={{
             top: 257,
-            left: 40,
-            width: "60px",
+            left: 30,
+            width: "90px",
             height: "300px",
           }}
           spacing={0}

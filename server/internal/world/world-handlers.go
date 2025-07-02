@@ -133,11 +133,7 @@ func HandleZoneSession(ses *session.Session, payload []byte, wh *WorldHandler) b
 		return false
 	}
 	charStats, _ := db_character.GetCharacterStatsByID(int32(charData.ID))
-	ses.Client = &entity.Client{
-		CharData:  charData,
-		CharStats: charStats,
-	}
-	ses.Client.UpdateStats()
+	ses.Client = entity.NewClient(charData, charStats)
 	db_character.UpdateCharacterStats(ses.Client.CharStats)
 	ses.ZoneID = int(req.ZoneId())
 	ses.InstanceID = int(req.InstanceId())
