@@ -387,9 +387,7 @@ export const LoginWindowComponent: React.FC = () => {
               for (const zone of Object.values(supportedZones)) {
                 
                 const name = zone.shortName;
-                if (name !== 'nro') {
-                  continue;
-                }
+  
                 const associatedFiles: string[] = [];
                 // temp short circuit
                 // if (name !== "blackburrow") {

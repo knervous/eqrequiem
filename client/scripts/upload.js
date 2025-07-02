@@ -28,7 +28,7 @@ const rootFolder = "eqrequiem";
 const rootPath = process.argv[2] || process.cwd();
 
 const zippedPrefixes = ["eqrequiem/textures"];
-const skipZip = true;
+const skipZip = false;
 let allowedFolders = new Set([
   "data",
   "models",
@@ -53,14 +53,14 @@ let allowedExtensions = new Set([
   ".basis",
   // ".glb", prefer .babylon
   // ".webp",
-  // ".dds",
+   ".dds",
   // ".wav", // only if it changes uncomment
   // ".mid",
   // ".gif",
   // ".tga",
   // ".png",
-  ".babylon",
-  ".bin"
+  // ".babylon",
+  // ".bin"
 ]);
 
 if (onlyTextures) {
