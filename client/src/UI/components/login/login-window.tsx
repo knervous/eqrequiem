@@ -376,17 +376,20 @@ export const LoginWindowComponent: React.FC = () => {
               // const load2Files = ["load2.s3d","load2_obj.s3d"];
               // await fsBindings.processFiles('load2', load2Files);
               // // First do global
-              console.log('Processing global');
-              const globalCharFiles = ["global_chr.s3d", "global3_chr.s3d", "global4_chr.s3d"];
-              await fsBindings.processFiles('global_chr', globalCharFiles);
+              // console.log('Processing global');
+              // const globalCharFiles = ["global_chr.s3d", "global3_chr.s3d", "global4_chr.s3d"];
+              // await fsBindings.processFiles('global_chr', globalCharFiles);
 
               // //Items
               // console.log('Processing items');
               // const itemFiles = ["gequip.s3d", "gequip2.s3d"];
               // await fsBindings.processFiles('gequip', itemFiles);
               for (const zone of Object.values(supportedZones)) {
-                continue;
+                
                 const name = zone.shortName;
+                if (name !== 'nro') {
+                  continue;
+                }
                 const associatedFiles: string[] = [];
                 // temp short circuit
                 // if (name !== "blackburrow") {
@@ -395,7 +398,7 @@ export const LoginWindowComponent: React.FC = () => {
                 const exists = await getEQFileExists("zones", `${name}.glb`);
                 if (exists) {
                   console.log("Exists, skipping", name);
-                  continue;
+                //  continue;
                 }
                 console.log("Process", name);
                 for await (const fileHandle of getFilesRecursively(

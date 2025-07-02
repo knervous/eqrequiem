@@ -168,7 +168,13 @@ export class CommandHandler {
   @command("zone")
   async commandZone(args: string[]) {
     const zone = args[0];
-
+    const supportedZone = Object.entries(supportedZones).find(
+      ([, value]) => value.shortName.toLowerCase() === zone.toLowerCase(),
+    );
+    if (!supportedZone) {
+      addChatLine(`Zone '${zone}' not found. Type /listzones to see available zones.`);
+      return;
+    } 
     if (!WorldSocket.isConnected) {
       GameManager.instance.loadZone(zone);
       GameManager.instance.instantiatePlayer({
@@ -183,9 +189,7 @@ export class CommandHandler {
       return;
     }
     if (zone) {
-      const supportedZone = Object.entries(supportedZones).find(
-        ([, value]) => value.shortName.toLowerCase() === zone.toLowerCase(),
-      );
+
       WorldSocket.sendMessage(
         OpCodes.RequestClientZoneChange,
         RequestClientZoneChange,
@@ -194,7 +198,7 @@ export class CommandHandler {
           x: 5,
           y: 5,
           z: 5,
-          zoneId: supportedZone ? supportedZone[0] : 0,
+          zoneId: supportedZone[0],
         },
       );
     } else {
