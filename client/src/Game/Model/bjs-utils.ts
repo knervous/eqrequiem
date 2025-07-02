@@ -4,6 +4,9 @@ import { FileSystem } from "@game/FileSystem/filesystem";
 import { BabylonTextureCache } from "./bjs-texture-cache";
 
 
+const pending = {
+
+};
 export async function swapMaterialTexture(
   material: BJS.Material,
   newTextureName: string,
@@ -22,12 +25,15 @@ export async function swapMaterialTexture(
 
   const cacheKey = `${fileName}-${newTextureName}`;
 
-
+  if (pending[cacheKey]) {
+    return null;
+  }
   const cached = BabylonTextureCache.get(cacheKey);
   if (cached) {
     applyToMaterial(material, cached, flipY);
     return cached;
   }
+  pending[cacheKey] = true;
 
 
   const bytes = await FileSystem.getFileBytes(
@@ -58,7 +64,9 @@ export async function swapMaterialTexture(
   newTex.name = cacheKey;
   BabylonTextureCache.set(cacheKey, newTex);
   applyToMaterial(material, newTex, flipY);
+  pending[cacheKey] = false;
   return newTex;
+  
 }
 
 /** Assigns the newly loaded texture to the correct slot on Standard vs PBR materials */
