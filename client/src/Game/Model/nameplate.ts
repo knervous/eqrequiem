@@ -5,17 +5,15 @@ import GameManager from "@game/Manager/game-manager";
 export class Nameplate {
   private static fontAsset: FontAsset | null = null;
   private static initialized = false;
-  private static scene: BJS.Scene | null = null;
   private static textRenderers: TextRenderer[] = [];
   private static initPromise: Promise<void> | null = null; // Store the initialization promise
 
   private static async initialize(scene: BJS.Scene): Promise<void> {
     if (Nameplate.initialized) return;
     Nameplate.initialized = true;
-    Nameplate.scene = scene;
     const sdfFontDefinition = await (await fetch("https://assets.babylonjs.com/fonts/roboto-regular.json")).text();
     Nameplate.fontAsset = new FontAsset(sdfFontDefinition, "https://assets.babylonjs.com/fonts/roboto-regular.png");
-    scene.onAfterRenderObservable.add(this.render.bind(this));
+    scene.onAfterRenderCameraObservable.add(this.render.bind(this));
   }
 
   public static dispose() {
@@ -25,14 +23,12 @@ export class Nameplate {
     this.textRenderers = [];
   }
 
-  private static render() {
-    if (!Nameplate.scene || !Nameplate.fontAsset) return;
-    const camera = GameManager.instance.scene?.activeCamera;
-    if (!camera) return;
-
-    Nameplate.textRenderers.forEach((renderer) => {
-      renderer.render(camera!.getViewMatrix(), camera!.getProjectionMatrix());
-    });
+  private static render(camera: BJS.Camera): void {
+    if (camera === GameManager.instance.Camera && Nameplate.fontAsset) {
+      Nameplate.textRenderers.forEach((renderer) => {
+        renderer.render(camera.getViewMatrix(), camera.getProjectionMatrix());
+      });
+    }
   }
 
   static async removeNameplate(tr: TextRenderer): Promise<void> {

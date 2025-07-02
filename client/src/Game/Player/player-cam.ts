@@ -1,6 +1,7 @@
 import BABYLON from "@bjs";
 import type * as BJS from "@babylonjs/core";
 import type Player from "./player";
+import { Entity } from "@game/Model/entity";
 
 export class PlayerCamera {
   private player: Player;
@@ -10,6 +11,8 @@ export class PlayerCamera {
   private minCameraDistance: number = 0.5;
   private maxCameraDistance: number = 35;
   private cameraDistance: number = 13;
+  private preferredCameraDistance: number = 13;
+  private cameraCollided: boolean = false;
   private cameraHeight: number = 5;
   private canvas: HTMLCanvasElement | null = null;
   private isLocked: boolean = false;
@@ -163,7 +166,7 @@ export class PlayerCamera {
 
     if (buttonIndex === 0) {
       this.leftButtonDown = !up;
-    } 
+    }
     if (buttonIndex === 2) {
       this.rightButtonDown = !up;
     }
@@ -218,15 +221,19 @@ export class PlayerCamera {
   public adjustCameraDistance(delta: number) {
     if (!this.player.playerEntity) return;
     const deltaCoefficient = 1.2;
-    this.cameraDistance = Math.max(
+    this.preferredCameraDistance = Math.max(
       this.minCameraDistance,
       Math.min(
         this.maxCameraDistance,
-        this.cameraDistance + delta * deltaCoefficient,
+        this.preferredCameraDistance + delta * deltaCoefficient,
       ),
     );
-    this.isFirstPerson = this.cameraDistance <= this.minCameraDistance;
-    this.player.playerEntity.toggleVisibility(!this.isFirstPerson);
+    this.isFirstPerson = this.preferredCameraDistance <= this.minCameraDistance;
+    if (this.player.gameManager.SecondaryCamera !== null) {
+      this.player.playerEntity.toggleVisibility(true);
+    } else {
+      this.player.playerEntity.toggleVisibility(!this.isFirstPerson);
+    }
     this.updateCameraPosition();
   }
 
@@ -258,10 +265,68 @@ export class PlayerCamera {
     this.updateCameraPosition();
   }
 
+  private checkCollision(entity: Entity): boolean {
+    const plugin = this.player.physicsPlugin;
+    const position = this.player.playerEntity?.spawnPosition;
+    if (!position) {
+      return false;
+    }
+    const result = new BABYLON.PhysicsRaycastResult();
+
+    plugin.raycast(this.camera.position, position, result);
+
+    if (
+      result.hasHit &&
+      result.body?.motionType === BABYLON.PhysicsMotionType.STATIC
+    ) {
+      return true;
+    }
+
+    if (this.cameraCollided) {
+      const hDist = this.preferredCameraDistance * Math.cos(this.cameraPitch);
+      const vDist = this.preferredCameraDistance * Math.sin(this.cameraPitch);
+      const forward = entity.getDirection(BABYLON.Axis.X).scale(hDist);
+      const camPosition = this.cameraPosition.clone();
+      camPosition
+        .copyFrom(position)
+        .addInPlace(new BABYLON.Vector3(0, this.cameraHeight + vDist, 0))
+        .addInPlace(forward);
+      plugin.raycast(camPosition, position, result);
+      if (
+        !(
+          result.hasHit &&
+          result.body?.motionType === BABYLON.PhysicsMotionType.STATIC
+        )
+      ) {
+
+        this.cameraCollided = false;
+
+      }
+    }
+    return false;
+  }
+
   public updateCameraPosition() {
     const entity = this.player.playerEntity;
     if (!entity) return;
     const playerPos = entity.spawnPosition.clone();
+
+    // Physics check - keep within bounds of collidable world
+    if (this.checkCollision(entity)) {
+      this.cameraDistance = Math.max(
+        this.minCameraDistance,
+        this.cameraDistance - 2,
+      );
+      this.cameraDistance += 0.1; // Adjust to prevent jitter
+    } else if (!this.cameraCollided && Math.abs(this.cameraDistance - this.preferredCameraDistance) > 0.1) {
+      this.cameraCollided = true;
+      this.cameraDistance = BABYLON.Scalar.Lerp(
+        this.cameraDistance,
+        this.preferredCameraDistance,
+        0.1,
+      );
+    }
+
 
     if (this.isFirstPerson) {
       this.camera.position = playerPos.add(this.lookatOffset);
