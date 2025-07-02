@@ -8,199 +8,100 @@ import (
 	math "math"
 )
 
-type Tint capnp.Struct
+type CharacterSelect capnp.Struct
 
-// Tint_TypeID is the unique identifier for the type Tint.
-const Tint_TypeID = 0xe83eeeca42eb6184
+// CharacterSelect_TypeID is the unique identifier for the type CharacterSelect.
+const CharacterSelect_TypeID = 0xe0ce907abb969349
 
-func NewTint(s *capnp.Segment) (Tint, error) {
-	st, err := capnp.NewStruct(s, capnp.ObjectSize{DataSize: 16, PointerCount: 0})
-	return Tint(st), err
-}
-
-func NewRootTint(s *capnp.Segment) (Tint, error) {
-	st, err := capnp.NewRootStruct(s, capnp.ObjectSize{DataSize: 16, PointerCount: 0})
-	return Tint(st), err
-}
-
-func ReadRootTint(msg *capnp.Message) (Tint, error) {
-	root, err := msg.Root()
-	return Tint(root.Struct()), err
-}
-
-func (s Tint) String() string {
-	str, _ := text.Marshal(0xe83eeeca42eb6184, capnp.Struct(s))
-	return str
-}
-
-func (s Tint) EncodeAsPtr(seg *capnp.Segment) capnp.Ptr {
-	return capnp.Struct(s).EncodeAsPtr(seg)
-}
-
-func (Tint) DecodeFromPtr(p capnp.Ptr) Tint {
-	return Tint(capnp.Struct{}.DecodeFromPtr(p))
-}
-
-func (s Tint) ToPtr() capnp.Ptr {
-	return capnp.Struct(s).ToPtr()
-}
-func (s Tint) IsValid() bool {
-	return capnp.Struct(s).IsValid()
-}
-
-func (s Tint) Message() *capnp.Message {
-	return capnp.Struct(s).Message()
-}
-
-func (s Tint) Segment() *capnp.Segment {
-	return capnp.Struct(s).Segment()
-}
-func (s Tint) Blue() int32 {
-	return int32(capnp.Struct(s).Uint32(0))
-}
-
-func (s Tint) SetBlue(v int32) {
-	capnp.Struct(s).SetUint32(0, uint32(v))
-}
-
-func (s Tint) Green() int32 {
-	return int32(capnp.Struct(s).Uint32(4))
-}
-
-func (s Tint) SetGreen(v int32) {
-	capnp.Struct(s).SetUint32(4, uint32(v))
-}
-
-func (s Tint) Red() int32 {
-	return int32(capnp.Struct(s).Uint32(8))
-}
-
-func (s Tint) SetRed(v int32) {
-	capnp.Struct(s).SetUint32(8, uint32(v))
-}
-
-func (s Tint) UseTint() int32 {
-	return int32(capnp.Struct(s).Uint32(12))
-}
-
-func (s Tint) SetUseTint(v int32) {
-	capnp.Struct(s).SetUint32(12, uint32(v))
-}
-
-// Tint_List is a list of Tint.
-type Tint_List = capnp.StructList[Tint]
-
-// NewTint creates a new list of Tint.
-func NewTint_List(s *capnp.Segment, sz int32) (Tint_List, error) {
-	l, err := capnp.NewCompositeList(s, capnp.ObjectSize{DataSize: 16, PointerCount: 0}, sz)
-	return capnp.StructList[Tint](l), err
-}
-
-// Tint_Future is a wrapper for a Tint promised by a client call.
-type Tint_Future struct{ *capnp.Future }
-
-func (f Tint_Future) Struct() (Tint, error) {
-	p, err := f.Future.Ptr()
-	return Tint(p.Struct()), err
-}
-
-type CharSelectEquip capnp.Struct
-
-// CharSelectEquip_TypeID is the unique identifier for the type CharSelectEquip.
-const CharSelectEquip_TypeID = 0xa41074130e196783
-
-func NewCharSelectEquip(s *capnp.Segment) (CharSelectEquip, error) {
+func NewCharacterSelect(s *capnp.Segment) (CharacterSelect, error) {
 	st, err := capnp.NewStruct(s, capnp.ObjectSize{DataSize: 8, PointerCount: 1})
-	return CharSelectEquip(st), err
+	return CharacterSelect(st), err
 }
 
-func NewRootCharSelectEquip(s *capnp.Segment) (CharSelectEquip, error) {
+func NewRootCharacterSelect(s *capnp.Segment) (CharacterSelect, error) {
 	st, err := capnp.NewRootStruct(s, capnp.ObjectSize{DataSize: 8, PointerCount: 1})
-	return CharSelectEquip(st), err
+	return CharacterSelect(st), err
 }
 
-func ReadRootCharSelectEquip(msg *capnp.Message) (CharSelectEquip, error) {
+func ReadRootCharacterSelect(msg *capnp.Message) (CharacterSelect, error) {
 	root, err := msg.Root()
-	return CharSelectEquip(root.Struct()), err
+	return CharacterSelect(root.Struct()), err
 }
 
-func (s CharSelectEquip) String() string {
-	str, _ := text.Marshal(0xa41074130e196783, capnp.Struct(s))
+func (s CharacterSelect) String() string {
+	str, _ := text.Marshal(0xe0ce907abb969349, capnp.Struct(s))
 	return str
 }
 
-func (s CharSelectEquip) EncodeAsPtr(seg *capnp.Segment) capnp.Ptr {
+func (s CharacterSelect) EncodeAsPtr(seg *capnp.Segment) capnp.Ptr {
 	return capnp.Struct(s).EncodeAsPtr(seg)
 }
 
-func (CharSelectEquip) DecodeFromPtr(p capnp.Ptr) CharSelectEquip {
-	return CharSelectEquip(capnp.Struct{}.DecodeFromPtr(p))
+func (CharacterSelect) DecodeFromPtr(p capnp.Ptr) CharacterSelect {
+	return CharacterSelect(capnp.Struct{}.DecodeFromPtr(p))
 }
 
-func (s CharSelectEquip) ToPtr() capnp.Ptr {
+func (s CharacterSelect) ToPtr() capnp.Ptr {
 	return capnp.Struct(s).ToPtr()
 }
-func (s CharSelectEquip) IsValid() bool {
+func (s CharacterSelect) IsValid() bool {
 	return capnp.Struct(s).IsValid()
 }
 
-func (s CharSelectEquip) Message() *capnp.Message {
+func (s CharacterSelect) Message() *capnp.Message {
 	return capnp.Struct(s).Message()
 }
 
-func (s CharSelectEquip) Segment() *capnp.Segment {
+func (s CharacterSelect) Segment() *capnp.Segment {
 	return capnp.Struct(s).Segment()
 }
-func (s CharSelectEquip) Material() int32 {
+func (s CharacterSelect) CharacterCount() int32 {
 	return int32(capnp.Struct(s).Uint32(0))
 }
 
-func (s CharSelectEquip) SetMaterial(v int32) {
+func (s CharacterSelect) SetCharacterCount(v int32) {
 	capnp.Struct(s).SetUint32(0, uint32(v))
 }
 
-func (s CharSelectEquip) Color() (Tint, error) {
+func (s CharacterSelect) Characters() (CharacterSelectEntry_List, error) {
 	p, err := capnp.Struct(s).Ptr(0)
-	return Tint(p.Struct()), err
+	return CharacterSelectEntry_List(p.List()), err
 }
 
-func (s CharSelectEquip) HasColor() bool {
+func (s CharacterSelect) HasCharacters() bool {
 	return capnp.Struct(s).HasPtr(0)
 }
 
-func (s CharSelectEquip) SetColor(v Tint) error {
-	return capnp.Struct(s).SetPtr(0, capnp.Struct(v).ToPtr())
+func (s CharacterSelect) SetCharacters(v CharacterSelectEntry_List) error {
+	return capnp.Struct(s).SetPtr(0, v.ToPtr())
 }
 
-// NewColor sets the color field to a newly
-// allocated Tint struct, preferring placement in s's segment.
-func (s CharSelectEquip) NewColor() (Tint, error) {
-	ss, err := NewTint(capnp.Struct(s).Segment())
+// NewCharacters sets the characters field to a newly
+// allocated CharacterSelectEntry_List, preferring placement in s's segment.
+func (s CharacterSelect) NewCharacters(n int32) (CharacterSelectEntry_List, error) {
+	l, err := NewCharacterSelectEntry_List(capnp.Struct(s).Segment(), n)
 	if err != nil {
-		return Tint{}, err
+		return CharacterSelectEntry_List{}, err
 	}
-	err = capnp.Struct(s).SetPtr(0, capnp.Struct(ss).ToPtr())
-	return ss, err
+	err = capnp.Struct(s).SetPtr(0, l.ToPtr())
+	return l, err
 }
 
-// CharSelectEquip_List is a list of CharSelectEquip.
-type CharSelectEquip_List = capnp.StructList[CharSelectEquip]
+// CharacterSelect_List is a list of CharacterSelect.
+type CharacterSelect_List = capnp.StructList[CharacterSelect]
 
-// NewCharSelectEquip creates a new list of CharSelectEquip.
-func NewCharSelectEquip_List(s *capnp.Segment, sz int32) (CharSelectEquip_List, error) {
+// NewCharacterSelect creates a new list of CharacterSelect.
+func NewCharacterSelect_List(s *capnp.Segment, sz int32) (CharacterSelect_List, error) {
 	l, err := capnp.NewCompositeList(s, capnp.ObjectSize{DataSize: 8, PointerCount: 1}, sz)
-	return capnp.StructList[CharSelectEquip](l), err
+	return capnp.StructList[CharacterSelect](l), err
 }
 
-// CharSelectEquip_Future is a wrapper for a CharSelectEquip promised by a client call.
-type CharSelectEquip_Future struct{ *capnp.Future }
+// CharacterSelect_Future is a wrapper for a CharacterSelect promised by a client call.
+type CharacterSelect_Future struct{ *capnp.Future }
 
-func (f CharSelectEquip_Future) Struct() (CharSelectEquip, error) {
+func (f CharacterSelect_Future) Struct() (CharacterSelect, error) {
 	p, err := f.Future.Ptr()
-	return CharSelectEquip(p.Struct()), err
-}
-func (p CharSelectEquip_Future) Color() Tint_Future {
-	return Tint_Future{Future: p.Future.Field(0, nil)}
+	return CharacterSelect(p.Struct()), err
 }
 
 type CharacterSelectEntry capnp.Struct
@@ -412,670 +313,103 @@ func (f CharacterSelectEntry_Future) Struct() (CharacterSelectEntry, error) {
 	return CharacterSelectEntry(p.Struct()), err
 }
 
-type CharacterSelect capnp.Struct
+type CharSelectEquip capnp.Struct
 
-// CharacterSelect_TypeID is the unique identifier for the type CharacterSelect.
-const CharacterSelect_TypeID = 0xe0ce907abb969349
+// CharSelectEquip_TypeID is the unique identifier for the type CharSelectEquip.
+const CharSelectEquip_TypeID = 0xa41074130e196783
 
-func NewCharacterSelect(s *capnp.Segment) (CharacterSelect, error) {
+func NewCharSelectEquip(s *capnp.Segment) (CharSelectEquip, error) {
 	st, err := capnp.NewStruct(s, capnp.ObjectSize{DataSize: 8, PointerCount: 1})
-	return CharacterSelect(st), err
+	return CharSelectEquip(st), err
 }
 
-func NewRootCharacterSelect(s *capnp.Segment) (CharacterSelect, error) {
+func NewRootCharSelectEquip(s *capnp.Segment) (CharSelectEquip, error) {
 	st, err := capnp.NewRootStruct(s, capnp.ObjectSize{DataSize: 8, PointerCount: 1})
-	return CharacterSelect(st), err
+	return CharSelectEquip(st), err
 }
 
-func ReadRootCharacterSelect(msg *capnp.Message) (CharacterSelect, error) {
+func ReadRootCharSelectEquip(msg *capnp.Message) (CharSelectEquip, error) {
 	root, err := msg.Root()
-	return CharacterSelect(root.Struct()), err
+	return CharSelectEquip(root.Struct()), err
 }
 
-func (s CharacterSelect) String() string {
-	str, _ := text.Marshal(0xe0ce907abb969349, capnp.Struct(s))
+func (s CharSelectEquip) String() string {
+	str, _ := text.Marshal(0xa41074130e196783, capnp.Struct(s))
 	return str
 }
 
-func (s CharacterSelect) EncodeAsPtr(seg *capnp.Segment) capnp.Ptr {
+func (s CharSelectEquip) EncodeAsPtr(seg *capnp.Segment) capnp.Ptr {
 	return capnp.Struct(s).EncodeAsPtr(seg)
 }
 
-func (CharacterSelect) DecodeFromPtr(p capnp.Ptr) CharacterSelect {
-	return CharacterSelect(capnp.Struct{}.DecodeFromPtr(p))
+func (CharSelectEquip) DecodeFromPtr(p capnp.Ptr) CharSelectEquip {
+	return CharSelectEquip(capnp.Struct{}.DecodeFromPtr(p))
 }
 
-func (s CharacterSelect) ToPtr() capnp.Ptr {
+func (s CharSelectEquip) ToPtr() capnp.Ptr {
 	return capnp.Struct(s).ToPtr()
 }
-func (s CharacterSelect) IsValid() bool {
+func (s CharSelectEquip) IsValid() bool {
 	return capnp.Struct(s).IsValid()
 }
 
-func (s CharacterSelect) Message() *capnp.Message {
+func (s CharSelectEquip) Message() *capnp.Message {
 	return capnp.Struct(s).Message()
 }
 
-func (s CharacterSelect) Segment() *capnp.Segment {
+func (s CharSelectEquip) Segment() *capnp.Segment {
 	return capnp.Struct(s).Segment()
 }
-func (s CharacterSelect) CharacterCount() int32 {
+func (s CharSelectEquip) Material() int32 {
 	return int32(capnp.Struct(s).Uint32(0))
 }
 
-func (s CharacterSelect) SetCharacterCount(v int32) {
+func (s CharSelectEquip) SetMaterial(v int32) {
 	capnp.Struct(s).SetUint32(0, uint32(v))
 }
 
-func (s CharacterSelect) Characters() (CharacterSelectEntry_List, error) {
+func (s CharSelectEquip) Color() (Tint, error) {
 	p, err := capnp.Struct(s).Ptr(0)
-	return CharacterSelectEntry_List(p.List()), err
+	return Tint(p.Struct()), err
 }
 
-func (s CharacterSelect) HasCharacters() bool {
+func (s CharSelectEquip) HasColor() bool {
 	return capnp.Struct(s).HasPtr(0)
 }
 
-func (s CharacterSelect) SetCharacters(v CharacterSelectEntry_List) error {
-	return capnp.Struct(s).SetPtr(0, v.ToPtr())
+func (s CharSelectEquip) SetColor(v Tint) error {
+	return capnp.Struct(s).SetPtr(0, capnp.Struct(v).ToPtr())
 }
 
-// NewCharacters sets the characters field to a newly
-// allocated CharacterSelectEntry_List, preferring placement in s's segment.
-func (s CharacterSelect) NewCharacters(n int32) (CharacterSelectEntry_List, error) {
-	l, err := NewCharacterSelectEntry_List(capnp.Struct(s).Segment(), n)
+// NewColor sets the color field to a newly
+// allocated Tint struct, preferring placement in s's segment.
+func (s CharSelectEquip) NewColor() (Tint, error) {
+	ss, err := NewTint(capnp.Struct(s).Segment())
 	if err != nil {
-		return CharacterSelectEntry_List{}, err
+		return Tint{}, err
 	}
-	err = capnp.Struct(s).SetPtr(0, l.ToPtr())
-	return l, err
+	err = capnp.Struct(s).SetPtr(0, capnp.Struct(ss).ToPtr())
+	return ss, err
 }
 
-// CharacterSelect_List is a list of CharacterSelect.
-type CharacterSelect_List = capnp.StructList[CharacterSelect]
+// CharSelectEquip_List is a list of CharSelectEquip.
+type CharSelectEquip_List = capnp.StructList[CharSelectEquip]
 
-// NewCharacterSelect creates a new list of CharacterSelect.
-func NewCharacterSelect_List(s *capnp.Segment, sz int32) (CharacterSelect_List, error) {
+// NewCharSelectEquip creates a new list of CharSelectEquip.
+func NewCharSelectEquip_List(s *capnp.Segment, sz int32) (CharSelectEquip_List, error) {
 	l, err := capnp.NewCompositeList(s, capnp.ObjectSize{DataSize: 8, PointerCount: 1}, sz)
-	return capnp.StructList[CharacterSelect](l), err
+	return capnp.StructList[CharSelectEquip](l), err
 }
 
-// CharacterSelect_Future is a wrapper for a CharacterSelect promised by a client call.
-type CharacterSelect_Future struct{ *capnp.Future }
+// CharSelectEquip_Future is a wrapper for a CharSelectEquip promised by a client call.
+type CharSelectEquip_Future struct{ *capnp.Future }
 
-func (f CharacterSelect_Future) Struct() (CharacterSelect, error) {
+func (f CharSelectEquip_Future) Struct() (CharSelectEquip, error) {
 	p, err := f.Future.Ptr()
-	return CharacterSelect(p.Struct()), err
+	return CharSelectEquip(p.Struct()), err
 }
-
-type CharacterStatsRecord capnp.Struct
-
-// CharacterStatsRecord_TypeID is the unique identifier for the type CharacterStatsRecord.
-const CharacterStatsRecord_TypeID = 0xef73278a0e5d89af
-
-func NewCharacterStatsRecord(s *capnp.Segment) (CharacterStatsRecord, error) {
-	st, err := capnp.NewStruct(s, capnp.ObjectSize{DataSize: 272, PointerCount: 1})
-	return CharacterStatsRecord(st), err
-}
-
-func NewRootCharacterStatsRecord(s *capnp.Segment) (CharacterStatsRecord, error) {
-	st, err := capnp.NewRootStruct(s, capnp.ObjectSize{DataSize: 272, PointerCount: 1})
-	return CharacterStatsRecord(st), err
-}
-
-func ReadRootCharacterStatsRecord(msg *capnp.Message) (CharacterStatsRecord, error) {
-	root, err := msg.Root()
-	return CharacterStatsRecord(root.Struct()), err
-}
-
-func (s CharacterStatsRecord) String() string {
-	str, _ := text.Marshal(0xef73278a0e5d89af, capnp.Struct(s))
-	return str
-}
-
-func (s CharacterStatsRecord) EncodeAsPtr(seg *capnp.Segment) capnp.Ptr {
-	return capnp.Struct(s).EncodeAsPtr(seg)
-}
-
-func (CharacterStatsRecord) DecodeFromPtr(p capnp.Ptr) CharacterStatsRecord {
-	return CharacterStatsRecord(capnp.Struct{}.DecodeFromPtr(p))
-}
-
-func (s CharacterStatsRecord) ToPtr() capnp.Ptr {
-	return capnp.Struct(s).ToPtr()
-}
-func (s CharacterStatsRecord) IsValid() bool {
-	return capnp.Struct(s).IsValid()
-}
-
-func (s CharacterStatsRecord) Message() *capnp.Message {
-	return capnp.Struct(s).Message()
-}
-
-func (s CharacterStatsRecord) Segment() *capnp.Segment {
-	return capnp.Struct(s).Segment()
-}
-func (s CharacterStatsRecord) CharacterId() int32 {
-	return int32(capnp.Struct(s).Uint32(0))
-}
-
-func (s CharacterStatsRecord) SetCharacterId(v int32) {
-	capnp.Struct(s).SetUint32(0, uint32(v))
-}
-
-func (s CharacterStatsRecord) Name() (string, error) {
-	p, err := capnp.Struct(s).Ptr(0)
-	return p.Text(), err
-}
-
-func (s CharacterStatsRecord) HasName() bool {
-	return capnp.Struct(s).HasPtr(0)
-}
-
-func (s CharacterStatsRecord) NameBytes() ([]byte, error) {
-	p, err := capnp.Struct(s).Ptr(0)
-	return p.TextBytes(), err
-}
-
-func (s CharacterStatsRecord) SetName(v string) error {
-	return capnp.Struct(s).SetText(0, v)
-}
-
-func (s CharacterStatsRecord) Status() int32 {
-	return int32(capnp.Struct(s).Uint32(4))
-}
-
-func (s CharacterStatsRecord) SetStatus(v int32) {
-	capnp.Struct(s).SetUint32(4, uint32(v))
-}
-
-func (s CharacterStatsRecord) Level() int32 {
-	return int32(capnp.Struct(s).Uint32(8))
-}
-
-func (s CharacterStatsRecord) SetLevel(v int32) {
-	capnp.Struct(s).SetUint32(8, uint32(v))
-}
-
-func (s CharacterStatsRecord) Class() int32 {
-	return int32(capnp.Struct(s).Uint32(12))
-}
-
-func (s CharacterStatsRecord) SetClass(v int32) {
-	capnp.Struct(s).SetUint32(12, uint32(v))
-}
-
-func (s CharacterStatsRecord) Race() int32 {
-	return int32(capnp.Struct(s).Uint32(16))
-}
-
-func (s CharacterStatsRecord) SetRace(v int32) {
-	capnp.Struct(s).SetUint32(16, uint32(v))
-}
-
-func (s CharacterStatsRecord) AaPoints() int32 {
-	return int32(capnp.Struct(s).Uint32(20))
-}
-
-func (s CharacterStatsRecord) SetAaPoints(v int32) {
-	capnp.Struct(s).SetUint32(20, uint32(v))
-}
-
-func (s CharacterStatsRecord) Hp() int64 {
-	return int64(capnp.Struct(s).Uint64(24))
-}
-
-func (s CharacterStatsRecord) SetHp(v int64) {
-	capnp.Struct(s).SetUint64(24, uint64(v))
-}
-
-func (s CharacterStatsRecord) Mana() int64 {
-	return int64(capnp.Struct(s).Uint64(32))
-}
-
-func (s CharacterStatsRecord) SetMana(v int64) {
-	capnp.Struct(s).SetUint64(32, uint64(v))
-}
-
-func (s CharacterStatsRecord) Endurance() int64 {
-	return int64(capnp.Struct(s).Uint64(40))
-}
-
-func (s CharacterStatsRecord) SetEndurance(v int64) {
-	capnp.Struct(s).SetUint64(40, uint64(v))
-}
-
-func (s CharacterStatsRecord) Ac() int32 {
-	return int32(capnp.Struct(s).Uint32(48))
-}
-
-func (s CharacterStatsRecord) SetAc(v int32) {
-	capnp.Struct(s).SetUint32(48, uint32(v))
-}
-
-func (s CharacterStatsRecord) Strength() int32 {
-	return int32(capnp.Struct(s).Uint32(52))
-}
-
-func (s CharacterStatsRecord) SetStrength(v int32) {
-	capnp.Struct(s).SetUint32(52, uint32(v))
-}
-
-func (s CharacterStatsRecord) Stamina() int32 {
-	return int32(capnp.Struct(s).Uint32(56))
-}
-
-func (s CharacterStatsRecord) SetStamina(v int32) {
-	capnp.Struct(s).SetUint32(56, uint32(v))
-}
-
-func (s CharacterStatsRecord) Dexterity() int32 {
-	return int32(capnp.Struct(s).Uint32(60))
-}
-
-func (s CharacterStatsRecord) SetDexterity(v int32) {
-	capnp.Struct(s).SetUint32(60, uint32(v))
-}
-
-func (s CharacterStatsRecord) Agility() int32 {
-	return int32(capnp.Struct(s).Uint32(64))
-}
-
-func (s CharacterStatsRecord) SetAgility(v int32) {
-	capnp.Struct(s).SetUint32(64, uint32(v))
-}
-
-func (s CharacterStatsRecord) Intelligence() int32 {
-	return int32(capnp.Struct(s).Uint32(68))
-}
-
-func (s CharacterStatsRecord) SetIntelligence(v int32) {
-	capnp.Struct(s).SetUint32(68, uint32(v))
-}
-
-func (s CharacterStatsRecord) Wisdom() int32 {
-	return int32(capnp.Struct(s).Uint32(72))
-}
-
-func (s CharacterStatsRecord) SetWisdom(v int32) {
-	capnp.Struct(s).SetUint32(72, uint32(v))
-}
-
-func (s CharacterStatsRecord) Charisma() int32 {
-	return int32(capnp.Struct(s).Uint32(76))
-}
-
-func (s CharacterStatsRecord) SetCharisma(v int32) {
-	capnp.Struct(s).SetUint32(76, uint32(v))
-}
-
-func (s CharacterStatsRecord) MagicResist() int32 {
-	return int32(capnp.Struct(s).Uint32(80))
-}
-
-func (s CharacterStatsRecord) SetMagicResist(v int32) {
-	capnp.Struct(s).SetUint32(80, uint32(v))
-}
-
-func (s CharacterStatsRecord) FireResist() int32 {
-	return int32(capnp.Struct(s).Uint32(84))
-}
-
-func (s CharacterStatsRecord) SetFireResist(v int32) {
-	capnp.Struct(s).SetUint32(84, uint32(v))
-}
-
-func (s CharacterStatsRecord) ColdResist() int32 {
-	return int32(capnp.Struct(s).Uint32(88))
-}
-
-func (s CharacterStatsRecord) SetColdResist(v int32) {
-	capnp.Struct(s).SetUint32(88, uint32(v))
-}
-
-func (s CharacterStatsRecord) PoisonResist() int32 {
-	return int32(capnp.Struct(s).Uint32(92))
-}
-
-func (s CharacterStatsRecord) SetPoisonResist(v int32) {
-	capnp.Struct(s).SetUint32(92, uint32(v))
-}
-
-func (s CharacterStatsRecord) DiseaseResist() int32 {
-	return int32(capnp.Struct(s).Uint32(96))
-}
-
-func (s CharacterStatsRecord) SetDiseaseResist(v int32) {
-	capnp.Struct(s).SetUint32(96, uint32(v))
-}
-
-func (s CharacterStatsRecord) CorruptionResist() int32 {
-	return int32(capnp.Struct(s).Uint32(100))
-}
-
-func (s CharacterStatsRecord) SetCorruptionResist(v int32) {
-	capnp.Struct(s).SetUint32(100, uint32(v))
-}
-
-func (s CharacterStatsRecord) Haste() int32 {
-	return int32(capnp.Struct(s).Uint32(104))
-}
-
-func (s CharacterStatsRecord) SetHaste(v int32) {
-	capnp.Struct(s).SetUint32(104, uint32(v))
-}
-
-func (s CharacterStatsRecord) Accuracy() int32 {
-	return int32(capnp.Struct(s).Uint32(108))
-}
-
-func (s CharacterStatsRecord) SetAccuracy(v int32) {
-	capnp.Struct(s).SetUint32(108, uint32(v))
-}
-
-func (s CharacterStatsRecord) Attack() int32 {
-	return int32(capnp.Struct(s).Uint32(112))
-}
-
-func (s CharacterStatsRecord) SetAttack(v int32) {
-	capnp.Struct(s).SetUint32(112, uint32(v))
-}
-
-func (s CharacterStatsRecord) Avoidance() int32 {
-	return int32(capnp.Struct(s).Uint32(116))
-}
-
-func (s CharacterStatsRecord) SetAvoidance(v int32) {
-	capnp.Struct(s).SetUint32(116, uint32(v))
-}
-
-func (s CharacterStatsRecord) Clairvoyance() int32 {
-	return int32(capnp.Struct(s).Uint32(120))
-}
-
-func (s CharacterStatsRecord) SetClairvoyance(v int32) {
-	capnp.Struct(s).SetUint32(120, uint32(v))
-}
-
-func (s CharacterStatsRecord) CombatEffects() int32 {
-	return int32(capnp.Struct(s).Uint32(124))
-}
-
-func (s CharacterStatsRecord) SetCombatEffects(v int32) {
-	capnp.Struct(s).SetUint32(124, uint32(v))
-}
-
-func (s CharacterStatsRecord) DamageShieldMitigation() int32 {
-	return int32(capnp.Struct(s).Uint32(128))
-}
-
-func (s CharacterStatsRecord) SetDamageShieldMitigation(v int32) {
-	capnp.Struct(s).SetUint32(128, uint32(v))
-}
-
-func (s CharacterStatsRecord) DamageShield() int32 {
-	return int32(capnp.Struct(s).Uint32(132))
-}
-
-func (s CharacterStatsRecord) SetDamageShield(v int32) {
-	capnp.Struct(s).SetUint32(132, uint32(v))
-}
-
-func (s CharacterStatsRecord) DotShielding() int32 {
-	return int32(capnp.Struct(s).Uint32(136))
-}
-
-func (s CharacterStatsRecord) SetDotShielding(v int32) {
-	capnp.Struct(s).SetUint32(136, uint32(v))
-}
-
-func (s CharacterStatsRecord) HpRegen() int32 {
-	return int32(capnp.Struct(s).Uint32(140))
-}
-
-func (s CharacterStatsRecord) SetHpRegen(v int32) {
-	capnp.Struct(s).SetUint32(140, uint32(v))
-}
-
-func (s CharacterStatsRecord) ManaRegen() int32 {
-	return int32(capnp.Struct(s).Uint32(144))
-}
-
-func (s CharacterStatsRecord) SetManaRegen(v int32) {
-	capnp.Struct(s).SetUint32(144, uint32(v))
-}
-
-func (s CharacterStatsRecord) EnduranceRegen() int32 {
-	return int32(capnp.Struct(s).Uint32(148))
-}
-
-func (s CharacterStatsRecord) SetEnduranceRegen(v int32) {
-	capnp.Struct(s).SetUint32(148, uint32(v))
-}
-
-func (s CharacterStatsRecord) Shielding() int32 {
-	return int32(capnp.Struct(s).Uint32(152))
-}
-
-func (s CharacterStatsRecord) SetShielding(v int32) {
-	capnp.Struct(s).SetUint32(152, uint32(v))
-}
-
-func (s CharacterStatsRecord) SpellDamage() int32 {
-	return int32(capnp.Struct(s).Uint32(156))
-}
-
-func (s CharacterStatsRecord) SetSpellDamage(v int32) {
-	capnp.Struct(s).SetUint32(156, uint32(v))
-}
-
-func (s CharacterStatsRecord) SpellShielding() int32 {
-	return int32(capnp.Struct(s).Uint32(160))
-}
-
-func (s CharacterStatsRecord) SetSpellShielding(v int32) {
-	capnp.Struct(s).SetUint32(160, uint32(v))
-}
-
-func (s CharacterStatsRecord) Strikethrough() int32 {
-	return int32(capnp.Struct(s).Uint32(164))
-}
-
-func (s CharacterStatsRecord) SetStrikethrough(v int32) {
-	capnp.Struct(s).SetUint32(164, uint32(v))
-}
-
-func (s CharacterStatsRecord) StunResist() int32 {
-	return int32(capnp.Struct(s).Uint32(168))
-}
-
-func (s CharacterStatsRecord) SetStunResist(v int32) {
-	capnp.Struct(s).SetUint32(168, uint32(v))
-}
-
-func (s CharacterStatsRecord) Backstab() int32 {
-	return int32(capnp.Struct(s).Uint32(172))
-}
-
-func (s CharacterStatsRecord) SetBackstab(v int32) {
-	capnp.Struct(s).SetUint32(172, uint32(v))
-}
-
-func (s CharacterStatsRecord) Wind() int32 {
-	return int32(capnp.Struct(s).Uint32(176))
-}
-
-func (s CharacterStatsRecord) SetWind(v int32) {
-	capnp.Struct(s).SetUint32(176, uint32(v))
-}
-
-func (s CharacterStatsRecord) Brass() int32 {
-	return int32(capnp.Struct(s).Uint32(180))
-}
-
-func (s CharacterStatsRecord) SetBrass(v int32) {
-	capnp.Struct(s).SetUint32(180, uint32(v))
-}
-
-func (s CharacterStatsRecord) String_() int32 {
-	return int32(capnp.Struct(s).Uint32(184))
-}
-
-func (s CharacterStatsRecord) SetString_(v int32) {
-	capnp.Struct(s).SetUint32(184, uint32(v))
-}
-
-func (s CharacterStatsRecord) Percussion() int32 {
-	return int32(capnp.Struct(s).Uint32(188))
-}
-
-func (s CharacterStatsRecord) SetPercussion(v int32) {
-	capnp.Struct(s).SetUint32(188, uint32(v))
-}
-
-func (s CharacterStatsRecord) Singing() int32 {
-	return int32(capnp.Struct(s).Uint32(192))
-}
-
-func (s CharacterStatsRecord) SetSinging(v int32) {
-	capnp.Struct(s).SetUint32(192, uint32(v))
-}
-
-func (s CharacterStatsRecord) Baking() int32 {
-	return int32(capnp.Struct(s).Uint32(196))
-}
-
-func (s CharacterStatsRecord) SetBaking(v int32) {
-	capnp.Struct(s).SetUint32(196, uint32(v))
-}
-
-func (s CharacterStatsRecord) Alchemy() int32 {
-	return int32(capnp.Struct(s).Uint32(200))
-}
-
-func (s CharacterStatsRecord) SetAlchemy(v int32) {
-	capnp.Struct(s).SetUint32(200, uint32(v))
-}
-
-func (s CharacterStatsRecord) Tailoring() int32 {
-	return int32(capnp.Struct(s).Uint32(204))
-}
-
-func (s CharacterStatsRecord) SetTailoring(v int32) {
-	capnp.Struct(s).SetUint32(204, uint32(v))
-}
-
-func (s CharacterStatsRecord) Blacksmithing() int32 {
-	return int32(capnp.Struct(s).Uint32(208))
-}
-
-func (s CharacterStatsRecord) SetBlacksmithing(v int32) {
-	capnp.Struct(s).SetUint32(208, uint32(v))
-}
-
-func (s CharacterStatsRecord) Fletching() int32 {
-	return int32(capnp.Struct(s).Uint32(212))
-}
-
-func (s CharacterStatsRecord) SetFletching(v int32) {
-	capnp.Struct(s).SetUint32(212, uint32(v))
-}
-
-func (s CharacterStatsRecord) Brewing() int32 {
-	return int32(capnp.Struct(s).Uint32(216))
-}
-
-func (s CharacterStatsRecord) SetBrewing(v int32) {
-	capnp.Struct(s).SetUint32(216, uint32(v))
-}
-
-func (s CharacterStatsRecord) Jewelry() int32 {
-	return int32(capnp.Struct(s).Uint32(220))
-}
-
-func (s CharacterStatsRecord) SetJewelry(v int32) {
-	capnp.Struct(s).SetUint32(220, uint32(v))
-}
-
-func (s CharacterStatsRecord) Pottery() int32 {
-	return int32(capnp.Struct(s).Uint32(224))
-}
-
-func (s CharacterStatsRecord) SetPottery(v int32) {
-	capnp.Struct(s).SetUint32(224, uint32(v))
-}
-
-func (s CharacterStatsRecord) Research() int32 {
-	return int32(capnp.Struct(s).Uint32(228))
-}
-
-func (s CharacterStatsRecord) SetResearch(v int32) {
-	capnp.Struct(s).SetUint32(228, uint32(v))
-}
-
-func (s CharacterStatsRecord) Alcohol() int32 {
-	return int32(capnp.Struct(s).Uint32(232))
-}
-
-func (s CharacterStatsRecord) SetAlcohol(v int32) {
-	capnp.Struct(s).SetUint32(232, uint32(v))
-}
-
-func (s CharacterStatsRecord) Fishing() int32 {
-	return int32(capnp.Struct(s).Uint32(236))
-}
-
-func (s CharacterStatsRecord) SetFishing(v int32) {
-	capnp.Struct(s).SetUint32(236, uint32(v))
-}
-
-func (s CharacterStatsRecord) Tinkering() int32 {
-	return int32(capnp.Struct(s).Uint32(240))
-}
-
-func (s CharacterStatsRecord) SetTinkering(v int32) {
-	capnp.Struct(s).SetUint32(240, uint32(v))
-}
-
-func (s CharacterStatsRecord) MaxHp() int64 {
-	return int64(capnp.Struct(s).Uint64(248))
-}
-
-func (s CharacterStatsRecord) SetMaxHp(v int64) {
-	capnp.Struct(s).SetUint64(248, uint64(v))
-}
-
-func (s CharacterStatsRecord) MaxMana() int64 {
-	return int64(capnp.Struct(s).Uint64(256))
-}
-
-func (s CharacterStatsRecord) SetMaxMana(v int64) {
-	capnp.Struct(s).SetUint64(256, uint64(v))
-}
-
-func (s CharacterStatsRecord) MaxEndurance() int64 {
-	return int64(capnp.Struct(s).Uint64(264))
-}
-
-func (s CharacterStatsRecord) SetMaxEndurance(v int64) {
-	capnp.Struct(s).SetUint64(264, uint64(v))
-}
-
-// CharacterStatsRecord_List is a list of CharacterStatsRecord.
-type CharacterStatsRecord_List = capnp.StructList[CharacterStatsRecord]
-
-// NewCharacterStatsRecord creates a new list of CharacterStatsRecord.
-func NewCharacterStatsRecord_List(s *capnp.Segment, sz int32) (CharacterStatsRecord_List, error) {
-	l, err := capnp.NewCompositeList(s, capnp.ObjectSize{DataSize: 272, PointerCount: 1}, sz)
-	return capnp.StructList[CharacterStatsRecord](l), err
-}
-
-// CharacterStatsRecord_Future is a wrapper for a CharacterStatsRecord promised by a client call.
-type CharacterStatsRecord_Future struct{ *capnp.Future }
-
-func (f CharacterStatsRecord_Future) Struct() (CharacterStatsRecord, error) {
-	p, err := f.Future.Ptr()
-	return CharacterStatsRecord(p.Struct()), err
+func (p CharSelectEquip_Future) Color() Tint_Future {
+	return Tint_Future{Future: p.Future.Field(0, nil)}
 }
 
 type PlayerProfile capnp.Struct
@@ -1084,12 +418,12 @@ type PlayerProfile capnp.Struct
 const PlayerProfile_TypeID = 0xb8375f7f6b27403c
 
 func NewPlayerProfile(s *capnp.Segment) (PlayerProfile, error) {
-	st, err := capnp.NewStruct(s, capnp.ObjectSize{DataSize: 416, PointerCount: 25})
+	st, err := capnp.NewStruct(s, capnp.ObjectSize{DataSize: 464, PointerCount: 19})
 	return PlayerProfile(st), err
 }
 
 func NewRootPlayerProfile(s *capnp.Segment) (PlayerProfile, error) {
-	st, err := capnp.NewRootStruct(s, capnp.ObjectSize{DataSize: 416, PointerCount: 25})
+	st, err := capnp.NewRootStruct(s, capnp.ObjectSize{DataSize: 464, PointerCount: 19})
 	return PlayerProfile(st), err
 }
 
@@ -1125,52 +459,36 @@ func (s PlayerProfile) Message() *capnp.Message {
 func (s PlayerProfile) Segment() *capnp.Segment {
 	return capnp.Struct(s).Segment()
 }
-func (s PlayerProfile) Checksum() int32 {
+func (s PlayerProfile) Gender() int32 {
 	return int32(capnp.Struct(s).Uint32(0))
 }
 
-func (s PlayerProfile) SetChecksum(v int32) {
+func (s PlayerProfile) SetGender(v int32) {
 	capnp.Struct(s).SetUint32(0, uint32(v))
 }
 
-func (s PlayerProfile) Gender() int32 {
+func (s PlayerProfile) Race() int32 {
 	return int32(capnp.Struct(s).Uint32(4))
 }
 
-func (s PlayerProfile) SetGender(v int32) {
+func (s PlayerProfile) SetRace(v int32) {
 	capnp.Struct(s).SetUint32(4, uint32(v))
 }
 
-func (s PlayerProfile) Race() int32 {
+func (s PlayerProfile) CharClass() int32 {
 	return int32(capnp.Struct(s).Uint32(8))
 }
 
-func (s PlayerProfile) SetRace(v int32) {
+func (s PlayerProfile) SetCharClass(v int32) {
 	capnp.Struct(s).SetUint32(8, uint32(v))
 }
 
-func (s PlayerProfile) CharClass() int32 {
+func (s PlayerProfile) Level() int32 {
 	return int32(capnp.Struct(s).Uint32(12))
 }
 
-func (s PlayerProfile) SetCharClass(v int32) {
-	capnp.Struct(s).SetUint32(12, uint32(v))
-}
-
-func (s PlayerProfile) Level() int32 {
-	return int32(capnp.Struct(s).Uint32(16))
-}
-
 func (s PlayerProfile) SetLevel(v int32) {
-	capnp.Struct(s).SetUint32(16, uint32(v))
-}
-
-func (s PlayerProfile) Level1() int32 {
-	return int32(capnp.Struct(s).Uint32(20))
-}
-
-func (s PlayerProfile) SetLevel1(v int32) {
-	capnp.Struct(s).SetUint32(20, uint32(v))
+	capnp.Struct(s).SetUint32(12, uint32(v))
 }
 
 func (s PlayerProfile) Binds() (Bind_List, error) {
@@ -1197,19 +515,19 @@ func (s PlayerProfile) NewBinds(n int32) (Bind_List, error) {
 	return l, err
 }
 func (s PlayerProfile) Deity() int32 {
-	return int32(capnp.Struct(s).Uint32(24))
+	return int32(capnp.Struct(s).Uint32(16))
 }
 
 func (s PlayerProfile) SetDeity(v int32) {
-	capnp.Struct(s).SetUint32(24, uint32(v))
+	capnp.Struct(s).SetUint32(16, uint32(v))
 }
 
 func (s PlayerProfile) Intoxication() int32 {
-	return int32(capnp.Struct(s).Uint32(28))
+	return int32(capnp.Struct(s).Uint32(20))
 }
 
 func (s PlayerProfile) SetIntoxication(v int32) {
-	capnp.Struct(s).SetUint32(28, uint32(v))
+	capnp.Struct(s).SetUint32(20, uint32(v))
 }
 
 func (s PlayerProfile) SpellSlotRefresh() (capnp.Int32List, error) {
@@ -1236,59 +554,11 @@ func (s PlayerProfile) NewSpellSlotRefresh(n int32) (capnp.Int32List, error) {
 	return l, err
 }
 func (s PlayerProfile) AbilitySlotRefresh() int32 {
-	return int32(capnp.Struct(s).Uint32(32))
+	return int32(capnp.Struct(s).Uint32(24))
 }
 
 func (s PlayerProfile) SetAbilitySlotRefresh(v int32) {
-	capnp.Struct(s).SetUint32(32, uint32(v))
-}
-
-func (s PlayerProfile) Haircolor() int32 {
-	return int32(capnp.Struct(s).Uint32(36))
-}
-
-func (s PlayerProfile) SetHaircolor(v int32) {
-	capnp.Struct(s).SetUint32(36, uint32(v))
-}
-
-func (s PlayerProfile) Beardcolor() int32 {
-	return int32(capnp.Struct(s).Uint32(40))
-}
-
-func (s PlayerProfile) SetBeardcolor(v int32) {
-	capnp.Struct(s).SetUint32(40, uint32(v))
-}
-
-func (s PlayerProfile) Eyecolor1() int32 {
-	return int32(capnp.Struct(s).Uint32(44))
-}
-
-func (s PlayerProfile) SetEyecolor1(v int32) {
-	capnp.Struct(s).SetUint32(44, uint32(v))
-}
-
-func (s PlayerProfile) Eyecolor2() int32 {
-	return int32(capnp.Struct(s).Uint32(48))
-}
-
-func (s PlayerProfile) SetEyecolor2(v int32) {
-	capnp.Struct(s).SetUint32(48, uint32(v))
-}
-
-func (s PlayerProfile) Hairstyle() int32 {
-	return int32(capnp.Struct(s).Uint32(52))
-}
-
-func (s PlayerProfile) SetHairstyle(v int32) {
-	capnp.Struct(s).SetUint32(52, uint32(v))
-}
-
-func (s PlayerProfile) Beard() int32 {
-	return int32(capnp.Struct(s).Uint32(56))
-}
-
-func (s PlayerProfile) SetBeard(v int32) {
-	capnp.Struct(s).SetUint32(56, uint32(v))
+	capnp.Struct(s).SetUint32(24, uint32(v))
 }
 
 func (s PlayerProfile) ItemMaterial() (TextureProfile, error) {
@@ -1316,11 +586,11 @@ func (s PlayerProfile) NewItemMaterial() (TextureProfile, error) {
 }
 
 func (s PlayerProfile) ItemTint() int32 {
-	return int32(capnp.Struct(s).Uint32(60))
+	return int32(capnp.Struct(s).Uint32(28))
 }
 
 func (s PlayerProfile) SetItemTint(v int32) {
-	capnp.Struct(s).SetUint32(60, uint32(v))
+	capnp.Struct(s).SetUint32(28, uint32(v))
 }
 
 func (s PlayerProfile) AaArray() (AAArray_List, error) {
@@ -1347,91 +617,91 @@ func (s PlayerProfile) NewAaArray(n int32) (AAArray_List, error) {
 	return l, err
 }
 func (s PlayerProfile) Points() int32 {
-	return int32(capnp.Struct(s).Uint32(64))
+	return int32(capnp.Struct(s).Uint32(32))
 }
 
 func (s PlayerProfile) SetPoints(v int32) {
-	capnp.Struct(s).SetUint32(64, uint32(v))
+	capnp.Struct(s).SetUint32(32, uint32(v))
 }
 
 func (s PlayerProfile) Mana() int32 {
-	return int32(capnp.Struct(s).Uint32(68))
+	return int32(capnp.Struct(s).Uint32(36))
 }
 
 func (s PlayerProfile) SetMana(v int32) {
-	capnp.Struct(s).SetUint32(68, uint32(v))
+	capnp.Struct(s).SetUint32(36, uint32(v))
 }
 
 func (s PlayerProfile) CurHp() int32 {
-	return int32(capnp.Struct(s).Uint32(72))
+	return int32(capnp.Struct(s).Uint32(40))
 }
 
 func (s PlayerProfile) SetCurHp(v int32) {
-	capnp.Struct(s).SetUint32(72, uint32(v))
+	capnp.Struct(s).SetUint32(40, uint32(v))
 }
 
 func (s PlayerProfile) Str() int32 {
-	return int32(capnp.Struct(s).Uint32(76))
+	return int32(capnp.Struct(s).Uint32(44))
 }
 
 func (s PlayerProfile) SetStr(v int32) {
-	capnp.Struct(s).SetUint32(76, uint32(v))
+	capnp.Struct(s).SetUint32(44, uint32(v))
 }
 
 func (s PlayerProfile) Sta() int32 {
-	return int32(capnp.Struct(s).Uint32(80))
+	return int32(capnp.Struct(s).Uint32(48))
 }
 
 func (s PlayerProfile) SetSta(v int32) {
-	capnp.Struct(s).SetUint32(80, uint32(v))
+	capnp.Struct(s).SetUint32(48, uint32(v))
 }
 
 func (s PlayerProfile) Cha() int32 {
-	return int32(capnp.Struct(s).Uint32(84))
+	return int32(capnp.Struct(s).Uint32(52))
 }
 
 func (s PlayerProfile) SetCha(v int32) {
-	capnp.Struct(s).SetUint32(84, uint32(v))
+	capnp.Struct(s).SetUint32(52, uint32(v))
 }
 
 func (s PlayerProfile) Dex() int32 {
-	return int32(capnp.Struct(s).Uint32(88))
+	return int32(capnp.Struct(s).Uint32(56))
 }
 
 func (s PlayerProfile) SetDex(v int32) {
-	capnp.Struct(s).SetUint32(88, uint32(v))
+	capnp.Struct(s).SetUint32(56, uint32(v))
 }
 
 func (s PlayerProfile) Intel() int32 {
-	return int32(capnp.Struct(s).Uint32(92))
+	return int32(capnp.Struct(s).Uint32(60))
 }
 
 func (s PlayerProfile) SetIntel(v int32) {
-	capnp.Struct(s).SetUint32(92, uint32(v))
+	capnp.Struct(s).SetUint32(60, uint32(v))
 }
 
 func (s PlayerProfile) Agi() int32 {
-	return int32(capnp.Struct(s).Uint32(96))
+	return int32(capnp.Struct(s).Uint32(64))
 }
 
 func (s PlayerProfile) SetAgi(v int32) {
-	capnp.Struct(s).SetUint32(96, uint32(v))
+	capnp.Struct(s).SetUint32(64, uint32(v))
 }
 
 func (s PlayerProfile) Wis() int32 {
-	return int32(capnp.Struct(s).Uint32(100))
+	return int32(capnp.Struct(s).Uint32(68))
 }
 
 func (s PlayerProfile) SetWis(v int32) {
-	capnp.Struct(s).SetUint32(100, uint32(v))
+	capnp.Struct(s).SetUint32(68, uint32(v))
 }
 
 func (s PlayerProfile) Face() int32 {
-	return int32(capnp.Struct(s).Uint32(104))
+	return int32(capnp.Struct(s).Uint32(72))
 }
 
 func (s PlayerProfile) SetFace(v int32) {
-	capnp.Struct(s).SetUint32(104, uint32(v))
+	capnp.Struct(s).SetUint32(72, uint32(v))
 }
 
 func (s PlayerProfile) SpellBook() (capnp.Int32List, error) {
@@ -1481,67 +751,67 @@ func (s PlayerProfile) NewMemSpells(n int32) (capnp.Int32List, error) {
 	return l, err
 }
 func (s PlayerProfile) Platinum() int32 {
-	return int32(capnp.Struct(s).Uint32(108))
+	return int32(capnp.Struct(s).Uint32(76))
 }
 
 func (s PlayerProfile) SetPlatinum(v int32) {
-	capnp.Struct(s).SetUint32(108, uint32(v))
+	capnp.Struct(s).SetUint32(76, uint32(v))
 }
 
 func (s PlayerProfile) Gold() int32 {
-	return int32(capnp.Struct(s).Uint32(112))
+	return int32(capnp.Struct(s).Uint32(80))
 }
 
 func (s PlayerProfile) SetGold(v int32) {
-	capnp.Struct(s).SetUint32(112, uint32(v))
+	capnp.Struct(s).SetUint32(80, uint32(v))
 }
 
 func (s PlayerProfile) Silver() int32 {
-	return int32(capnp.Struct(s).Uint32(116))
+	return int32(capnp.Struct(s).Uint32(84))
 }
 
 func (s PlayerProfile) SetSilver(v int32) {
-	capnp.Struct(s).SetUint32(116, uint32(v))
+	capnp.Struct(s).SetUint32(84, uint32(v))
 }
 
 func (s PlayerProfile) Copper() int32 {
-	return int32(capnp.Struct(s).Uint32(120))
+	return int32(capnp.Struct(s).Uint32(88))
 }
 
 func (s PlayerProfile) SetCopper(v int32) {
-	capnp.Struct(s).SetUint32(120, uint32(v))
+	capnp.Struct(s).SetUint32(88, uint32(v))
 }
 
 func (s PlayerProfile) PlatinumCursor() int32 {
-	return int32(capnp.Struct(s).Uint32(124))
+	return int32(capnp.Struct(s).Uint32(92))
 }
 
 func (s PlayerProfile) SetPlatinumCursor(v int32) {
-	capnp.Struct(s).SetUint32(124, uint32(v))
+	capnp.Struct(s).SetUint32(92, uint32(v))
 }
 
 func (s PlayerProfile) GoldCursor() int32 {
-	return int32(capnp.Struct(s).Uint32(128))
+	return int32(capnp.Struct(s).Uint32(96))
 }
 
 func (s PlayerProfile) SetGoldCursor(v int32) {
-	capnp.Struct(s).SetUint32(128, uint32(v))
+	capnp.Struct(s).SetUint32(96, uint32(v))
 }
 
 func (s PlayerProfile) SilverCursor() int32 {
-	return int32(capnp.Struct(s).Uint32(132))
+	return int32(capnp.Struct(s).Uint32(100))
 }
 
 func (s PlayerProfile) SetSilverCursor(v int32) {
-	capnp.Struct(s).SetUint32(132, uint32(v))
+	capnp.Struct(s).SetUint32(100, uint32(v))
 }
 
 func (s PlayerProfile) CopperCursor() int32 {
-	return int32(capnp.Struct(s).Uint32(136))
+	return int32(capnp.Struct(s).Uint32(104))
 }
 
 func (s PlayerProfile) SetCopperCursor(v int32) {
-	capnp.Struct(s).SetUint32(136, uint32(v))
+	capnp.Struct(s).SetUint32(104, uint32(v))
 }
 
 func (s PlayerProfile) Skills() (capnp.Int32List, error) {
@@ -1591,27 +861,27 @@ func (s PlayerProfile) NewInnateSkills(n int32) (capnp.Int32List, error) {
 	return l, err
 }
 func (s PlayerProfile) Toxicity() int32 {
-	return int32(capnp.Struct(s).Uint32(140))
+	return int32(capnp.Struct(s).Uint32(108))
 }
 
 func (s PlayerProfile) SetToxicity(v int32) {
-	capnp.Struct(s).SetUint32(140, uint32(v))
+	capnp.Struct(s).SetUint32(108, uint32(v))
 }
 
 func (s PlayerProfile) ThirstLevel() int32 {
-	return int32(capnp.Struct(s).Uint32(144))
+	return int32(capnp.Struct(s).Uint32(112))
 }
 
 func (s PlayerProfile) SetThirstLevel(v int32) {
-	capnp.Struct(s).SetUint32(144, uint32(v))
+	capnp.Struct(s).SetUint32(112, uint32(v))
 }
 
 func (s PlayerProfile) HungerLevel() int32 {
-	return int32(capnp.Struct(s).Uint32(148))
+	return int32(capnp.Struct(s).Uint32(116))
 }
 
 func (s PlayerProfile) SetHungerLevel(v int32) {
-	capnp.Struct(s).SetUint32(148, uint32(v))
+	capnp.Struct(s).SetUint32(116, uint32(v))
 }
 
 func (s PlayerProfile) Buffs() (SpellBuff_List, error) {
@@ -1685,27 +955,27 @@ func (s PlayerProfile) NewRecastTimers(n int32) (capnp.Int32List, error) {
 	return l, err
 }
 func (s PlayerProfile) Endurance() int32 {
-	return int32(capnp.Struct(s).Uint32(152))
+	return int32(capnp.Struct(s).Uint32(120))
 }
 
 func (s PlayerProfile) SetEndurance(v int32) {
-	capnp.Struct(s).SetUint32(152, uint32(v))
+	capnp.Struct(s).SetUint32(120, uint32(v))
 }
 
 func (s PlayerProfile) AapointsSpent() int32 {
-	return int32(capnp.Struct(s).Uint32(156))
+	return int32(capnp.Struct(s).Uint32(124))
 }
 
 func (s PlayerProfile) SetAapointsSpent(v int32) {
-	capnp.Struct(s).SetUint32(156, uint32(v))
+	capnp.Struct(s).SetUint32(124, uint32(v))
 }
 
 func (s PlayerProfile) Aapoints() int32 {
-	return int32(capnp.Struct(s).Uint32(160))
+	return int32(capnp.Struct(s).Uint32(128))
 }
 
 func (s PlayerProfile) SetAapoints(v int32) {
-	capnp.Struct(s).SetUint32(160, uint32(v))
+	capnp.Struct(s).SetUint32(128, uint32(v))
 }
 
 func (s PlayerProfile) Bandoliers() (Bandolier_List, error) {
@@ -1756,11 +1026,11 @@ func (s PlayerProfile) NewPotionbelt() (PotionBelt, error) {
 }
 
 func (s PlayerProfile) AvailableSlots() int32 {
-	return int32(capnp.Struct(s).Uint32(164))
+	return int32(capnp.Struct(s).Uint32(132))
 }
 
 func (s PlayerProfile) SetAvailableSlots(v int32) {
-	capnp.Struct(s).SetUint32(164, uint32(v))
+	capnp.Struct(s).SetUint32(132, uint32(v))
 }
 
 func (s PlayerProfile) Name() (string, error) {
@@ -1800,91 +1070,91 @@ func (s PlayerProfile) SetLastName(v string) error {
 }
 
 func (s PlayerProfile) GuildId() int32 {
-	return int32(capnp.Struct(s).Uint32(168))
+	return int32(capnp.Struct(s).Uint32(136))
 }
 
 func (s PlayerProfile) SetGuildId(v int32) {
-	capnp.Struct(s).SetUint32(168, uint32(v))
+	capnp.Struct(s).SetUint32(136, uint32(v))
 }
 
 func (s PlayerProfile) Birthday() int32 {
-	return int32(capnp.Struct(s).Uint32(172))
+	return int32(capnp.Struct(s).Uint32(140))
 }
 
 func (s PlayerProfile) SetBirthday(v int32) {
-	capnp.Struct(s).SetUint32(172, uint32(v))
+	capnp.Struct(s).SetUint32(140, uint32(v))
 }
 
 func (s PlayerProfile) Lastlogin() int32 {
-	return int32(capnp.Struct(s).Uint32(176))
+	return int32(capnp.Struct(s).Uint32(144))
 }
 
 func (s PlayerProfile) SetLastlogin(v int32) {
-	capnp.Struct(s).SetUint32(176, uint32(v))
+	capnp.Struct(s).SetUint32(144, uint32(v))
 }
 
 func (s PlayerProfile) TimePlayedMin() int32 {
-	return int32(capnp.Struct(s).Uint32(180))
+	return int32(capnp.Struct(s).Uint32(148))
 }
 
 func (s PlayerProfile) SetTimePlayedMin(v int32) {
-	capnp.Struct(s).SetUint32(180, uint32(v))
+	capnp.Struct(s).SetUint32(148, uint32(v))
 }
 
 func (s PlayerProfile) Pvp() int32 {
-	return int32(capnp.Struct(s).Uint32(184))
+	return int32(capnp.Struct(s).Uint32(152))
 }
 
 func (s PlayerProfile) SetPvp(v int32) {
-	capnp.Struct(s).SetUint32(184, uint32(v))
+	capnp.Struct(s).SetUint32(152, uint32(v))
 }
 
 func (s PlayerProfile) Anon() int32 {
-	return int32(capnp.Struct(s).Uint32(188))
+	return int32(capnp.Struct(s).Uint32(156))
 }
 
 func (s PlayerProfile) SetAnon(v int32) {
-	capnp.Struct(s).SetUint32(188, uint32(v))
+	capnp.Struct(s).SetUint32(156, uint32(v))
 }
 
 func (s PlayerProfile) Gm() int32 {
-	return int32(capnp.Struct(s).Uint32(192))
+	return int32(capnp.Struct(s).Uint32(160))
 }
 
 func (s PlayerProfile) SetGm(v int32) {
-	capnp.Struct(s).SetUint32(192, uint32(v))
+	capnp.Struct(s).SetUint32(160, uint32(v))
 }
 
 func (s PlayerProfile) Guildrank() int32 {
-	return int32(capnp.Struct(s).Uint32(196))
+	return int32(capnp.Struct(s).Uint32(164))
 }
 
 func (s PlayerProfile) SetGuildrank(v int32) {
-	capnp.Struct(s).SetUint32(196, uint32(v))
+	capnp.Struct(s).SetUint32(164, uint32(v))
 }
 
 func (s PlayerProfile) Guildbanker() int32 {
-	return int32(capnp.Struct(s).Uint32(200))
+	return int32(capnp.Struct(s).Uint32(168))
 }
 
 func (s PlayerProfile) SetGuildbanker(v int32) {
-	capnp.Struct(s).SetUint32(200, uint32(v))
+	capnp.Struct(s).SetUint32(168, uint32(v))
 }
 
 func (s PlayerProfile) Exp() int32 {
-	return int32(capnp.Struct(s).Uint32(204))
+	return int32(capnp.Struct(s).Uint32(172))
 }
 
 func (s PlayerProfile) SetExp(v int32) {
-	capnp.Struct(s).SetUint32(204, uint32(v))
+	capnp.Struct(s).SetUint32(172, uint32(v))
 }
 
 func (s PlayerProfile) Timeentitledonaccount() int32 {
-	return int32(capnp.Struct(s).Uint32(208))
+	return int32(capnp.Struct(s).Uint32(176))
 }
 
 func (s PlayerProfile) SetTimeentitledonaccount(v int32) {
-	capnp.Struct(s).SetUint32(208, uint32(v))
+	capnp.Struct(s).SetUint32(176, uint32(v))
 }
 
 func (s PlayerProfile) Languages() (capnp.Int32List, error) {
@@ -1911,107 +1181,107 @@ func (s PlayerProfile) NewLanguages(n int32) (capnp.Int32List, error) {
 	return l, err
 }
 func (s PlayerProfile) X() float32 {
-	return math.Float32frombits(capnp.Struct(s).Uint32(212))
+	return math.Float32frombits(capnp.Struct(s).Uint32(180))
 }
 
 func (s PlayerProfile) SetX(v float32) {
-	capnp.Struct(s).SetUint32(212, math.Float32bits(v))
+	capnp.Struct(s).SetUint32(180, math.Float32bits(v))
 }
 
 func (s PlayerProfile) Y() float32 {
-	return math.Float32frombits(capnp.Struct(s).Uint32(216))
+	return math.Float32frombits(capnp.Struct(s).Uint32(184))
 }
 
 func (s PlayerProfile) SetY(v float32) {
-	capnp.Struct(s).SetUint32(216, math.Float32bits(v))
+	capnp.Struct(s).SetUint32(184, math.Float32bits(v))
 }
 
 func (s PlayerProfile) Z() float32 {
-	return math.Float32frombits(capnp.Struct(s).Uint32(220))
+	return math.Float32frombits(capnp.Struct(s).Uint32(188))
 }
 
 func (s PlayerProfile) SetZ(v float32) {
-	capnp.Struct(s).SetUint32(220, math.Float32bits(v))
+	capnp.Struct(s).SetUint32(188, math.Float32bits(v))
 }
 
 func (s PlayerProfile) Heading() float32 {
-	return math.Float32frombits(capnp.Struct(s).Uint32(224))
+	return math.Float32frombits(capnp.Struct(s).Uint32(192))
 }
 
 func (s PlayerProfile) SetHeading(v float32) {
-	capnp.Struct(s).SetUint32(224, math.Float32bits(v))
+	capnp.Struct(s).SetUint32(192, math.Float32bits(v))
 }
 
 func (s PlayerProfile) PlatinumBank() int32 {
-	return int32(capnp.Struct(s).Uint32(228))
+	return int32(capnp.Struct(s).Uint32(196))
 }
 
 func (s PlayerProfile) SetPlatinumBank(v int32) {
-	capnp.Struct(s).SetUint32(228, uint32(v))
+	capnp.Struct(s).SetUint32(196, uint32(v))
 }
 
 func (s PlayerProfile) GoldBank() int32 {
-	return int32(capnp.Struct(s).Uint32(232))
+	return int32(capnp.Struct(s).Uint32(200))
 }
 
 func (s PlayerProfile) SetGoldBank(v int32) {
-	capnp.Struct(s).SetUint32(232, uint32(v))
+	capnp.Struct(s).SetUint32(200, uint32(v))
 }
 
 func (s PlayerProfile) SilverBank() int32 {
-	return int32(capnp.Struct(s).Uint32(236))
+	return int32(capnp.Struct(s).Uint32(204))
 }
 
 func (s PlayerProfile) SetSilverBank(v int32) {
-	capnp.Struct(s).SetUint32(236, uint32(v))
+	capnp.Struct(s).SetUint32(204, uint32(v))
 }
 
 func (s PlayerProfile) CopperBank() int32 {
-	return int32(capnp.Struct(s).Uint32(240))
+	return int32(capnp.Struct(s).Uint32(208))
 }
 
 func (s PlayerProfile) SetCopperBank(v int32) {
-	capnp.Struct(s).SetUint32(240, uint32(v))
+	capnp.Struct(s).SetUint32(208, uint32(v))
 }
 
 func (s PlayerProfile) PlatinumShared() int32 {
-	return int32(capnp.Struct(s).Uint32(244))
+	return int32(capnp.Struct(s).Uint32(212))
 }
 
 func (s PlayerProfile) SetPlatinumShared(v int32) {
-	capnp.Struct(s).SetUint32(244, uint32(v))
+	capnp.Struct(s).SetUint32(212, uint32(v))
 }
 
 func (s PlayerProfile) Expansions() int32 {
-	return int32(capnp.Struct(s).Uint32(248))
+	return int32(capnp.Struct(s).Uint32(216))
 }
 
 func (s PlayerProfile) SetExpansions(v int32) {
-	capnp.Struct(s).SetUint32(248, uint32(v))
+	capnp.Struct(s).SetUint32(216, uint32(v))
 }
 
 func (s PlayerProfile) Autosplit() int32 {
-	return int32(capnp.Struct(s).Uint32(252))
+	return int32(capnp.Struct(s).Uint32(220))
 }
 
 func (s PlayerProfile) SetAutosplit(v int32) {
-	capnp.Struct(s).SetUint32(252, uint32(v))
+	capnp.Struct(s).SetUint32(220, uint32(v))
 }
 
 func (s PlayerProfile) ZoneId() int32 {
-	return int32(capnp.Struct(s).Uint32(256))
+	return int32(capnp.Struct(s).Uint32(224))
 }
 
 func (s PlayerProfile) SetZoneId(v int32) {
-	capnp.Struct(s).SetUint32(256, uint32(v))
+	capnp.Struct(s).SetUint32(224, uint32(v))
 }
 
 func (s PlayerProfile) ZoneInstance() int32 {
-	return int32(capnp.Struct(s).Uint32(260))
+	return int32(capnp.Struct(s).Uint32(228))
 }
 
 func (s PlayerProfile) SetZoneInstance(v int32) {
-	capnp.Struct(s).SetUint32(260, uint32(v))
+	capnp.Struct(s).SetUint32(228, uint32(v))
 }
 
 func (s PlayerProfile) GroupMembers() (StringList_List, error) {
@@ -2056,414 +1326,80 @@ func (s PlayerProfile) SetGroupLeader(v string) error {
 }
 
 func (s PlayerProfile) Entityid() int32 {
-	return int32(capnp.Struct(s).Uint32(264))
+	return int32(capnp.Struct(s).Uint32(232))
 }
 
 func (s PlayerProfile) SetEntityid(v int32) {
-	capnp.Struct(s).SetUint32(264, uint32(v))
+	capnp.Struct(s).SetUint32(232, uint32(v))
 }
 
 func (s PlayerProfile) LeadAaActive() int32 {
-	return int32(capnp.Struct(s).Uint32(268))
+	return int32(capnp.Struct(s).Uint32(236))
 }
 
 func (s PlayerProfile) SetLeadAaActive(v int32) {
-	capnp.Struct(s).SetUint32(268, uint32(v))
-}
-
-func (s PlayerProfile) LdonPointsGuk() int32 {
-	return int32(capnp.Struct(s).Uint32(272))
-}
-
-func (s PlayerProfile) SetLdonPointsGuk(v int32) {
-	capnp.Struct(s).SetUint32(272, uint32(v))
-}
-
-func (s PlayerProfile) LdonPointsMir() int32 {
-	return int32(capnp.Struct(s).Uint32(276))
-}
-
-func (s PlayerProfile) SetLdonPointsMir(v int32) {
-	capnp.Struct(s).SetUint32(276, uint32(v))
-}
-
-func (s PlayerProfile) LdonPointsMmc() int32 {
-	return int32(capnp.Struct(s).Uint32(280))
-}
-
-func (s PlayerProfile) SetLdonPointsMmc(v int32) {
-	capnp.Struct(s).SetUint32(280, uint32(v))
-}
-
-func (s PlayerProfile) LdonPointsRuj() int32 {
-	return int32(capnp.Struct(s).Uint32(284))
-}
-
-func (s PlayerProfile) SetLdonPointsRuj(v int32) {
-	capnp.Struct(s).SetUint32(284, uint32(v))
-}
-
-func (s PlayerProfile) LdonPointsTak() int32 {
-	return int32(capnp.Struct(s).Uint32(288))
-}
-
-func (s PlayerProfile) SetLdonPointsTak(v int32) {
-	capnp.Struct(s).SetUint32(288, uint32(v))
-}
-
-func (s PlayerProfile) LdonPointsAvailable() int32 {
-	return int32(capnp.Struct(s).Uint32(292))
-}
-
-func (s PlayerProfile) SetLdonPointsAvailable(v int32) {
-	capnp.Struct(s).SetUint32(292, uint32(v))
-}
-
-func (s PlayerProfile) TributeTimeRemaining() int32 {
-	return int32(capnp.Struct(s).Uint32(296))
-}
-
-func (s PlayerProfile) SetTributeTimeRemaining(v int32) {
-	capnp.Struct(s).SetUint32(296, uint32(v))
-}
-
-func (s PlayerProfile) CareerTributePoints() int32 {
-	return int32(capnp.Struct(s).Uint32(300))
-}
-
-func (s PlayerProfile) SetCareerTributePoints(v int32) {
-	capnp.Struct(s).SetUint32(300, uint32(v))
-}
-
-func (s PlayerProfile) TributePoints() int32 {
-	return int32(capnp.Struct(s).Uint32(304))
-}
-
-func (s PlayerProfile) SetTributePoints(v int32) {
-	capnp.Struct(s).SetUint32(304, uint32(v))
-}
-
-func (s PlayerProfile) TributeActive() int32 {
-	return int32(capnp.Struct(s).Uint32(308))
-}
-
-func (s PlayerProfile) SetTributeActive(v int32) {
-	capnp.Struct(s).SetUint32(308, uint32(v))
-}
-
-func (s PlayerProfile) Tributes() (Tribute_List, error) {
-	p, err := capnp.Struct(s).Ptr(18)
-	return Tribute_List(p.List()), err
-}
-
-func (s PlayerProfile) HasTributes() bool {
-	return capnp.Struct(s).HasPtr(18)
-}
-
-func (s PlayerProfile) SetTributes(v Tribute_List) error {
-	return capnp.Struct(s).SetPtr(18, v.ToPtr())
-}
-
-// NewTributes sets the tributes field to a newly
-// allocated Tribute_List, preferring placement in s's segment.
-func (s PlayerProfile) NewTributes(n int32) (Tribute_List, error) {
-	l, err := NewTribute_List(capnp.Struct(s).Segment(), n)
-	if err != nil {
-		return Tribute_List{}, err
-	}
-	err = capnp.Struct(s).SetPtr(18, l.ToPtr())
-	return l, err
-}
-func (s PlayerProfile) GroupLeadershipExp() float64 {
-	return math.Float64frombits(capnp.Struct(s).Uint64(312))
-}
-
-func (s PlayerProfile) SetGroupLeadershipExp(v float64) {
-	capnp.Struct(s).SetUint64(312, math.Float64bits(v))
-}
-
-func (s PlayerProfile) RaidLeadershipExp() float64 {
-	return math.Float64frombits(capnp.Struct(s).Uint64(320))
-}
-
-func (s PlayerProfile) SetRaidLeadershipExp(v float64) {
-	capnp.Struct(s).SetUint64(320, math.Float64bits(v))
-}
-
-func (s PlayerProfile) GroupLeadershipPoints() int32 {
-	return int32(capnp.Struct(s).Uint32(328))
-}
-
-func (s PlayerProfile) SetGroupLeadershipPoints(v int32) {
-	capnp.Struct(s).SetUint32(328, uint32(v))
-}
-
-func (s PlayerProfile) RaidLeadershipPoints() int32 {
-	return int32(capnp.Struct(s).Uint32(332))
-}
-
-func (s PlayerProfile) SetRaidLeadershipPoints(v int32) {
-	capnp.Struct(s).SetUint32(332, uint32(v))
-}
-
-func (s PlayerProfile) LeaderAbilities() (LeadershipAA, error) {
-	p, err := capnp.Struct(s).Ptr(19)
-	return LeadershipAA(p.Struct()), err
-}
-
-func (s PlayerProfile) HasLeaderAbilities() bool {
-	return capnp.Struct(s).HasPtr(19)
-}
-
-func (s PlayerProfile) SetLeaderAbilities(v LeadershipAA) error {
-	return capnp.Struct(s).SetPtr(19, capnp.Struct(v).ToPtr())
-}
-
-// NewLeaderAbilities sets the leaderAbilities field to a newly
-// allocated LeadershipAA struct, preferring placement in s's segment.
-func (s PlayerProfile) NewLeaderAbilities() (LeadershipAA, error) {
-	ss, err := NewLeadershipAA(capnp.Struct(s).Segment())
-	if err != nil {
-		return LeadershipAA{}, err
-	}
-	err = capnp.Struct(s).SetPtr(19, capnp.Struct(ss).ToPtr())
-	return ss, err
+	capnp.Struct(s).SetUint32(236, uint32(v))
 }
 
 func (s PlayerProfile) AirRemaining() int32 {
-	return int32(capnp.Struct(s).Uint32(336))
+	return int32(capnp.Struct(s).Uint32(240))
 }
 
 func (s PlayerProfile) SetAirRemaining(v int32) {
-	capnp.Struct(s).SetUint32(336, uint32(v))
+	capnp.Struct(s).SetUint32(240, uint32(v))
 }
 
-func (s PlayerProfile) PvpKills() int32 {
-	return int32(capnp.Struct(s).Uint32(340))
-}
-
-func (s PlayerProfile) SetPvpKills(v int32) {
-	capnp.Struct(s).SetUint32(340, uint32(v))
-}
-
-func (s PlayerProfile) PvpDeaths() int32 {
-	return int32(capnp.Struct(s).Uint32(344))
-}
-
-func (s PlayerProfile) SetPvpDeaths(v int32) {
-	capnp.Struct(s).SetUint32(344, uint32(v))
-}
-
-func (s PlayerProfile) PvpCurrentPoints() int32 {
-	return int32(capnp.Struct(s).Uint32(348))
-}
-
-func (s PlayerProfile) SetPvpCurrentPoints(v int32) {
-	capnp.Struct(s).SetUint32(348, uint32(v))
-}
-
-func (s PlayerProfile) PvpCareerPoints() int32 {
-	return int32(capnp.Struct(s).Uint32(352))
-}
-
-func (s PlayerProfile) SetPvpCareerPoints(v int32) {
-	capnp.Struct(s).SetUint32(352, uint32(v))
-}
-
-func (s PlayerProfile) PvpBestKillStreak() int32 {
-	return int32(capnp.Struct(s).Uint32(356))
-}
-
-func (s PlayerProfile) SetPvpBestKillStreak(v int32) {
-	capnp.Struct(s).SetUint32(356, uint32(v))
-}
-
-func (s PlayerProfile) PvpWorstDeathStreak() int32 {
-	return int32(capnp.Struct(s).Uint32(360))
-}
-
-func (s PlayerProfile) SetPvpWorstDeathStreak(v int32) {
-	capnp.Struct(s).SetUint32(360, uint32(v))
-}
-
-func (s PlayerProfile) PvpCurrentKillStreak() int32 {
-	return int32(capnp.Struct(s).Uint32(364))
-}
-
-func (s PlayerProfile) SetPvpCurrentKillStreak(v int32) {
-	capnp.Struct(s).SetUint32(364, uint32(v))
-}
-
-func (s PlayerProfile) PvpLastKill() (PVPStatsEntry, error) {
-	p, err := capnp.Struct(s).Ptr(20)
-	return PVPStatsEntry(p.Struct()), err
-}
-
-func (s PlayerProfile) HasPvpLastKill() bool {
-	return capnp.Struct(s).HasPtr(20)
-}
-
-func (s PlayerProfile) SetPvpLastKill(v PVPStatsEntry) error {
-	return capnp.Struct(s).SetPtr(20, capnp.Struct(v).ToPtr())
-}
-
-// NewPvpLastKill sets the pvpLastKill field to a newly
-// allocated PVPStatsEntry struct, preferring placement in s's segment.
-func (s PlayerProfile) NewPvpLastKill() (PVPStatsEntry, error) {
-	ss, err := NewPVPStatsEntry(capnp.Struct(s).Segment())
-	if err != nil {
-		return PVPStatsEntry{}, err
-	}
-	err = capnp.Struct(s).SetPtr(20, capnp.Struct(ss).ToPtr())
-	return ss, err
-}
-
-func (s PlayerProfile) PvpLastDeath() (PVPStatsEntry, error) {
-	p, err := capnp.Struct(s).Ptr(21)
-	return PVPStatsEntry(p.Struct()), err
-}
-
-func (s PlayerProfile) HasPvpLastDeath() bool {
-	return capnp.Struct(s).HasPtr(21)
-}
-
-func (s PlayerProfile) SetPvpLastDeath(v PVPStatsEntry) error {
-	return capnp.Struct(s).SetPtr(21, capnp.Struct(v).ToPtr())
-}
-
-// NewPvpLastDeath sets the pvpLastDeath field to a newly
-// allocated PVPStatsEntry struct, preferring placement in s's segment.
-func (s PlayerProfile) NewPvpLastDeath() (PVPStatsEntry, error) {
-	ss, err := NewPVPStatsEntry(capnp.Struct(s).Segment())
-	if err != nil {
-		return PVPStatsEntry{}, err
-	}
-	err = capnp.Struct(s).SetPtr(21, capnp.Struct(ss).ToPtr())
-	return ss, err
-}
-
-func (s PlayerProfile) PvpNumberOfKillsInLastHours() int32 {
-	return int32(capnp.Struct(s).Uint32(368))
-}
-
-func (s PlayerProfile) SetPvpNumberOfKillsInLastHours(v int32) {
-	capnp.Struct(s).SetUint32(368, uint32(v))
-}
-
-func (s PlayerProfile) PvpRecentKills() (PVPStatsEntry_List, error) {
-	p, err := capnp.Struct(s).Ptr(22)
-	return PVPStatsEntry_List(p.List()), err
-}
-
-func (s PlayerProfile) HasPvpRecentKills() bool {
-	return capnp.Struct(s).HasPtr(22)
-}
-
-func (s PlayerProfile) SetPvpRecentKills(v PVPStatsEntry_List) error {
-	return capnp.Struct(s).SetPtr(22, v.ToPtr())
-}
-
-// NewPvpRecentKills sets the pvpRecentKills field to a newly
-// allocated PVPStatsEntry_List, preferring placement in s's segment.
-func (s PlayerProfile) NewPvpRecentKills(n int32) (PVPStatsEntry_List, error) {
-	l, err := NewPVPStatsEntry_List(capnp.Struct(s).Segment(), n)
-	if err != nil {
-		return PVPStatsEntry_List{}, err
-	}
-	err = capnp.Struct(s).SetPtr(22, l.ToPtr())
-	return l, err
-}
 func (s PlayerProfile) ExpAa() int32 {
-	return int32(capnp.Struct(s).Uint32(372))
+	return int32(capnp.Struct(s).Uint32(244))
 }
 
 func (s PlayerProfile) SetExpAa(v int32) {
-	capnp.Struct(s).SetUint32(372, uint32(v))
-}
-
-func (s PlayerProfile) CurrentRadCrystals() int32 {
-	return int32(capnp.Struct(s).Uint32(376))
-}
-
-func (s PlayerProfile) SetCurrentRadCrystals(v int32) {
-	capnp.Struct(s).SetUint32(376, uint32(v))
-}
-
-func (s PlayerProfile) CareerRadCrystals() int32 {
-	return int32(capnp.Struct(s).Uint32(380))
-}
-
-func (s PlayerProfile) SetCareerRadCrystals(v int32) {
-	capnp.Struct(s).SetUint32(380, uint32(v))
-}
-
-func (s PlayerProfile) CurrentEbonCrystals() int32 {
-	return int32(capnp.Struct(s).Uint32(384))
-}
-
-func (s PlayerProfile) SetCurrentEbonCrystals(v int32) {
-	capnp.Struct(s).SetUint32(384, uint32(v))
-}
-
-func (s PlayerProfile) CareerEbonCrystals() int32 {
-	return int32(capnp.Struct(s).Uint32(388))
-}
-
-func (s PlayerProfile) SetCareerEbonCrystals(v int32) {
-	capnp.Struct(s).SetUint32(388, uint32(v))
+	capnp.Struct(s).SetUint32(244, uint32(v))
 }
 
 func (s PlayerProfile) GroupAutoconsent() int32 {
-	return int32(capnp.Struct(s).Uint32(392))
+	return int32(capnp.Struct(s).Uint32(248))
 }
 
 func (s PlayerProfile) SetGroupAutoconsent(v int32) {
-	capnp.Struct(s).SetUint32(392, uint32(v))
+	capnp.Struct(s).SetUint32(248, uint32(v))
 }
 
 func (s PlayerProfile) RaidAutoconsent() int32 {
-	return int32(capnp.Struct(s).Uint32(396))
+	return int32(capnp.Struct(s).Uint32(252))
 }
 
 func (s PlayerProfile) SetRaidAutoconsent(v int32) {
-	capnp.Struct(s).SetUint32(396, uint32(v))
+	capnp.Struct(s).SetUint32(252, uint32(v))
 }
 
 func (s PlayerProfile) GuildAutoconsent() int32 {
-	return int32(capnp.Struct(s).Uint32(400))
+	return int32(capnp.Struct(s).Uint32(256))
 }
 
 func (s PlayerProfile) SetGuildAutoconsent(v int32) {
-	capnp.Struct(s).SetUint32(400, uint32(v))
-}
-
-func (s PlayerProfile) Level3() int32 {
-	return int32(capnp.Struct(s).Uint32(404))
-}
-
-func (s PlayerProfile) SetLevel3(v int32) {
-	capnp.Struct(s).SetUint32(404, uint32(v))
+	capnp.Struct(s).SetUint32(256, uint32(v))
 }
 
 func (s PlayerProfile) Showhelm() int32 {
-	return int32(capnp.Struct(s).Uint32(408))
+	return int32(capnp.Struct(s).Uint32(260))
 }
 
 func (s PlayerProfile) SetShowhelm(v int32) {
-	capnp.Struct(s).SetUint32(408, uint32(v))
+	capnp.Struct(s).SetUint32(260, uint32(v))
 }
 
 func (s PlayerProfile) InventoryItems() (ItemInstance_List, error) {
-	p, err := capnp.Struct(s).Ptr(23)
+	p, err := capnp.Struct(s).Ptr(18)
 	return ItemInstance_List(p.List()), err
 }
 
 func (s PlayerProfile) HasInventoryItems() bool {
-	return capnp.Struct(s).HasPtr(23)
+	return capnp.Struct(s).HasPtr(18)
 }
 
 func (s PlayerProfile) SetInventoryItems(v ItemInstance_List) error {
-	return capnp.Struct(s).SetPtr(23, v.ToPtr())
+	return capnp.Struct(s).SetPtr(18, v.ToPtr())
 }
 
 // NewInventoryItems sets the inventoryItems field to a newly
@@ -2473,39 +1409,383 @@ func (s PlayerProfile) NewInventoryItems(n int32) (ItemInstance_List, error) {
 	if err != nil {
 		return ItemInstance_List{}, err
 	}
-	err = capnp.Struct(s).SetPtr(23, l.ToPtr())
+	err = capnp.Struct(s).SetPtr(18, l.ToPtr())
 	return l, err
 }
 func (s PlayerProfile) SpawnId() int32 {
-	return int32(capnp.Struct(s).Uint32(412))
+	return int32(capnp.Struct(s).Uint32(264))
 }
 
 func (s PlayerProfile) SetSpawnId(v int32) {
+	capnp.Struct(s).SetUint32(264, uint32(v))
+}
+
+func (s PlayerProfile) Status() int32 {
+	return int32(capnp.Struct(s).Uint32(268))
+}
+
+func (s PlayerProfile) SetStatus(v int32) {
+	capnp.Struct(s).SetUint32(268, uint32(v))
+}
+
+func (s PlayerProfile) AaPoints() int32 {
+	return int32(capnp.Struct(s).Uint32(272))
+}
+
+func (s PlayerProfile) SetAaPoints(v int32) {
+	capnp.Struct(s).SetUint32(272, uint32(v))
+}
+
+func (s PlayerProfile) Ac() int32 {
+	return int32(capnp.Struct(s).Uint32(276))
+}
+
+func (s PlayerProfile) SetAc(v int32) {
+	capnp.Struct(s).SetUint32(276, uint32(v))
+}
+
+func (s PlayerProfile) MagicResist() int32 {
+	return int32(capnp.Struct(s).Uint32(280))
+}
+
+func (s PlayerProfile) SetMagicResist(v int32) {
+	capnp.Struct(s).SetUint32(280, uint32(v))
+}
+
+func (s PlayerProfile) FireResist() int32 {
+	return int32(capnp.Struct(s).Uint32(284))
+}
+
+func (s PlayerProfile) SetFireResist(v int32) {
+	capnp.Struct(s).SetUint32(284, uint32(v))
+}
+
+func (s PlayerProfile) ColdResist() int32 {
+	return int32(capnp.Struct(s).Uint32(288))
+}
+
+func (s PlayerProfile) SetColdResist(v int32) {
+	capnp.Struct(s).SetUint32(288, uint32(v))
+}
+
+func (s PlayerProfile) PoisonResist() int32 {
+	return int32(capnp.Struct(s).Uint32(292))
+}
+
+func (s PlayerProfile) SetPoisonResist(v int32) {
+	capnp.Struct(s).SetUint32(292, uint32(v))
+}
+
+func (s PlayerProfile) DiseaseResist() int32 {
+	return int32(capnp.Struct(s).Uint32(296))
+}
+
+func (s PlayerProfile) SetDiseaseResist(v int32) {
+	capnp.Struct(s).SetUint32(296, uint32(v))
+}
+
+func (s PlayerProfile) Haste() int32 {
+	return int32(capnp.Struct(s).Uint32(300))
+}
+
+func (s PlayerProfile) SetHaste(v int32) {
+	capnp.Struct(s).SetUint32(300, uint32(v))
+}
+
+func (s PlayerProfile) Accuracy() int32 {
+	return int32(capnp.Struct(s).Uint32(304))
+}
+
+func (s PlayerProfile) SetAccuracy(v int32) {
+	capnp.Struct(s).SetUint32(304, uint32(v))
+}
+
+func (s PlayerProfile) Attack() int32 {
+	return int32(capnp.Struct(s).Uint32(308))
+}
+
+func (s PlayerProfile) SetAttack(v int32) {
+	capnp.Struct(s).SetUint32(308, uint32(v))
+}
+
+func (s PlayerProfile) Avoidance() int32 {
+	return int32(capnp.Struct(s).Uint32(312))
+}
+
+func (s PlayerProfile) SetAvoidance(v int32) {
+	capnp.Struct(s).SetUint32(312, uint32(v))
+}
+
+func (s PlayerProfile) Clairvoyance() int32 {
+	return int32(capnp.Struct(s).Uint32(316))
+}
+
+func (s PlayerProfile) SetClairvoyance(v int32) {
+	capnp.Struct(s).SetUint32(316, uint32(v))
+}
+
+func (s PlayerProfile) CombatEffects() int32 {
+	return int32(capnp.Struct(s).Uint32(320))
+}
+
+func (s PlayerProfile) SetCombatEffects(v int32) {
+	capnp.Struct(s).SetUint32(320, uint32(v))
+}
+
+func (s PlayerProfile) DamageShieldMitigation() int32 {
+	return int32(capnp.Struct(s).Uint32(324))
+}
+
+func (s PlayerProfile) SetDamageShieldMitigation(v int32) {
+	capnp.Struct(s).SetUint32(324, uint32(v))
+}
+
+func (s PlayerProfile) DamageShield() int32 {
+	return int32(capnp.Struct(s).Uint32(328))
+}
+
+func (s PlayerProfile) SetDamageShield(v int32) {
+	capnp.Struct(s).SetUint32(328, uint32(v))
+}
+
+func (s PlayerProfile) DotShielding() int32 {
+	return int32(capnp.Struct(s).Uint32(332))
+}
+
+func (s PlayerProfile) SetDotShielding(v int32) {
+	capnp.Struct(s).SetUint32(332, uint32(v))
+}
+
+func (s PlayerProfile) HpRegen() int32 {
+	return int32(capnp.Struct(s).Uint32(336))
+}
+
+func (s PlayerProfile) SetHpRegen(v int32) {
+	capnp.Struct(s).SetUint32(336, uint32(v))
+}
+
+func (s PlayerProfile) ManaRegen() int32 {
+	return int32(capnp.Struct(s).Uint32(340))
+}
+
+func (s PlayerProfile) SetManaRegen(v int32) {
+	capnp.Struct(s).SetUint32(340, uint32(v))
+}
+
+func (s PlayerProfile) EnduranceRegen() int32 {
+	return int32(capnp.Struct(s).Uint32(344))
+}
+
+func (s PlayerProfile) SetEnduranceRegen(v int32) {
+	capnp.Struct(s).SetUint32(344, uint32(v))
+}
+
+func (s PlayerProfile) Shielding() int32 {
+	return int32(capnp.Struct(s).Uint32(348))
+}
+
+func (s PlayerProfile) SetShielding(v int32) {
+	capnp.Struct(s).SetUint32(348, uint32(v))
+}
+
+func (s PlayerProfile) SpellDamage() int32 {
+	return int32(capnp.Struct(s).Uint32(352))
+}
+
+func (s PlayerProfile) SetSpellDamage(v int32) {
+	capnp.Struct(s).SetUint32(352, uint32(v))
+}
+
+func (s PlayerProfile) SpellShielding() int32 {
+	return int32(capnp.Struct(s).Uint32(356))
+}
+
+func (s PlayerProfile) SetSpellShielding(v int32) {
+	capnp.Struct(s).SetUint32(356, uint32(v))
+}
+
+func (s PlayerProfile) Strikethrough() int32 {
+	return int32(capnp.Struct(s).Uint32(360))
+}
+
+func (s PlayerProfile) SetStrikethrough(v int32) {
+	capnp.Struct(s).SetUint32(360, uint32(v))
+}
+
+func (s PlayerProfile) StunResist() int32 {
+	return int32(capnp.Struct(s).Uint32(364))
+}
+
+func (s PlayerProfile) SetStunResist(v int32) {
+	capnp.Struct(s).SetUint32(364, uint32(v))
+}
+
+func (s PlayerProfile) Backstab() int32 {
+	return int32(capnp.Struct(s).Uint32(368))
+}
+
+func (s PlayerProfile) SetBackstab(v int32) {
+	capnp.Struct(s).SetUint32(368, uint32(v))
+}
+
+func (s PlayerProfile) Wind() int32 {
+	return int32(capnp.Struct(s).Uint32(372))
+}
+
+func (s PlayerProfile) SetWind(v int32) {
+	capnp.Struct(s).SetUint32(372, uint32(v))
+}
+
+func (s PlayerProfile) Brass() int32 {
+	return int32(capnp.Struct(s).Uint32(376))
+}
+
+func (s PlayerProfile) SetBrass(v int32) {
+	capnp.Struct(s).SetUint32(376, uint32(v))
+}
+
+func (s PlayerProfile) String_() int32 {
+	return int32(capnp.Struct(s).Uint32(380))
+}
+
+func (s PlayerProfile) SetString_(v int32) {
+	capnp.Struct(s).SetUint32(380, uint32(v))
+}
+
+func (s PlayerProfile) Percussion() int32 {
+	return int32(capnp.Struct(s).Uint32(384))
+}
+
+func (s PlayerProfile) SetPercussion(v int32) {
+	capnp.Struct(s).SetUint32(384, uint32(v))
+}
+
+func (s PlayerProfile) Singing() int32 {
+	return int32(capnp.Struct(s).Uint32(388))
+}
+
+func (s PlayerProfile) SetSinging(v int32) {
+	capnp.Struct(s).SetUint32(388, uint32(v))
+}
+
+func (s PlayerProfile) Baking() int32 {
+	return int32(capnp.Struct(s).Uint32(392))
+}
+
+func (s PlayerProfile) SetBaking(v int32) {
+	capnp.Struct(s).SetUint32(392, uint32(v))
+}
+
+func (s PlayerProfile) Alchemy() int32 {
+	return int32(capnp.Struct(s).Uint32(396))
+}
+
+func (s PlayerProfile) SetAlchemy(v int32) {
+	capnp.Struct(s).SetUint32(396, uint32(v))
+}
+
+func (s PlayerProfile) Tailoring() int32 {
+	return int32(capnp.Struct(s).Uint32(400))
+}
+
+func (s PlayerProfile) SetTailoring(v int32) {
+	capnp.Struct(s).SetUint32(400, uint32(v))
+}
+
+func (s PlayerProfile) Blacksmithing() int32 {
+	return int32(capnp.Struct(s).Uint32(404))
+}
+
+func (s PlayerProfile) SetBlacksmithing(v int32) {
+	capnp.Struct(s).SetUint32(404, uint32(v))
+}
+
+func (s PlayerProfile) Fletching() int32 {
+	return int32(capnp.Struct(s).Uint32(408))
+}
+
+func (s PlayerProfile) SetFletching(v int32) {
+	capnp.Struct(s).SetUint32(408, uint32(v))
+}
+
+func (s PlayerProfile) Brewing() int32 {
+	return int32(capnp.Struct(s).Uint32(412))
+}
+
+func (s PlayerProfile) SetBrewing(v int32) {
 	capnp.Struct(s).SetUint32(412, uint32(v))
 }
 
-func (s PlayerProfile) Stats() (CharacterStatsRecord, error) {
-	p, err := capnp.Struct(s).Ptr(24)
-	return CharacterStatsRecord(p.Struct()), err
+func (s PlayerProfile) Jewelry() int32 {
+	return int32(capnp.Struct(s).Uint32(416))
 }
 
-func (s PlayerProfile) HasStats() bool {
-	return capnp.Struct(s).HasPtr(24)
+func (s PlayerProfile) SetJewelry(v int32) {
+	capnp.Struct(s).SetUint32(416, uint32(v))
 }
 
-func (s PlayerProfile) SetStats(v CharacterStatsRecord) error {
-	return capnp.Struct(s).SetPtr(24, capnp.Struct(v).ToPtr())
+func (s PlayerProfile) Pottery() int32 {
+	return int32(capnp.Struct(s).Uint32(420))
 }
 
-// NewStats sets the stats field to a newly
-// allocated CharacterStatsRecord struct, preferring placement in s's segment.
-func (s PlayerProfile) NewStats() (CharacterStatsRecord, error) {
-	ss, err := NewCharacterStatsRecord(capnp.Struct(s).Segment())
-	if err != nil {
-		return CharacterStatsRecord{}, err
-	}
-	err = capnp.Struct(s).SetPtr(24, capnp.Struct(ss).ToPtr())
-	return ss, err
+func (s PlayerProfile) SetPottery(v int32) {
+	capnp.Struct(s).SetUint32(420, uint32(v))
+}
+
+func (s PlayerProfile) Research() int32 {
+	return int32(capnp.Struct(s).Uint32(424))
+}
+
+func (s PlayerProfile) SetResearch(v int32) {
+	capnp.Struct(s).SetUint32(424, uint32(v))
+}
+
+func (s PlayerProfile) Alcohol() int32 {
+	return int32(capnp.Struct(s).Uint32(428))
+}
+
+func (s PlayerProfile) SetAlcohol(v int32) {
+	capnp.Struct(s).SetUint32(428, uint32(v))
+}
+
+func (s PlayerProfile) Fishing() int32 {
+	return int32(capnp.Struct(s).Uint32(432))
+}
+
+func (s PlayerProfile) SetFishing(v int32) {
+	capnp.Struct(s).SetUint32(432, uint32(v))
+}
+
+func (s PlayerProfile) Tinkering() int32 {
+	return int32(capnp.Struct(s).Uint32(436))
+}
+
+func (s PlayerProfile) SetTinkering(v int32) {
+	capnp.Struct(s).SetUint32(436, uint32(v))
+}
+
+func (s PlayerProfile) MaxHp() int64 {
+	return int64(capnp.Struct(s).Uint64(440))
+}
+
+func (s PlayerProfile) SetMaxHp(v int64) {
+	capnp.Struct(s).SetUint64(440, uint64(v))
+}
+
+func (s PlayerProfile) MaxMana() int64 {
+	return int64(capnp.Struct(s).Uint64(448))
+}
+
+func (s PlayerProfile) SetMaxMana(v int64) {
+	capnp.Struct(s).SetUint64(448, uint64(v))
+}
+
+func (s PlayerProfile) MaxEndurance() int64 {
+	return int64(capnp.Struct(s).Uint64(456))
+}
+
+func (s PlayerProfile) SetMaxEndurance(v int64) {
+	capnp.Struct(s).SetUint64(456, uint64(v))
 }
 
 // PlayerProfile_List is a list of PlayerProfile.
@@ -2513,7 +1793,7 @@ type PlayerProfile_List = capnp.StructList[PlayerProfile]
 
 // NewPlayerProfile creates a new list of PlayerProfile.
 func NewPlayerProfile_List(s *capnp.Segment, sz int32) (PlayerProfile_List, error) {
-	l, err := capnp.NewCompositeList(s, capnp.ObjectSize{DataSize: 416, PointerCount: 25}, sz)
+	l, err := capnp.NewCompositeList(s, capnp.ObjectSize{DataSize: 464, PointerCount: 19}, sz)
 	return capnp.StructList[PlayerProfile](l), err
 }
 
@@ -2533,15 +1813,99 @@ func (p PlayerProfile_Future) Disciplines() Disciplines_Future {
 func (p PlayerProfile_Future) Potionbelt() PotionBelt_Future {
 	return PotionBelt_Future{Future: p.Future.Field(12, nil)}
 }
-func (p PlayerProfile_Future) LeaderAbilities() LeadershipAA_Future {
-	return LeadershipAA_Future{Future: p.Future.Field(19, nil)}
+
+type Tint capnp.Struct
+
+// Tint_TypeID is the unique identifier for the type Tint.
+const Tint_TypeID = 0xe83eeeca42eb6184
+
+func NewTint(s *capnp.Segment) (Tint, error) {
+	st, err := capnp.NewStruct(s, capnp.ObjectSize{DataSize: 16, PointerCount: 0})
+	return Tint(st), err
 }
-func (p PlayerProfile_Future) PvpLastKill() PVPStatsEntry_Future {
-	return PVPStatsEntry_Future{Future: p.Future.Field(20, nil)}
+
+func NewRootTint(s *capnp.Segment) (Tint, error) {
+	st, err := capnp.NewRootStruct(s, capnp.ObjectSize{DataSize: 16, PointerCount: 0})
+	return Tint(st), err
 }
-func (p PlayerProfile_Future) PvpLastDeath() PVPStatsEntry_Future {
-	return PVPStatsEntry_Future{Future: p.Future.Field(21, nil)}
+
+func ReadRootTint(msg *capnp.Message) (Tint, error) {
+	root, err := msg.Root()
+	return Tint(root.Struct()), err
 }
-func (p PlayerProfile_Future) Stats() CharacterStatsRecord_Future {
-	return CharacterStatsRecord_Future{Future: p.Future.Field(24, nil)}
+
+func (s Tint) String() string {
+	str, _ := text.Marshal(0xe83eeeca42eb6184, capnp.Struct(s))
+	return str
+}
+
+func (s Tint) EncodeAsPtr(seg *capnp.Segment) capnp.Ptr {
+	return capnp.Struct(s).EncodeAsPtr(seg)
+}
+
+func (Tint) DecodeFromPtr(p capnp.Ptr) Tint {
+	return Tint(capnp.Struct{}.DecodeFromPtr(p))
+}
+
+func (s Tint) ToPtr() capnp.Ptr {
+	return capnp.Struct(s).ToPtr()
+}
+func (s Tint) IsValid() bool {
+	return capnp.Struct(s).IsValid()
+}
+
+func (s Tint) Message() *capnp.Message {
+	return capnp.Struct(s).Message()
+}
+
+func (s Tint) Segment() *capnp.Segment {
+	return capnp.Struct(s).Segment()
+}
+func (s Tint) Blue() int32 {
+	return int32(capnp.Struct(s).Uint32(0))
+}
+
+func (s Tint) SetBlue(v int32) {
+	capnp.Struct(s).SetUint32(0, uint32(v))
+}
+
+func (s Tint) Green() int32 {
+	return int32(capnp.Struct(s).Uint32(4))
+}
+
+func (s Tint) SetGreen(v int32) {
+	capnp.Struct(s).SetUint32(4, uint32(v))
+}
+
+func (s Tint) Reddays() int32 {
+	return int32(capnp.Struct(s).Uint32(8))
+}
+
+func (s Tint) SetReddays(v int32) {
+	capnp.Struct(s).SetUint32(8, uint32(v))
+}
+
+func (s Tint) UseTint() int32 {
+	return int32(capnp.Struct(s).Uint32(12))
+}
+
+func (s Tint) SetUseTint(v int32) {
+	capnp.Struct(s).SetUint32(12, uint32(v))
+}
+
+// Tint_List is a list of Tint.
+type Tint_List = capnp.StructList[Tint]
+
+// NewTint creates a new list of Tint.
+func NewTint_List(s *capnp.Segment, sz int32) (Tint_List, error) {
+	l, err := capnp.NewCompositeList(s, capnp.ObjectSize{DataSize: 16, PointerCount: 0}, sz)
+	return capnp.StructList[Tint](l), err
+}
+
+// Tint_Future is a wrapper for a Tint promised by a client call.
+type Tint_Future struct{ *capnp.Future }
+
+func (f Tint_Future) Struct() (Tint, error) {
+	p, err := f.Future.Ptr()
+	return Tint(p.Struct()), err
 }

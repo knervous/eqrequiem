@@ -169,7 +169,6 @@ func CharacterCreate(ses *session.Session, accountId int64, cc eq.CharCreate) bo
 	pp.SetIntel(cc.Intel())
 	pp.SetCha(cc.Cha())
 	pp.SetFace(cc.Face())
-	pp.SetBeard(cc.Beard())
 	pp.SetLevel(1)
 	pp.SetPoints(5)
 	pp.SetCurHp(1000)

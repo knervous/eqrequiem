@@ -7,14 +7,12 @@ import (
 type Client struct {
 	Mob
 	CharData     *model.CharacterData
-	CharStats    *model.CharacterStatsRecord
 	ConnectionID string
 }
 
-func NewClient(charData *model.CharacterData, charStats *model.CharacterStatsRecord) *Client {
+func NewClient(charData *model.CharacterData) *Client {
 	client := &Client{
-		CharData:  charData,
-		CharStats: charStats,
+		CharData: charData,
 	}
 	client.Mob.CurrentHp = int(charData.CurHp)
 	client.Mob.DataSource = client
@@ -23,8 +21,7 @@ func NewClient(charData *model.CharacterData, charStats *model.CharacterStatsRec
 	client.Mob.CurrentHp = int(charData.CurHp)
 	client.Mob.CurrentMana = int(charData.Mana)
 
-	client.UpdateStats()
-
+	client.CalcBonuses()
 	return client
 }
 
@@ -53,14 +50,3 @@ func (c *Client) SetPosition(pos MobPosition) {
 }
 
 func (n *Client) Type() int32 { return EntityTypePlayer }
-
-func (client *Client) UpdateStats() {
-	client.CalcBonuses()
-	charStats := client.CharStats
-	*charStats.Status = 0
-	*charStats.Name = client.CharData.Name
-	*charStats.AaPoints = int32(client.CharData.AaPoints) - int32(client.CharData.AaPointsSpent)
-	*charStats.Level = int32(client.CharData.Level)
-	*charStats.Class = int32(client.CharData.Class)
-	*charStats.Race = int32(client.CharData.Race)
-}

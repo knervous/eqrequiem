@@ -1,5 +1,4 @@
 import BABYLON from "@bjs";
-import type * as BJS from "@babylonjs/core";
 import emitter from "@game/Events/events";
 import GameManager from "@game/Manager/game-manager";
 import Player from "@game/Player/player";
@@ -194,7 +193,8 @@ export const StoneInventory: React.FC<{
           className="invui"
           sx={{ top: 114, left: 65, color: "lightgray !important" }}
         >
-          {player?.stats?.hp ?? 0}/{player?.stats?.maxHp ?? 0}{/* HP placeholder */}
+          {player?.curHp ?? 0}/{player?.maxHp ?? 0}
+          {/* HP placeholder */}
         </Typography>
         <Typography
           className="invui"
@@ -210,7 +210,7 @@ export const StoneInventory: React.FC<{
         </Typography>
         <Box
           className="invui"
-          sx={{ top: 212, left: 24, color: "lightgray !important" }}
+          sx={{ top: 212, left: 23, color: "lightgray !important" }}
         >
           <UiImageComponent sak name="A_Classic_GaugeFill_Yellow" />
         </Box>
@@ -268,24 +268,33 @@ export const StoneInventory: React.FC<{
         >
           <Stack spacing={1} direction="row" justifyContent={"space-between"}>
             <Typography className="uistat">POISON</Typography>
-            <Typography className="uistat">{player?.stats?.poisonResist ?? 0}</Typography>
-
+            <Typography className="uistat">
+              {player?.poisonResist ?? 0}
+            </Typography>
           </Stack>
           <Stack spacing={1} direction="row" justifyContent={"space-between"}>
             <Typography className="uistat">MAGIC</Typography>
-            <Typography className="uistat">{player?.stats?.magicResist ?? 0}</Typography>
+            <Typography className="uistat">
+              {player?.magicResist ?? 0}
+            </Typography>
           </Stack>
           <Stack spacing={1} direction="row" justifyContent={"space-between"}>
             <Typography className="uistat">DISEASE</Typography>
-            <Typography className="uistat">{player?.stats?.diseaseResist ?? 0}</Typography>
+            <Typography className="uistat">
+              {player?.diseaseResist ?? 0}
+            </Typography>
           </Stack>
           <Stack spacing={1} direction="row" justifyContent={"space-between"}>
             <Typography className="uistat">FIRE</Typography>
-            <Typography className="uistat">{player?.stats?.fireResist ?? 0}</Typography>
+            <Typography className="uistat">
+              {player?.fireResist ?? 0}
+            </Typography>
           </Stack>
           <Stack spacing={1} direction="row" justifyContent={"space-between"}>
             <Typography className="uistat">COLD</Typography>
-            <Typography className="uistat">{player?.stats?.coldResist ?? 0}</Typography>
+            <Typography className="uistat">
+              {player?.coldResist ?? 0}
+            </Typography>
           </Stack>
         </Stack>
       </Box>

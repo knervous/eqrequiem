@@ -403,7 +403,12 @@ func SaveCharacterCreate(ctx context.Context, accountID int64, pp *eq.PlayerProf
 	// Get or create character ID
 	charID, err := GetOrCreateCharacterID(ctx, accountID, pp)
 	if err != nil {
-		log.Printf("Failed to get or create character ID for %s: %v", pp.Name, err)
+		log.Printf("Failed to get or create character ID for %d: %v", accountID, err)
+		return false
+	}
+	name, err := pp.Name()
+	if err != nil {
+		log.Printf("Failed to get character name from PlayerProfile: %v", err)
 		return false
 	}
 
@@ -436,19 +441,11 @@ func SaveCharacterCreate(ctx context.Context, accountID int64, pp *eq.PlayerProf
 			table.CharacterData.Int,
 			table.CharacterData.Cha,
 			table.CharacterData.Face,
-			table.CharacterData.EyeColor1,
-			table.CharacterData.EyeColor2,
-			table.CharacterData.HairStyle,
-			table.CharacterData.HairColor,
-			table.CharacterData.Beard,
-			table.CharacterData.BeardColor,
-
 			table.CharacterData.LastLogin,
 			table.CharacterData.Points,
 			table.CharacterData.CurHp,
 			table.CharacterData.HungerLevel,
 			table.CharacterData.ThirstLevel,
-			table.CharacterData.PvpStatus,
 		).
 		SET(
 			mysql.Uint32(uint32(pp.ZoneId())),
@@ -469,38 +466,28 @@ func SaveCharacterCreate(ctx context.Context, accountID int64, pp *eq.PlayerProf
 			mysql.Int32(pp.Intel()),
 			mysql.Int32(pp.Cha()),
 			mysql.Int32(pp.Face()),
-			mysql.Int32(pp.Eyecolor1()),
-			mysql.Int32(pp.Eyecolor2()),
-			mysql.Int32(pp.Hairstyle()),
-			mysql.Int32(pp.Haircolor()),
-			mysql.Int32(pp.Beard()),
-			mysql.Int32(pp.Beardcolor()),
 			mysql.Int32(pp.Lastlogin()),
 			mysql.Int32(pp.Points()),
 			mysql.Int32(pp.CurHp()),
 			mysql.Int32(pp.HungerLevel()),
 			mysql.Int32(pp.ThirstLevel()),
-			mysql.Uint8(uint8(pp.Pvp())),
 		).
 		WHERE(table.CharacterData.ID.EQ(mysql.Int64(charID)))
 
 	if _, err := stmt.ExecContext(ctx, tx); err != nil {
-		log.Printf("Failed to save character data for %s: %v", pp.Name, err)
+		log.Printf("Failed to save character data for %s: %v", name, err)
 		return false
 	}
 
 	// Save skills
 	skills, err := pp.Skills()
 	if err != nil {
-		log.Printf("Failed to get skills for %s: %v", pp.Name, err)
+		log.Printf("Failed to get skills for %s: %v", name, err)
 		return false
 	}
 	for i := range skills.Len() {
 		skill := skills.At(i)
-		if err != nil {
-			log.Printf("Failed to get skill %d for %s: %v", i, pp.Name, err)
-			return false
-		}
+
 		if skill > 0 {
 			stmt := table.CharacterSkills.
 				INSERT(
@@ -517,7 +504,7 @@ func SaveCharacterCreate(ctx context.Context, accountID int64, pp *eq.PlayerProf
 					table.CharacterSkills.Value.SET(mysql.Uint32(uint32(skill))),
 				)
 			if _, err := stmt.ExecContext(ctx, tx); err != nil {
-				log.Printf("Failed to save skill %d for %s: %v", i, pp.Name, err)
+				log.Printf("Failed to save skill %d for %s: %v", i, name, err)
 				return false
 			}
 		}
@@ -526,7 +513,7 @@ func SaveCharacterCreate(ctx context.Context, accountID int64, pp *eq.PlayerProf
 	// Save languages
 	languages, err := pp.Languages()
 	if err != nil {
-		log.Printf("Failed to get languages for %s: %v", pp.Name, err)
+		log.Printf("Failed to get languages for %s: %v", name, err)
 		return false
 	}
 	for i := range languages.Len() {
@@ -547,7 +534,7 @@ func SaveCharacterCreate(ctx context.Context, accountID int64, pp *eq.PlayerProf
 					table.CharacterLanguages.Value.SET(mysql.Uint32(uint32(lang))),
 				)
 			if _, err := stmt.ExecContext(ctx, tx); err != nil {
-				log.Printf("Failed to save language %d for %s: %v", i, pp.Name, err)
+				log.Printf("Failed to save language %d for %s: %v", i, name, err)
 				return false
 			}
 		}
@@ -556,7 +543,7 @@ func SaveCharacterCreate(ctx context.Context, accountID int64, pp *eq.PlayerProf
 	// Save bind points
 	binds, err := pp.Binds()
 	if err != nil {
-		log.Printf("Failed to get bind points for %s: %v", pp.Name, err)
+		log.Printf("Failed to get bind points for %s: %v", name, err)
 		return false
 	}
 	for i := range binds.Len() {
@@ -594,27 +581,27 @@ func SaveCharacterCreate(ctx context.Context, accountID int64, pp *eq.PlayerProf
 				table.CharacterBind.Heading.SET(mysql.Float(float64(bind.Heading()))),
 			)
 		if _, err := stmt.ExecContext(ctx, tx); err != nil {
-			log.Printf("Failed to save bind point %d for %s: %v", i, pp.Name, err)
+			log.Printf("Failed to save bind point %d for %s: %v", i, name, err)
 			return false
 		}
 	}
 
 	// Commit transaction
 	if err := tx.Commit(); err != nil {
-		log.Printf("Failed to commit transaction for %s: %v", pp.Name, err)
+		log.Printf("Failed to commit transaction for %s: %v", name, err)
 		return false
 	}
 
 	// Save inventory later
 	startingItems, err := db_character.InstantiateStartingItems(pp.Race(), pp.CharClass(), pp.Deity(), pp.ZoneId())
 	if err != nil {
-		log.Printf("Failed to instantiate starting items for %s: %v", pp.Name, err)
+		log.Printf("Failed to instantiate starting items for %s: %v", name, err)
 		return false
 	}
 	for _, item := range startingItems {
 		_, err = items.AddItemToPlayerInventoryFreeSlot(item, int32(charID))
 		if err != nil {
-			log.Printf("Failed to add item to inventory for %s: %v", pp.Name, err)
+			log.Printf("Failed to add item to inventory for %s: %v", name, err)
 			return false
 		}
 	}
@@ -623,7 +610,7 @@ func SaveCharacterCreate(ctx context.Context, accountID int64, pp *eq.PlayerProf
 	cacheKey := fmt.Sprintf("account:characters:%d", accountID)
 	cache.GetCache().Delete(cacheKey)
 
-	log.Printf("Character creation succeeded for %s (ID: %d)", pp.Name, charID)
+	log.Printf("Character creation succeeded for %s (ID: %d)", name, charID)
 	return true
 }
 

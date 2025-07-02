@@ -15,6 +15,7 @@
     "bjs:sky": "node scripts/bjs-export-full.js ~/documents/everquest_rof2/eqrequiem/sky",
     "bjs:all": "npm-run-all bjs:items bjs:objects bjs:zones bjs:sky",
     "upload": "node scripts/upload.js ~/documents/everquest_rof2",
+    "upload:db": "node scripts/upload-db.js",
     "start": "cross-env VITE_LOCAL_DEV=true VITE_USE_SAGE=false vite",
     "start:prod": "cross-env VITE_LOCAL_DEV=false VITE_USE_SAGE=false vite",
     "build": "vite build",

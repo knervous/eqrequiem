@@ -154,15 +154,11 @@ func HandleRequestClientZoneChange(z *ZoneInstance, ses *session.Session, payloa
 		log.Printf("client session %d has no character data", ses.SessionID)
 		return
 	}
-	charStats := ses.Client.CharStats
-	if charStats == nil {
-		log.Printf("client session %d has no character stats", ses.SessionID)
-		//return
-	}
+
 	clientEntry := z.ClientEntries[ses.SessionID]
 	dbZone, err := db_zone.GetZoneById(context.Background(), int(charData.ZoneID))
 	if err != nil {
-		log.Printf("failed to get zone %d: %v", req.ZoneId, err)
+		log.Printf("failed to get zone %d: %v", req.ZoneId(), err)
 		return
 	}
 	fmt.Println("zone data", dbZone)
@@ -181,7 +177,7 @@ func HandleRequestClientZoneChange(z *ZoneInstance, ses *session.Session, payloa
 
 	zonePoints, err := db_zone.GetZonePointsByZoneName(*dbZone.ShortName)
 	if err != nil {
-		log.Printf("failed to get zone points for zone %s: %v", newZone.ShortName, err)
+		log.Printf("failed to get zone points for zone %d: %v", newZone.ZoneIdNumber(), err)
 		return
 	}
 	zp, err := newZone.NewZonePoints(int32(len(zonePoints)))
@@ -229,24 +225,21 @@ func HandleRequestClientZoneChange(z *ZoneInstance, ses *session.Session, payloa
 	playerProfile.SetHeading(float32(charData.Heading))
 	playerProfile.SetSpawnId(int32(clientEntry.EntityId))
 	playerProfile.SetDeity(int32(charData.Deity))
-	stats, err := playerProfile.NewStats()
-	if err != nil {
-		log.Printf("failed to create PlayerProfile stats message: %v", err)
-		return
-	}
+	playerProfile.SetAaPoints(int32(charData.AaPoints))
+
+	// Derived stats
 	mob := ses.Client.Mob
-	stats.SetAaPoints(int32(*charStats.AaPoints))
-	stats.SetAc(int32(mob.AC))
-	stats.SetMagicResist(mob.MR)
-	stats.SetFireResist(mob.FR)
-	stats.SetColdResist(mob.CR)
-	stats.SetPoisonResist(mob.PR)
-	stats.SetDiseaseResist(mob.DR)
-	stats.SetAttack(int32(mob.ATK))
-	stats.SetHp(int64(mob.CurrentHp))
-	stats.SetMana(int64(mob.CurrentMana))
-	stats.SetMaxHp(int64(mob.MaxHp))
-	stats.SetMaxMana(int64(mob.MaxMana))
+	playerProfile.SetAc(int32(mob.AC))
+	playerProfile.SetMagicResist(mob.MR)
+	playerProfile.SetFireResist(mob.FR)
+	playerProfile.SetColdResist(mob.CR)
+	playerProfile.SetPoisonResist(mob.PR)
+	playerProfile.SetDiseaseResist(mob.DR)
+	playerProfile.SetAttack(int32(mob.ATK))
+	playerProfile.SetCurHp(int32(mob.CurrentHp))
+	playerProfile.SetMana(int32(mob.CurrentMana))
+	playerProfile.SetMaxHp(int64(mob.MaxHp))
+	playerProfile.SetMaxMana(int64(mob.MaxMana))
 
 	// TODO stats fill the rest of this out
 

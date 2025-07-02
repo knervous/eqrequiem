@@ -2,8 +2,11 @@ package main
 
 import (
 	"compress/gzip"
+	"flag"
 	"fmt"
+	"io"
 	"log"
+	"net/http"
 	"os"
 	"os/exec"
 
@@ -30,7 +33,24 @@ func mustRun(cmd *exec.Cmd) {
 	}
 }
 
+func fetchGzipFromURL(url string) (io.ReadCloser, error) {
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch URL %s: %v", url, err)
+	}
+	if resp.StatusCode != http.StatusOK {
+		resp.Body.Close()
+		return nil, fmt.Errorf("unexpected status code %d for URL %s", resp.StatusCode, url)
+	}
+	return resp.Body, nil
+}
+
 func main() {
+	// Define CLI flag for URL
+	urlPtr := flag.String("url", "https://eqrequiem.blob.core.windows.net/dev/eqgo.sql.gz", "URL of the gzip database dump")
+	filePtr := flag.String("file", "", "Local file path of the gzip database dump")
+	flag.Parse()
+
 	host, port, user, pass, dbName, err := getConnection()
 	if err != nil {
 		log.Fatalf("❌ %v", err)
@@ -47,17 +67,30 @@ func main() {
 	mustRun(exec.Command("mysql", createArgs...))
 	log.Printf("✅ Database `%s` ensured\n", dbName)
 
-	// 2) Open gzip dump
-	inPath := fmt.Sprintf("%s.sql.gz", dbName)
-	f, err := os.Open(inPath)
-	if err != nil {
-		log.Fatalf("failed to open %s: %v", inPath, err)
-	}
-	defer f.Close()
-
-	gr, err := gzip.NewReader(f)
-	if err != nil {
-		log.Fatalf("failed to create gzip reader: %v", err)
+	// 2) Get gzip reader
+	var gr *gzip.Reader
+	if *filePtr != "" {
+		// Read from local file
+		f, err := os.Open(*filePtr)
+		if err != nil {
+			log.Fatalf("failed to open %s: %v", *filePtr, err)
+		}
+		defer f.Close()
+		gr, err = gzip.NewReader(f)
+		if err != nil {
+			log.Fatalf("failed to create gzip reader: %v", err)
+		}
+	} else {
+		// Fetch from URL
+		body, err := fetchGzipFromURL(*urlPtr)
+		if err != nil {
+			log.Fatalf("failed to fetch from URL: %v", err)
+		}
+		defer body.Close()
+		gr, err = gzip.NewReader(body)
+		if err != nil {
+			log.Fatalf("failed to create gzip reader: %v", err)
+		}
 	}
 	defer gr.Close()
 
@@ -78,5 +111,5 @@ func main() {
 		log.Fatalf("mysql import failed: %v", err)
 	}
 
-	log.Printf("✅ Import complete from %s\n", inPath)
+	log.Printf("✅ Import complete from %s\n", *urlPtr)
 }

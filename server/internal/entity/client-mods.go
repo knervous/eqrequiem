@@ -27,6 +27,7 @@ func (client *Client) CalcBonuses() {
 	client.CalcPR()
 	client.CalcCR()
 
+	// HP / Mana
 	client.CalcMaxHP()
 	client.CalcMaxMana()
 }

@@ -3,72 +3,39 @@ import * as $ from "capnp-es";
 import { Vector3, InventorySlot, TypelessInventorySlot, EntityId, Duel, DuelResponse, AdventureInfo, TextureProfile, TintProfile, Spawns, Spawn, ClientZoneEntry, ServerZoneEntry, MemorizeSpell, Charm, InterruptCast, DeleteSpell, ManaChange, SwapSpell, BeginCast, CastSpell, SpawnAppearance, SpellBuff, SpellBuffPacket, ItemNamePacket, ItemProperties, GMTrainee, GMTrainEnd, GMSkillChange, ConsentResponse, NameGeneration, NameApprove, CharCreate, AAArray, Disciplines, Tribute, BandolierItem, Bandolier, PotionBeltItem, PotionBelt, StringList, GroupLeadershipAA, RaidLeadershipAA, LeadershipAA, Bind, PVPStatsEntry, ClientTarget, PetCommand, DeleteSpawn, ChannelMessage, SpecialMesg, WearChange, BindWound, Animation, Action, CombatDamage, Consider, Death, BecomeCorpse, EntityPositionUpdateBase, EntityPositionUpdate, EntityAnimation, ClientPositionUpdate, SpawnHPUpdate, SpawnHPUpdate2, Stamina, LevelUpdate, ExpUpdate, BulkItemPacket, Consume, DeleteItem, MoveItem, MultiMoveItemSub, MultiMoveItem, MoveCoin, TradeBusy, TradeCoin, TradeMoneyUpdate, Surname, GuildsList, MoneyOnCorpse, LootingItem, GuildManageStatus, GuildJoin, GuildInviteAccept, GuildManageRemove, Guildcommand, OnLevelMessage, GMZoneRequest, GMSummon, GMGoto, GMLastName, CombatAbility, InstillDoubt, GiveItem, RandomReq, RandomReply, LFG, LFGAppearance, TimeOfDay, MerchantClick, MerchantSell, MerchantPurchase, MerchantDelItem, AdventurePurchase, AdventureSell, AdventurePointsUpdate, AdventureFinish, AdventureRequest, AdventureRequestResponse, Illusion, SkillUpdate, ZoneUnavail, GroupGeneric, GroupCancel, GroupUpdate, GroupUpdate2, GroupJoin, FaceChange, TradeRequest, TradeAccept, CancelTrade, PetitionUpdate, Petition, WhoAll, Stun, AugmentItem, Emote, Inspect, InspectResponse, SetDataRate, SetServerFilter, SetServerFilterAck, IncreaseStat, GMName, GMDelCorpse, GMKick, GMKill, GMEmoteZone, BookText, BookRequest, Object, ClickObject, ClickObjectAction, Shielding, ClickObjectAck, CloseContainer, Door, DoorSpawns, ClickDoor, MoveDoor, BecomeNPC, Underworld, Resurrect, SetRunMode, EnvDamage2, BazaarWindowStart, BazaarWelcome, BazaarSearch, BazaarInspect, BazaarReturnDone, BazaarSearchResults, ServerSideFilters, ItemViewRequest, PickPocket, ActionPickPocket, LogServer, ClientError, MobHealth, Track, TrackTarget, Tracking, ZoneServerInfo, WhoAllPlayer, WhoAllReturn, Trader, ClickTrader, GetItems, BecomeTrader, TraderShowItems, TraderBuy, TraderItemUpdate, MoneyUpdate, TraderDelItem, TraderClick, FormattedMessage, SimpleMessage, GuildMemberEntry, GuildMembers, GuildMOTD, GuildUpdatePublicNote, GuildDemote, GuildRemove, GuildMakeLeader, MakePet, GroundSpawn, GroundSpawns, ApproveZone, ZoneInSendName, ZoneInSendName2, StartTribute, TributeLevel, TributeAbility, GuildTributeAbility, SelectTributeReq, SelectTributeReply, TributeInfo, TributeItem, TributePoint, TributeMoney, Split, NewCombine, TradeskillFavorites, RecipesSearch, RecipeReply, RecipeAutoCombine, LevelAppearance, MerchantList, TempMerchantList, FindPersonPoint, FindPersonRequest, FindPersonResult, MobRename, PlayMP3, TitleEntry, Titles, TitleListEntry, TitleList, SetTitle, SetTitleReply, TaskDescription, TaskMemberList, TaskActivity, TaskHistoryEntry, TaskHistory, AcceptNewTask, AvaliableTask, BankerChange, LeadershipExpUpdate, UpdateLeadershipAA, LeadExpUpdate, RaidGeneral, RaidAddMember, RaidNote, RaidMOTD, RaidLeadershipUpdate, RaidCreate, RaidMemberInfo, RaidDetails, RaidMembers, DynamicWall, BandolierCreate, BandolierDelete, BandolierSet, Arrow, Consent, AdventureMerchant, GMtoggle, GroupInvite, ColoredText, UseAA, AAAbility, SendAA, AAList, AAAction, AAExpUpdate, AltAdvStats, PlayerAA, AATable, Weather, LoadSpellSet, ApplyPoison, GuildMemberUpdate, VeteranRewardItem, VeteranReward, ExpeditionInvite, ExpeditionInviteResponse, DynamicZoneInfo, DynamicZoneMemberEntry, DynamicZoneMemberList, DynamicZoneMemberListName, ExpeditionLockoutTimerEntry, ExpeditionLockoutTimers, DynamicZoneLeaderName, ExpeditionCommand, ExpeditionCommandSwap, ExpeditionExpireWarning, DynamicZoneCompassEntry, DynamicZoneCompass, DynamicZoneChooseZoneEntry, DynamicZoneChooseZone, DynamicZoneChooseZoneReply, LFGuildSearchPlayer, LFGuildSearchGuild, LFGuildPlayertoggle, LFGuildGuildtoggle, SayLinkBodyFrame, WebLogin, WebLoginServerRequest, WebLoginReply, WebLoginWorldServer, WebLoginServerResponse, WebPlayEverquestRequest, WebPlayEverquestResponse, WebSession, Int, Bool, String } from "./common.js";
 import { ItemInstance, Items } from "./item.js";
 export const _capnpFileId = BigInt("0xcdefabcdefabc234");
-export class Tint extends $.Struct {
+export class CharacterSelect extends $.Struct {
   static readonly _capnp = {
-    displayName: "Tint",
-    id: "e83eeeca42eb6184",
-    size: new $.ObjectSize(16, 0)
-  };
-  get blue(): number {
-    return $.utils.getInt32(0, this);
-  }
-  set blue(value: number) {
-    $.utils.setInt32(0, value, this);
-  }
-  get green(): number {
-    return $.utils.getInt32(4, this);
-  }
-  set green(value: number) {
-    $.utils.setInt32(4, value, this);
-  }
-  get red(): number {
-    return $.utils.getInt32(8, this);
-  }
-  set red(value: number) {
-    $.utils.setInt32(8, value, this);
-  }
-  get useTint(): number {
-    return $.utils.getInt32(12, this);
-  }
-  set useTint(value: number) {
-    $.utils.setInt32(12, value, this);
-  }
-  toString(): string {
-    return "Tint_" + super.toString();
-  }
-}
-export class CharSelectEquip extends $.Struct {
-  static readonly _capnp = {
-    displayName: "CharSelectEquip",
-    id: "a41074130e196783",
+    displayName: "CharacterSelect",
+    id: "e0ce907abb969349",
     size: new $.ObjectSize(8, 1)
   };
-  get material(): number {
+  static _Characters: $.ListCtor<CharacterSelectEntry>;
+  get characterCount(): number {
     return $.utils.getInt32(0, this);
   }
-  set material(value: number) {
+  set characterCount(value: number) {
     $.utils.setInt32(0, value, this);
   }
-  _adoptColor(value: $.Orphan<Tint>): void {
+  _adoptCharacters(value: $.Orphan<$.List<CharacterSelectEntry>>): void {
     $.utils.adopt(value, $.utils.getPointer(0, this));
   }
-  _disownColor(): $.Orphan<Tint> {
-    return $.utils.disown(this.color);
+  _disownCharacters(): $.Orphan<$.List<CharacterSelectEntry>> {
+    return $.utils.disown(this.characters);
   }
-  get color(): Tint {
-    return $.utils.getStruct(0, Tint, this);
+  get characters(): $.List<CharacterSelectEntry> {
+    return $.utils.getList(0, CharacterSelect._Characters, this);
   }
-  _hasColor(): boolean {
+  _hasCharacters(): boolean {
     return !$.utils.isNull($.utils.getPointer(0, this));
   }
-  _initColor(): Tint {
-    return $.utils.initStructAt(0, Tint, this);
+  _initCharacters(length: number): $.List<CharacterSelectEntry> {
+    return $.utils.initList(0, CharacterSelect._Characters, length, this);
   }
-  set color(value: Tint) {
+  set characters(value: $.List<CharacterSelectEntry>) {
     $.utils.copyFrom(value, $.utils.getPointer(0, this));
   }
   toString(): string {
-    return "CharSelectEquip_" + super.toString();
+    return "CharacterSelect_" + super.toString();
   }
 }
 export class CharacterSelectEntry extends $.Struct {
@@ -184,472 +151,75 @@ export class CharacterSelectEntry extends $.Struct {
     return "CharacterSelectEntry_" + super.toString();
   }
 }
-export class CharacterSelect extends $.Struct {
+export class CharSelectEquip extends $.Struct {
   static readonly _capnp = {
-    displayName: "CharacterSelect",
-    id: "e0ce907abb969349",
+    displayName: "CharSelectEquip",
+    id: "a41074130e196783",
     size: new $.ObjectSize(8, 1)
   };
-  static _Characters: $.ListCtor<CharacterSelectEntry>;
-  get characterCount(): number {
+  get material(): number {
     return $.utils.getInt32(0, this);
   }
-  set characterCount(value: number) {
+  set material(value: number) {
     $.utils.setInt32(0, value, this);
   }
-  _adoptCharacters(value: $.Orphan<$.List<CharacterSelectEntry>>): void {
+  _adoptColor(value: $.Orphan<Tint>): void {
     $.utils.adopt(value, $.utils.getPointer(0, this));
   }
-  _disownCharacters(): $.Orphan<$.List<CharacterSelectEntry>> {
-    return $.utils.disown(this.characters);
+  _disownColor(): $.Orphan<Tint> {
+    return $.utils.disown(this.color);
   }
-  get characters(): $.List<CharacterSelectEntry> {
-    return $.utils.getList(0, CharacterSelect._Characters, this);
+  get color(): Tint {
+    return $.utils.getStruct(0, Tint, this);
   }
-  _hasCharacters(): boolean {
+  _hasColor(): boolean {
     return !$.utils.isNull($.utils.getPointer(0, this));
   }
-  _initCharacters(length: number): $.List<CharacterSelectEntry> {
-    return $.utils.initList(0, CharacterSelect._Characters, length, this);
+  _initColor(): Tint {
+    return $.utils.initStructAt(0, Tint, this);
   }
-  set characters(value: $.List<CharacterSelectEntry>) {
+  set color(value: Tint) {
     $.utils.copyFrom(value, $.utils.getPointer(0, this));
   }
   toString(): string {
-    return "CharacterSelect_" + super.toString();
-  }
-}
-export class CharacterStatsRecord extends $.Struct {
-  static readonly _capnp = {
-    displayName: "CharacterStatsRecord",
-    id: "ef73278a0e5d89af",
-    size: new $.ObjectSize(272, 1)
-  };
-  get characterId(): number {
-    return $.utils.getInt32(0, this);
-  }
-  set characterId(value: number) {
-    $.utils.setInt32(0, value, this);
-  }
-  get name(): string {
-    return $.utils.getText(0, this);
-  }
-  set name(value: string) {
-    $.utils.setText(0, value, this);
-  }
-  get status(): number {
-    return $.utils.getInt32(4, this);
-  }
-  set status(value: number) {
-    $.utils.setInt32(4, value, this);
-  }
-  get level(): number {
-    return $.utils.getInt32(8, this);
-  }
-  set level(value: number) {
-    $.utils.setInt32(8, value, this);
-  }
-  get class(): number {
-    return $.utils.getInt32(12, this);
-  }
-  set class(value: number) {
-    $.utils.setInt32(12, value, this);
-  }
-  get race(): number {
-    return $.utils.getInt32(16, this);
-  }
-  set race(value: number) {
-    $.utils.setInt32(16, value, this);
-  }
-  get aaPoints(): number {
-    return $.utils.getInt32(20, this);
-  }
-  set aaPoints(value: number) {
-    $.utils.setInt32(20, value, this);
-  }
-  get hp(): bigint {
-    return $.utils.getInt64(24, this);
-  }
-  set hp(value: bigint) {
-    $.utils.setInt64(24, value, this);
-  }
-  get mana(): bigint {
-    return $.utils.getInt64(32, this);
-  }
-  set mana(value: bigint) {
-    $.utils.setInt64(32, value, this);
-  }
-  get endurance(): bigint {
-    return $.utils.getInt64(40, this);
-  }
-  set endurance(value: bigint) {
-    $.utils.setInt64(40, value, this);
-  }
-  get ac(): number {
-    return $.utils.getInt32(48, this);
-  }
-  set ac(value: number) {
-    $.utils.setInt32(48, value, this);
-  }
-  get strength(): number {
-    return $.utils.getInt32(52, this);
-  }
-  set strength(value: number) {
-    $.utils.setInt32(52, value, this);
-  }
-  get stamina(): number {
-    return $.utils.getInt32(56, this);
-  }
-  set stamina(value: number) {
-    $.utils.setInt32(56, value, this);
-  }
-  get dexterity(): number {
-    return $.utils.getInt32(60, this);
-  }
-  set dexterity(value: number) {
-    $.utils.setInt32(60, value, this);
-  }
-  get agility(): number {
-    return $.utils.getInt32(64, this);
-  }
-  set agility(value: number) {
-    $.utils.setInt32(64, value, this);
-  }
-  get intelligence(): number {
-    return $.utils.getInt32(68, this);
-  }
-  set intelligence(value: number) {
-    $.utils.setInt32(68, value, this);
-  }
-  get wisdom(): number {
-    return $.utils.getInt32(72, this);
-  }
-  set wisdom(value: number) {
-    $.utils.setInt32(72, value, this);
-  }
-  get charisma(): number {
-    return $.utils.getInt32(76, this);
-  }
-  set charisma(value: number) {
-    $.utils.setInt32(76, value, this);
-  }
-  get magicResist(): number {
-    return $.utils.getInt32(80, this);
-  }
-  set magicResist(value: number) {
-    $.utils.setInt32(80, value, this);
-  }
-  get fireResist(): number {
-    return $.utils.getInt32(84, this);
-  }
-  set fireResist(value: number) {
-    $.utils.setInt32(84, value, this);
-  }
-  get coldResist(): number {
-    return $.utils.getInt32(88, this);
-  }
-  set coldResist(value: number) {
-    $.utils.setInt32(88, value, this);
-  }
-  get poisonResist(): number {
-    return $.utils.getInt32(92, this);
-  }
-  set poisonResist(value: number) {
-    $.utils.setInt32(92, value, this);
-  }
-  get diseaseResist(): number {
-    return $.utils.getInt32(96, this);
-  }
-  set diseaseResist(value: number) {
-    $.utils.setInt32(96, value, this);
-  }
-  get corruptionResist(): number {
-    return $.utils.getInt32(100, this);
-  }
-  set corruptionResist(value: number) {
-    $.utils.setInt32(100, value, this);
-  }
-  get haste(): number {
-    return $.utils.getInt32(104, this);
-  }
-  set haste(value: number) {
-    $.utils.setInt32(104, value, this);
-  }
-  get accuracy(): number {
-    return $.utils.getInt32(108, this);
-  }
-  set accuracy(value: number) {
-    $.utils.setInt32(108, value, this);
-  }
-  get attack(): number {
-    return $.utils.getInt32(112, this);
-  }
-  set attack(value: number) {
-    $.utils.setInt32(112, value, this);
-  }
-  get avoidance(): number {
-    return $.utils.getInt32(116, this);
-  }
-  set avoidance(value: number) {
-    $.utils.setInt32(116, value, this);
-  }
-  get clairvoyance(): number {
-    return $.utils.getInt32(120, this);
-  }
-  set clairvoyance(value: number) {
-    $.utils.setInt32(120, value, this);
-  }
-  get combatEffects(): number {
-    return $.utils.getInt32(124, this);
-  }
-  set combatEffects(value: number) {
-    $.utils.setInt32(124, value, this);
-  }
-  get damageShieldMitigation(): number {
-    return $.utils.getInt32(128, this);
-  }
-  set damageShieldMitigation(value: number) {
-    $.utils.setInt32(128, value, this);
-  }
-  get damageShield(): number {
-    return $.utils.getInt32(132, this);
-  }
-  set damageShield(value: number) {
-    $.utils.setInt32(132, value, this);
-  }
-  get dotShielding(): number {
-    return $.utils.getInt32(136, this);
-  }
-  set dotShielding(value: number) {
-    $.utils.setInt32(136, value, this);
-  }
-  get hpRegen(): number {
-    return $.utils.getInt32(140, this);
-  }
-  set hpRegen(value: number) {
-    $.utils.setInt32(140, value, this);
-  }
-  get manaRegen(): number {
-    return $.utils.getInt32(144, this);
-  }
-  set manaRegen(value: number) {
-    $.utils.setInt32(144, value, this);
-  }
-  get enduranceRegen(): number {
-    return $.utils.getInt32(148, this);
-  }
-  set enduranceRegen(value: number) {
-    $.utils.setInt32(148, value, this);
-  }
-  get shielding(): number {
-    return $.utils.getInt32(152, this);
-  }
-  set shielding(value: number) {
-    $.utils.setInt32(152, value, this);
-  }
-  get spellDamage(): number {
-    return $.utils.getInt32(156, this);
-  }
-  set spellDamage(value: number) {
-    $.utils.setInt32(156, value, this);
-  }
-  get spellShielding(): number {
-    return $.utils.getInt32(160, this);
-  }
-  set spellShielding(value: number) {
-    $.utils.setInt32(160, value, this);
-  }
-  get strikethrough(): number {
-    return $.utils.getInt32(164, this);
-  }
-  set strikethrough(value: number) {
-    $.utils.setInt32(164, value, this);
-  }
-  get stunResist(): number {
-    return $.utils.getInt32(168, this);
-  }
-  set stunResist(value: number) {
-    $.utils.setInt32(168, value, this);
-  }
-  get backstab(): number {
-    return $.utils.getInt32(172, this);
-  }
-  set backstab(value: number) {
-    $.utils.setInt32(172, value, this);
-  }
-  get wind(): number {
-    return $.utils.getInt32(176, this);
-  }
-  set wind(value: number) {
-    $.utils.setInt32(176, value, this);
-  }
-  get brass(): number {
-    return $.utils.getInt32(180, this);
-  }
-  set brass(value: number) {
-    $.utils.setInt32(180, value, this);
-  }
-  get string(): number {
-    return $.utils.getInt32(184, this);
-  }
-  set string(value: number) {
-    $.utils.setInt32(184, value, this);
-  }
-  get percussion(): number {
-    return $.utils.getInt32(188, this);
-  }
-  set percussion(value: number) {
-    $.utils.setInt32(188, value, this);
-  }
-  get singing(): number {
-    return $.utils.getInt32(192, this);
-  }
-  set singing(value: number) {
-    $.utils.setInt32(192, value, this);
-  }
-  get baking(): number {
-    return $.utils.getInt32(196, this);
-  }
-  set baking(value: number) {
-    $.utils.setInt32(196, value, this);
-  }
-  get alchemy(): number {
-    return $.utils.getInt32(200, this);
-  }
-  set alchemy(value: number) {
-    $.utils.setInt32(200, value, this);
-  }
-  get tailoring(): number {
-    return $.utils.getInt32(204, this);
-  }
-  set tailoring(value: number) {
-    $.utils.setInt32(204, value, this);
-  }
-  get blacksmithing(): number {
-    return $.utils.getInt32(208, this);
-  }
-  set blacksmithing(value: number) {
-    $.utils.setInt32(208, value, this);
-  }
-  get fletching(): number {
-    return $.utils.getInt32(212, this);
-  }
-  set fletching(value: number) {
-    $.utils.setInt32(212, value, this);
-  }
-  get brewing(): number {
-    return $.utils.getInt32(216, this);
-  }
-  set brewing(value: number) {
-    $.utils.setInt32(216, value, this);
-  }
-  get jewelry(): number {
-    return $.utils.getInt32(220, this);
-  }
-  set jewelry(value: number) {
-    $.utils.setInt32(220, value, this);
-  }
-  get pottery(): number {
-    return $.utils.getInt32(224, this);
-  }
-  set pottery(value: number) {
-    $.utils.setInt32(224, value, this);
-  }
-  get research(): number {
-    return $.utils.getInt32(228, this);
-  }
-  set research(value: number) {
-    $.utils.setInt32(228, value, this);
-  }
-  get alcohol(): number {
-    return $.utils.getInt32(232, this);
-  }
-  set alcohol(value: number) {
-    $.utils.setInt32(232, value, this);
-  }
-  get fishing(): number {
-    return $.utils.getInt32(236, this);
-  }
-  set fishing(value: number) {
-    $.utils.setInt32(236, value, this);
-  }
-  get tinkering(): number {
-    return $.utils.getInt32(240, this);
-  }
-  set tinkering(value: number) {
-    $.utils.setInt32(240, value, this);
-  }
-  get maxHp(): bigint {
-    return $.utils.getInt64(248, this);
-  }
-  set maxHp(value: bigint) {
-    $.utils.setInt64(248, value, this);
-  }
-  get maxMana(): bigint {
-    return $.utils.getInt64(256, this);
-  }
-  set maxMana(value: bigint) {
-    $.utils.setInt64(256, value, this);
-  }
-  get maxEndurance(): bigint {
-    return $.utils.getInt64(264, this);
-  }
-  set maxEndurance(value: bigint) {
-    $.utils.setInt64(264, value, this);
-  }
-  toString(): string {
-    return "CharacterStatsRecord_" + super.toString();
+    return "CharSelectEquip_" + super.toString();
   }
 }
 export class PlayerProfile extends $.Struct {
   static readonly _capnp = {
     displayName: "PlayerProfile",
     id: "b8375f7f6b27403c",
-    size: new $.ObjectSize(416, 25)
+    size: new $.ObjectSize(464, 19)
   };
   static _Binds: $.ListCtor<Bind>;
   static _AaArray: $.ListCtor<AAArray>;
   static _Buffs: $.ListCtor<SpellBuff>;
   static _Bandoliers: $.ListCtor<Bandolier>;
   static _GroupMembers: $.ListCtor<StringList>;
-  static _Tributes: $.ListCtor<Tribute>;
-  static _PvpRecentKills: $.ListCtor<PVPStatsEntry>;
   static _InventoryItems: $.ListCtor<ItemInstance>;
-  get checksum(): number {
+  get gender(): number {
     return $.utils.getInt32(0, this);
   }
-  set checksum(value: number) {
+  set gender(value: number) {
     $.utils.setInt32(0, value, this);
   }
-  get gender(): number {
+  get race(): number {
     return $.utils.getInt32(4, this);
   }
-  set gender(value: number) {
+  set race(value: number) {
     $.utils.setInt32(4, value, this);
   }
-  get race(): number {
+  get charClass(): number {
     return $.utils.getInt32(8, this);
   }
-  set race(value: number) {
+  set charClass(value: number) {
     $.utils.setInt32(8, value, this);
   }
-  get charClass(): number {
+  get level(): number {
     return $.utils.getInt32(12, this);
   }
-  set charClass(value: number) {
-    $.utils.setInt32(12, value, this);
-  }
-  get level(): number {
-    return $.utils.getInt32(16, this);
-  }
   set level(value: number) {
-    $.utils.setInt32(16, value, this);
-  }
-  get level1(): number {
-    return $.utils.getInt32(20, this);
-  }
-  set level1(value: number) {
-    $.utils.setInt32(20, value, this);
+    $.utils.setInt32(12, value, this);
   }
   _adoptBinds(value: $.Orphan<$.List<Bind>>): void {
     $.utils.adopt(value, $.utils.getPointer(0, this));
@@ -670,16 +240,16 @@ export class PlayerProfile extends $.Struct {
     $.utils.copyFrom(value, $.utils.getPointer(0, this));
   }
   get deity(): number {
-    return $.utils.getInt32(24, this);
+    return $.utils.getInt32(16, this);
   }
   set deity(value: number) {
-    $.utils.setInt32(24, value, this);
+    $.utils.setInt32(16, value, this);
   }
   get intoxication(): number {
-    return $.utils.getInt32(28, this);
+    return $.utils.getInt32(20, this);
   }
   set intoxication(value: number) {
-    $.utils.setInt32(28, value, this);
+    $.utils.setInt32(20, value, this);
   }
   _adoptSpellSlotRefresh(value: $.Orphan<$.List<number>>): void {
     $.utils.adopt(value, $.utils.getPointer(1, this));
@@ -700,46 +270,10 @@ export class PlayerProfile extends $.Struct {
     $.utils.copyFrom(value, $.utils.getPointer(1, this));
   }
   get abilitySlotRefresh(): number {
-    return $.utils.getInt32(32, this);
+    return $.utils.getInt32(24, this);
   }
   set abilitySlotRefresh(value: number) {
-    $.utils.setInt32(32, value, this);
-  }
-  get haircolor(): number {
-    return $.utils.getInt32(36, this);
-  }
-  set haircolor(value: number) {
-    $.utils.setInt32(36, value, this);
-  }
-  get beardcolor(): number {
-    return $.utils.getInt32(40, this);
-  }
-  set beardcolor(value: number) {
-    $.utils.setInt32(40, value, this);
-  }
-  get eyecolor1(): number {
-    return $.utils.getInt32(44, this);
-  }
-  set eyecolor1(value: number) {
-    $.utils.setInt32(44, value, this);
-  }
-  get eyecolor2(): number {
-    return $.utils.getInt32(48, this);
-  }
-  set eyecolor2(value: number) {
-    $.utils.setInt32(48, value, this);
-  }
-  get hairstyle(): number {
-    return $.utils.getInt32(52, this);
-  }
-  set hairstyle(value: number) {
-    $.utils.setInt32(52, value, this);
-  }
-  get beard(): number {
-    return $.utils.getInt32(56, this);
-  }
-  set beard(value: number) {
-    $.utils.setInt32(56, value, this);
+    $.utils.setInt32(24, value, this);
   }
   _adoptItemMaterial(value: $.Orphan<TextureProfile>): void {
     $.utils.adopt(value, $.utils.getPointer(2, this));
@@ -760,10 +294,10 @@ export class PlayerProfile extends $.Struct {
     $.utils.copyFrom(value, $.utils.getPointer(2, this));
   }
   get itemTint(): number {
-    return $.utils.getInt32(60, this);
+    return $.utils.getInt32(28, this);
   }
   set itemTint(value: number) {
-    $.utils.setInt32(60, value, this);
+    $.utils.setInt32(28, value, this);
   }
   _adoptAaArray(value: $.Orphan<$.List<AAArray>>): void {
     $.utils.adopt(value, $.utils.getPointer(3, this));
@@ -784,70 +318,70 @@ export class PlayerProfile extends $.Struct {
     $.utils.copyFrom(value, $.utils.getPointer(3, this));
   }
   get points(): number {
-    return $.utils.getInt32(64, this);
+    return $.utils.getInt32(32, this);
   }
   set points(value: number) {
-    $.utils.setInt32(64, value, this);
+    $.utils.setInt32(32, value, this);
   }
   get mana(): number {
-    return $.utils.getInt32(68, this);
+    return $.utils.getInt32(36, this);
   }
   set mana(value: number) {
-    $.utils.setInt32(68, value, this);
+    $.utils.setInt32(36, value, this);
   }
   get curHp(): number {
-    return $.utils.getInt32(72, this);
+    return $.utils.getInt32(40, this);
   }
   set curHp(value: number) {
-    $.utils.setInt32(72, value, this);
+    $.utils.setInt32(40, value, this);
   }
   get str(): number {
-    return $.utils.getInt32(76, this);
+    return $.utils.getInt32(44, this);
   }
   set str(value: number) {
-    $.utils.setInt32(76, value, this);
+    $.utils.setInt32(44, value, this);
   }
   get sta(): number {
-    return $.utils.getInt32(80, this);
+    return $.utils.getInt32(48, this);
   }
   set sta(value: number) {
-    $.utils.setInt32(80, value, this);
+    $.utils.setInt32(48, value, this);
   }
   get cha(): number {
-    return $.utils.getInt32(84, this);
+    return $.utils.getInt32(52, this);
   }
   set cha(value: number) {
-    $.utils.setInt32(84, value, this);
+    $.utils.setInt32(52, value, this);
   }
   get dex(): number {
-    return $.utils.getInt32(88, this);
+    return $.utils.getInt32(56, this);
   }
   set dex(value: number) {
-    $.utils.setInt32(88, value, this);
+    $.utils.setInt32(56, value, this);
   }
   get intel(): number {
-    return $.utils.getInt32(92, this);
+    return $.utils.getInt32(60, this);
   }
   set intel(value: number) {
-    $.utils.setInt32(92, value, this);
+    $.utils.setInt32(60, value, this);
   }
   get agi(): number {
-    return $.utils.getInt32(96, this);
+    return $.utils.getInt32(64, this);
   }
   set agi(value: number) {
-    $.utils.setInt32(96, value, this);
+    $.utils.setInt32(64, value, this);
   }
   get wis(): number {
-    return $.utils.getInt32(100, this);
+    return $.utils.getInt32(68, this);
   }
   set wis(value: number) {
-    $.utils.setInt32(100, value, this);
+    $.utils.setInt32(68, value, this);
   }
   get face(): number {
-    return $.utils.getInt32(104, this);
+    return $.utils.getInt32(72, this);
   }
   set face(value: number) {
-    $.utils.setInt32(104, value, this);
+    $.utils.setInt32(72, value, this);
   }
   _adoptSpellBook(value: $.Orphan<$.List<number>>): void {
     $.utils.adopt(value, $.utils.getPointer(4, this));
@@ -886,52 +420,52 @@ export class PlayerProfile extends $.Struct {
     $.utils.copyFrom(value, $.utils.getPointer(5, this));
   }
   get platinum(): number {
-    return $.utils.getInt32(108, this);
+    return $.utils.getInt32(76, this);
   }
   set platinum(value: number) {
-    $.utils.setInt32(108, value, this);
+    $.utils.setInt32(76, value, this);
   }
   get gold(): number {
-    return $.utils.getInt32(112, this);
+    return $.utils.getInt32(80, this);
   }
   set gold(value: number) {
-    $.utils.setInt32(112, value, this);
+    $.utils.setInt32(80, value, this);
   }
   get silver(): number {
-    return $.utils.getInt32(116, this);
+    return $.utils.getInt32(84, this);
   }
   set silver(value: number) {
-    $.utils.setInt32(116, value, this);
+    $.utils.setInt32(84, value, this);
   }
   get copper(): number {
-    return $.utils.getInt32(120, this);
+    return $.utils.getInt32(88, this);
   }
   set copper(value: number) {
-    $.utils.setInt32(120, value, this);
+    $.utils.setInt32(88, value, this);
   }
   get platinumCursor(): number {
-    return $.utils.getInt32(124, this);
+    return $.utils.getInt32(92, this);
   }
   set platinumCursor(value: number) {
-    $.utils.setInt32(124, value, this);
+    $.utils.setInt32(92, value, this);
   }
   get goldCursor(): number {
-    return $.utils.getInt32(128, this);
+    return $.utils.getInt32(96, this);
   }
   set goldCursor(value: number) {
-    $.utils.setInt32(128, value, this);
+    $.utils.setInt32(96, value, this);
   }
   get silverCursor(): number {
-    return $.utils.getInt32(132, this);
+    return $.utils.getInt32(100, this);
   }
   set silverCursor(value: number) {
-    $.utils.setInt32(132, value, this);
+    $.utils.setInt32(100, value, this);
   }
   get copperCursor(): number {
-    return $.utils.getInt32(136, this);
+    return $.utils.getInt32(104, this);
   }
   set copperCursor(value: number) {
-    $.utils.setInt32(136, value, this);
+    $.utils.setInt32(104, value, this);
   }
   _adoptSkills(value: $.Orphan<$.List<number>>): void {
     $.utils.adopt(value, $.utils.getPointer(6, this));
@@ -970,22 +504,22 @@ export class PlayerProfile extends $.Struct {
     $.utils.copyFrom(value, $.utils.getPointer(7, this));
   }
   get toxicity(): number {
-    return $.utils.getInt32(140, this);
+    return $.utils.getInt32(108, this);
   }
   set toxicity(value: number) {
-    $.utils.setInt32(140, value, this);
+    $.utils.setInt32(108, value, this);
   }
   get thirstLevel(): number {
-    return $.utils.getInt32(144, this);
+    return $.utils.getInt32(112, this);
   }
   set thirstLevel(value: number) {
-    $.utils.setInt32(144, value, this);
+    $.utils.setInt32(112, value, this);
   }
   get hungerLevel(): number {
-    return $.utils.getInt32(148, this);
+    return $.utils.getInt32(116, this);
   }
   set hungerLevel(value: number) {
-    $.utils.setInt32(148, value, this);
+    $.utils.setInt32(116, value, this);
   }
   _adoptBuffs(value: $.Orphan<$.List<SpellBuff>>): void {
     $.utils.adopt(value, $.utils.getPointer(8, this));
@@ -1042,22 +576,22 @@ export class PlayerProfile extends $.Struct {
     $.utils.copyFrom(value, $.utils.getPointer(10, this));
   }
   get endurance(): number {
-    return $.utils.getInt32(152, this);
+    return $.utils.getInt32(120, this);
   }
   set endurance(value: number) {
-    $.utils.setInt32(152, value, this);
+    $.utils.setInt32(120, value, this);
   }
   get aapointsSpent(): number {
-    return $.utils.getInt32(156, this);
+    return $.utils.getInt32(124, this);
   }
   set aapointsSpent(value: number) {
-    $.utils.setInt32(156, value, this);
+    $.utils.setInt32(124, value, this);
   }
   get aapoints(): number {
-    return $.utils.getInt32(160, this);
+    return $.utils.getInt32(128, this);
   }
   set aapoints(value: number) {
-    $.utils.setInt32(160, value, this);
+    $.utils.setInt32(128, value, this);
   }
   _adoptBandoliers(value: $.Orphan<$.List<Bandolier>>): void {
     $.utils.adopt(value, $.utils.getPointer(11, this));
@@ -1096,10 +630,10 @@ export class PlayerProfile extends $.Struct {
     $.utils.copyFrom(value, $.utils.getPointer(12, this));
   }
   get availableSlots(): number {
-    return $.utils.getInt32(164, this);
+    return $.utils.getInt32(132, this);
   }
   set availableSlots(value: number) {
-    $.utils.setInt32(164, value, this);
+    $.utils.setInt32(132, value, this);
   }
   get name(): string {
     return $.utils.getText(13, this);
@@ -1114,70 +648,70 @@ export class PlayerProfile extends $.Struct {
     $.utils.setText(14, value, this);
   }
   get guildId(): number {
-    return $.utils.getInt32(168, this);
+    return $.utils.getInt32(136, this);
   }
   set guildId(value: number) {
-    $.utils.setInt32(168, value, this);
+    $.utils.setInt32(136, value, this);
   }
   get birthday(): number {
-    return $.utils.getInt32(172, this);
+    return $.utils.getInt32(140, this);
   }
   set birthday(value: number) {
-    $.utils.setInt32(172, value, this);
+    $.utils.setInt32(140, value, this);
   }
   get lastlogin(): number {
-    return $.utils.getInt32(176, this);
+    return $.utils.getInt32(144, this);
   }
   set lastlogin(value: number) {
-    $.utils.setInt32(176, value, this);
+    $.utils.setInt32(144, value, this);
   }
   get timePlayedMin(): number {
-    return $.utils.getInt32(180, this);
+    return $.utils.getInt32(148, this);
   }
   set timePlayedMin(value: number) {
-    $.utils.setInt32(180, value, this);
+    $.utils.setInt32(148, value, this);
   }
   get pvp(): number {
-    return $.utils.getInt32(184, this);
+    return $.utils.getInt32(152, this);
   }
   set pvp(value: number) {
-    $.utils.setInt32(184, value, this);
+    $.utils.setInt32(152, value, this);
   }
   get anon(): number {
-    return $.utils.getInt32(188, this);
+    return $.utils.getInt32(156, this);
   }
   set anon(value: number) {
-    $.utils.setInt32(188, value, this);
+    $.utils.setInt32(156, value, this);
   }
   get gm(): number {
-    return $.utils.getInt32(192, this);
+    return $.utils.getInt32(160, this);
   }
   set gm(value: number) {
-    $.utils.setInt32(192, value, this);
+    $.utils.setInt32(160, value, this);
   }
   get guildrank(): number {
-    return $.utils.getInt32(196, this);
+    return $.utils.getInt32(164, this);
   }
   set guildrank(value: number) {
-    $.utils.setInt32(196, value, this);
+    $.utils.setInt32(164, value, this);
   }
   get guildbanker(): number {
-    return $.utils.getInt32(200, this);
+    return $.utils.getInt32(168, this);
   }
   set guildbanker(value: number) {
-    $.utils.setInt32(200, value, this);
+    $.utils.setInt32(168, value, this);
   }
   get exp(): number {
-    return $.utils.getInt32(204, this);
+    return $.utils.getInt32(172, this);
   }
   set exp(value: number) {
-    $.utils.setInt32(204, value, this);
+    $.utils.setInt32(172, value, this);
   }
   get timeentitledonaccount(): number {
-    return $.utils.getInt32(208, this);
+    return $.utils.getInt32(176, this);
   }
   set timeentitledonaccount(value: number) {
-    $.utils.setInt32(208, value, this);
+    $.utils.setInt32(176, value, this);
   }
   _adoptLanguages(value: $.Orphan<$.List<number>>): void {
     $.utils.adopt(value, $.utils.getPointer(15, this));
@@ -1198,82 +732,82 @@ export class PlayerProfile extends $.Struct {
     $.utils.copyFrom(value, $.utils.getPointer(15, this));
   }
   get x(): number {
-    return $.utils.getFloat32(212, this);
+    return $.utils.getFloat32(180, this);
   }
   set x(value: number) {
-    $.utils.setFloat32(212, value, this);
+    $.utils.setFloat32(180, value, this);
   }
   get y(): number {
-    return $.utils.getFloat32(216, this);
+    return $.utils.getFloat32(184, this);
   }
   set y(value: number) {
-    $.utils.setFloat32(216, value, this);
+    $.utils.setFloat32(184, value, this);
   }
   get z(): number {
-    return $.utils.getFloat32(220, this);
+    return $.utils.getFloat32(188, this);
   }
   set z(value: number) {
-    $.utils.setFloat32(220, value, this);
+    $.utils.setFloat32(188, value, this);
   }
   get heading(): number {
-    return $.utils.getFloat32(224, this);
+    return $.utils.getFloat32(192, this);
   }
   set heading(value: number) {
-    $.utils.setFloat32(224, value, this);
+    $.utils.setFloat32(192, value, this);
   }
   get platinumBank(): number {
-    return $.utils.getInt32(228, this);
+    return $.utils.getInt32(196, this);
   }
   set platinumBank(value: number) {
-    $.utils.setInt32(228, value, this);
+    $.utils.setInt32(196, value, this);
   }
   get goldBank(): number {
-    return $.utils.getInt32(232, this);
+    return $.utils.getInt32(200, this);
   }
   set goldBank(value: number) {
-    $.utils.setInt32(232, value, this);
+    $.utils.setInt32(200, value, this);
   }
   get silverBank(): number {
-    return $.utils.getInt32(236, this);
+    return $.utils.getInt32(204, this);
   }
   set silverBank(value: number) {
-    $.utils.setInt32(236, value, this);
+    $.utils.setInt32(204, value, this);
   }
   get copperBank(): number {
-    return $.utils.getInt32(240, this);
+    return $.utils.getInt32(208, this);
   }
   set copperBank(value: number) {
-    $.utils.setInt32(240, value, this);
+    $.utils.setInt32(208, value, this);
   }
   get platinumShared(): number {
-    return $.utils.getInt32(244, this);
+    return $.utils.getInt32(212, this);
   }
   set platinumShared(value: number) {
-    $.utils.setInt32(244, value, this);
+    $.utils.setInt32(212, value, this);
   }
   get expansions(): number {
-    return $.utils.getInt32(248, this);
+    return $.utils.getInt32(216, this);
   }
   set expansions(value: number) {
-    $.utils.setInt32(248, value, this);
+    $.utils.setInt32(216, value, this);
   }
   get autosplit(): number {
-    return $.utils.getInt32(252, this);
+    return $.utils.getInt32(220, this);
   }
   set autosplit(value: number) {
-    $.utils.setInt32(252, value, this);
+    $.utils.setInt32(220, value, this);
   }
   get zoneId(): number {
-    return $.utils.getInt32(256, this);
+    return $.utils.getInt32(224, this);
   }
   set zoneId(value: number) {
-    $.utils.setInt32(256, value, this);
+    $.utils.setInt32(224, value, this);
   }
   get zoneInstance(): number {
-    return $.utils.getInt32(260, this);
+    return $.utils.getInt32(228, this);
   }
   set zoneInstance(value: number) {
-    $.utils.setInt32(260, value, this);
+    $.utils.setInt32(228, value, this);
   }
   _adoptGroupMembers(value: $.Orphan<$.List<StringList>>): void {
     $.utils.adopt(value, $.utils.getPointer(16, this));
@@ -1300,358 +834,396 @@ export class PlayerProfile extends $.Struct {
     $.utils.setText(17, value, this);
   }
   get entityid(): number {
-    return $.utils.getInt32(264, this);
+    return $.utils.getInt32(232, this);
   }
   set entityid(value: number) {
-    $.utils.setInt32(264, value, this);
+    $.utils.setInt32(232, value, this);
   }
   get leadAaActive(): number {
-    return $.utils.getInt32(268, this);
+    return $.utils.getInt32(236, this);
   }
   set leadAaActive(value: number) {
-    $.utils.setInt32(268, value, this);
-  }
-  get ldonPointsGuk(): number {
-    return $.utils.getInt32(272, this);
-  }
-  set ldonPointsGuk(value: number) {
-    $.utils.setInt32(272, value, this);
-  }
-  get ldonPointsMir(): number {
-    return $.utils.getInt32(276, this);
-  }
-  set ldonPointsMir(value: number) {
-    $.utils.setInt32(276, value, this);
-  }
-  get ldonPointsMmc(): number {
-    return $.utils.getInt32(280, this);
-  }
-  set ldonPointsMmc(value: number) {
-    $.utils.setInt32(280, value, this);
-  }
-  get ldonPointsRuj(): number {
-    return $.utils.getInt32(284, this);
-  }
-  set ldonPointsRuj(value: number) {
-    $.utils.setInt32(284, value, this);
-  }
-  get ldonPointsTak(): number {
-    return $.utils.getInt32(288, this);
-  }
-  set ldonPointsTak(value: number) {
-    $.utils.setInt32(288, value, this);
-  }
-  get ldonPointsAvailable(): number {
-    return $.utils.getInt32(292, this);
-  }
-  set ldonPointsAvailable(value: number) {
-    $.utils.setInt32(292, value, this);
-  }
-  get tributeTimeRemaining(): number {
-    return $.utils.getInt32(296, this);
-  }
-  set tributeTimeRemaining(value: number) {
-    $.utils.setInt32(296, value, this);
-  }
-  get careerTributePoints(): number {
-    return $.utils.getInt32(300, this);
-  }
-  set careerTributePoints(value: number) {
-    $.utils.setInt32(300, value, this);
-  }
-  get tributePoints(): number {
-    return $.utils.getInt32(304, this);
-  }
-  set tributePoints(value: number) {
-    $.utils.setInt32(304, value, this);
-  }
-  get tributeActive(): number {
-    return $.utils.getInt32(308, this);
-  }
-  set tributeActive(value: number) {
-    $.utils.setInt32(308, value, this);
-  }
-  _adoptTributes(value: $.Orphan<$.List<Tribute>>): void {
-    $.utils.adopt(value, $.utils.getPointer(18, this));
-  }
-  _disownTributes(): $.Orphan<$.List<Tribute>> {
-    return $.utils.disown(this.tributes);
-  }
-  get tributes(): $.List<Tribute> {
-    return $.utils.getList(18, PlayerProfile._Tributes, this);
-  }
-  _hasTributes(): boolean {
-    return !$.utils.isNull($.utils.getPointer(18, this));
-  }
-  _initTributes(length: number): $.List<Tribute> {
-    return $.utils.initList(18, PlayerProfile._Tributes, length, this);
-  }
-  set tributes(value: $.List<Tribute>) {
-    $.utils.copyFrom(value, $.utils.getPointer(18, this));
-  }
-  get groupLeadershipExp(): number {
-    return $.utils.getFloat64(312, this);
-  }
-  set groupLeadershipExp(value: number) {
-    $.utils.setFloat64(312, value, this);
-  }
-  get raidLeadershipExp(): number {
-    return $.utils.getFloat64(320, this);
-  }
-  set raidLeadershipExp(value: number) {
-    $.utils.setFloat64(320, value, this);
-  }
-  get groupLeadershipPoints(): number {
-    return $.utils.getInt32(328, this);
-  }
-  set groupLeadershipPoints(value: number) {
-    $.utils.setInt32(328, value, this);
-  }
-  get raidLeadershipPoints(): number {
-    return $.utils.getInt32(332, this);
-  }
-  set raidLeadershipPoints(value: number) {
-    $.utils.setInt32(332, value, this);
-  }
-  _adoptLeaderAbilities(value: $.Orphan<LeadershipAA>): void {
-    $.utils.adopt(value, $.utils.getPointer(19, this));
-  }
-  _disownLeaderAbilities(): $.Orphan<LeadershipAA> {
-    return $.utils.disown(this.leaderAbilities);
-  }
-  get leaderAbilities(): LeadershipAA {
-    return $.utils.getStruct(19, LeadershipAA, this);
-  }
-  _hasLeaderAbilities(): boolean {
-    return !$.utils.isNull($.utils.getPointer(19, this));
-  }
-  _initLeaderAbilities(): LeadershipAA {
-    return $.utils.initStructAt(19, LeadershipAA, this);
-  }
-  set leaderAbilities(value: LeadershipAA) {
-    $.utils.copyFrom(value, $.utils.getPointer(19, this));
+    $.utils.setInt32(236, value, this);
   }
   get airRemaining(): number {
-    return $.utils.getInt32(336, this);
+    return $.utils.getInt32(240, this);
   }
   set airRemaining(value: number) {
-    $.utils.setInt32(336, value, this);
-  }
-  get pvpKills(): number {
-    return $.utils.getInt32(340, this);
-  }
-  set pvpKills(value: number) {
-    $.utils.setInt32(340, value, this);
-  }
-  get pvpDeaths(): number {
-    return $.utils.getInt32(344, this);
-  }
-  set pvpDeaths(value: number) {
-    $.utils.setInt32(344, value, this);
-  }
-  get pvpCurrentPoints(): number {
-    return $.utils.getInt32(348, this);
-  }
-  set pvpCurrentPoints(value: number) {
-    $.utils.setInt32(348, value, this);
-  }
-  get pvpCareerPoints(): number {
-    return $.utils.getInt32(352, this);
-  }
-  set pvpCareerPoints(value: number) {
-    $.utils.setInt32(352, value, this);
-  }
-  get pvpBestKillStreak(): number {
-    return $.utils.getInt32(356, this);
-  }
-  set pvpBestKillStreak(value: number) {
-    $.utils.setInt32(356, value, this);
-  }
-  get pvpWorstDeathStreak(): number {
-    return $.utils.getInt32(360, this);
-  }
-  set pvpWorstDeathStreak(value: number) {
-    $.utils.setInt32(360, value, this);
-  }
-  get pvpCurrentKillStreak(): number {
-    return $.utils.getInt32(364, this);
-  }
-  set pvpCurrentKillStreak(value: number) {
-    $.utils.setInt32(364, value, this);
-  }
-  _adoptPvpLastKill(value: $.Orphan<PVPStatsEntry>): void {
-    $.utils.adopt(value, $.utils.getPointer(20, this));
-  }
-  _disownPvpLastKill(): $.Orphan<PVPStatsEntry> {
-    return $.utils.disown(this.pvpLastKill);
-  }
-  get pvpLastKill(): PVPStatsEntry {
-    return $.utils.getStruct(20, PVPStatsEntry, this);
-  }
-  _hasPvpLastKill(): boolean {
-    return !$.utils.isNull($.utils.getPointer(20, this));
-  }
-  _initPvpLastKill(): PVPStatsEntry {
-    return $.utils.initStructAt(20, PVPStatsEntry, this);
-  }
-  set pvpLastKill(value: PVPStatsEntry) {
-    $.utils.copyFrom(value, $.utils.getPointer(20, this));
-  }
-  _adoptPvpLastDeath(value: $.Orphan<PVPStatsEntry>): void {
-    $.utils.adopt(value, $.utils.getPointer(21, this));
-  }
-  _disownPvpLastDeath(): $.Orphan<PVPStatsEntry> {
-    return $.utils.disown(this.pvpLastDeath);
-  }
-  get pvpLastDeath(): PVPStatsEntry {
-    return $.utils.getStruct(21, PVPStatsEntry, this);
-  }
-  _hasPvpLastDeath(): boolean {
-    return !$.utils.isNull($.utils.getPointer(21, this));
-  }
-  _initPvpLastDeath(): PVPStatsEntry {
-    return $.utils.initStructAt(21, PVPStatsEntry, this);
-  }
-  set pvpLastDeath(value: PVPStatsEntry) {
-    $.utils.copyFrom(value, $.utils.getPointer(21, this));
-  }
-  get pvpNumberOfKillsInLastHours(): number {
-    return $.utils.getInt32(368, this);
-  }
-  set pvpNumberOfKillsInLastHours(value: number) {
-    $.utils.setInt32(368, value, this);
-  }
-  _adoptPvpRecentKills(value: $.Orphan<$.List<PVPStatsEntry>>): void {
-    $.utils.adopt(value, $.utils.getPointer(22, this));
-  }
-  _disownPvpRecentKills(): $.Orphan<$.List<PVPStatsEntry>> {
-    return $.utils.disown(this.pvpRecentKills);
-  }
-  get pvpRecentKills(): $.List<PVPStatsEntry> {
-    return $.utils.getList(22, PlayerProfile._PvpRecentKills, this);
-  }
-  _hasPvpRecentKills(): boolean {
-    return !$.utils.isNull($.utils.getPointer(22, this));
-  }
-  _initPvpRecentKills(length: number): $.List<PVPStatsEntry> {
-    return $.utils.initList(22, PlayerProfile._PvpRecentKills, length, this);
-  }
-  set pvpRecentKills(value: $.List<PVPStatsEntry>) {
-    $.utils.copyFrom(value, $.utils.getPointer(22, this));
+    $.utils.setInt32(240, value, this);
   }
   get expAa(): number {
-    return $.utils.getInt32(372, this);
+    return $.utils.getInt32(244, this);
   }
   set expAa(value: number) {
-    $.utils.setInt32(372, value, this);
-  }
-  get currentRadCrystals(): number {
-    return $.utils.getInt32(376, this);
-  }
-  set currentRadCrystals(value: number) {
-    $.utils.setInt32(376, value, this);
-  }
-  get careerRadCrystals(): number {
-    return $.utils.getInt32(380, this);
-  }
-  set careerRadCrystals(value: number) {
-    $.utils.setInt32(380, value, this);
-  }
-  get currentEbonCrystals(): number {
-    return $.utils.getInt32(384, this);
-  }
-  set currentEbonCrystals(value: number) {
-    $.utils.setInt32(384, value, this);
-  }
-  get careerEbonCrystals(): number {
-    return $.utils.getInt32(388, this);
-  }
-  set careerEbonCrystals(value: number) {
-    $.utils.setInt32(388, value, this);
+    $.utils.setInt32(244, value, this);
   }
   get groupAutoconsent(): number {
-    return $.utils.getInt32(392, this);
+    return $.utils.getInt32(248, this);
   }
   set groupAutoconsent(value: number) {
-    $.utils.setInt32(392, value, this);
+    $.utils.setInt32(248, value, this);
   }
   get raidAutoconsent(): number {
-    return $.utils.getInt32(396, this);
+    return $.utils.getInt32(252, this);
   }
   set raidAutoconsent(value: number) {
-    $.utils.setInt32(396, value, this);
+    $.utils.setInt32(252, value, this);
   }
   get guildAutoconsent(): number {
-    return $.utils.getInt32(400, this);
+    return $.utils.getInt32(256, this);
   }
   set guildAutoconsent(value: number) {
-    $.utils.setInt32(400, value, this);
-  }
-  get level3(): number {
-    return $.utils.getInt32(404, this);
-  }
-  set level3(value: number) {
-    $.utils.setInt32(404, value, this);
+    $.utils.setInt32(256, value, this);
   }
   get showhelm(): number {
-    return $.utils.getInt32(408, this);
+    return $.utils.getInt32(260, this);
   }
   set showhelm(value: number) {
-    $.utils.setInt32(408, value, this);
+    $.utils.setInt32(260, value, this);
   }
   _adoptInventoryItems(value: $.Orphan<$.List<ItemInstance>>): void {
-    $.utils.adopt(value, $.utils.getPointer(23, this));
+    $.utils.adopt(value, $.utils.getPointer(18, this));
   }
   _disownInventoryItems(): $.Orphan<$.List<ItemInstance>> {
     return $.utils.disown(this.inventoryItems);
   }
   get inventoryItems(): $.List<ItemInstance> {
-    return $.utils.getList(23, PlayerProfile._InventoryItems, this);
+    return $.utils.getList(18, PlayerProfile._InventoryItems, this);
   }
   _hasInventoryItems(): boolean {
-    return !$.utils.isNull($.utils.getPointer(23, this));
+    return !$.utils.isNull($.utils.getPointer(18, this));
   }
   _initInventoryItems(length: number): $.List<ItemInstance> {
-    return $.utils.initList(23, PlayerProfile._InventoryItems, length, this);
+    return $.utils.initList(18, PlayerProfile._InventoryItems, length, this);
   }
   set inventoryItems(value: $.List<ItemInstance>) {
-    $.utils.copyFrom(value, $.utils.getPointer(23, this));
+    $.utils.copyFrom(value, $.utils.getPointer(18, this));
   }
   get spawnId(): number {
-    return $.utils.getInt32(412, this);
+    return $.utils.getInt32(264, this);
   }
   set spawnId(value: number) {
+    $.utils.setInt32(264, value, this);
+  }
+  get status(): number {
+    return $.utils.getInt32(268, this);
+  }
+  set status(value: number) {
+    $.utils.setInt32(268, value, this);
+  }
+  get aaPoints(): number {
+    return $.utils.getInt32(272, this);
+  }
+  set aaPoints(value: number) {
+    $.utils.setInt32(272, value, this);
+  }
+  get ac(): number {
+    return $.utils.getInt32(276, this);
+  }
+  set ac(value: number) {
+    $.utils.setInt32(276, value, this);
+  }
+  get magicResist(): number {
+    return $.utils.getInt32(280, this);
+  }
+  set magicResist(value: number) {
+    $.utils.setInt32(280, value, this);
+  }
+  get fireResist(): number {
+    return $.utils.getInt32(284, this);
+  }
+  set fireResist(value: number) {
+    $.utils.setInt32(284, value, this);
+  }
+  get coldResist(): number {
+    return $.utils.getInt32(288, this);
+  }
+  set coldResist(value: number) {
+    $.utils.setInt32(288, value, this);
+  }
+  get poisonResist(): number {
+    return $.utils.getInt32(292, this);
+  }
+  set poisonResist(value: number) {
+    $.utils.setInt32(292, value, this);
+  }
+  get diseaseResist(): number {
+    return $.utils.getInt32(296, this);
+  }
+  set diseaseResist(value: number) {
+    $.utils.setInt32(296, value, this);
+  }
+  get haste(): number {
+    return $.utils.getInt32(300, this);
+  }
+  set haste(value: number) {
+    $.utils.setInt32(300, value, this);
+  }
+  get accuracy(): number {
+    return $.utils.getInt32(304, this);
+  }
+  set accuracy(value: number) {
+    $.utils.setInt32(304, value, this);
+  }
+  get attack(): number {
+    return $.utils.getInt32(308, this);
+  }
+  set attack(value: number) {
+    $.utils.setInt32(308, value, this);
+  }
+  get avoidance(): number {
+    return $.utils.getInt32(312, this);
+  }
+  set avoidance(value: number) {
+    $.utils.setInt32(312, value, this);
+  }
+  get clairvoyance(): number {
+    return $.utils.getInt32(316, this);
+  }
+  set clairvoyance(value: number) {
+    $.utils.setInt32(316, value, this);
+  }
+  get combatEffects(): number {
+    return $.utils.getInt32(320, this);
+  }
+  set combatEffects(value: number) {
+    $.utils.setInt32(320, value, this);
+  }
+  get damageShieldMitigation(): number {
+    return $.utils.getInt32(324, this);
+  }
+  set damageShieldMitigation(value: number) {
+    $.utils.setInt32(324, value, this);
+  }
+  get damageShield(): number {
+    return $.utils.getInt32(328, this);
+  }
+  set damageShield(value: number) {
+    $.utils.setInt32(328, value, this);
+  }
+  get dotShielding(): number {
+    return $.utils.getInt32(332, this);
+  }
+  set dotShielding(value: number) {
+    $.utils.setInt32(332, value, this);
+  }
+  get hpRegen(): number {
+    return $.utils.getInt32(336, this);
+  }
+  set hpRegen(value: number) {
+    $.utils.setInt32(336, value, this);
+  }
+  get manaRegen(): number {
+    return $.utils.getInt32(340, this);
+  }
+  set manaRegen(value: number) {
+    $.utils.setInt32(340, value, this);
+  }
+  get enduranceRegen(): number {
+    return $.utils.getInt32(344, this);
+  }
+  set enduranceRegen(value: number) {
+    $.utils.setInt32(344, value, this);
+  }
+  get shielding(): number {
+    return $.utils.getInt32(348, this);
+  }
+  set shielding(value: number) {
+    $.utils.setInt32(348, value, this);
+  }
+  get spellDamage(): number {
+    return $.utils.getInt32(352, this);
+  }
+  set spellDamage(value: number) {
+    $.utils.setInt32(352, value, this);
+  }
+  get spellShielding(): number {
+    return $.utils.getInt32(356, this);
+  }
+  set spellShielding(value: number) {
+    $.utils.setInt32(356, value, this);
+  }
+  get strikethrough(): number {
+    return $.utils.getInt32(360, this);
+  }
+  set strikethrough(value: number) {
+    $.utils.setInt32(360, value, this);
+  }
+  get stunResist(): number {
+    return $.utils.getInt32(364, this);
+  }
+  set stunResist(value: number) {
+    $.utils.setInt32(364, value, this);
+  }
+  get backstab(): number {
+    return $.utils.getInt32(368, this);
+  }
+  set backstab(value: number) {
+    $.utils.setInt32(368, value, this);
+  }
+  get wind(): number {
+    return $.utils.getInt32(372, this);
+  }
+  set wind(value: number) {
+    $.utils.setInt32(372, value, this);
+  }
+  get brass(): number {
+    return $.utils.getInt32(376, this);
+  }
+  set brass(value: number) {
+    $.utils.setInt32(376, value, this);
+  }
+  get string(): number {
+    return $.utils.getInt32(380, this);
+  }
+  set string(value: number) {
+    $.utils.setInt32(380, value, this);
+  }
+  get percussion(): number {
+    return $.utils.getInt32(384, this);
+  }
+  set percussion(value: number) {
+    $.utils.setInt32(384, value, this);
+  }
+  get singing(): number {
+    return $.utils.getInt32(388, this);
+  }
+  set singing(value: number) {
+    $.utils.setInt32(388, value, this);
+  }
+  get baking(): number {
+    return $.utils.getInt32(392, this);
+  }
+  set baking(value: number) {
+    $.utils.setInt32(392, value, this);
+  }
+  get alchemy(): number {
+    return $.utils.getInt32(396, this);
+  }
+  set alchemy(value: number) {
+    $.utils.setInt32(396, value, this);
+  }
+  get tailoring(): number {
+    return $.utils.getInt32(400, this);
+  }
+  set tailoring(value: number) {
+    $.utils.setInt32(400, value, this);
+  }
+  get blacksmithing(): number {
+    return $.utils.getInt32(404, this);
+  }
+  set blacksmithing(value: number) {
+    $.utils.setInt32(404, value, this);
+  }
+  get fletching(): number {
+    return $.utils.getInt32(408, this);
+  }
+  set fletching(value: number) {
+    $.utils.setInt32(408, value, this);
+  }
+  get brewing(): number {
+    return $.utils.getInt32(412, this);
+  }
+  set brewing(value: number) {
     $.utils.setInt32(412, value, this);
   }
-  _adoptStats(value: $.Orphan<CharacterStatsRecord>): void {
-    $.utils.adopt(value, $.utils.getPointer(24, this));
+  get jewelry(): number {
+    return $.utils.getInt32(416, this);
   }
-  _disownStats(): $.Orphan<CharacterStatsRecord> {
-    return $.utils.disown(this.stats);
+  set jewelry(value: number) {
+    $.utils.setInt32(416, value, this);
   }
-  get stats(): CharacterStatsRecord {
-    return $.utils.getStruct(24, CharacterStatsRecord, this);
+  get pottery(): number {
+    return $.utils.getInt32(420, this);
   }
-  _hasStats(): boolean {
-    return !$.utils.isNull($.utils.getPointer(24, this));
+  set pottery(value: number) {
+    $.utils.setInt32(420, value, this);
   }
-  _initStats(): CharacterStatsRecord {
-    return $.utils.initStructAt(24, CharacterStatsRecord, this);
+  get research(): number {
+    return $.utils.getInt32(424, this);
   }
-  set stats(value: CharacterStatsRecord) {
-    $.utils.copyFrom(value, $.utils.getPointer(24, this));
+  set research(value: number) {
+    $.utils.setInt32(424, value, this);
+  }
+  get alcohol(): number {
+    return $.utils.getInt32(428, this);
+  }
+  set alcohol(value: number) {
+    $.utils.setInt32(428, value, this);
+  }
+  get fishing(): number {
+    return $.utils.getInt32(432, this);
+  }
+  set fishing(value: number) {
+    $.utils.setInt32(432, value, this);
+  }
+  get tinkering(): number {
+    return $.utils.getInt32(436, this);
+  }
+  set tinkering(value: number) {
+    $.utils.setInt32(436, value, this);
+  }
+  get maxHp(): bigint {
+    return $.utils.getInt64(440, this);
+  }
+  set maxHp(value: bigint) {
+    $.utils.setInt64(440, value, this);
+  }
+  get maxMana(): bigint {
+    return $.utils.getInt64(448, this);
+  }
+  set maxMana(value: bigint) {
+    $.utils.setInt64(448, value, this);
+  }
+  get maxEndurance(): bigint {
+    return $.utils.getInt64(456, this);
+  }
+  set maxEndurance(value: bigint) {
+    $.utils.setInt64(456, value, this);
   }
   toString(): string {
     return "PlayerProfile_" + super.toString();
   }
 }
-CharacterSelectEntry._Items = $.CompositeList(ItemInstance);
+export class Tint extends $.Struct {
+  static readonly _capnp = {
+    displayName: "Tint",
+    id: "e83eeeca42eb6184",
+    size: new $.ObjectSize(16, 0)
+  };
+  get blue(): number {
+    return $.utils.getInt32(0, this);
+  }
+  set blue(value: number) {
+    $.utils.setInt32(0, value, this);
+  }
+  get green(): number {
+    return $.utils.getInt32(4, this);
+  }
+  set green(value: number) {
+    $.utils.setInt32(4, value, this);
+  }
+  get reddays(): number {
+    return $.utils.getInt32(8, this);
+  }
+  set reddays(value: number) {
+    $.utils.setInt32(8, value, this);
+  }
+  get useTint(): number {
+    return $.utils.getInt32(12, this);
+  }
+  set useTint(value: number) {
+    $.utils.setInt32(12, value, this);
+  }
+  toString(): string {
+    return "Tint_" + super.toString();
+  }
+}
 CharacterSelect._Characters = $.CompositeList(CharacterSelectEntry);
+CharacterSelectEntry._Items = $.CompositeList(ItemInstance);
 PlayerProfile._Binds = $.CompositeList(Bind);
 PlayerProfile._AaArray = $.CompositeList(AAArray);
 PlayerProfile._Buffs = $.CompositeList(SpellBuff);
 PlayerProfile._Bandoliers = $.CompositeList(Bandolier);
 PlayerProfile._GroupMembers = $.CompositeList(StringList);
-PlayerProfile._Tributes = $.CompositeList(Tribute);
-PlayerProfile._PvpRecentKills = $.CompositeList(PVPStatsEntry);
 PlayerProfile._InventoryItems = $.CompositeList(ItemInstance);
