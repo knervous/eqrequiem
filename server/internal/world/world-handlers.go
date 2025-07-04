@@ -227,6 +227,14 @@ func HandleRequestClientZoneChange(ses *session.Session, payload []byte, wh *Wor
 	} else {
 		// We are zoning from another zone
 		// Get validation logic later for this zone request, for now save off and bust cache
+
+		// First remove client from previous zone
+		if ses.ZoneID != -1 {
+			zoneInstance, ok := wh.zoneManager.Get(ses.ZoneID, ses.InstanceID)
+			if ok {
+				zoneInstance.RemoveClient(ses.SessionID)
+			}
+		}
 		charData.X = float64(req.X())
 		charData.Y = float64(req.Y())
 		charData.Z = float64(req.Z())

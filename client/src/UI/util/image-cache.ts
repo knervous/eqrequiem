@@ -89,3 +89,5 @@ export class ImageCache {
     return this.cache[cacheKey] ?? "";
   }
 }
+
+window.ImageCache = ImageCache; // Expose to global scope for debugging

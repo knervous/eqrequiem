@@ -11,8 +11,9 @@ export type ChatMessage = {
   color: string;
 };
 
-type Events = {
+export type Events = {
   playerName: string;
+  playerLoaded: void;
   playerPosition: BJS.Vector3;
   playerRotation: BJS.Vector3;
   setPlayer: PlayerProfile;
@@ -21,6 +22,7 @@ type Events = {
   viewportChanged: number[];
   chatMessage: ChatMessage;
   toggleInventory: void;
+  setMode: string;
 };
 
 export const emitter: Emitter<Events> = mitt<Events>();

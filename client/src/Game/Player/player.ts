@@ -288,6 +288,7 @@ export default class Player {
     // Emit events
     emitter.emit("playerName", this.player.name);
     emitter.emit("setPlayer", this.player);
+    emitter.emit("playerLoaded");
   }
 
   public playAnimation(

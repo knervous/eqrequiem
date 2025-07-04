@@ -15,14 +15,17 @@ export default class EntityPool {
   loadedPromiseResolve: () => void = () => {};
   loadedPromise: Promise<void> | null = null;
   entityCache: EntityCache | null = null;
-  private grid: Grid;
+  private grid: Grid | null = null;
   private spawns: Record<number, Spawn> = {};
   private scene: BJS.Scene;
 
   constructor(private gameManager: GameManager, parent: BJS.Node, scene: BJS.Scene) {
     this.scene = scene;
     this.parent = parent;
-    this.grid = new Grid(300.0, scene);
+  }
+
+  initialize() {
+    this.grid = new Grid(300.0, this.scene);
   }
 
   dispose() {
@@ -30,7 +33,8 @@ export default class EntityPool {
       entity.dispose();
     }
     this.entities = {};
-    this.grid.dispose();
+    this.grid?.dispose();
+    this.grid = null;
     this.entities = {};
     this.spawns = {};
     this.loadedPromise = null;
@@ -43,12 +47,14 @@ export default class EntityPool {
   }
 
   async AddSpawn(spawn: Spawn) {
-    
+    while (this.gameManager.loading) {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
     if (spawn.isNpc) {
-      //   return;
+      // return;
     }
 
-    if (!spawn.name.includes('rodent')) {
+    if (!spawn.name.includes('Moodoro')) {
       //return;
     }
 

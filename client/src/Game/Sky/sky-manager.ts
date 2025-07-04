@@ -141,15 +141,15 @@ export default class DayNightSkyManager {
 
   // Internal properties
   #camera;
-  #scene;
+  #scene: BJS.Scene | null = null;
   #domeRoot;
+  skyContainer: BJS.AssetContainer | null = null;
   #layer1Mat: BJS.ShaderMaterial | null = null;
   #layer2Mat: BJS.ShaderMaterial | null = null;
   #sun;
   #worldEnv;
   #uvOffsetLayer1 = new BABYLON.Vector2(0, 0);
   #uvOffsetLayer2 = new BABYLON.Vector2(0, 0);
-  #moveInterval;
   parent: ZoneManager;
   constructor(parent) {
     this.parent = parent;
@@ -157,6 +157,11 @@ export default class DayNightSkyManager {
 
   async createSky(name, noWorldEnv: boolean = false) {
     this.#scene = this.parent.GameManager.scene!;
+    this.#scene.fogEnabled = true;
+    this.#scene.fogMode = BABYLON.Scene.FOGMODE_LINEAR;
+    this.#scene.fogColor = new BABYLON.Color3(0.5, 0.5, 0.5);
+    this.#scene.fogStart = 1000;
+    this.#scene.fogEnd = 5000;
     this.#camera = this.parent.GameManager.Camera;
     const bytes = await FileSystem.getFileBytes(
       `eqrequiem/sky`,
@@ -180,6 +185,7 @@ export default class DayNightSkyManager {
       console.error(`[SkyManager] Failed to load sky mesh: ${name}`);
       return;
     }
+    this.skyContainer = sky;
     // Create sky dome
     sky.addAllToScene();
     this.#domeRoot = sky.meshes[0];
@@ -240,18 +246,41 @@ export default class DayNightSkyManager {
       this.#domeRoot.dispose();
       this.#domeRoot = null;
     }
+
+    // Dispose of shader materials
+    if (this.#layer1Mat) {
+      this.#layer1Mat.dispose();
+      this.#layer1Mat = null;
+    }
+    if (this.#layer2Mat) {
+      this.#layer2Mat.dispose();
+      this.#layer2Mat = null;
+    }
+
+    // Dispose of lights
     if (this.#worldEnv) {
       this.#worldEnv.dispose();
       this.#worldEnv = null;
     }
     if (this.#sun) {
+    // Dispose of shadow generator if it exists
+      if (this.#sun.shadowGenerator) {
+        this.#sun.shadowGenerator.dispose();
+      }
       this.#sun.dispose();
       this.#sun = null;
     }
-    if (this.#moveInterval) {
-      clearInterval(this.#moveInterval);
-      this.#moveInterval = null;
+
+    if (this.skyContainer) {
+      this.skyContainer.dispose();
+      this.skyContainer = null;
     }
+
+    // Null references to scene and camera
+    this.#scene = null;
+    this.#camera = null;
+
+  // Null parent reference (optional, depending on ZoneManager behavior)
   }
 
   tick(delta) {
@@ -303,6 +332,12 @@ export default class DayNightSkyManager {
     this.#layer2Mat.setColor3("uLowColor",  low);
     this.#layer2Mat.setColor3("uMidColor",  mid);
     this.#layer2Mat.setColor3("uHighColor", high);
+
+    if (this.#scene) {
+      this.#scene.fogColor = mid;
+      // this.#scene.fogStart = 1000 * heightNorm;
+      // this.#scene.fogEnd = 5000 * heightNorm;
+    }
   }
 
   #updateSunAndSky() {
@@ -336,7 +371,6 @@ export default class DayNightSkyManager {
 
     this.#sun.diffuse = col;
     this.#sun.intensity = (heightNorm * 2) + 0.2;
-
-
+    
   }
 }

@@ -19,11 +19,13 @@ type WorldHandler struct {
 // NewWorldHandler creates a new WorldHandler.
 func NewWorldHandler(zoneManager *ZoneManager, sessionManager *session.SessionManager) *WorldHandler {
 	registry := NewWorldOpCodeRegistry() // Global registry
-	return &WorldHandler{
+	wh := &WorldHandler{
 		zoneManager:    zoneManager,
 		sessionManager: sessionManager,
 		globalRegistry: registry,
 	}
+	registry.WH = wh // Set the WorldHandler in the registry
+	return wh
 }
 
 // HandlePacket processes incoming datagrams and routes them.

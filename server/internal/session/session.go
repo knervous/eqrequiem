@@ -58,6 +58,13 @@ type SessionManager struct {
 // globalSessionManager holds the singleton SessionManager.
 var globalSessionManager *SessionManager
 
+func GetActiveSessionCount() int {
+	sm := GetSessionManager()
+	sm.mu.RLock()
+	defer sm.mu.RUnlock()
+	return len(sm.sessions)
+}
+
 // InitSessionManager initializes the global SessionManager.
 func InitSessionManager(sm *SessionManager) {
 	globalSessionManager = sm

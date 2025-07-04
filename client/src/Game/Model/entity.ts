@@ -624,6 +624,8 @@ export class Entity extends BABYLON.TransformNode {
         const newPosition = new BABYLON.Vector3(hitPoint.x, hitPoint.y - 0.1, hitPoint.z);
         this.setPosition(newPosition.x, newPosition.y + 5, newPosition.z);
         console.log(`[Player] Repositioned to ${newPosition.toString()} due to no ground below`);
+      } else if (this.isPlayer) {
+        this.setPosition(5, 5, 5);
       }
     }
   }

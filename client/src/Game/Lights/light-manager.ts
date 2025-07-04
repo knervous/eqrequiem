@@ -20,13 +20,18 @@ export class LightManager {
   private previousLights: number[] = [];
   private lastPosition: BJS.Vector3 = new BABYLON.Vector3(-1, 0, 0);
   private accumTime: number = 0;
-
   dispose() {
-    this.zoneLights.forEach((l) => l.dispose());
-    this.previousLights = [];
+    // Defer disposal until after the next render frame
+    this.zoneLights.forEach((light) => {
+      if (!light.isDisposed()) {
+        light.dispose();
+      }
+    });
     this.zoneLights = [];
     this.ambientLight?.dispose();
     this.playerLight?.dispose();
+    this.previousLights = [];
+
   }
 
   setAmbientColor(hex: string) {
@@ -42,7 +47,8 @@ export class LightManager {
     }
   }
 
-  async loadLights(container: BJS.Node, scene: BJS.Scene, zoneLights: LightData[]) {
+  async loadLights(container: BJS.Node, scene: BJS.Scene, zoneLights: LightData[], zoneName: string) {
+    this.dispose();
     // Allow up to MAX_LIGHTS influence per material
     scene.materials.forEach((m) => {
       m.maxSimultaneousLights = 8;
@@ -51,7 +57,7 @@ export class LightManager {
     // Create lights
     zoneLights.forEach((data, idx) => {
       const pos = new BABYLON.Vector3(-data.x, data.y, data.z);
-      const light = new BABYLON.PointLight(`zoneLight_${idx}`, pos, scene);
+      const light = new BABYLON.PointLight(`zoneLight_${zoneName}_${idx}`, pos, scene);
       light.diffuse = new BABYLON.Color3(data.r, data.g, data.b);
       light.intensity = 0.5;
       light.radius = 25;

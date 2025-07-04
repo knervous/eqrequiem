@@ -16,3 +16,5 @@ export class BabylonTextureCache {
     BabylonTextureCache.clear();
   }
 }
+
+window.BJSTextureCache = BabylonTextureCache; // Expose to global scope for debugging

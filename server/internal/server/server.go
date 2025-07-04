@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/binary"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -281,6 +282,26 @@ func startHTTPServer(tlsConf *tls.Config) {
 		w.Header().Set("Content-Type", "text/plain")
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("Server is online"))
+	})))
+
+	mux.Handle("/playercount", corsMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("Received /playercount request from %s", r.RemoteAddr)
+		count := session.GetActiveSessionCount()
+
+		type response struct {
+			Count int `json:"count"`
+		}
+
+		res := response{Count: count}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+
+		if err := json.NewEncoder(w).Encode(res); err != nil {
+			log.Printf("Error encoding JSON: %v", err)
+			http.Error(w, `{"error": "Internal server error"}`, http.StatusInternalServerError)
+			return
+		}
 	})))
 
 	listener, err := net.Listen("tcp", ":443")

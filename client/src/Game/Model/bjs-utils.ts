@@ -3,70 +3,81 @@ import type * as BJS from "@babylonjs/core";
 import { FileSystem } from "@game/FileSystem/filesystem";
 import { BabylonTextureCache } from "./bjs-texture-cache";
 
-
-const pending = {
-
-};
+const pending = {};
 export async function swapMaterialTexture(
   material: BJS.Material,
   newTextureName: string,
   flipY: boolean = false,
 ): Promise<BJS.Texture | null> {
-
   // First try to find in the scene
   const fileName = material.metadata?.gltf?.extras?.file;
   if (!fileName) {
     console.warn(
-      '[ImageSwap] swapMaterialTexture: material.metadata.gltf.extras.file is missing',
+      "[ImageSwap] swapMaterialTexture: material.metadata.gltf.extras.file is missing",
       material,
     );
     return null;
   }
 
-  const cacheKey = `${fileName}-${newTextureName}`;
+  const cacheKey = newTextureName;
 
   if (pending[cacheKey]) {
     return null;
   }
-  const cached = BabylonTextureCache.get(cacheKey);
-  if (cached) {
+  const cached =
+    BabylonTextureCache.get(cacheKey);
+  if (cached && (material.getScene().getTextureByName(cacheKey))) {
     applyToMaterial(material, cached, flipY);
     return cached;
   }
   pending[cacheKey] = true;
 
-
   const bytes = await FileSystem.getFileBytes(
     `eqrequiem/textures/${fileName}`,
     `${newTextureName}.webp`,
   );
+
   if (!bytes) {
-    console.warn('[ImageSwap] Failed to load texture:', newTextureName);
+    console.warn("[ImageSwap] Failed to load texture:", newTextureName);
     return null;
-  } 
+  }
   const blob = new Blob([bytes], { type: "image/webp" });
   const url = URL.createObjectURL(blob);
   const scene = (material as any).getScene() as BJS.Scene;
+  const newTex = await new Promise<BJS.Texture>((res, rej) => {
+    const newTex = new BABYLON.Texture(
+      url,
+      scene,
+      true,
+      false,
+      undefined,
+      () => {
+        URL.revokeObjectURL(url);
+        res(newTex);
+      },
+      (msg, ex) => {
+        rej();
+        URL.revokeObjectURL(url);
+        console.error("Texture load error:", msg, ex);
+      },
+    );
+    newTex.name = cacheKey;
+    if (newTextureName.startsWith("fire")) {
+      console.log(
+        "[ImageSwap] Loaded texture:",
+        newTextureName,
+        "from",
+        fileName,
+        "into cache",
+        cacheKey,
+      );
+    }
+    BabylonTextureCache.set(cacheKey, newTex);
+    applyToMaterial(material, newTex, flipY);
+    pending[cacheKey] = false;
+  });
 
-  const newTex = new BABYLON.Texture(
-    url,
-    scene,
-    true,
-    false,
-    undefined,
-    () => {
-      URL.revokeObjectURL(url);
-    },
-    (msg, ex) => {
-      console.error("Texture load error:", msg, ex);
-    },
-  );
-  newTex.name = cacheKey;
-  BabylonTextureCache.set(cacheKey, newTex);
-  applyToMaterial(material, newTex, flipY);
-  pending[cacheKey] = false;
   return newTex;
-  
 }
 
 /** Assigns the newly loaded texture to the correct slot on Standard vs PBR materials */
@@ -79,15 +90,14 @@ function applyToMaterial(
     material.diffuseTexture = tex;
     if (flipY) {
       material.diffuseTexture.vScale = -1;
-      material.diffuseTexture.vOffset = 1;    
+      material.diffuseTexture.vOffset = 1;
     }
   } else if (material instanceof BABYLON.PBRMaterial) {
     material.albedoTexture = tex;
     tex.hasAlpha = true;
     if (flipY) {
       material.albedoTexture.vScale = -1;
-      material.albedoTexture.vOffset = 1;  
-
+      material.albedoTexture.vOffset = 1;
     }
   } else {
     console.warn(
@@ -95,12 +105,13 @@ function applyToMaterial(
     );
   }
 }
-export function createNameplate(scene: BJS.Scene, node: BJS.Mesh, lines: string[], size = 32) {
-  const temp = new BABYLON.DynamicTexture(
-    'DynamicTexture',
-    size,
-    scene,
-  );
+export function createNameplate(
+  scene: BJS.Scene,
+  node: BJS.Mesh,
+  lines: string[],
+  size = 32,
+) {
+  const temp = new BABYLON.DynamicTexture("DynamicTexture", size, scene);
   const tmpctx = temp.getContext();
   tmpctx.font = `${size}px Arial`;
   const textWidth = lines.reduce((acc, val) => {
@@ -114,15 +125,15 @@ export function createNameplate(scene: BJS.Scene, node: BJS.Mesh, lines: string[
   temp.dispose();
 
   const dynamicTexture = new BABYLON.DynamicTexture(
-    'DynamicTexture',
-    { width: textWidth + 4, height: (size * 4) + lines.length * size * 2 }, // Added padding for stroke
+    "DynamicTexture",
+    { width: textWidth + 4, height: size * 4 + lines.length * size * 2 }, // Added padding for stroke
     scene,
   );
 
   const ctx = dynamicTexture.getContext();
   ctx.font = `${size}px Arial`;
-  ctx.fillStyle = 'white';
-  ctx.strokeStyle = 'white'; // White border color
+  ctx.fillStyle = "white";
+  ctx.strokeStyle = "white"; // White border color
   ctx.lineWidth = 1; // Small border thickness
 
   const { width: canvasWidth } = dynamicTexture.getSize();
@@ -140,7 +151,7 @@ export function createNameplate(scene: BJS.Scene, node: BJS.Mesh, lines: string[
   dynamicTexture.update();
 
   const plane = BABYLON.MeshBuilder.CreatePlane(
-    'namePlate',
+    "namePlate",
     { width: (textWidth + 4) / (size * 2), height: 2 + lines.length }, // Adjusted for padding
     scene,
   );
@@ -151,10 +162,7 @@ export function createNameplate(scene: BJS.Scene, node: BJS.Mesh, lines: string[
   );
   plane.billboardMode = BABYLON.ParticleSystem.BILLBOARDMODE_ALL;
   plane.parent = node;
-  const material = new BABYLON.StandardMaterial(
-    'nameplate',
-    scene,
-  );
+  const material = new BABYLON.StandardMaterial("nameplate", scene);
   plane.material = material;
   material.diffuseTexture = dynamicTexture;
   material.diffuseTexture.hasAlpha = true;
@@ -165,4 +173,3 @@ export function createNameplate(scene: BJS.Scene, node: BJS.Mesh, lines: string[
   material.disableLighting = true; // Ensure consistent color
   plane.scaling.x *= -1;
 }
-

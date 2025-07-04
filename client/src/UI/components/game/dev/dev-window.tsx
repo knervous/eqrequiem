@@ -57,7 +57,7 @@ export const DevWindowComponent: React.FC = () => {
   };
   const tabStyle = {
     color: "white",
-    fontSize: "13px",
+    fontSize: "12px",
     width: "20%",
     minHeight: "24px", // Override MUI default min-height
     padding: "0 8px", // Reduce padding for a tighter look
@@ -81,17 +81,22 @@ export const DevWindowComponent: React.FC = () => {
             margin: 0,
           }}
         >
-          {" "}
           <Tabs
             value={tabValue}
             onChange={handleTabChange}
             sx={{
               justifyContent: "center",
               alignContent: "center",
-              marginTop: '10px',
-              minHeight: "24px", // Reduce Tabs container height
-              "& .MuiTabs-indicator": { height: "2px" }, // Thinner indicator
-              "& .MuiTabs-flexContainer": { height: "24px" }, // Match tab height
+              marginTop: '5px',
+              minHeight: "20px", // Reduce Tabs container height
+              "& .MuiTabs-indicator": { display: 'none' }, // Thinner indicator
+              "& .Mui-selected": {
+                backgroundColor: "hsla(205, 100.00%, 50.00%, 0.58)", // Light highlight effect
+                color: "white",
+                fontWeight: "", // Optional: make selected tab bolder
+                borderRadius: "0px", // Optional: rounded corners for highlight
+              },
+              "& .MuiTabs-flexContainer": { height: "20px" }, // Match tab height
             }}
             aria-label="dev window tabs"
           >
@@ -132,15 +137,16 @@ export const DevWindowComponent: React.FC = () => {
           <DevPlayer />
         </TabPanel>
         <TabPanel value={tabValue} index={1}>
-          <FormControl sx={{ width: "300px", color: "white" }}>
+          <FormControl sx={{ width: "calc(100% - 20px)", color: "white" }}>
             <Typography
-              sx={{ fontSize: 14, marginTop: 2, width: "80%" }}
+              sx={{ fontSize: 12, marginTop: 1, width: "80%" }}
               color="text.secondary"
               gutterBottom
             >
               Time of Day: {timeOfDay}
             </Typography>
             <Slider
+              size={'small'}
               value={timeOfDay}
               onChange={(e) => {
                 setTimeOfDay(e.target.value);

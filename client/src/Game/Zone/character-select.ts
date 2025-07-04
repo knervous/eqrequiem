@@ -53,12 +53,12 @@ export default class CharacterSelect {
     this.zoneManager = new ZoneManager(this.gameManager);
     this.zoneManager?.loadZone("load2", false, true);
     this.worldTickInterval = setInterval(() => {
-      // this.zoneManager?.SkyManager?.worldTick?.();
+      this.zoneManager?.SkyManager?.worldTick?.();
     }, 500);
   }
 
   public dispose() {
-    console.log("Disposing character select");
+    console.log("[CharacterSelect] Disposing character select");
     if (this.character) {
       this.character?.dispose();
     }

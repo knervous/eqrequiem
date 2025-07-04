@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import Player from '@game/Player/player';
 import {
   Box,
@@ -13,9 +13,14 @@ import {
   Typography,
   Slider,
 } from '@mui/material';
+import emitter from '@game/Events/events';
+import { useEvent } from '@game/Events/event-hooks';
+
+const speedKey = 'dev-player-speed';
 
 export const DevPlayer: React.FC = () => {
   const player = Player.instance!;
+
   const [speed, setSpeed] = useState(player?.playerMovement?.moveSpeed ?? 20);
   const [anim, setAnim] = useState(player?.currentAnimation || '');
   const [collision, setCollision] = useState(true);
@@ -24,10 +29,24 @@ export const DevPlayer: React.FC = () => {
     const v = +e.target.value;
     setSpeed(v);
     if (player?.playerMovement) {
+      localStorage.setItem(speedKey, v.toString());
 
       player.playerMovement.moveSpeed = v;
     } 
   };
+
+  const restoreSpeed = useCallback(() => {
+    const player = Player.instance;
+    if (!player?.playerMovement) return;
+    const savedSpeed = localStorage.getItem(speedKey);
+
+    if (savedSpeed) {
+      setSpeed(+savedSpeed);
+      player.playerMovement.moveSpeed = +savedSpeed;
+    }
+  }, []);
+  useEvent('playerLoaded', restoreSpeed);
+
 
   const onAnim = (e: React.ChangeEvent<{ value: unknown }>) => {
     setAnim(e.target.value as string);
@@ -48,15 +67,17 @@ export const DevPlayer: React.FC = () => {
   return (
     <Box p={0} sx={{ '*': { color: 'white!important' } }}>
       <Stack spacing={2}>
-        <FormControl sx={{ width: "300px", color: "white" }}>
+        <FormControl sx={{ width: "calc(100% - 20px)", color: "white" }}>
           <Typography
-            sx={{ fontSize: 14, marginTop: 2, width: "80%" }}
+            sx={{ fontSize: 12, marginTop: 1, width: "80%" }}
             color="text.secondary"
             gutterBottom
           >
               Move Speed: {speed}
           </Typography>
           <Slider
+            sx={{ width: '100%' }}
+            size='small'
             value={speed}
             onChange={onSpeed}
             step={1}

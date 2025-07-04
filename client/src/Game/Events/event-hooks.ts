@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import emitter from "./events";
+import emitter, { Events } from "./events";
 import type { Entity } from "@game/Model/entity";
 import Player from "@game/Player/player";
 import { PlayerProfile } from "@game/Net/internal/api/capnp/player";
@@ -16,6 +16,18 @@ export const usePlayerName = () => {
     };
   }, []);
   return playerName;
+};
+
+export const useEvent = <T extends keyof Events>(
+  eventName: T,
+  callback: (arg: Events[T]) => void,
+) => {
+  useEffect(() => {
+    emitter.on(eventName, callback);
+    return () => {
+      emitter.off(eventName, callback);
+    };
+  }, [eventName, callback]);
 };
 
 export const usePlayerProfile = () => {

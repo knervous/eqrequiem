@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useReducer, useRef } from "react";
+import React, { useCallback, useEffect, useMemo, useReducer, useRef } from "react";
 import Box from "@mui/material/Box";
 import { UiState, initialUiState } from "../state/initial-state";
 import { uiReducer } from "../state/reducer";
@@ -15,6 +15,7 @@ import { fsBindings } from "@/Core/bindings";
 import "./overlay.css";
 import { ZonePacketHandler } from "@game/Net/zone-packets";
 import emitter from "@game/Events/events";
+import { useEvent } from "@game/Events/event-hooks";
 
 
 let storedState: UiState | string | null = localStorage.getItem(stateKey);
@@ -41,7 +42,10 @@ export const Overlay: React.FC<Props> = (props: Props) => {
     (storedState as UiState | null) ?? initialUiState,
   );
 
-  useMemo(() => new ZonePacketHandler(setMode), [setMode]);
+  useEvent('setMode', useCallback((newMode: string) => {
+    setMode(newMode);
+  }, []));
+
 
   useEffect(() => {
     if (mode === 'game') {

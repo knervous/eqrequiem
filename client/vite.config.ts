@@ -2,7 +2,12 @@ import fs from "node:fs";
 import path from "node:path";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
+import * as https from 'https';
+import fetch from 'node-fetch';
 
+const agent = new https.Agent({
+  rejectUnauthorized: false,
+});
 const isLocalDev = process.env.VITE_LOCAL_DEV === "true";
 export default defineConfig({
   base: "./",
@@ -36,8 +41,15 @@ export default defineConfig({
             res.end(hash);
             return;
           }
-          if (req.url?.includes("Test.wasm")) {
-            res.setHeader("Content-Encoding", "br");
+          if (req.url?.startsWith("/api/playercount")) {
+            const hash = await fetch(`https://127.0.0.1/playercount`,  { agent })
+              .then((r) => r.json())
+              .catch((e) => {
+                console.error("Error fetching player count:", e);
+                return { count: 0 };
+              });
+            res.end(JSON.stringify(hash));
+            return;
           }
           res.setHeader("Cross-Origin-Embedder-Policy", "require-corp");
           res.setHeader("Cross-Origin-Opener-Policy", "same-origin");

@@ -5,8 +5,7 @@ import type { ZoneMetadata } from "@game/Zone/zone-types";
 import { RequestClientZoneChange, ZoneChangeType, type ZonePoint } from "@game/Net/internal/api/capnp/zone";
 import Player from "@game/Player/player";
 import { capnpToPlainObject } from "@game/Constants/util";
-import { WorldSocket } from "@ui/net/instances";
-import { OpCodes } from "@game/Net/opcodes";
+import type GameManager from "@game/Manager/game-manager";
 
 
 interface AABBNode {
@@ -23,6 +22,10 @@ export class RegionManager {
   private zonePoints: Record<number, ZonePoint> = {};
   private regions: ZoneMetadata["regions"] = [];
   private scene?: BJS.Scene;
+
+  constructor(private gameManager: GameManager) {
+
+  }
   public instantiateRegions(
     scene: BJS.Scene,
     metadata: ZoneMetadata,
@@ -38,7 +41,6 @@ export class RegionManager {
       this.zonePoints[z.number] = capnpToPlainObject(z);
     }
       
-    console.log(`[RegionManager] Instantiating ${regions.length} regions...`, this.zonePoints, regions);
 
     // Build raw AABB nodes
     const nodes: AABBNode[] = regions.map((r, i) => ({
@@ -94,11 +96,14 @@ export class RegionManager {
               requestZone.z = zonePoint.z;
               requestZone.zoneId = zonePoint.zoneId;
               requestZone.instanceId = zonePoint.zoneInstance;
+              console.log('[RegionManager] Original Zonepoint', zonePoint);
+
             } else if (region.zoneLineInfo) { // Absolute
-              requestZone.x = region.zoneLineInfo.x!;
-              requestZone.y = region.zoneLineInfo.y!;
-              requestZone.z = region.zoneLineInfo.z!;
+              requestZone.x = -region.zoneLineInfo.x!;
+              requestZone.y = region.zoneLineInfo.z!;
+              requestZone.z = region.zoneLineInfo.y!;
               requestZone.zoneId = region.zoneLineInfo.zoneIndex!;
+              console.log('[RegionManager] Absolute Zonepoint', region.zoneLineInfo);
             } else {
               console.warn(`[RegionManager] No zone line info for region ${i}`);
               return;
@@ -107,13 +112,13 @@ export class RegionManager {
             const magicRot = 999;
             console.log(`[RegionManager] Requesting zone change to:`, requestZone);
             console.log(`[RegionManager] Player position:`, Player.instance!.getPlayerPosition());
-            if (requestZone.x === magicLoc) {
+            if (Math.abs(requestZone.x) === magicLoc) {
               requestZone.x = Player.instance!.getPlayerPosition()!.x;
             }
-            if (requestZone.y === magicLoc) {
+            if (Math.abs(requestZone.y) === magicLoc) {
               requestZone.y = Player.instance!.getPlayerPosition()!.y;
             }
-            if (requestZone.z === magicLoc) {
+            if (Math.abs(requestZone.z) === magicLoc) {
               requestZone.z = Player.instance!.getPlayerPosition()!.z;
             }
             if (requestZone.x === magicRot) {
@@ -122,16 +127,17 @@ export class RegionManager {
             const tempX = requestZone.x;
             const tempY = requestZone.y;
             const tempZ = requestZone.z;
-            requestZone.x = -tempX;
-            requestZone.y = tempZ;
-            requestZone.z = tempY;
+            requestZone.x = tempX;
+            requestZone.y = tempY;
+            requestZone.z = tempZ;
             console.log(`[RegionManager] Requesting zone change AFTER MAGIC to:`, requestZone);
-
-            WorldSocket.sendMessage(
-              OpCodes.RequestClientZoneChange,
-              RequestClientZoneChange,
-              requestZone,
-            );
+            if (requestZone.zoneId === this.gameManager.ZoneManager?.CurrentZone?.zoneIdNumber) {
+              this.gameManager.player?.setPosition(requestZone.x, requestZone.y, requestZone.z);
+            } else {
+              this.gameManager.requestZone(requestZone);
+              this.dispose();
+            }
+         
             break; 
           }
         }

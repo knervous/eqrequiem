@@ -24,12 +24,15 @@ declare const window: Window;
 const doEnterSandbox =
   new URLSearchParams(window.location.search).get("sandbox") === "true";
 
+const serverUrl = import.meta.env.VITE_LOCAL_DEV === 'true' ? '/api' : 'https://eqrequiem.ddns.net';
+
 export const LoginWindowComponent: React.FC = () => {
   const navigate = useNavigate();
   const setMode = useUIContext((state) => state.setMode);
   const token = useUIContext((state) => state.token);
   const [imageTiles, setImageTiles] = React.useState<string[]>([]);
   const [selectedServer, setSelectedServer] = React.useState<number>(0);
+  const [playerCount, setPlayerCount] = React.useState<number>(-1);
 
   const enterSandbox = useCallback(() => {
     setMode("game");
@@ -49,11 +52,13 @@ export const LoginWindowComponent: React.FC = () => {
   }, [setMode]);
 
   const servers = [
-    { name: "EQ: Requiem", playersOnline: 42 },
+    { name: "EQ: Requiem", playersOnline: playerCount },
   ];
 
+
   const connectToWorld = useCallback(
-    async (worldName = defaultWorldName) => {
+    async () => {
+      const worldName = defaultWorldName;
       let storedDetails: ({ token: string} | null) = null;
       try {
         const storedDetailsString = localStorage.getItem(worldName);
@@ -69,28 +74,6 @@ export const LoginWindowComponent: React.FC = () => {
         window.location.href = discordAuthUrl;
       }
 
-      if (!local) {
-        // First try an opaque ping to the world server
-      // With a 2s timeout
-        const controller = new AbortController();
-        const signal = controller.signal;
-        setTimeout(() => {
-          controller.abort();
-        }, 2000);
-        const serverOnline = await fetch("https://eqrequiem.ddns.net/online", {
-          method: "GET",
-          mode: "cors",
-          signal,
-        }).then(() => true).catch((e) => {
-          console.log("World server offline", e);
-          return false;
-        });
-        if (!serverOnline) {
-          alert("World Server Offline");
-          return;
-        }
-      }
-
       if (
         await WorldSocket.connect("eqrequiem.ddns.net", 443, () => {
           console.log("Disconnected");
@@ -101,18 +84,60 @@ export const LoginWindowComponent: React.FC = () => {
           token.current = "local";
         } else {
           if (storedDetails === null) {
-            alert("World Server Offline");
             return;
           }
           token.current = storedDetails.token;
         }
         setMode("character-select");
-      } else {
-        alert("World Server Offline");
       }
     },
     [setMode, token, navigate],
   );
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const signal = controller.signal;
+    setTimeout(() => {
+      controller.abort();
+    }, 2000);
+    fetch(`${serverUrl}/playercount`, {
+      method: "GET",
+      mode: "cors",
+      signal,
+    }).then((response) => {
+      if (!response.ok) {
+        console.error("Failed to fetch player count");
+        return;
+      }
+      return response.json();
+    }).then((data) => {
+      if (data && data.count !== undefined) {
+        setPlayerCount(data.count);
+      } else {
+        console.error("Invalid player count data", data);
+      }
+    }).catch((error) => {
+      console.error("Error fetching player count:", error);
+    });
+  }, []);  
+
+
+  useEffect(() => {
+    const kbCallback = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        navigate("/");
+      }
+      if (e.key === "Enter") {
+        if (selectedServer >= 0 && selectedServer < servers.length) {
+          connectToWorld();
+        }
+      }
+    };
+    window.addEventListener("keydown", kbCallback);
+    return () => {
+      window.removeEventListener("keydown", kbCallback);
+    };   
+  }, [navigate, connectToWorld, selectedServer, servers.length]);
 
   useEffect(() => {
     Promise.all(
@@ -134,7 +159,7 @@ export const LoginWindowComponent: React.FC = () => {
 
   useEffect(() => {
     if (sessionStorage.getItem("worldLogin") === defaultWorldName) {
-      connectToWorld(defaultWorldName);
+      connectToWorld();
       sessionStorage.removeItem("worldLogin");
     }
   }, [connectToWorld]);
@@ -289,7 +314,7 @@ export const LoginWindowComponent: React.FC = () => {
                 <Typography
                   sx={{ fontSize: "14px", color: "#fff", textAlign: "center" }}
                 >
-                  {server.playersOnline}
+                  {server.playersOnline === -1 ? "Offline" : server.playersOnline}
                 </Typography>
               </ListItem>
             ))}
@@ -325,11 +350,11 @@ export const LoginWindowComponent: React.FC = () => {
 
           <UiButtonComponent
             buttonName="A_EQLS_LargeBtn"
-            //isDisabled={import.meta.env.VITE_LOCAL_DEV !== 'true'}
-            text={"Enter World"}
+            text={playerCount < 0 ? "World Offline" : "Enter World"}
             textSx={{
               color: 'white !important',
             }}
+            isDisabled={playerCount < 0}
             onClick={connectToWorld}
             icon={
               <DiscordIcon

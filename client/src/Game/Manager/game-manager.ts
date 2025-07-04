@@ -7,8 +7,12 @@ import MusicManager from "@game/Music/music-manager";
 import { ZoneManager } from "@game/Zone/zone-manager";
 import { PlayerProfile } from "@game/Net/internal/api/capnp/player";
 import HavokPhysics from "@babylonjs/havok";
-import { NewZone } from "@game/Net/internal/api/capnp/zone";
+import { NewZone, RequestClientZoneChange } from "@game/Net/internal/api/capnp/zone";
 import type { Inspector } from '@babylonjs/inspector';
+import { WorldSocket } from "@ui/net/instances";
+import { OpCodes } from "@game/Net/opcodes";
+import { ZonePacketHandler } from "@game/Net/zone-packets";
+import EntityCache from "@game/Model/entity-cache";
 
 declare const window: Window;
 
@@ -27,11 +31,11 @@ export default class GameManager {
     return this.musicManager;
   }
   private musicManager: MusicManager | null = null;
-  private worldTickInterval: number = -1;
+  private worldTickInterval: ReturnType<typeof setInterval> = -1 as unknown as ReturnType<typeof setInterval>;
   private lastPlayer: Partial<PlayerProfile> | null = null;
-  private player: Player | null = null;
+  public player: Player | null = null;
+  public zonePacketHandler: ZonePacketHandler = new ZonePacketHandler(this);
   public havokPlugin: BJS.HavokPlugin | null = null;
-
   public CurrentZone: NewZone | null = null;
 
   get CharacterSelect(): CharacterSelect | null {
@@ -64,7 +68,6 @@ export default class GameManager {
   }
 
   constructor() {
-    this.zoneManager = new ZoneManager(this);
     this.keyDown = this.keyDown.bind(this);
     this.resize = this.resize.bind(this);
     this.renderLoop = this.renderLoop.bind(this);
@@ -142,7 +145,6 @@ export default class GameManager {
     const heightNorm   = height / rh;
 
     // Need to scale by DPI
-    const dpiScale = window.devicePixelRatio || 1;
     
     this.camera.viewport = new BABYLON.Viewport(
       xNorm,
@@ -150,6 +152,15 @@ export default class GameManager {
       widthNorm,
       heightNorm,
     );
+  }
+
+  public requestZone(requestZone: RequestClientZoneChange) {
+    WorldSocket.sendMessage(
+      OpCodes.RequestClientZoneChange,
+      RequestClientZoneChange,
+      requestZone,
+    );
+    this.loading = true;
   }
 
 
@@ -190,7 +201,7 @@ export default class GameManager {
     this.canvas = canvas;
 
     if (navigator.gpu) {
-      this.engine = new BABYLON.WebGPUEngine(canvas, { deviceDescriptor: { requiredFeatures: ["timestamp-query", 'occlusion-query'] } });
+      this.engine = new BABYLON.WebGPUEngine(canvas, { deviceDescriptor: { requiredFeatures: ["timestamp-query"] } });
       await this.engine?.initAsync?.();
       this.engineInitialized = true;
 
@@ -209,6 +220,7 @@ export default class GameManager {
     this.canvas!.oncontextmenu = (e) => e.preventDefault();
     this.scene.onPointerObservable.add(this.onPointerEvent.bind(this));
 
+    this.zoneManager = new ZoneManager(this);
     
     this.engine.setHardwareScalingLevel(1 / window.devicePixelRatio);
     this.engine.disableManifestCheck = true;
@@ -308,6 +320,13 @@ export default class GameManager {
 
   public dispose() {
     clearInterval(this.worldTickInterval);
+    // for (const material of this.scene?.materials || []) {
+    //   if (material instanceof BABYLON.PBRMaterial) {
+    //     material.dispose(true, true);
+    //   }
+    // }
+
+    EntityCache.disposeAll(this.scene!);
     if (this.zoneManager) {
       this.zoneManager.dispose();
     }
@@ -340,6 +359,7 @@ export default class GameManager {
   public async loadZoneServer(zone: NewZone) {
     this.CurrentZone = zone;
     await this.loadZoneId(zone.zoneIdNumber);
+    this.loading = false;
   }
 
   public async loadZoneId(zoneId: number): Promise<void> {
@@ -352,14 +372,15 @@ export default class GameManager {
     }
   }
 
-  public loadZone(zoneName: string): void {
+  public async loadZone(zoneName: string): Promise<void> {
     this.dispose();
     this.camera = new BABYLON.UniversalCamera(
       "__camera__",
       new BABYLON.Vector3(0, 0, 0),
       this.scene!,
     );
-    this.zoneManager?.loadZone(zoneName);
+    await this.zoneManager?.loadZone(zoneName);
+    clearTimeout(this.worldTickInterval);
     this.worldTickInterval = setInterval(() => {
       this.zoneManager?.SkyManager?.worldTick?.();
     }, 1000);

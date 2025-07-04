@@ -29,11 +29,15 @@ export class PlayerCamera {
   constructor(player: Player, camera: BJS.UniversalCamera) {
     this.player = player;
     this.camera = camera;
-    this.cameraLight = new BABYLON.PointLight(
-      "playerLight",
-      new BABYLON.Vector3(0, 5, 0),
-      this.player.gameManager.scene!,
-    );
+    this.cameraLight =
+      (player.gameManager.scene?.getLightByName(
+        "playerLight",
+      ) as BJS.PointLight) ||
+      new BABYLON.PointLight(
+        "playerLight",
+        new BABYLON.Vector3(0, 5, 0),
+        this.player.gameManager.scene!,
+      );
     this.onChangePointerLock = this.onChangePointerLock.bind(this);
     this.handleMouseDown = this.handleMouseDown.bind(this);
     this.handleMouseUp = this.handleMouseUp.bind(this);
@@ -298,9 +302,7 @@ export class PlayerCamera {
           result.body?.motionType === BABYLON.PhysicsMotionType.STATIC
         )
       ) {
-
         this.cameraCollided = false;
-
       }
     }
     return false;
@@ -318,7 +320,10 @@ export class PlayerCamera {
         this.cameraDistance - 2,
       );
       this.cameraDistance += 0.1; // Adjust to prevent jitter
-    } else if (!this.cameraCollided && Math.abs(this.cameraDistance - this.preferredCameraDistance) > 0.1) {
+    } else if (
+      !this.cameraCollided &&
+      Math.abs(this.cameraDistance - this.preferredCameraDistance) > 0.1
+    ) {
       this.cameraCollided = true;
       this.cameraDistance = BABYLON.Scalar.Lerp(
         this.cameraDistance,
@@ -326,7 +331,6 @@ export class PlayerCamera {
         0.1,
       );
     }
-
 
     if (this.isFirstPerson) {
       this.camera.position = playerPos.add(this.lookatOffset);
@@ -357,9 +361,6 @@ export class PlayerCamera {
       element.removeEventListener(type, listener, false);
     });
     this.eventListeners = [];
-
-    // Dispose of the camera light
-    this.cameraLight.dispose();
 
     // Clear canvas reference
     this.canvas = null;
