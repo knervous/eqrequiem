@@ -1,11 +1,11 @@
 import type * as BJS from "@babylonjs/core";
 import BABYLON from "@bjs";
-
 import type { ZoneMetadata } from "@game/Zone/zone-types";
 import { RequestClientZoneChange, ZoneChangeType, type ZonePoint } from "@game/Net/internal/api/capnp/zone";
 import Player from "@game/Player/player";
 import { capnpToPlainObject } from "@game/Constants/util";
 import type GameManager from "@game/Manager/game-manager";
+import { animateVignette, gaussianBlurTeleport } from "@game/Effects/effects";
 
 
 interface AABBNode {
@@ -22,10 +22,69 @@ export class RegionManager {
   private zonePoints: Record<number, ZonePoint> = {};
   private regions: ZoneMetadata["regions"] = [];
   private scene?: BJS.Scene;
+  private teleportEffects: BJS.GPUParticleSystem[] = [];
 
   constructor(private gameManager: GameManager) {
 
   }
+
+  private createTeleportEffect(region: ZoneMetadata["regions"][number], scene: BJS.Scene, index: number): BJS.GPUParticleSystem {
+    const { Vector3, GPUParticleSystem, Texture, Color4, BoxParticleEmitter } = BABYLON;
+    // 1) Compute your AABB center & half‐size
+    const min    = new Vector3(region.minVertex[0], region.minVertex[1], region.minVertex[2]);
+    const max    = new Vector3(region.maxVertex[0], region.maxVertex[1], region.maxVertex[2]);
+    const center = min.add(max).scale(0.5);
+    const size   = max.subtract(min);
+
+    const half   = max.subtract(min).scale(0.5);
+    const volume = size.x * size.y * size.z;
+    const density = 50;                   // e.g. 50 particles per unit³ – tweak to taste
+    const capacity = Math.min(2000, Math.max(1, Math.floor(Math.abs(Math.ceil(volume * density)) / 1000)));
+    console.log(`[RegionManager] Creating teleport effect for region ${index} with capacity:`, capacity);
+    // 2) Make the GPU system & texture
+    const ps = new GPUParticleSystem(`teleportPS_${index}`, { capacity }, scene);
+    ps.particleTexture = new Texture("textures/flare.png", scene);
+
+    // 3) Build a box emitter that only emits on the BOTTOM face
+    const emitter = new BoxParticleEmitter();
+    // flat along bottom: local‐space Y = –half.y
+    emitter.minEmitBox = new Vector3(-half.x, -half.y, -half.z);
+    emitter.maxEmitBox = new Vector3(half.x, -half.y,  half.z);
+
+    // give them a purely upward push, with a tiny spread if you like:
+    emitter.direction1 = new Vector3(-0.05, 1, -0.05);
+    emitter.direction2 = new Vector3(0.05, 1,  0.05);
+
+    ps.particleEmitterType = emitter;
+
+    // 4) Tune color, size, speed, lifetime
+    ps.addColorGradient(
+      0.0,
+      new Color4(0.6, 0.8, 1.0, 0.6),   // light-blue, alpha 0.6
+    );
+
+    // At death: same hue range but fully transparent
+    ps.addColorGradient(
+      1.0,
+      new Color4(1.0, 0.84, 0.0, 0.0),   // gold,      alpha 0.0
+    );
+    ps.minSize       = 0.1;
+    ps.maxSize       = 0.3;
+    ps.minLifeTime   = 1.5;
+    ps.maxLifeTime   = 12.5;
+    ps.emitRate      = Math.floor(capacity / 10);
+    ps.minEmitPower  = 1.0;   // strength of the upward velocity
+    ps.maxEmitPower  = 2.0;
+    ps.updateSpeed   = 0.02;
+
+    // 5) Place the emitter in world space
+    ps.emitter = center;
+
+    // 6) Fire it up
+    ps.start();
+    return ps;
+  }
+
   public instantiateRegions(
     scene: BJS.Scene,
     metadata: ZoneMetadata,
@@ -51,7 +110,17 @@ export class RegionManager {
 
     this.aabbTree = this.buildTree(nodes);
     this.inside.clear();
-
+    for (let i = 0; i < regions.length; i++) {
+      const region = regions[i];
+      if (region.center[0] === 0 && region.center[1] === 0 && region.center[2] === 0) {
+        continue;
+      }
+      if (region.regionType === 4) {
+        this.teleportEffects.push(
+          this.createTeleportEffect(regions[i], scene, i),
+        );
+      }
+    }
     // Hook into player-movement loop
     scene.registerBeforeRender(this.update.bind(this));
 
@@ -131,10 +200,21 @@ export class RegionManager {
             requestZone.y = tempY;
             requestZone.z = tempZ;
             console.log(`[RegionManager] Requesting zone change AFTER MAGIC to:`, requestZone);
+            animateVignette(
+              this.gameManager.Camera,
+              this.gameManager.scene!,
+            );
+            gaussianBlurTeleport(
+              this.gameManager.Camera,
+              this.gameManager.scene!,
+            );
             if (requestZone.zoneId === this.gameManager.ZoneManager?.CurrentZone?.zoneIdNumber) {
               this.gameManager.player?.setPosition(requestZone.x, requestZone.y, requestZone.z);
             } else {
-              this.gameManager.requestZone(requestZone);
+              setTimeout(() => {
+                this.gameManager.requestZone(requestZone);
+              }, 100);
+             
               this.dispose();
             }
          
@@ -207,6 +287,11 @@ export class RegionManager {
     this.aabbTree = undefined;
     this.regions = [];
     this.zonePoints = {};
+    for (const ps of this.teleportEffects) {
+      ps.stop();
+      ps.dispose();
+    }
+    this.teleportEffects = [];
     this.scene?.unregisterBeforeRender(this.update.bind(this));
     this.inside.clear();
   }
