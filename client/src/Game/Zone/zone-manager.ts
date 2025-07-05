@@ -165,7 +165,7 @@ export class ZoneManager {
       console.error("[ZoneManager] No scene available to instantiate zone.");
       return;
     }
-    this.renderObservable = this.parent.scene.onBeforeRenderObservable.add(this.tick.bind(this));
+    this.parent.scene.onBeforeRenderObservable.add(this.tick.bind(this));
     this.parent.setLoading(true);
     const bytes = await FileSystem.getFileBytes(
       `eqrequiem/zones`,
@@ -253,7 +253,6 @@ export class ZoneManager {
       try {
         const str = new TextDecoder("utf-8").decode(metadataByte);
         const metadata = JSON.parse(str) as ZoneMetadata;
-        this.metadata = metadata;
         console.log("Got metadata", metadata);
         console.log("Version: ", metadata.version);
         console.log("Current zone", this.CurrentZone);
