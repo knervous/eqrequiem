@@ -240,6 +240,9 @@ func (z *ZoneQuestInterface) Unregister(name string, events ...QuestEventType) {
 
 func (z *ZoneQuestInterface) Invoke(name string, evt *QuestEvent) bool {
 	// First check for global handler and try to invoke it
+	if z == nil {
+		return false
+	}
 	if globalHandler, ok := z.Handlers[""]; ok {
 		if handler, ok := globalHandler[evt.EventType]; ok {
 			stopPropagation := handler(evt)
