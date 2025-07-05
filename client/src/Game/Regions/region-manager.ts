@@ -39,7 +39,7 @@ export class RegionManager {
     const half   = max.subtract(min).scale(0.5);
     const volume = size.x * size.y * size.z;
     const density = 50;                   // e.g. 50 particles per unit³ – tweak to taste
-    const capacity = Math.min(2000, Math.max(1, Math.floor(Math.abs(Math.ceil(volume * density)) / 1000)));
+    const capacity = Math.min(10000, Math.max(1, Math.floor(Math.abs(Math.ceil(volume * density)) / 1000)));
     console.log(`[RegionManager] Creating teleport effect for region ${index} with capacity:`, capacity);
     // 2) Make the GPU system & texture
     const ps = new GPUParticleSystem(`teleportPS_${index}`, { capacity }, scene);
