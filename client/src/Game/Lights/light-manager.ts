@@ -144,11 +144,11 @@ export class LightManager {
       const pos = new BABYLON.Vector3(data.x, data.y, data.z);
       const light = new BABYLON.PointLight(`zoneLight_${zoneName}_${idx}`, pos, scene);
       light.diffuse = new BABYLON.Color3(data.r, data.g, data.b);
-      light.intensity = 0.5;
-      light.radius = 25;
-      light.range = 100;
-      light.intensityMode = BABYLON.Light.INTENSITYMODE_LUMINANCE;
-      light.falloffType = BABYLON.Light.FALLOFF_GLTF;
+      light.intensity = 110.5;
+      light.radius = 75;
+      light.range = 180;
+      light.intensityMode = BABYLON.Light.INTENSITYMODE_LUMINOUSINTENSITY;
+      light.falloffType = BABYLON.Light.FALLOFF_PHYSICAL;
       light.specular.set(0, 0, 0);
       light.setEnabled(false);
       light.parent = container;

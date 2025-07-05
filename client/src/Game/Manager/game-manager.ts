@@ -155,6 +155,10 @@ export default class GameManager {
   }
 
   public requestZone(requestZone: RequestClientZoneChange) {
+    // Release pointer lock
+    if (this.canvas && document.pointerLockElement === this.canvas) {
+      document.exitPointerLock();
+    }
     WorldSocket.sendMessage(
       OpCodes.RequestClientZoneChange,
       RequestClientZoneChange,
