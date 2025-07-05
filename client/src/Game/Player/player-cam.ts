@@ -8,7 +8,7 @@ export class PlayerCamera {
   private camera: BJS.UniversalCamera;
   private cameraLight: BJS.PointLight;
   public isFirstPerson: boolean = false;
-  private minCameraDistance: number = 0.5;
+  private minCameraDistance: number = 1.5;
   private maxCameraDistance: number = 35;
   private cameraDistance: number = 13;
   private preferredCameraDistance: number = 13;
@@ -16,7 +16,7 @@ export class PlayerCamera {
   private cameraHeight: number = 5;
   private canvas: HTMLCanvasElement | null = null;
   private isLocked: boolean = false;
-  private lookatOffset = new BABYLON.Vector3(0, 3, 0);
+  private lookatOffset = new BABYLON.Vector3(0, 4.5, 0);
   private cameraPosition = new BABYLON.Vector3(0, 0, 0);
   private cameraPitch: number = 0;
   public cameraYaw: number = 0;

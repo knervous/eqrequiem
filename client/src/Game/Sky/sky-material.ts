@@ -93,7 +93,7 @@ export const createSkyLayerMaterial = (
   const bi = layerMesh.getBoundingInfo();
   const minY = bi.minimum.y;
   const maxY = bi.maximum.y;
-  const yRange = maxY - minY;
+  const yRange = (maxY - minY) / 1.25;
 
   mat.setFloat("uDomeHeight", scale * yRange);
   mat.setFloat("uDomeMinY", scale * minY);

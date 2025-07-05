@@ -1,10 +1,9 @@
 import BABYLON from "@bjs";
 import type * as BJS from "@babylonjs/core";
-
 import { FileSystem } from "@game/FileSystem/filesystem";
 import type GameManager from "@game/Manager/game-manager";
 import { RegionManager } from "@game/Regions/region-manager";
-import { LightData, LightManager } from "@game/Lights/light-manager";
+import { LightManager } from "@game/Lights/light-manager";
 import DayNightSkyManager from "@game/Sky/sky-manager";
 import { Spawns } from "@game/Net/internal/api/capnp/common";
 import EntityPool from "./entity-pool";
@@ -12,8 +11,7 @@ import ObjectCache from "@/Game/Model/object-cache";
 import { ZoneMetadata } from "./zone-types";
 import { swapMaterialTexture } from "@game/Model/bjs-utils";
 import { supportedZones } from "@game/Constants/supportedZones";
-import { ChatMessage } from "@ui/components/game/chat/chat-types";
-import emitter from "@game/Events/events";
+import emitter, { ChatMessage } from "@game/Events/events";
 
 export class ZoneManager {
   get RegionManager(): RegionManager {
@@ -44,7 +42,6 @@ export class ZoneManager {
   }
   private entityPool: EntityPool | null = null;
   private zoneObjects: ObjectCache | null = null;
-  private metadata: ZoneMetadata | null = null;
 
   private disableWorldEnv: boolean = false;
   public zoneName = "qeynos2";
@@ -58,7 +55,6 @@ export class ZoneManager {
   private parent: GameManager;
 
   private intervals: NodeJS.Timeout[] = [];
-  private renderObservable: BJS.Observer<BJS.Scene> | null = null;
 
   constructor(parent: GameManager) {
     this.parent = parent;
@@ -104,15 +100,15 @@ export class ZoneManager {
         }
       });
     }
-    if (this.objectContainer) {
-      this.objectContainer.dispose();
-    }
-    if (this.lightContainer) {
-      this.lightContainer.dispose();
-    }
-    if (this.entityContainerNode) {
-      this.entityContainerNode.dispose();
-    }
+    // if (this.objectContainer) {
+    //   this.objectContainer.dispose();
+    // }
+    // if (this.lightContainer) {
+    //   this.lightContainer.dispose();
+    // }
+    // if (this.entityContainerNode) {
+    //   this.entityContainerNode.dispose();
+    // }
     if (this.entityPool) {
       this.entityPool.dispose();
     }

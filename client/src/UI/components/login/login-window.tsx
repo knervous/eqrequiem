@@ -430,9 +430,9 @@ export const LoginWindowComponent: React.FC = () => {
                   new RegExp(`^${name}[_\\.].*`),
                   false,
                 )) {
-                  // if (onlyChr && !(fileHandle.name.includes('_chr') || fileHandle.name.includes('_obj'))) {
-                  //   continue;
-                  // }
+                  if ((fileHandle.name.includes('_chr') || fileHandle.name.includes('_obj'))) {
+                    continue;
+                  }
                   associatedFiles.push(fileHandle.name);
                 }
                 console.log(`Found ${name}`, associatedFiles);

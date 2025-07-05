@@ -42,6 +42,7 @@ const process = async (
       skipSubload: true,
       embedWebP: true,
       deferWrite: true,
+      requiemExport: true,
     },
   );
   try {

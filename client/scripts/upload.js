@@ -28,7 +28,7 @@ const rootFolder = "eqrequiem";
 const rootPath = process.argv[2] || process.cwd();
 
 const zippedPrefixes = ["eqrequiem/textures"];
-const skipZip = false;
+const skipZip = true;
 let allowedFolders = new Set([
   "data",
   "models",
@@ -49,7 +49,7 @@ const allowedRootFolders = new Set(["uifiles", "eqrequiem"]);
 const allowedRootFiles = new Set(["eqstr_us.txt"]);
 let allowedExtensions = new Set([
   //".txt",
-  // ".json",
+   ".json",
   // ".basis",
   // ".glb", prefer .babylon
   // ".webp",

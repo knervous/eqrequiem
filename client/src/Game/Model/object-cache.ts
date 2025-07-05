@@ -120,13 +120,12 @@ export default class ObjectCache {
     const params = new BABYLON.Vector4();
 
     for (let i = 0; i < count; i++) {
-      transforms[i].rotateY *= -1; // Invert Y rotation for correct orientation
       const { x, y, z, rotateX, rotateY, rotateZ, scale } = transforms[i];
       if (x === 0 && y === 0 && z === 0) {
         continue;
       }
 
-      const translation = BABYLON.Matrix.Translation(-x, y, z);
+      const translation = BABYLON.Matrix.Translation(x, y, z);
       const rotation = BABYLON.Matrix.RotationYawPitchRoll(
         BABYLON.Tools.ToRadians(rotateY),
         BABYLON.Tools.ToRadians(rotateX),
@@ -191,7 +190,7 @@ export default class ObjectCache {
           physicsTransformNode.parent = container.rootNodes[0].parent;
   
           // Apply the transformation to the transform node
-          const translation = BABYLON.Matrix.Translation(-x, y, z);
+          const translation = BABYLON.Matrix.Translation(x, y, z);
           const rotation = BABYLON.Matrix.RotationYawPitchRoll(
             BABYLON.Tools.ToRadians(rotateY),
             BABYLON.Tools.ToRadians(rotateX),
@@ -214,6 +213,10 @@ export default class ObjectCache {
           // Store the physics body
           physicsBodies.push(physicsBody);
         }
+      }
+
+      if (mesh.metadata?.gltf?.extras?.passThrough) {
+        console.log(`[ObjectCache] Mesh ${mesh.name} is a passthrough object, skipping physics body creation.`);
       }
       
     }

@@ -38,17 +38,23 @@ export default defineConfig({
             const hash = await fetch(`http://${ip}:${port}/hash`)
               .then((r) => r.text())
               .catch(() => "");
+
             res.end(hash);
             return;
           }
           if (req.url?.startsWith("/api/playercount")) {
-            const hash = await fetch(`https://127.0.0.1/playercount`,  { agent })
+            const playerCount = await fetch(`https://127.0.0.1/playercount`,  { agent })
               .then((r) => r.json())
               .catch((e) => {
                 console.error("Error fetching player count:", e);
-                return { count: 0 };
+                return { count: -1  };
               });
-            res.end(JSON.stringify(hash));
+            if (!playerCount) {
+              res.statusCode = 500;
+              res.end("Failed to fetch hash");
+              return;
+            }
+            res.end(JSON.stringify(playerCount));
             return;
           }
           res.setHeader("Cross-Origin-Embedder-Policy", "require-corp");

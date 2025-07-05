@@ -44,8 +44,8 @@ export class RegionManager {
 
     // Build raw AABB nodes
     const nodes: AABBNode[] = regions.map((r, i) => ({
-      min: new BABYLON.Vector3(-r.maxVertex[0], r.minVertex[1], r.minVertex[2]),
-      max: new BABYLON.Vector3(-r.minVertex[0], r.maxVertex[1], r.maxVertex[2]),
+      min: new BABYLON.Vector3(r.maxVertex[0], r.minVertex[1], r.minVertex[2]),
+      max: new BABYLON.Vector3(r.minVertex[0], r.maxVertex[1], r.maxVertex[2]),
       index: i,
     }));
 
