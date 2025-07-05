@@ -248,7 +248,7 @@ export default class Player {
     return new BABYLON.TransformNode("playerNodeContainer", scene);
   }
 
-  public async Load(player: PlayerProfile) {
+  public async Load(player: PlayerProfile, fromCharSelect: boolean = false) {
     if (this.playerEntity) {
       await this.playerEntity.dispose();
       this.playerEntity = null;
@@ -283,7 +283,9 @@ export default class Player {
     }
  
     this.gameManager.scene?.registerBeforeRender(this.tick.bind(this));
-
+    if (this.playerCamera.isFirstPerson && !fromCharSelect) {
+      this.playerEntity.toggleVisibility(false);
+    }
 
     // Emit events
     emitter.emit("playerName", this.player.name);

@@ -46,12 +46,13 @@ export const GameUIComponent: React.FC = () => {
   return (
     <Box sx={{ display: uiHidden ? 'none' : 'initial', height: '100vh', width: '100vw' }}>    
       <StoneUIBase />
+      <CompassWindowComponent />
+
       {!inEditor && <DevWindowComponent />}
 
       {/* <ChatWindowsComponent />
       <ActionBarWindowsComponent />
       <TopBarWindowComponent />
-      <CompassWindowComponent />
       <ActionWindowComponent />
       <TargetWindowComponent />
       <PlayerWindowComponent />

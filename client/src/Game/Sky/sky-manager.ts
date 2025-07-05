@@ -307,10 +307,8 @@ export default class DayNightSkyManager {
     this.timeOfDay = ((time % 24) + 24) % 24;
     this.#updateSunAndSky();
     this.#updateSkydomeColors();
-
-    // compute your two gradient stops on the CPU:
-
   }
+  
   #updateSkydomeColors() {
     if (!this.#layer1Mat || !this.#layer2Mat) {
       return;

@@ -45,12 +45,26 @@ function TabPanel(props: TabPanelProps) {
 export const DevWindowComponent: React.FC = () => {
   const state = useUIContext((state) => state.ui.devWindow);
   const [tabValue, setTabValue] = useState(0);
-  const [timeOfDay, setTimeOfDay] = useState(12);
+  const [timeOfDay, setTimeOfDay] = useState(7);
   useEffect(() => {
     if (GameManager.instance?.ZoneManager?.SkyManager) {
       GameManager.instance.ZoneManager?.SkyManager.setTimeOfDay(timeOfDay);
     }
   }, [timeOfDay]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+
+      setTimeOfDay((prev) => {
+        const newTime = prev + 0.01;
+        if (newTime >= 24) {
+          return 0; // Reset to 0 after reaching 24
+        }
+        return newTime;
+      });
+    }, 100);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
@@ -143,7 +157,7 @@ export const DevWindowComponent: React.FC = () => {
               color="text.secondary"
               gutterBottom
             >
-              Time of Day: {timeOfDay}
+              Time of Day: {timeOfDay.toFixed(2)}
             </Typography>
             <Slider
               size={'small'}

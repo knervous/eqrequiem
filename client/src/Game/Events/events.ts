@@ -25,5 +25,18 @@ export type Events = {
   setMode: string;
 };
 
-export const emitter: Emitter<Events> = mitt<Events>();
+type EnhancedEmitter<Events extends Record<string, unknown>> = Emitter<Events> & {
+  once: <K extends keyof Events>(type: K, handler: (event: Events[K]) => void) => void;
+};
+
+export const emitter: EnhancedEmitter<Events> = mitt<Events>() as EnhancedEmitter<Events>;
+
+emitter.once = <K extends keyof Events>(type: K, handler: (event: Events[K]) => void) => {
+  const onceHandler = (event: Events[K]) => {
+    handler(event);
+    emitter.off(type, onceHandler);
+  };
+  emitter.on(type, onceHandler);
+};
+
 export default emitter;

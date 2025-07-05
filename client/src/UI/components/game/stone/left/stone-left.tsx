@@ -114,7 +114,6 @@ export const StoneLeft: React.FC<{ width: number }> = ({ width }) => {
       emitter.off("setPlayer", cb);
     };
   }, []);
-
   return (
     <Box
       sx={{
@@ -203,7 +202,7 @@ export const StoneLeft: React.FC<{ width: number }> = ({ width }) => {
                   mt: 2,
                 }}
               >
-                {!["warrior", "rogue", "monk"].includes(playerClass) && (
+                {!["warrior", "rogue", "monk"].includes(playerClass?.toLowerCase()) && (
                   <UiButtonComponent
                     onClick={() => console.log("Spells")}
                     sx={{

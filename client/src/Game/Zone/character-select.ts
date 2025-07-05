@@ -144,7 +144,7 @@ export default class CharacterSelect {
       face: player.face,
       scale: 1.0,
       ...location,
-    } as unknown as PlayerProfile).then(async () => {
+    } as unknown as PlayerProfile, true).then(async () => {
       onLoaded();
       if (!this.character || !this.character.playerEntity) {
         console.error("Character not loaded properly");

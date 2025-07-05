@@ -37,6 +37,7 @@ export class ZoneManager {
   private lightContainer: BJS.TransformNode | null = null;
   private entityContainerNode: BJS.TransformNode | null = null;
 
+  private tickObservable: BJS.Nullable<BJS.Observer<BJS.Scene>> = null;
   get EntityPool(): EntityPool | null {
     return this.entityPool;
   }
@@ -100,15 +101,6 @@ export class ZoneManager {
         }
       });
     }
-    // if (this.objectContainer) {
-    //   this.objectContainer.dispose();
-    // }
-    // if (this.lightContainer) {
-    //   this.lightContainer.dispose();
-    // }
-    // if (this.entityContainerNode) {
-    //   this.entityContainerNode.dispose();
-    // }
     if (this.entityPool) {
       this.entityPool.dispose();
     }
@@ -119,6 +111,10 @@ export class ZoneManager {
     this.regionManager.dispose();
     this.lightManager.dispose();
     this.skyManager.dispose();
+    if (this.tickObservable) {
+      this.parent.scene?.onBeforeRenderObservable.remove(this.tickObservable);
+      this.tickObservable = null;
+    }
   }
 
 
@@ -165,7 +161,7 @@ export class ZoneManager {
       console.error("[ZoneManager] No scene available to instantiate zone.");
       return;
     }
-    this.parent.scene.onBeforeRenderObservable.add(this.tick.bind(this));
+    this.tickObservable = this.parent.scene.onBeforeRenderObservable.add(this.tick.bind(this));
     this.parent.setLoading(true);
     const bytes = await FileSystem.getFileBytes(
       `eqrequiem/zones`,
@@ -220,6 +216,7 @@ export class ZoneManager {
 
         this.intervals.push(intervalId);
       }
+
       mesh.parent = this.zoneContainer;
 
       const passThrough = mesh.metadata?.gltf?.extras?.passThrough ?? false;

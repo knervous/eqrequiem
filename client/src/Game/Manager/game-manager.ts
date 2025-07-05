@@ -13,6 +13,8 @@ import { WorldSocket } from "@ui/net/instances";
 import { OpCodes } from "@game/Net/opcodes";
 import { ZonePacketHandler } from "@game/Net/zone-packets";
 import EntityCache from "@game/Model/entity-cache";
+import emitter from "@game/Events/events";
+import { animateVignette, gaussianBlurTeleport } from "@game/Effects/effects";
 
 declare const window: Window;
 
@@ -155,16 +157,16 @@ export default class GameManager {
   }
 
   public requestZone(requestZone: RequestClientZoneChange) {
-    // Release pointer lock
     if (this.canvas && document.pointerLockElement === this.canvas) {
       document.exitPointerLock();
     }
+
     WorldSocket.sendMessage(
       OpCodes.RequestClientZoneChange,
       RequestClientZoneChange,
       requestZone,
     );
-    this.loading = true;
+
   }
 
 
@@ -364,7 +366,6 @@ export default class GameManager {
   public async loadZoneServer(zone: NewZone) {
     this.CurrentZone = zone;
     await this.loadZoneId(zone.zoneIdNumber);
-    this.loading = false;
   }
 
   public async loadZoneId(zoneId: number): Promise<void> {
@@ -384,6 +385,18 @@ export default class GameManager {
       new BABYLON.Vector3(0, 0, 0),
       this.scene!,
     );
+    animateVignette(
+      this.camera,
+              this.scene!,
+    );
+    gaussianBlurTeleport(
+      this.camera,
+              this.scene!,
+    );
+    this.loading = true;
+    emitter.once('playerLoaded', () => {
+      this.loading = false;
+    });
     await this.zoneManager?.loadZone(zoneName);
     clearTimeout(this.worldTickInterval);
     this.worldTickInterval = setInterval(() => {

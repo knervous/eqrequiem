@@ -7,11 +7,11 @@ export class PlayerCamera {
   private player: Player;
   private camera: BJS.UniversalCamera;
   private cameraLight: BJS.PointLight;
-  public isFirstPerson: boolean = false;
+  public isFirstPerson: boolean = true;
   private minCameraDistance: number = 1.5;
   private maxCameraDistance: number = 35;
-  private cameraDistance: number = 13;
-  private preferredCameraDistance: number = 13;
+  private cameraDistance: number = 1.5;
+  private preferredCameraDistance: number = 1.5;
   private cameraCollided: boolean = false;
   private cameraHeight: number = 5;
   private canvas: HTMLCanvasElement | null = null;
@@ -50,6 +50,7 @@ export class PlayerCamera {
     this.cameraLight.specular = new BABYLON.Color3(0, 0, 0);
     this.cameraLight.range = 100.0;
     this.bindInputEvents();
+
   }
 
   private bindInputEvents() {
