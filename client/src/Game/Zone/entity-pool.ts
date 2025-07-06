@@ -47,14 +47,15 @@ export default class EntityPool {
   }
 
   async AddSpawn(spawn: Spawn) {
-    while (this.gameManager.loading) {
-      await new Promise((resolve) => setTimeout(resolve, 100));
+    if (spawn.name === this.gameManager.player?.player?.name) {
+      // This is the player, skip adding it to the pool
+      return;
     }
     if (spawn.isNpc) {
       // return;
     }
 
-    if (!spawn.name.includes('Moodoro')) {
+    if (!spawn.name.includes('Discord')) {
       //return;
     }
 
@@ -65,7 +66,7 @@ export default class EntityPool {
       console.error("Failed to acquire entity for spawn", spawn.spawnId);
       return;
     }
-    this.grid.addEntity(entity);
+    this.grid?.addEntity(entity);
     this.entities[spawn.spawnId] = entity;
   }
   

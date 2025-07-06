@@ -63,7 +63,7 @@ export default class CharacterSelect {
       this.character?.dispose();
     }
     if (this.zoneManager) {
-      this.zoneManager.dispose();
+      this.zoneManager.dispose(true);
       this.zoneManager = null;
     }
     if (this.orbitIntervalId !== undefined) {

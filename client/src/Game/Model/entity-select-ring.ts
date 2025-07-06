@@ -34,7 +34,7 @@ export function createTargetRingMaterial(scene: BJS.Scene): [BJS.StandardMateria
   texture.setColor4("color", new BABYLON.Color4(1, 0, 1, 1));
   texture.setFloat("time", time);
 
-  const material = new BABYLON.StandardMaterial("mat");
+  const material = new BABYLON.StandardMaterial("targetRingMaterial", scene);
   material.emissiveTexture = texture;
   // *also* drive transparency
   material.opacityTexture = texture;

@@ -3,7 +3,7 @@ import { WorldSocket } from "@ui/net/instances";
 import { OpCodes } from "./opcodes";
 import { NewZone } from "./internal/api/capnp/zone";
 import { PlayerProfile } from "./internal/api/capnp/player";
-import { ChannelMessage, EntityAnimation, EntityPositionUpdate, Spawn } from "./internal/api/capnp/common";
+import { ChannelMessage, EntityAnimation, EntityPositionUpdate, Spawn, Spawns } from "./internal/api/capnp/common";
 import Player from "@game/Player/player";
 import emitter from "@game/Events/events";
 
@@ -45,8 +45,20 @@ export class ZonePacketHandler {
     this.gameManager.instantiatePlayer(playerProfile);
   }
 
+  @opCodeHandler(OpCodes.BatchZoneSpawns, Spawns)
+  loadBatchZoneSpawns(spawns: Spawns) {
+    Promise.all(spawns.spawns.map((spawn) => {
+      return this.gameManager.ZoneManager?.EntityPool?.AddSpawn(spawn);
+    })).then(() => {
+      emitter.emit("zoneSpawns");
+    }).catch((err) => {
+      console.error('Error adding spawns:', err);
+    });
+  }
+
   @opCodeHandler(OpCodes.ZoneSpawns, Spawn)
   loadZoneSpawns(spawn: Spawn) {
+    console.log('Received spawn data', spawn);
     this.gameManager.ZoneManager?.EntityPool?.AddSpawn(spawn);
   }
 

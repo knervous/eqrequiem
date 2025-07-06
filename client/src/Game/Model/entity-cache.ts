@@ -323,6 +323,7 @@ export class EntityCache {
   }
 
   public static disposeAll(scene: BJS.Scene): void {
+    Entity.disposeStatics();
     Object.keys(EntityCache.resolvedContainers).forEach((m) => {
       const c = EntityCache.resolvedContainers[m];
       if (!c) return;
@@ -340,6 +341,7 @@ export class EntityCache {
     Object.keys(EntityCache.containers).forEach((m) => {
       delete EntityCache.containers[m];
     });
+    Entity.instantiateStatics(scene);
   }
 }
 

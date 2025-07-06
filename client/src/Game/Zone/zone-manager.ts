@@ -86,7 +86,7 @@ export class ZoneManager {
     );
   }
 
-  dispose() {
+  dispose(destroy = false) {
     // Clean up resources if needed.
     if (this.zoneContainer) {
       this.zoneContainer.getChildren().forEach((child) => {
@@ -111,6 +111,12 @@ export class ZoneManager {
     this.regionManager.dispose();
     this.lightManager.dispose();
     this.skyManager.dispose();
+    if (destroy) {
+      this.zoneContainer?.dispose();
+      this.objectContainer?.dispose();
+      this.lightContainer?.dispose();
+      this.entityContainerNode?.dispose();
+    }
     if (this.tickObservable) {
       this.parent.scene?.onBeforeRenderObservable.remove(this.tickObservable);
       this.tickObservable = null;
@@ -221,6 +227,11 @@ export class ZoneManager {
 
       const passThrough = mesh.metadata?.gltf?.extras?.passThrough ?? false;
       if (!passThrough) {
+        // Disable the cloud mdf always
+        if (mesh.name === "CLOUD_MDF") {
+          mesh.setEnabled(false);
+        }
+
         // Create physics body for static zone geometry
         mesh.physicsBody = new BABYLON.PhysicsBody(
           mesh,

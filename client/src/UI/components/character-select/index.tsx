@@ -1,4 +1,10 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useUIContext } from "../context";
 import { WorldSocket } from "../../net/instances";
 import { Box, Stack } from "@mui/material";
@@ -10,22 +16,32 @@ import GameManager from "@game/Manager/game-manager";
 import { MusicPlayer } from "@game/Music/music-player";
 import { OpCodes } from "@game/Net/opcodes";
 import { Int, String } from "@game/Net/internal/api/capnp/common";
-import { EnterWorld, JWTLogin, JWTResponse } from "@game/Net/internal/api/capnp/world";
-import { CharacterSelect, CharacterSelectEntry } from "@game/Net/internal/api/capnp/player";
-import { RequestClientZoneChange, ZoneChangeType, ZoneSession } from "@game/Net/internal/api/capnp/zone";
+import {
+  EnterWorld,
+  JWTLogin,
+  JWTResponse,
+} from "@game/Net/internal/api/capnp/world";
+import {
+  CharacterSelect,
+  CharacterSelectEntry,
+} from "@game/Net/internal/api/capnp/player";
+import {
+  RequestClientZoneChange,
+  ZoneChangeType,
+  ZoneSession,
+} from "@game/Net/internal/api/capnp/zone";
 
 import "./component.css";
 import { useDebouncedCallback } from "use-debounce";
 
-let splashed = false;
+const splashed = false;
 
 export const CharacterSelectUIComponent: React.FC = () => {
   const setMode = useUIContext((state) => state.setMode);
   const token = useUIContext((state) => state.token);
   const [view, setView] = useState(VIEWS.CHAR_SELECT);
   const setSplash = window.setSplash;
-  const [charInfo, setCharInfo] =
-    React.useState<CharacterSelect | null>(null);
+  const [charInfo, setCharInfo] = React.useState<CharacterSelect | null>(null);
   const gotCharInfo = useRef(false);
   const [selectedChar, setSelectedChar] =
     React.useState<CharacterSelectEntry | null>(null);
@@ -37,23 +53,19 @@ export const CharacterSelectUIComponent: React.FC = () => {
       }
       gotCharInfo.current = true;
       setCharInfo(serverCharInfo);
-      setSelectedChar(serverCharInfo.characterCount > 0 ? serverCharInfo.characters[0] : {
-        race: 0,
-        charClass: 0,
-        name: "Soandso",
-        level: 1,
-      } as CharacterSelectEntry,
+      setSelectedChar(
+        serverCharInfo.characterCount > 0
+          ? serverCharInfo.characters[0]
+          : ({
+            race: 1,
+            charClass: 1,
+            name: "Soandso",
+            level: 1,
+            face: 1,
+          } as CharacterSelectEntry),
       );
-      if (!splashed) {
-        setSplash?.(true);
-        setTimeout(() => {
-          setSplash?.(false);
-          setSplash?.(false);
-        }, 1000);
-        splashed = true;
-      }
     },
-    [setSplash],
+    [],
   );
 
   useEffect(() => {
@@ -67,48 +79,36 @@ export const CharacterSelectUIComponent: React.FC = () => {
     }
     GameManager.instance.CharacterSelect?.dispose();
 
-    WorldSocket.registerOpCodeHandler(
-      OpCodes.ZoneSessionValid,
-      Int,
-      (data) => {
-        console.log('Zone session valid:', data);
-        if (data) {
-          WorldSocket.sendMessage(
-            OpCodes.RequestClientZoneChange,
-            RequestClientZoneChange,
-            { 
-              type: ZoneChangeType.FROM_WORLD, // Type 0 is zone in from world
-            },
-          );
-        } else {
-          alert("Could not enter world");
-        }
-      },
-    );
-    WorldSocket.registerOpCodeHandler(
-      OpCodes.PostEnterWorld,
-      Int,
-      (data) => {
-        if (data.value === 1) {
-          WorldSocket.sendMessage(
-            OpCodes.ZoneSession,
-            ZoneSession,
-            { 
-              zoneId: selectedChar.zone,
-              instanceId: 0,
-            },
-          );
-        } else {
-          alert("Could not enter world");
-        }
-      },
-    );
-    console.log('Sending enter world');
-    WorldSocket.sendMessage(
-      OpCodes.EnterWorld,
-      EnterWorld,
-      { name: selectedChar.name, tutorial: 0, returnHome: 0 },
-    );
+    WorldSocket.registerOpCodeHandler(OpCodes.ZoneSessionValid, Int, (data) => {
+      console.log("Zone session valid:", data);
+      if (data) {
+        WorldSocket.sendMessage(
+          OpCodes.RequestClientZoneChange,
+          RequestClientZoneChange,
+          {
+            type: ZoneChangeType.FROM_WORLD, // Type 0 is zone in from world
+          },
+        );
+      } else {
+        alert("Could not enter world");
+      }
+    });
+    WorldSocket.registerOpCodeHandler(OpCodes.PostEnterWorld, Int, (data) => {
+      if (data.value === 1) {
+        WorldSocket.sendMessage(OpCodes.ZoneSession, ZoneSession, {
+          zoneId: selectedChar.zone,
+          instanceId: 0,
+        });
+      } else {
+        alert("Could not enter world");
+      }
+    });
+    console.log("Sending enter world");
+    WorldSocket.sendMessage(OpCodes.EnterWorld, EnterWorld, {
+      name: selectedChar.name,
+      tutorial: 0,
+      returnHome: 0,
+    });
   }, 100);
 
   useEffect(() => {
@@ -140,7 +140,7 @@ export const CharacterSelectUIComponent: React.FC = () => {
       CharacterSelect,
       charSelectHandler,
     );
-    console.log('Sending token');
+    console.log("Sending token");
     WorldSocket.registerOpCodeHandler<JWTResponse>(
       OpCodes.JWTResponse,
       JWTResponse,
@@ -158,27 +158,34 @@ export const CharacterSelectUIComponent: React.FC = () => {
         } else {
           WorldSocket.setSessionId(e.status);
         }
-        console.log('JWT Response', e.status);
+        console.log("JWT Response", e.status);
       },
     );
 
     WorldSocket.sendMessage(OpCodes.JWTLogin, JWTLogin, {
       token: token.current,
     });
-    
   }, [setMode, charSelectHandler, token, setSplash]);
   const charSelectNum = useMemo(() => {
     return 8 - (charInfo?.characterCount ?? 0);
   }, [charInfo?.characterCount]);
 
   useEffect(() => {
-    if (view === VIEWS.CHAR_CREATE || !selectedChar) {
+    if (view === VIEWS.CHAR_CREATE) {
       return;
     }
-    GameManager.instance.CharacterSelect?.loadModel(
-      selectedChar,
-    );
-  }, [selectedChar, view]);  
+    const char =
+      selectedChar ||
+      ({
+        name: "Soandso",
+        gender: 0,
+        charClass: 0,
+        race: 1,
+        level: 1,
+        face: 1,
+      } as CharacterSelectEntry);
+    GameManager.instance.CharacterSelect?.loadModel(char);
+  }, [selectedChar, view]);
 
   return !gotCharInfo.current ? null : (
     <Box className="char-select">
@@ -251,11 +258,9 @@ export const CharacterSelectUIComponent: React.FC = () => {
                   if (!selectedChar) {
                     return;
                   }
-                  WorldSocket.sendMessage(
-                    OpCodes.DeleteCharacter,
-                    String,
-                    { value: selectedChar.name },
-                  );
+                  WorldSocket.sendMessage(OpCodes.DeleteCharacter, String, {
+                    value: selectedChar.name,
+                  });
                 }}
               />
             </Stack>

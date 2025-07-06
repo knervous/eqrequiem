@@ -5,7 +5,6 @@ import type * as BJS from "@babylonjs/core";
 import { FileSystem } from "@game/FileSystem/filesystem";
 import { Transform } from "@game/Zone/zone-types";
 import { swapMaterialTexture } from "./bjs-utils";
-import { textureFromBakedVertexDataHalfFloat } from "./vat-texture";
 
 type ModelKey = string;
 
@@ -14,7 +13,7 @@ type ContainerData = {
   hasAnimations: boolean;
   animationRanges: BJS.Nullable<BJS.AnimationRange>[];
   physicsBodies: BJS.PhysicsBody[] | null;
-  vatData: Float32Array | null;
+  vatData: Float32ArrayBuffer | Uint16Array | null;
 };
 
 export default class ObjectCache {
@@ -68,10 +67,23 @@ export default class ObjectCache {
           ag.dispose();
         }
         result.animationGroups = [];
-        const vatDataBytes = await FileSystem.getFileBytes('eqrequiem/vat', `${model}.bin.gz`);
-        if (vatDataBytes) {
-          vatData = new Uint16Array(vatDataBytes);
+        // Vertex animation data
+        const canUseFloat16 = scene.getEngine().getCaps().textureHalfFloat;
+        const vat16 = `${model}.bin.gz`;
+        const vat32 = `${model}_32.bin.gz`;
+        const vatBytes = await FileSystem.getFileBytes(
+          `eqrequiem/vat`,
+          canUseFloat16 ? vat16 : vat32,
+        );
+        if (!vatBytes) {
+          console.warn(`[EntityCache] VAT data missing for ${model}`);
+          return null;
         }
+        vatData = (canUseFloat16
+          ? new Uint16Array(vatBytes)
+          : new Float32Array(vatBytes));
+
+
       }
       result.rootNodes[0].setEnabled(true);
 
@@ -108,9 +120,12 @@ export default class ObjectCache {
     const manager = new BABYLON.BakedVertexAnimationManager(scene);
 
     if (hasAnimations && vatData) {
-      const vertexTexture = textureFromBakedVertexDataHalfFloat(vatData, container.skeletons[0], scene);
+      const baker = new BABYLON.VertexAnimationBaker(
+        scene,
+        container.skeletons[0],
+      );
+      manager.texture = baker.textureFromBakedVertexData(vatData);
       scene.removeSkeleton(container.skeletons[0]);
-      manager.texture = vertexTexture;
       container.animationGroups = [];
       scene.registerBeforeRender(() => {
         manager.time += scene.getEngine().getDeltaTime() / 1000.0;

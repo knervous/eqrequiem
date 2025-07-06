@@ -3,12 +3,10 @@ import type * as BJS from "@babylonjs/core";
 import Player from "../Player/player";
 import CharacterSelect from "../Zone/character-select";
 import { supportedZones } from "../Constants/supportedZones";
-import MusicManager from "@game/Music/music-manager";
 import { ZoneManager } from "@game/Zone/zone-manager";
 import { PlayerProfile } from "@game/Net/internal/api/capnp/player";
 import HavokPhysics from "@babylonjs/havok";
 import { NewZone, RequestClientZoneChange } from "@game/Net/internal/api/capnp/zone";
-import type { Inspector } from '@babylonjs/inspector';
 import { WorldSocket } from "@ui/net/instances";
 import { OpCodes } from "@game/Net/opcodes";
 import { ZonePacketHandler } from "@game/Net/zone-packets";
@@ -26,13 +24,9 @@ export default class GameManager {
   engineInitialized: boolean = false;
 
   canvas: HTMLCanvasElement | null = null;
-  loading: boolean = true;
+  loadingRefCount: number = 1;
   scene: BJS.Scene | null = null;
 
-  get MusicManager(): MusicManager | null {
-    return this.musicManager;
-  }
-  private musicManager: MusicManager | null = null;
   private worldTickInterval: ReturnType<typeof setInterval> = -1 as unknown as ReturnType<typeof setInterval>;
   private lastPlayer: Partial<PlayerProfile> | null = null;
   public player: Player | null = null;
@@ -232,7 +226,7 @@ export default class GameManager {
     this.engine.setHardwareScalingLevel(1 / window.devicePixelRatio);
     this.engine.disableManifestCheck = true;
     this.engine.enableOfflineSupport = false;
-    this.loading = false;
+    this.loadingRefCount = 0;
 
     if (!(await this.loadPhysicsEngine())) {
       console.error("[GameManager] Could not load physics engine");
@@ -275,7 +269,7 @@ export default class GameManager {
   }
 
   renderLoop() {
-    if (this.scene && this.scene?.activeCamera && !this.loading) {
+    if (this.scene && this.scene?.activeCamera && !this.loadingRefCount) {
       try {
         this.scene.render();
       } catch (e) {
@@ -284,7 +278,7 @@ export default class GameManager {
     }
   }
 
-  private inspector: Inspector | null = null;
+  private inspector: any | null = null;
   private instantiatingInspector: boolean = false;
   async keyDown(e: BJS.IKeyboardEvent) {
     switch (`${e?.key}`?.toLowerCase?.()) {
@@ -333,12 +327,8 @@ export default class GameManager {
     //   }
     // }
 
-    EntityCache.disposeAll(this.scene!);
     if (this.zoneManager) {
       this.zoneManager.dispose();
-    }
-    if (this.musicManager) {
-      this.musicManager.dispose();
     }
     if (this.characterSelect) {
       this.characterSelect.dispose();
@@ -348,6 +338,7 @@ export default class GameManager {
       this.camera.dispose();
       this.camera = null;
     }
+    EntityCache.disposeAll(this.scene!);
   }
 
   public async loadCharacterSelect() {
@@ -365,6 +356,12 @@ export default class GameManager {
 
   public async loadZoneServer(zone: NewZone) {
     this.CurrentZone = zone;
+    this.loadingRefCount++;
+    this.setLoading(true);
+    emitter.once('zoneSpawns', () => {
+      this.loadingRefCount--;
+      this.setLoading(false);
+    });
     await this.loadZoneId(zone.zoneIdNumber);
   }
 
@@ -393,10 +390,11 @@ export default class GameManager {
       this.camera,
               this.scene!,
     );
-    this.loading = true;
+    this.loadingRefCount++;
     emitter.once('playerLoaded', () => {
-      this.loading = false;
+      this.loadingRefCount--;
     });
+
     await this.zoneManager?.loadZone(zoneName);
     clearTimeout(this.worldTickInterval);
     this.worldTickInterval = setInterval(() => {

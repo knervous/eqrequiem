@@ -250,6 +250,7 @@ const (
 	InterruptCast
 	ItemLinkResponse
 	ZoneSpawns
+	BatchZoneSpawns
 	CompletedTasks
 	CharInventory
 	CustomTitles

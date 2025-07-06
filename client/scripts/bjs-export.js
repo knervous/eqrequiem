@@ -236,7 +236,7 @@ import "@babylonjs/loaders/glTF/2.0/index.js";
             prune(),
 
             // b) Deduplicate identical accessors/meshes
-            dedup(),
+          //  dedup(),
           );
 
           // 3a) Store `animationRanges` in root.extras

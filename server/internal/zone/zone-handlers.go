@@ -246,16 +246,24 @@ func HandleRequestClientZoneChange(z *ZoneInstance, ses *session.Session, payloa
 	ses.SendStream(playerProfile.Message(), opcodes.PlayerProfile)
 
 	// Send all zone spawns
+	spawns, err := session.NewMessage(ses, eq.NewRootSpawns)
+	if err != nil {
+		log.Printf("failed to create Spawns message: %v", err)
+		return
+	}
+	spawnArray, err := spawns.NewSpawns(int32(len(z.Npcs))) // +1 for the player character spawn
+	if err != nil {
+		log.Printf("failed to create Spawns array: %v", err)
+		return
+	}
+	spawnIdx := 0
 	for _, npc := range z.Npcs {
 		if npc.ID() == clientEntry.EntityId {
 			// Skip the player character spawn
 			continue
 		}
-		spawn, err := session.NewMessage(ses, eq.NewRootSpawn)
-		if err != nil {
-			log.Printf("failed to create Spawn message: %v", err)
-			return
-		}
+		spawn := spawnArray.At(spawnIdx)
+		spawnIdx++
 		spawn.SetRace(int32(npc.NpcData.Race))
 		spawn.SetCharClass(int32(npc.NpcData.Class))
 		spawn.SetLevel(int32(npc.NpcData.Level))
@@ -275,11 +283,12 @@ func HandleRequestClientZoneChange(z *ZoneInstance, ses *session.Session, payloa
 		spawn.SetCellX(int32(c[0]))
 		spawn.SetCellY(int32(c[1]))
 		spawn.SetCellZ(int32(c[2]))
-		err = ses.SendStream(spawn.Message(), opcodes.ZoneSpawns)
-		if err != nil {
-			log.Printf("failed to send Spawn message: %v", err)
-			return
-		}
+
+	}
+	err = ses.SendStream(spawns.Message(), opcodes.BatchZoneSpawns)
+	if err != nil {
+		log.Printf("failed to send Spawn message: %v", err)
+		return
 	}
 	z.registerNewClientGrid(clientEntry.EntityId, entity.MobPosition{
 		X: charData.X, Y: charData.Y, Z: charData.Z, Heading: charData.Heading,

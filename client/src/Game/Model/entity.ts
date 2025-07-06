@@ -37,6 +37,68 @@ export class Entity extends BABYLON.TransformNode {
   private static currentlySelected: Entity | null = null;
   private static targetTexture: BJS.ProceduralTexture | null = null;
 
+  public static disposeStatics() {
+    if (Entity.pickerPrototype) {
+      Entity.pickerPrototype.dispose(false, true);
+      Entity.pickerPrototype = null as unknown as BJS.Mesh;
+    }
+    if (Entity.targetRing) {
+      Entity.targetRing.dispose(false, true);
+      Entity.targetRing = null as unknown as BJS.Mesh;
+    }
+    if (Entity.targetTexture) {
+      Entity.targetTexture.dispose();
+      Entity.targetTexture = null;
+    }
+    Entity.currentlySelected = null;
+  }
+
+  public static instantiateStatics(scene: BJS.Scene) {
+   
+    if (!Entity.pickerPrototype) {
+      // create a unit cube at the world origin
+      Entity.pickerPrototype = BABYLON.MeshBuilder.CreateBox(
+        "pickerProto",
+        { size: 1 },
+        scene,
+      );
+      // one totally transparent material
+      const pickMat = new BABYLON.StandardMaterial("pickerMat", scene);
+      pickMat.alpha = 0;
+      Entity.pickerPrototype.material = pickMat;
+      Entity.pickerPrototype.isPickable = false;
+      Entity.pickerPrototype.setEnabled(false);
+    }
+
+    if (!Entity.targetRing) {
+      const targetRing = BABYLON.MeshBuilder.CreateTorus(
+        "selectionRing",
+        {
+          diameter: 5,       // outer diameter = 2 × your desired radius (5 × 2)
+          thickness: 4,     // tube thickness — make this as big as you like to “fill” the hole
+          tessellation: 64,   // smoothness
+          updatable: true,    // if you ever want to tweak it at runtime
+        },
+        scene,
+      );
+      const positions = targetRing.getVerticesData(BABYLON.VertexBuffer.PositionKind)!;
+      const uvs = new Array(positions.length/3*2);
+      for (let i = 0, j = 0; i < positions.length; i += 3, j += 2) {
+        const x = positions[i];    // ring’s local X
+        const z = positions[i+2];  // ring’s local Z
+        uvs[j]   = (x / 10) + 0.5;  // x∈[-5..+5] → [0..1]
+        uvs[j+1] = (z / 10) + 0.5;  // z∈[-5..+5] → [0..1]
+      }
+      targetRing.setVerticesData(BABYLON.VertexBuffer.UVKind, uvs, true);
+      const [mat, texture] = createTargetRingMaterial(scene);
+      Entity.targetTexture = texture;
+      targetRing.material = mat;
+      targetRing.isPickable = false;
+      targetRing.setEnabled(false);
+      Entity.targetRing = targetRing;
+    }
+  }
+
   private textureBuffers: Record<string, BJS.Vector2> = {};
 
   private gameManager: GameManager;
@@ -80,49 +142,7 @@ export class Entity extends BABYLON.TransformNode {
     this.spawnPosition = new BABYLON.Vector3(spawn.x, spawn.y + 5, spawn.z);
     // this.debugWireframe = new DebugWireframe(this, scene);
     this.playAnimation(AnimationDefinitions.Idle1);
-
-    if (!Entity.pickerPrototype) {
-      // create a unit cube at the world origin
-      Entity.pickerPrototype = BABYLON.MeshBuilder.CreateBox(
-        "pickerProto",
-        { size: 1 },
-        this.scene,
-      );
-      // one totally transparent material
-      const pickMat = new BABYLON.StandardMaterial("pickerMat", this.scene);
-      pickMat.alpha = 0;
-      Entity.pickerPrototype.material = pickMat;
-      Entity.pickerPrototype.isPickable = false;
-      Entity.pickerPrototype.setEnabled(false);
-    }
-
-    if (!Entity.targetRing) {
-      const targetRing = BABYLON.MeshBuilder.CreateTorus(
-        "selectionRing",
-        {
-          diameter: 5,       // outer diameter = 2 × your desired radius (5 × 2)
-          thickness: 4,     // tube thickness — make this as big as you like to “fill” the hole
-          tessellation: 64,   // smoothness
-          updatable: true,    // if you ever want to tweak it at runtime
-        },
-        this.scene,
-      );
-      const positions = targetRing.getVerticesData(BABYLON.VertexBuffer.PositionKind)!;
-      const uvs = new Array(positions.length/3*2);
-      for (let i = 0, j = 0; i < positions.length; i += 3, j += 2) {
-        const x = positions[i];    // ring’s local X
-        const z = positions[i+2];  // ring’s local Z
-        uvs[j]   = (x / 10) + 0.5;  // x∈[-5..+5] → [0..1]
-        uvs[j+1] = (z / 10) + 0.5;  // z∈[-5..+5] → [0..1]
-      }
-      targetRing.setVerticesData(BABYLON.VertexBuffer.UVKind, uvs, true);
-      const [mat, texture] = createTargetRingMaterial(this.scene);
-      Entity.targetTexture = texture;
-      targetRing.material = mat;
-      targetRing.isPickable = false;
-      targetRing.setEnabled(false);
-      Entity.targetRing = targetRing;
-    }
+    Entity.instantiateStatics(scene);
   }
 
   public get isHumanoid(): boolean {
@@ -422,6 +442,8 @@ export class Entity extends BABYLON.TransformNode {
           }
           //material -= 6; // Adjust index for robe textures
           idx = this.getTextureIndex(name, material);
+        } else if (hasRobe && this.spawn instanceof Spawn) {
+          idx = this.getTextureIndex(name, 0);
         }
       } else {
         idx = this.getTextureIndex(name, 22); // Default to 1 if not found for now
@@ -499,6 +521,9 @@ export class Entity extends BABYLON.TransformNode {
       `${this.spawn.name}`,
       this.scene,
     );
+    if (!this.isPlayer) {
+      this.nodeContainer.parent = this;
+    }
     this.nodeContainer.position = this.spawnPosition;
     this.physicsBody = new BABYLON.PhysicsBody(
       this.nodeContainer, // Use the TransformNode as the root

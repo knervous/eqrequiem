@@ -123,6 +123,9 @@ function filePathsForModel(modelName) {
 
 // … then your existing processModel & main loop untouched …
 async function processModel(modelName) {
+  if (!modelName.startsWith('hum')) {
+   // return
+  }
   const srcList = filePathsForModel(modelName);
   if (srcList.length === 0) {
     console.log(`No files for model "${modelName}", skipping.`);
@@ -152,8 +155,9 @@ async function processModel(modelName) {
 
     const base = path.basename(filePath, ".dds");
     const png  = path.join(modelOutputDir, `${base}.png`);
-    await resized.png().toFile(png);
-    pngPaths.push(png);
+    const relative = path.relative('.', png);
+    await resized.png().toFile(relative);
+    pngPaths.push(relative);
     pathList.push(base);
   }
 

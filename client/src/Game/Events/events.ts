@@ -14,6 +14,7 @@ export type ChatMessage = {
 export type Events = {
   playerName: string;
   playerLoaded: void;
+  zoneSpawns: void;
   playerPosition: BJS.Vector3;
   playerRotation: BJS.Vector3;
   setPlayer: PlayerProfile;
