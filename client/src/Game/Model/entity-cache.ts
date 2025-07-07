@@ -11,6 +11,7 @@ import { createVATShaderMaterial } from "./entity-material";
 import { PlayerProfile } from "@game/Net/internal/api/capnp/player";
 import type GameManager from "@game/Manager/game-manager";
 import { InventorySlot } from "@game/Player/player-constants";
+import { Races } from "@game/Constants/constants";
 
 type ModelKey = string;
 
@@ -297,7 +298,7 @@ export class EntityCache {
     parentNode?: BJS.Node,
   ): Promise<Entity | null> {
     const race = spawn.race ?? 1;
-    const entry = RACE_DATA[race];
+    const entry = RACE_DATA[race] ?? RACE_DATA[Races.HUMAN];
     let model = entry[spawn.gender ?? 0] || entry[2];
     let robed = false;
     if (spawn instanceof Spawn) {
