@@ -30,6 +30,24 @@ export const useEvent = <T extends keyof Events>(
   }, [eventName, callback]);
 };
 
+export const useEventState = <T extends keyof Events>(
+  eventName: T,
+  initialState: Events[T],
+): Events[T] => {
+  const [state, setState] = useState<Events[T]>(initialState);
+  useEffect(() => {
+    const cb = (value: Events[T]) => {
+      setState(value);
+    };
+    emitter.on(eventName, cb);
+    return () => {
+      emitter.off(eventName, cb);
+    };
+  }, [eventName]);
+
+  return state;
+};
+
 export const usePlayerProfile = () => {
   const [profile, setProfile] = useState<PlayerProfile | null>(Player.instance?.player ?? null);
   useEffect(() => {

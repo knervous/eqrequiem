@@ -279,9 +279,12 @@ export class PlayerMovement {
     }
 
     // Compute velocity
-    const speedMod = this.isActionPressed("sprint")
+    let speedMod = this.isActionPressed("sprint")
       ? this.sprintMultiplier
       : 1.0;
+    if (this.player.Running) {
+      speedMod *= 2.0;
+    }
     const movementZScaled = movement.z * this.moveSpeed * speedMod;
     const movementXScaled = movement.x * this.moveSpeed * speedMod;
     const movementYScaled = movement.y * this.moveSpeed * speedMod;
@@ -299,11 +302,10 @@ export class PlayerMovement {
     const finalVelocity = velocity.add(velocityY);
 
     // Play animations
-
     if (playWalk) {
       if (didCrouch) {
         this.player.playDuckWalk();
-      } else if (this.isActionPressed("sprint")) {
+      } else if (this.player.Running) {
         this.player.playRun();
       } else {
         this.player.playWalk();

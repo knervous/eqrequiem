@@ -1,6 +1,6 @@
 import { Box, BoxProps, SxProps, Typography } from "@mui/material";
 import React, { useMemo, useState } from "react";
-import { ImageEntry, useImage, useStoneImage } from "../hooks/use-image";
+import { ImageEntry, useStoneImage } from "../hooks/use-image";
 import classNames from "classnames";
 
 type AtlasEntry = {

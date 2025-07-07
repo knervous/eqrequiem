@@ -30,6 +30,17 @@ export default class Player {
 
   private originalCollisionFilter = 0;
   private physicsBody: BJS.PhysicsBody | null = null;
+
+  private running: boolean = true;
+  public get Running() {
+    return this.running;
+  }
+  public set Running(value: boolean) {
+    this.running = value;
+    emitter.emit("playerRunning", value);
+  }
+
+  private target: Entity | null = null;
   public get Target() {
     return this.target;
   }
@@ -44,19 +55,19 @@ export default class Player {
       const levelDifference = this.target.spawn.level - this.player!.level;
       switch(true) {
         case levelDifference > 3:
-          color = new BABYLON.Color4(1, 0, 0, 1); // Red for too high
+          color = new BABYLON.Color4(1, 0, 0, 1);
           break;
         case levelDifference > 0 && levelDifference < 3:
-          color = new BABYLON.Color4(1, 1, 0, 1); // Yellow for slightly higher
+          color = new BABYLON.Color4(1, 1, 0, 1);
           break;
         case levelDifference === 0:
-          color = new BABYLON.Color4(1, 1, 1, 1); // White for same level
+          color = new BABYLON.Color4(1, 1, 1, 1);
           break;
         case levelDifference < 0 && levelDifference > -3:
-          color = new BABYLON.Color4(0, 0, 1, 1); // Blue for slightly lower
+          color = new BABYLON.Color4(0, 0, 1, 1);
           break;
         case levelDifference <= -3:
-          color = new BABYLON.Color4(0, 1, 0, 1); // Green for too low
+          color = new BABYLON.Color4(0, 1, 0, 1);
           break;
         default:
           break;
@@ -64,7 +75,6 @@ export default class Player {
       this.target.setSelected(true, color);
     }
   }
-  private target: Entity | null = null;
 
   static instance: Player | null = null;
 

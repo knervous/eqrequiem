@@ -2,7 +2,8 @@ import { useMemo, useState } from "react";
 import { Box, Stack, Typography } from "@mui/material";
 import { UiButtonComponent } from "@ui/common/ui-button";
 import { UiImageComponent } from "@ui/common/ui-image";
-import { transform } from "typescript";
+import { useEventState } from "@game/Events/event-hooks";
+import Player from "@game/Player/player";
 
 const ActionTabs = {
   Main: 0,
@@ -13,7 +14,7 @@ const ActionTabs = {
 
 export const StoneActions: React.FC = () => {
   const [mode, setMode] = useState<number>(ActionTabs.Main);
-
+  const running = useEventState('playerRunning', true);
   const tabStyles = useMemo(
     () => ({
       "&:hover": {
@@ -63,9 +64,12 @@ export const StoneActions: React.FC = () => {
               buttonName="A_BTN_SIT"
             />
             <UiButtonComponent
-              onClick={() => console.log("Help")}
+              onClick={() => {
+                if (!Player.instance) return;
+                Player.instance.Running = !Player.instance.Running;
+              }}
               sx={{ mt: 1 }}
-              buttonName="A_BTN_WALK"
+              buttonName={running ? "A_BTN_WALK" : "A_BTN_RUN"}
             />
           </Stack>
         );
@@ -76,7 +80,7 @@ export const StoneActions: React.FC = () => {
       case ActionTabs.Abilities:
         return <Box sx={{ p: 2 }}>Abilities</Box>;
     }
-  }, [mode]);
+  }, [mode, running]);
 
   return (
     <Box>
