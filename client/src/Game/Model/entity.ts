@@ -254,19 +254,20 @@ export class Entity extends BABYLON.TransformNode {
       const rayOrigin = this.nodeContainer!.position;
       const downEnd = rayOrigin.add(new BABYLON.Vector3(0, -1000, 0)); // 10 units down
       this.physicsPlugin.raycast(rayOrigin, downEnd, result);
-      let offset = -3;
+      let offset = -3 * this.spawnScale; // Default offset for the ring
       if (result.hasHit) {
         const hitPoint = result.hitPoint;
         offset = hitPoint.y - rayOrigin.y; // Calculate offset based on hit point
 
         // Then half the width
-        offset -= 1.75;
+        offset -= 1.75 * this.spawnScale; // Adjust for the ring's height
       }
 
       if (color) {
         color.a = 0.5;
         Entity.targetTexture?.setColor4("color", color);
       }
+      targetRing.scaling.setAll(this.spawnScale);
       targetRing.position.set(0, offset + 0.1, 0);
       targetRing.setEnabled(true);
     } else {

@@ -254,18 +254,17 @@ export const StoneLeft: React.FC<{ width: number }> = ({ width }) => {
                 direction="row"
                 alignItems="center"
                 justifyContent="center"
-                //sx={{ mt: -4 }}
               >
                 <UiButtonComponent
                   onClick={() => console.log("Prev")}
-                  scale={0.75 / scale}
+                  scale={1.5}
                   buttonName="A_LeftArrowBtn"
                 />
                 <Typography sx={{ fontSize: 35, color: "white", mx: 3 }}>
                   1
                 </Typography>
                 <UiButtonComponent
-                  scale={0.75 / scale}
+                  scale={1.5}
                   onClick={() => console.log("Next")}
                   buttonName="A_RightArrowBtn"
                 />
