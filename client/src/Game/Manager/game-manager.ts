@@ -172,7 +172,7 @@ export default class GameManager {
       const HK = await getInitializedHavok();
       const havokPlugin = new BABYLON.HavokPlugin(true, HK);
       this.havokPlugin = havokPlugin;
-      const worldGravity = new BABYLON.Vector3(0, -9.81 * 4, 0);
+      const worldGravity = new BABYLON.Vector3(0, -9.81 * 30, 0);
       const didEnable = this.scene.enablePhysics(
         worldGravity,
         havokPlugin,

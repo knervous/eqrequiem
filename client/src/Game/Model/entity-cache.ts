@@ -316,7 +316,7 @@ export class EntityCache {
     model = model.toLowerCase();
     const container = await EntityCache.getContainer(model, scene);
     if (!container) return null;
-    return new Entity(gameManager, spawn, scene, container, this, parentNode!);
+    return new Entity(gameManager, spawn, scene, container, this, parentNode!, entry);
   }
 
   public static dispose(model: ModelKey): void {

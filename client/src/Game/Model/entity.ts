@@ -15,6 +15,7 @@ import { PlayerProfile } from "@game/Net/internal/api/capnp/player";
 import type GameManager from "@game/Manager/game-manager";
 import { createTargetRingMaterial } from "./entity-select-ring";
 import { InventorySlot } from "@game/Player/player-constants";
+import { RaceEntry } from "@game/Constants/race-data";
 // import { DebugWireframe } from "./entity-debug";
 
 const modelYOffset = {
@@ -27,6 +28,7 @@ export class Entity extends BABYLON.TransformNode {
   public spawnPosition: BJS.Vector3 = new BABYLON.Vector3(0, 0, 0);
   public spawnScale: number = 1.5; // Default scaling factor for entities
   public hidden: boolean = true;
+  public raceDataEntry: RaceEntry | null = null;
 
   public get cleanName(): string {
     return this.spawn.name.replaceAll("_", " ");
@@ -129,16 +131,26 @@ export class Entity extends BABYLON.TransformNode {
     entityContainer: EntityContainer,
     entityCache: EntityCache,
     parent: BJS.Node,
+    raceEntry: RaceEntry,
   ) {
     super(`entity_${spawn.name}`, scene);
     this.isPlayer = spawn instanceof PlayerProfile;
+    this.raceDataEntry = raceEntry;
     this.gameManager = gameManager;
     this.spawn = spawn;
     this.scene = scene;
     this.setParent(parent);
     this.entityContainer = entityContainer;
     this.entityCache = entityCache;
-    this.spawnScale = spawn.scale || 1.5; // Use spawn scale if available, otherwise default to 1.5
+    const height = 6;
+    let spawnScale = spawn instanceof Spawn ? spawn.size : 6;
+    if (spawnScale === -1) {
+      spawnScale = 6;
+    }
+    const finalScale = spawnScale / height;
+    console.log(`[Entity] Final scale for ${spawn.name} is ${finalScale} (size: ${spawn.size}, height: ${height})`);
+
+    this.spawnScale = finalScale; // Use spawn scale if available, otherwise default to 1.5
     this.spawnPosition = new BABYLON.Vector3(spawn.x, spawn.y + 5, spawn.z);
     // this.debugWireframe = new DebugWireframe(this, scene);
     this.playAnimation(AnimationDefinitions.Idle1);
@@ -455,8 +467,8 @@ export class Entity extends BABYLON.TransformNode {
   private setupPhysics() {
     // Get BB for physics capsule height
     const boundingBox = this.entityContainer.boundingBox;
-    const yOffset = this.entityContainer.boundingBox?.yOffset ?? 0;
-    let capsuleHeight = 5.5;
+    const yOffset = 0;// this.entityContainer.boundingBox?.yOffset ?? 0;
+    let capsuleHeight = this.raceDataEntry?.height ?? 6;
     if (boundingBox) {
       const min = new BABYLON.Vector3(
         boundingBox.min[0],
@@ -492,7 +504,7 @@ export class Entity extends BABYLON.TransformNode {
     }
 
     // Setup physics body with capsule shape
-    const capsuleRadius = 2.0;
+    const capsuleRadius = 2.0 * this.spawnScale; // Adjust radius based on scale
     const pointA = new BABYLON.Vector3(0, (capsuleHeight / 2 - capsuleRadius), 0);
     const pointB = new BABYLON.Vector3(
       0,
@@ -503,7 +515,7 @@ export class Entity extends BABYLON.TransformNode {
     pointB.y += yOffset / 2;
     // Slight adjustment to ensure the capsule is centered
     //pointA.y -= 0.5;
-    pointB.y -= 0.3;
+    //pointB.y -= 0.3;
 
     if (modelYOffset[this.entityContainer.model]) {
       pointB.y += modelYOffset[this.entityContainer.model];

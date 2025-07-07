@@ -21,7 +21,7 @@ export class PlayerMovement {
   public moveSpeed: number = 20;
   public turnSpeed: number = 1.5;
   public gravity: boolean = true;
-  public jumpImpulseStrength: number = 15; // Jump impulse strength
+  public jumpImpulseStrength: number = 25; // Jump impulse strength
   public finalVelocity: BJS.Vector3 = BABYLON.Vector3.Zero(); // Add public property
   private sprintMultiplier: number = 2.0;
   private updateDelta: number = 0;

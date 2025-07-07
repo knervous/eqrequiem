@@ -268,6 +268,7 @@ func HandleRequestClientZoneChange(z *ZoneInstance, ses *session.Session, payloa
 		spawn.SetCharClass(int32(npc.NpcData.Class))
 		spawn.SetLevel(int32(npc.NpcData.Level))
 		spawn.SetName(npc.Name())
+		spawn.SetSize(float32(npc.NpcData.Size))
 		spawn.SetFace(int32(npc.NpcData.Face))
 		spawn.SetSpawnId(int32(npc.ID()))
 		spawn.SetIsNpc(1)
