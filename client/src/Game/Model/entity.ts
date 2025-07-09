@@ -720,8 +720,19 @@ export class Entity extends BABYLON.TransformNode {
     this.currentAnimation = name;
     this.animationBuffer.set(match.from, match.to, 0, 60);
   }
-
   private getTextureIndex(
+    originalName: string,
+    variation: number = 22,
+  ): number {
+    const retValue = this.getTextureIndexImpl(originalName, variation);
+    if (retValue < 0) {
+      return this.getTextureIndexImpl(
+        originalName,
+        1);
+    }
+    return retValue;
+  }
+  private getTextureIndexImpl(
     originalName: string,
     variation: number = 22,
   ): number {
