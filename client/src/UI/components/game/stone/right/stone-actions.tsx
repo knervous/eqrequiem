@@ -1,11 +1,13 @@
 import { useMemo, useState } from 'react';
 import { CommandHandler } from '@game/ChatCommands/command-handler';
 import { useEventState } from '@game/Events/event-hooks';
-import { Box, Stack } from '@mui/material';
+import { Box, Stack, Typography } from '@mui/material';
 import { UiImageComponent } from '@ui/common/ui-image';
 import { ActionButton } from '../../action-button/action-button';
 import { ActionButtonType, UIActions } from '../../action-button/constants';
+import { StoneActionsAbilities } from './stone-actions-abilities';
 import { StoneActionsCombat } from './stone-actions-combat';
+import { StoneActionsSocials } from './stone-actions-socials';
 
 const ActionTabs = {
   Main     : 0,
@@ -36,54 +38,54 @@ export const StoneActions: React.FC<{ scale: number }> = ({ scale }) => {
       case ActionTabs.Main:
         return (
           <Stack
-            sx={{}}
-            spacing={2}
+            alignItems={'center'}
             direction={'column'}
             justifyContent={'center'}
-            alignItems={'center'}
+            spacing={2}
+            sx={{}}
           >
             <ActionButton
-              action={CommandHandler.instance.commandWho}
-              scale={scale}
               useDefaultSize
+              action={CommandHandler.instance.commandWho}
               actionData={UIActions[ActionButtonType.WHO]}
               buttonName="A_BTN_WHO"
+              scale={scale}
             />
             <ActionButton
-              action={CommandHandler.instance.commandInvite}
-              scale={scale}
               useDefaultSize
+              action={CommandHandler.instance.commandInvite}
               actionData={UIActions[ActionButtonType.INVITE]}
               buttonName="A_BTN_INVITE"
+              scale={scale}
             />
             <ActionButton
-              action={CommandHandler.instance.commandDisband}
-              scale={scale}
               useDefaultSize
+              action={CommandHandler.instance.commandDisband}
               actionData={UIActions[ActionButtonType.DISBAND]}
               buttonName="A_BTN_DISBAND"
+              scale={scale}
             />
             <ActionButton
-              action={CommandHandler.instance.commandCamp}
-              scale={scale}
               useDefaultSize
+              action={CommandHandler.instance.commandCamp}
               actionData={UIActions[ActionButtonType.CAMP]}
               buttonName="A_BTN_CAMP"
+              scale={scale}
             />
             <ActionButton
-              action={CommandHandler.instance.commandSit}
-              scale={scale}
               useDefaultSize
+              action={CommandHandler.instance.commandSit}
               actionData={UIActions[ActionButtonType.SIT]}
               buttonName={sitting ? 'A_BTN_STAND' : 'A_BTN_SIT'}
+              scale={scale}
             />
 
             <ActionButton
-              action={CommandHandler.instance.commandWalk}
-              scale={scale}
               useDefaultSize
+              action={CommandHandler.instance.commandWalk}
               actionData={UIActions[ActionButtonType.WALK]}
               buttonName={running ? 'A_BTN_WALK' : 'A_BTN_RUN'}
+              scale={scale}
             />
 
           </Stack>
@@ -91,16 +93,37 @@ export const StoneActions: React.FC<{ scale: number }> = ({ scale }) => {
       case ActionTabs.Combat:
         return <StoneActionsCombat scale={scale} />;
       case ActionTabs.Socials:
-        return <Box sx={{ p: 2 }}>Socials</Box>;
+        return <StoneActionsSocials scale={scale} />;
       case ActionTabs.Abilities:
-        return <Box sx={{ p: 2 }}>Abilities</Box>;
+        return <StoneActionsAbilities scale={scale} />;
       default:
         return <Box sx={{ p: 2 }}>Unknown Tab</Box>;
     }
   }, [mode, running, scale, sitting]);
 
+  const text = useMemo(() => {
+    let text = '';
+    switch (mode) {
+      case ActionTabs.Main:
+        text = 'Main';
+        break;
+      case ActionTabs.Combat:
+        text = 'Combat';
+        break;
+      case ActionTabs.Socials:
+        text = 'Social';
+        break;
+      case ActionTabs.Abilities:
+        text = 'Abilities';
+        break;
+      default:
+        text = 'Unknown Tab';
+    }
+    return text;
+  }, [mode]);
   return (
     <Box sx={{ height: '100%', pt: 5 }}>
+      <Typography sx={{ textAlign: 'center', mt: 1, mb: 5, fontSize: 30, color: '#ddd' }}>{text}</Typography>
       <Stack
         direction={'row'}
         sx={{
@@ -112,42 +135,42 @@ export const StoneActions: React.FC<{ scale: number }> = ({ scale }) => {
         }}
       >
         <UiImageComponent
-          sx={tabStyles}
           crop
-          onClick={() => setMode(ActionTabs.Main)}
           name={
             mode === ActionTabs.Main ? 'A_MainTabActiveIcon' : 'A_MainTabIcon'
           }
+          sx={tabStyles}
+          onClick={() => setMode(ActionTabs.Main)}
         />
         <UiImageComponent
-          sx={tabStyles}
           crop
-          onClick={() => setMode(ActionTabs.Combat)}
           name={
             mode === ActionTabs.Combat
               ? 'A_CombatTabActiveIcon'
               : 'A_CombatTabIcon'
           }
+          sx={tabStyles}
+          onClick={() => setMode(ActionTabs.Combat)}
         />
         <UiImageComponent
-          sx={tabStyles}
           crop
-          onClick={() => setMode(ActionTabs.Socials)}
           name={
             mode === ActionTabs.Socials
               ? 'A_SocialsTabActiveIcon'
               : 'A_SocialsTabIcon'
           }
+          sx={tabStyles}
+          onClick={() => setMode(ActionTabs.Socials)}
         />
         <UiImageComponent
-          sx={tabStyles}
           crop
-          onClick={() => setMode(ActionTabs.Abilities)}
           name={
             mode === ActionTabs.Abilities
               ? 'A_AbilitiesTabActiveIcon'
               : 'A_AbilitiesTabIcon'
           }
+          sx={tabStyles}
+          onClick={() => setMode(ActionTabs.Abilities)}
         />
       </Stack>
       <Box

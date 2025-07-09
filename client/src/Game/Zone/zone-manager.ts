@@ -1,17 +1,17 @@
-import BABYLON from "@bjs";
-import type * as BJS from "@babylonjs/core";
-import { FileSystem } from "@game/FileSystem/filesystem";
-import type GameManager from "@game/Manager/game-manager";
-import { RegionManager } from "@game/Regions/region-manager";
-import { LightManager } from "@game/Lights/light-manager";
-import DayNightSkyManager from "@game/Sky/sky-manager";
-import { Spawns } from "@game/Net/internal/api/capnp/common";
-import EntityPool from "./entity-pool";
-import ObjectCache from "@/Game/Model/object-cache";
-import { ZoneMetadata } from "./zone-types";
-import { swapMaterialTexture } from "@game/Model/bjs-utils";
-import { supportedZones } from "@game/Constants/supportedZones";
-import emitter, { ChatMessage } from "@game/Events/events";
+import type * as BJS from '@babylonjs/core';
+import BABYLON from '@bjs';
+import { supportedZones } from '@game/Constants/supportedZones';
+import emitter, { ChatMessage } from '@game/Events/events';
+import { FileSystem } from '@game/FileSystem/filesystem';
+import { LightManager } from '@game/Lights/light-manager';
+import type GameManager from '@game/Manager/game-manager';
+import { swapMaterialTexture } from '@game/Model/bjs-utils';
+import { Spawns } from '@game/Net/internal/api/capnp/common';
+import { RegionManager } from '@game/Regions/region-manager';
+import DayNightSkyManager from '@game/Sky/sky-manager';
+import EntityPool from './entity-pool';
+import { ZoneMetadata } from './zone-types';
+import ObjectCache from '@/Game/Model/object-cache';
 
 export class ZoneManager {
   get RegionManager(): RegionManager {
@@ -45,7 +45,7 @@ export class ZoneManager {
   private zoneObjects: ObjectCache | null = null;
 
   private disableWorldEnv: boolean = false;
-  public zoneName = "qeynos2";
+  public zoneName = 'qeynos2';
   public get CurrentZone() {
     return this.parent.CurrentZone;
   }
@@ -64,19 +64,19 @@ export class ZoneManager {
     this.lightManager = new LightManager();
     this.skyManager = new DayNightSkyManager(this);
     this.zoneContainer = new BABYLON.TransformNode(
-      "ZoneContainer",
+      'ZoneContainer',
       this.parent.scene,
     );
     this.objectContainer = new BABYLON.TransformNode(
-      "ZoneObjectContainer",
+      'ZoneObjectContainer',
       this.parent.scene,
     );
     this.lightContainer = new BABYLON.TransformNode(
-      "LightContainer",
+      'LightContainer',
       this.parent.scene,
     );
     this.entityContainerNode = new BABYLON.TransformNode(
-      "EntityContainer",
+      'EntityContainer',
       this.parent.scene,
     );
     this.entityPool = new EntityPool(
@@ -125,7 +125,7 @@ export class ZoneManager {
 
 
   public async loadZone(zoneName: string): Promise<void> {
-    console.log("[ZoneManager] Loading zone:", zoneName);
+    console.log('[ZoneManager] Loading zone:', zoneName);
     this.dispose();
     const longName = Object.values(supportedZones).find(
       (z) => z.shortName.toLowerCase() === zoneName.toLowerCase(),
@@ -133,11 +133,11 @@ export class ZoneManager {
     const msg: ChatMessage = {
       message: `You have entered ${longName}`,
       chanNum: 0,
-      color: "#ddd",
-      type: 0,
+      color  : '#ddd',
+      type   : 0,
     };
     setTimeout(() => {
-      emitter.emit("chatMessage", msg);
+      emitter.emit('chatMessage', msg);
     }, 500);
     console.log(`You have entered ${longName}`);
     this.zoneName = zoneName;
@@ -151,26 +151,26 @@ export class ZoneManager {
   }
 
   public async loadSpawns(spawns: Spawns) {
-    console.log("Got spawns", spawns);
+    console.log('Got spawns', spawns);
     if (!this.zoneContainer) {
-      return;
+      
     }
   }
   public async instantiateZone() {
-    console.log("Inst zone");
+    console.log('Inst zone');
     if (!this.zoneContainer) {
       return;
     }
     // this.parent.scene!.performancePriority =
     //   BABYLON.ScenePerformancePriority.Aggressive;
     if (!this.parent.scene) {
-      console.error("[ZoneManager] No scene available to instantiate zone.");
+      console.error('[ZoneManager] No scene available to instantiate zone.');
       return;
     }
     this.tickObservable = this.parent.scene.onBeforeRenderObservable.add(this.tick.bind(this));
     this.parent.setLoading(true);
     const bytes = await FileSystem.getFileBytes(
-      `eqrequiem/zones`,
+      'eqrequiem/zones',
       `${this.zoneName}.babylon`,
     );
     if (!bytes) {
@@ -179,7 +179,7 @@ export class ZoneManager {
       return;
     }
     const file = new File([bytes], `${this.zoneName}.babylon`, {
-      type: "application/babylon",
+      type: 'application/babylon',
     });
     const result = await BABYLON.LoadAssetContainerAsync(
       file,
@@ -228,7 +228,7 @@ export class ZoneManager {
       const passThrough = mesh.metadata?.gltf?.extras?.passThrough ?? false;
       if (!passThrough) {
         // Disable the cloud mdf always
-        if (mesh.name === "CLOUD_MDF") {
+        if (mesh.name === 'CLOUD_MDF') {
           mesh.setEnabled(false);
         }
 
@@ -250,20 +250,20 @@ export class ZoneManager {
       }
     });
 
-    this.skyManager.createSky("sky1", this.disableWorldEnv);
+    this.skyManager.createSky('sky1', this.disableWorldEnv);
     this.parent.setLoading(false);
 
     const metadataByte = await FileSystem.getFileBytes(
-      `eqrequiem/zones`,
+      'eqrequiem/zones',
       `${this.zoneName}.json`,
     );
     if (metadataByte) {
       try {
-        const str = new TextDecoder("utf-8").decode(metadataByte);
+        const str = new TextDecoder('utf-8').decode(metadataByte);
         const metadata = JSON.parse(str) as ZoneMetadata;
-        console.log("Got metadata", metadata);
-        console.log("Version: ", metadata.version);
-        console.log("Current zone", this.CurrentZone);
+        console.log('Got metadata', metadata);
+        console.log('Version: ', metadata.version);
+        console.log('Current zone', this.CurrentZone);
         this.lightManager.loadLights(
           this.lightContainer!,
           this.parent.scene!,
@@ -281,10 +281,10 @@ export class ZoneManager {
           this.dedupeMaterialsByName();
         });
   
-        //this.bakeZoneVertexColors(metadata.lights);
+        // this.bakeZoneVertexColors(metadata.lights);
    
       } catch (e) {
-        console.log("Error parsing zone metadata", e);
+        console.log('Error parsing zone metadata', e);
       }
     }
 

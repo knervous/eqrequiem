@@ -1,21 +1,21 @@
-import BABYLON from "@bjs";
-import type * as BJS from "@babylonjs/core";
-import { Spawn } from "@game/Net/internal/api/capnp/common";
-import type { EntityContainer, EntityCache } from "./entity-cache";
+import type { TextRenderer } from '@babylonjs/addons';
+import type * as BJS from '@babylonjs/core';
+import BABYLON from '@bjs';
+import { AnimationDefinitions } from '@game/Animation/animation-constants';
 import {
   charFileRegex,
   clkRegex,
   MaterialPrefixes,
-} from "@game/Constants/constants";
-import { AnimationDefinitions } from "@game/Animation/animation-constants";
-import { Nameplate } from "./nameplate";
-import type { TextRenderer } from "@babylonjs/addons";
-import { sleep } from "@game/Constants/util";
-import { PlayerProfile } from "@game/Net/internal/api/capnp/player";
-import type GameManager from "@game/Manager/game-manager";
-import { createTargetRingMaterial } from "./entity-select-ring";
-import { InventorySlot } from "@game/Player/player-constants";
-import { RaceEntry } from "@game/Constants/race-data";
+} from '@game/Constants/constants';
+import { RaceEntry } from '@game/Constants/race-data';
+import { sleep } from '@game/Constants/util';
+import type GameManager from '@game/Manager/game-manager';
+import { Spawn } from '@game/Net/internal/api/capnp/common';
+import { PlayerProfile } from '@game/Net/internal/api/capnp/player';
+import { InventorySlot } from '@game/Player/player-constants';
+import type { EntityContainer, EntityCache } from './entity-cache';
+import { createTargetRingMaterial } from './entity-select-ring';
+import { Nameplate } from './nameplate';
 // import { DebugWireframe } from "./entity-debug";
 
 const modelYOffset = {
@@ -31,7 +31,7 @@ export class Entity extends BABYLON.TransformNode {
   public raceDataEntry: RaceEntry | null = null;
 
   public get cleanName(): string {
-    return this.spawn.name.replaceAll("_", " ");
+    return this.spawn.name.replaceAll('_', ' ');
   }
 
   private static pickerPrototype: BJS.Mesh;
@@ -56,16 +56,15 @@ export class Entity extends BABYLON.TransformNode {
   }
 
   public static instantiateStatics(scene: BJS.Scene) {
-   
     if (!Entity.pickerPrototype) {
       // create a unit cube at the world origin
       Entity.pickerPrototype = BABYLON.MeshBuilder.CreateBox(
-        "pickerProto",
+        'pickerProto',
         { size: 1 },
         scene,
       );
       // one totally transparent material
-      const pickMat = new BABYLON.StandardMaterial("pickerMat", scene);
+      const pickMat = new BABYLON.StandardMaterial('pickerMat', scene);
       pickMat.alpha = 0;
       Entity.pickerPrototype.material = pickMat;
       Entity.pickerPrototype.isPickable = false;
@@ -74,22 +73,24 @@ export class Entity extends BABYLON.TransformNode {
 
     if (!Entity.targetRing) {
       const targetRing = BABYLON.MeshBuilder.CreateTorus(
-        "selectionRing",
+        'selectionRing',
         {
-          diameter: 5,       // outer diameter = 2 × your desired radius (5 × 2)
-          thickness: 4,     // tube thickness — make this as big as you like to “fill” the hole
-          tessellation: 64,   // smoothness
-          updatable: true,    // if you ever want to tweak it at runtime
+          diameter    : 5, // outer diameter = 2 × your desired radius (5 × 2)
+          thickness   : 4, // tube thickness — make this as big as you like to “fill” the hole
+          tessellation: 64, // smoothness
+          updatable   : true, // if you ever want to tweak it at runtime
         },
         scene,
       );
-      const positions = targetRing.getVerticesData(BABYLON.VertexBuffer.PositionKind)!;
-      const uvs = new Array(positions.length/3*2);
+      const positions = targetRing.getVerticesData(
+        BABYLON.VertexBuffer.PositionKind,
+      )!;
+      const uvs = new Array((positions.length / 3) * 2);
       for (let i = 0, j = 0; i < positions.length; i += 3, j += 2) {
-        const x = positions[i];    // ring’s local X
-        const z = positions[i+2];  // ring’s local Z
-        uvs[j]   = (x / 10) + 0.5;  // x∈[-5..+5] → [0..1]
-        uvs[j+1] = (z / 10) + 0.5;  // z∈[-5..+5] → [0..1]
+        const x = positions[i]; // ring’s local X
+        const z = positions[i + 2]; // ring’s local Z
+        uvs[j] = x / 10 + 0.5; // x∈[-5..+5] → [0..1]
+        uvs[j + 1] = z / 10 + 0.5; // z∈[-5..+5] → [0..1]
       }
       targetRing.setVerticesData(BABYLON.VertexBuffer.UVKind, uvs, true);
       const [mat, texture] = createTargetRingMaterial(scene);
@@ -148,7 +149,6 @@ export class Entity extends BABYLON.TransformNode {
       spawnScale = 6;
     }
     const finalScale = spawnScale / height;
-    console.log(`[Entity] Final scale for ${spawn.name} is ${finalScale} (size: ${spawn.size}, height: ${height})`);
 
     this.spawnScale = finalScale; // Use spawn scale if available, otherwise default to 1.5
     this.spawnPosition = new BABYLON.Vector3(spawn.x, spawn.y + 5, spawn.z);
@@ -222,7 +222,10 @@ export class Entity extends BABYLON.TransformNode {
     ]);
   }
 
-  public getClosestSpawns(n: number= 1, filter: (spawn: Entity) => boolean = () => true): Entity[] {
+  public getClosestSpawns(
+    n: number = 1,
+    filter: (spawn: Entity) => boolean = () => true,
+  ): Entity[] {
     const entities = this.gameManager.ZoneManager?.EntityPool?.entities ?? {};
     const myPos = this.spawnPosition;
     // Create an array of entities with their distances
@@ -230,14 +233,15 @@ export class Entity extends BABYLON.TransformNode {
       .filter((entity) => !entity.hidden && entity !== this)
       .map((entity) => ({
         entity,
-        dist: Math.sqrt(BABYLON.Vector3.DistanceSquared(myPos, entity.spawnPosition)),
-      })).
-      filter((entity) => filter(entity.entity))
+        dist: Math.sqrt(
+          BABYLON.Vector3.DistanceSquared(myPos, entity.spawnPosition),
+        ),
+      }))
+      .filter((entity) => filter(entity.entity))
       .sort((a, b) => a.dist - b.dist) // Sort by distance
       .slice(0, n) // Take the 5 closest
       .map((entry) => entry.entity);
   }
-
 
   public setSelected(selected: boolean, color?: BJS.Color4): void {
     const targetRing = Entity.targetRing!;
@@ -265,7 +269,7 @@ export class Entity extends BABYLON.TransformNode {
 
       if (color) {
         color.a = 0.5;
-        Entity.targetTexture?.setColor4("color", color);
+        Entity.targetTexture?.setColor4('color', color);
       }
       targetRing.scaling.setAll(this.spawnScale);
       targetRing.position.set(0, offset + 0.1, 0);
@@ -328,7 +332,9 @@ export class Entity extends BABYLON.TransformNode {
   }
 
   public async hide(): Promise<void> {
-    if (this.isTearingDown || this.hidden) return;
+    if (this.isTearingDown || this.hidden) {
+      return;
+    }
     this.isTearingDown = true;
 
     // Dispose physics body and shape
@@ -380,14 +386,14 @@ export class Entity extends BABYLON.TransformNode {
     this.setupPhysics();
     // Create body instances and assign physics body
     this.instantiateMeshes();
-    if ("equipChest" in this.spawn) {
-      const variation = this.spawn.helm.toString().padStart(2, "0");
+    if ('equipChest' in this.spawn) {
+      const variation = this.spawn.helm.toString().padStart(2, '0');
       await this.instantiateSecondaryMesh(
         variation,
         this.isHumanoid ? this.spawn.face : this.spawn.equipChest,
       );
     }
-    await this.instantiateNameplate([this.spawn.name.replaceAll("_", " ")]);
+    await this.instantiateNameplate([this.spawn.name.replaceAll('_', ' ')]);
 
     this.updateModelTextures();
     this.checkBelowAndReposition();
@@ -401,14 +407,10 @@ export class Entity extends BABYLON.TransformNode {
     for (const mesh of this.entityContainer.meshes) {
       mesh.isPickable = false;
       const bodyInst = mesh.createInstance(
-        `instance_${this.spawn.name}_${this.spawn.spawnId ?? ""}_${meshIdx++}`,
+        `instance_${this.spawn.name}_${this.spawn.spawnId ?? ''}_${meshIdx++}`,
       );
       bodyInst.setParent(this.nodeContainer);
-      bodyInst.position = new BABYLON.Vector3(
-        0,
-        this.spawnScale * (0.5),
-        0,
-      ); //this.spawnPosition;
+      bodyInst.position = new BABYLON.Vector3(0, this.spawnScale * 0.5, 0); // this.spawnPosition;
       bodyInst.scaling.setAll(this.spawnScale);
       bodyInst.instancedBuffers.bakedVertexAnimationSettingsInstanced =
         this.animationBuffer;
@@ -426,7 +428,7 @@ export class Entity extends BABYLON.TransformNode {
   public updateModelTextures() {
     for (const mesh of this.bodyInstances.concat(this.secondaryInstances)) {
       const name = mesh.metadata.name;
-      const hasRobe = this.entityContainer.model.endsWith("01");
+      const hasRobe = this.entityContainer.model.endsWith('01');
       let idx = this.getTextureIndex(
         name,
         !this.isPlayer ? (this.spawn as Spawn).equipChest : 22,
@@ -440,7 +442,7 @@ export class Entity extends BABYLON.TransformNode {
         }
       }
       if (this.textureBuffers[name]) {
-        if (hasRobe && name.startsWith("clk")) {
+        if (hasRobe && name.startsWith('clk')) {
           let material = 10;
           if (this.spawn instanceof Spawn) {
             material = this.spawn.isNpc
@@ -453,7 +455,7 @@ export class Entity extends BABYLON.TransformNode {
                 .find((item) => item.slot === InventorySlot.Chest)?.item
                 ?.material ?? 10;
           }
-          //material -= 6; // Adjust index for robe textures
+          // material -= 6; // Adjust index for robe textures
           idx = this.getTextureIndex(name, material);
         } else if (hasRobe && this.spawn instanceof Spawn) {
           idx = this.getTextureIndex(name, 0);
@@ -468,7 +470,7 @@ export class Entity extends BABYLON.TransformNode {
   private setupPhysics() {
     // Get BB for physics capsule height
     const boundingBox = this.entityContainer.boundingBox;
-    const yOffset = 0;// this.entityContainer.boundingBox?.yOffset ?? 0;
+    const yOffset = 0; // this.entityContainer.boundingBox?.yOffset ?? 0;
     let capsuleHeight = this.raceDataEntry?.height ?? 6;
     if (boundingBox) {
       const min = new BABYLON.Vector3(
@@ -488,7 +490,7 @@ export class Entity extends BABYLON.TransformNode {
       // disable pick when in first person, it gets annoying.
       if (!this.isPlayer) {
         const pickInst = Entity.pickerPrototype.createInstance(
-          `pickBox_${this.spawn.name}_${this.spawn.spawnId ?? ""}`,
+          `pickBox_${this.spawn.name}_${this.spawn.spawnId ?? ''}`,
         );
         this.pickInst = pickInst;
         pickInst.setParent(this);
@@ -506,7 +508,7 @@ export class Entity extends BABYLON.TransformNode {
 
     // Setup physics body with capsule shape
     const capsuleRadius = 2.0 * this.spawnScale; // Adjust radius based on scale
-    const pointA = new BABYLON.Vector3(0, (capsuleHeight / 2 - capsuleRadius), 0);
+    const pointA = new BABYLON.Vector3(0, capsuleHeight / 2 - capsuleRadius, 0);
     const pointB = new BABYLON.Vector3(
       0,
       -(capsuleHeight / 2 - capsuleRadius),
@@ -515,8 +517,8 @@ export class Entity extends BABYLON.TransformNode {
     pointA.y += yOffset / 2;
     pointB.y += yOffset / 2;
     // Slight adjustment to ensure the capsule is centered
-    //pointA.y -= 0.5;
-    //pointB.y -= 0.3;
+    // pointA.y -= 0.5;
+    // pointB.y -= 0.3;
 
     if (modelYOffset[this.entityContainer.model]) {
       pointB.y += modelYOffset[this.entityContainer.model];
@@ -551,7 +553,7 @@ export class Entity extends BABYLON.TransformNode {
 
     this.physicsBody.shape = this.capsuleShape;
     this.physicsBody.setMassProperties({
-      mass: 5,
+      mass   : 5,
       inertia: new BABYLON.Vector3(0, 0, 0),
     });
   }
@@ -562,14 +564,14 @@ export class Entity extends BABYLON.TransformNode {
     this.nameplate = await Nameplate.createNameplate(this.scene);
     if (!this.nameplate) {
       console.warn(
-        `[Entity] Failed to create nameplate for ${textLines.join(", ")}`,
+        `[Entity] Failed to create nameplate for ${textLines.join(', ')}`,
       );
       return;
     }
     for (const line of textLines) {
       this.nameplate.addParagraph(line);
     }
-    this.nameplate.color = BABYLON.Color4.FromHexString("#00ffff");
+    this.nameplate.color = BABYLON.Color4.FromHexString('#00ffff');
     this.nameplateNode = new BABYLON.TransformNode(
       `nameplate_${this.spawn.name}`,
       this.scene,
@@ -587,7 +589,9 @@ export class Entity extends BABYLON.TransformNode {
     variation: string,
     textureVariation: number,
   ): Promise<void> {
-    if (this.entityContainer.secondaryMeshes <= 0) return;
+    if (this.entityContainer.secondaryMeshes <= 0) {
+      return;
+    }
     for (const instance of this.secondaryInstances) {
       instance.dispose();
     }
@@ -614,7 +618,7 @@ export class Entity extends BABYLON.TransformNode {
       secondaryInstance.setParent(this.nodeContainer);
       secondaryInstance.position = new BABYLON.Vector3(
         0,
-        this.spawnScale * (0.5),
+        this.spawnScale * 0.5,
         0,
       );
       secondaryInstance.metadata = {
@@ -656,13 +660,27 @@ export class Entity extends BABYLON.TransformNode {
       result.reset();
       plugin.raycast(rayOrigin, upEnd, result);
 
-      if (result.hasHit && result.body?.motionType === BABYLON.PhysicsMotionType.STATIC) {
+      if (
+        result.hasHit &&
+        result.body?.motionType === BABYLON.PhysicsMotionType.STATIC
+      ) {
         // Reposition player just below the hit point
         const hitPoint = result.hitPoint;
-        const newPosition = new BABYLON.Vector3(hitPoint.x, hitPoint.y - 0.1, hitPoint.z);
+        const newPosition = new BABYLON.Vector3(
+          hitPoint.x,
+          hitPoint.y - 0.1,
+          hitPoint.z,
+        );
         this.setPosition(newPosition.x, newPosition.y + 5, newPosition.z);
-        console.log(`[Player] Repositioned to ${newPosition.toString()} due to no ground below`);
+        if (this.isPlayer) {
+          console.log(
+            `[Entity] Repositioned to ${newPosition.toString()} due to no ground below`,
+          );
+        }
       } else if (this.isPlayer) {
+        console.log(
+          '[Entity] Repositioned to Safe Point due to no ground below',
+        );
         this.setPosition(5, 5, 5);
       }
     }
@@ -670,13 +688,13 @@ export class Entity extends BABYLON.TransformNode {
 
   public currentAnimation: string | null = null;
 
-  public setFace(variation: number): void {  
+  public setFace(variation: number): void {
     if (!this.isHumanoid) {
       return;
     }
     this.spawn.face = variation;
     this.updateModelTextures();
-  } 
+  }
 
   public playAnimation(name: string, playThrough: boolean = false): void {
     const match = this.entityContainer.animations.find((a) => a.name === name);
@@ -703,7 +721,10 @@ export class Entity extends BABYLON.TransformNode {
     this.animationBuffer.set(match.from, match.to, 0, 60);
   }
 
-  private getTextureIndex(originalName: string, variation: number = 22): number {
+  private getTextureIndex(
+    originalName: string,
+    variation: number = 22,
+  ): number {
     originalName = originalName.toLowerCase();
     let model, piece, texIdx;
     const match = originalName.match(charFileRegex);
@@ -714,46 +735,43 @@ export class Entity extends BABYLON.TransformNode {
       // Next try robe
       const clkMatch = originalName.match(clkRegex);
       if (clkMatch) {
-        model = "clk";
+        model = 'clk';
         texIdx = clkMatch[2];
         return (
           this.entityContainer?.textureAtlas.indexOf(
-            `${model}${(variation - 6).toString().padStart(2, "0")}${texIdx}`,
-          ) ?? -1
-        );
-      } else {
-        // console.warn(
-        //   `[SwapTexture] Sub-material name ${originalName} does not match expected format`,
-        // );
-        return -1;
-      }
-    } else {
-      model = match[1];
-      piece = match[2];
-      texIdx = match[4];
-
-      if (piece === MaterialPrefixes.Face && this.isHumanoid) {
-        // For humanoids, use the face texture variation
-        variation = this.spawn.face;
-        const pieceNumber = texIdx[1];
-        const baseIndex = this.entityContainer?.textureAtlas.indexOf(
-          `${model}${piece}00${variation}${pieceNumber}`,
-        );
-        if (baseIndex !== undefined && baseIndex >= 0) {
-          return baseIndex; // Adjust index based on variation
-        } else {
-          return this.entityContainer?.textureAtlas.indexOf(
-            `${model}${piece}00${+variation + 1}${pieceNumber}`,
-          ) ?? -1;
-        }
-      } else  {
-        return (
-          this.entityContainer?.textureAtlas.indexOf(
-            `${model}${piece}${variation.toString().padStart(2, "0")}${texIdx}`,
+            `${model}${(variation - 6).toString().padStart(2, '0')}${texIdx}`,
           ) ?? -1
         );
       }
-      
+      // console.warn(
+      //   `[SwapTexture] Sub-material name ${originalName} does not match expected format`,
+      // );
+      return -1;
     }
+    model = match[1];
+    piece = match[2];
+    texIdx = match[4];
+
+    if (piece === MaterialPrefixes.Face && this.isHumanoid) {
+      // For humanoids, use the face texture variation
+      variation = this.spawn.face;
+      const pieceNumber = texIdx[1];
+      const baseIndex = this.entityContainer?.textureAtlas.indexOf(
+        `${model}${piece}00${variation}${pieceNumber}`,
+      );
+      if (baseIndex !== undefined && baseIndex >= 0) {
+        return baseIndex; // Adjust index based on variation
+      }
+      return (
+        this.entityContainer?.textureAtlas.indexOf(
+          `${model}${piece}00${+variation + 1}${pieceNumber}`,
+        ) ?? -1
+      );
+    }
+    return (
+      this.entityContainer?.textureAtlas.indexOf(
+        `${model}${piece}${variation.toString().padStart(2, '0')}${texIdx}`,
+      ) ?? -1
+    );
   }
 }

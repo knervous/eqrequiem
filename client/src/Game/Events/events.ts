@@ -1,4 +1,5 @@
 import type * as BJS from '@babylonjs/core';
+import type { Config } from '@game/Config/types';
 import type { Entity } from '@game/Model/entity';
 import type { PlayerProfile } from '@game/Net/internal/api/capnp/player';
 import mitt, { Emitter } from 'mitt';
@@ -28,7 +29,7 @@ export type Events = {
   setMode: string;
 
   // Config
-  updateConfig: void;
+  updateConfig: keyof Config | undefined;
   updateKeybinds: void;
   updateSettings: void;
 
@@ -37,6 +38,9 @@ export type Events = {
   updateCombatButtons: void;
   updateSocialButtons: void;
   updateAbilityButtons: void;
+
+  // Hotkey
+  hotkey: number;
 };
 
 type EnhancedEmitter<Events extends Record<string, unknown>> = Emitter<Events> & {

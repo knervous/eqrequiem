@@ -10,28 +10,42 @@ import { ItemInstance } from '@game/Net/internal/api/capnp/item';
 import { PlayerProfile } from '@game/Net/internal/api/capnp/player';
 import { ActionButtonData, ActionType } from '@ui/components/game/action-button/constants';
 import RACE_DATA from '../Constants/race-data';
+import { PlayerAbility } from './player-ability';
 import { PlayerCamera } from './player-cam';
+import { PlayerCombat } from './player-combat';
 import { InventorySlot } from './player-constants';
 import { PlayerKeyboard } from './player-keyboard';
 import { PlayerMovement } from './player-movement';
+import { PlayerSocials } from './player-socials';
 
 export default class Player {
+  public gameManager: GameManager;
+  private inGame: boolean = true;
+
   public playerMovement: PlayerMovement | null = null;
   public playerCamera: PlayerCamera;
   public playerKeyboard: PlayerKeyboard;
+  public playerCombat: PlayerCombat;
+  public playerAbility: PlayerAbility;
+  public playerSocials: PlayerSocials;
+
+  static instance: Player | null = null;
+
   public player: PlayerProfile | null = null;
   public playerEntity: Entity | null = null;
   public isPlayerMoving: boolean = false;
-  public gameManager: GameManager;
   public inventory: Map<InventorySlot, ItemInstance | null> = new Map();
   public model: string = '';
   public currentAnimation: string = '';
   public currentPlayToEnd: boolean = false;
-  private inGame: boolean = true;
 
   private originalCollisionFilter = 0;
-  private physicsBody: BJS.PhysicsBody | null = null;
+  private raycastTickCounter: number = 0;
+  private readonly raycastCheckInterval: number = 10;
 
+  /**
+   * Running
+   */
   private running: boolean = true;
   public get Running() {
     return this.running;
@@ -41,6 +55,9 @@ export default class Player {
     emitter.emit('playerRunning', value);
   }
 
+  /**
+   * Sitting
+   */
   private sitting: boolean = false;
   public get Sitting() {
     return this.sitting;
@@ -49,10 +66,13 @@ export default class Player {
     this.sitting = value;
     emitter.emit('playerSitting', value);
     if (this.playerEntity) {
-      // Do Animation
+    
     }
   }
 
+  /**
+   * Target
+   */
   private target: Entity | null = null;
   public get Target() {
     return this.target;
@@ -89,10 +109,7 @@ export default class Player {
     }
   }
 
-  static instance: Player | null = null;
 
-  private raycastTickCounter: number = 0;
-  private readonly raycastCheckInterval: number = 10;
   constructor(
     gameManager: GameManager,
     camera: BJS.UniversalCamera,
@@ -102,25 +119,12 @@ export default class Player {
     this.gameManager = gameManager;
     this.playerCamera = new PlayerCamera(this, camera);
     this.playerKeyboard = new PlayerKeyboard(this, gameManager.scene!);
+    this.playerCombat = new PlayerCombat(this);
+    this.playerAbility = new PlayerAbility(this);
+    this.playerSocials = new PlayerSocials(this);
+
     Player.instance = this;
     (window as any).player = this;
-  }
-
-  private observers: Record<string, ((any) => void)[]> = {};
-
-  public addObserver(name: string, observer: (any) => void) {
-    if (!this.observers[name]) {
-      this.observers[name] = [];
-    }
-    this.observers[name].push(observer);
-  }
-
-  public removeObserver(name: string, observer: (any) => void) {
-    if (this.observers[name]) {
-      this.observers[name] = this.observers[name].filter(
-        (obs) => obs !== observer,
-      );
-    }
   }
 
   public async dispose() {
@@ -166,8 +170,8 @@ export default class Player {
   }
 
   public setCollision(on: boolean) {
-    if (this.physicsBody?.shape) {
-      this.physicsBody.shape.filterCollideMask = on ? this.originalCollisionFilter : 8;
+    if (this.playerEntity?.physicsBody?.shape) {
+      this.playerEntity.physicsBody.shape.filterCollideMask = on ? this.originalCollisionFilter : 8;
     }
   }
 
@@ -316,6 +320,10 @@ export default class Player {
     emitter.emit('playerLoaded');
   }
 
+  public toggleAutoRun() {
+    this.playerMovement?.toggleAutoRun();
+  }
+
   public playAnimation(
     animationName: string,
     playThrough: boolean = true,
@@ -360,16 +368,34 @@ export default class Player {
 
   // Action types
 
-  public doAction(actionData: ActionButtonData) {
+  public doAction(actionData?: ActionButtonData) {
     if (!this.playerEntity) {
       console.warn('[Player] No player entity to perform action');
       return;
     }
+    if (!actionData) {
+      console.warn('[Player] No action data provided');
+      return;
+    }
+  
     console.log('Action data', actionData);
-    switch (actionData.action) {
+    switch (actionData.action as ActionType) {
       case ActionType.MELEE_ATTACK:
         this.autoAttack();
         break;
+      case ActionType.RANGED_ATTACK:
+        this.rangedAttack();
+        break;
+      case ActionType.COMBAT:
+        this.playerCombat.doCombatAction(actionData);
+        break;
+      case ActionType.ABILITY:
+        this.playerAbility.doAbility(actionData);
+        break;
+      case ActionType.SOCIAL:
+        this.playerSocials.doSocial(actionData);
+        break;
+
       default:
         console.warn(`[Player] Unknown action type: ${actionData.type}`);
     }
@@ -382,9 +408,8 @@ export default class Player {
   public toggleWalk() {
     this.Running = !this.Running;
   }
-
   public autoAttack() {
-    console.log('Autoattack on');
+    console.log('Autoattack');
   }
 
   public rangedAttack() {

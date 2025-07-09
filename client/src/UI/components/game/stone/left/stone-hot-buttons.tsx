@@ -1,67 +1,67 @@
-import { Box, Grid, Stack, Typography } from "@mui/material";
-import { ActionHotButton } from "../../action-button/action-button";
-import { useState } from "react";
-import { useSakImage } from "@ui/hooks/use-image";
-import { UiButtonComponent } from "@ui/common/ui-button";
-import { useActionButtons } from "@game/Config/use-config";
+import { useState } from 'react';
+import { useActionButtons } from '@game/Config/use-config';
+import { Box, Grid, Stack, Typography } from '@mui/material';
+import { UiButtonComponent } from '@ui/common/ui-button';
+import { useSakImage } from '@ui/hooks/use-image';
+import { ActionHotButton } from '../../action-button/action-button';
  
 const itemsPerPage = 10;
 
 export const StoneHotButtons: React.FC<{ scale: number}> = ({ scale }) => {
-  const hbImage = useSakImage("HBW_BG_TXDN", true);
+  const hbImage = useSakImage('HBW_BG_TXDN', true);
   const [page, setPage] = useState(0);
   const actionButtons = useActionButtons();
 
   return (
     <Box
       sx={{
-        width: hbImage.entry.width * 2,
-        height: hbImage.entry.height * 2,
+        width          : hbImage.entry.width * 2,
+        height         : hbImage.entry.height * 2,
         backgroundImage: `url(${hbImage.image})`,
-        backgroundSize: "cover",
+        backgroundSize : 'cover',
       }}
     >
-      <Stack direction="row" alignItems="center" justifyContent="center">
+      <Stack alignItems="center" direction="row" justifyContent="center">
         <UiButtonComponent
-          onClick={() => setPage((prev) => Math.max(prev - 1, 0))}
-          scale={1.5}
           buttonName="A_LeftArrowBtn"
+          scale={1.5}
+          onClick={() => setPage((prev) => Math.max(prev - 1, 0))}
         />
         <Typography
           sx={{
-            width: 30,
-            textAlign: "center",
-            fontSize: 35,
-            color: "white",
-            mx: 3,
+            width    : 30,
+            textAlign: 'center',
+            fontSize : 35,
+            color    : 'white',
+            mx       : 3,
           }}
         >
           {page + 1}
         </Typography>
         <UiButtonComponent
+          buttonName="A_RightArrowBtn"
           scale={1.5}
           onClick={() => setPage((prev) => Math.min(prev + 1, 9))}
-          buttonName="A_RightArrowBtn"
         />
       </Stack>
       <Box
         sx={{
-          width: 250,
-          height: 640,
-          position: "relative",
-          top: 7,
-          left: 26,
+          width   : 250,
+          height  : 640,
+          position: 'relative',
+          top     : 7,
+          left    : 26,
         }}
       >
         <Grid container columns={16}>
           {Array.from({ length: itemsPerPage }).map((_, idx) => (
             <Grid key={idx} size={8} sx={{ height: 640 / 5, width: 125 }}>
               <ActionHotButton
+                hotButton
                 actionButtonConfig={actionButtons}
-                scale={scale}
                 actionData={actionButtons?.hotButtons?.[idx + (page * itemsPerPage)]}
                 index={idx + (page * itemsPerPage)}
-                hotButton
+                scale={scale}
                 size={125}
               />
             </Grid>

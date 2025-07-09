@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useCombatButtons } from '@game/Config/use-config';
+import { useSocialButtons } from '@game/Config/use-config';
 import Player from '@game/Player/player';
 import { Grid, Stack, Typography } from '@mui/material';
 import { UiButtonComponent } from '@ui/common/ui-button';
@@ -7,11 +7,11 @@ import { ActionButton } from '../../action-button/action-button';
 
 const pageSize = 6;
 
-export const StoneActionsCombat: React.FC<{
+export const StoneActionsSocials: React.FC<{
   scale: number;
 }> = ({ scale }) => {
   const [page, setPage] = useState(0);
-  const combatButtons = useCombatButtons();
+  const socialButtons = useSocialButtons();
   if (!Player.instance) {
     return null;
   }
@@ -56,7 +56,7 @@ export const StoneActionsCombat: React.FC<{
               hotButton
               playerAction
               action={Player.instance!.doAction.bind(Player.instance)}
-              actionData={combatButtons?.[idx + (page * pageSize)]}
+              actionData={socialButtons?.[idx + (page * pageSize)]}
               buttonName={'A_SquareBtn'}
               scale={scale}
               size={105}

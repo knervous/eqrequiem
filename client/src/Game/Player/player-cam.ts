@@ -1,7 +1,7 @@
-import BABYLON from "@bjs";
-import type * as BJS from "@babylonjs/core";
-import type Player from "./player";
-import { Entity } from "@game/Model/entity";
+import type * as BJS from '@babylonjs/core';
+import BABYLON from '@bjs';
+import { Entity } from '@game/Model/entity';
+import type Player from './player';
 
 export class PlayerCamera {
   private player: Player;
@@ -31,10 +31,10 @@ export class PlayerCamera {
     this.camera = camera;
     this.cameraLight =
       (player.gameManager.scene?.getLightByName(
-        "playerLight",
+        'playerLight',
       ) as BJS.PointLight) ||
       new BABYLON.PointLight(
-        "playerLight",
+        'playerLight',
         new BABYLON.Vector3(0, 5, 0),
         this.player.gameManager.scene!,
       );
@@ -57,19 +57,19 @@ export class PlayerCamera {
     const canvas = this.player.gameManager
       .scene!.getEngine()
       .getRenderingCanvas();
-    if (!canvas) return;
+    if (!canvas) {return;}
 
     this.canvas = canvas;
 
     // Store event listeners for later removal
     this.eventListeners.push(
-      { element: canvas, type: "mousedown", listener: this.handleMouseDown },
-      { element: canvas, type: "mouseup", listener: this.handleMouseUp },
-      { element: canvas, type: "mousemove", listener: this.handleMouseMove },
-      { element: canvas, type: "wheel", listener: this.handleWheel },
+      { element: canvas, type: 'mousedown', listener: this.handleMouseDown as EventListenerOrEventListenerObject },
+      { element: canvas, type: 'mouseup', listener: this.handleMouseUp as EventListenerOrEventListenerObject },
+      { element: canvas, type: 'mousemove', listener: this.handleMouseMove as EventListenerOrEventListenerObject },
+      { element: canvas, type: 'wheel', listener: this.handleWheel as EventListenerOrEventListenerObject },
       {
-        element: document,
-        type: "pointerlockchange",
+        element : document,
+        type    : 'pointerlockchange',
         listener: this.onChangePointerLock,
       },
     );
@@ -162,7 +162,7 @@ export class PlayerCamera {
     x: number = 0,
     y: number = 0,
   ) {
-    if (!this.canvas) return;
+    if (!this.canvas) {return;}
     const charSelect = !!this.player.gameManager.CharacterSelect?.character;
     if (charSelect) {
       return;
@@ -175,7 +175,7 @@ export class PlayerCamera {
     if (buttonIndex === 2) {
       this.rightButtonDown = !up;
     }
-    if (!this.player.playerMovement) return;
+    if (!this.player.playerMovement) {return;}
     if (this.leftButtonDown && this.rightButtonDown) {
       this.player.playerMovement!.moveForward = true;
       return;
@@ -215,7 +215,7 @@ export class PlayerCamera {
   }
 
   public attachPlayerLight(mesh: BJS.AbstractMesh) {
-    if (!this.cameraLight) return;
+    if (!this.cameraLight) {return;}
     this.cameraLight.parent = mesh;
     const forward = mesh.getDirection(BABYLON.Axis.X).normalize();
     const heightOff = new BABYLON.Vector3(0, 2, 1);
@@ -224,7 +224,7 @@ export class PlayerCamera {
   }
 
   public adjustCameraDistance(delta: number) {
-    if (!this.player.playerEntity) return;
+    if (!this.player.playerEntity) {return;}
     const deltaCoefficient = 1.2;
     this.preferredCameraDistance = Math.max(
       this.minCameraDistance,
@@ -243,7 +243,7 @@ export class PlayerCamera {
   }
 
   public inputMouseMotion(x: number, y: number) {
-    if (!this.player.playerEntity || !this.isLocked) return;
+    if (!this.player.playerEntity || !this.isLocked) {return;}
     const charSelect = !!this.player.gameManager.CharacterSelect?.character;
     if (charSelect) {
       return;
@@ -311,7 +311,7 @@ export class PlayerCamera {
 
   public updateCameraPosition() {
     const entity = this.player.playerEntity;
-    if (!entity) return;
+    if (!entity) {return;}
     const playerPos = entity.spawnPosition.clone();
 
     // Physics check - keep within bounds of collidable world

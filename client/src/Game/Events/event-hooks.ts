@@ -1,21 +1,39 @@
-import { useEffect, useState } from "react";
-import emitter, { Events } from "./events";
-import type { Entity } from "@game/Model/entity";
-import Player from "@game/Player/player";
-import { PlayerProfile } from "@game/Net/internal/api/capnp/player";
+import { useEffect, useState } from 'react';
+import type { Entity } from '@game/Model/entity';
+import { PlayerProfile } from '@game/Net/internal/api/capnp/player';
+import Player from '@game/Player/player';
+import emitter, { Events } from './events';
 
 export const usePlayerName = () => {
-  const [playerName, setPlayerName] = useState<string>(Player.instance?.player?.name ?? "Soandso");
+  const [playerName, setPlayerName] = useState<string>(Player.instance?.player?.name ?? 'Soandso');
   useEffect(() => {
     const cb = (name: string) => {
       setPlayerName(name);
     };
-    emitter.on("playerName", cb);
+    emitter.on('playerName', cb);
     return () => {
-      emitter.off("playerName", cb);
+      emitter.off('playerName', cb);
     };
   }, []);
   return playerName;
+};
+
+export const useEventArg = <T extends keyof Events>(
+  eventName: T,
+  callback: (arg: Events[T]) => void,
+  expectedValue: Events[T],
+) => {
+  useEffect(() => {
+    const internalCallback = (arg: Events[T]) => {
+      if (arg === expectedValue) {
+        callback(arg);
+      }
+    };
+    emitter.on(eventName, internalCallback);
+    return () => {
+      emitter.off(eventName, internalCallback);
+    };
+  }, [eventName, expectedValue, callback]);
 };
 
 export const useEvent = <T extends keyof Events>(
@@ -54,9 +72,9 @@ export const usePlayerProfile = () => {
     const cb = (p: PlayerProfile | null) => {
       setProfile(p);
     };
-    emitter.on("setPlayer", cb);
+    emitter.on('setPlayer', cb);
     return () => {
-      emitter.off("setPlayer", cb);
+      emitter.off('setPlayer', cb);
     };
   }, []);
   return profile; 
@@ -68,9 +86,9 @@ export const useInventoryOpen = () => {
     const cb = () => {
       setOpen((open) => !open);
     };
-    emitter.on("toggleInventory", cb);
+    emitter.on('toggleInventory', cb);
     return () => {
-      emitter.off("toggleInventory", cb);
+      emitter.off('toggleInventory', cb);
     };
   }, []);
   return open;
@@ -82,9 +100,9 @@ export const useTarget = () => {
     const cb = (t: Entity | null) => {
       setTarget(t);
     };
-    emitter.on("target", cb);
+    emitter.on('target', cb);
     return () => {
-      emitter.off("target", cb);
+      emitter.off('target', cb);
     };
   }, []);
   return target;

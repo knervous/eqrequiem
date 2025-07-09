@@ -1,4 +1,3 @@
-
 // File: client/src/Game/Config/config.ts
 import emitter from '@game/Events/events';
 import {
@@ -9,7 +8,7 @@ import {
 import { getEQFile, writeRootEQFile } from 'sage-core/util/fileHandler';
 import { Config, KeyBindings, Settings } from './types';
 
-const configVersion = 4;
+const configVersion = 5;
 
 export const DEFAULT_CONFIG: Config = {
   keyBindings: {
@@ -26,6 +25,23 @@ export const DEFAULT_CONFIG: Config = {
     inventory     : 'I',
     spells        : 'P',
     autoAttack    : 'T',
+
+    // Chat
+    reply  : 'R',
+    // Misc
+    autoRun: 'Clear',
+
+    // Hotkeys
+    hotkey1 : '1',
+    hotkey2 : '2',
+    hotkey3 : '3',
+    hotkey4 : '4',
+    hotkey5 : '5',
+    hotkey6 : '6',
+    hotkey7 : '7',
+    hotkey8 : '8',
+    hotkey9 : '9',
+    hotkey10: '0',
   },
   settings: {
     particles: true,
@@ -39,20 +55,39 @@ export const DEFAULT_CONFIG: Config = {
   },
   hotButtons: {
     0: {
-      type : ActionButtonType.COMBAT,
-      index: 0,
+      type  : ActionButtonType.MELEE_ATTACK,
+      action: ActionType.MELEE_ATTACK,
+      label : 'Melee Attack',
+      index : 0,
     },
-    1: {
-      type : ActionButtonType.SOCIALS,
-      index: 0,
+    '1': {
+      type  : ActionButtonType.SOCIALS,
+      action: ActionType.SOCIAL,
+      label : 'Hail',
+      color : '#00FF00',
+      data  : ['/hail'],
+      index : 0,
     },
-    2: {
-      type: ActionButtonType.SIT,
+    '2': {
+      type: 12,
     },
-    3: {
-      type: ActionButtonType.WALK,
+    '3': {
+      type  : ActionButtonType.SOCIALS,
+      action: ActionType.SOCIAL,
+      label : 'Consider',
+      color : '#FFFF00',
+      data  : ['/consider'],
+      index : 1,
     },
-
+    '4': {
+      type: 8,
+    },
+    '5': {
+      type: 13,
+    },
+    '9': {
+      type: 11,
+    },
   },
   combatButtons: {
     0: {
@@ -68,46 +103,68 @@ export const DEFAULT_CONFIG: Config = {
   },
   socialButtons: {
     0: {
-      type : ActionButtonType.SOCIALS,
-      label: 'Hail',
-      color: '#00FF00',
-      data : ['/hail'],
+      type  : ActionButtonType.SOCIALS,
+      action: ActionType.SOCIAL,
+      label : 'Hail',
+      color : '#00FF00',
+      data  : ['/hail'],
     },
     1: {
-      type : ActionButtonType.SOCIALS,
-      label: 'Consider',
-      color: '#FFFF00',
-      data : ['/consider'],
+      type  : ActionButtonType.SOCIALS,
+      action: ActionType.SOCIAL,
+      label : 'Consider',
+      color : '#FFFF00',
+      data  : ['/consider'],
     },
     2: {
-      type : ActionButtonType.SOCIALS,
-      label: 'Afk',
-      color: '#FF00FF',
-      data : ['/afk'],
+      type  : ActionButtonType.SOCIALS,
+      action: ActionType.SOCIAL,
+      label : 'Afk',
+      color : '#FF00FF',
+      data  : ['/afk'],
     },
   },
   abilityButtons: {},
 };
 
-
 export class UserConfig {
   private static instance_: UserConfig;
   private config: Config;
   private configFilePath = '';
-  private writePromise: Promise<void> | null = null;
 
   private constructor() {
     this.config = DEFAULT_CONFIG;
     emitter.on('updateConfig', this.updateConfigEvent.bind(this));
   }
 
-  private updateConfigEvent() {
-    emitter.emit('updateSettings');
-    emitter.emit('updateKeybinds');
-    emitter.emit('updateHotButtons');
-    emitter.emit('updateCombatButtons');
-    emitter.emit('updateSocialButtons');
-    emitter.emit('updateAbilityButtons');
+  private updateConfigEvent(key?: keyof Config): void {
+    switch (key) {
+      case 'keyBindings':
+        emitter.emit('updateKeybinds');
+        break;
+      case 'settings':
+        emitter.emit('updateSettings');
+        break;
+      case 'hotButtons':
+        emitter.emit('updateHotButtons');
+        break;
+      case 'combatButtons':
+        emitter.emit('updateCombatButtons');
+        break;
+      case 'socialButtons':
+        emitter.emit('updateSocialButtons');
+        break;
+      case 'abilityButtons':
+        emitter.emit('updateAbilityButtons');
+        break;
+      default:
+        emitter.emit('updateSettings');
+        emitter.emit('updateKeybinds');
+        emitter.emit('updateHotButtons');
+        emitter.emit('updateCombatButtons');
+        emitter.emit('updateSocialButtons');
+        emitter.emit('updateAbilityButtons');
+    }
   }
 
   public async initialize(server: string, player: string): Promise<void> {
@@ -126,10 +183,7 @@ export class UserConfig {
     this.save();
   }
 
-  public swapHotButtons(
-    index1: number,
-    index2: number = index1 + 1,
-  ): void {
+  public swapHotButtons(index1: number, index2: number = index1 + 1): void {
     const temp = this.config.hotButtons[index1];
     this.config.hotButtons[index1] = this.config.hotButtons[index2];
     if (temp !== undefined) {
@@ -137,7 +191,7 @@ export class UserConfig {
     } else {
       delete this.config.hotButtons[index2];
     }
-    emitter.emit('updateHotButtons');
+    emitter.emit('updateConfig', 'hotButtons');
     this.save();
   }
 
@@ -147,7 +201,7 @@ export class UserConfig {
     } else {
       delete this.config.hotButtons[index];
     }
-    emitter.emit('updateHotButtons');
+    emitter.emit('updateConfig', 'hotButtons');
     this.save();
   }
 
@@ -160,7 +214,7 @@ export class UserConfig {
     } else {
       delete this.config.combatButtons[index];
     }
-    emitter.emit('updateCombatButtons');
+    emitter.emit('updateConfig', 'combatButtons');
     this.save();
   }
 
@@ -173,7 +227,7 @@ export class UserConfig {
     } else {
       delete this.config.socialButtons[index];
     }
-    emitter.emit('updateSocialButtons');
+    emitter.emit('updateConfig', 'socialButtons');
     this.save();
   }
 
@@ -186,13 +240,13 @@ export class UserConfig {
     } else {
       delete this.config.abilityButtons[index];
     }
-    emitter.emit('updateAbilityButtons');
+    emitter.emit('updateConfig', 'abilityButtons');
     this.save();
   }
 
   public updateKeybind(key: keyof KeyBindings, value: string): void {
     this.config.keyBindings[key] = value;
-    emitter.emit('updateKeybinds');
+    emitter.emit('updateConfig', 'keyBindings');
     this.save();
   }
 
@@ -201,22 +255,24 @@ export class UserConfig {
     value: Settings[K],
   ): void {
     this.config.settings[key] = value;
-    emitter.emit('updateSettings');
+    emitter.emit('updateConfig', 'settings');
     this.save();
   }
+  private saveTimeout: NodeJS.Timeout | null = null;
 
-  private async save(): Promise<void> {
-    if (this.writePromise) {
-      await this.writePromise;
+  private save(): void {
+    if (this.saveTimeout) {
+      clearTimeout(this.saveTimeout);
     }
-    this.writePromise = writeRootEQFile(
-      'eqrequiem/config',
-      this.configFilePath,
-      JSON.stringify(this.config, null, 2),
-    );
-    await this.writePromise;
-    this.writePromise = null;
-    console.log(`Config saved to ${this.configFilePath}`);
+    this.saveTimeout = setTimeout(async () => {
+      await writeRootEQFile(
+        'eqrequiem/config',
+        this.configFilePath,
+        JSON.stringify(this.config, null, 2),
+      );
+      console.log(`Config saved to ${this.configFilePath}`);
+      this.saveTimeout = null;
+    }, 300);
   }
 
   public static get instance(): UserConfig {

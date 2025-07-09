@@ -1,6 +1,7 @@
 // eslint.config.js
 import js from "@eslint/js";
 import globals from "globals";
+import react from "eslint-plugin-react"
 import reactHooks from "eslint-plugin-react-hooks";
 import reactRefresh from "eslint-plugin-react-refresh";
 import tseslint from "typescript-eslint";
@@ -29,6 +30,7 @@ export default tseslint.config(
       },
     },
     plugins: {
+      react,
       "react-hooks": reactHooks,
       "react-refresh": reactRefresh,
       import: importPlugin,
@@ -39,16 +41,18 @@ export default tseslint.config(
       ...tseslint.configs.recommended.rules,
       ...reactHooks.configs.recommended.rules,
 
+      "react/jsx-sort-props": [
+        "error",
+        {
+          callbacksLast: true,      // put props like onClick after others
+          shorthandFirst: true,     // <Foo a b {...rest} /> rather than {...rest} a b
+          reservedFirst: true,      // put `key` & `ref` before all other props
+          ignoreCase: true          // sort case-insensitively
+        }
+      ],
+
       // TypeScript-specific rules
       "@typescript-eslint/adjacent-overload-signatures": ["error"],
-      // "@typescript-eslint/decorator-position": ["error", {
-      //   decoratorsBeforeExport: true,
-      //   minLineBetweenDecorators: 0,
-      // }],
-      // "@typescript-eslint/lines-between-class-members": ["error", "always", {
-      //   exceptAfterOverload: false,
-      //   exceptAfterSingleLine: true,
-      // }],
 
       // Rules from main config
       "react-refresh/only-export-components": [

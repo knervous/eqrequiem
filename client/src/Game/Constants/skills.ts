@@ -93,4 +93,4 @@ export const ActiveCombatSkills = [
   Skills.FlyingKick,
   Skills.Kick,
   Skills.RoundKick,
-] as const;
+] as Skills[];

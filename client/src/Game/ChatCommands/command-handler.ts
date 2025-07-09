@@ -2,6 +2,7 @@ import { AnimationDefinitions } from '@game/Animation/animation-constants';
 import { CLASS_DATA_NAMES } from '@game/Constants/class-data';
 import RACE_DATA from '@game/Constants/race-data';
 import { supportedZones } from '@game/Constants/supportedZones';
+import emitter from '@game/Events/events';
 import GameManager from '@game/Manager/game-manager';
 import { ChannelMessage } from '@game/Net/internal/api/capnp/common';
 import {
@@ -278,8 +279,10 @@ export class CommandHandler {
 
   @command('camp')
   commandCamp() {
-    GameManager.instance.dispose();
-    this.setMode?.('character-select');
+    GameManager.instance?.dispose();
+    setTimeout(() => {
+      emitter.emit('setMode', 'character-select');
+    }, 100);
   }
 
   @command('nod')

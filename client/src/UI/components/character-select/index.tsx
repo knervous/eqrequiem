@@ -4,44 +4,43 @@ import React, {
   useMemo,
   useRef,
   useState,
-} from "react";
-import { useUIContext } from "../context";
-import { WorldSocket } from "../../net/instances";
-import { Box, Stack } from "@mui/material";
-import { UiWindowComponent } from "../../common/ui-window";
-import { UiButtonComponent } from "../../common/ui-button";
-import { VIEWS } from "../../../Game/Constants/constants";
-import { CharacterCreate } from "./char-create";
-import GameManager from "@game/Manager/game-manager";
-import { MusicPlayer } from "@game/Music/music-player";
-import { OpCodes } from "@game/Net/opcodes";
-import { Int, String } from "@game/Net/internal/api/capnp/common";
+} from 'react';
+import { UserConfig } from '@game/Config/config';
+import GameManager from '@game/Manager/game-manager';
+import { MusicPlayer } from '@game/Music/music-player';
+import { Int, String } from '@game/Net/internal/api/capnp/common';
+import {
+  CharacterSelect,
+  CharacterSelectEntry,
+} from '@game/Net/internal/api/capnp/player';
 import {
   EnterWorld,
   JWTLogin,
   JWTResponse,
-} from "@game/Net/internal/api/capnp/world";
-import {
-  CharacterSelect,
-  CharacterSelectEntry,
-} from "@game/Net/internal/api/capnp/player";
+} from '@game/Net/internal/api/capnp/world';
 import {
   RequestClientZoneChange,
   ZoneChangeType,
   ZoneSession,
-} from "@game/Net/internal/api/capnp/zone";
+} from '@game/Net/internal/api/capnp/zone';
+import { OpCodes } from '@game/Net/opcodes';
+import { Box, Stack } from '@mui/material';
+import { useDebouncedCallback } from 'use-debounce';
+import { VIEWS } from '../../../Game/Constants/constants';
+import { UiButtonComponent } from '../../common/ui-button';
+import { UiWindowComponent } from '../../common/ui-window';
+import { WorldSocket } from '../../net/instances';
+import { useUIContext } from '../context';
+import { CharacterCreate } from './char-create';
+import './component.css';
 
-import "./component.css";
-import { useDebouncedCallback } from "use-debounce";
-import { UserConfig } from "@game/Config/config";
 
-const splashed = false;
 
 export const CharacterSelectUIComponent: React.FC = () => {
   const setMode = useUIContext((state) => state.setMode);
   const token = useUIContext((state) => state.token);
   const [view, setView] = useState(VIEWS.CHAR_SELECT);
-  const setSplash = window.setSplash;
+  const setSplash = globalThis.setSplash;
   const [charInfo, setCharInfo] = React.useState<CharacterSelect | null>(null);
   const gotCharInfo = useRef(false);
   const [selectedChar, setSelectedChar] =
@@ -58,11 +57,11 @@ export const CharacterSelectUIComponent: React.FC = () => {
         serverCharInfo.characterCount > 0
           ? serverCharInfo.characters[0]
           : ({
-            race: 1,
+            race     : 1,
             charClass: 1,
-            name: "Soandso",
-            level: 1,
-            face: 1,
+            name     : 'Soandso',
+            level    : 1,
+            face     : 1,
           } as CharacterSelectEntry),
       );
     },
@@ -70,8 +69,8 @@ export const CharacterSelectUIComponent: React.FC = () => {
   );
 
   useEffect(() => {
-    document.title = "EQ: Requiem";
-    MusicPlayer.play("character-select");
+    document.title = 'EQ: Requiem';
+    MusicPlayer.play('character-select');
   }, []);
 
   const enterWorld = useDebouncedCallback(() => {
@@ -81,7 +80,7 @@ export const CharacterSelectUIComponent: React.FC = () => {
     GameManager.instance.CharacterSelect?.dispose();
 
     WorldSocket.registerOpCodeHandler(OpCodes.ZoneSessionValid, Int, (data) => {
-      console.log("Zone session valid:", data);
+      console.log('Zone session valid:', data);
       if (data) {
         WorldSocket.sendMessage(
           OpCodes.RequestClientZoneChange,
@@ -91,41 +90,41 @@ export const CharacterSelectUIComponent: React.FC = () => {
           },
         );
       } else {
-        alert("Could not enter world");
+        // alert('Could not enter world');
       }
     });
     WorldSocket.registerOpCodeHandler(OpCodes.PostEnterWorld, Int, async (data) => {
       if (data.value === 1) {
         await UserConfig.instance.initialize('requiem', selectedChar.name);
         WorldSocket.sendMessage(OpCodes.ZoneSession, ZoneSession, {
-          zoneId: selectedChar.zone,
+          zoneId    : selectedChar.zone,
           instanceId: 0,
         });
       } else {
-        alert("Could not enter world");
+        //  alert('Could not enter world');
       }
     });
-    console.log("Sending enter world");
+    console.log('Sending enter world');
     WorldSocket.sendMessage(OpCodes.EnterWorld, EnterWorld, {
-      name: selectedChar.name,
-      tutorial: 0,
+      name      : selectedChar.name,
+      tutorial  : 0,
       returnHome: 0,
     });
   }, 100);
 
   useEffect(() => {
     const keyHandler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        setMode("login");
+      if (e.key === 'Escape') {
+        setMode('login');
         GameManager.instance.dispose();
         WorldSocket.close();
-      } else if (e.key === "Enter") {
+      } else if (e.key === 'Enter') {
         enterWorld();
       }
     };
-    document.addEventListener("keydown", keyHandler);
+    document.addEventListener('keydown', keyHandler);
     return () => {
-      document.removeEventListener("keydown", keyHandler);
+      document.removeEventListener('keydown', keyHandler);
     };
   }, [selectedChar, setMode, view, enterWorld]);
 
@@ -142,25 +141,25 @@ export const CharacterSelectUIComponent: React.FC = () => {
       CharacterSelect,
       charSelectHandler,
     );
-    console.log("Sending token");
+    console.log('Sending token');
     WorldSocket.registerOpCodeHandler<JWTResponse>(
       OpCodes.JWTResponse,
       JWTResponse,
       (e) => {
         if (!e.status) {
-          alert("Could not login to server");
-          setMode("login");
+          // alert('Could not login to server');
+          setMode('login');
           GameManager.instance.dispose();
           WorldSocket.close();
         } else if (e.status === -100) {
-          localStorage.removeItem("requiem");
-          alert("Your session has expired, please login again.");
-          setMode("login");
+          localStorage.removeItem('requiem');
+          // alert('Your session has expired, please login again.');
+          setMode('login');
           GameManager.instance.dispose();
         } else {
           WorldSocket.setSessionId(e.status);
         }
-        console.log("JWT Response", e.status);
+        console.log('JWT Response', e.status);
       },
     );
 
@@ -179,12 +178,12 @@ export const CharacterSelectUIComponent: React.FC = () => {
     const char =
       selectedChar ||
       ({
-        name: "Soandso",
-        gender: 0,
+        name     : 'Soandso',
+        gender   : 0,
         charClass: 0,
-        race: 1,
-        level: 1,
-        face: 1,
+        race     : 1,
+        level    : 1,
+        face     : 1,
       } as CharacterSelectEntry);
     GameManager.instance.CharacterSelect?.loadModel(char);
   }, [selectedChar, view]);
@@ -193,69 +192,69 @@ export const CharacterSelectUIComponent: React.FC = () => {
     <Box className="char-select">
       {view === VIEWS.CHAR_SELECT ? (
         <UiWindowComponent
-          title="Characters"
           background="TrackingBG_TX"
           state={{
-            fixed: true,
-            x: 30,
-            y: 30,
+            fixed      : true,
+            x          : 30,
+            y          : 30,
             fixedHeight: 600,
-            fixedWidth: 250,
+            fixedWidth : 250,
           }}
-          windowName={"charSelect"}
+          title="Characters"
+          windowName={'charSelect'}
         >
           <Stack
-            sx={{ padding: "20px", paddingTop: "30px", height: "100%" }}
-            alignItems={"center"}
+            alignItems={'center'}
+            sx={{ padding: '20px', paddingTop: '30px', height: '100%' }}
           >
             {charInfo?.characters.map((c) => (
               <UiButtonComponent
-                selected={selectedChar?.name === c?.name}
+                key={`char-${c.name}`}
                 buttonName="A_BigBtn"
-                text={c.name}
                 scale={1.5}
+                selected={selectedChar?.name === c?.name}
+                sx={{ margin: '12px' }}
+                text={c.name}
                 textFontSize="9px"
-                sx={{ margin: "12px" }}
                 onClick={() => {
                   setSelectedChar(c);
                 }}
-                key={`char-${c.name}`}
               />
             ))}
             {Array.from({ length: charSelectNum }, (_, idx) => (
               <UiButtonComponent
+                key={`char-create-${idx}`}
                 buttonName="A_BigBtn"
-                text={"Create New Character"}
-                textFontSize="9px"
                 scale={1.5}
-                sx={{ margin: "12px" }}
+                sx={{ margin: '12px' }}
+                text={'Create New Character'}
+                textFontSize="9px"
                 onClick={() => {
                   setView(VIEWS.CHAR_CREATE);
                 }}
-                key={`char-create-${idx}`}
               />
             ))}
 
-            <Stack sx={{ marginTop: "25px" }} direction={"row"}>
+            <Stack direction={'row'} sx={{ marginTop: '25px' }}>
               <UiButtonComponent
                 buttonName="A_SmallBtn"
-                text={"Back"}
                 scale={1.3}
+                sx={{ margin: '12px' }}
+                text={'Back'}
                 textFontSize="11px"
-                sx={{ margin: "12px" }}
                 onClick={() => {
-                  setMode("login");
+                  setMode('login');
                   GameManager.instance.dispose();
                   WorldSocket.close();
                 }}
               />
               <UiButtonComponent
                 buttonName="A_SmallBtn"
-                text={"Delete"}
                 isDisabled={!selectedChar}
                 scale={1.3}
+                sx={{ margin: '12px' }}
+                text={'Delete'}
                 textFontSize="11px"
-                sx={{ margin: "12px" }}
                 onClick={() => {
                   if (!selectedChar) {
                     return;
@@ -268,17 +267,17 @@ export const CharacterSelectUIComponent: React.FC = () => {
             </Stack>
             <UiButtonComponent
               buttonName="A_BigBtn"
-              text={"Enter World"}
               isDisabled={!selectedChar || charSelectNum === 8}
               scale={1.5}
+              sx={{ margin: '12px' }}
+              text={'Enter World'}
               textFontSize="9px"
-              sx={{ margin: "12px" }}
               onClick={enterWorld}
             />
           </Stack>
         </UiWindowComponent>
       ) : (
-        <CharacterCreate setView={setView} charInfo={charInfo} />
+        <CharacterCreate charInfo={charInfo} setView={setView} />
       )}
     </Box>
   );

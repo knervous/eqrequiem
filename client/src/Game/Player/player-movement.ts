@@ -1,11 +1,11 @@
-import BABYLON from "@bjs";
-import type * as BJS from "@babylonjs/core";
-import type Player from "./player";
-import { WorldSocket } from "@ui/net/instances";
-import { OpCodes } from "@game/Net/opcodes";
-import { ClientPositionUpdate } from "@game/Net/internal/api/capnp/common";
-import { AnimationDefinitions } from "@game/Animation/animation-constants";
-import emitter from "@game/Events/events";
+import type * as BJS from '@babylonjs/core';
+import BABYLON from '@bjs';
+import { AnimationDefinitions } from '@game/Animation/animation-constants';
+import emitter from '@game/Events/events';
+import { ClientPositionUpdate } from '@game/Net/internal/api/capnp/common';
+import { OpCodes } from '@game/Net/opcodes';
+import { WorldSocket } from '@ui/net/instances';
+import type Player from './player';
 
 type SimpleVector4 = {
   x: number;
@@ -25,10 +25,10 @@ export class PlayerMovement {
   public finalVelocity: BJS.Vector3 = BABYLON.Vector3.Zero(); // Add public property
   private sprintMultiplier: number = 2.0;
   private updateDelta: number = 0;
-  private jumpState: string = "idle"; // Jump state: idle, leavingGround, inAir
+  private jumpState: string = 'idle'; // Jump state: idle, leavingGround, inAir
   private lastPlayerPosition: SimpleVector4 = { x: 0, y: 0, z: 0, heading: 0 };
   private keyStates: { [key: string]: boolean } = {};
-
+  private autoRun: boolean = false;
   public moveForward: boolean = false;
 
   constructor(player: Player, scene: BJS.Scene) {
@@ -46,9 +46,16 @@ export class PlayerMovement {
         case BABYLON.KeyboardEventTypes.KEYUP:
           this.keyStates[code] = false;
           break;
+        default:
+          break;
       }
     });
   }
+
+  public toggleAutoRun() {
+    this.autoRun = !this.autoRun;
+  }
+
   public dispose() {
     this.scene.onKeyboardObservable.clear();
     this.scene = null as any;
@@ -58,33 +65,34 @@ export class PlayerMovement {
 
   private isActionPressed(action: string): boolean {
     const keyMap: Record<string, string> = {
-      move_forward: "KeyW",
-      move_backward: "KeyS",
-      turn_left: "KeyA",
-      turn_right: "KeyD",
-      move_up: "Space",
-      move_down: "ControlLeft",
-      sprint: "ShiftLeft",
+      move_forward : 'KeyW',
+      move_backward: 'KeyS',
+      turn_left    : 'KeyA',
+      turn_right   : 'KeyD',
+      move_up      : 'Space',
+      move_down    : 'ControlLeft',
+      sprint       : 'ShiftLeft',
     };
     return !!this.keyStates[keyMap[action]];
   }
 
   private isMovementKeysPressed(): boolean {
     return (
-      this.isActionPressed("move_forward") ||
-      this.isActionPressed("move_backward") ||
-      this.isActionPressed("turn_left") ||
-      this.isActionPressed("turn_right") ||
-      this.moveForward
+      this.isActionPressed('move_forward') ||
+      this.isActionPressed('move_backward') ||
+      this.isActionPressed('turn_left') ||
+      this.isActionPressed('turn_right') ||
+      this.moveForward ||
+      this.autoRun
     );
   }
 
   private isOnFloor(): boolean {
     const playerEntity = this.player.playerEntity;
-    if (!playerEntity || !this.physicsBody) return false;
+    if (!playerEntity || !this.physicsBody) {return false;}
 
     const origin = this.player.getPlayerPosition()!;
-    if (!origin) return false;
+    if (!origin) {return false;}
 
     // figure out your capsule height (Y‐extent)
     const shape = this.physicsBody.shape;
@@ -96,7 +104,7 @@ export class PlayerMovement {
 
     // we’ll use half‐height as our baseline "flat-ground" distance
     const halfHeight = shapeHeight * 0.5;
-    const baseline = halfHeight + 0.1;              // + tiny epsilon
+    const baseline = halfHeight + 0.1; // + tiny epsilon
 
     // cast straight down
     const rayEnd = origin.add(new BABYLON.Vector3(0, -shapeHeight, 0));
@@ -111,8 +119,8 @@ export class PlayerMovement {
     }
 
     // pull the surface normal and the hit distance
-    const N = result.hitNormalWorld;               // surface normal
-    const D = result.hitDistance;                  // how far down we hit
+    const N = result.hitNormalWorld; // surface normal
+    const D = result.hitDistance; // how far down we hit
 
     // compute cos(angle) = dot(N, up)
     const up = new BABYLON.Vector3(0, 1, 0);
@@ -135,17 +143,7 @@ export class PlayerMovement {
 
   public movementTick(delta: number) {
     const playerEntity = this.player.playerEntity;
-    if (!playerEntity || !this.physicsBody) return;
-
-    // if (
-    //   document.activeElement &&
-    //   !(
-    //     document.activeElement === document.body ||
-    //     document.activeElement === this.player.gameManager.canvas
-    //   )
-    // ) {
-    //   return;
-    // }
+    if (!playerEntity || !this.physicsBody) {return;}
 
     const currentPos = playerEntity.spawnPosition;
     const heading = playerEntity.getHeading();
@@ -169,12 +167,12 @@ export class PlayerMovement {
 
     // Handle turning
     if (!mouseCaptured) {
-      if (this.isActionPressed("turn_left")) {
+      if (this.isActionPressed('turn_left')) {
         didTurn = true;
         this.player.playerCamera.cameraYaw += this.turnSpeed * delta;
         this.player.setRotation(this.player.playerCamera.cameraYaw);
       }
-      if (this.isActionPressed("turn_right")) {
+      if (this.isActionPressed('turn_right')) {
         didTurn = true;
         this.player.playerCamera.cameraYaw -= this.turnSpeed * delta;
         this.player.setRotation(this.player.playerCamera.cameraYaw);
@@ -183,29 +181,34 @@ export class PlayerMovement {
 
     // Compute movement direction
     const movement = new BABYLON.Vector3(0, 0, 0);
-    if (this.isActionPressed("move_forward") || this.moveForward) {
+    if (this.isActionPressed('move_forward') || this.moveForward) {
       movement.x = -1;
-
+      this.autoRun = false; // Disable auto-run when moving forward
       playWalk = true;
     }
-    if (this.isActionPressed("move_backward")) {
+    if (this.isActionPressed('move_backward')) {
       movement.x = 1;
-
+      this.autoRun = false; // Disable auto-run when moving backward
       playWalk = true;
     }
-    if (this.isActionPressed("turn_left") && mouseCaptured) {
+    if (this.isActionPressed('turn_left') && mouseCaptured) {
       movement.z = 1;
 
       playWalk = true;
     }
-    if (this.isActionPressed("turn_right") && mouseCaptured) {
+    if (this.isActionPressed('turn_right') && mouseCaptured) {
       movement.z = -1;
-
       playWalk = true;
     }
-    if (this.isActionPressed("move_down")) {
+    if (this.isActionPressed('move_down')) {
       movement.y = -1;
       didCrouch = true;
+    }
+
+    // Autorun
+    if (this.autoRun) {
+      movement.x = -1;
+      playWalk = true;
     }
 
     // Compute forward and right vectors
@@ -248,13 +251,13 @@ export class PlayerMovement {
     ).normalize();
     // Handle jump
     const onFloor = this.isOnFloor();
-    const notJumping = this.jumpState === "idle" && onFloor;
+    const notJumping = this.jumpState === 'idle' && onFloor;
     if (
-      this.isActionPressed("move_up") &&
+      this.isActionPressed('move_up') &&
       // this.jumpState === "idle" &&
-      true //onFloor
+      true // onFloor
     ) {
-      this.jumpState = "leavingGround";
+      this.jumpState = 'leavingGround';
       const currentVelocity = this.physicsBody.getLinearVelocity();
       const jumpVelocity = new BABYLON.Vector3(0, this.jumpImpulseStrength, 0);
       this.physicsBody.setLinearVelocity(
@@ -268,18 +271,18 @@ export class PlayerMovement {
     }
 
     // Update jump state
-    if (this.jumpState === "leavingGround" && !onFloor) {
-      this.jumpState = "inAir";
+    if (this.jumpState === 'leavingGround' && !onFloor) {
+      this.jumpState = 'inAir';
     }
-    if (this.jumpState === "leavingGround" && onFloor) {
-      this.jumpState = "idle";
+    if (this.jumpState === 'leavingGround' && onFloor) {
+      this.jumpState = 'idle';
     }
-    if (this.jumpState === "inAir" && onFloor) {
-      this.jumpState = "idle";
+    if (this.jumpState === 'inAir' && onFloor) {
+      this.jumpState = 'idle';
     }
 
     // Compute velocity
-    let speedMod = this.isActionPressed("sprint")
+    let speedMod = this.isActionPressed('sprint')
       ? this.sprintMultiplier
       : 1.0;
     if (this.player.Running) {
@@ -337,10 +340,10 @@ export class PlayerMovement {
       //     diffZ,
       //   );
       // }
-      //return;
+      // return;
     } else {
       const currentVelocity = this.physicsBody.getLinearVelocity();
-      emitter.emit("playerMovement", currentPos);
+      emitter.emit('playerMovement', currentPos);
 
       this.physicsBody.setLinearVelocity(
         new BABYLON.Vector3(
@@ -364,8 +367,8 @@ export class PlayerMovement {
       );
     }
 
-    emitter.emit("playerPosition", this.player.getPlayerPosition()!);
-    emitter.emit("playerRotation", this.player.getPlayerRotation());
+    emitter.emit('playerPosition', this.player.getPlayerPosition()!);
+    emitter.emit('playerRotation', this.player.getPlayerRotation());
     // Network update
     this.updateDelta += delta;
     if (this.updateDelta > 0.5) {
@@ -381,7 +384,7 @@ export class PlayerMovement {
             AnimationDefinitions.Idle1,
         });
       } catch (e) {
-        console.error("[PlayerMovement] Error sending position update:", e);
+        console.error('[PlayerMovement] Error sending position update:', e);
       }
     }
 

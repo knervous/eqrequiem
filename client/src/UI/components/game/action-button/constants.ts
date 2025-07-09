@@ -58,11 +58,15 @@ export enum ActionType {
   // Combat
   MELEE_ATTACK = 0,
   RANGED_ATTACK = 1,
+  COMBAT = 2,
   // Abilities
-
+  ABILITY = 3,
+  // Socials
+  SOCIAL = 4,
   // Spells
-
+  CAST_SPELL = 5,
   // Inventory
+  INVENTORY = 6,
 }
 
 export interface ActionButtonData<T = any> {

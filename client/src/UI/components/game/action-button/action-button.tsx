@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { CommandHandler } from '@game/ChatCommands/command-handler';
 import { UserConfig } from '@game/Config/config';
 import type { ActionButtonsConfig } from '@game/Config/types';
+import { useEventArg } from '@game/Events/event-hooks';
 import emitter from '@game/Events/events';
 import Player from '@game/Player/player';
 import { Box } from '@mui/material';
@@ -32,8 +33,15 @@ interface HotButtonProps extends CommonButtonProps {
 
 interface ActionButtonProps extends CommonButtonProps {
   action: (_: any) => void;
+  playerAction?: boolean;
   buttonName?: string;
 }
+
+const buttonMap = {
+  [ActionButtonType.ABILITIES]: 'abilityButtons',
+  [ActionButtonType.SOCIALS]  : 'socialButtons',
+  [ActionButtonType.COMBAT]   : 'combatButtons',
+} as Record<ActionButtonType, keyof ActionButtonsConfig>;
 
 export const ActionButton: React.FC<ActionButtonProps> = (props) => {
   const { elementRef, onMouseDown } = useImmediateDragClone<HTMLDivElement>(
@@ -46,13 +54,7 @@ export const ActionButton: React.FC<ActionButtonProps> = (props) => {
     }
     return (
       <UiButtonComponent
-        text={props.text}
         buttonName={props.buttonName}
-        textSx={{
-          fontSize: '25px',
-          font    : 'Arial',
-          color   : 'black',
-        }}
         sx={{
           ['&:hover']: {
             boxShadow: '0px 0px 10px 5px inset rgba(216, 215, 208, 0.27)',
@@ -61,14 +63,31 @@ export const ActionButton: React.FC<ActionButtonProps> = (props) => {
             ? {}
             : { width: props.size, height: props.size }),
         }}
+        text={props.text ?? props.actionData?.label}
+        textSx={{
+          fontSize: '25px',
+          font    : 'Arial',
+          color   : 'black',
+        }}
       ></UiButtonComponent>
     );
-  }, [props.buttonName, props.text, props.size, props.useDefaultSize]);
+  }, [
+    props.buttonName,
+    props.text,
+    props.size,
+    props.useDefaultSize,
+    props.actionData,
+  ]);
+
+  const buttonAction = useMemo(
+    () =>
+      props.playerAction ? () => props.action(props.actionData) : props.action,
+    [props],
+  );
 
   return (
     <Box
       ref={elementRef}
-      onMouseDown={onMouseDown}
       className="action-button"
       sx={{
         ['&:hover']: {
@@ -85,7 +104,8 @@ export const ActionButton: React.FC<ActionButtonProps> = (props) => {
         alignItems    : 'center',
         justifyContent: 'center',
       }}
-      onClick={props.action}
+      onClick={buttonAction}
+      onMouseDown={onMouseDown}
     >
       {uiButton}
     </Box>
@@ -95,12 +115,28 @@ export const ActionButton: React.FC<ActionButtonProps> = (props) => {
 export const ActionHotButton: React.FC<HotButtonProps> = (props) => {
   const dropRef = useRef<HTMLDivElement>(null);
 
-  const action = useMemo(() => {
+  const linkedActionData: ActionButtonData | undefined = useMemo(() => {
+    const { actionData, actionButtonConfig } = props;
+    if (!actionButtonConfig || !actionData) {
+      return undefined;
+    }
+    const actionButton = actionButtonConfig[buttonMap[actionData.type]];
+    if (!actionButton) {
+      return undefined;
+    }
+    return actionButton[actionData.index ?? 0];
+  }, [props]);
+
+  const action: () => void = useMemo(() => {
     const player = Player.instance;
     if (!player) {
       return () => console.log('No player instance');
     }
-    switch (props.actionData?.type) {
+    const { actionButtonConfig, actionData } = props;
+    if (!actionButtonConfig || !actionData) {
+      return () => console.log('No action button config or action data');
+    }
+    switch (actionData.type) {
       case ActionButtonType.WHO:
         return CommandHandler.instance.commandWho.bind(CommandHandler.instance);
       case ActionButtonType.INVITE:
@@ -135,28 +171,15 @@ export const ActionHotButton: React.FC<HotButtonProps> = (props) => {
         return player.toggleSit.bind(player);
       case ActionButtonType.WALK:
         return player.toggleWalk.bind(player);
+      case ActionButtonType.ABILITIES:
       case ActionButtonType.SOCIALS:
-        return () => {
-          console.log('Socials action triggered');
-          // this will need some work
-          for (const line of props.actionButtonConfig?.socialButtons?.[
-            props.actionData?.index ?? 0
-          ]?.data ?? ([] as string[])) {
-            console.log('Executing social command:', line);
-            CommandHandler.instance.parseCommand(line.slice(1));
-          }
-        };
-      case ActionButtonType.COMBAT:
-        return () =>
-          player.doAction(
-            props.actionButtonConfig?.combatButtons?.[
-              props.actionData?.index ?? 0
-            ] as ActionButtonData,
-          );
+      case ActionButtonType.COMBAT: {
+        return () => player.doAction(linkedActionData);
+      }
       default:
         return () => console.log('Default action triggered');
     }
-  }, [props.actionData, props.actionButtonConfig]);
+  }, [props, linkedActionData]) as () => void;
 
   const buttonName = useMemo(
     () =>
@@ -202,54 +225,60 @@ export const ActionHotButton: React.FC<HotButtonProps> = (props) => {
     };
   }, [props.actionData]);
 
-  const text = useMemo(() => {
-    switch (props.actionData?.type) {
-      case ActionButtonType.WHO:
-        return 'Who';
-      case ActionButtonType.INVITE:
-        return 'Invite';
-      case ActionButtonType.DISBAND:
-        return 'Disband';
-      case ActionButtonType.CAMP:
-        return 'Camp';
-      case ActionButtonType.HELP:
-        return 'Help';
-      case ActionButtonType.PERSONA:
-        return 'Persona';
-      case ActionButtonType.OPTIONS:
-        return 'Options';
-      case ActionButtonType.ABILITIES:
-        return 'Abilities';
-      case ActionButtonType.SPELLS:
-        return 'Spells';
-      case ActionButtonType.INVENTORY:
-        return 'Inventory';
-      case ActionButtonType.OPTIONS:
-        return 'Options';
-      case ActionButtonType.MELEE_ATTACK:
-        return 'Melee';
-      case ActionButtonType.RANGED_ATTACK:
-        return 'Ranged';
-      case ActionButtonType.SIT:
-        return Player.instance?.Sitting ? 'Stand' : 'Sit';
-      case ActionButtonType.WALK:
-        return Player.instance?.Running ? 'Walk' : 'Run';
-      case ActionButtonType.SOCIALS:
-        return (
-          props.actionButtonConfig?.socialButtons?.[
-            props.actionData?.index ?? 0
-          ]?.label ?? 'Socials'
-        );
-      case ActionButtonType.COMBAT:
-        return (
-          props.actionButtonConfig?.combatButtons?.[
-            props.actionData?.index ?? 0
-          ]?.label ?? `Combat ${props.index}`
-        );
-      default:
-        return props.actionData?.label ?? '';
-    }
-  }, [props.actionData, props.actionButtonConfig, props.index, forceRender]); // eslint-disable-line react-hooks/exhaustive-deps
+  const text = useMemo(
+    () => {
+      switch (props.actionData?.type) {
+        case ActionButtonType.WHO:
+          return 'Who';
+        case ActionButtonType.INVITE:
+          return 'Invite';
+        case ActionButtonType.DISBAND:
+          return 'Disband';
+        case ActionButtonType.CAMP:
+          return 'Camp';
+        case ActionButtonType.HELP:
+          return 'Help';
+        case ActionButtonType.PERSONA:
+          return 'Persona';
+        case ActionButtonType.OPTIONS:
+          return 'Options';
+        case ActionButtonType.ABILITIES:
+          return 'Abilities';
+        case ActionButtonType.SPELLS:
+          return 'Spells';
+        case ActionButtonType.INVENTORY:
+          return 'Inventory';
+        case ActionButtonType.OPTIONS:
+          return 'Options';
+        case ActionButtonType.MELEE_ATTACK:
+          return 'Melee';
+        case ActionButtonType.RANGED_ATTACK:
+          return 'Ranged';
+        case ActionButtonType.SIT:
+          return Player.instance?.Sitting ? 'Stand' : 'Sit';
+        case ActionButtonType.WALK:
+          return Player.instance?.Running ? 'Walk' : 'Run';
+        case ActionButtonType.SOCIALS:
+        case ActionButtonType.COMBAT:
+        case ActionButtonType.ABILITIES: {
+          // For these types, we use the label from the action data
+          return linkedActionData?.label ?? '';
+        }
+        default:
+          return props.actionData?.label ?? '';
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [
+      props.actionData,
+      props.actionButtonConfig,
+      props.index,
+      linkedActionData,
+      forceRender,
+    ],
+  );
+
+  useEventArg('hotkey', action, props.index);
 
   useEffect(() => {
     const el = dropRef.current;
@@ -269,6 +298,7 @@ export const ActionHotButton: React.FC<HotButtonProps> = (props) => {
           dropped.hotButtonIndex!,
         );
       } else if (dropped) {
+        console.log('Dropped action data:', dropped);
         UserConfig.instance.updateHotButton(
           props.index,
           dropped as ActionButtonData,
@@ -296,11 +326,11 @@ export const ActionHotButton: React.FC<HotButtonProps> = (props) => {
     <Box ref={dropRef} data-hot-button={props.index} sx={{ p: 1 }}>
       <ActionButton
         {...props}
-        actionData={hotButtonActionData}
         action={action}
+        actionData={hotButtonActionData}
         buttonName={buttonName}
-        text={text}
         size={110}
+        text={text}
       />
     </Box>
   );
