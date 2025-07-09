@@ -1,11 +1,14 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Box, Stack, Typography } from "@mui/material";
+import { Box, Grid, Stack, Typography } from "@mui/material";
 import { useRawImage, useSakImage, useSakImages } from "@ui/hooks/use-image";
 import { UiButtonComponent } from "@ui/common/ui-button";
 import { PlayerProfile } from "@game/Net/internal/api/capnp/player";
 import { CLASS_DATA_NAMES } from "@game/Constants/class-data";
 import emitter from "@game/Events/events";
 import Player from "@game/Player/player";
+import { ActionButton, ActionHotButton } from "../../action-button/action-button";
+import { StoneHotButtons } from "./stone-hot-buttons";
+import { StoneGeneralInv } from "./stone-general-inv";
 
 // Configuration for all stone frame pieces
 const stoneConfigs = [
@@ -48,7 +51,9 @@ const StoneRow: React.FC<{
 const imageNames = stoneConfigs.map(({ name }) => `${name}`);
 export const StoneLeft: React.FC<{ width: number }> = ({ width }) => {
   const bgImages = useSakImages(imageNames, true);
-  const [playerClass, setPlayerClass] = useState(CLASS_DATA_NAMES[Player.instance?.player?.charClass ?? 1]);
+  const [playerClass, setPlayerClass] = useState(
+    CLASS_DATA_NAMES[Player.instance?.player?.charClass ?? 1],
+  );
   const stoneImages = useMemo(
     () =>
       stoneConfigs.reduce(
@@ -71,11 +76,8 @@ export const StoneLeft: React.FC<{ width: number }> = ({ width }) => {
     "image/gif",
   );
   const spellGem = useSakImage("Jib_SpellGemBG", true);
-  const invImage = useSakImage("HBW_BG_TXUP", true);
-  const hbImage = useSakImage("HBW_BG_TXDN", true);
 
-  const bottomHeight =
-    invImage.entry.height * 2 + hbImage.entry.height * 2 + 30; // Scale down to match other elements
+  const bottomHeight = 1400;
 
   // Calculate scale factor (clamped)
   const scale = useMemo(() => {
@@ -100,7 +102,14 @@ export const StoneLeft: React.FC<{ width: number }> = ({ width }) => {
             backgroundSize: "cover",
             //transform: `scale(${2})`,
           }}
-        />
+        >
+          <ActionButton
+            background="A_ClassicButtonBG"
+            foreGround="A_ClassicButtonFG"
+            action={() => console.log(`Spell Gem ${i + 1} Clicked`)}
+            size={spellGem.entry.width * 2.3}
+          />
+        </Box>
       )),
     [spellGem],
   );
@@ -186,7 +195,7 @@ export const StoneLeft: React.FC<{ width: number }> = ({ width }) => {
               />
               <UiButtonComponent
                 onClick={() => {
-                  emitter.emit('toggleInventory');
+                  emitter.emit("toggleInventory");
                 }}
                 sx={{ mt: 12 }}
                 scale={1.1}
@@ -202,7 +211,9 @@ export const StoneLeft: React.FC<{ width: number }> = ({ width }) => {
                   mt: 2,
                 }}
               >
-                {!["warrior", "rogue", "monk"].includes(playerClass?.toLowerCase()) && (
+                {!["warrior", "rogue", "monk"].includes(
+                  playerClass?.toLowerCase(),
+                ) && (
                   <UiButtonComponent
                     onClick={() => console.log("Spells")}
                     sx={{
@@ -233,43 +244,14 @@ export const StoneLeft: React.FC<{ width: number }> = ({ width }) => {
             justifyContent={"center"}
             sx={{ width: "100%", height: bottomHeight }}
           >
-            <Box
-              sx={{
-                width: invImage.entry.width * 2,
-                height: invImage.entry.height * 2,
-                backgroundImage: `url(${invImage.image})`,
-                backgroundSize: "cover",
-              }}
-            />
+            <StoneGeneralInv />
 
-            <Box
-              sx={{
-                width: hbImage.entry.width * 2,
-                height: hbImage.entry.height * 2,
-                backgroundImage: `url(${hbImage.image})`,
-                backgroundSize: "cover",
-              }}
-            >
-              <Stack
-                direction="row"
-                alignItems="center"
-                justifyContent="center"
-              >
-                <UiButtonComponent
-                  onClick={() => console.log("Prev")}
-                  scale={1.5}
-                  buttonName="A_LeftArrowBtn"
-                />
-                <Typography sx={{ fontSize: 35, color: "white", mx: 3 }}>
-                  1
-                </Typography>
-                <UiButtonComponent
-                  scale={1.5}
-                  onClick={() => console.log("Next")}
-                  buttonName="A_RightArrowBtn"
-                />
-              </Stack>
-            </Box>
+            {/** Action Hot Buttons */}
+            <StoneHotButtons scale={scale} />
+            
+    
+
+           
           </Stack>
         </Box>
       </Box>

@@ -1,5 +1,5 @@
 // src/components/UiWindowComponent.tsx
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { UiWindow, UiState } from "../state/initial-state";
 import { Box } from "@mui/material";
 import { actions } from "../state/reducer";
@@ -102,7 +102,9 @@ export const UiWindowComponent: React.FC<Props> = ({
       transition: resize.isResizing ? "" : "height 0.2s ease-in-out", // Smooth height transition
     };
   }, [x, y, width, height, minimized, title, resize, bg]);
-
+  const toggleMinimize = useCallback(() => {
+    setMinimized((prev) => !prev);
+  }, []);
   return (
     <Box className="ui-window" style={windowStyles} data-ui-window>
       {title ? (
@@ -112,7 +114,7 @@ export const UiWindowComponent: React.FC<Props> = ({
           name={title}
           minimized={minimized}
           draggable={draggable}
-          toggleMinimize={() => setMinimized((prev) => !prev)}
+          toggleMinimize={toggleMinimize}
           handleDragMouseDown={handleDragMouseDown}
         />
       ) : (

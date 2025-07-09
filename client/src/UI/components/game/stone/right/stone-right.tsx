@@ -188,7 +188,7 @@ export const StoneRight: React.FC<{ width: number }> = ({ width }) => {
             direction={"column"}
             justifyContent={"center"}
           >
-            <StoneActions />
+            <StoneActions scale={scale} />
 
           </Stack>
         </Box>

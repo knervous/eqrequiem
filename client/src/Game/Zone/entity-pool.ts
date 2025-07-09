@@ -1,13 +1,13 @@
-import type * as BJS from "@babylonjs/core";
+import type * as BJS from '@babylonjs/core';
+import type GameManager from '@game/Manager/game-manager';
+import { Entity } from '@game/Model/entity';
+import EntityCache from '@game/Model/entity-cache';
 import {
   EntityAnimation,
   EntityPositionUpdateBase,
   Spawn,
-} from "@game/Net/internal/api/capnp/common";
-import { Entity } from "@game/Model/entity";
-import { Grid } from "./zone-grid";
-import EntityCache from "@game/Model/entity-cache";
-import type GameManager from "@game/Manager/game-manager";
+} from '@game/Net/internal/api/capnp/common';
+import { Grid } from './zone-grid';
 
 export default class EntityPool {
   parent: BJS.Node;
@@ -42,8 +42,18 @@ export default class EntityPool {
 
   }
 
+  getPlayerEntities(): Entity[] {
+    const playerEntities: Entity[] = [];
+    for (const entity of Object.values(this.entities)) {
+      if (entity?.spawn instanceof Spawn && !entity?.spawn.isNpc) {
+        playerEntities.push(entity);
+      }
+    }
+    return playerEntities;
+  }
+
   async process() {
-    return;
+    
   }
 
   async AddSpawn(spawn: Spawn) {
@@ -56,14 +66,14 @@ export default class EntityPool {
     }
 
     if (!spawn.name.includes('Discord')) {
-      //return;
+      // return;
     }
 
     this.spawns[spawn.spawnId] = spawn;
 
     const entity = await EntityCache.getInstance(this.gameManager, spawn, this.scene!, this.parent);
     if (!entity) {
-      console.error("Failed to acquire entity for spawn", spawn.spawnId);
+      console.error('Failed to acquire entity for spawn', spawn.spawnId);
       return;
     }
     this.grid?.addEntity(entity);
@@ -72,7 +82,7 @@ export default class EntityPool {
   
   UpdateSpawnPosition(sp: EntityPositionUpdateBase) {
     const e = this.entities[sp.spawnId];
-    if (!e || !e.spawn) return;
+    if (!e || !e.spawn) {return;}
 
     const { x, y, z } = sp.position;
     e.setPosition(x, y, z);
@@ -82,7 +92,7 @@ export default class EntityPool {
     const vz = sp.velocity.z;
     e.setVelocity(vx, vy, vz);
 
-    const speed2 = vx*vx + vz*vz;
+    const speed2 = vx * vx + vz * vz;
     if (speed2 > 1e-6) {
     // compute, then flip 180°
       const raw = Math.atan2(vz, vx);
@@ -102,7 +112,7 @@ export default class EntityPool {
 
   PlayAnimation(anim: EntityAnimation) {
     const e = this.entities[anim.spawnId];
-    if (!e || !e.spawn) return;
+    if (!e || !e.spawn) {return;}
     e.playAnimation(anim.animation);
   }
 }

@@ -55,7 +55,7 @@ export const AtlasGallery = ({ atlasData, useImageHook }) => {
         ) : (
           <Grid container spacing={2}>
             {filteredEntries.map(([path]) => (
-              <Grid item key={path} xs={6} sm={4} md={3} lg={2}>
+              <Grid item key={path} >
                 <AtlasImageItem path={path} useImageHook={useImageHook} />
               </Grid>
             ))}

@@ -4,12 +4,15 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 
 	eq "github.com/knervous/eqgo/internal/api/capnp"
 	"github.com/knervous/eqgo/internal/api/opcodes"
+	"github.com/knervous/eqgo/internal/constants"
 	entity "github.com/knervous/eqgo/internal/entity"
 	"github.com/knervous/eqgo/internal/quest"
 
+	db_character "github.com/knervous/eqgo/internal/db/character"
 	db_zone "github.com/knervous/eqgo/internal/db/zone"
 	"github.com/knervous/eqgo/internal/session"
 )
@@ -23,6 +26,9 @@ func HandleChannelMessage(z *ZoneInstance, ses *session.Session, payload []byte)
 	targetName, err := req.Targetname()
 	if err != nil {
 		log.Printf("failed to get target name: %v", err)
+		return
+	}
+	if strings.Trim(targetName, " ") == "" {
 		return
 	}
 	message, err := req.Message_()
@@ -163,6 +169,12 @@ func HandleRequestClientZoneChange(z *ZoneInstance, ses *session.Session, payloa
 	}
 	fmt.Println("zone data", dbZone)
 
+	characterSkills, err := db_character.GetCharacterSkills(context.Background(), int64(charData.ID))
+	if err != nil {
+		log.Printf("failed to get character skills for character %d: %v", charData.ID, err)
+		return
+	}
+
 	newZone, err := session.NewMessage(ses, eq.NewRootNewZone)
 	if err != nil {
 		log.Printf("failed to create NewZone message: %v", err)
@@ -240,6 +252,17 @@ func HandleRequestClientZoneChange(z *ZoneInstance, ses *session.Session, payloa
 	playerProfile.SetMana(int32(mob.CurrentMana))
 	playerProfile.SetMaxHp(int64(mob.MaxHp))
 	playerProfile.SetMaxMana(int64(mob.MaxMana))
+
+	// Skills
+	skills, err := playerProfile.NewSkills(int32(constants.Skill_HIGHEST) + 1)
+	if err != nil {
+		log.Printf("failed to create Skills array: %v", err)
+		return
+	}
+	for _, skill := range characterSkills {
+		skills.Set(int(skill.SkillID), int32(skill.Value))
+	}
+	playerProfile.SetSkills(skills)
 
 	// TODO stats fill the rest of this out
 

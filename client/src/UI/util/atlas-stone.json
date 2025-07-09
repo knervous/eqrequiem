@@ -2913,7 +2913,7 @@
   },
   "A_LeftArrowBtnPressed": {
     "texture": "window_pieces03.webp",
-    "left": 90,
+     "left": 60,
     "top": 216,
     "width": 30,
     "height": 32

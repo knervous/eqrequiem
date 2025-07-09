@@ -1,8 +1,7 @@
-import type { Entity } from "@game/Model/entity";
-import type * as BJS from "@babylonjs/core";
-
-import mitt, { Emitter } from "mitt";
-import type { PlayerProfile } from "@game/Net/internal/api/capnp/player";
+import type * as BJS from '@babylonjs/core';
+import type { Entity } from '@game/Model/entity';
+import type { PlayerProfile } from '@game/Net/internal/api/capnp/player';
+import mitt, { Emitter } from 'mitt';
 
 export type ChatMessage = {
   type: number;
@@ -15,6 +14,7 @@ export type Events = {
   playerName: string;
   playerLoaded: void;
   playerRunning: boolean;
+  playerSitting: boolean;
 
   zoneSpawns: void;
   playerPosition: BJS.Vector3;
@@ -26,6 +26,17 @@ export type Events = {
   chatMessage: ChatMessage;
   toggleInventory: void;
   setMode: string;
+
+  // Config
+  updateConfig: void;
+  updateKeybinds: void;
+  updateSettings: void;
+
+  // Action buttons
+  updateHotButtons: void;
+  updateCombatButtons: void;
+  updateSocialButtons: void;
+  updateAbilityButtons: void;
 };
 
 type EnhancedEmitter<Events extends Record<string, unknown>> = Emitter<Events> & {

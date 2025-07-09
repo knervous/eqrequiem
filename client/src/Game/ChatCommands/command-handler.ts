@@ -1,16 +1,18 @@
-import { Trie } from "./trie";
-import Player from "@game/Player/player";
-import GameManager from "@game/Manager/game-manager";
-import { WorldSocket } from "@ui/net/instances";
-import { OpCodes } from "@game/Net/opcodes";
-import { ChannelMessage } from "@game/Net/internal/api/capnp/common";
-import { AnimationDefinitions } from "@game/Animation/animation-constants";
-import { supportedZones } from "@game/Constants/supportedZones";
+import { AnimationDefinitions } from '@game/Animation/animation-constants';
+import { CLASS_DATA_NAMES } from '@game/Constants/class-data';
+import RACE_DATA from '@game/Constants/race-data';
+import { supportedZones } from '@game/Constants/supportedZones';
+import GameManager from '@game/Manager/game-manager';
+import { ChannelMessage } from '@game/Net/internal/api/capnp/common';
 import {
   RequestClientZoneChange,
   ZoneChangeType,
-} from "@game/Net/internal/api/capnp/zone";
-import emitter from "@game/Events/events";
+} from '@game/Net/internal/api/capnp/zone';
+import { OpCodes } from '@game/Net/opcodes';
+import Player from '@game/Player/player';
+import { WorldSocket } from '@ui/net/instances';
+import { chatMessage } from './chat-message';
+import { Trie } from './trie';
 
 export function command(name: string): MethodDecorator {
   return (target: object, propertyKey: string | symbol) => {
@@ -23,7 +25,12 @@ export function command(name: string): MethodDecorator {
 }
 
 const addChatLine = (message: string) => {
-  emitter.emit("chatMessage", { type: 0, message, color: "#ddd", chanNum: 0 });
+  chatMessage({
+    type   : 0,
+    message,
+    color  : '#ddd',
+    chanNum: 0, 
+  });
 };
 
 const addChatLines = (lines: string | string[]) => {
@@ -31,7 +38,7 @@ const addChatLines = (lines: string | string[]) => {
     ? lines
     : lines
       .trim()
-      .split("\n")
+      .split('\n')
       .map((line) => line.trim());
   lineArray.forEach((line) => addChatLine(line));
 };
@@ -76,7 +83,7 @@ export class CommandHandler {
 
     if (entry) {
       const fn = (this as any)[entry.method];
-      if (typeof fn === "function") {
+      if (typeof fn === 'function') {
         fn.call(this, args);
       } else {
         console.error(`Handler ${entry.method} is not a function`);
@@ -86,17 +93,31 @@ export class CommandHandler {
     }
   }
 
-  @command("speed")
+  @command('speed')
   commandSpeed(args: string[]) {
     if (+args[0] > 0 && Player.instance?.playerMovement) {
       Player.instance.playerMovement.moveSpeed = +args[0];
       addChatLine(`Speed set to ${args[0]}`);
     } else {
-      addChatLine("Invalid speed value");
+      addChatLine('Invalid speed value');
     }
   }
 
-  @command("help")
+  @command('sit')
+  commandSit() {
+    if (Player.instance) {
+      Player.instance.toggleSit();
+    } 
+  }
+
+  @command('walk')
+  commandWalk() {
+    if (Player.instance) {
+      Player.instance.toggleWalk();
+    }
+  }
+
+  @command('help')
   commandHelp() {
     addChatLines(`
         ----- Available commands -----
@@ -117,7 +138,7 @@ export class CommandHandler {
     `);
   }
 
-  @command("location")
+  @command('location')
   commandLocation() {
     if (Player.instance?.getPlayerPosition() !== undefined) {
       const { x, y, z } = Player.instance.getPlayerPosition()!;
@@ -126,25 +147,25 @@ export class CommandHandler {
       );
     } else {
       addChatLine(
-        "You are not in the game or your player entity is not initialized.",
+        'You are not in the game or your player entity is not initialized.',
       );
     }
   }
 
-  @command("controls")
+  @command('controls')
   commandControls() {
     addChatLines([
-      "Movement: W, A, S, D",
-      "Jump (Up): Space",
-      "Sprint: Shift",
-      "Crouch (Down): Ctrl",
-      "Look around: Mouse with Right Click = Mouse lock",
+      'Movement: W, A, S, D',
+      'Jump (Up): Space',
+      'Sprint: Shift',
+      'Crouch (Down): Ctrl',
+      'Look around: Mouse with Right Click = Mouse lock',
     ]);
   }
 
-  @command("target")
+  @command('target')
   commandTarget(args: string[]) {
-    const targetName = args.join(" ").trim();
+    const targetName = args.join(' ').trim();
     if (!targetName) {
       return;
     }
@@ -156,16 +177,16 @@ export class CommandHandler {
     }
   }
 
-  @command("listzones")
+  @command('listzones')
   commandListZones() {
     const zoneList = Object.entries(supportedZones)
       .map(([, value]) => `${value.shortName} - ${value.longName}`)
-      .join("\n");
+      .join('\n');
     addChatLines(`Available zones:\n${zoneList}`);
-    addChatLine(`To change zones, use: /zone {shortname}`);
+    addChatLine('To change zones, use: /zone {shortname}');
   }
 
-  @command("zone")
+  @command('zone')
   async commandZone(args: string[]) {
     const zone = args[0];
     const supportedZone = Object.entries(supportedZones).find(
@@ -178,13 +199,13 @@ export class CommandHandler {
     if (!WorldSocket.isConnected) {
       GameManager.instance.loadZone(zone);
       GameManager.instance.instantiatePlayer({
-        race: 1,
+        race     : 1,
         charClass: 1,
-        name: "Soandso",
-        x: 15,
-        y: 15,
-        z: 15,
-        face: 4,
+        name     : 'Soandso',
+        x        : 15,
+        y        : 15,
+        z        : 15,
+        face     : 4,
       });
       return;
     }
@@ -194,168 +215,206 @@ export class CommandHandler {
         OpCodes.RequestClientZoneChange,
         RequestClientZoneChange,
         {
-          type: ZoneChangeType.FROM_ZONE,
-          x: 5,
-          y: 5,
-          z: 5,
+          type  : ZoneChangeType.FROM_ZONE,
+          x     : 5,
+          y     : 5,
+          z     : 5,
           zoneId: supportedZone[0],
         },
       );
     } else {
-      addChatLine("No zone entered");
+      addChatLine('No zone entered');
     }
   }
 
-  @command("ooc")
-  commandOoc(args: string[]) {
-    alert("TODO fill me in!");
+  // @command("ooc")
+  // commandOoc(args: string[]) {
+  //   alert("TODO fill me in!");
+  // }
+
+  @command('who')
+  commandWho() {
+    if (!GameManager.instance.ZoneManager?.CurrentZone) {
+      return;
+    }
+    const entities = GameManager.instance.ZoneManager?.EntityPool?.getPlayerEntities() ?? [];
+    addChatLine(`----- There are ${entities.length} players in ${GameManager.instance.ZoneManager?.CurrentZone?.longName} -----`);
+    addChatLines(entities.map((e) => `[${e.spawn.level} ${RACE_DATA[e.spawn.race]?.name ?? 'Unknown'} ${CLASS_DATA_NAMES[e.spawn.charClass]}] ${e.spawn.name}`));
   }
 
-  @command("say")
+  @command('invite')
+  commandInvite(args: string[]) {
+    console.log('Invite command not implemented yet.', args);
+  }
+
+  @command('disband')
+  commandDisband() {
+    console.log('Disband command not implemented yet.');
+  }
+
+  @command('options')
+  commandOptions() {
+    addChatLine('Options command not implemented yet.');
+  }
+
+  @command('persona')
+  commandPersona() {
+    addChatLine('Persona command not implemented yet.');
+  }
+
+  @command('say')
   commandSay(args: string[]) {
-    const message = args.join(" ");
+    const message = args.join(' ');
     if (message) {
-      addChatLine(`You say, '${message}'`, { type: 1 });
+      addChatLine(`You say, '${message}'`);
       WorldSocket.sendMessage(OpCodes.ChannelMessage, ChannelMessage, {
-        sender: Player.instance?.player?.name ?? "",
+        sender    : Player.instance?.player?.name ?? '',
         targetname: Player.instance?.Target?.spawn?.name,
-        chanNum: 0,
+        chanNum   : 0,
         message,
       });
     }
   }
 
-  @command("camp")
+  @command('camp')
   commandCamp() {
     GameManager.instance.dispose();
-    this.setMode?.("character-select");
+    this.setMode?.('character-select');
   }
 
-  @command("nod")
+  @command('nod')
   commandNod() {
     Player.instance?.playAnimation(AnimationDefinitions.Nod, true);
   }
 
-  @command("amaze")
+  @command('amaze')
   commandAmaze() {
     Player.instance?.playAnimation(AnimationDefinitions.Amaze, true);
   }
 
-  @command("plead")
+  @command('plead')
   commandPlead() {
     Player.instance?.playAnimation(AnimationDefinitions.Plead, true);
   }
 
-  @command("clap")
+  @command('clap')
   commandClap() {
     Player.instance?.playAnimation(AnimationDefinitions.Clap, true);
   }
 
-  @command("hungry")
+  @command('hungry')
   commandHungry() {
     Player.instance?.playAnimation(AnimationDefinitions.Hungry, true);
   }
 
-  @command("blush")
+  @command('blush')
   commandBlush() {
     Player.instance?.playAnimation(AnimationDefinitions.Blush, true);
   }
 
-  @command("chuckle")
+  @command('chuckle')
   commandChuckle() {
     Player.instance?.playAnimation(AnimationDefinitions.Chuckle, true);
   }
 
-  @command("cough")
+  @command('cough')
   commandCough() {
     Player.instance?.playAnimation(AnimationDefinitions.Cough, true);
   }
 
-  @command("duck")
+  @command('duck')
   commandDuck() {
     Player.instance?.playAnimation(AnimationDefinitions.Duck, true);
   }
 
-  @command("puzzle")
+  @command('puzzle')
   commandPuzzle() {
     Player.instance?.playAnimation(AnimationDefinitions.Puzzle, true);
   }
 
-  @command("dance")
+  @command('dance')
   commandDance() {
     Player.instance?.playAnimation(AnimationDefinitions.Dance, true);
   }
 
-  @command("blink")
+  @command('blink')
   commandBlink() {
     Player.instance?.playAnimation(AnimationDefinitions.Blink, true);
   }
 
-  @command("glare")
+  @command('glare')
   commandGlare() {
     Player.instance?.playAnimation(AnimationDefinitions.Glare, true);
   }
 
-  @command("drool")
+  @command('drool')
   commandDrool() {
     Player.instance?.playAnimation(AnimationDefinitions.Drool, true);
   }
 
-  @command("kneel")
+  @command('kneel')
   commandKneel() {
     Player.instance?.playAnimation(AnimationDefinitions.Kneel, true);
   }
 
-  @command("laugh")
+  @command('laugh')
   commandLaugh() {
     Player.instance?.playAnimation(AnimationDefinitions.Laugh, true);
   }
 
-  @command("point")
+  @command('point')
   commandPoint() {
     Player.instance?.playAnimation(AnimationDefinitions.Point, true);
   }
 
-  @command("shrug")
+  @command('shrug')
   commandShrug() {
     Player.instance?.playAnimation(AnimationDefinitions.Shrug, true);
   }
 
-  @command("ready")
+  @command('ready')
   commandReady() {
     Player.instance?.playAnimation(AnimationDefinitions.Ready, true);
   }
 
-  @command("salute")
+  @command('salute')
   commandSalute() {
     Player.instance?.playAnimation(AnimationDefinitions.Salute, true);
   }
 
-  @command("shiver")
+  @command('shiver')
   commandShiver() {
     Player.instance?.playAnimation(AnimationDefinitions.Shiver, true);
   }
 
-  @command("tap")
+  @command('tap')
   commandTap() {
     Player.instance?.playAnimation(AnimationDefinitions.Tap, true);
   }
 
-  @command("bow")
+  @command('bow')
   commandBow() {
     Player.instance?.playAnimation(AnimationDefinitions.Bow, true);
   }
 
-  @command("hail")
+  @command('hail')
   commandHail() {
     this.commandSay([
       Player.instance?.Target
         ? `Hail, ${Player.instance.Target.cleanName}`
-        : "Hail",
+        : 'Hail',
     ]);
   }
 
-  @command("goto")
+  @command('consider')
+  commandConsider() {
+    if (Player.instance?.Target) {
+      addChatLine(`You consider ${Player.instance.Target.cleanName}`);
+    } else {
+      addChatLine('You must target a creature to consider it.');
+    }
+  }
+  @command('goto')
   commandGoto(args: string[]) {
     let x, y, z;
     if (args.length !== 3) {
@@ -365,7 +424,7 @@ export class CommandHandler {
         y = targetPosition.y;
         z = targetPosition.z;
       } else {
-        addChatLine("Usage: /goto x y z");
+        addChatLine('Usage: /goto x y z');
         return;
       }
     } else {

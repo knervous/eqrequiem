@@ -6,6 +6,7 @@ import (
 	"unicode"
 
 	eq "github.com/knervous/eqgo/internal/api/capnp"
+	"github.com/knervous/eqgo/internal/constants"
 	"github.com/knervous/eqgo/internal/session"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -417,14 +418,7 @@ func SetRacialLanguages(pp *eq.PlayerProfile) {
 
 // SetRaceStartingSkills sets race-specific starting skills
 func SetRaceStartingSkills(pp *eq.PlayerProfile) {
-	const (
-		SkillHide      = 29
-		SkillSneak     = 34
-		SkillForage    = 17
-		SkillSwimming  = 27
-		SkillTinkering = 23
-		SkillSafeFall  = 31
-	)
+
 	skills, err := pp.Skills()
 	if err != nil {
 		log.Printf("failed to get skills: %v", err)
@@ -432,23 +426,23 @@ func SetRaceStartingSkills(pp *eq.PlayerProfile) {
 	}
 	switch pp.Race() {
 	case RaceDarkElf:
-		skills.Set(SkillHide, 50)
+		skills.Set(constants.Skill_Hide, 50)
 	case RaceFroglok:
-		skills.Set(SkillSwimming, 100)
+		skills.Set(constants.Skill_Swimming, 100)
 	case RaceGnome:
-		skills.Set(SkillTinkering, 50)
+		skills.Set(constants.Skill_Tinkering, 50)
 	case RaceHalfling:
-		skills.Set(SkillHide, 50)
-		skills.Set(SkillSneak, 50)
+		skills.Set(constants.Skill_Hide, 50)
+		skills.Set(constants.Skill_Sneak, 50)
 	case RaceIksar:
-		skills.Set(SkillForage, 50)
-		skills.Set(SkillSwimming, 50)
+		skills.Set(constants.Skill_Forage, 50)
+		skills.Set(constants.Skill_Swimming, 50)
 	case RaceWoodElf:
-		skills.Set(SkillForage, 50)
-		skills.Set(SkillHide, 50)
+		skills.Set(constants.Skill_Forage, 50)
+		skills.Set(constants.Skill_Hide, 50)
 	case RaceVahShir:
-		skills.Set(SkillSafeFall, 50)
-		skills.Set(SkillSneak, 50)
+		skills.Set(constants.Skill_SafeFall, 50)
+		skills.Set(constants.Skill_Sneak, 50)
 	}
 }
 
@@ -463,11 +457,20 @@ func SetClassStartingSkills(pp *eq.PlayerProfile) {
 	}
 	for i := 0; i <= 77; i++ {
 		if skills.At(i) == 0 {
-			// Skip specialized skills, tradeskills (except fishing), etc.
-			if i == 23 || i == 24 || i == 25 || i == 26 || i == 28 || i == 30 || i == 32 || i == 33 || i == 35 {
+
+			if constants.IsSpecializedSkill(i) || (constants.IsTradeskill(i) && i != constants.Skill_Fishing) ||
+				i == constants.Skill_AlcoholTolerance || i == constants.Skill_BindWound {
 				continue
 			}
-			skills.Set(i, 50) // Placeholder; replace with actual skill cap logic
+
+			charClass := int32(pp.CharClass())
+			cap, err := GetSkillCap(int(charClass), i, 1)
+			if err != nil {
+				log.Printf("failed to get skill cap for class %d, skill %d: %v", charClass, i, err)
+				skills.Set(i, 0)
+				continue
+			}
+			skills.Set(i, int32(cap))
 		}
 	}
 }

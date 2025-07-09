@@ -16,7 +16,9 @@ export type ImageEntry = {
   entry: AtlasEntry;
   image: string | null;
 };
-const sakCache = {};
+
+//––– SAK CACHE (promises) –––
+const sakCache: Record<string, Promise<string>> = {};
 
 export const useSakImage = (
   path: string,
@@ -27,60 +29,63 @@ export const useSakImage = (
     [path],
   );
   const [image, setImage] = useState<string | null>(null);
+
   useEffect(() => {
     if (!entry) {
       setImage(null);
       return;
     }
-    if (sakCache[path]) {
-      setImage(sakCache[path]);
-      return;
+
+    // get or create the promise
+    let promise = sakCache[path];
+    if (!promise) {
+      promise = ImageCache.getImageUrl(
+        "uifiles/sakui",
+        entry.texture,
+        crop,
+        entry.left,
+        entry.top,
+        entry.width,
+        entry.height,
+      );
+      sakCache[path] = promise;
     }
-    ImageCache.getImageUrl(
-      "uifiles/sakui",
-      entry.texture,
-      crop,
-      entry.left,
-      entry.top,
-      entry.width,
-      entry.height,
-    )
-      .then((img) => {
-        sakCache[path] = img;
-        return img;
-      })
-      .then(setImage);
+
+    promise.then(setImage);
+
   }, [entry, crop, path]);
-  return {
-    entry,
-    image,
-  };
+
+  return { entry, image };
 };
 
 export const useSakImages = (
   paths: string[],
   crop: boolean = false,
 ): ImageEntry[] => {
-  const entries = useMemo<AtlasEntry[]>(
-    () => paths.map((path) => sakAtlas[path] || atlas[path]).filter(Boolean),
+  // first resolve entries for each path
+  const entries = useMemo(
+    () => paths
+      .map((p) => sakAtlas[p] || atlas[p])
+      .filter((e): e is AtlasEntry => Boolean(e)),
     [paths],
   );
-  const [images, setImages] = useState<string[]>(
+
+  const [images, setImages] = useState<(string | null)[]>(
     new Array(entries.length).fill(null),
   );
 
   useEffect(() => {
     if (entries.length === 0) {
-      setImages(new Array(entries.length).fill(null));
+      setImages([]);
       return;
     }
-    if (entries.every((entry) => sakCache[entry.texture])) {
-      setImages(entries.map((entry) => sakCache[entry.texture]));
-      return;
-    }
-    Promise.all(
-      entries.map((entry) =>
-        ImageCache.getImageUrl(
+
+    // build or grab each promise
+    const promises = entries.map((entry, i) => {
+      const path = paths[i];
+      let promise = sakCache[path];
+      if (!promise) {
+        promise = ImageCache.getImageUrl(
           "uifiles/sakui",
           entry.texture,
           crop,
@@ -88,25 +93,26 @@ export const useSakImages = (
           entry.top,
           entry.width,
           entry.height,
-        ),
-      ),
-    )
-      .then((imgs) => {
-        imgs.forEach((img, index) => {
-          sakCache[entries[index].texture] = img;
-        });
-        return imgs;
-      })
-      .then(setImages);
-  }, [entries, crop]);
+        );
+        sakCache[path] = promise;
+      }
+      return promise;
+    });
 
-  return entries.map((entry, index) => ({
+    Promise.all(promises).then((imgs) => {
+      setImages(imgs);
+    });
+  }, [paths, crop, entries]);
+
+  return entries.map((entry, i) => ({
     entry,
-    image: images[index],
+    image: images[i],
   }));
 };
 
-const stoneCache = {};
+//––– STONE CACHE (promises) –––
+const stoneCache: Record<string, Promise<string>> = {};
+
 export const useStoneImage = (
   path: string,
   crop: boolean = false,
@@ -116,60 +122,59 @@ export const useStoneImage = (
     [path],
   );
   const [image, setImage] = useState<string | null>(null);
+
   useEffect(() => {
     if (!entry) {
       setImage(null);
       return;
     }
-    if (stoneCache[path]) {
-      setImage(stoneCache[path]);
-      return;
+
+    let promise = stoneCache[path];
+    if (!promise) {
+      promise = ImageCache.getImageUrl(
+        "uifiles/stone",
+        entry.texture,
+        crop,
+        entry.left,
+        entry.top,
+        entry.width,
+        entry.height,
+      );
+      stoneCache[path] = promise;
     }
-    ImageCache.getImageUrl(
-      "uifiles/stone",
-      entry.texture,
-      crop,
-      entry.left,
-      entry.top,
-      entry.width,
-      entry.height,
-    )
-      .then((img) => {
-        stoneCache[path] = img;
-        return img;
-      })
-      .then(setImage);
+
+    promise.then(setImage);
   }, [entry, crop, path]);
-  return {
-    entry,
-    image,
-  };
+
+  return { entry, image };
 };
 
 export const useStoneImages = (
   paths: string[],
   crop: boolean = false,
 ): ImageEntry[] => {
-  const entries = useMemo<AtlasEntry[]>(
-    () => paths.map((path) => stoneAtlas[path] || atlas[path]).filter(Boolean),
+  const entries = useMemo(
+    () => paths
+      .map((p) => stoneAtlas[p] || atlas[p])
+      .filter((e): e is AtlasEntry => Boolean(e)),
     [paths],
   );
-  const [images, setImages] = useState<string[]>(
+
+  const [images, setImages] = useState<(string | null)[]>(
     new Array(entries.length).fill(null),
   );
 
   useEffect(() => {
     if (entries.length === 0) {
-      setImages(new Array(entries.length).fill(null));
+      setImages([]);
       return;
     }
-    if (entries.every((entry) => stoneCache[entry.texture])) {
-      setImages(entries.map((entry) => stoneCache[entry.texture]));
-      return;
-    }
-    Promise.all(
-      entries.map((entry) =>
-        ImageCache.getImageUrl(
+
+    const promises = entries.map((entry, i) => {
+      const path = paths[i];
+      let promise = stoneCache[path];
+      if (!promise) {
+        promise = ImageCache.getImageUrl(
           "uifiles/stone",
           entry.texture,
           crop,
@@ -177,24 +182,20 @@ export const useStoneImages = (
           entry.top,
           entry.width,
           entry.height,
-        ),
-      ),
-    )
-      .then((img) => {
-        img.forEach((image, index) => {
-          stoneCache[entries[index].texture] = image;
-        });
-        return img;
-      })
-      .then(setImages);
-  }, [entries, crop]);
+        );
+        stoneCache[path] = promise;
+      }
+      return promise;
+    });
 
-  return entries.map((entry, index) => ({
+    Promise.all(promises).then(setImages);
+  }, [paths, crop, entries]);
+
+  return entries.map((entry, i) => ({
     entry,
-    image: images[index],
+    image: images[i],
   }));
 };
-
 export const useRawImage = (
   folder: string,
   path: string,

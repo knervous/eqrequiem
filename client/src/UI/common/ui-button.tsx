@@ -1,5 +1,5 @@
 import { Box, BoxProps, SxProps, Typography } from "@mui/material";
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useCallback } from "react";
 import { ImageEntry, useStoneImage } from "../hooks/use-image";
 import classNames from "classnames";
 
@@ -12,7 +12,7 @@ type AtlasEntry = {
 };
 
 type Props = {
-  onClick: () => void;
+  onClick?: () => void;
   children?: React.ReactNode;
   className?: string;
   icon?: React.ReactNode;
@@ -30,15 +30,16 @@ type Props = {
   selected?: boolean;
   stone?: boolean;
   entrySx?: (entry: ImageEntry) => SxProps;
-  crop?: boolean; // If true, use cropped images
 } & BoxProps
+
+const emptySx = {};
 
 export const UiButtonComponent: React.FC<Props> = (props: Props) => {
   const buttonName = props.buttonName ?? "A_BigBtn";
-  const normal = useStoneImage(`${buttonName}Normal`, props.crop);
-  const pressed = useStoneImage(`${buttonName}Pressed`, props.crop);
-  const hover = useStoneImage(`${buttonName}Flyby`, props.crop);
-  const disabled = useStoneImage(`${buttonName}Disabled`, props.crop);
+  const normal = useStoneImage(`${buttonName}Normal`, true);
+  const pressed = useStoneImage(`${buttonName}Pressed`, true);
+  const hover = useStoneImage(`${buttonName}Flyby`, true);
+  const disabled = useStoneImage(`${buttonName}Disabled`, true);
 
   const [isHovered, setIsHovered] = useState(false);
   const [isPressed, setIsPressed] = useState(false);
@@ -64,6 +65,13 @@ export const UiButtonComponent: React.FC<Props> = (props: Props) => {
     ],
   );
 
+  const doClick = useCallback(() => {
+    if (props.isDisabled || !props.onClick) {
+      return;
+    }
+    props.onClick();
+  }, [props]);
+
   return !selectedEntry.entry ? null : (
     <Box
       className={classNames("cursor-default", "eq-button", props.className)}
@@ -77,11 +85,10 @@ export const UiButtonComponent: React.FC<Props> = (props: Props) => {
         alignItems: "center",
         justifyContent: "center",
         alignContent: "center",
-        backgroundSize: props.crop ? "cover" : "",
-        backgroundPosition: props.crop ? '' : `-${selectedEntry.entry.left}px -${selectedEntry.entry?.top}px`,
-        ...(props.scale ? { transform: `scale(${props.scale})` } : {}),
+        backgroundSize: "cover",
+        ...(props.scale ? { transform: `scale(${props.scale})` } : emptySx),
         ...(props.sx ?? {}),
-        ...(props.entrySx ? props.entrySx(selectedEntry) : {}),
+        ...(props.entrySx ? props.entrySx(selectedEntry) : emptySx),
       }}
       onMouseEnter={() => !props.isDisabled && setIsHovered(true)}
       onMouseLeave={() => {
@@ -90,7 +97,7 @@ export const UiButtonComponent: React.FC<Props> = (props: Props) => {
       }}
       onMouseDown={() => !props.isDisabled && setIsPressed(true)}
       onMouseUp={() => setIsPressed(false)}
-      onClick={() => !props.isDisabled && props.onClick()}
+      onClick={doClick}
       onFocus={props.onFocus}
       onBlur={props.onBlur}
       tabIndex={0}

@@ -418,12 +418,12 @@ type PlayerProfile capnp.Struct
 const PlayerProfile_TypeID = 0xb8375f7f6b27403c
 
 func NewPlayerProfile(s *capnp.Segment) (PlayerProfile, error) {
-	st, err := capnp.NewStruct(s, capnp.ObjectSize{DataSize: 464, PointerCount: 19})
+	st, err := capnp.NewStruct(s, capnp.ObjectSize{DataSize: 400, PointerCount: 19})
 	return PlayerProfile(st), err
 }
 
 func NewRootPlayerProfile(s *capnp.Segment) (PlayerProfile, error) {
-	st, err := capnp.NewRootStruct(s, capnp.ObjectSize{DataSize: 464, PointerCount: 19})
+	st, err := capnp.NewRootStruct(s, capnp.ObjectSize{DataSize: 400, PointerCount: 19})
 	return PlayerProfile(st), err
 }
 
@@ -1628,164 +1628,36 @@ func (s PlayerProfile) SetBackstab(v int32) {
 	capnp.Struct(s).SetUint32(368, uint32(v))
 }
 
-func (s PlayerProfile) Wind() int32 {
+func (s PlayerProfile) Alcohol() int32 {
 	return int32(capnp.Struct(s).Uint32(372))
 }
 
-func (s PlayerProfile) SetWind(v int32) {
+func (s PlayerProfile) SetAlcohol(v int32) {
 	capnp.Struct(s).SetUint32(372, uint32(v))
 }
 
-func (s PlayerProfile) Brass() int32 {
-	return int32(capnp.Struct(s).Uint32(376))
-}
-
-func (s PlayerProfile) SetBrass(v int32) {
-	capnp.Struct(s).SetUint32(376, uint32(v))
-}
-
-func (s PlayerProfile) String_() int32 {
-	return int32(capnp.Struct(s).Uint32(380))
-}
-
-func (s PlayerProfile) SetString_(v int32) {
-	capnp.Struct(s).SetUint32(380, uint32(v))
-}
-
-func (s PlayerProfile) Percussion() int32 {
-	return int32(capnp.Struct(s).Uint32(384))
-}
-
-func (s PlayerProfile) SetPercussion(v int32) {
-	capnp.Struct(s).SetUint32(384, uint32(v))
-}
-
-func (s PlayerProfile) Singing() int32 {
-	return int32(capnp.Struct(s).Uint32(388))
-}
-
-func (s PlayerProfile) SetSinging(v int32) {
-	capnp.Struct(s).SetUint32(388, uint32(v))
-}
-
-func (s PlayerProfile) Baking() int32 {
-	return int32(capnp.Struct(s).Uint32(392))
-}
-
-func (s PlayerProfile) SetBaking(v int32) {
-	capnp.Struct(s).SetUint32(392, uint32(v))
-}
-
-func (s PlayerProfile) Alchemy() int32 {
-	return int32(capnp.Struct(s).Uint32(396))
-}
-
-func (s PlayerProfile) SetAlchemy(v int32) {
-	capnp.Struct(s).SetUint32(396, uint32(v))
-}
-
-func (s PlayerProfile) Tailoring() int32 {
-	return int32(capnp.Struct(s).Uint32(400))
-}
-
-func (s PlayerProfile) SetTailoring(v int32) {
-	capnp.Struct(s).SetUint32(400, uint32(v))
-}
-
-func (s PlayerProfile) Blacksmithing() int32 {
-	return int32(capnp.Struct(s).Uint32(404))
-}
-
-func (s PlayerProfile) SetBlacksmithing(v int32) {
-	capnp.Struct(s).SetUint32(404, uint32(v))
-}
-
-func (s PlayerProfile) Fletching() int32 {
-	return int32(capnp.Struct(s).Uint32(408))
-}
-
-func (s PlayerProfile) SetFletching(v int32) {
-	capnp.Struct(s).SetUint32(408, uint32(v))
-}
-
-func (s PlayerProfile) Brewing() int32 {
-	return int32(capnp.Struct(s).Uint32(412))
-}
-
-func (s PlayerProfile) SetBrewing(v int32) {
-	capnp.Struct(s).SetUint32(412, uint32(v))
-}
-
-func (s PlayerProfile) Jewelry() int32 {
-	return int32(capnp.Struct(s).Uint32(416))
-}
-
-func (s PlayerProfile) SetJewelry(v int32) {
-	capnp.Struct(s).SetUint32(416, uint32(v))
-}
-
-func (s PlayerProfile) Pottery() int32 {
-	return int32(capnp.Struct(s).Uint32(420))
-}
-
-func (s PlayerProfile) SetPottery(v int32) {
-	capnp.Struct(s).SetUint32(420, uint32(v))
-}
-
-func (s PlayerProfile) Research() int32 {
-	return int32(capnp.Struct(s).Uint32(424))
-}
-
-func (s PlayerProfile) SetResearch(v int32) {
-	capnp.Struct(s).SetUint32(424, uint32(v))
-}
-
-func (s PlayerProfile) Alcohol() int32 {
-	return int32(capnp.Struct(s).Uint32(428))
-}
-
-func (s PlayerProfile) SetAlcohol(v int32) {
-	capnp.Struct(s).SetUint32(428, uint32(v))
-}
-
-func (s PlayerProfile) Fishing() int32 {
-	return int32(capnp.Struct(s).Uint32(432))
-}
-
-func (s PlayerProfile) SetFishing(v int32) {
-	capnp.Struct(s).SetUint32(432, uint32(v))
-}
-
-func (s PlayerProfile) Tinkering() int32 {
-	return int32(capnp.Struct(s).Uint32(436))
-}
-
-func (s PlayerProfile) SetTinkering(v int32) {
-	capnp.Struct(s).SetUint32(436, uint32(v))
-}
-
 func (s PlayerProfile) MaxHp() int64 {
-	return int64(capnp.Struct(s).Uint64(440))
+	return int64(capnp.Struct(s).Uint64(376))
 }
 
 func (s PlayerProfile) SetMaxHp(v int64) {
-	capnp.Struct(s).SetUint64(440, uint64(v))
+	capnp.Struct(s).SetUint64(376, uint64(v))
 }
 
 func (s PlayerProfile) MaxMana() int64 {
-	return int64(capnp.Struct(s).Uint64(448))
+	return int64(capnp.Struct(s).Uint64(384))
 }
 
 func (s PlayerProfile) SetMaxMana(v int64) {
-	capnp.Struct(s).SetUint64(448, uint64(v))
+	capnp.Struct(s).SetUint64(384, uint64(v))
 }
 
 func (s PlayerProfile) MaxEndurance() int64 {
-	return int64(capnp.Struct(s).Uint64(456))
+	return int64(capnp.Struct(s).Uint64(392))
 }
 
 func (s PlayerProfile) SetMaxEndurance(v int64) {
-	capnp.Struct(s).SetUint64(456, uint64(v))
+	capnp.Struct(s).SetUint64(392, uint64(v))
 }
 
 // PlayerProfile_List is a list of PlayerProfile.
@@ -1793,7 +1665,7 @@ type PlayerProfile_List = capnp.StructList[PlayerProfile]
 
 // NewPlayerProfile creates a new list of PlayerProfile.
 func NewPlayerProfile_List(s *capnp.Segment, sz int32) (PlayerProfile_List, error) {
-	l, err := capnp.NewCompositeList(s, capnp.ObjectSize{DataSize: 464, PointerCount: 19}, sz)
+	l, err := capnp.NewCompositeList(s, capnp.ObjectSize{DataSize: 400, PointerCount: 19}, sz)
 	return capnp.StructList[PlayerProfile](l), err
 }
 

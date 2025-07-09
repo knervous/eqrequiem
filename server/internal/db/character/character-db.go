@@ -47,6 +47,21 @@ func GetCharacterByName(name string) (*model.CharacterData, error) {
 	return &character, nil
 }
 
+func GetCharacterSkills(ctx context.Context, characterID int64) ([]model.CharacterSkills, error) {
+	var skills []model.CharacterSkills
+	if err := table.CharacterSkills.
+		SELECT(
+			table.CharacterSkills.SkillID,
+			table.CharacterSkills.Value,
+		).
+		FROM(table.CharacterSkills).
+		WHERE(table.CharacterSkills.ID.EQ(mysql.Int64(characterID))).
+		QueryContext(ctx, db.GlobalWorldDB.DB, &skills); err != nil {
+		return nil, fmt.Errorf("query character skills: %w", err)
+	}
+	return skills, nil
+}
+
 func UpdateCharacter(charData *model.CharacterData, accountID int64) error {
 	cacheKey := fmt.Sprintf("character:id:%d", charData.ID)
 	if _, err := cache.GetCache().Set(cacheKey, charData); err != nil {

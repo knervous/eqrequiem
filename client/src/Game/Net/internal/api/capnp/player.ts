@@ -189,7 +189,7 @@ export class PlayerProfile extends $.Struct {
   static readonly _capnp = {
     displayName: "PlayerProfile",
     id: "b8375f7f6b27403c",
-    size: new $.ObjectSize(464, 19)
+    size: new $.ObjectSize(400, 19)
   };
   static _Binds: $.ListCtor<Bind>;
   static _AaArray: $.ListCtor<AAArray>;
@@ -1061,125 +1061,29 @@ export class PlayerProfile extends $.Struct {
   set backstab(value: number) {
     $.utils.setInt32(368, value, this);
   }
-  get wind(): number {
+  get alcohol(): number {
     return $.utils.getInt32(372, this);
   }
-  set wind(value: number) {
+  set alcohol(value: number) {
     $.utils.setInt32(372, value, this);
   }
-  get brass(): number {
-    return $.utils.getInt32(376, this);
-  }
-  set brass(value: number) {
-    $.utils.setInt32(376, value, this);
-  }
-  get string(): number {
-    return $.utils.getInt32(380, this);
-  }
-  set string(value: number) {
-    $.utils.setInt32(380, value, this);
-  }
-  get percussion(): number {
-    return $.utils.getInt32(384, this);
-  }
-  set percussion(value: number) {
-    $.utils.setInt32(384, value, this);
-  }
-  get singing(): number {
-    return $.utils.getInt32(388, this);
-  }
-  set singing(value: number) {
-    $.utils.setInt32(388, value, this);
-  }
-  get baking(): number {
-    return $.utils.getInt32(392, this);
-  }
-  set baking(value: number) {
-    $.utils.setInt32(392, value, this);
-  }
-  get alchemy(): number {
-    return $.utils.getInt32(396, this);
-  }
-  set alchemy(value: number) {
-    $.utils.setInt32(396, value, this);
-  }
-  get tailoring(): number {
-    return $.utils.getInt32(400, this);
-  }
-  set tailoring(value: number) {
-    $.utils.setInt32(400, value, this);
-  }
-  get blacksmithing(): number {
-    return $.utils.getInt32(404, this);
-  }
-  set blacksmithing(value: number) {
-    $.utils.setInt32(404, value, this);
-  }
-  get fletching(): number {
-    return $.utils.getInt32(408, this);
-  }
-  set fletching(value: number) {
-    $.utils.setInt32(408, value, this);
-  }
-  get brewing(): number {
-    return $.utils.getInt32(412, this);
-  }
-  set brewing(value: number) {
-    $.utils.setInt32(412, value, this);
-  }
-  get jewelry(): number {
-    return $.utils.getInt32(416, this);
-  }
-  set jewelry(value: number) {
-    $.utils.setInt32(416, value, this);
-  }
-  get pottery(): number {
-    return $.utils.getInt32(420, this);
-  }
-  set pottery(value: number) {
-    $.utils.setInt32(420, value, this);
-  }
-  get research(): number {
-    return $.utils.getInt32(424, this);
-  }
-  set research(value: number) {
-    $.utils.setInt32(424, value, this);
-  }
-  get alcohol(): number {
-    return $.utils.getInt32(428, this);
-  }
-  set alcohol(value: number) {
-    $.utils.setInt32(428, value, this);
-  }
-  get fishing(): number {
-    return $.utils.getInt32(432, this);
-  }
-  set fishing(value: number) {
-    $.utils.setInt32(432, value, this);
-  }
-  get tinkering(): number {
-    return $.utils.getInt32(436, this);
-  }
-  set tinkering(value: number) {
-    $.utils.setInt32(436, value, this);
-  }
   get maxHp(): bigint {
-    return $.utils.getInt64(440, this);
+    return $.utils.getInt64(376, this);
   }
   set maxHp(value: bigint) {
-    $.utils.setInt64(440, value, this);
+    $.utils.setInt64(376, value, this);
   }
   get maxMana(): bigint {
-    return $.utils.getInt64(448, this);
+    return $.utils.getInt64(384, this);
   }
   set maxMana(value: bigint) {
-    $.utils.setInt64(448, value, this);
+    $.utils.setInt64(384, value, this);
   }
   get maxEndurance(): bigint {
-    return $.utils.getInt64(456, this);
+    return $.utils.getInt64(392, this);
   }
   set maxEndurance(value: bigint) {
-    $.utils.setInt64(456, value, this);
+    $.utils.setInt64(392, value, this);
   }
   toString(): string {
     return "PlayerProfile_" + super.toString();

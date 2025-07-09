@@ -33,6 +33,7 @@ import {
 
 import "./component.css";
 import { useDebouncedCallback } from "use-debounce";
+import { UserConfig } from "@game/Config/config";
 
 const splashed = false;
 
@@ -93,8 +94,9 @@ export const CharacterSelectUIComponent: React.FC = () => {
         alert("Could not enter world");
       }
     });
-    WorldSocket.registerOpCodeHandler(OpCodes.PostEnterWorld, Int, (data) => {
+    WorldSocket.registerOpCodeHandler(OpCodes.PostEnterWorld, Int, async (data) => {
       if (data.value === 1) {
+        await UserConfig.instance.initialize('requiem', selectedChar.name);
         WorldSocket.sendMessage(OpCodes.ZoneSession, ZoneSession, {
           zoneId: selectedChar.zone,
           instanceId: 0,

@@ -22,6 +22,13 @@ import (
 	"github.com/google/uuid"
 )
 
+const (
+	ClassCount = 15
+	SkillCount = 78
+	LevelCount = 100
+	TotalSize  = ClassCount * SkillCount * LevelCount
+)
+
 func LoginIP(ctx context.Context, accountID int64, ip string) error {
 	stmt := table.AccountIP.
 		INSERT(
@@ -280,6 +287,53 @@ func CheckNameFilter(ctx context.Context, name string) bool {
 	}
 
 	return true
+}
+
+func skillCapIdx(class, skill, level int) int {
+	return (class-1)*SkillCount*LevelCount +
+		skill*LevelCount +
+		(level - 1)
+}
+
+func LoadSkillCapsBuffer(ctx context.Context) ([]uint16, error) {
+	cacheKey := "skillcaps_buffer"
+	if val, found, err := cache.GetCache().Get(cacheKey); err == nil && found {
+		if buf, ok := val.([]uint16); ok {
+			return buf, nil
+		}
+	}
+
+	var rows []model.SkillCaps
+	if err := table.SkillCaps.
+		SELECT(table.SkillCaps.AllColumns).
+		FROM(table.SkillCaps).
+		QueryContext(ctx, db.GlobalWorldDB.DB, &rows); err != nil {
+		return nil, fmt.Errorf("query skill caps: %w", err)
+	}
+
+	buf := make([]uint16, TotalSize)
+
+	for _, r := range rows {
+		c := int(r.ClassID) // 1…15
+		s := int(r.SkillID) // 0…77
+		l := int(r.Level)   // 1…100
+		if c < 1 || c > ClassCount || s < 0 || s >= SkillCount || l < 1 || l > LevelCount {
+			continue
+		}
+		buf[skillCapIdx(c, s, l)] = uint16(r.Cap)
+	}
+
+	cache.GetCache().Set(cacheKey, buf)
+	return buf, nil
+}
+
+func GetSkillCap(class, skill, level int) (uint16, error) {
+	buf, err := LoadSkillCapsBuffer(context.Background())
+	if err != nil {
+		log.Printf("failed to load skill caps buffer: %v", err)
+		return 0, err
+	}
+	return buf[skillCapIdx(class, skill, level)], nil
 }
 
 func GetStartZone(ctx context.Context, class uint8, deity uint32, race uint32) (model.CharacterBind, error) {

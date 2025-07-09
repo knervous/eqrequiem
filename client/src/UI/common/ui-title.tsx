@@ -1,5 +1,5 @@
 import { Box, Stack } from "@mui/material";
-import React from "react";
+import React, { memo } from "react";
 import { UiImageComponent } from "./ui-image";
 import { UiButtonComponent } from "./ui-button";
 import classNames from "classnames";
@@ -17,7 +17,7 @@ type Props = {
   useMargin?: boolean;
 };
 
-export const UiTitleComponent: React.FC<Props> = (props: Props) => {
+export const UiTitleComponent: React.FC<Props> = memo((props: Props) => {
   return (
     <Box
       className={classNames({ "cursor-drag": props.draggable })}
@@ -77,4 +77,4 @@ export const UiTitleComponent: React.FC<Props> = (props: Props) => {
       </Stack>
     </Box>
   );
-};
+});

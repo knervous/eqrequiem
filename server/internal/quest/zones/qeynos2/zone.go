@@ -13,6 +13,9 @@ func registerZoneQuests(zq *quest.ZoneQuestInterface) {
 		quest.EventSay, func(e *quest.QuestEvent) bool {
 			switch e.Receiver.(type) {
 			case *entity.NPC:
+				if e.Receiver == nil || e.Actor == nil {
+					return false
+				}
 				greetings := fmt.Sprintf("Hello, %s! My name is %s", e.Actor.Name(), e.Receiver.Name())
 				e.Receiver.Say(greetings)
 			}

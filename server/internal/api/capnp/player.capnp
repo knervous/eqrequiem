@@ -148,26 +148,10 @@ struct PlayerProfile {
   strikethrough @109 :Int32;
   stunResist @110 :Int32;
   backstab @111 :Int32;
-  wind @112 :Int32;
-  brass @113 :Int32;
-  string @114 :Int32;
-  percussion @115 :Int32;
-  singing @116 :Int32;
-  baking @117 :Int32;
-  alchemy @118 :Int32;
-  tailoring @119 :Int32;
-  blacksmithing @120 :Int32;
-  fletching @121 :Int32;
-  brewing @122 :Int32;
-  jewelry @123 :Int32;
-  pottery @124 :Int32;
-  research @125 :Int32;
-  alcohol @126 :Int32;
-  fishing @127 :Int32;
-  tinkering @128 :Int32;
-  maxHp @129 :Int64;
-  maxMana @130 :Int64;
-  maxEndurance @131 :Int64;
+  alcohol @112 :Int32;
+  maxHp @113 :Int64;
+  maxMana @114 :Int64;
+  maxEndurance @115 :Int64;
 }
 
 struct Tint {
