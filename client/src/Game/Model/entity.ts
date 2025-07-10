@@ -724,11 +724,12 @@ export class Entity extends BABYLON.TransformNode {
     originalName: string,
     variation: number = 22,
   ): number {
-    const retValue = this.getTextureIndexImpl(originalName, variation);
-    if (retValue < 0) {
-      return this.getTextureIndexImpl(
+    let retValue = this.getTextureIndexImpl(originalName, variation);
+    const maxVariation = 10;
+    while (retValue < 0 && variation < maxVariation) {
+      retValue = this.getTextureIndexImpl(
         originalName,
-        1);
+        variation++);
     }
     return retValue;
   }
@@ -760,8 +761,8 @@ export class Entity extends BABYLON.TransformNode {
       return -1;
     }
     model = match[1];
-    piece = match[2];
     texIdx = match[4];
+    const piece = match[2];
 
     if (piece === MaterialPrefixes.Face && this.isHumanoid) {
       // For humanoids, use the face texture variation
@@ -779,10 +780,18 @@ export class Entity extends BABYLON.TransformNode {
         ) ?? -1
       );
     }
-    return (
+    let retValue = (
       this.entityContainer?.textureAtlas.indexOf(
         `${model}${piece}${variation.toString().padStart(2, '0')}${texIdx}`,
       ) ?? -1
     );
+    while (retValue < 0 && +texIdx > 0) {
+      retValue = (
+        this.entityContainer?.textureAtlas.indexOf(
+          `${model}${piece}${(variation++).toString().padStart(2, '0')}${(texIdx--).toString().padStart(2, '0')}`,
+        ) ?? -1
+      );
+    }
+    return retValue;
   }
 }
