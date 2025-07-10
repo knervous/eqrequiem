@@ -5,22 +5,10 @@ $Go.package("net");         # Go package name
 $Go.import("github.com/knervous/eqgo/internal/api/capnp");  # Go import path
 
 struct ItemInstance {
-  id @0 :Int32;
-  itemId @1 :Int32;
-  mods @2 :Text;
-  charges @3 :UInt32;
-  quantity @4 :UInt32;
-  ownerId @5 :UInt32;
-  ownerType @6 :Int32;
-  slot @7 :Int32;
-  item @8 :Items;
-}
-
-struct Items {
-  id @0 :Int32;
-  minstatus @1 :Int32;
-  name @2 :Text;
-  aagi @3 :Int32;
+  mods @0 :Text;
+  charges @1 :UInt32;
+  quantity @2 :UInt32;
+  slot @3 :Int32;
   ac @4 :Int32;
   accuracy @5 :Int32;
   acha @6 :Int32;
@@ -186,4 +174,7 @@ struct Items {
   heirloom @166 :Int32;
   placeable @167 :Int32;
   epicitem @168 :Int32;
+  minstatus @169 :Int32;
+  name @170 :Text;
+  aagi @171 :Int32;
 }

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import type { Entity } from '@game/Model/entity';
 import { PlayerProfile } from '@game/Net/internal/api/capnp/player';
 import Player from '@game/Player/player';
+import type { PlayerInventory } from '@game/Player/player-inventory';
 import emitter, { Events } from './events';
 
 export const usePlayerName = () => {
@@ -106,4 +107,18 @@ export const useTarget = () => {
     };
   }, []);
   return target;
+};
+
+export const usePlayerInventory = () => {
+  const [inventory, setInventory] = useState<PlayerInventory | null>(Player.instance?.playerInventory ?? null);
+  useEffect(() => {
+    const cb = () => {
+      setInventory(Player.instance?.playerInventory ?? null);
+    };
+    emitter.on('updateInventory', cb);
+    return () => {
+      emitter.off('updateInventory', cb);
+    };
+  }, []);
+  return inventory;
 };

@@ -17,10 +17,6 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-// Helper function to create pointers
-func ptr[T any](v T) *T {
-	return &v
-}
 func GetCharacterByName(name string) (*model.CharacterData, error) {
 	cacheKey := fmt.Sprintf("character:name:%s", name)
 	if val, found, err := cache.GetCache().Get(cacheKey); err == nil && found {
@@ -95,6 +91,28 @@ func UpdateCharacter(charData *model.CharacterData, accountID int64) error {
 		fmt.Println("UpdateCharacter result:", result)
 	}
 	return nil
+}
+
+func GetCharacterItems(ctx context.Context, id int) ([]items.ItemWithSlot, error) {
+	var charItems []items.ItemWithSlot
+	stmt := table.ItemInstances.
+		SELECT(
+			table.ItemInstances.AllColumns,
+			table.CharacterInventory.AllColumns,
+		).
+		FROM(table.ItemInstances.LEFT_JOIN(
+			table.CharacterInventory,
+			table.CharacterInventory.ItemInstanceID.
+				EQ(table.ItemInstances.ID),
+		)).
+		WHERE(
+			table.ItemInstances.OwnerID.EQ(mysql.Int(int64(id))),
+		)
+
+	if err := stmt.QueryContext(ctx, db.GlobalWorldDB.DB, &charItems); err != nil {
+		return nil, fmt.Errorf("query character items: %w", err)
+	}
+	return charItems, nil
 }
 
 func InstantiateStartingItems(race, classID, deity, zone int32) ([]items.ItemInstance, error) {

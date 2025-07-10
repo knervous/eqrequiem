@@ -5,20 +5,8 @@ export class ItemInstance extends $.Struct {
   static readonly _capnp = {
     displayName: "ItemInstance",
     id: "d8a782a58f006803",
-    size: new $.ObjectSize(32, 2)
+    size: new $.ObjectSize(672, 6)
   };
-  get id(): number {
-    return $.utils.getInt32(0, this);
-  }
-  set id(value: number) {
-    $.utils.setInt32(0, value, this);
-  }
-  get itemId(): number {
-    return $.utils.getInt32(4, this);
-  }
-  set itemId(value: number) {
-    $.utils.setInt32(4, value, this);
-  }
   get mods(): string {
     return $.utils.getText(0, this);
   }
@@ -26,85 +14,21 @@ export class ItemInstance extends $.Struct {
     $.utils.setText(0, value, this);
   }
   get charges(): number {
-    return $.utils.getUint32(8, this);
+    return $.utils.getUint32(0, this);
   }
   set charges(value: number) {
-    $.utils.setUint32(8, value, this);
+    $.utils.setUint32(0, value, this);
   }
   get quantity(): number {
-    return $.utils.getUint32(12, this);
+    return $.utils.getUint32(4, this);
   }
   set quantity(value: number) {
-    $.utils.setUint32(12, value, this);
-  }
-  get ownerId(): number {
-    return $.utils.getUint32(16, this);
-  }
-  set ownerId(value: number) {
-    $.utils.setUint32(16, value, this);
-  }
-  get ownerType(): number {
-    return $.utils.getInt32(20, this);
-  }
-  set ownerType(value: number) {
-    $.utils.setInt32(20, value, this);
+    $.utils.setUint32(4, value, this);
   }
   get slot(): number {
-    return $.utils.getInt32(24, this);
-  }
-  set slot(value: number) {
-    $.utils.setInt32(24, value, this);
-  }
-  _adoptItem(value: $.Orphan<Items>): void {
-    $.utils.adopt(value, $.utils.getPointer(1, this));
-  }
-  _disownItem(): $.Orphan<Items> {
-    return $.utils.disown(this.item);
-  }
-  get item(): Items {
-    return $.utils.getStruct(1, Items, this);
-  }
-  _hasItem(): boolean {
-    return !$.utils.isNull($.utils.getPointer(1, this));
-  }
-  _initItem(): Items {
-    return $.utils.initStructAt(1, Items, this);
-  }
-  set item(value: Items) {
-    $.utils.copyFrom(value, $.utils.getPointer(1, this));
-  }
-  toString(): string {
-    return "ItemInstance_" + super.toString();
-  }
-}
-export class Items extends $.Struct {
-  static readonly _capnp = {
-    displayName: "Items",
-    id: "d06564713244f529",
-    size: new $.ObjectSize(664, 5)
-  };
-  get id(): number {
-    return $.utils.getInt32(0, this);
-  }
-  set id(value: number) {
-    $.utils.setInt32(0, value, this);
-  }
-  get minstatus(): number {
-    return $.utils.getInt32(4, this);
-  }
-  set minstatus(value: number) {
-    $.utils.setInt32(4, value, this);
-  }
-  get name(): string {
-    return $.utils.getText(0, this);
-  }
-  set name(value: string) {
-    $.utils.setText(0, value, this);
-  }
-  get aagi(): number {
     return $.utils.getInt32(8, this);
   }
-  set aagi(value: number) {
+  set slot(value: number) {
     $.utils.setInt32(8, value, this);
   }
   get ac(): number {
@@ -1097,7 +1021,25 @@ export class Items extends $.Struct {
   set epicitem(value: number) {
     $.utils.setInt32(656, value, this);
   }
+  get minstatus(): number {
+    return $.utils.getInt32(660, this);
+  }
+  set minstatus(value: number) {
+    $.utils.setInt32(660, value, this);
+  }
+  get name(): string {
+    return $.utils.getText(5, this);
+  }
+  set name(value: string) {
+    $.utils.setText(5, value, this);
+  }
+  get aagi(): number {
+    return $.utils.getInt32(664, this);
+  }
+  set aagi(value: number) {
+    $.utils.setInt32(664, value, this);
+  }
   toString(): string {
-    return "Items_" + super.toString();
+    return "ItemInstance_" + super.toString();
   }
 }

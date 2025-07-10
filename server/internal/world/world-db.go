@@ -221,13 +221,11 @@ func GetCharSelectInfo(ses *session.Session, ctx context.Context, accountID int6
 			}
 
 			item := capCharItems.At(itemIdx)
-			item.SetItemId(charItem.ItemID)
 			item.SetCharges(uint32(charItem.Charges))
 			item.SetQuantity(uint32(charItem.Quantity))
 			item.SetMods(*charItem.Mods)
-			item.SetOwnerId(*charItem.OwnerID)
 			item.SetSlot(int32(charItem.Slot))
-			item.SetItem(items.ConvertItemTemplateToCapnp(ses, &itemTemplate))
+			items.ConvertItemTemplateToCapnp(ses, &itemTemplate, &item)
 		}
 	}
 

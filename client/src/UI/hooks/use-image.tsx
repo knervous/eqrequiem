@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
-import atlas from "../util/atlas.json";
-import stoneAtlas from "../util/atlas-stone.json";
-import sakAtlas from "../util/atlas-sak.json";
-import { ImageCache } from "../util/image-cache";
+import { use, useEffect, useMemo, useState } from 'react';
+import sakAtlas from '../util/atlas-sak.json';
+import stoneAtlas from '../util/atlas-stone.json';
+import atlas from '../util/atlas.json';
+import { ImageCache } from '../util/image-cache';
 
 export type AtlasEntry = {
   texture: string; // Path to the texture file (e.g., "uifiles/default/atlas.tga")
@@ -17,7 +17,7 @@ export type ImageEntry = {
   image: string | null;
 };
 
-//––– SAK CACHE (promises) –––
+// ––– SAK CACHE (promises) –––
 const sakCache: Record<string, Promise<string>> = {};
 
 export const useSakImage = (
@@ -40,7 +40,7 @@ export const useSakImage = (
     let promise = sakCache[path];
     if (!promise) {
       promise = ImageCache.getImageUrl(
-        "uifiles/sakui",
+        'uifiles/sakui',
         entry.texture,
         crop,
         entry.left,
@@ -86,7 +86,7 @@ export const useSakImages = (
       let promise = sakCache[path];
       if (!promise) {
         promise = ImageCache.getImageUrl(
-          "uifiles/sakui",
+          'uifiles/sakui',
           entry.texture,
           crop,
           entry.left,
@@ -110,7 +110,7 @@ export const useSakImages = (
   }));
 };
 
-//––– STONE CACHE (promises) –––
+// ––– STONE CACHE (promises) –––
 const stoneCache: Record<string, Promise<string>> = {};
 
 export const useStoneImage = (
@@ -132,7 +132,7 @@ export const useStoneImage = (
     let promise = stoneCache[path];
     if (!promise) {
       promise = ImageCache.getImageUrl(
-        "uifiles/stone",
+        'uifiles/stone',
         entry.texture,
         crop,
         entry.left,
@@ -175,7 +175,7 @@ export const useStoneImages = (
       let promise = stoneCache[path];
       if (!promise) {
         promise = ImageCache.getImageUrl(
-          "uifiles/stone",
+          'uifiles/stone',
           entry.texture,
           crop,
           entry.left,
@@ -196,16 +196,33 @@ export const useStoneImages = (
     image: images[i],
   }));
 };
+
+const rawCache: Record<string, Promise<string>> = {};
 export const useRawImage = (
   folder: string,
   path: string,
   type: string,
 ): string => {
-  const [image, setImage] = useState<string>("");
+  const [image, setImage] = useState<string>('');
   useEffect(() => {
-    ImageCache.getRawImageUrl(folder, path, type).then(setImage);
+    if (!path) {
+      setImage('');
+      return;
+    }
+    // Check if the image is already cached
+    let promise = rawCache[path];
+    if (!promise) {
+      // If not cached, create a new promise to fetch the image
+      promise = ImageCache.getRawImageUrl(folder, path, type);
+      rawCache[path] = promise;
+    }
+    
+    promise.then((imgUrl) => {
+      setImage(imgUrl);
+    });
+
   }, [folder, path, type]);
-  return image || "";
+  return image || '';
 };
 
 export const useImage = (path: string, crop: boolean = false): ImageEntry => {
@@ -217,7 +234,7 @@ export const useImage = (path: string, crop: boolean = false): ImageEntry => {
       return;
     }
     ImageCache.getImageUrl(
-      "uifiles/default",
+      'uifiles/default',
       entry.texture,
       crop,
       entry.left,
@@ -230,4 +247,58 @@ export const useImage = (path: string, crop: boolean = false): ImageEntry => {
     entry,
     image,
   };
+};
+
+
+type AtlasType ={
+  texture: string; // Path to the texture file (e.g., "uifiles/default/atlas.tga")
+  x: number; // X coordinate of the sprite in the atlas
+  y: number; // Y coordinate of the sprite in the atlas
+  cellSize: number; // Size of each cell in the atlas
+} 
+const loadAtlasItem =
+  (prefix, padStart, base, gridItems, columns, cellSize) => (id): AtlasType => {
+    const itemId = id - base;
+    const fileIndex = Math.floor(itemId / gridItems) + 1;
+
+    const spriteIndex = itemId % gridItems;
+
+    const row = Math.floor(spriteIndex / columns);
+    const col = spriteIndex % columns;
+
+    const x = row * cellSize;
+    const y = col * cellSize;
+
+    return {
+      texture: `${prefix}${fileIndex.toString().padStart(padStart, '0')}.webp`,
+      x,
+      y,
+      cellSize,
+    };
+  };
+
+export const loadItemIcon = loadAtlasItem('dragitem', 0, 500, 36, 6, 40);
+export const loadSpellIcon = loadAtlasItem('Spells', 2, 0, 36, 6, 40);
+export const loadGemIcon = loadAtlasItem('gemicons', 2, 0, 100, 10, 24);
+
+export const useItemImage = (id: number): string => {
+  const atlasItem = useMemo(() => id === -1 ? null : loadItemIcon(id), [id]);
+  const [image, setImage] = useState<string | null>(null);
+  useEffect(() => {
+    if (!atlasItem) {
+      setImage(null);
+      return;
+    }
+    console.log('useItemImage', atlasItem);
+    ImageCache.getImageUrl(
+      'uifiles/default',
+      atlasItem.texture,
+      true,
+      atlasItem.x,
+      atlasItem.y,
+      atlasItem.cellSize,
+      atlasItem.cellSize,
+    ).then(setImage);
+  }, [atlasItem]);
+  return image || '';
 };

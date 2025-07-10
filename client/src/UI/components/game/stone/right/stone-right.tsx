@@ -1,22 +1,22 @@
-import React, { useMemo } from "react";
-import { Box, Stack, Typography } from "@mui/material";
-import { useSakImage, useSakImages } from "@ui/hooks/use-image";
-import { usePlayerName } from "@game/Events/event-hooks";
-import { UiImageComponent } from "@ui/common/ui-image";
-import { StoneTarget } from "./stone-target";
-import { StoneActions } from "./stone-actions";
+import React, { useMemo } from 'react';
+import { usePlayerName } from '@game/Events/event-hooks';
+import { Box, Stack, Typography } from '@mui/material';
+import { UiImageComponent } from '@ui/common/ui-image';
+import { useSakImage, useSakImages } from '@ui/hooks/use-image';
+import { StoneActions } from './stone-actions';
+import { StoneTarget } from './stone-target';
 
 // Configuration for all stone frame pieces
 const stoneConfigs = [
-  { key: "topLeft", name: "A_ClassicTopLeft", bgSize: "cover" },
-  { key: "top", name: "A_ClassicTop", bgSize: "cover" },
-  { key: "topRight", name: "A_ClassicTopRight", bgSize: "cover" },
-  { key: "midLeft", name: "A_ClassicLeft", bgSize: "repeat-y" },
-  { key: "mid", name: "BG_Light", bgSize: "repeat" },
-  { key: "midRight", name: "A_ClassicRight", bgSize: "repeat-y" },
-  { key: "botLeft", name: "A_ClassicBottomLeft", bgSize: "cover" },
-  { key: "bot", name: "A_ClassicBottom", bgSize: "repeat-x" },
-  { key: "botRight", name: "A_ClassicBottomRight", bgSize: "cover" },
+  { key: 'topLeft', name: 'A_ClassicTopLeft', bgSize: 'cover' },
+  { key: 'top', name: 'A_ClassicTop', bgSize: 'cover' },
+  { key: 'topRight', name: 'A_ClassicTopRight', bgSize: 'cover' },
+  { key: 'midLeft', name: 'A_ClassicLeft', bgSize: 'repeat-y' },
+  { key: 'mid', name: 'BG_Light', bgSize: 'repeat' },
+  { key: 'midRight', name: 'A_ClassicRight', bgSize: 'repeat-y' },
+  { key: 'botLeft', name: 'A_ClassicBottomLeft', bgSize: 'cover' },
+  { key: 'bot', name: 'A_ClassicBottom', bgSize: 'repeat-x' },
+  { key: 'botRight', name: 'A_ClassicBottomRight', bgSize: 'cover' },
 ];
 
 // Component to render a row of stone pieces
@@ -34,10 +34,10 @@ const StoneRow: React.FC<{
         <Box
           key={key}
           sx={{
-            width: widthPx / scale,
+            width          : widthPx / scale,
             height,
             backgroundImage: `url(${image})`,
-            backgroundSize: bgSize,
+            backgroundSize : bgSize,
           }}
         />
       );
@@ -54,8 +54,8 @@ export const StoneRight: React.FC<{ width: number }> = ({ width }) => {
         (acc, { key, bgSize }, idx) => {
           acc[key] = {
             entry: bgImages[idx]?.entry ?? {},
-            image: bgImages[idx]?.image ?? "",
-            bgSize: bgSize,
+            image: bgImages[idx]?.image ?? '',
+            bgSize,
           };
           return acc;
         },
@@ -75,10 +75,10 @@ export const StoneRight: React.FC<{ width: number }> = ({ width }) => {
   const topHeight = stoneImages.topLeft.entry.height * scale;
   const middleHeight = window.innerHeight - 2 * topHeight;
 
-  const playerImage = useSakImage("PW_BG_TX", true);
-  const partyMembersImage = useSakImage("GW_BG_TX", true);
-  const targetImage = useSakImage("TARGET_BG_TX", true);
-  const buffImage = useSakImage("BUFF_BG_TX", true);
+  const playerImage = useSakImage('PW_BG_TX', true);
+  const partyMembersImage = useSakImage('GW_BG_TX', true);
+  const targetImage = useSakImage('TARGET_BG_TX', true);
+  const buffImage = useSakImage('BUFF_BG_TX', true);
 
   const totalTopHeight =
     playerImage.entry.height +
@@ -89,60 +89,60 @@ export const StoneRight: React.FC<{ width: number }> = ({ width }) => {
   return (
     <Box
       sx={{
-        width: "100%",
-        height: "100%",
-        overflow: "hidden",
+        width   : '100%',
+        height  : '100%',
+        overflow: 'hidden',
       }}
     >
       {/* Frame */}
       <StoneRow
-        keys={["topLeft", "top", "topRight"]}
-        stoneImages={stoneImages}
-        scale={scale}
         height={topHeight}
+        keys={['topLeft', 'top', 'topRight']}
+        scale={scale}
+        stoneImages={stoneImages}
       />
       <StoneRow
-        keys={["midLeft", "mid", "midRight"]}
-        stoneImages={stoneImages}
-        scale={scale}
         height={`${middleHeight}px`}
+        keys={['midLeft', 'mid', 'midRight']}
+        scale={scale}
+        stoneImages={stoneImages}
       />
       <StoneRow
-        keys={["botLeft", "bot", "botRight"]}
-        stoneImages={stoneImages}
-        scale={scale}
         height={topHeight}
+        keys={['botLeft', 'bot', 'botRight']}
+        scale={scale}
+        stoneImages={stoneImages}
       />
 
       {/* Overlay UI */}
       <Box
-        sx={{ position: "absolute", top: 0, left: 0, width, height: "100vh" }}
+        sx={{ position: 'absolute', top: 0, left: 0, width, height: '100vh' }}
       >
         <Box
           sx={{
-            transform: `scale(${scale})`,
-            transformOrigin: "top left",
-            width: width / scale,
-            height: `calc(100vh / ${scale})`,
+            transform      : `scale(${scale})`,
+            transformOrigin: 'top left',
+            width          : width / scale,
+            height         : `calc(100vh / ${scale})`,
           }}
         >
-          <Stack sx={{ height: totalTopHeight * 2 }} direction={"column"}>
+          <Stack direction={'column'} sx={{ height: totalTopHeight * 2 }}>
             <Box
               sx={{
-                width: playerImage.entry.width * 2,
-                height: playerImage.entry.height * 2,
+                width          : playerImage.entry.width * 2,
+                height         : playerImage.entry.height * 2,
                 backgroundImage: `url(${playerImage.image})`,
-                backgroundSize: "cover",
+                backgroundSize : 'cover',
               }}
             >
               <Box sx={{ m: 7 }}>
                 <Typography
-                  variant="h6"
                   sx={{
-                    fontSize: "30px",
-                    color: "white",
-                    textShadow: "1px 1px 2px black",
+                    fontSize  : '30px',
+                    color     : 'white',
+                    textShadow: '1px 1px 2px black',
                   }}
+                  variant="h6"
                 >
                   {playerName}
                 </Typography>
@@ -158,35 +158,35 @@ export const StoneRight: React.FC<{ width: number }> = ({ width }) => {
             </Box>
             <Box
               sx={{
-                width: partyMembersImage.entry.width * 2,
-                height: partyMembersImage.entry.height * 2,
+                width          : partyMembersImage.entry.width * 2,
+                height         : partyMembersImage.entry.height * 2,
                 backgroundImage: `url(${partyMembersImage.image})`,
-                backgroundSize: "cover",
+                backgroundSize : 'cover',
               }}
             />
             <Box
               sx={{
-                width: targetImage.entry.width * 2,
-                height: targetImage.entry.height * 2,
+                width          : targetImage.entry.width * 2,
+                height         : targetImage.entry.height * 2,
                 backgroundImage: `url(${targetImage.image})`,
-                backgroundSize: "cover",
+                backgroundSize : 'cover',
               }}
             >
               <StoneTarget />
             </Box>
             <Box
               sx={{
-                width: buffImage.entry.width * 2,
-                height: buffImage.entry.height * 2,
+                width          : buffImage.entry.width * 2,
+                height         : buffImage.entry.height * 2,
                 backgroundImage: `url(${buffImage.image})`,
-                backgroundSize: "cover",
+                backgroundSize : 'cover',
               }}
             />
           </Stack>
           <Stack
+            direction={'column'}
+            justifyContent={'center'}
             sx={{ height: `calc(100% - ${totalTopHeight * 2}px)` }}
-            direction={"column"}
-            justifyContent={"center"}
           >
             <StoneActions scale={scale} />
 

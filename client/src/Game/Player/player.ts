@@ -6,14 +6,13 @@ import emitter from '@game/Events/events';
 import type GameManager from '@game/Manager/game-manager';
 import { Entity } from '@game/Model/entity';
 import EntityCache from '@game/Model/entity-cache';
-import { ItemInstance } from '@game/Net/internal/api/capnp/item';
 import { PlayerProfile } from '@game/Net/internal/api/capnp/player';
 import { ActionButtonData, ActionType } from '@ui/components/game/action-button/constants';
 import RACE_DATA from '../Constants/race-data';
 import { PlayerAbility } from './player-ability';
 import { PlayerCamera } from './player-cam';
 import { PlayerCombat } from './player-combat';
-import { InventorySlot } from './player-constants';
+import { PlayerInventory } from './player-inventory';
 import { PlayerKeyboard } from './player-keyboard';
 import { PlayerMovement } from './player-movement';
 import { PlayerSocials } from './player-socials';
@@ -28,13 +27,13 @@ export default class Player {
   public playerCombat: PlayerCombat;
   public playerAbility: PlayerAbility;
   public playerSocials: PlayerSocials;
+  public playerInventory: PlayerInventory;
 
   static instance: Player | null = null;
 
   public player: PlayerProfile | null = null;
   public playerEntity: Entity | null = null;
   public isPlayerMoving: boolean = false;
-  public inventory: Map<InventorySlot, ItemInstance | null> = new Map();
   public model: string = '';
   public currentAnimation: string = '';
   public currentPlayToEnd: boolean = false;
@@ -122,6 +121,7 @@ export default class Player {
     this.playerCombat = new PlayerCombat(this);
     this.playerAbility = new PlayerAbility(this);
     this.playerSocials = new PlayerSocials(this);
+    this.playerInventory = new PlayerInventory(this);
 
     Player.instance = this;
     (window as any).player = this;
@@ -190,18 +190,12 @@ export default class Player {
       this.playerEntity.checkBelowAndReposition();
     }
   }
-
   
-
-  public input_pan(delta: number) {
-    this.playerCamera.adjustCameraDistance(delta < 0 ? -1 : 1);
-  }
-
   private get headVariation(): number {
     if (!this.player) {
       return 0;
     }
-    return this.inventory.get(InventorySlot.Head)?.item?.itemtype ?? 0;
+    return this.playerInventory.getHeadSlot()?.itemtype ?? 0;
   }
 
   private get headModelName(): string {
@@ -283,9 +277,7 @@ export default class Player {
     this.player = capnpToPlainObject(player) as PlayerProfile;
     console.log('player', this.player, player);
     this.currentAnimation = '';
-    for (const item of this.player.inventoryItems ?? []) {
-      this.inventory.set(item.slot, item);
-    }
+    this.playerInventory.load();
     if (!this.player) {
       console.warn('[Player] No player data available');
       return;

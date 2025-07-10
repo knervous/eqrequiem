@@ -1,20 +1,21 @@
-import BABYLON from "@bjs";
-import emitter from "@game/Events/events";
-import GameManager from "@game/Manager/game-manager";
-import Player from "@game/Player/player";
-import { Box, Stack, Typography } from "@mui/material";
-import { useSakImages } from "@ui/hooks/use-image";
-import { useEffect, useMemo, useRef } from "react";
-import { usePlayerProfile } from "@game/Events/event-hooks";
-import { CLASS_DATA_NAMES } from "@game/Constants/class-data";
-import { getDeityName } from "@game/Constants/util";
-import { UiImageComponent } from "@ui/common/ui-image";
+import { useEffect, useMemo, useRef } from 'react';
+import BABYLON from '@bjs';
+import { CLASS_DATA_NAMES } from '@game/Constants/class-data';
+import { getDeityName } from '@game/Constants/util';
+import { usePlayerProfile } from '@game/Events/event-hooks';
+import emitter from '@game/Events/events';
+import GameManager from '@game/Manager/game-manager';
+import Player from '@game/Player/player';
+import { Box, Stack, Typography } from '@mui/material';
+import { UiImageComponent } from '@ui/common/ui-image';
+import { useSakImages } from '@ui/hooks/use-image';
+import { StoneGeneralInv } from '../../left/stone-general-inv';
 
 const stoneConfigs = [
-  { key: "invTopLeft", name: "INV_BG_TXTOPLEFT", bgSize: "cover" },
-  { key: "invTopRight", name: "INV_BG_TXTOPRIGHT", bgSize: "cover" },
-  { key: "invBottomLeft", name: "INV_BG_TXLOWLEFT", bgSize: "cover" },
-  { key: "invBottomRight", name: "INV_BG_TXLOWRIGHT", bgSize: "cover" },
+  { key: 'invTopLeft', name: 'INV_BG_TXTOPLEFT', bgSize: 'cover' },
+  { key: 'invTopRight', name: 'INV_BG_TXTOPRIGHT', bgSize: 'cover' },
+  { key: 'invBottomLeft', name: 'INV_BG_TXLOWLEFT', bgSize: 'cover' },
+  { key: 'invBottomRight', name: 'INV_BG_TXLOWRIGHT', bgSize: 'cover' },
 ];
 
 const StoneRow: React.FC<{
@@ -31,10 +32,10 @@ const StoneRow: React.FC<{
         <Box
           key={key}
           sx={{
-            width: widthPx,
-            height: height * scale,
+            width          : widthPx,
+            height         : height * scale,
             backgroundImage: `url(${image})`,
-            backgroundSize: bgSize,
+            backgroundSize : bgSize,
           }}
         />
       );
@@ -57,8 +58,8 @@ export const StoneInventory: React.FC<{
         (acc, { key, bgSize }, idx) => {
           acc[key] = {
             entry: bgImages[idx]?.entry ?? {},
-            image: bgImages[idx]?.image ?? "",
-            bgSize: bgSize,
+            image: bgImages[idx]?.image ?? '',
+            bgSize,
           };
           return acc;
         },
@@ -84,8 +85,7 @@ export const StoneInventory: React.FC<{
       if (
         !GameManager.instance?.SecondaryCamera ||
         !Player.instance?.playerEntity
-      )
-        return;
+      ) {return;}
       const camera = GameManager.instance.SecondaryCamera;
       const hDist = 14;
       const vDist = 5;
@@ -99,17 +99,17 @@ export const StoneInventory: React.FC<{
         .addInPlace(forward);
       camera.setTarget(Player.instance.getPlayerPosition()!.add(lookatOffset));
     };
-    emitter.on("playerPosition", cb);
-    emitter.on("playerRotation", cb);
+    emitter.on('playerPosition', cb);
+    emitter.on('playerRotation', cb);
 
     return () => {
-      emitter.off("playerPosition", cb);
-      emitter.off("playerRotation", cb);
+      emitter.off('playerPosition', cb);
+      emitter.off('playerRotation', cb);
     };
   }, []);
   useEffect(() => {
     const clientRect = inventoryRef.current?.getBoundingClientRect();
-    if (!clientRect) return;
+    if (!clientRect) {return;}
 
     GameManager.instance.setInventoryViewport(
       clientRect.right - 132 * scale,
@@ -129,127 +129,127 @@ export const StoneInventory: React.FC<{
   return (
     <Box
       ref={inventoryRef}
-      onClickCapture={() => {
-        console.log("Click captured on StoneInventory");
-      }}
       sx={{
-        position: "absolute",
-        zIndex: 5,
-        width: dimensions.width,
-        height: dimensions.height,
-        top: height / 2 - dimensions.height / 2,
-        left: width / 2 - dimensions.width / 2,
+        position: 'absolute',
+        zIndex  : 5,
+        width   : dimensions.width,
+        height  : dimensions.height,
+        top     : height / 2 - dimensions.height / 2,
+        left    : width / 2 - dimensions.width / 2,
+      }}
+      onClickCapture={() => {
+        console.log('Click captured on StoneInventory');
       }}
     >
       <StoneRow
-        keys={["invTopLeft", "invTopRight"]}
-        stoneImages={stoneImages}
-        scale={scale}
         height={stoneImages.invTopLeft.entry.height}
+        keys={['invTopLeft', 'invTopRight']}
+        scale={scale}
+        stoneImages={stoneImages}
       />
       <StoneRow
-        keys={["invBottomLeft", "invBottomRight"]}
-        stoneImages={stoneImages}
-        scale={scale}
         height={stoneImages.invBottomLeft.entry.height}
+        keys={['invBottomLeft', 'invBottomRight']}
+        scale={scale}
+        stoneImages={stoneImages}
       />
 
       {/* Text Overlay */}
       <Box
         sx={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          width: dimensions.width,
-          height: dimensions.height,
-          transform: `scale(${scale})`,
-          transformOrigin: "top left",
-          ["& > .invui, .invui p"]: {
-            position: "absolute",
-            fontSize: "13px",
-            color: "white",
-            userSelect: "none",
+          position                : 'absolute',
+          top                     : 0,
+          left                    : 0,
+          width                   : dimensions.width,
+          height                  : dimensions.height,
+          transform               : `scale(${scale})`,
+          transformOrigin         : 'top left',
+          ['& > .invui, .invui p']: {
+            position  : 'absolute',
+            fontSize  : '13px',
+            color     : 'white',
+            userSelect: 'none',
           },
-          [".uistat"]: {
-            fontSize: "12px !important",
-            position: "relative !important",
-            lineHeight: "1.2 !important",
+          ['.uistat']: {
+            fontSize  : '12px !important',
+            position  : 'relative !important',
+            lineHeight: '1.2 !important',
           },
         }}
       >
         <Typography className="invui" sx={{ top: 12, left: 17 }}>
-          {player?.name || ""}
+          {player?.name || ''}
         </Typography>
         <Typography className="invui" sx={{ top: 53, left: 60 }}>
-          {player?.level || ""}
+          {player?.level || ''}
         </Typography>
         <Typography className="invui" sx={{ top: 73, left: 25 }}>
-          {CLASS_DATA_NAMES[player?.charClass ?? ""] || ""}
+          {CLASS_DATA_NAMES[player?.charClass ?? ''] || ''}
         </Typography>
         <Typography className="invui" sx={{ top: 90, left: 25 }}>
-          {getDeityName(player?.deity ?? 0) || ""}
+          {getDeityName(player?.deity ?? 0) || ''}
         </Typography>
         <Typography
           className="invui"
-          sx={{ top: 114, left: 65, color: "lightgray !important" }}
+          sx={{ top: 114, left: 65, color: 'lightgray !important' }}
         >
           {player?.curHp ?? 0}/{player?.maxHp ?? 0}
           {/* HP placeholder */}
         </Typography>
         <Typography
           className="invui"
-          sx={{ top: 129, left: 65, color: "lightgray !important" }}
+          sx={{ top: 129, left: 65, color: 'lightgray !important' }}
         >
           10 {/* AC placeholder */}
         </Typography>
         <Typography
           className="invui"
-          sx={{ top: 145, left: 65, color: "lightgray !important" }}
+          sx={{ top: 145, left: 65, color: 'lightgray !important' }}
         >
           10 {/* ATK placeholder */}
         </Typography>
         <Box
           className="invui"
-          sx={{ top: 212, left: 23, color: "lightgray !important" }}
+          sx={{ top: 212, left: 23, color: 'lightgray !important' }}
         >
           <UiImageComponent sak name="A_Classic_GaugeFill_Yellow" />
         </Box>
         <Stack
           className="invui"
           direction="column"
-          sx={{
-            top: 257,
-            left: 30,
-            width: "90px",
-            height: "300px",
-          }}
           spacing={0}
+          sx={{
+            top   : 257,
+            left  : 30,
+            width : '90px',
+            height: '300px',
+          }}
         >
-          <Stack spacing={1} direction="row" justifyContent={"space-between"}>
+          <Stack direction="row" justifyContent={'space-between'} spacing={1}>
             <Typography className="uistat">STR</Typography>
             <Typography className="uistat">{player?.str}</Typography>
           </Stack>
-          <Stack spacing={1} direction="row" justifyContent={"space-between"}>
+          <Stack direction="row" justifyContent={'space-between'} spacing={1}>
             <Typography className="uistat">STA</Typography>
             <Typography className="uistat">{player?.sta}</Typography>
           </Stack>
-          <Stack spacing={1} direction="row" justifyContent={"space-between"}>
+          <Stack direction="row" justifyContent={'space-between'} spacing={1}>
             <Typography className="uistat">DEX</Typography>
             <Typography className="uistat">{player?.dex}</Typography>
           </Stack>
-          <Stack spacing={1} direction="row" justifyContent={"space-between"}>
+          <Stack direction="row" justifyContent={'space-between'} spacing={1}>
             <Typography className="uistat">AGI</Typography>
             <Typography className="uistat">{player?.agi}</Typography>
           </Stack>
-          <Stack spacing={1} direction="row" justifyContent={"space-between"}>
+          <Stack direction="row" justifyContent={'space-between'} spacing={1}>
             <Typography className="uistat">WIS</Typography>
             <Typography className="uistat">{player?.wis}</Typography>
           </Stack>
-          <Stack spacing={1} direction="row" justifyContent={"space-between"}>
+          <Stack direction="row" justifyContent={'space-between'} spacing={1}>
             <Typography className="uistat">INT</Typography>
             <Typography className="uistat">{player?.intel}</Typography>
           </Stack>
-          <Stack spacing={1} direction="row" justifyContent={"space-between"}>
+          <Stack direction="row" justifyContent={'space-between'} spacing={1}>
             <Typography className="uistat">CHA</Typography>
             <Typography className="uistat">{player?.cha}</Typography>
           </Stack>
@@ -258,45 +258,57 @@ export const StoneInventory: React.FC<{
         <Stack
           className="invui"
           direction="column"
-          sx={{
-            top: 400,
-            left: 30,
-            width: "90px",
-            height: "300px",
-          }}
           spacing={0}
+          sx={{
+            top   : 400,
+            left  : 30,
+            width : '90px',
+            height: '300px',
+          }}
         >
-          <Stack spacing={1} direction="row" justifyContent={"space-between"}>
+          <Stack direction="row" justifyContent={'space-between'} spacing={1}>
             <Typography className="uistat">POISON</Typography>
             <Typography className="uistat">
               {player?.poisonResist ?? 0}
             </Typography>
           </Stack>
-          <Stack spacing={1} direction="row" justifyContent={"space-between"}>
+          <Stack direction="row" justifyContent={'space-between'} spacing={1}>
             <Typography className="uistat">MAGIC</Typography>
             <Typography className="uistat">
               {player?.magicResist ?? 0}
             </Typography>
           </Stack>
-          <Stack spacing={1} direction="row" justifyContent={"space-between"}>
+          <Stack direction="row" justifyContent={'space-between'} spacing={1}>
             <Typography className="uistat">DISEASE</Typography>
             <Typography className="uistat">
               {player?.diseaseResist ?? 0}
             </Typography>
           </Stack>
-          <Stack spacing={1} direction="row" justifyContent={"space-between"}>
+          <Stack direction="row" justifyContent={'space-between'} spacing={1}>
             <Typography className="uistat">FIRE</Typography>
             <Typography className="uistat">
               {player?.fireResist ?? 0}
             </Typography>
           </Stack>
-          <Stack spacing={1} direction="row" justifyContent={"space-between"}>
+          <Stack direction="row" justifyContent={'space-between'} spacing={1}>
             <Typography className="uistat">COLD</Typography>
             <Typography className="uistat">
               {player?.coldResist ?? 0}
             </Typography>
           </Stack>
         </Stack>
+
+        { /* Inventory Slots */ }
+        <Box className="invui"
+          sx={{
+            top            : 256,
+            left           : 578,
+            width          : 125,
+            height         : 254,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          }}>
+          <StoneGeneralInv contain scale={scale} />
+        </Box>
       </Box>
     </Box>
   );

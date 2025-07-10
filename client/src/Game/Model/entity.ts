@@ -738,7 +738,7 @@ export class Entity extends BABYLON.TransformNode {
     variation: number = 22,
   ): number {
     originalName = originalName.toLowerCase();
-    let model, piece, texIdx;
+    let model, texIdx;
     const match = originalName.match(charFileRegex);
     if (!match) {
       // console.warn(

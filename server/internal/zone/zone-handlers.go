@@ -13,6 +13,7 @@ import (
 	"github.com/knervous/eqgo/internal/quest"
 
 	db_character "github.com/knervous/eqgo/internal/db/character"
+	"github.com/knervous/eqgo/internal/db/items"
 	db_zone "github.com/knervous/eqgo/internal/db/zone"
 	"github.com/knervous/eqgo/internal/session"
 )
@@ -238,6 +239,34 @@ func HandleRequestClientZoneChange(z *ZoneInstance, ses *session.Session, payloa
 	playerProfile.SetSpawnId(int32(clientEntry.EntityId))
 	playerProfile.SetDeity(int32(charData.Deity))
 	playerProfile.SetAaPoints(int32(charData.AaPoints))
+
+	// Inventory
+	charItems, err := db_character.GetCharacterItems(context.Background(), int(charData.ID))
+	if err != nil {
+		log.Printf("failed to get character items for character %d: %v", charData.ID, err)
+		return
+	}
+
+	charItemsLength := int32(len(charItems))
+	capCharItems, err := playerProfile.NewInventoryItems(charItemsLength)
+	if err != nil {
+		log.Printf("failed to create InventoryItems array: %v", err)
+		return
+	}
+	for itemIdx, charItem := range charItems {
+		itemTemplate, err := items.GetItemTemplateByID(charItem.ItemID)
+		if err != nil {
+			log.Printf("failed to get item template for itemID %d: %v", charItem.ItemID, err)
+			continue
+		}
+
+		item := capCharItems.At(itemIdx)
+		item.SetCharges(uint32(charItem.Charges))
+		item.SetQuantity(uint32(charItem.Quantity))
+		item.SetMods(*charItem.Mods)
+		item.SetSlot(int32(charItem.Slot))
+		items.ConvertItemTemplateToCapnp(ses, &itemTemplate, &item)
+	}
 
 	// Derived stats
 	mob := ses.Client.Mob

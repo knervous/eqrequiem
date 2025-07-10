@@ -1,26 +1,26 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { Box, Grid, Stack, Typography } from "@mui/material";
-import { useRawImage, useSakImage, useSakImages } from "@ui/hooks/use-image";
-import { UiButtonComponent } from "@ui/common/ui-button";
-import { PlayerProfile } from "@game/Net/internal/api/capnp/player";
-import { CLASS_DATA_NAMES } from "@game/Constants/class-data";
-import emitter from "@game/Events/events";
-import Player from "@game/Player/player";
-import { ActionButton, ActionHotButton } from "../../action-button/action-button";
-import { StoneHotButtons } from "./stone-hot-buttons";
-import { StoneGeneralInv } from "./stone-general-inv";
+import React, { useEffect, useMemo, useState } from 'react';
+import { CLASS_DATA_NAMES } from '@game/Constants/class-data';
+import emitter from '@game/Events/events';
+import { PlayerProfile } from '@game/Net/internal/api/capnp/player';
+import Player from '@game/Player/player';
+import { Box, Grid, Stack, Typography } from '@mui/material';
+import { UiButtonComponent } from '@ui/common/ui-button';
+import { useRawImage, useSakImage, useSakImages } from '@ui/hooks/use-image';
+import { ActionButton, ActionHotButton } from '../../action-button/action-button';
+import { StoneGeneralInv } from './stone-general-inv';
+import { StoneHotButtons } from './stone-hot-buttons';
 
 // Configuration for all stone frame pieces
 const stoneConfigs = [
-  { key: "topLeft", name: "A_ClassicTopLeft", bgSize: "cover" },
-  { key: "top", name: "A_ClassicTop", bgSize: "cover" },
-  { key: "topRight", name: "A_ClassicTopRight", bgSize: "cover" },
-  { key: "midLeft", name: "A_ClassicLeft", bgSize: "repeat-y" },
-  { key: "mid", name: "BG_Light", bgSize: "repeat" },
-  { key: "midRight", name: "A_ClassicRight", bgSize: "repeat-y" },
-  { key: "botLeft", name: "A_ClassicBottomLeft", bgSize: "cover" },
-  { key: "bot", name: "A_ClassicBottom", bgSize: "repeat-x" },
-  { key: "botRight", name: "A_ClassicBottomRight", bgSize: "cover" },
+  { key: 'topLeft', name: 'A_ClassicTopLeft', bgSize: 'cover' },
+  { key: 'top', name: 'A_ClassicTop', bgSize: 'cover' },
+  { key: 'topRight', name: 'A_ClassicTopRight', bgSize: 'cover' },
+  { key: 'midLeft', name: 'A_ClassicLeft', bgSize: 'repeat-y' },
+  { key: 'mid', name: 'BG_Light', bgSize: 'repeat' },
+  { key: 'midRight', name: 'A_ClassicRight', bgSize: 'repeat-y' },
+  { key: 'botLeft', name: 'A_ClassicBottomLeft', bgSize: 'cover' },
+  { key: 'bot', name: 'A_ClassicBottom', bgSize: 'repeat-x' },
+  { key: 'botRight', name: 'A_ClassicBottomRight', bgSize: 'cover' },
 ];
 
 // Component to render a row of stone pieces
@@ -38,10 +38,10 @@ const StoneRow: React.FC<{
         <Box
           key={key}
           sx={{
-            width: widthPx,
+            width          : widthPx,
             height,
             backgroundImage: `url(${image})`,
-            backgroundSize: bgSize,
+            backgroundSize : bgSize,
           }}
         />
       );
@@ -60,8 +60,8 @@ export const StoneLeft: React.FC<{ width: number }> = ({ width }) => {
         (acc, { key, bgSize }, idx) => {
           acc[key] = {
             entry: bgImages[idx]?.entry ?? {},
-            image: bgImages[idx]?.image ?? "",
-            bgSize: bgSize,
+            image: bgImages[idx]?.image ?? '',
+            bgSize,
           };
           return acc;
         },
@@ -71,11 +71,11 @@ export const StoneLeft: React.FC<{ width: number }> = ({ width }) => {
   );
   // Other assets
   const classGif = useRawImage(
-    "uifiles/stone",
+    'uifiles/stone',
     `${playerClass}.gif`,
-    "image/gif",
+    'image/gif',
   );
-  const spellGem = useSakImage("Jib_SpellGemBG", true);
+  const spellGem = useSakImage('Jib_SpellGemBG', true);
 
   const bottomHeight = 1400;
 
@@ -96,17 +96,17 @@ export const StoneLeft: React.FC<{ width: number }> = ({ width }) => {
         <Box
           key={i}
           sx={{
-            width: spellGem.entry.width * 2.3,
-            height: spellGem.entry.height * 2.3,
+            width          : spellGem.entry.width * 2.3,
+            height         : spellGem.entry.height * 2.3,
             backgroundImage: `url(${spellGem.image})`,
-            backgroundSize: "cover",
-            //transform: `scale(${2})`,
+            backgroundSize : 'cover',
+            // transform: `scale(${2})`,
           }}
         >
           <ActionButton
+            action={() => console.log(`Spell Gem ${i + 1} Clicked`)}
             background="A_ClassicButtonBG"
             foreGround="A_ClassicButtonFG"
-            action={() => console.log(`Spell Gem ${i + 1} Clicked`)}
             size={spellGem.entry.width * 2.3}
           />
         </Box>
@@ -116,113 +116,113 @@ export const StoneLeft: React.FC<{ width: number }> = ({ width }) => {
 
   useEffect(() => {
     const cb = (player: PlayerProfile) => {
-      setPlayerClass(CLASS_DATA_NAMES[player.charClass] || "warrior");
+      setPlayerClass(CLASS_DATA_NAMES[player.charClass] || 'warrior');
     };
-    emitter.on("setPlayer", cb);
+    emitter.on('setPlayer', cb);
     return () => {
-      emitter.off("setPlayer", cb);
+      emitter.off('setPlayer', cb);
     };
   }, []);
   return (
     <Box
       sx={{
-        width: "100%",
-        height: "100%",
-        overflow: "hidden",
+        width   : '100%',
+        height  : '100%',
+        overflow: 'hidden',
       }}
     >
       {/* Frame */}
       <StoneRow
-        keys={["topLeft", "top", "topRight"]}
-        stoneImages={stoneImages}
-        scale={scale}
         height={topHeight}
+        keys={['topLeft', 'top', 'topRight']}
+        scale={scale}
+        stoneImages={stoneImages}
       />
       <StoneRow
-        keys={["midLeft", "mid", "midRight"]}
-        stoneImages={stoneImages}
-        scale={scale}
         height={`${middleHeight}px`}
+        keys={['midLeft', 'mid', 'midRight']}
+        scale={scale}
+        stoneImages={stoneImages}
       />
       <StoneRow
-        keys={["botLeft", "bot", "botRight"]}
-        stoneImages={stoneImages}
-        scale={scale}
         height={topHeight}
+        keys={['botLeft', 'bot', 'botRight']}
+        scale={scale}
+        stoneImages={stoneImages}
       />
 
       {/* Overlay UI */}
       <Box
-        sx={{ position: "absolute", top: 0, left: 0, width, height: "100vh" }}
+        sx={{ position: 'absolute', top: 0, left: 0, width, height: '100vh' }}
       >
         <Box
           sx={{
-            p: `${16 * scale}px`,
-            transform: `scale(${scale})`,
-            transformOrigin: "top left",
-            width: (width - 8) / scale,
-            height: `calc(100vh / ${scale})`,
+            p              : `${16 * scale}px`,
+            transform      : `scale(${scale})`,
+            transformOrigin: 'top left',
+            width          : (width - 8) / scale,
+            height         : `calc(100vh / ${scale})`,
           }}
         >
           {/* Top half: buttons & gems */}
           <Stack
             direction="row"
             sx={{
-              width: "100%",
+              width : '100%',
               height: `calc(100% - ${bottomHeight}px)`,
-              ml: "12px",
+              ml    : '12px',
             }}
           >
             {/* Left buttons */}
             <Stack
               direction="column"
               sx={{
-                height: "100%",
-                width: `calc(100% - ${spellGem.entry.width * 2.3}px)`,
+                height: '100%',
+                width : `calc(100% - ${spellGem.entry.width * 2.3}px)`,
               }}
             >
               <UiButtonComponent
-                onClick={() => console.log("Help")}
-                sx={{ mt: 2 }}
                 buttonName="A_BTN_HELP"
                 scale={1.1}
+                sx={{ mt: 2 }}
+                onClick={() => console.log('Help')}
               />
               <UiButtonComponent
-                onClick={() => console.log("Options")}
-                sx={{ mt: 2 }}
                 buttonName="A_BTN_OPTIONS"
                 scale={1.1}
+                sx={{ mt: 2 }}
+                onClick={() => console.log('Options')}
               />
               <UiButtonComponent
-                onClick={() => {
-                  emitter.emit("toggleInventory");
-                }}
-                sx={{ mt: 12 }}
-                scale={1.1}
                 buttonName="A_BTN_PERSONA"
+                scale={1.1}
+                sx={{ mt: 12 }}
+                onClick={() => {
+                  emitter.emit('toggleInventory');
+                }}
               />
               <Box
                 sx={{
                   backgroundImage: `url(${classGif})`,
-                  backgroundSize: "cover",
-                  width: 165,
-                  height: 420,
-                  position: "relative",
-                  mt: 2,
+                  backgroundSize : 'cover',
+                  width          : 165,
+                  height         : 420,
+                  position       : 'relative',
+                  mt             : 2,
                 }}
               >
-                {!["warrior", "rogue", "monk"].includes(
+                {!['warrior', 'rogue', 'monk'].includes(
                   playerClass?.toLowerCase(),
                 ) && (
                   <UiButtonComponent
-                    onClick={() => console.log("Spells")}
-                    sx={{
-                      position: "absolute",
-                      top: 315,
-                      left: "50%",
-                      transform: "translateX(-50%) scale(1.1)",
-                    }}
                     buttonName="A_BTN_SPELLS"
+                    sx={{
+                      position : 'absolute',
+                      top      : 315,
+                      left     : '50%',
+                      transform: 'translateX(-50%) scale(1.1)',
+                    }}
+                    onClick={() => console.log('Spells')}
                   />
                 )}
               </Box>
@@ -231,7 +231,7 @@ export const StoneLeft: React.FC<{ width: number }> = ({ width }) => {
             {/* Gems */}
             <Stack
               direction="column"
-              sx={{ height: "100%", width: spellGem.entry.width * 2, mt: 1 }}
+              sx={{ height: '100%', width: spellGem.entry.width * 2, mt: 1 }}
             >
               {spellGems}
             </Stack>
@@ -239,18 +239,15 @@ export const StoneLeft: React.FC<{ width: number }> = ({ width }) => {
 
           {/* Bottom half: navigation & hot buttons */}
           <Stack
-            direction="column"
             alignItems="center"
-            justifyContent={"center"}
-            sx={{ width: "100%", height: bottomHeight }}
+            direction="column"
+            justifyContent={'center'}
+            sx={{ width: '100%', height: bottomHeight }}
           >
-            <StoneGeneralInv />
+            <StoneGeneralInv scale={scale} />
 
             {/** Action Hot Buttons */}
             <StoneHotButtons scale={scale} />
-            
-    
-
            
           </Stack>
         </Box>

@@ -1,42 +1,57 @@
-import { Box, Grid } from "@mui/material";
-import { useSakImage } from "@ui/hooks/use-image";
-import { ActionButton } from "../../action-button/action-button";
+import { useMemo } from 'react';
+import { usePlayerInventory } from '@game/Events/event-hooks';
+import { InventorySlot } from '@game/Player/player-constants';
+import { Box, Grid } from '@mui/material';
+import { ItemButton } from '../../action-button/item-button';
 
-export const StoneGeneralInv: React.FC = () => {
-  const invImage = useSakImage("HBW_BG_TXUP", true);
 
+export const StoneGeneralInv: React.FC<{
+  scale: number;
+  contain?: boolean;
+}> = ({ scale, contain = false }) => {
+  const inventory = usePlayerInventory();
+  const generalInventory = useMemo(() => {
+    return {
+      [InventorySlot.General1]: inventory?.get(InventorySlot.General1),
+      [InventorySlot.General2]: inventory?.get(InventorySlot.General2),
+      [InventorySlot.General3]: inventory?.get(InventorySlot.General3),
+      [InventorySlot.General4]: inventory?.get(InventorySlot.General4),
+      [InventorySlot.General5]: inventory?.get(InventorySlot.General5),
+      [InventorySlot.General6]: inventory?.get(InventorySlot.General6),
+      [InventorySlot.General7]: inventory?.get(InventorySlot.General7),
+      [InventorySlot.General8]: inventory?.get(InventorySlot.General8),
+    };
+  }, [inventory]);
   return (
     <Box
-      sx={{
-        width: invImage.entry.width * 2,
-        height: invImage.entry.height * 2,
-        backgroundImage: `url(${invImage.image})`,
-        backgroundSize: "cover",
-      }}
+      sx={
+        contain
+          ? {
+            height: 'calc(100%)',
+          }
+          : {
+            // width : 'calc(100%)',
+            width : '100%',
+            height: '550px',
+            mb    : 4,
+          }
+      }
     >
-      {/** Inventory Hot Buttons */}
-      <Box
-        sx={{
-          width: 250,
-          height: 510,
-          position: "relative",
-          top: 15,
-          left: 25,
-        }}
-      >
-        <Grid container columns={16}>
-          {Array.from({ length: 8 }).map((_, idx) => (
-            <Grid key={idx} size={8} sx={{ height: 510 / 4, width: 125 }}>
-              <ActionButton
-                background="A_ClassicButtonBG"
-                foreGround="A_ClassicButtonFG"
-                action={() => console.log("Action Button Clicked")}
-                size={125}
-              />
-            </Grid>
-          ))}
-        </Grid>
-      </Box>
+      <Grid container columns={16} sx={{ height: '100%' }}>
+        {Object.entries(generalInventory).map(([slot, item], idx) => (
+          <Grid
+            key={idx}
+            size={8}
+            sx={{ height: 'calc(100% / 4)' }}
+          >
+            <ItemButton
+              item={item}
+              scale={scale}
+              slot={+slot as InventorySlot}
+            />
+          </Grid>
+        ))}
+      </Grid>
     </Box>
   );
 };

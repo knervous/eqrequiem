@@ -7,13 +7,10 @@ import emitter from '@game/Events/events';
 import Player from '@game/Player/player';
 import { Box } from '@mui/material';
 import { UiButtonComponent } from '@ui/common/ui-button';
-import { ActionButtonData, ActionButtonType } from './constants';
+import { ActionButtonData, ActionButtonType, FullActionData, FullItemEntryData } from './constants';
 import { useImmediateDragClone } from './hooks';
+import { ItemButton } from './item-button';
 
-export type FullActionData = ActionButtonData & {
-  hotButton?: boolean;
-  hotButtonIndex?: number;
-};
 
 interface CommonButtonProps {
   background?: string;
@@ -163,6 +160,8 @@ export const ActionHotButton: React.FC<HotButtonProps> = (props) => {
         return CommandHandler.instance.commandOptions.bind(
           CommandHandler.instance,
         );
+      case ActionButtonType.INVENTORY:
+        return () => player.playerInventory.useItem(props.actionData?.index ?? -1);
       case ActionButtonType.MELEE_ATTACK:
         return player.autoAttack.bind(player);
       case ActionButtonType.RANGED_ATTACK:
@@ -204,7 +203,6 @@ export const ActionHotButton: React.FC<HotButtonProps> = (props) => {
       ).includes(props.actionData!.type!)
         ? 'A_SquareBtn'
         : '',
-
     [props.actionData],
   );
 
@@ -280,12 +278,12 @@ export const ActionHotButton: React.FC<HotButtonProps> = (props) => {
 
   useEventArg('hotkey', action, props.index);
 
+  // For Action Buttons
   useEffect(() => {
     const el = dropRef.current;
     if (!el) {
       return;
     }
-
     const handler = (
       e: CustomEvent<{ data: FullActionData; originalEvent: MouseEvent }>,
     ) => {
@@ -312,6 +310,41 @@ export const ActionHotButton: React.FC<HotButtonProps> = (props) => {
     };
   }, [props.index]);
 
+  // For Inventory Items
+  useEffect(() => {
+    const el = dropRef.current;
+    if (!el) {
+      return;
+    }
+    const handler = (
+      e: CustomEvent<{ data: FullItemEntryData; originalEvent: MouseEvent }>,
+    ) => {
+      e.preventDefault();
+      const dropped = e.detail.data;
+      if (dropped?.hotButton) {
+        UserConfig.instance.swapHotButtons(
+          props.index,
+          dropped.hotButtonIndex!,
+        );
+      } else if (dropped) {
+        console.log('Dropped action data:', dropped);
+        UserConfig.instance.updateHotButton(
+          props.index,
+          {
+            type : ActionButtonType.INVENTORY,
+            index: dropped.slot,
+          } as ActionButtonData,
+        );
+      }
+    };
+    
+    el.addEventListener('item-drop', handler as EventListener);
+    return () => {
+      el.removeEventListener('item-drop', handler as EventListener);
+    };
+    
+  }, [props.index]);
+
   const hotButtonActionData = useMemo(
     () =>
       ({
@@ -322,16 +355,36 @@ export const ActionHotButton: React.FC<HotButtonProps> = (props) => {
     [props.actionData, props.index],
   );
 
+  const inventoryButton = useMemo(() => props.actionData?.type === ActionButtonType.INVENTORY, [props.actionData]);
+
+  const linkedButton = useMemo(() => { 
+    if (props.actionData?.type === ActionButtonType.INVENTORY) {
+      return <ItemButton
+        hotButton={true}
+        hotButtonIndex={props.index}
+        item={Player.instance?.playerInventory?.get(props.actionData.index ?? 0)}
+        scale={(props.scale ?? 1)}
+        slot={props.actionData.index ?? -1}
+      />;
+    }
+
+    return <ActionButton
+      {...props}
+      action={action}
+      actionData={hotButtonActionData}
+      buttonName={buttonName}
+      size={110}
+      text={text}
+    />;
+
+  }, [action, props, hotButtonActionData, buttonName, text]);
+
   return (
-    <Box ref={dropRef} data-hot-button={props.index} sx={{ p: 1 }}>
-      <ActionButton
-        {...props}
-        action={action}
-        actionData={hotButtonActionData}
-        buttonName={buttonName}
-        size={110}
-        text={text}
-      />
+    <Box ref={dropRef} data-hot-button={props.index} sx={{ p: 1, ...(inventoryButton ? {
+      width : '110px',
+      height: '110px',
+    } : {}) }}>
+      {linkedButton}
     </Box>
   );
 };

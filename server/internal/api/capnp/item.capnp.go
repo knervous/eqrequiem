@@ -14,12 +14,12 @@ type ItemInstance capnp.Struct
 const ItemInstance_TypeID = 0xd8a782a58f006803
 
 func NewItemInstance(s *capnp.Segment) (ItemInstance, error) {
-	st, err := capnp.NewStruct(s, capnp.ObjectSize{DataSize: 32, PointerCount: 2})
+	st, err := capnp.NewStruct(s, capnp.ObjectSize{DataSize: 672, PointerCount: 6})
 	return ItemInstance(st), err
 }
 
 func NewRootItemInstance(s *capnp.Segment) (ItemInstance, error) {
-	st, err := capnp.NewRootStruct(s, capnp.ObjectSize{DataSize: 32, PointerCount: 2})
+	st, err := capnp.NewRootStruct(s, capnp.ObjectSize{DataSize: 672, PointerCount: 6})
 	return ItemInstance(st), err
 }
 
@@ -55,22 +55,6 @@ func (s ItemInstance) Message() *capnp.Message {
 func (s ItemInstance) Segment() *capnp.Segment {
 	return capnp.Struct(s).Segment()
 }
-func (s ItemInstance) Id() int32 {
-	return int32(capnp.Struct(s).Uint32(0))
-}
-
-func (s ItemInstance) SetId(v int32) {
-	capnp.Struct(s).SetUint32(0, uint32(v))
-}
-
-func (s ItemInstance) ItemId() int32 {
-	return int32(capnp.Struct(s).Uint32(4))
-}
-
-func (s ItemInstance) SetItemId(v int32) {
-	capnp.Struct(s).SetUint32(4, uint32(v))
-}
-
 func (s ItemInstance) Mods() (string, error) {
 	p, err := capnp.Struct(s).Ptr(0)
 	return p.Text(), err
@@ -90,67 +74,1421 @@ func (s ItemInstance) SetMods(v string) error {
 }
 
 func (s ItemInstance) Charges() uint32 {
-	return capnp.Struct(s).Uint32(8)
+	return capnp.Struct(s).Uint32(0)
 }
 
 func (s ItemInstance) SetCharges(v uint32) {
-	capnp.Struct(s).SetUint32(8, v)
+	capnp.Struct(s).SetUint32(0, v)
 }
 
 func (s ItemInstance) Quantity() uint32 {
-	return capnp.Struct(s).Uint32(12)
+	return capnp.Struct(s).Uint32(4)
 }
 
 func (s ItemInstance) SetQuantity(v uint32) {
-	capnp.Struct(s).SetUint32(12, v)
-}
-
-func (s ItemInstance) OwnerId() uint32 {
-	return capnp.Struct(s).Uint32(16)
-}
-
-func (s ItemInstance) SetOwnerId(v uint32) {
-	capnp.Struct(s).SetUint32(16, v)
-}
-
-func (s ItemInstance) OwnerType() int32 {
-	return int32(capnp.Struct(s).Uint32(20))
-}
-
-func (s ItemInstance) SetOwnerType(v int32) {
-	capnp.Struct(s).SetUint32(20, uint32(v))
+	capnp.Struct(s).SetUint32(4, v)
 }
 
 func (s ItemInstance) Slot() int32 {
-	return int32(capnp.Struct(s).Uint32(24))
+	return int32(capnp.Struct(s).Uint32(8))
 }
 
 func (s ItemInstance) SetSlot(v int32) {
+	capnp.Struct(s).SetUint32(8, uint32(v))
+}
+
+func (s ItemInstance) Ac() int32 {
+	return int32(capnp.Struct(s).Uint32(12))
+}
+
+func (s ItemInstance) SetAc(v int32) {
+	capnp.Struct(s).SetUint32(12, uint32(v))
+}
+
+func (s ItemInstance) Accuracy() int32 {
+	return int32(capnp.Struct(s).Uint32(16))
+}
+
+func (s ItemInstance) SetAccuracy(v int32) {
+	capnp.Struct(s).SetUint32(16, uint32(v))
+}
+
+func (s ItemInstance) Acha() int32 {
+	return int32(capnp.Struct(s).Uint32(20))
+}
+
+func (s ItemInstance) SetAcha(v int32) {
+	capnp.Struct(s).SetUint32(20, uint32(v))
+}
+
+func (s ItemInstance) Adex() int32 {
+	return int32(capnp.Struct(s).Uint32(24))
+}
+
+func (s ItemInstance) SetAdex(v int32) {
 	capnp.Struct(s).SetUint32(24, uint32(v))
 }
 
-func (s ItemInstance) Item() (Items, error) {
-	p, err := capnp.Struct(s).Ptr(1)
-	return Items(p.Struct()), err
+func (s ItemInstance) Aint() int32 {
+	return int32(capnp.Struct(s).Uint32(28))
 }
 
-func (s ItemInstance) HasItem() bool {
+func (s ItemInstance) SetAint(v int32) {
+	capnp.Struct(s).SetUint32(28, uint32(v))
+}
+
+func (s ItemInstance) Artifactflag() uint32 {
+	return capnp.Struct(s).Uint32(32)
+}
+
+func (s ItemInstance) SetArtifactflag(v uint32) {
+	capnp.Struct(s).SetUint32(32, v)
+}
+
+func (s ItemInstance) Asta() int32 {
+	return int32(capnp.Struct(s).Uint32(36))
+}
+
+func (s ItemInstance) SetAsta(v int32) {
+	capnp.Struct(s).SetUint32(36, uint32(v))
+}
+
+func (s ItemInstance) Astr() int32 {
+	return int32(capnp.Struct(s).Uint32(40))
+}
+
+func (s ItemInstance) SetAstr(v int32) {
+	capnp.Struct(s).SetUint32(40, uint32(v))
+}
+
+func (s ItemInstance) Attack() int32 {
+	return int32(capnp.Struct(s).Uint32(44))
+}
+
+func (s ItemInstance) SetAttack(v int32) {
+	capnp.Struct(s).SetUint32(44, uint32(v))
+}
+
+func (s ItemInstance) Augrestrict() int32 {
+	return int32(capnp.Struct(s).Uint32(48))
+}
+
+func (s ItemInstance) SetAugrestrict(v int32) {
+	capnp.Struct(s).SetUint32(48, uint32(v))
+}
+
+func (s ItemInstance) Augslot1type() int32 {
+	return int32(capnp.Struct(s).Uint32(52))
+}
+
+func (s ItemInstance) SetAugslot1type(v int32) {
+	capnp.Struct(s).SetUint32(52, uint32(v))
+}
+
+func (s ItemInstance) Augslot1visible() int32 {
+	return int32(capnp.Struct(s).Uint32(56))
+}
+
+func (s ItemInstance) SetAugslot1visible(v int32) {
+	capnp.Struct(s).SetUint32(56, uint32(v))
+}
+
+func (s ItemInstance) Augslot2type() int32 {
+	return int32(capnp.Struct(s).Uint32(60))
+}
+
+func (s ItemInstance) SetAugslot2type(v int32) {
+	capnp.Struct(s).SetUint32(60, uint32(v))
+}
+
+func (s ItemInstance) Augslot2visible() int32 {
+	return int32(capnp.Struct(s).Uint32(64))
+}
+
+func (s ItemInstance) SetAugslot2visible(v int32) {
+	capnp.Struct(s).SetUint32(64, uint32(v))
+}
+
+func (s ItemInstance) Augslot3type() int32 {
+	return int32(capnp.Struct(s).Uint32(68))
+}
+
+func (s ItemInstance) SetAugslot3type(v int32) {
+	capnp.Struct(s).SetUint32(68, uint32(v))
+}
+
+func (s ItemInstance) Augslot3visible() int32 {
+	return int32(capnp.Struct(s).Uint32(72))
+}
+
+func (s ItemInstance) SetAugslot3visible(v int32) {
+	capnp.Struct(s).SetUint32(72, uint32(v))
+}
+
+func (s ItemInstance) Augslot4type() int32 {
+	return int32(capnp.Struct(s).Uint32(76))
+}
+
+func (s ItemInstance) SetAugslot4type(v int32) {
+	capnp.Struct(s).SetUint32(76, uint32(v))
+}
+
+func (s ItemInstance) Augslot4visible() int32 {
+	return int32(capnp.Struct(s).Uint32(80))
+}
+
+func (s ItemInstance) SetAugslot4visible(v int32) {
+	capnp.Struct(s).SetUint32(80, uint32(v))
+}
+
+func (s ItemInstance) Augslot5type() int32 {
+	return int32(capnp.Struct(s).Uint32(84))
+}
+
+func (s ItemInstance) SetAugslot5type(v int32) {
+	capnp.Struct(s).SetUint32(84, uint32(v))
+}
+
+func (s ItemInstance) Augslot5visible() int32 {
+	return int32(capnp.Struct(s).Uint32(88))
+}
+
+func (s ItemInstance) SetAugslot5visible(v int32) {
+	capnp.Struct(s).SetUint32(88, uint32(v))
+}
+
+func (s ItemInstance) Augslot6type() int32 {
+	return int32(capnp.Struct(s).Uint32(92))
+}
+
+func (s ItemInstance) SetAugslot6type(v int32) {
+	capnp.Struct(s).SetUint32(92, uint32(v))
+}
+
+func (s ItemInstance) Augslot6visible() int32 {
+	return int32(capnp.Struct(s).Uint32(96))
+}
+
+func (s ItemInstance) SetAugslot6visible(v int32) {
+	capnp.Struct(s).SetUint32(96, uint32(v))
+}
+
+func (s ItemInstance) Augtype() int32 {
+	return int32(capnp.Struct(s).Uint32(100))
+}
+
+func (s ItemInstance) SetAugtype(v int32) {
+	capnp.Struct(s).SetUint32(100, uint32(v))
+}
+
+func (s ItemInstance) Avoidance() int32 {
+	return int32(capnp.Struct(s).Uint32(104))
+}
+
+func (s ItemInstance) SetAvoidance(v int32) {
+	capnp.Struct(s).SetUint32(104, uint32(v))
+}
+
+func (s ItemInstance) Awis() int32 {
+	return int32(capnp.Struct(s).Uint32(108))
+}
+
+func (s ItemInstance) SetAwis(v int32) {
+	capnp.Struct(s).SetUint32(108, uint32(v))
+}
+
+func (s ItemInstance) Bagsize() int32 {
+	return int32(capnp.Struct(s).Uint32(112))
+}
+
+func (s ItemInstance) SetBagsize(v int32) {
+	capnp.Struct(s).SetUint32(112, uint32(v))
+}
+
+func (s ItemInstance) Bagslots() int32 {
+	return int32(capnp.Struct(s).Uint32(116))
+}
+
+func (s ItemInstance) SetBagslots(v int32) {
+	capnp.Struct(s).SetUint32(116, uint32(v))
+}
+
+func (s ItemInstance) Bagtype() int32 {
+	return int32(capnp.Struct(s).Uint32(120))
+}
+
+func (s ItemInstance) SetBagtype(v int32) {
+	capnp.Struct(s).SetUint32(120, uint32(v))
+}
+
+func (s ItemInstance) Bagwr() int32 {
+	return int32(capnp.Struct(s).Uint32(124))
+}
+
+func (s ItemInstance) SetBagwr(v int32) {
+	capnp.Struct(s).SetUint32(124, uint32(v))
+}
+
+func (s ItemInstance) Banedmgamt() int32 {
+	return int32(capnp.Struct(s).Uint32(128))
+}
+
+func (s ItemInstance) SetBanedmgamt(v int32) {
+	capnp.Struct(s).SetUint32(128, uint32(v))
+}
+
+func (s ItemInstance) Banedmgraceamt() int32 {
+	return int32(capnp.Struct(s).Uint32(132))
+}
+
+func (s ItemInstance) SetBanedmgraceamt(v int32) {
+	capnp.Struct(s).SetUint32(132, uint32(v))
+}
+
+func (s ItemInstance) Banedmgbody() int32 {
+	return int32(capnp.Struct(s).Uint32(136))
+}
+
+func (s ItemInstance) SetBanedmgbody(v int32) {
+	capnp.Struct(s).SetUint32(136, uint32(v))
+}
+
+func (s ItemInstance) Banedmgrace() int32 {
+	return int32(capnp.Struct(s).Uint32(140))
+}
+
+func (s ItemInstance) SetBanedmgrace(v int32) {
+	capnp.Struct(s).SetUint32(140, uint32(v))
+}
+
+func (s ItemInstance) Bardtype() int32 {
+	return int32(capnp.Struct(s).Uint32(144))
+}
+
+func (s ItemInstance) SetBardtype(v int32) {
+	capnp.Struct(s).SetUint32(144, uint32(v))
+}
+
+func (s ItemInstance) Bardvalue() int32 {
+	return int32(capnp.Struct(s).Uint32(148))
+}
+
+func (s ItemInstance) SetBardvalue(v int32) {
+	capnp.Struct(s).SetUint32(148, uint32(v))
+}
+
+func (s ItemInstance) Book() int32 {
+	return int32(capnp.Struct(s).Uint32(152))
+}
+
+func (s ItemInstance) SetBook(v int32) {
+	capnp.Struct(s).SetUint32(152, uint32(v))
+}
+
+func (s ItemInstance) Casttime() int32 {
+	return int32(capnp.Struct(s).Uint32(156))
+}
+
+func (s ItemInstance) SetCasttime(v int32) {
+	capnp.Struct(s).SetUint32(156, uint32(v))
+}
+
+func (s ItemInstance) Casttime2() int32 {
+	return int32(capnp.Struct(s).Uint32(160))
+}
+
+func (s ItemInstance) SetCasttime2(v int32) {
+	capnp.Struct(s).SetUint32(160, uint32(v))
+}
+
+func (s ItemInstance) Classes() int32 {
+	return int32(capnp.Struct(s).Uint32(164))
+}
+
+func (s ItemInstance) SetClasses(v int32) {
+	capnp.Struct(s).SetUint32(164, uint32(v))
+}
+
+func (s ItemInstance) Color() uint32 {
+	return capnp.Struct(s).Uint32(168)
+}
+
+func (s ItemInstance) SetColor(v uint32) {
+	capnp.Struct(s).SetUint32(168, v)
+}
+
+func (s ItemInstance) Combateffects() (string, error) {
+	p, err := capnp.Struct(s).Ptr(1)
+	return p.Text(), err
+}
+
+func (s ItemInstance) HasCombateffects() bool {
 	return capnp.Struct(s).HasPtr(1)
 }
 
-func (s ItemInstance) SetItem(v Items) error {
-	return capnp.Struct(s).SetPtr(1, capnp.Struct(v).ToPtr())
+func (s ItemInstance) CombateffectsBytes() ([]byte, error) {
+	p, err := capnp.Struct(s).Ptr(1)
+	return p.TextBytes(), err
 }
 
-// NewItem sets the item field to a newly
-// allocated Items struct, preferring placement in s's segment.
-func (s ItemInstance) NewItem() (Items, error) {
-	ss, err := NewItems(capnp.Struct(s).Segment())
-	if err != nil {
-		return Items{}, err
-	}
-	err = capnp.Struct(s).SetPtr(1, capnp.Struct(ss).ToPtr())
-	return ss, err
+func (s ItemInstance) SetCombateffects(v string) error {
+	return capnp.Struct(s).SetText(1, v)
+}
+
+func (s ItemInstance) Extradmgskill() int32 {
+	return int32(capnp.Struct(s).Uint32(172))
+}
+
+func (s ItemInstance) SetExtradmgskill(v int32) {
+	capnp.Struct(s).SetUint32(172, uint32(v))
+}
+
+func (s ItemInstance) Extradmgamt() int32 {
+	return int32(capnp.Struct(s).Uint32(176))
+}
+
+func (s ItemInstance) SetExtradmgamt(v int32) {
+	capnp.Struct(s).SetUint32(176, uint32(v))
+}
+
+func (s ItemInstance) Price() int32 {
+	return int32(capnp.Struct(s).Uint32(180))
+}
+
+func (s ItemInstance) SetPrice(v int32) {
+	capnp.Struct(s).SetUint32(180, uint32(v))
+}
+
+func (s ItemInstance) Cr() int32 {
+	return int32(capnp.Struct(s).Uint32(184))
+}
+
+func (s ItemInstance) SetCr(v int32) {
+	capnp.Struct(s).SetUint32(184, uint32(v))
+}
+
+func (s ItemInstance) Damage() int32 {
+	return int32(capnp.Struct(s).Uint32(188))
+}
+
+func (s ItemInstance) SetDamage(v int32) {
+	capnp.Struct(s).SetUint32(188, uint32(v))
+}
+
+func (s ItemInstance) Damageshield() int32 {
+	return int32(capnp.Struct(s).Uint32(192))
+}
+
+func (s ItemInstance) SetDamageshield(v int32) {
+	capnp.Struct(s).SetUint32(192, uint32(v))
+}
+
+func (s ItemInstance) Deity() int32 {
+	return int32(capnp.Struct(s).Uint32(196))
+}
+
+func (s ItemInstance) SetDeity(v int32) {
+	capnp.Struct(s).SetUint32(196, uint32(v))
+}
+
+func (s ItemInstance) Delay() int32 {
+	return int32(capnp.Struct(s).Uint32(200))
+}
+
+func (s ItemInstance) SetDelay(v int32) {
+	capnp.Struct(s).SetUint32(200, uint32(v))
+}
+
+func (s ItemInstance) Augdistiller() uint32 {
+	return capnp.Struct(s).Uint32(204)
+}
+
+func (s ItemInstance) SetAugdistiller(v uint32) {
+	capnp.Struct(s).SetUint32(204, v)
+}
+
+func (s ItemInstance) Dotshielding() int32 {
+	return int32(capnp.Struct(s).Uint32(208))
+}
+
+func (s ItemInstance) SetDotshielding(v int32) {
+	capnp.Struct(s).SetUint32(208, uint32(v))
+}
+
+func (s ItemInstance) Dr() int32 {
+	return int32(capnp.Struct(s).Uint32(212))
+}
+
+func (s ItemInstance) SetDr(v int32) {
+	capnp.Struct(s).SetUint32(212, uint32(v))
+}
+
+func (s ItemInstance) Clicktype() int32 {
+	return int32(capnp.Struct(s).Uint32(216))
+}
+
+func (s ItemInstance) SetClicktype(v int32) {
+	capnp.Struct(s).SetUint32(216, uint32(v))
+}
+
+func (s ItemInstance) Clicklevel2() int32 {
+	return int32(capnp.Struct(s).Uint32(220))
+}
+
+func (s ItemInstance) SetClicklevel2(v int32) {
+	capnp.Struct(s).SetUint32(220, uint32(v))
+}
+
+func (s ItemInstance) Elemdmgtype() int32 {
+	return int32(capnp.Struct(s).Uint32(224))
+}
+
+func (s ItemInstance) SetElemdmgtype(v int32) {
+	capnp.Struct(s).SetUint32(224, uint32(v))
+}
+
+func (s ItemInstance) Elemdmgamt() int32 {
+	return int32(capnp.Struct(s).Uint32(228))
+}
+
+func (s ItemInstance) SetElemdmgamt(v int32) {
+	capnp.Struct(s).SetUint32(228, uint32(v))
+}
+
+func (s ItemInstance) Endur() int32 {
+	return int32(capnp.Struct(s).Uint32(232))
+}
+
+func (s ItemInstance) SetEndur(v int32) {
+	capnp.Struct(s).SetUint32(232, uint32(v))
+}
+
+func (s ItemInstance) Factionamt1() int32 {
+	return int32(capnp.Struct(s).Uint32(236))
+}
+
+func (s ItemInstance) SetFactionamt1(v int32) {
+	capnp.Struct(s).SetUint32(236, uint32(v))
+}
+
+func (s ItemInstance) Factionamt2() int32 {
+	return int32(capnp.Struct(s).Uint32(240))
+}
+
+func (s ItemInstance) SetFactionamt2(v int32) {
+	capnp.Struct(s).SetUint32(240, uint32(v))
+}
+
+func (s ItemInstance) Factionamt3() int32 {
+	return int32(capnp.Struct(s).Uint32(244))
+}
+
+func (s ItemInstance) SetFactionamt3(v int32) {
+	capnp.Struct(s).SetUint32(244, uint32(v))
+}
+
+func (s ItemInstance) Factionamt4() int32 {
+	return int32(capnp.Struct(s).Uint32(248))
+}
+
+func (s ItemInstance) SetFactionamt4(v int32) {
+	capnp.Struct(s).SetUint32(248, uint32(v))
+}
+
+func (s ItemInstance) Factionmod1() int32 {
+	return int32(capnp.Struct(s).Uint32(252))
+}
+
+func (s ItemInstance) SetFactionmod1(v int32) {
+	capnp.Struct(s).SetUint32(252, uint32(v))
+}
+
+func (s ItemInstance) Factionmod2() int32 {
+	return int32(capnp.Struct(s).Uint32(256))
+}
+
+func (s ItemInstance) SetFactionmod2(v int32) {
+	capnp.Struct(s).SetUint32(256, uint32(v))
+}
+
+func (s ItemInstance) Factionmod3() int32 {
+	return int32(capnp.Struct(s).Uint32(260))
+}
+
+func (s ItemInstance) SetFactionmod3(v int32) {
+	capnp.Struct(s).SetUint32(260, uint32(v))
+}
+
+func (s ItemInstance) Factionmod4() int32 {
+	return int32(capnp.Struct(s).Uint32(264))
+}
+
+func (s ItemInstance) SetFactionmod4(v int32) {
+	capnp.Struct(s).SetUint32(264, uint32(v))
+}
+
+func (s ItemInstance) Focuseffect() int32 {
+	return int32(capnp.Struct(s).Uint32(268))
+}
+
+func (s ItemInstance) SetFocuseffect(v int32) {
+	capnp.Struct(s).SetUint32(268, uint32(v))
+}
+
+func (s ItemInstance) Fr() int32 {
+	return int32(capnp.Struct(s).Uint32(272))
+}
+
+func (s ItemInstance) SetFr(v int32) {
+	capnp.Struct(s).SetUint32(272, uint32(v))
+}
+
+func (s ItemInstance) Fvnodrop() int32 {
+	return int32(capnp.Struct(s).Uint32(276))
+}
+
+func (s ItemInstance) SetFvnodrop(v int32) {
+	capnp.Struct(s).SetUint32(276, uint32(v))
+}
+
+func (s ItemInstance) Haste() int32 {
+	return int32(capnp.Struct(s).Uint32(280))
+}
+
+func (s ItemInstance) SetHaste(v int32) {
+	capnp.Struct(s).SetUint32(280, uint32(v))
+}
+
+func (s ItemInstance) Clicklevel() int32 {
+	return int32(capnp.Struct(s).Uint32(284))
+}
+
+func (s ItemInstance) SetClicklevel(v int32) {
+	capnp.Struct(s).SetUint32(284, uint32(v))
+}
+
+func (s ItemInstance) Hp() int32 {
+	return int32(capnp.Struct(s).Uint32(288))
+}
+
+func (s ItemInstance) SetHp(v int32) {
+	capnp.Struct(s).SetUint32(288, uint32(v))
+}
+
+func (s ItemInstance) Regen() int32 {
+	return int32(capnp.Struct(s).Uint32(292))
+}
+
+func (s ItemInstance) SetRegen(v int32) {
+	capnp.Struct(s).SetUint32(292, uint32(v))
+}
+
+func (s ItemInstance) Icon() int32 {
+	return int32(capnp.Struct(s).Uint32(296))
+}
+
+func (s ItemInstance) SetIcon(v int32) {
+	capnp.Struct(s).SetUint32(296, uint32(v))
+}
+
+func (s ItemInstance) Idfile() (string, error) {
+	p, err := capnp.Struct(s).Ptr(2)
+	return p.Text(), err
+}
+
+func (s ItemInstance) HasIdfile() bool {
+	return capnp.Struct(s).HasPtr(2)
+}
+
+func (s ItemInstance) IdfileBytes() ([]byte, error) {
+	p, err := capnp.Struct(s).Ptr(2)
+	return p.TextBytes(), err
+}
+
+func (s ItemInstance) SetIdfile(v string) error {
+	return capnp.Struct(s).SetText(2, v)
+}
+
+func (s ItemInstance) Itemclass() int32 {
+	return int32(capnp.Struct(s).Uint32(300))
+}
+
+func (s ItemInstance) SetItemclass(v int32) {
+	capnp.Struct(s).SetUint32(300, uint32(v))
+}
+
+func (s ItemInstance) Itemtype() int32 {
+	return int32(capnp.Struct(s).Uint32(304))
+}
+
+func (s ItemInstance) SetItemtype(v int32) {
+	capnp.Struct(s).SetUint32(304, uint32(v))
+}
+
+func (s ItemInstance) Light() int32 {
+	return int32(capnp.Struct(s).Uint32(308))
+}
+
+func (s ItemInstance) SetLight(v int32) {
+	capnp.Struct(s).SetUint32(308, uint32(v))
+}
+
+func (s ItemInstance) Lore() (string, error) {
+	p, err := capnp.Struct(s).Ptr(3)
+	return p.Text(), err
+}
+
+func (s ItemInstance) HasLore() bool {
+	return capnp.Struct(s).HasPtr(3)
+}
+
+func (s ItemInstance) LoreBytes() ([]byte, error) {
+	p, err := capnp.Struct(s).Ptr(3)
+	return p.TextBytes(), err
+}
+
+func (s ItemInstance) SetLore(v string) error {
+	return capnp.Struct(s).SetText(3, v)
+}
+
+func (s ItemInstance) Loregroup() int32 {
+	return int32(capnp.Struct(s).Uint32(312))
+}
+
+func (s ItemInstance) SetLoregroup(v int32) {
+	capnp.Struct(s).SetUint32(312, uint32(v))
+}
+
+func (s ItemInstance) Magic() int32 {
+	return int32(capnp.Struct(s).Uint32(316))
+}
+
+func (s ItemInstance) SetMagic(v int32) {
+	capnp.Struct(s).SetUint32(316, uint32(v))
+}
+
+func (s ItemInstance) Mana() int32 {
+	return int32(capnp.Struct(s).Uint32(320))
+}
+
+func (s ItemInstance) SetMana(v int32) {
+	capnp.Struct(s).SetUint32(320, uint32(v))
+}
+
+func (s ItemInstance) Manaregen() int32 {
+	return int32(capnp.Struct(s).Uint32(324))
+}
+
+func (s ItemInstance) SetManaregen(v int32) {
+	capnp.Struct(s).SetUint32(324, uint32(v))
+}
+
+func (s ItemInstance) Enduranceregen() int32 {
+	return int32(capnp.Struct(s).Uint32(328))
+}
+
+func (s ItemInstance) SetEnduranceregen(v int32) {
+	capnp.Struct(s).SetUint32(328, uint32(v))
+}
+
+func (s ItemInstance) Material() int32 {
+	return int32(capnp.Struct(s).Uint32(332))
+}
+
+func (s ItemInstance) SetMaterial(v int32) {
+	capnp.Struct(s).SetUint32(332, uint32(v))
+}
+
+func (s ItemInstance) Herosforgemodel() int32 {
+	return int32(capnp.Struct(s).Uint32(336))
+}
+
+func (s ItemInstance) SetHerosforgemodel(v int32) {
+	capnp.Struct(s).SetUint32(336, uint32(v))
+}
+
+func (s ItemInstance) Maxcharges() int32 {
+	return int32(capnp.Struct(s).Uint32(340))
+}
+
+func (s ItemInstance) SetMaxcharges(v int32) {
+	capnp.Struct(s).SetUint32(340, uint32(v))
+}
+
+func (s ItemInstance) Mr() int32 {
+	return int32(capnp.Struct(s).Uint32(344))
+}
+
+func (s ItemInstance) SetMr(v int32) {
+	capnp.Struct(s).SetUint32(344, uint32(v))
+}
+
+func (s ItemInstance) Nodrop() int32 {
+	return int32(capnp.Struct(s).Uint32(348))
+}
+
+func (s ItemInstance) SetNodrop(v int32) {
+	capnp.Struct(s).SetUint32(348, uint32(v))
+}
+
+func (s ItemInstance) Norent() int32 {
+	return int32(capnp.Struct(s).Uint32(352))
+}
+
+func (s ItemInstance) SetNorent(v int32) {
+	capnp.Struct(s).SetUint32(352, uint32(v))
+}
+
+func (s ItemInstance) Pendingloreflag() uint32 {
+	return capnp.Struct(s).Uint32(356)
+}
+
+func (s ItemInstance) SetPendingloreflag(v uint32) {
+	capnp.Struct(s).SetUint32(356, v)
+}
+
+func (s ItemInstance) Pr() int32 {
+	return int32(capnp.Struct(s).Uint32(360))
+}
+
+func (s ItemInstance) SetPr(v int32) {
+	capnp.Struct(s).SetUint32(360, uint32(v))
+}
+
+func (s ItemInstance) Procrate() int32 {
+	return int32(capnp.Struct(s).Uint32(364))
+}
+
+func (s ItemInstance) SetProcrate(v int32) {
+	capnp.Struct(s).SetUint32(364, uint32(v))
+}
+
+func (s ItemInstance) Races() int32 {
+	return int32(capnp.Struct(s).Uint32(368))
+}
+
+func (s ItemInstance) SetRaces(v int32) {
+	capnp.Struct(s).SetUint32(368, uint32(v))
+}
+
+func (s ItemInstance) Range() int32 {
+	return int32(capnp.Struct(s).Uint32(372))
+}
+
+func (s ItemInstance) SetRange(v int32) {
+	capnp.Struct(s).SetUint32(372, uint32(v))
+}
+
+func (s ItemInstance) Reclevel() int32 {
+	return int32(capnp.Struct(s).Uint32(376))
+}
+
+func (s ItemInstance) SetReclevel(v int32) {
+	capnp.Struct(s).SetUint32(376, uint32(v))
+}
+
+func (s ItemInstance) Recskill() int32 {
+	return int32(capnp.Struct(s).Uint32(380))
+}
+
+func (s ItemInstance) SetRecskill(v int32) {
+	capnp.Struct(s).SetUint32(380, uint32(v))
+}
+
+func (s ItemInstance) Reqlevel() int32 {
+	return int32(capnp.Struct(s).Uint32(384))
+}
+
+func (s ItemInstance) SetReqlevel(v int32) {
+	capnp.Struct(s).SetUint32(384, uint32(v))
+}
+
+func (s ItemInstance) Sellrate() float64 {
+	return math.Float64frombits(capnp.Struct(s).Uint64(392))
+}
+
+func (s ItemInstance) SetSellrate(v float64) {
+	capnp.Struct(s).SetUint64(392, math.Float64bits(v))
+}
+
+func (s ItemInstance) Shielding() int32 {
+	return int32(capnp.Struct(s).Uint32(388))
+}
+
+func (s ItemInstance) SetShielding(v int32) {
+	capnp.Struct(s).SetUint32(388, uint32(v))
+}
+
+func (s ItemInstance) Size() int32 {
+	return int32(capnp.Struct(s).Uint32(400))
+}
+
+func (s ItemInstance) SetSize(v int32) {
+	capnp.Struct(s).SetUint32(400, uint32(v))
+}
+
+func (s ItemInstance) Skillmodtype() int32 {
+	return int32(capnp.Struct(s).Uint32(404))
+}
+
+func (s ItemInstance) SetSkillmodtype(v int32) {
+	capnp.Struct(s).SetUint32(404, uint32(v))
+}
+
+func (s ItemInstance) Skillmodvalue() int32 {
+	return int32(capnp.Struct(s).Uint32(408))
+}
+
+func (s ItemInstance) SetSkillmodvalue(v int32) {
+	capnp.Struct(s).SetUint32(408, uint32(v))
+}
+
+func (s ItemInstance) Slots() int32 {
+	return int32(capnp.Struct(s).Uint32(412))
+}
+
+func (s ItemInstance) SetSlots(v int32) {
+	capnp.Struct(s).SetUint32(412, uint32(v))
+}
+
+func (s ItemInstance) Clickeffect() int32 {
+	return int32(capnp.Struct(s).Uint32(416))
+}
+
+func (s ItemInstance) SetClickeffect(v int32) {
+	capnp.Struct(s).SetUint32(416, uint32(v))
+}
+
+func (s ItemInstance) Spellshield() int32 {
+	return int32(capnp.Struct(s).Uint32(420))
+}
+
+func (s ItemInstance) SetSpellshield(v int32) {
+	capnp.Struct(s).SetUint32(420, uint32(v))
+}
+
+func (s ItemInstance) Strikethrough() int32 {
+	return int32(capnp.Struct(s).Uint32(424))
+}
+
+func (s ItemInstance) SetStrikethrough(v int32) {
+	capnp.Struct(s).SetUint32(424, uint32(v))
+}
+
+func (s ItemInstance) Stunresist() int32 {
+	return int32(capnp.Struct(s).Uint32(428))
+}
+
+func (s ItemInstance) SetStunresist(v int32) {
+	capnp.Struct(s).SetUint32(428, uint32(v))
+}
+
+func (s ItemInstance) Summonedflag() uint32 {
+	return capnp.Struct(s).Uint32(432)
+}
+
+func (s ItemInstance) SetSummonedflag(v uint32) {
+	capnp.Struct(s).SetUint32(432, v)
+}
+
+func (s ItemInstance) Tradeskills() int32 {
+	return int32(capnp.Struct(s).Uint32(436))
+}
+
+func (s ItemInstance) SetTradeskills(v int32) {
+	capnp.Struct(s).SetUint32(436, uint32(v))
+}
+
+func (s ItemInstance) Favor() int32 {
+	return int32(capnp.Struct(s).Uint32(440))
+}
+
+func (s ItemInstance) SetFavor(v int32) {
+	capnp.Struct(s).SetUint32(440, uint32(v))
+}
+
+func (s ItemInstance) Weight() int32 {
+	return int32(capnp.Struct(s).Uint32(444))
+}
+
+func (s ItemInstance) SetWeight(v int32) {
+	capnp.Struct(s).SetUint32(444, uint32(v))
+}
+
+func (s ItemInstance) Benefitflag() int32 {
+	return int32(capnp.Struct(s).Uint32(448))
+}
+
+func (s ItemInstance) SetBenefitflag(v int32) {
+	capnp.Struct(s).SetUint32(448, uint32(v))
+}
+
+func (s ItemInstance) Booktype() int32 {
+	return int32(capnp.Struct(s).Uint32(452))
+}
+
+func (s ItemInstance) SetBooktype(v int32) {
+	capnp.Struct(s).SetUint32(452, uint32(v))
+}
+
+func (s ItemInstance) Recastdelay() int32 {
+	return int32(capnp.Struct(s).Uint32(456))
+}
+
+func (s ItemInstance) SetRecastdelay(v int32) {
+	capnp.Struct(s).SetUint32(456, uint32(v))
+}
+
+func (s ItemInstance) Recasttype() int32 {
+	return int32(capnp.Struct(s).Uint32(460))
+}
+
+func (s ItemInstance) SetRecasttype(v int32) {
+	capnp.Struct(s).SetUint32(460, uint32(v))
+}
+
+func (s ItemInstance) Guildfavor() int32 {
+	return int32(capnp.Struct(s).Uint32(464))
+}
+
+func (s ItemInstance) SetGuildfavor(v int32) {
+	capnp.Struct(s).SetUint32(464, uint32(v))
+}
+
+func (s ItemInstance) Attuneable() int32 {
+	return int32(capnp.Struct(s).Uint32(468))
+}
+
+func (s ItemInstance) SetAttuneable(v int32) {
+	capnp.Struct(s).SetUint32(468, uint32(v))
+}
+
+func (s ItemInstance) Nopet() int32 {
+	return int32(capnp.Struct(s).Uint32(472))
+}
+
+func (s ItemInstance) SetNopet(v int32) {
+	capnp.Struct(s).SetUint32(472, uint32(v))
+}
+
+func (s ItemInstance) Updated() (string, error) {
+	p, err := capnp.Struct(s).Ptr(4)
+	return p.Text(), err
+}
+
+func (s ItemInstance) HasUpdated() bool {
+	return capnp.Struct(s).HasPtr(4)
+}
+
+func (s ItemInstance) UpdatedBytes() ([]byte, error) {
+	p, err := capnp.Struct(s).Ptr(4)
+	return p.TextBytes(), err
+}
+
+func (s ItemInstance) SetUpdated(v string) error {
+	return capnp.Struct(s).SetText(4, v)
+}
+
+func (s ItemInstance) Pointtype() int32 {
+	return int32(capnp.Struct(s).Uint32(476))
+}
+
+func (s ItemInstance) SetPointtype(v int32) {
+	capnp.Struct(s).SetUint32(476, uint32(v))
+}
+
+func (s ItemInstance) Potionbelt() int32 {
+	return int32(capnp.Struct(s).Uint32(480))
+}
+
+func (s ItemInstance) SetPotionbelt(v int32) {
+	capnp.Struct(s).SetUint32(480, uint32(v))
+}
+
+func (s ItemInstance) Potionbeltslots() int32 {
+	return int32(capnp.Struct(s).Uint32(484))
+}
+
+func (s ItemInstance) SetPotionbeltslots(v int32) {
+	capnp.Struct(s).SetUint32(484, uint32(v))
+}
+
+func (s ItemInstance) Stacksize() int32 {
+	return int32(capnp.Struct(s).Uint32(488))
+}
+
+func (s ItemInstance) SetStacksize(v int32) {
+	capnp.Struct(s).SetUint32(488, uint32(v))
+}
+
+func (s ItemInstance) Notransfer() int32 {
+	return int32(capnp.Struct(s).Uint32(492))
+}
+
+func (s ItemInstance) SetNotransfer(v int32) {
+	capnp.Struct(s).SetUint32(492, uint32(v))
+}
+
+func (s ItemInstance) Stackable() int32 {
+	return int32(capnp.Struct(s).Uint32(496))
+}
+
+func (s ItemInstance) SetStackable(v int32) {
+	capnp.Struct(s).SetUint32(496, uint32(v))
+}
+
+func (s ItemInstance) Proceffect() int32 {
+	return int32(capnp.Struct(s).Uint32(500))
+}
+
+func (s ItemInstance) SetProceffect(v int32) {
+	capnp.Struct(s).SetUint32(500, uint32(v))
+}
+
+func (s ItemInstance) Proctype() int32 {
+	return int32(capnp.Struct(s).Uint32(504))
+}
+
+func (s ItemInstance) SetProctype(v int32) {
+	capnp.Struct(s).SetUint32(504, uint32(v))
+}
+
+func (s ItemInstance) Proclevel2() int32 {
+	return int32(capnp.Struct(s).Uint32(508))
+}
+
+func (s ItemInstance) SetProclevel2(v int32) {
+	capnp.Struct(s).SetUint32(508, uint32(v))
+}
+
+func (s ItemInstance) Proclevel() int32 {
+	return int32(capnp.Struct(s).Uint32(512))
+}
+
+func (s ItemInstance) SetProclevel(v int32) {
+	capnp.Struct(s).SetUint32(512, uint32(v))
+}
+
+func (s ItemInstance) Worneffect() int32 {
+	return int32(capnp.Struct(s).Uint32(516))
+}
+
+func (s ItemInstance) SetWorneffect(v int32) {
+	capnp.Struct(s).SetUint32(516, uint32(v))
+}
+
+func (s ItemInstance) Worntype() int32 {
+	return int32(capnp.Struct(s).Uint32(520))
+}
+
+func (s ItemInstance) SetWorntype(v int32) {
+	capnp.Struct(s).SetUint32(520, uint32(v))
+}
+
+func (s ItemInstance) Wornlevel2() int32 {
+	return int32(capnp.Struct(s).Uint32(524))
+}
+
+func (s ItemInstance) SetWornlevel2(v int32) {
+	capnp.Struct(s).SetUint32(524, uint32(v))
+}
+
+func (s ItemInstance) Wornlevel() int32 {
+	return int32(capnp.Struct(s).Uint32(528))
+}
+
+func (s ItemInstance) SetWornlevel(v int32) {
+	capnp.Struct(s).SetUint32(528, uint32(v))
+}
+
+func (s ItemInstance) Focustype() int32 {
+	return int32(capnp.Struct(s).Uint32(532))
+}
+
+func (s ItemInstance) SetFocustype(v int32) {
+	capnp.Struct(s).SetUint32(532, uint32(v))
+}
+
+func (s ItemInstance) Focuslevel2() int32 {
+	return int32(capnp.Struct(s).Uint32(536))
+}
+
+func (s ItemInstance) SetFocuslevel2(v int32) {
+	capnp.Struct(s).SetUint32(536, uint32(v))
+}
+
+func (s ItemInstance) Focuslevel() int32 {
+	return int32(capnp.Struct(s).Uint32(540))
+}
+
+func (s ItemInstance) SetFocuslevel(v int32) {
+	capnp.Struct(s).SetUint32(540, uint32(v))
+}
+
+func (s ItemInstance) Scrolleffect() int32 {
+	return int32(capnp.Struct(s).Uint32(544))
+}
+
+func (s ItemInstance) SetScrolleffect(v int32) {
+	capnp.Struct(s).SetUint32(544, uint32(v))
+}
+
+func (s ItemInstance) Scrolltype() int32 {
+	return int32(capnp.Struct(s).Uint32(548))
+}
+
+func (s ItemInstance) SetScrolltype(v int32) {
+	capnp.Struct(s).SetUint32(548, uint32(v))
+}
+
+func (s ItemInstance) Scrolllevel2() int32 {
+	return int32(capnp.Struct(s).Uint32(552))
+}
+
+func (s ItemInstance) SetScrolllevel2(v int32) {
+	capnp.Struct(s).SetUint32(552, uint32(v))
+}
+
+func (s ItemInstance) Scrolllevel() int32 {
+	return int32(capnp.Struct(s).Uint32(556))
+}
+
+func (s ItemInstance) SetScrolllevel(v int32) {
+	capnp.Struct(s).SetUint32(556, uint32(v))
+}
+
+func (s ItemInstance) Svcorruption() int32 {
+	return int32(capnp.Struct(s).Uint32(560))
+}
+
+func (s ItemInstance) SetSvcorruption(v int32) {
+	capnp.Struct(s).SetUint32(560, uint32(v))
+}
+
+func (s ItemInstance) Skillmodmax() int32 {
+	return int32(capnp.Struct(s).Uint32(564))
+}
+
+func (s ItemInstance) SetSkillmodmax(v int32) {
+	capnp.Struct(s).SetUint32(564, uint32(v))
+}
+
+func (s ItemInstance) Questitemflag() int32 {
+	return int32(capnp.Struct(s).Uint32(568))
+}
+
+func (s ItemInstance) SetQuestitemflag(v int32) {
+	capnp.Struct(s).SetUint32(568, uint32(v))
+}
+
+func (s ItemInstance) Purity() int32 {
+	return int32(capnp.Struct(s).Uint32(572))
+}
+
+func (s ItemInstance) SetPurity(v int32) {
+	capnp.Struct(s).SetUint32(572, uint32(v))
+}
+
+func (s ItemInstance) Evoitem() int32 {
+	return int32(capnp.Struct(s).Uint32(576))
+}
+
+func (s ItemInstance) SetEvoitem(v int32) {
+	capnp.Struct(s).SetUint32(576, uint32(v))
+}
+
+func (s ItemInstance) Evoid() int32 {
+	return int32(capnp.Struct(s).Uint32(580))
+}
+
+func (s ItemInstance) SetEvoid(v int32) {
+	capnp.Struct(s).SetUint32(580, uint32(v))
+}
+
+func (s ItemInstance) Evolvinglevel() int32 {
+	return int32(capnp.Struct(s).Uint32(584))
+}
+
+func (s ItemInstance) SetEvolvinglevel(v int32) {
+	capnp.Struct(s).SetUint32(584, uint32(v))
+}
+
+func (s ItemInstance) Evomax() int32 {
+	return int32(capnp.Struct(s).Uint32(588))
+}
+
+func (s ItemInstance) SetEvomax(v int32) {
+	capnp.Struct(s).SetUint32(588, uint32(v))
+}
+
+func (s ItemInstance) Dsmitigation() int32 {
+	return int32(capnp.Struct(s).Uint32(592))
+}
+
+func (s ItemInstance) SetDsmitigation(v int32) {
+	capnp.Struct(s).SetUint32(592, uint32(v))
+}
+
+func (s ItemInstance) Healamt() int32 {
+	return int32(capnp.Struct(s).Uint32(596))
+}
+
+func (s ItemInstance) SetHealamt(v int32) {
+	capnp.Struct(s).SetUint32(596, uint32(v))
+}
+
+func (s ItemInstance) Spelldmg() int32 {
+	return int32(capnp.Struct(s).Uint32(600))
+}
+
+func (s ItemInstance) SetSpelldmg(v int32) {
+	capnp.Struct(s).SetUint32(600, uint32(v))
+}
+
+func (s ItemInstance) Clairvoyance() int32 {
+	return int32(capnp.Struct(s).Uint32(604))
+}
+
+func (s ItemInstance) SetClairvoyance(v int32) {
+	capnp.Struct(s).SetUint32(604, uint32(v))
+}
+
+func (s ItemInstance) Backstabdmg() int32 {
+	return int32(capnp.Struct(s).Uint32(608))
+}
+
+func (s ItemInstance) SetBackstabdmg(v int32) {
+	capnp.Struct(s).SetUint32(608, uint32(v))
+}
+
+func (s ItemInstance) Elitematerial() int32 {
+	return int32(capnp.Struct(s).Uint32(612))
+}
+
+func (s ItemInstance) SetElitematerial(v int32) {
+	capnp.Struct(s).SetUint32(612, uint32(v))
+}
+
+func (s ItemInstance) Scriptfileid() int32 {
+	return int32(capnp.Struct(s).Uint32(616))
+}
+
+func (s ItemInstance) SetScriptfileid(v int32) {
+	capnp.Struct(s).SetUint32(616, uint32(v))
+}
+
+func (s ItemInstance) Expendablearrow() int32 {
+	return int32(capnp.Struct(s).Uint32(620))
+}
+
+func (s ItemInstance) SetExpendablearrow(v int32) {
+	capnp.Struct(s).SetUint32(620, uint32(v))
+}
+
+func (s ItemInstance) Powersourcecapacity() int32 {
+	return int32(capnp.Struct(s).Uint32(624))
+}
+
+func (s ItemInstance) SetPowersourcecapacity(v int32) {
+	capnp.Struct(s).SetUint32(624, uint32(v))
+}
+
+func (s ItemInstance) Bardeffect() int32 {
+	return int32(capnp.Struct(s).Uint32(628))
+}
+
+func (s ItemInstance) SetBardeffect(v int32) {
+	capnp.Struct(s).SetUint32(628, uint32(v))
+}
+
+func (s ItemInstance) Bardeffecttype() int32 {
+	return int32(capnp.Struct(s).Uint32(632))
+}
+
+func (s ItemInstance) SetBardeffecttype(v int32) {
+	capnp.Struct(s).SetUint32(632, uint32(v))
+}
+
+func (s ItemInstance) Bardlevel2() int32 {
+	return int32(capnp.Struct(s).Uint32(636))
+}
+
+func (s ItemInstance) SetBardlevel2(v int32) {
+	capnp.Struct(s).SetUint32(636, uint32(v))
+}
+
+func (s ItemInstance) Bardlevel() int32 {
+	return int32(capnp.Struct(s).Uint32(640))
+}
+
+func (s ItemInstance) SetBardlevel(v int32) {
+	capnp.Struct(s).SetUint32(640, uint32(v))
+}
+
+func (s ItemInstance) Subtype() int32 {
+	return int32(capnp.Struct(s).Uint32(644))
+}
+
+func (s ItemInstance) SetSubtype(v int32) {
+	capnp.Struct(s).SetUint32(644, uint32(v))
+}
+
+func (s ItemInstance) Heirloom() int32 {
+	return int32(capnp.Struct(s).Uint32(648))
+}
+
+func (s ItemInstance) SetHeirloom(v int32) {
+	capnp.Struct(s).SetUint32(648, uint32(v))
+}
+
+func (s ItemInstance) Placeable() int32 {
+	return int32(capnp.Struct(s).Uint32(652))
+}
+
+func (s ItemInstance) SetPlaceable(v int32) {
+	capnp.Struct(s).SetUint32(652, uint32(v))
+}
+
+func (s ItemInstance) Epicitem() int32 {
+	return int32(capnp.Struct(s).Uint32(656))
+}
+
+func (s ItemInstance) SetEpicitem(v int32) {
+	capnp.Struct(s).SetUint32(656, uint32(v))
+}
+
+func (s ItemInstance) Minstatus() int32 {
+	return int32(capnp.Struct(s).Uint32(660))
+}
+
+func (s ItemInstance) SetMinstatus(v int32) {
+	capnp.Struct(s).SetUint32(660, uint32(v))
+}
+
+func (s ItemInstance) Name() (string, error) {
+	p, err := capnp.Struct(s).Ptr(5)
+	return p.Text(), err
+}
+
+func (s ItemInstance) HasName() bool {
+	return capnp.Struct(s).HasPtr(5)
+}
+
+func (s ItemInstance) NameBytes() ([]byte, error) {
+	p, err := capnp.Struct(s).Ptr(5)
+	return p.TextBytes(), err
+}
+
+func (s ItemInstance) SetName(v string) error {
+	return capnp.Struct(s).SetText(5, v)
+}
+
+func (s ItemInstance) Aagi() int32 {
+	return int32(capnp.Struct(s).Uint32(664))
+}
+
+func (s ItemInstance) SetAagi(v int32) {
+	capnp.Struct(s).SetUint32(664, uint32(v))
 }
 
 // ItemInstance_List is a list of ItemInstance.
@@ -158,7 +1496,7 @@ type ItemInstance_List = capnp.StructList[ItemInstance]
 
 // NewItemInstance creates a new list of ItemInstance.
 func NewItemInstance_List(s *capnp.Segment, sz int32) (ItemInstance_List, error) {
-	l, err := capnp.NewCompositeList(s, capnp.ObjectSize{DataSize: 32, PointerCount: 2}, sz)
+	l, err := capnp.NewCompositeList(s, capnp.ObjectSize{DataSize: 672, PointerCount: 6}, sz)
 	return capnp.StructList[ItemInstance](l), err
 }
 
@@ -168,1473 +1506,4 @@ type ItemInstance_Future struct{ *capnp.Future }
 func (f ItemInstance_Future) Struct() (ItemInstance, error) {
 	p, err := f.Future.Ptr()
 	return ItemInstance(p.Struct()), err
-}
-func (p ItemInstance_Future) Item() Items_Future {
-	return Items_Future{Future: p.Future.Field(1, nil)}
-}
-
-type Items capnp.Struct
-
-// Items_TypeID is the unique identifier for the type Items.
-const Items_TypeID = 0xd06564713244f529
-
-func NewItems(s *capnp.Segment) (Items, error) {
-	st, err := capnp.NewStruct(s, capnp.ObjectSize{DataSize: 664, PointerCount: 5})
-	return Items(st), err
-}
-
-func NewRootItems(s *capnp.Segment) (Items, error) {
-	st, err := capnp.NewRootStruct(s, capnp.ObjectSize{DataSize: 664, PointerCount: 5})
-	return Items(st), err
-}
-
-func ReadRootItems(msg *capnp.Message) (Items, error) {
-	root, err := msg.Root()
-	return Items(root.Struct()), err
-}
-
-func (s Items) String() string {
-	str, _ := text.Marshal(0xd06564713244f529, capnp.Struct(s))
-	return str
-}
-
-func (s Items) EncodeAsPtr(seg *capnp.Segment) capnp.Ptr {
-	return capnp.Struct(s).EncodeAsPtr(seg)
-}
-
-func (Items) DecodeFromPtr(p capnp.Ptr) Items {
-	return Items(capnp.Struct{}.DecodeFromPtr(p))
-}
-
-func (s Items) ToPtr() capnp.Ptr {
-	return capnp.Struct(s).ToPtr()
-}
-func (s Items) IsValid() bool {
-	return capnp.Struct(s).IsValid()
-}
-
-func (s Items) Message() *capnp.Message {
-	return capnp.Struct(s).Message()
-}
-
-func (s Items) Segment() *capnp.Segment {
-	return capnp.Struct(s).Segment()
-}
-func (s Items) Id() int32 {
-	return int32(capnp.Struct(s).Uint32(0))
-}
-
-func (s Items) SetId(v int32) {
-	capnp.Struct(s).SetUint32(0, uint32(v))
-}
-
-func (s Items) Minstatus() int32 {
-	return int32(capnp.Struct(s).Uint32(4))
-}
-
-func (s Items) SetMinstatus(v int32) {
-	capnp.Struct(s).SetUint32(4, uint32(v))
-}
-
-func (s Items) Name() (string, error) {
-	p, err := capnp.Struct(s).Ptr(0)
-	return p.Text(), err
-}
-
-func (s Items) HasName() bool {
-	return capnp.Struct(s).HasPtr(0)
-}
-
-func (s Items) NameBytes() ([]byte, error) {
-	p, err := capnp.Struct(s).Ptr(0)
-	return p.TextBytes(), err
-}
-
-func (s Items) SetName(v string) error {
-	return capnp.Struct(s).SetText(0, v)
-}
-
-func (s Items) Aagi() int32 {
-	return int32(capnp.Struct(s).Uint32(8))
-}
-
-func (s Items) SetAagi(v int32) {
-	capnp.Struct(s).SetUint32(8, uint32(v))
-}
-
-func (s Items) Ac() int32 {
-	return int32(capnp.Struct(s).Uint32(12))
-}
-
-func (s Items) SetAc(v int32) {
-	capnp.Struct(s).SetUint32(12, uint32(v))
-}
-
-func (s Items) Accuracy() int32 {
-	return int32(capnp.Struct(s).Uint32(16))
-}
-
-func (s Items) SetAccuracy(v int32) {
-	capnp.Struct(s).SetUint32(16, uint32(v))
-}
-
-func (s Items) Acha() int32 {
-	return int32(capnp.Struct(s).Uint32(20))
-}
-
-func (s Items) SetAcha(v int32) {
-	capnp.Struct(s).SetUint32(20, uint32(v))
-}
-
-func (s Items) Adex() int32 {
-	return int32(capnp.Struct(s).Uint32(24))
-}
-
-func (s Items) SetAdex(v int32) {
-	capnp.Struct(s).SetUint32(24, uint32(v))
-}
-
-func (s Items) Aint() int32 {
-	return int32(capnp.Struct(s).Uint32(28))
-}
-
-func (s Items) SetAint(v int32) {
-	capnp.Struct(s).SetUint32(28, uint32(v))
-}
-
-func (s Items) Artifactflag() uint32 {
-	return capnp.Struct(s).Uint32(32)
-}
-
-func (s Items) SetArtifactflag(v uint32) {
-	capnp.Struct(s).SetUint32(32, v)
-}
-
-func (s Items) Asta() int32 {
-	return int32(capnp.Struct(s).Uint32(36))
-}
-
-func (s Items) SetAsta(v int32) {
-	capnp.Struct(s).SetUint32(36, uint32(v))
-}
-
-func (s Items) Astr() int32 {
-	return int32(capnp.Struct(s).Uint32(40))
-}
-
-func (s Items) SetAstr(v int32) {
-	capnp.Struct(s).SetUint32(40, uint32(v))
-}
-
-func (s Items) Attack() int32 {
-	return int32(capnp.Struct(s).Uint32(44))
-}
-
-func (s Items) SetAttack(v int32) {
-	capnp.Struct(s).SetUint32(44, uint32(v))
-}
-
-func (s Items) Augrestrict() int32 {
-	return int32(capnp.Struct(s).Uint32(48))
-}
-
-func (s Items) SetAugrestrict(v int32) {
-	capnp.Struct(s).SetUint32(48, uint32(v))
-}
-
-func (s Items) Augslot1type() int32 {
-	return int32(capnp.Struct(s).Uint32(52))
-}
-
-func (s Items) SetAugslot1type(v int32) {
-	capnp.Struct(s).SetUint32(52, uint32(v))
-}
-
-func (s Items) Augslot1visible() int32 {
-	return int32(capnp.Struct(s).Uint32(56))
-}
-
-func (s Items) SetAugslot1visible(v int32) {
-	capnp.Struct(s).SetUint32(56, uint32(v))
-}
-
-func (s Items) Augslot2type() int32 {
-	return int32(capnp.Struct(s).Uint32(60))
-}
-
-func (s Items) SetAugslot2type(v int32) {
-	capnp.Struct(s).SetUint32(60, uint32(v))
-}
-
-func (s Items) Augslot2visible() int32 {
-	return int32(capnp.Struct(s).Uint32(64))
-}
-
-func (s Items) SetAugslot2visible(v int32) {
-	capnp.Struct(s).SetUint32(64, uint32(v))
-}
-
-func (s Items) Augslot3type() int32 {
-	return int32(capnp.Struct(s).Uint32(68))
-}
-
-func (s Items) SetAugslot3type(v int32) {
-	capnp.Struct(s).SetUint32(68, uint32(v))
-}
-
-func (s Items) Augslot3visible() int32 {
-	return int32(capnp.Struct(s).Uint32(72))
-}
-
-func (s Items) SetAugslot3visible(v int32) {
-	capnp.Struct(s).SetUint32(72, uint32(v))
-}
-
-func (s Items) Augslot4type() int32 {
-	return int32(capnp.Struct(s).Uint32(76))
-}
-
-func (s Items) SetAugslot4type(v int32) {
-	capnp.Struct(s).SetUint32(76, uint32(v))
-}
-
-func (s Items) Augslot4visible() int32 {
-	return int32(capnp.Struct(s).Uint32(80))
-}
-
-func (s Items) SetAugslot4visible(v int32) {
-	capnp.Struct(s).SetUint32(80, uint32(v))
-}
-
-func (s Items) Augslot5type() int32 {
-	return int32(capnp.Struct(s).Uint32(84))
-}
-
-func (s Items) SetAugslot5type(v int32) {
-	capnp.Struct(s).SetUint32(84, uint32(v))
-}
-
-func (s Items) Augslot5visible() int32 {
-	return int32(capnp.Struct(s).Uint32(88))
-}
-
-func (s Items) SetAugslot5visible(v int32) {
-	capnp.Struct(s).SetUint32(88, uint32(v))
-}
-
-func (s Items) Augslot6type() int32 {
-	return int32(capnp.Struct(s).Uint32(92))
-}
-
-func (s Items) SetAugslot6type(v int32) {
-	capnp.Struct(s).SetUint32(92, uint32(v))
-}
-
-func (s Items) Augslot6visible() int32 {
-	return int32(capnp.Struct(s).Uint32(96))
-}
-
-func (s Items) SetAugslot6visible(v int32) {
-	capnp.Struct(s).SetUint32(96, uint32(v))
-}
-
-func (s Items) Augtype() int32 {
-	return int32(capnp.Struct(s).Uint32(100))
-}
-
-func (s Items) SetAugtype(v int32) {
-	capnp.Struct(s).SetUint32(100, uint32(v))
-}
-
-func (s Items) Avoidance() int32 {
-	return int32(capnp.Struct(s).Uint32(104))
-}
-
-func (s Items) SetAvoidance(v int32) {
-	capnp.Struct(s).SetUint32(104, uint32(v))
-}
-
-func (s Items) Awis() int32 {
-	return int32(capnp.Struct(s).Uint32(108))
-}
-
-func (s Items) SetAwis(v int32) {
-	capnp.Struct(s).SetUint32(108, uint32(v))
-}
-
-func (s Items) Bagsize() int32 {
-	return int32(capnp.Struct(s).Uint32(112))
-}
-
-func (s Items) SetBagsize(v int32) {
-	capnp.Struct(s).SetUint32(112, uint32(v))
-}
-
-func (s Items) Bagslots() int32 {
-	return int32(capnp.Struct(s).Uint32(116))
-}
-
-func (s Items) SetBagslots(v int32) {
-	capnp.Struct(s).SetUint32(116, uint32(v))
-}
-
-func (s Items) Bagtype() int32 {
-	return int32(capnp.Struct(s).Uint32(120))
-}
-
-func (s Items) SetBagtype(v int32) {
-	capnp.Struct(s).SetUint32(120, uint32(v))
-}
-
-func (s Items) Bagwr() int32 {
-	return int32(capnp.Struct(s).Uint32(124))
-}
-
-func (s Items) SetBagwr(v int32) {
-	capnp.Struct(s).SetUint32(124, uint32(v))
-}
-
-func (s Items) Banedmgamt() int32 {
-	return int32(capnp.Struct(s).Uint32(128))
-}
-
-func (s Items) SetBanedmgamt(v int32) {
-	capnp.Struct(s).SetUint32(128, uint32(v))
-}
-
-func (s Items) Banedmgraceamt() int32 {
-	return int32(capnp.Struct(s).Uint32(132))
-}
-
-func (s Items) SetBanedmgraceamt(v int32) {
-	capnp.Struct(s).SetUint32(132, uint32(v))
-}
-
-func (s Items) Banedmgbody() int32 {
-	return int32(capnp.Struct(s).Uint32(136))
-}
-
-func (s Items) SetBanedmgbody(v int32) {
-	capnp.Struct(s).SetUint32(136, uint32(v))
-}
-
-func (s Items) Banedmgrace() int32 {
-	return int32(capnp.Struct(s).Uint32(140))
-}
-
-func (s Items) SetBanedmgrace(v int32) {
-	capnp.Struct(s).SetUint32(140, uint32(v))
-}
-
-func (s Items) Bardtype() int32 {
-	return int32(capnp.Struct(s).Uint32(144))
-}
-
-func (s Items) SetBardtype(v int32) {
-	capnp.Struct(s).SetUint32(144, uint32(v))
-}
-
-func (s Items) Bardvalue() int32 {
-	return int32(capnp.Struct(s).Uint32(148))
-}
-
-func (s Items) SetBardvalue(v int32) {
-	capnp.Struct(s).SetUint32(148, uint32(v))
-}
-
-func (s Items) Book() int32 {
-	return int32(capnp.Struct(s).Uint32(152))
-}
-
-func (s Items) SetBook(v int32) {
-	capnp.Struct(s).SetUint32(152, uint32(v))
-}
-
-func (s Items) Casttime() int32 {
-	return int32(capnp.Struct(s).Uint32(156))
-}
-
-func (s Items) SetCasttime(v int32) {
-	capnp.Struct(s).SetUint32(156, uint32(v))
-}
-
-func (s Items) Casttime2() int32 {
-	return int32(capnp.Struct(s).Uint32(160))
-}
-
-func (s Items) SetCasttime2(v int32) {
-	capnp.Struct(s).SetUint32(160, uint32(v))
-}
-
-func (s Items) Classes() int32 {
-	return int32(capnp.Struct(s).Uint32(164))
-}
-
-func (s Items) SetClasses(v int32) {
-	capnp.Struct(s).SetUint32(164, uint32(v))
-}
-
-func (s Items) Color() uint32 {
-	return capnp.Struct(s).Uint32(168)
-}
-
-func (s Items) SetColor(v uint32) {
-	capnp.Struct(s).SetUint32(168, v)
-}
-
-func (s Items) Combateffects() (string, error) {
-	p, err := capnp.Struct(s).Ptr(1)
-	return p.Text(), err
-}
-
-func (s Items) HasCombateffects() bool {
-	return capnp.Struct(s).HasPtr(1)
-}
-
-func (s Items) CombateffectsBytes() ([]byte, error) {
-	p, err := capnp.Struct(s).Ptr(1)
-	return p.TextBytes(), err
-}
-
-func (s Items) SetCombateffects(v string) error {
-	return capnp.Struct(s).SetText(1, v)
-}
-
-func (s Items) Extradmgskill() int32 {
-	return int32(capnp.Struct(s).Uint32(172))
-}
-
-func (s Items) SetExtradmgskill(v int32) {
-	capnp.Struct(s).SetUint32(172, uint32(v))
-}
-
-func (s Items) Extradmgamt() int32 {
-	return int32(capnp.Struct(s).Uint32(176))
-}
-
-func (s Items) SetExtradmgamt(v int32) {
-	capnp.Struct(s).SetUint32(176, uint32(v))
-}
-
-func (s Items) Price() int32 {
-	return int32(capnp.Struct(s).Uint32(180))
-}
-
-func (s Items) SetPrice(v int32) {
-	capnp.Struct(s).SetUint32(180, uint32(v))
-}
-
-func (s Items) Cr() int32 {
-	return int32(capnp.Struct(s).Uint32(184))
-}
-
-func (s Items) SetCr(v int32) {
-	capnp.Struct(s).SetUint32(184, uint32(v))
-}
-
-func (s Items) Damage() int32 {
-	return int32(capnp.Struct(s).Uint32(188))
-}
-
-func (s Items) SetDamage(v int32) {
-	capnp.Struct(s).SetUint32(188, uint32(v))
-}
-
-func (s Items) Damageshield() int32 {
-	return int32(capnp.Struct(s).Uint32(192))
-}
-
-func (s Items) SetDamageshield(v int32) {
-	capnp.Struct(s).SetUint32(192, uint32(v))
-}
-
-func (s Items) Deity() int32 {
-	return int32(capnp.Struct(s).Uint32(196))
-}
-
-func (s Items) SetDeity(v int32) {
-	capnp.Struct(s).SetUint32(196, uint32(v))
-}
-
-func (s Items) Delay() int32 {
-	return int32(capnp.Struct(s).Uint32(200))
-}
-
-func (s Items) SetDelay(v int32) {
-	capnp.Struct(s).SetUint32(200, uint32(v))
-}
-
-func (s Items) Augdistiller() uint32 {
-	return capnp.Struct(s).Uint32(204)
-}
-
-func (s Items) SetAugdistiller(v uint32) {
-	capnp.Struct(s).SetUint32(204, v)
-}
-
-func (s Items) Dotshielding() int32 {
-	return int32(capnp.Struct(s).Uint32(208))
-}
-
-func (s Items) SetDotshielding(v int32) {
-	capnp.Struct(s).SetUint32(208, uint32(v))
-}
-
-func (s Items) Dr() int32 {
-	return int32(capnp.Struct(s).Uint32(212))
-}
-
-func (s Items) SetDr(v int32) {
-	capnp.Struct(s).SetUint32(212, uint32(v))
-}
-
-func (s Items) Clicktype() int32 {
-	return int32(capnp.Struct(s).Uint32(216))
-}
-
-func (s Items) SetClicktype(v int32) {
-	capnp.Struct(s).SetUint32(216, uint32(v))
-}
-
-func (s Items) Clicklevel2() int32 {
-	return int32(capnp.Struct(s).Uint32(220))
-}
-
-func (s Items) SetClicklevel2(v int32) {
-	capnp.Struct(s).SetUint32(220, uint32(v))
-}
-
-func (s Items) Elemdmgtype() int32 {
-	return int32(capnp.Struct(s).Uint32(224))
-}
-
-func (s Items) SetElemdmgtype(v int32) {
-	capnp.Struct(s).SetUint32(224, uint32(v))
-}
-
-func (s Items) Elemdmgamt() int32 {
-	return int32(capnp.Struct(s).Uint32(228))
-}
-
-func (s Items) SetElemdmgamt(v int32) {
-	capnp.Struct(s).SetUint32(228, uint32(v))
-}
-
-func (s Items) Endur() int32 {
-	return int32(capnp.Struct(s).Uint32(232))
-}
-
-func (s Items) SetEndur(v int32) {
-	capnp.Struct(s).SetUint32(232, uint32(v))
-}
-
-func (s Items) Factionamt1() int32 {
-	return int32(capnp.Struct(s).Uint32(236))
-}
-
-func (s Items) SetFactionamt1(v int32) {
-	capnp.Struct(s).SetUint32(236, uint32(v))
-}
-
-func (s Items) Factionamt2() int32 {
-	return int32(capnp.Struct(s).Uint32(240))
-}
-
-func (s Items) SetFactionamt2(v int32) {
-	capnp.Struct(s).SetUint32(240, uint32(v))
-}
-
-func (s Items) Factionamt3() int32 {
-	return int32(capnp.Struct(s).Uint32(244))
-}
-
-func (s Items) SetFactionamt3(v int32) {
-	capnp.Struct(s).SetUint32(244, uint32(v))
-}
-
-func (s Items) Factionamt4() int32 {
-	return int32(capnp.Struct(s).Uint32(248))
-}
-
-func (s Items) SetFactionamt4(v int32) {
-	capnp.Struct(s).SetUint32(248, uint32(v))
-}
-
-func (s Items) Factionmod1() int32 {
-	return int32(capnp.Struct(s).Uint32(252))
-}
-
-func (s Items) SetFactionmod1(v int32) {
-	capnp.Struct(s).SetUint32(252, uint32(v))
-}
-
-func (s Items) Factionmod2() int32 {
-	return int32(capnp.Struct(s).Uint32(256))
-}
-
-func (s Items) SetFactionmod2(v int32) {
-	capnp.Struct(s).SetUint32(256, uint32(v))
-}
-
-func (s Items) Factionmod3() int32 {
-	return int32(capnp.Struct(s).Uint32(260))
-}
-
-func (s Items) SetFactionmod3(v int32) {
-	capnp.Struct(s).SetUint32(260, uint32(v))
-}
-
-func (s Items) Factionmod4() int32 {
-	return int32(capnp.Struct(s).Uint32(264))
-}
-
-func (s Items) SetFactionmod4(v int32) {
-	capnp.Struct(s).SetUint32(264, uint32(v))
-}
-
-func (s Items) Focuseffect() int32 {
-	return int32(capnp.Struct(s).Uint32(268))
-}
-
-func (s Items) SetFocuseffect(v int32) {
-	capnp.Struct(s).SetUint32(268, uint32(v))
-}
-
-func (s Items) Fr() int32 {
-	return int32(capnp.Struct(s).Uint32(272))
-}
-
-func (s Items) SetFr(v int32) {
-	capnp.Struct(s).SetUint32(272, uint32(v))
-}
-
-func (s Items) Fvnodrop() int32 {
-	return int32(capnp.Struct(s).Uint32(276))
-}
-
-func (s Items) SetFvnodrop(v int32) {
-	capnp.Struct(s).SetUint32(276, uint32(v))
-}
-
-func (s Items) Haste() int32 {
-	return int32(capnp.Struct(s).Uint32(280))
-}
-
-func (s Items) SetHaste(v int32) {
-	capnp.Struct(s).SetUint32(280, uint32(v))
-}
-
-func (s Items) Clicklevel() int32 {
-	return int32(capnp.Struct(s).Uint32(284))
-}
-
-func (s Items) SetClicklevel(v int32) {
-	capnp.Struct(s).SetUint32(284, uint32(v))
-}
-
-func (s Items) Hp() int32 {
-	return int32(capnp.Struct(s).Uint32(288))
-}
-
-func (s Items) SetHp(v int32) {
-	capnp.Struct(s).SetUint32(288, uint32(v))
-}
-
-func (s Items) Regen() int32 {
-	return int32(capnp.Struct(s).Uint32(292))
-}
-
-func (s Items) SetRegen(v int32) {
-	capnp.Struct(s).SetUint32(292, uint32(v))
-}
-
-func (s Items) Icon() int32 {
-	return int32(capnp.Struct(s).Uint32(296))
-}
-
-func (s Items) SetIcon(v int32) {
-	capnp.Struct(s).SetUint32(296, uint32(v))
-}
-
-func (s Items) Idfile() (string, error) {
-	p, err := capnp.Struct(s).Ptr(2)
-	return p.Text(), err
-}
-
-func (s Items) HasIdfile() bool {
-	return capnp.Struct(s).HasPtr(2)
-}
-
-func (s Items) IdfileBytes() ([]byte, error) {
-	p, err := capnp.Struct(s).Ptr(2)
-	return p.TextBytes(), err
-}
-
-func (s Items) SetIdfile(v string) error {
-	return capnp.Struct(s).SetText(2, v)
-}
-
-func (s Items) Itemclass() int32 {
-	return int32(capnp.Struct(s).Uint32(300))
-}
-
-func (s Items) SetItemclass(v int32) {
-	capnp.Struct(s).SetUint32(300, uint32(v))
-}
-
-func (s Items) Itemtype() int32 {
-	return int32(capnp.Struct(s).Uint32(304))
-}
-
-func (s Items) SetItemtype(v int32) {
-	capnp.Struct(s).SetUint32(304, uint32(v))
-}
-
-func (s Items) Light() int32 {
-	return int32(capnp.Struct(s).Uint32(308))
-}
-
-func (s Items) SetLight(v int32) {
-	capnp.Struct(s).SetUint32(308, uint32(v))
-}
-
-func (s Items) Lore() (string, error) {
-	p, err := capnp.Struct(s).Ptr(3)
-	return p.Text(), err
-}
-
-func (s Items) HasLore() bool {
-	return capnp.Struct(s).HasPtr(3)
-}
-
-func (s Items) LoreBytes() ([]byte, error) {
-	p, err := capnp.Struct(s).Ptr(3)
-	return p.TextBytes(), err
-}
-
-func (s Items) SetLore(v string) error {
-	return capnp.Struct(s).SetText(3, v)
-}
-
-func (s Items) Loregroup() int32 {
-	return int32(capnp.Struct(s).Uint32(312))
-}
-
-func (s Items) SetLoregroup(v int32) {
-	capnp.Struct(s).SetUint32(312, uint32(v))
-}
-
-func (s Items) Magic() int32 {
-	return int32(capnp.Struct(s).Uint32(316))
-}
-
-func (s Items) SetMagic(v int32) {
-	capnp.Struct(s).SetUint32(316, uint32(v))
-}
-
-func (s Items) Mana() int32 {
-	return int32(capnp.Struct(s).Uint32(320))
-}
-
-func (s Items) SetMana(v int32) {
-	capnp.Struct(s).SetUint32(320, uint32(v))
-}
-
-func (s Items) Manaregen() int32 {
-	return int32(capnp.Struct(s).Uint32(324))
-}
-
-func (s Items) SetManaregen(v int32) {
-	capnp.Struct(s).SetUint32(324, uint32(v))
-}
-
-func (s Items) Enduranceregen() int32 {
-	return int32(capnp.Struct(s).Uint32(328))
-}
-
-func (s Items) SetEnduranceregen(v int32) {
-	capnp.Struct(s).SetUint32(328, uint32(v))
-}
-
-func (s Items) Material() int32 {
-	return int32(capnp.Struct(s).Uint32(332))
-}
-
-func (s Items) SetMaterial(v int32) {
-	capnp.Struct(s).SetUint32(332, uint32(v))
-}
-
-func (s Items) Herosforgemodel() int32 {
-	return int32(capnp.Struct(s).Uint32(336))
-}
-
-func (s Items) SetHerosforgemodel(v int32) {
-	capnp.Struct(s).SetUint32(336, uint32(v))
-}
-
-func (s Items) Maxcharges() int32 {
-	return int32(capnp.Struct(s).Uint32(340))
-}
-
-func (s Items) SetMaxcharges(v int32) {
-	capnp.Struct(s).SetUint32(340, uint32(v))
-}
-
-func (s Items) Mr() int32 {
-	return int32(capnp.Struct(s).Uint32(344))
-}
-
-func (s Items) SetMr(v int32) {
-	capnp.Struct(s).SetUint32(344, uint32(v))
-}
-
-func (s Items) Nodrop() int32 {
-	return int32(capnp.Struct(s).Uint32(348))
-}
-
-func (s Items) SetNodrop(v int32) {
-	capnp.Struct(s).SetUint32(348, uint32(v))
-}
-
-func (s Items) Norent() int32 {
-	return int32(capnp.Struct(s).Uint32(352))
-}
-
-func (s Items) SetNorent(v int32) {
-	capnp.Struct(s).SetUint32(352, uint32(v))
-}
-
-func (s Items) Pendingloreflag() uint32 {
-	return capnp.Struct(s).Uint32(356)
-}
-
-func (s Items) SetPendingloreflag(v uint32) {
-	capnp.Struct(s).SetUint32(356, v)
-}
-
-func (s Items) Pr() int32 {
-	return int32(capnp.Struct(s).Uint32(360))
-}
-
-func (s Items) SetPr(v int32) {
-	capnp.Struct(s).SetUint32(360, uint32(v))
-}
-
-func (s Items) Procrate() int32 {
-	return int32(capnp.Struct(s).Uint32(364))
-}
-
-func (s Items) SetProcrate(v int32) {
-	capnp.Struct(s).SetUint32(364, uint32(v))
-}
-
-func (s Items) Races() int32 {
-	return int32(capnp.Struct(s).Uint32(368))
-}
-
-func (s Items) SetRaces(v int32) {
-	capnp.Struct(s).SetUint32(368, uint32(v))
-}
-
-func (s Items) Range() int32 {
-	return int32(capnp.Struct(s).Uint32(372))
-}
-
-func (s Items) SetRange(v int32) {
-	capnp.Struct(s).SetUint32(372, uint32(v))
-}
-
-func (s Items) Reclevel() int32 {
-	return int32(capnp.Struct(s).Uint32(376))
-}
-
-func (s Items) SetReclevel(v int32) {
-	capnp.Struct(s).SetUint32(376, uint32(v))
-}
-
-func (s Items) Recskill() int32 {
-	return int32(capnp.Struct(s).Uint32(380))
-}
-
-func (s Items) SetRecskill(v int32) {
-	capnp.Struct(s).SetUint32(380, uint32(v))
-}
-
-func (s Items) Reqlevel() int32 {
-	return int32(capnp.Struct(s).Uint32(384))
-}
-
-func (s Items) SetReqlevel(v int32) {
-	capnp.Struct(s).SetUint32(384, uint32(v))
-}
-
-func (s Items) Sellrate() float64 {
-	return math.Float64frombits(capnp.Struct(s).Uint64(392))
-}
-
-func (s Items) SetSellrate(v float64) {
-	capnp.Struct(s).SetUint64(392, math.Float64bits(v))
-}
-
-func (s Items) Shielding() int32 {
-	return int32(capnp.Struct(s).Uint32(388))
-}
-
-func (s Items) SetShielding(v int32) {
-	capnp.Struct(s).SetUint32(388, uint32(v))
-}
-
-func (s Items) Size() int32 {
-	return int32(capnp.Struct(s).Uint32(400))
-}
-
-func (s Items) SetSize(v int32) {
-	capnp.Struct(s).SetUint32(400, uint32(v))
-}
-
-func (s Items) Skillmodtype() int32 {
-	return int32(capnp.Struct(s).Uint32(404))
-}
-
-func (s Items) SetSkillmodtype(v int32) {
-	capnp.Struct(s).SetUint32(404, uint32(v))
-}
-
-func (s Items) Skillmodvalue() int32 {
-	return int32(capnp.Struct(s).Uint32(408))
-}
-
-func (s Items) SetSkillmodvalue(v int32) {
-	capnp.Struct(s).SetUint32(408, uint32(v))
-}
-
-func (s Items) Slots() int32 {
-	return int32(capnp.Struct(s).Uint32(412))
-}
-
-func (s Items) SetSlots(v int32) {
-	capnp.Struct(s).SetUint32(412, uint32(v))
-}
-
-func (s Items) Clickeffect() int32 {
-	return int32(capnp.Struct(s).Uint32(416))
-}
-
-func (s Items) SetClickeffect(v int32) {
-	capnp.Struct(s).SetUint32(416, uint32(v))
-}
-
-func (s Items) Spellshield() int32 {
-	return int32(capnp.Struct(s).Uint32(420))
-}
-
-func (s Items) SetSpellshield(v int32) {
-	capnp.Struct(s).SetUint32(420, uint32(v))
-}
-
-func (s Items) Strikethrough() int32 {
-	return int32(capnp.Struct(s).Uint32(424))
-}
-
-func (s Items) SetStrikethrough(v int32) {
-	capnp.Struct(s).SetUint32(424, uint32(v))
-}
-
-func (s Items) Stunresist() int32 {
-	return int32(capnp.Struct(s).Uint32(428))
-}
-
-func (s Items) SetStunresist(v int32) {
-	capnp.Struct(s).SetUint32(428, uint32(v))
-}
-
-func (s Items) Summonedflag() uint32 {
-	return capnp.Struct(s).Uint32(432)
-}
-
-func (s Items) SetSummonedflag(v uint32) {
-	capnp.Struct(s).SetUint32(432, v)
-}
-
-func (s Items) Tradeskills() int32 {
-	return int32(capnp.Struct(s).Uint32(436))
-}
-
-func (s Items) SetTradeskills(v int32) {
-	capnp.Struct(s).SetUint32(436, uint32(v))
-}
-
-func (s Items) Favor() int32 {
-	return int32(capnp.Struct(s).Uint32(440))
-}
-
-func (s Items) SetFavor(v int32) {
-	capnp.Struct(s).SetUint32(440, uint32(v))
-}
-
-func (s Items) Weight() int32 {
-	return int32(capnp.Struct(s).Uint32(444))
-}
-
-func (s Items) SetWeight(v int32) {
-	capnp.Struct(s).SetUint32(444, uint32(v))
-}
-
-func (s Items) Benefitflag() int32 {
-	return int32(capnp.Struct(s).Uint32(448))
-}
-
-func (s Items) SetBenefitflag(v int32) {
-	capnp.Struct(s).SetUint32(448, uint32(v))
-}
-
-func (s Items) Booktype() int32 {
-	return int32(capnp.Struct(s).Uint32(452))
-}
-
-func (s Items) SetBooktype(v int32) {
-	capnp.Struct(s).SetUint32(452, uint32(v))
-}
-
-func (s Items) Recastdelay() int32 {
-	return int32(capnp.Struct(s).Uint32(456))
-}
-
-func (s Items) SetRecastdelay(v int32) {
-	capnp.Struct(s).SetUint32(456, uint32(v))
-}
-
-func (s Items) Recasttype() int32 {
-	return int32(capnp.Struct(s).Uint32(460))
-}
-
-func (s Items) SetRecasttype(v int32) {
-	capnp.Struct(s).SetUint32(460, uint32(v))
-}
-
-func (s Items) Guildfavor() int32 {
-	return int32(capnp.Struct(s).Uint32(464))
-}
-
-func (s Items) SetGuildfavor(v int32) {
-	capnp.Struct(s).SetUint32(464, uint32(v))
-}
-
-func (s Items) Attuneable() int32 {
-	return int32(capnp.Struct(s).Uint32(468))
-}
-
-func (s Items) SetAttuneable(v int32) {
-	capnp.Struct(s).SetUint32(468, uint32(v))
-}
-
-func (s Items) Nopet() int32 {
-	return int32(capnp.Struct(s).Uint32(472))
-}
-
-func (s Items) SetNopet(v int32) {
-	capnp.Struct(s).SetUint32(472, uint32(v))
-}
-
-func (s Items) Updated() (string, error) {
-	p, err := capnp.Struct(s).Ptr(4)
-	return p.Text(), err
-}
-
-func (s Items) HasUpdated() bool {
-	return capnp.Struct(s).HasPtr(4)
-}
-
-func (s Items) UpdatedBytes() ([]byte, error) {
-	p, err := capnp.Struct(s).Ptr(4)
-	return p.TextBytes(), err
-}
-
-func (s Items) SetUpdated(v string) error {
-	return capnp.Struct(s).SetText(4, v)
-}
-
-func (s Items) Pointtype() int32 {
-	return int32(capnp.Struct(s).Uint32(476))
-}
-
-func (s Items) SetPointtype(v int32) {
-	capnp.Struct(s).SetUint32(476, uint32(v))
-}
-
-func (s Items) Potionbelt() int32 {
-	return int32(capnp.Struct(s).Uint32(480))
-}
-
-func (s Items) SetPotionbelt(v int32) {
-	capnp.Struct(s).SetUint32(480, uint32(v))
-}
-
-func (s Items) Potionbeltslots() int32 {
-	return int32(capnp.Struct(s).Uint32(484))
-}
-
-func (s Items) SetPotionbeltslots(v int32) {
-	capnp.Struct(s).SetUint32(484, uint32(v))
-}
-
-func (s Items) Stacksize() int32 {
-	return int32(capnp.Struct(s).Uint32(488))
-}
-
-func (s Items) SetStacksize(v int32) {
-	capnp.Struct(s).SetUint32(488, uint32(v))
-}
-
-func (s Items) Notransfer() int32 {
-	return int32(capnp.Struct(s).Uint32(492))
-}
-
-func (s Items) SetNotransfer(v int32) {
-	capnp.Struct(s).SetUint32(492, uint32(v))
-}
-
-func (s Items) Stackable() int32 {
-	return int32(capnp.Struct(s).Uint32(496))
-}
-
-func (s Items) SetStackable(v int32) {
-	capnp.Struct(s).SetUint32(496, uint32(v))
-}
-
-func (s Items) Proceffect() int32 {
-	return int32(capnp.Struct(s).Uint32(500))
-}
-
-func (s Items) SetProceffect(v int32) {
-	capnp.Struct(s).SetUint32(500, uint32(v))
-}
-
-func (s Items) Proctype() int32 {
-	return int32(capnp.Struct(s).Uint32(504))
-}
-
-func (s Items) SetProctype(v int32) {
-	capnp.Struct(s).SetUint32(504, uint32(v))
-}
-
-func (s Items) Proclevel2() int32 {
-	return int32(capnp.Struct(s).Uint32(508))
-}
-
-func (s Items) SetProclevel2(v int32) {
-	capnp.Struct(s).SetUint32(508, uint32(v))
-}
-
-func (s Items) Proclevel() int32 {
-	return int32(capnp.Struct(s).Uint32(512))
-}
-
-func (s Items) SetProclevel(v int32) {
-	capnp.Struct(s).SetUint32(512, uint32(v))
-}
-
-func (s Items) Worneffect() int32 {
-	return int32(capnp.Struct(s).Uint32(516))
-}
-
-func (s Items) SetWorneffect(v int32) {
-	capnp.Struct(s).SetUint32(516, uint32(v))
-}
-
-func (s Items) Worntype() int32 {
-	return int32(capnp.Struct(s).Uint32(520))
-}
-
-func (s Items) SetWorntype(v int32) {
-	capnp.Struct(s).SetUint32(520, uint32(v))
-}
-
-func (s Items) Wornlevel2() int32 {
-	return int32(capnp.Struct(s).Uint32(524))
-}
-
-func (s Items) SetWornlevel2(v int32) {
-	capnp.Struct(s).SetUint32(524, uint32(v))
-}
-
-func (s Items) Wornlevel() int32 {
-	return int32(capnp.Struct(s).Uint32(528))
-}
-
-func (s Items) SetWornlevel(v int32) {
-	capnp.Struct(s).SetUint32(528, uint32(v))
-}
-
-func (s Items) Focustype() int32 {
-	return int32(capnp.Struct(s).Uint32(532))
-}
-
-func (s Items) SetFocustype(v int32) {
-	capnp.Struct(s).SetUint32(532, uint32(v))
-}
-
-func (s Items) Focuslevel2() int32 {
-	return int32(capnp.Struct(s).Uint32(536))
-}
-
-func (s Items) SetFocuslevel2(v int32) {
-	capnp.Struct(s).SetUint32(536, uint32(v))
-}
-
-func (s Items) Focuslevel() int32 {
-	return int32(capnp.Struct(s).Uint32(540))
-}
-
-func (s Items) SetFocuslevel(v int32) {
-	capnp.Struct(s).SetUint32(540, uint32(v))
-}
-
-func (s Items) Scrolleffect() int32 {
-	return int32(capnp.Struct(s).Uint32(544))
-}
-
-func (s Items) SetScrolleffect(v int32) {
-	capnp.Struct(s).SetUint32(544, uint32(v))
-}
-
-func (s Items) Scrolltype() int32 {
-	return int32(capnp.Struct(s).Uint32(548))
-}
-
-func (s Items) SetScrolltype(v int32) {
-	capnp.Struct(s).SetUint32(548, uint32(v))
-}
-
-func (s Items) Scrolllevel2() int32 {
-	return int32(capnp.Struct(s).Uint32(552))
-}
-
-func (s Items) SetScrolllevel2(v int32) {
-	capnp.Struct(s).SetUint32(552, uint32(v))
-}
-
-func (s Items) Scrolllevel() int32 {
-	return int32(capnp.Struct(s).Uint32(556))
-}
-
-func (s Items) SetScrolllevel(v int32) {
-	capnp.Struct(s).SetUint32(556, uint32(v))
-}
-
-func (s Items) Svcorruption() int32 {
-	return int32(capnp.Struct(s).Uint32(560))
-}
-
-func (s Items) SetSvcorruption(v int32) {
-	capnp.Struct(s).SetUint32(560, uint32(v))
-}
-
-func (s Items) Skillmodmax() int32 {
-	return int32(capnp.Struct(s).Uint32(564))
-}
-
-func (s Items) SetSkillmodmax(v int32) {
-	capnp.Struct(s).SetUint32(564, uint32(v))
-}
-
-func (s Items) Questitemflag() int32 {
-	return int32(capnp.Struct(s).Uint32(568))
-}
-
-func (s Items) SetQuestitemflag(v int32) {
-	capnp.Struct(s).SetUint32(568, uint32(v))
-}
-
-func (s Items) Purity() int32 {
-	return int32(capnp.Struct(s).Uint32(572))
-}
-
-func (s Items) SetPurity(v int32) {
-	capnp.Struct(s).SetUint32(572, uint32(v))
-}
-
-func (s Items) Evoitem() int32 {
-	return int32(capnp.Struct(s).Uint32(576))
-}
-
-func (s Items) SetEvoitem(v int32) {
-	capnp.Struct(s).SetUint32(576, uint32(v))
-}
-
-func (s Items) Evoid() int32 {
-	return int32(capnp.Struct(s).Uint32(580))
-}
-
-func (s Items) SetEvoid(v int32) {
-	capnp.Struct(s).SetUint32(580, uint32(v))
-}
-
-func (s Items) Evolvinglevel() int32 {
-	return int32(capnp.Struct(s).Uint32(584))
-}
-
-func (s Items) SetEvolvinglevel(v int32) {
-	capnp.Struct(s).SetUint32(584, uint32(v))
-}
-
-func (s Items) Evomax() int32 {
-	return int32(capnp.Struct(s).Uint32(588))
-}
-
-func (s Items) SetEvomax(v int32) {
-	capnp.Struct(s).SetUint32(588, uint32(v))
-}
-
-func (s Items) Dsmitigation() int32 {
-	return int32(capnp.Struct(s).Uint32(592))
-}
-
-func (s Items) SetDsmitigation(v int32) {
-	capnp.Struct(s).SetUint32(592, uint32(v))
-}
-
-func (s Items) Healamt() int32 {
-	return int32(capnp.Struct(s).Uint32(596))
-}
-
-func (s Items) SetHealamt(v int32) {
-	capnp.Struct(s).SetUint32(596, uint32(v))
-}
-
-func (s Items) Spelldmg() int32 {
-	return int32(capnp.Struct(s).Uint32(600))
-}
-
-func (s Items) SetSpelldmg(v int32) {
-	capnp.Struct(s).SetUint32(600, uint32(v))
-}
-
-func (s Items) Clairvoyance() int32 {
-	return int32(capnp.Struct(s).Uint32(604))
-}
-
-func (s Items) SetClairvoyance(v int32) {
-	capnp.Struct(s).SetUint32(604, uint32(v))
-}
-
-func (s Items) Backstabdmg() int32 {
-	return int32(capnp.Struct(s).Uint32(608))
-}
-
-func (s Items) SetBackstabdmg(v int32) {
-	capnp.Struct(s).SetUint32(608, uint32(v))
-}
-
-func (s Items) Elitematerial() int32 {
-	return int32(capnp.Struct(s).Uint32(612))
-}
-
-func (s Items) SetElitematerial(v int32) {
-	capnp.Struct(s).SetUint32(612, uint32(v))
-}
-
-func (s Items) Scriptfileid() int32 {
-	return int32(capnp.Struct(s).Uint32(616))
-}
-
-func (s Items) SetScriptfileid(v int32) {
-	capnp.Struct(s).SetUint32(616, uint32(v))
-}
-
-func (s Items) Expendablearrow() int32 {
-	return int32(capnp.Struct(s).Uint32(620))
-}
-
-func (s Items) SetExpendablearrow(v int32) {
-	capnp.Struct(s).SetUint32(620, uint32(v))
-}
-
-func (s Items) Powersourcecapacity() int32 {
-	return int32(capnp.Struct(s).Uint32(624))
-}
-
-func (s Items) SetPowersourcecapacity(v int32) {
-	capnp.Struct(s).SetUint32(624, uint32(v))
-}
-
-func (s Items) Bardeffect() int32 {
-	return int32(capnp.Struct(s).Uint32(628))
-}
-
-func (s Items) SetBardeffect(v int32) {
-	capnp.Struct(s).SetUint32(628, uint32(v))
-}
-
-func (s Items) Bardeffecttype() int32 {
-	return int32(capnp.Struct(s).Uint32(632))
-}
-
-func (s Items) SetBardeffecttype(v int32) {
-	capnp.Struct(s).SetUint32(632, uint32(v))
-}
-
-func (s Items) Bardlevel2() int32 {
-	return int32(capnp.Struct(s).Uint32(636))
-}
-
-func (s Items) SetBardlevel2(v int32) {
-	capnp.Struct(s).SetUint32(636, uint32(v))
-}
-
-func (s Items) Bardlevel() int32 {
-	return int32(capnp.Struct(s).Uint32(640))
-}
-
-func (s Items) SetBardlevel(v int32) {
-	capnp.Struct(s).SetUint32(640, uint32(v))
-}
-
-func (s Items) Subtype() int32 {
-	return int32(capnp.Struct(s).Uint32(644))
-}
-
-func (s Items) SetSubtype(v int32) {
-	capnp.Struct(s).SetUint32(644, uint32(v))
-}
-
-func (s Items) Heirloom() int32 {
-	return int32(capnp.Struct(s).Uint32(648))
-}
-
-func (s Items) SetHeirloom(v int32) {
-	capnp.Struct(s).SetUint32(648, uint32(v))
-}
-
-func (s Items) Placeable() int32 {
-	return int32(capnp.Struct(s).Uint32(652))
-}
-
-func (s Items) SetPlaceable(v int32) {
-	capnp.Struct(s).SetUint32(652, uint32(v))
-}
-
-func (s Items) Epicitem() int32 {
-	return int32(capnp.Struct(s).Uint32(656))
-}
-
-func (s Items) SetEpicitem(v int32) {
-	capnp.Struct(s).SetUint32(656, uint32(v))
-}
-
-// Items_List is a list of Items.
-type Items_List = capnp.StructList[Items]
-
-// NewItems creates a new list of Items.
-func NewItems_List(s *capnp.Segment, sz int32) (Items_List, error) {
-	l, err := capnp.NewCompositeList(s, capnp.ObjectSize{DataSize: 664, PointerCount: 5}, sz)
-	return capnp.StructList[Items](l), err
-}
-
-// Items_Future is a wrapper for a Items promised by a client call.
-type Items_Future struct{ *capnp.Future }
-
-func (f Items_Future) Struct() (Items, error) {
-	p, err := f.Future.Ptr()
-	return Items(p.Struct()), err
 }

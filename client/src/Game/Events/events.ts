@@ -17,6 +17,9 @@ export type Events = {
   playerRunning: boolean;
   playerSitting: boolean;
 
+  // Items/inventory
+  updateInventory: void;
+
   zoneSpawns: void;
   playerPosition: BJS.Vector3;
   playerRotation: BJS.Vector3;

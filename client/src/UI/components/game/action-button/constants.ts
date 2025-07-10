@@ -69,6 +69,11 @@ export enum ActionType {
   INVENTORY = 6,
 }
 
+export type HotButtonData = {
+  hotButton?: boolean;
+  hotButtonIndex?: number;
+}
+
 export interface ActionButtonData<T = any> {
   type: ActionButtonType;
   action?: ActionType;
@@ -77,3 +82,11 @@ export interface ActionButtonData<T = any> {
   index?: number;
   data?: T;
 }
+
+export type FullActionData = ActionButtonData & HotButtonData;
+
+export type ItemEntryData = {
+  slot: number;
+}
+
+export type FullItemEntryData = ItemEntryData & HotButtonData;
