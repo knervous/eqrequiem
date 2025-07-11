@@ -1,17 +1,17 @@
-import type * as BJS from "@babylonjs/core";
-import BABYLON from "@bjs";
-import type { ZoneMetadata } from "@game/Zone/zone-types";
-import { RequestClientZoneChange, ZoneChangeType, type ZonePoint } from "@game/Net/internal/api/capnp/zone";
-import Player from "@game/Player/player";
-import { capnpToPlainObject } from "@game/Constants/util";
-import type GameManager from "@game/Manager/game-manager";
-import { animateVignette, gaussianBlurTeleport } from "@game/Effects/effects";
+import type * as BJS from '@babylonjs/core';
+import BABYLON from '@bjs';
+import { capnpToPlainObject } from '@game/Constants/util';
+import { animateVignette, gaussianBlurTeleport } from '@game/Effects/effects';
+import type GameManager from '@game/Manager/game-manager';
+import { RequestClientZoneChange, ZoneChangeType, type ZonePoint } from '@game/Net/internal/api/capnp/zone';
+import Player from '@game/Player/player';
+import type { ZoneMetadata } from '@game/Zone/zone-types';
 
 
 interface AABBNode {
   min: BJS.Vector3;
   max: BJS.Vector3;
-  index?: number;      // leaf
+  index?: number; // leaf
   left?: AABBNode;
   right?: AABBNode;
 }
@@ -20,7 +20,7 @@ export class RegionManager {
   private aabbTree?: AABBNode;
   private inside = new Set<number>();
   private zonePoints: Record<number, ZonePoint> = {};
-  private regions: ZoneMetadata["regions"] = [];
+  private regions: ZoneMetadata['regions'] = [];
   private scene?: BJS.Scene;
   private teleportEffects: BJS.GPUParticleSystem[] = [];
 
@@ -28,54 +28,53 @@ export class RegionManager {
 
   }
 
-  private createTeleportEffect(region: ZoneMetadata["regions"][number], scene: BJS.Scene, index: number): BJS.GPUParticleSystem {
+  private createTeleportEffect(region: ZoneMetadata['regions'][number], scene: BJS.Scene, index: number): BJS.GPUParticleSystem {
     const { Vector3, GPUParticleSystem, Texture, Color4, BoxParticleEmitter } = BABYLON;
     // 1) Compute your AABB center & half‐size
-    const min    = new Vector3(region.minVertex[0], region.minVertex[1], region.minVertex[2]);
-    const max    = new Vector3(region.maxVertex[0], region.maxVertex[1], region.maxVertex[2]);
+    const min = new Vector3(region.minVertex[0], region.minVertex[1], region.minVertex[2]);
+    const max = new Vector3(region.maxVertex[0], region.maxVertex[1], region.maxVertex[2]);
     const center = min.add(max).scale(0.5);
-    const size   = max.subtract(min);
+    const size = max.subtract(min);
 
-    const half   = max.subtract(min).scale(0.5);
+    const half = max.subtract(min).scale(0.5);
     const volume = size.x * size.y * size.z;
-    const density = 50;                   // e.g. 50 particles per unit³ – tweak to taste
+    const density = 50; // e.g. 50 particles per unit³ – tweak to taste
     const capacity = Math.min(10000, Math.max(1, Math.floor(Math.abs(Math.ceil(volume * density)) / 2000)));
-    console.log(`[RegionManager] Creating teleport effect for region ${index} with capacity:`, capacity);
     // 2) Make the GPU system & texture
     const ps = new GPUParticleSystem(`teleportPS_${index}`, { capacity }, scene);
-    ps.particleTexture = new Texture("textures/flare.png", scene);
+    ps.particleTexture = new Texture('textures/flare.png', scene);
 
     // 3) Build a box emitter that only emits on the BOTTOM face
     const emitter = new BoxParticleEmitter();
     // flat along bottom: local‐space Y = –half.y
     emitter.minEmitBox = new Vector3(-half.x, -half.y, -half.z);
-    emitter.maxEmitBox = new Vector3(half.x, -half.y,  half.z);
+    emitter.maxEmitBox = new Vector3(half.x, -half.y, half.z);
 
     // give them a purely upward push, with a tiny spread if you like:
     emitter.direction1 = new Vector3(-0.05, 1, -0.05);
-    emitter.direction2 = new Vector3(0.05, 1,  0.05);
+    emitter.direction2 = new Vector3(0.05, 1, 0.05);
 
     ps.particleEmitterType = emitter;
 
     // 4) Tune color, size, speed, lifetime
     ps.addColorGradient(
       0.0,
-      new Color4(0.6, 0.8, 1.0, 0.6),   // light-blue, alpha 0.6
+      new Color4(0.6, 0.8, 1.0, 0.6), // light-blue, alpha 0.6
     );
 
     // At death: same hue range but fully transparent
     ps.addColorGradient(
       1.0,
-      new Color4(1.0, 0.84, 0.0, 0.0),   // gold,      alpha 0.0
+      new Color4(1.0, 0.84, 0.0, 0.0), // gold,      alpha 0.0
     );
-    ps.minSize       = 0.1;
-    ps.maxSize       = 0.3;
-    ps.minLifeTime   = 1.5;
-    ps.maxLifeTime   = 12.5;
-    ps.emitRate      = Math.floor(capacity / 10);
-    ps.minEmitPower  = 1.0;   // strength of the upward velocity
-    ps.maxEmitPower  = 2.0;
-    ps.updateSpeed   = 0.02;
+    ps.minSize = 0.1;
+    ps.maxSize = 0.3;
+    ps.minLifeTime = 1.5;
+    ps.maxLifeTime = 12.5;
+    ps.emitRate = Math.floor(capacity / 10);
+    ps.minEmitPower = 1.0; // strength of the upward velocity
+    ps.maxEmitPower = 2.0;
+    ps.updateSpeed = 0.02;
 
     // 5) Place the emitter in world space
     ps.emitter = center;
@@ -92,7 +91,7 @@ export class RegionManager {
   ): void {
     const { regions } = metadata;
     if (!regions?.length) {
-      console.warn("No regions to instantiate.");
+      console.warn('No regions to instantiate.');
       return;
     }
     this.regions = regions;
@@ -103,8 +102,8 @@ export class RegionManager {
 
     // Build raw AABB nodes
     const nodes: AABBNode[] = regions.map((r, i) => ({
-      min: new BABYLON.Vector3(r.maxVertex[0], r.minVertex[1], r.minVertex[2]),
-      max: new BABYLON.Vector3(r.minVertex[0], r.maxVertex[1], r.maxVertex[2]),
+      min  : new BABYLON.Vector3(r.maxVertex[0], r.minVertex[1], r.minVertex[2]),
+      max  : new BABYLON.Vector3(r.minVertex[0], r.maxVertex[1], r.maxVertex[2]),
       index: i,
     }));
 
@@ -179,8 +178,8 @@ export class RegionManager {
             }
             const magicLoc = 999999;
             const magicRot = 999;
-            console.log(`[RegionManager] Requesting zone change to:`, requestZone);
-            console.log(`[RegionManager] Player position:`, Player.instance!.getPlayerPosition());
+            console.log('[RegionManager] Requesting zone change to:', requestZone);
+            console.log('[RegionManager] Player position:', Player.instance!.getPlayerPosition());
             if (Math.abs(requestZone.x) === magicLoc) {
               requestZone.x = Player.instance!.getPlayerPosition()!.x;
             }
@@ -199,7 +198,7 @@ export class RegionManager {
             requestZone.x = tempX;
             requestZone.y = tempY;
             requestZone.z = tempZ;
-            console.log(`[RegionManager] Requesting zone change AFTER MAGIC to:`, requestZone);
+            console.log('[RegionManager] Requesting zone change AFTER MAGIC to:', requestZone);
 
             if (requestZone.zoneId === this.gameManager.ZoneManager?.CurrentZone?.zoneIdNumber) {
               animateVignette(
@@ -220,6 +219,8 @@ export class RegionManager {
          
             break; 
           }
+          default:
+            break;
         }
       }
     });
@@ -235,8 +236,8 @@ export class RegionManager {
 
   }
   private buildTree(nodes: AABBNode[]): AABBNode | undefined {
-    if (!nodes.length) return;
-    if (nodes.length === 1) return nodes[0];
+    if (!nodes.length) {return;}
+    if (nodes.length === 1) {return nodes[0];}
 
     // overall bounds
     let min = nodes[0].min.clone(), max = nodes[0].max.clone();
@@ -252,13 +253,14 @@ export class RegionManager {
       : (size.y > size.z ? 'y' : 'z') as keyof BJS.Vector3;
 
     // sort & split
-    nodes.sort((a,b) => (
-      (a.min[axis]+a.max[axis]) - (b.min[axis]+b.max[axis])
+    nodes.sort((a, b) => (
+      // @ts-ignore
+      (a.min[axis] + a.max[axis]) - (b.min[axis] + b.max[axis]) 
     ));
     const mid = nodes.length >> 1;
     return {
       min, max,
-      left: this.buildTree(nodes.slice(0, mid)),
+      left : this.buildTree(nodes.slice(0, mid)),
       right: this.buildTree(nodes.slice(mid)),
     };
   }
@@ -268,17 +270,17 @@ export class RegionManager {
     p: BJS.Vector3,
     out: Set<number>,
   ): void {
-    if (!node) return;
+    if (!node) {return;}
     if (
       p.x < node.min.x || p.x > node.max.x ||
       p.y < node.min.y || p.y > node.max.y ||
       p.z < node.min.z || p.z > node.max.z
-    ) return;
+    ) {return;}
 
     if (node.index !== undefined) {
       out.add(node.index);
     } else {
-      this.queryTree(node.left,  p, out);
+      this.queryTree(node.left, p, out);
       this.queryTree(node.right, p, out);
     }
   }

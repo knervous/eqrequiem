@@ -289,7 +289,6 @@ export const useItemImage = (id: number): string => {
       setImage(null);
       return;
     }
-    console.log('useItemImage', atlasItem);
     ImageCache.getImageUrl(
       'uifiles/default',
       atlasItem.texture,

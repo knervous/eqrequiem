@@ -1,28 +1,28 @@
-import React, { useCallback, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { Box, Button, List, ListItem, Stack, Typography } from "@mui/material";
-import { WorldSocket } from "../../net/instances";
-import { ImageCache } from "../../util/image-cache";
-import DiscordIcon from "./discord";
-import { useUIContext } from "../context";
-import { UiButtonComponent } from "../../common/ui-button";
-import { DISCORD_CLIENT_ID, REDIRECT_URI, RESPONSE_TYPE, SCOPE } from "./util";
-import GameManager from "@game/Manager/game-manager";
-import { USE_SAGE } from "@game/Constants/constants";
+import React, { useCallback, useEffect } from 'react';
+import { USE_SAGE } from '@game/Constants/constants';
+import { supportedZones } from '@game/Constants/supportedZones';
+import { qeynos2_spawns } from '@game/Constants/test-data';
+import GameManager from '@game/Manager/game-manager';
+import { Spawn } from '@game/Net/internal/api/capnp/common';
+import { Box, Button, List, ListItem, Stack, Typography } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 import {
   getEQFileExists,
   getFilesRecursively,
-} from "sage-core/util/fileHandler";
-import { supportedZones } from "@game/Constants/supportedZones";
-import { fsBindings } from "@/Core/bindings";
-import { qeynos2_spawns } from "@game/Constants/test-data";
-import { Spawn } from "@game/Net/internal/api/capnp/common";
+} from 'sage-core/util/fileHandler';
+import { UiButtonComponent } from '../../common/ui-button';
+import { WorldSocket } from '../../net/instances';
+import { ImageCache } from '../../util/image-cache';
+import { useUIContext } from '../context';
+import DiscordIcon from './discord';
+import { DISCORD_CLIENT_ID, REDIRECT_URI, RESPONSE_TYPE, SCOPE } from './util';
+import { fsBindings } from '@/Core/bindings';
 
 
-const defaultWorldName = "requiem";
+const defaultWorldName = 'requiem';
 declare const window: Window;
 const doEnterSandbox =
-  new URLSearchParams(window.location.search).get("sandbox") === "true";
+  new URLSearchParams(window.location.search).get('sandbox') === 'true';
 
 const serverUrl = import.meta.env.VITE_LOCAL_DEV === 'true' ? '/api' : 'https://eqrequiem.ddns.net';
 
@@ -35,16 +35,16 @@ export const LoginWindowComponent: React.FC = () => {
   const [playerCount, setPlayerCount] = React.useState<number>(-1);
 
   const enterSandbox = useCallback(() => {
-    setMode("game");
+    setMode('game');
     GameManager.instance.loadZoneId(2);
     GameManager.instance.instantiatePlayer({
-      race: 1,
+      race     : 1,
       charClass: 1,
-      name: "Soandso",
-      x: 15,
-      y: 15,
-      z: 15,
-      face: 4,
+      name     : 'Soandso',
+      x        : 15,
+      y        : 15,
+      z        : 15,
+      face     : 4,
     });
     qeynos2_spawns.forEach((spawn) => { 
       GameManager.instance.ZoneManager?.EntityPool?.AddSpawn(spawn as Spawn);
@@ -52,7 +52,7 @@ export const LoginWindowComponent: React.FC = () => {
   }, [setMode]);
 
   const servers = [
-    { name: "EQ: Requiem", playersOnline: playerCount },
+    { name: 'EQ: Requiem', playersOnline: playerCount },
   ];
 
 
@@ -66,7 +66,7 @@ export const LoginWindowComponent: React.FC = () => {
           storedDetails = JSON.parse(storedDetailsString);
         }
       } catch (e) {
-        console.error("Error parsing stored world details:", e);
+        console.error('Error parsing stored world details:', e);
       }
       const local = import.meta.env.VITE_LOCAL_DEV === 'true';
       if (!storedDetails && !local) {
@@ -75,20 +75,20 @@ export const LoginWindowComponent: React.FC = () => {
       }
 
       if (
-        await WorldSocket.connect("eqrequiem.ddns.net", 443, () => {
-          console.log("Disconnected");
-          navigate("/");
+        await WorldSocket.connect('eqrequiem.ddns.net', 443, () => {
+          console.log('Disconnected');
+          navigate('/');
         })
       ) {
         if (local) {
-          token.current = "local";
+          token.current = 'local';
         } else {
           if (storedDetails === null) {
             return;
           }
           token.current = storedDetails.token;
         }
-        setMode("character-select");
+        setMode('character-select');
       }
     },
     [setMode, token, navigate],
@@ -101,12 +101,12 @@ export const LoginWindowComponent: React.FC = () => {
       controller.abort();
     }, 2000);
     fetch(`${serverUrl}/playercount`, {
-      method: "GET",
-      mode: "cors",
+      method: 'GET',
+      mode  : 'cors',
       signal,
     }).then((response) => {
       if (!response.ok) {
-        console.error("Failed to fetch player count");
+        console.error('Failed to fetch player count');
         return;
       }
       return response.json();
@@ -114,28 +114,28 @@ export const LoginWindowComponent: React.FC = () => {
       if (data && data.count !== undefined) {
         setPlayerCount(data.count);
       } else {
-        console.error("Invalid player count data", data);
+        console.error('Invalid player count data', data);
       }
     }).catch((error) => {
-      console.error("Error fetching player count:", error);
+      console.error('Error fetching player count:', error);
     });
   }, []);  
 
 
   useEffect(() => {
     const kbCallback = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        navigate("/");
+      if (e.key === 'Escape') {
+        navigate('/');
       }
-      if (e.key === "Enter") {
+      if (e.key === 'Enter') {
         if (selectedServer >= 0 && selectedServer < servers.length) {
           connectToWorld();
         }
       }
     };
-    window.addEventListener("keydown", kbCallback);
+    window.addEventListener('keydown', kbCallback);
     return () => {
-      window.removeEventListener("keydown", kbCallback);
+      window.removeEventListener('keydown', kbCallback);
     };   
   }, [navigate, connectToWorld, selectedServer, servers.length]);
 
@@ -143,12 +143,12 @@ export const LoginWindowComponent: React.FC = () => {
     Promise.all(
       Array.from({ length: 6 }).map((_, i) => {
         return ImageCache.getImageUrl(
-          "uifiles/default",
+          'uifiles/default',
           `EQLS_WndBorder_0${i + 1}.webp`,
         );
       }),
     ).then(setImageTiles);
-    document.title = "EQ: Requiem";
+    document.title = 'EQ: Requiem';
 
     if (doEnterSandbox) {
       setTimeout(() => {
@@ -158,24 +158,24 @@ export const LoginWindowComponent: React.FC = () => {
   }, [enterSandbox]);
 
   useEffect(() => {
-    if (sessionStorage.getItem("worldLogin") === defaultWorldName) {
+    if (sessionStorage.getItem('worldLogin') === defaultWorldName) {
       connectToWorld();
-      sessionStorage.removeItem("worldLogin");
+      sessionStorage.removeItem('worldLogin');
     }
   }, [connectToWorld]);
   return (
     <Box
       sx={{
-        position: "relative",
-        width: `634px`, // 3 tiles wide
-        height: `450px`, // 2 tiles tall
-        display: "grid",
-        gridTemplateRows: "1fr 1fr", // 2 rows
-        gridTemplateColumns: "1fr 1fr 1fr", // 3 columns
-        boxShadow: "0 0 25px 10px #000000", // Wide black shadow
-        gridGap: "0px", // No gap between tiles
-        "*": {
-          fontFamily: "Arial, sans-serif !important",
+        position           : 'relative',
+        width              : '634px', // 3 tiles wide
+        height             : '450px', // 2 tiles tall
+        display            : 'grid',
+        gridTemplateRows   : '1fr 1fr', // 2 rows
+        gridTemplateColumns: '1fr 1fr 1fr', // 3 columns
+        boxShadow          : '0 0 25px 10px #000000', // Wide black shadow
+        gridGap            : '0px', // No gap between tiles
+        '*'                : {
+          fontFamily: 'Arial, sans-serif !important',
         },
       }}
     >
@@ -186,42 +186,42 @@ export const LoginWindowComponent: React.FC = () => {
           <Box
             sx={{
               background: `url(${imageTiles[0]}) no-repeat`,
-              width: "256px",
+              width     : '256px',
             }}
           />
           <Box
             sx={{
               background: `url(${imageTiles[1]}) no-repeat`,
-              width: "256px",
-              marginLeft: "-2px",
+              width     : '256px',
+              marginLeft: '-2px',
             }}
           />
           <Box
             sx={{
               background: `url(${imageTiles[2]}) no-repeat`,
-              width: "128px",
-              marginLeft: "-4px",
+              width     : '128px',
+              marginLeft: '-4px',
             }}
           />
           {/* Row 2 */}
           <Box
             sx={{
               background: `url(${imageTiles[3]}) no-repeat`,
-              width: "256px",
+              width     : '256px',
             }}
           />
           <Box
             sx={{
               background: `url(${imageTiles[4]}) no-repeat`,
-              width: "256px",
-              marginLeft: "-2px",
+              width     : '256px',
+              marginLeft: '-2px',
             }}
           />
           <Box
             sx={{
               background: `url(${imageTiles[5]}) no-repeat`,
-              width: "128px",
-              marginLeft: "-4px",
+              width     : '128px',
+              marginLeft: '-4px',
             }}
           />
         </>
@@ -230,58 +230,58 @@ export const LoginWindowComponent: React.FC = () => {
       {/* Login Content Overlay */}
       <Box
         sx={{
-          position: "absolute",
-          width: "100%",
-          padding: "0px 20px",
-          textAlign: "center",
-          overflow: "hidden",
+          position : 'absolute',
+          width    : '100%',
+          padding  : '0px 20px',
+          textAlign: 'center',
+          overflow : 'hidden',
         }}
       >
         <Typography
-          variant="h6"
           sx={{
-            width: "100%",
-            color: "gold",
-            fontSize: "17px",
-            marginTop: "15px",
+            width    : '100%',
+            color    : 'gold',
+            fontSize : '17px',
+            marginTop: '15px',
           }}
+          variant="h6"
         >
           Server Select
         </Typography>
         <Box
           sx={{
-            width: "calc(100% - 75px)",
-            height: "270px",
-            marginTop: "35px",
-            marginLeft: "20px",
-            background:
-              "linear-gradient(180deg, rgba(20, 20, 20, 0.9) 0%, rgba(10, 10, 10, 0.9) 100%)", // Dark gradient
-            border: "1px solid #333", // Subtle border
-            overflowY: "scroll",
-            "&::-webkit-scrollbar": { width: "4px" },
-            "&::-webkit-scrollbar-thumb": { backgroundColor: "#555" },
+            width     : 'calc(100% - 75px)',
+            height    : '270px',
+            marginTop : '35px',
+            marginLeft: '20px',
+            background                  :
+              'linear-gradient(180deg, rgba(20, 20, 20, 0.9) 0%, rgba(10, 10, 10, 0.9) 100%)', // Dark gradient
+            border                      : '1px solid #333', // Subtle border
+            overflowY                   : 'scroll',
+            '&::-webkit-scrollbar'      : { width: '4px' },
+            '&::-webkit-scrollbar-thumb': { backgroundColor: '#555' },
           }}
         >
           {/* Header Row */}
           <Box
             sx={{
-              display: "grid",
-              gridTemplateColumns: "2fr 1fr", // Server name takes more space
-              backgroundColor: "rgba(0, 0, 0, 0.8)",
-              padding: "8px",
-              borderBottom: "1px solid #444",
-              position: "sticky",
-              top: 0,
-              zIndex: 1,
+              display            : 'grid',
+              gridTemplateColumns: '2fr 1fr', // Server name takes more space
+              backgroundColor    : 'rgba(0, 0, 0, 0.8)',
+              padding            : '8px',
+              borderBottom       : '1px solid #444',
+              position           : 'sticky',
+              top                : 0,
+              zIndex             : 1,
             }}
           >
             <Typography
-              sx={{ fontSize: "14px", color: "#ddd", fontWeight: "bold" }}
+              sx={{ fontSize: '14px', color: '#ddd', fontWeight: 'bold' }}
             >
               Server
             </Typography>
             <Typography
-              sx={{ fontSize: "14px", color: "#ddd", fontWeight: "bold" }}
+              sx={{ fontSize: '14px', color: '#ddd', fontWeight: 'bold' }}
             >
               Players Online
             </Typography>
@@ -292,29 +292,29 @@ export const LoginWindowComponent: React.FC = () => {
             {servers.map((server, index) => (
               <ListItem
                 key={index}
-                onClick={() => setSelectedServer(index)}
                 sx={{
-                  display: "grid",
-                  gridTemplateColumns: "2fr 1fr",
-                  padding: "8px",
-                  cursor: "pointer",
+                  display            : 'grid',
+                  gridTemplateColumns: '2fr 1fr',
+                  padding            : '8px',
+                  cursor             : 'pointer',
                   backgroundColor:
                     selectedServer === index
-                      ? "rgba(255, 215, 0, 0.2)"
-                      : "transparent", // Gold highlight for selected
-                  "&:hover": {
-                    backgroundColor: "rgba(255, 255, 255, 0.1)", // Hover effect
+                      ? 'rgba(255, 215, 0, 0.2)'
+                      : 'transparent', // Gold highlight for selected
+                  '&:hover': {
+                    backgroundColor: 'rgba(255, 255, 255, 0.1)', // Hover effect
                   },
-                  borderBottom: "1px solid #222",
+                  borderBottom: '1px solid #222',
                 }}
+                onClick={() => setSelectedServer(index)}
               >
-                <Typography sx={{ fontSize: "14px", color: "#fff" }}>
+                <Typography sx={{ fontSize: '14px', color: '#fff' }}>
                   {server.name}
                 </Typography>
                 <Typography
-                  sx={{ fontSize: "14px", color: "#fff", textAlign: "center" }}
+                  sx={{ fontSize: '14px', color: '#fff', textAlign: 'center' }}
                 >
-                  {server.playersOnline === -1 ? "Offline" : server.playersOnline}
+                  {server.playersOnline === -1 ? 'Offline' : server.playersOnline}
                 </Typography>
               </ListItem>
             ))}
@@ -323,50 +323,50 @@ export const LoginWindowComponent: React.FC = () => {
 
         {/* Buttons */}
         <Stack
-          sx={{
-            margin: "15px auto",
-            width: "80%",
-            alignContent: "center",
-            alignItems: "center",
-            justifyContent: "space-around",
-          }}
           direction="row"
           spacing={3}
+          sx={{
+            margin        : '15px auto',
+            width         : '80%',
+            alignContent  : 'center',
+            alignItems    : 'center',
+            justifyContent: 'space-around',
+          }}
         >
           <UiButtonComponent
             buttonName="A_EQLS_LargeBtn"
+            text={'Logout'}
             textSx={{
               color: 'white !important',
             }}
-            text={"Logout"}
             onClick={() => {
               document.cookie =
-                "auth_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-              localStorage.removeItem("token");
-              localStorage.removeItem("requiem");
-              window.location.href = "/";
+                'auth_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+              localStorage.removeItem('token');
+              localStorage.removeItem('requiem');
+              window.location.href = '/';
             }}
           />
 
           <UiButtonComponent
             buttonName="A_EQLS_LargeBtn"
-            text={playerCount < 0 ? "World Offline" : "Enter World"}
+            icon={
+              <DiscordIcon
+                sx={{ width: '13px !important', marginRight: '10px' }}
+              />
+            }
+            isDisabled={playerCount < 0}
+            text={playerCount < 0 ? 'World Offline' : 'Enter World'}
             textSx={{
               color: 'white !important',
             }}
-            isDisabled={playerCount < 0}
             onClick={connectToWorld}
-            icon={
-              <DiscordIcon
-                sx={{ width: "13px !important", marginRight: "10px" }}
-              />
-            }
           />
         </Stack>
         <UiButtonComponent
-          sx={{ float: "right", marginRight: "60px", marginTop: "-10px" }}
           buttonName="A_EQLS_LargeBtn"
-          text={"Offline Mode"}
+          sx={{ float: 'right', marginRight: '60px', marginTop: '-10px' }}
+          text={'Offline Mode'}
           textSx={{
             color: 'white !important',
           }}
@@ -376,13 +376,13 @@ export const LoginWindowComponent: React.FC = () => {
       {USE_SAGE && (
         <Box
           sx={{
-            color: "white",
-            position: "fixed",
-            bottom: 0,
-            left: 0,
-            padding: "10px",
-            backgroundColor: "rgba(0, 0, 0, 0.5)",
-            zIndex: 100,
+            color          : 'white',
+            position       : 'fixed',
+            bottom         : 0,
+            left           : 0,
+            padding        : '10px',
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            zIndex         : 100,
           }}
         >
           Dev Commands
@@ -397,36 +397,35 @@ export const LoginWindowComponent: React.FC = () => {
               // await fsBindings.processFiles('sky', skyFiles);
 
               // //load2
-              console.log('Processing load2');
-              const load2Files = ["load2.s3d","load2_obj.s3d"];
-              await fsBindings.processFiles('load2', load2Files);
-              // First do global
-              console.log('Processing global');
-              const globalCharFiles = ["global_chr.s3d", "global3_chr.s3d", "global4_chr.s3d"];
-              await fsBindings.processFiles('global_chr', globalCharFiles);
+              // console.log('Processing load2');
+              // const load2Files = ["load2.s3d","load2_obj.s3d"];
+              // await fsBindings.processFiles('load2', load2Files);
+              // // First do global
+              // console.log('Processing global');
+              // const globalCharFiles = ["global_chr.s3d", "global3_chr.s3d", "global4_chr.s3d"];
+              // await fsBindings.processFiles('global_chr', globalCharFiles);
 
               // //Items
               // console.log('Processing items');
               // const itemFiles = ["gequip.s3d", "gequip2.s3d"];
               // await fsBindings.processFiles('gequip', itemFiles);
               for (const zone of Object.values(supportedZones)) {
-                continue;
                 const name = zone.shortName;
   
                 const associatedFiles: string[] = [];
                 // temp short circuit
-                if (name !== "qeynos2") {
+                if (!['tox', 'steamfont', 'innothule', 'misty'].includes(zone.shortName)) {
                   continue;
                 }
-                const exists = await getEQFileExists("zones", `${name}.glb`);
+                const exists = await getEQFileExists('zones', `${name}.glb`);
                 if (exists) {
-                  console.log("Exists, skipping", name);
+                  console.log('Exists, skipping', name);
                 //  continue;
                 }
-                console.log("Process", name);
+                console.log('Process', name);
                 for await (const fileHandle of getFilesRecursively(
                   fsBindings.rootFileSystemHandle,
-                  "",
+                  '',
                   new RegExp(`^${name}[_\\.].*`),
                   false,
                 )) {
@@ -440,7 +439,7 @@ export const LoginWindowComponent: React.FC = () => {
                   await fsBindings.processFiles(name, associatedFiles);
                 }
               }
-              console.log("Done");
+              console.log('Done');
             }}
           >
             Process s3d

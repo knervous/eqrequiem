@@ -12,14 +12,14 @@ type ContainerData = {
   hasAnimations: boolean;
   animationRanges: BJS.Nullable<BJS.AnimationRange>[];
   physicsBodies: BJS.PhysicsBody[] | null;
-  vatData: Float32ArrayBuffer | Uint16Array | null;
+  manager: BJS.BakedVertexAnimationManager | null;
 };
-
 export default class ObjectCache {
   public dataContainers: Record<ModelKey, Promise<ContainerData>> = {};
   private objectContainer: BJS.TransformNode | null = null;
   private intervals: NodeJS.Timeout[] = [];
   private intervalNames: string[] = [];
+  private managerCallbacks: (() => void)[] = [];
   constructor(zoneContainer: BJS.TransformNode | null = null) {
     if (zoneContainer) {
       this.objectContainer = zoneContainer;
@@ -55,10 +55,19 @@ export default class ObjectCache {
       result.rootNodes[0].name = `container_${model}`;
       const { animationGroups, skeletons } = result;
       const hasAnimations = animationGroups.length > 0;
-      let vatData: Uint16Array | null = null;
+      
       const animationRanges: BJS.AnimationRange[] = [];
       result.rootNodes[0].setEnabled(false);
-      if (hasAnimations && skeletons.length) {
+      const hasMorphTargets = result.rootNodes[0].getChildMeshes().some(
+        (m) => m.morphTargetManager,
+      );
+      if (hasMorphTargets) {
+        console.log('[ObjectCache] Model has morph targets:', animationGroups, model);
+        
+        animationGroups[0]?.play?.(true);
+      }
+      let manager: BJS.BakedVertexAnimationManager | null = null;
+      if (hasAnimations && !hasMorphTargets && skeletons.length) {
         for (const ag of animationGroups) {
           const animationRange = new BABYLON.AnimationRange(
             ag.name,
@@ -70,7 +79,6 @@ export default class ObjectCache {
           ag.dispose();
         }
         result.animationGroups = [];
-        // Vertex animation data
         const canUseFloat16 = scene.getEngine().getCaps().textureHalfFloat;
         const vat16 = `${model}.bin.gz`;
         const vat32 = `${model}_32.bin.gz`;
@@ -82,17 +90,38 @@ export default class ObjectCache {
           console.warn(`[EntityCache] VAT data missing for ${model}`);
           return null;
         }
-        vatData = (
+        const vatData = (
           canUseFloat16 ? new Uint16Array(vatBytes) : new Float32Array(vatBytes)
-        ) as any;
+        ) as Uint16Array | Float32Array;
+
+
+        if (vatData) {
+          const baker = new BABYLON.VertexAnimationBaker(
+            scene,
+            result.skeletons[0],
+          );
+          manager = new BABYLON.BakedVertexAnimationManager(scene);
+          result.skeletons[0].dispose();
+          scene.removeSkeleton(result.skeletons[0]);
+          manager.texture = baker.textureFromBakedVertexData(vatData);
+          const cb = () => {
+            if (!manager || !manager.texture) {
+              return;
+            }
+            manager.time += scene.getEngine().getDeltaTime() / 1000.0;
+          };
+          this.managerCallbacks.push(cb);
+          scene.registerBeforeRender(cb);
+        }
+
       }
       result.rootNodes[0].setEnabled(true);
 
       this.dataContainers[model] = Promise.resolve({
         container    : result,
-        vatData,
         hasAnimations,
         animationRanges,
+        manager,
         physicsBodies: [],
       });
     }
@@ -108,7 +137,7 @@ export default class ObjectCache {
     if (!dataContainer) {
       return [];
     }
-    const { container, vatData, hasAnimations, animationRanges } =
+    const { container, hasAnimations, animationRanges, manager } =
       dataContainer;
 
     const root = container.rootNodes[0] as BJS.TransformNode;
@@ -123,20 +152,6 @@ export default class ObjectCache {
     const meshes = root
       .getChildMeshes()
       .filter((m) => m instanceof BABYLON.Mesh) as BJS.Mesh[];
-    const manager = new BABYLON.BakedVertexAnimationManager(scene);
-
-    if (hasAnimations && vatData) {
-      const baker = new BABYLON.VertexAnimationBaker(
-        scene,
-        container.skeletons[0],
-      );
-      manager.texture = baker.textureFromBakedVertexData(vatData);
-      scene.removeSkeleton(container.skeletons[0]);
-      container.animationGroups = [];
-      scene.registerBeforeRender(() => {
-        manager.time += scene.getEngine().getDeltaTime() / 1000.0;
-      });
-    }
 
     const params = new BABYLON.Vector4();
 
@@ -175,7 +190,7 @@ export default class ObjectCache {
       mesh.thinInstanceSetBuffer('matrix', matrixData, 16, false);
       mesh.alwaysSelectAsActiveMesh = false;
       mesh.thinInstanceRefreshBoundingInfo(true, false, false);
-      if (vatData) {
+      if (manager) {
         mesh.bakedVertexAnimationManager = manager;
         mesh.thinInstanceSetBuffer(
           'bakedVertexAnimationSettingsInstanced',
@@ -283,6 +298,13 @@ export default class ObjectCache {
   }
 
   disposeAll(): void {
+    const scene = BABYLON.EngineStore.LastCreatedScene;
+    if (scene) {
+      for (const cb of this.managerCallbacks) {
+        scene.unregisterBeforeRender(cb); 
+      }
+    }
+
     this.intervals.forEach((interval) => clearInterval(interval));
 
     Object.keys(this.dataContainers).forEach((model) => this.dispose(model));

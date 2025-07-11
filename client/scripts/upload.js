@@ -50,7 +50,7 @@ const allowedRootFiles = new Set(["eqstr_us.txt"]);
 let allowedExtensions = new Set([
   //".txt",
   ".json",
-  ".basis",
+  // ".basis",
   // ".glb", prefer .babylon
   // ".webp",
    // ".dds",
