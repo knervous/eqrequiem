@@ -1,10 +1,9 @@
 // src/game/Model/object-cache.ts
-import BABYLON from "@bjs";
-import type * as BJS from "@babylonjs/core";
-
-import { FileSystem } from "@game/FileSystem/filesystem";
-import { Transform } from "@game/Zone/zone-types";
-import { swapMaterialTexture } from "./bjs-utils";
+import type * as BJS from '@babylonjs/core';
+import BABYLON from '@bjs';
+import { FileSystem } from '@game/FileSystem/filesystem';
+import { Transform } from '@game/Zone/zone-types';
+import { swapMaterialTexture } from './bjs-utils';
 
 type ModelKey = string;
 
@@ -33,7 +32,7 @@ export default class ObjectCache {
   ): Promise<ContainerData | null> {
     if (!this.dataContainers[model]) {
       const bytes = await FileSystem.getFileBytes(
-        `eqrequiem/objects`,
+        'eqrequiem/objects',
         `${model}.babylon`,
       );
       if (!bytes) {
@@ -41,7 +40,7 @@ export default class ObjectCache {
         return null;
       }
       const file = new File([bytes!], `${model}.babylon`, {
-        type: "application/babylon",
+        type: 'application/babylon',
       });
       const result = await BABYLON.LoadAssetContainerAsync(file, scene);
       if (!result) {
@@ -61,7 +60,11 @@ export default class ObjectCache {
       result.rootNodes[0].setEnabled(false);
       if (hasAnimations && skeletons.length) {
         for (const ag of animationGroups) {
-          const animationRange = new BABYLON.AnimationRange(ag.name, ag.from, ag.to);
+          const animationRange = new BABYLON.AnimationRange(
+            ag.name,
+            ag.from,
+            ag.to,
+          );
           animationRanges.push(animationRange);
           ag.stop();
           ag.dispose();
@@ -72,23 +75,21 @@ export default class ObjectCache {
         const vat16 = `${model}.bin.gz`;
         const vat32 = `${model}_32.bin.gz`;
         const vatBytes = await FileSystem.getFileBytes(
-          `eqrequiem/vat`,
+          'eqrequiem/vat',
           canUseFloat16 ? vat16 : vat32,
         );
         if (!vatBytes) {
           console.warn(`[EntityCache] VAT data missing for ${model}`);
           return null;
         }
-        vatData = (canUseFloat16
-          ? new Uint16Array(vatBytes)
-          : new Float32Array(vatBytes));
-
-
+        vatData = (
+          canUseFloat16 ? new Uint16Array(vatBytes) : new Float32Array(vatBytes)
+        ) as any;
       }
       result.rootNodes[0].setEnabled(true);
 
       this.dataContainers[model] = Promise.resolve({
-        container: result,
+        container    : result,
         vatData,
         hasAnimations,
         animationRanges,
@@ -104,8 +105,11 @@ export default class ObjectCache {
     instanceTranslations: Transform[],
   ): Promise<BJS.AbstractMesh[]> {
     const dataContainer = await this.getContainer(model, scene);
-    if (!dataContainer) { return []; }
-    const { container, vatData, hasAnimations, animationRanges } = dataContainer;
+    if (!dataContainer) {
+      return [];
+    }
+    const { container, vatData, hasAnimations, animationRanges } =
+      dataContainer;
 
     const root = container.rootNodes[0] as BJS.TransformNode;
     const transforms = instanceTranslations;
@@ -116,7 +120,9 @@ export default class ObjectCache {
     // Store physics bodies for this model
     const physicsBodies: BJS.PhysicsBody[] = [];
 
-    const meshes = root.getChildMeshes().filter((m) => m instanceof BABYLON.Mesh) as BJS.Mesh[];
+    const meshes = root
+      .getChildMeshes()
+      .filter((m) => m instanceof BABYLON.Mesh) as BJS.Mesh[];
     const manager = new BABYLON.BakedVertexAnimationManager(scene);
 
     if (hasAnimations && vatData) {
@@ -136,7 +142,7 @@ export default class ObjectCache {
 
     for (let i = 0; i < count; i++) {
       transforms[i].rotateY *= -1; // Invert Y rotation for correct orientation
-      
+
       const { x, y, z, rotateX, rotateY, rotateZ, scale } = transforms[i];
       if (x === 0 && y === 0 && z === 0) {
         continue;
@@ -154,22 +160,35 @@ export default class ObjectCache {
 
       if (animParameters && animationRanges.length) {
         const [firstAnimationRange] = animationRanges;
-        params.set(firstAnimationRange?.from ?? 0, firstAnimationRange?.to ?? 0, 0, 60);
+        params.set(
+          firstAnimationRange?.from ?? 0,
+          firstAnimationRange?.to ?? 0,
+          0,
+          60,
+        );
         animParameters.set(params.asArray(), i * 4);
       }
     }
 
     for (const mesh of meshes) {
       mesh.isPickable = false;
-      mesh.thinInstanceSetBuffer("matrix", matrixData, 16, false);
+      mesh.thinInstanceSetBuffer('matrix', matrixData, 16, false);
       mesh.alwaysSelectAsActiveMesh = false;
       mesh.thinInstanceRefreshBoundingInfo(true, false, false);
       if (vatData) {
         mesh.bakedVertexAnimationManager = manager;
-        mesh.thinInstanceSetBuffer("bakedVertexAnimationSettingsInstanced", animParameters, 4);
+        mesh.thinInstanceSetBuffer(
+          'bakedVertexAnimationSettingsInstanced',
+          animParameters,
+          4,
+        );
       }
       const materialExtras = mesh?.material?.metadata?.gltf?.extras;
-      if (materialExtras?.frames?.length && materialExtras?.animationDelay && !this.intervalNames.includes(mesh.material!.name)) {
+      if (
+        materialExtras?.frames?.length &&
+        materialExtras?.animationDelay &&
+        !this.intervalNames.includes(mesh.material!.name)
+      ) {
         const textures = mesh.material?.getActiveTextures();
         textures?.forEach((tex) => scene.removeTexture(tex));
         const { frames, animationDelay } = materialExtras;
@@ -180,7 +199,10 @@ export default class ObjectCache {
             const selectedFrame = frames[currentFrameIndex] as string;
             swapMaterialTexture(mesh.material!, selectedFrame, true);
           } catch (error) {
-            console.error(`[ObjectCache] Failed to swap texture for mesh ${mesh.name}:`, error);
+            console.error(
+              `[ObjectCache] Failed to swap texture for mesh ${mesh.name}:`,
+              error,
+            );
             clearInterval(intervalId);
           }
         }, animationDelay * 2);
@@ -190,33 +212,38 @@ export default class ObjectCache {
       }
       if (!mesh.name?.endsWith('-passthrough')) {
         // Create a physics shape for the mesh (shared across instances)
-        const physicsShape = new BABYLON.PhysicsShapeMesh(mesh as BJS.Mesh, scene!);
-  
+        const physicsShape = new BABYLON.PhysicsShapeMesh(
+          mesh as BJS.Mesh,
+          scene!,
+        );
+
         // Create individual physics bodies for each instance
         for (let i = 0; i < count; i++) {
           const { x, y, z, rotateX, rotateY, rotateZ, scale } = transforms[i];
           if (x === 0 && y === 0 && z === 0) {
             continue; // Skip invalid transforms
           }
-  
+
           // Create a new transform node for the physics body to hold its position
           const physicsTransformNode = new BABYLON.TransformNode(
             `${mesh.name}_physics_${i}`,
             scene!,
           );
           physicsTransformNode.parent = container.rootNodes[0].parent;
-  
+
           // Apply the transformation to the transform node
           const translation = BABYLON.Matrix.Translation(x, y, z);
           const rotation = BABYLON.Matrix.RotationYawPitchRoll(
-            BABYLON.Tools.ToRadians(rotateY),
+            BABYLON.Tools.ToRadians(rotateY + 180),
             BABYLON.Tools.ToRadians(rotateX),
             BABYLON.Tools.ToRadians(rotateZ),
           );
           const scaling = BABYLON.Matrix.Scaling(scale, scale, scale);
-          const transformMatrix = scaling.multiply(rotation).multiply(translation);
+          const transformMatrix = scaling
+            .multiply(rotation)
+            .multiply(translation);
           physicsTransformNode.setPreTransformMatrix(transformMatrix);
-  
+
           // Create a new physics body for this instance
           const physicsBody = new BABYLON.PhysicsBody(
             physicsTransformNode,
@@ -226,17 +253,17 @@ export default class ObjectCache {
           );
           physicsBody.shape = physicsShape; // Reuse the same shape for efficiency
           physicsBody.setMassProperties({ mass: 0 }); // Static body
-  
+
           // Store the physics body
           physicsBodies.push(physicsBody);
         }
       }
-      
     }
-  
+
     // Store physics bodies for this model in the cache
-    dataContainer.physicsBodies = physicsBodies.length > 0 ? physicsBodies : null;
-  
+    dataContainer.physicsBodies =
+      physicsBodies.length > 0 ? physicsBodies : null;
+
     return meshes;
   }
   dispose(model: ModelKey): void {
