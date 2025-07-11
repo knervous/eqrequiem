@@ -568,6 +568,7 @@ struct MoveItem {
   fromSlot @0 :Int32;
   toSlot @1 :Int32;
   numberInStack @2 :Int32;
+  bagSlot @3 :Int32;
 }
 
 struct MultiMoveItemSub {
@@ -577,8 +578,7 @@ struct MultiMoveItemSub {
 }
 
 struct MultiMoveItem {
-  count @0 :Int32;
-  moves @1 :List(MultiMoveItemSub);
+  moves @0 :List(MultiMoveItemSub);
 }
 
 struct MoveCoin {

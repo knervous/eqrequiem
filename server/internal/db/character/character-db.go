@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/knervous/eqgo/internal/cache"
+	"github.com/knervous/eqgo/internal/constants"
 	"github.com/knervous/eqgo/internal/db"
 	"github.com/knervous/eqgo/internal/db/items"
 	"github.com/knervous/eqgo/internal/db/jetgen/eqgo/model"
@@ -93,8 +94,8 @@ func UpdateCharacter(charData *model.CharacterData, accountID int64) error {
 	return nil
 }
 
-func GetCharacterItems(ctx context.Context, id int) ([]items.ItemWithSlot, error) {
-	var charItems []items.ItemWithSlot
+func GetCharacterItems(ctx context.Context, id int) ([]constants.ItemWithSlot, error) {
+	var charItems []constants.ItemWithSlot
 	stmt := table.ItemInstances.
 		SELECT(
 			table.ItemInstances.AllColumns,

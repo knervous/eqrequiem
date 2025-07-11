@@ -1,11 +1,11 @@
-import type GameManager from "@game/Manager/game-manager";
-import { WorldSocket } from "@ui/net/instances";
-import { OpCodes } from "./opcodes";
-import { NewZone } from "./internal/api/capnp/zone";
-import { PlayerProfile } from "./internal/api/capnp/player";
-import { ChannelMessage, EntityAnimation, EntityPositionUpdate, Spawn, Spawns } from "./internal/api/capnp/common";
-import Player from "@game/Player/player";
-import emitter from "@game/Events/events";
+import emitter from '@game/Events/events';
+import type GameManager from '@game/Manager/game-manager';
+import Player from '@game/Player/player';
+import { WorldSocket } from '@ui/net/instances';
+import { ChannelMessage, EntityAnimation, EntityPositionUpdate, MoveItem, Spawn, Spawns } from './internal/api/capnp/common';
+import { PlayerProfile } from './internal/api/capnp/player';
+import { NewZone } from './internal/api/capnp/zone';
+import { OpCodes } from './opcodes';
 
 export function opCodeHandler(opCode: OpCodes, type: any): MethodDecorator {
   return (target: object, propertyKey: string | symbol) => {
@@ -36,7 +36,7 @@ export class ZonePacketHandler {
   newZone(newZone: NewZone) {
     console.log('Received new zone data', newZone);
     this.gameManager.loadZoneServer(newZone);
-    emitter.emit("setMode", "game");
+    emitter.emit('setMode', 'game');
   }
 
   @opCodeHandler(OpCodes.PlayerProfile, PlayerProfile)
@@ -50,7 +50,7 @@ export class ZonePacketHandler {
     Promise.all(spawns.spawns.map((spawn) => {
       return this.gameManager.ZoneManager?.EntityPool?.AddSpawn(spawn);
     })).then(() => {
-      emitter.emit("zoneSpawns");
+      emitter.emit('zoneSpawns');
     }).catch((err) => {
       console.error('Error adding spawns:', err);
     });
@@ -79,13 +79,13 @@ export class ZonePacketHandler {
     const msg = {
       message: channelMessage.message,
       chanNum: channelMessage.chanNum,
-      color: "#ddd",
-      type: 0,
+      color  : '#ddd',
+      type   : 0,
     };
-    switch(channelMessage.chanNum) { 
+    switch (channelMessage.chanNum) { 
       case -1:
         msg.message = `[Server Message] '${channelMessage.message}'`;
-        msg.color = "#00AAEE";
+        msg.color = '#00AAEE';
         break;
       case 0:
         if (channelMessage.sender === Player.instance?.player?.name) {
@@ -96,6 +96,11 @@ export class ZonePacketHandler {
       default:
         break;
     }
-    emitter.emit("chatMessage", msg);
+    emitter.emit('chatMessage', msg);
+  }
+
+  @opCodeHandler(OpCodes.MoveItem, MoveItem)
+  processMoveItem(item: MoveItem) {
+    Player.instance?.moveItem(item);
   }
 }

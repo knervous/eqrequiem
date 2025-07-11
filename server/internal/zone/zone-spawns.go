@@ -11,30 +11,31 @@ import (
 	"github.com/knervous/eqgo/internal/db/jetgen/eqgo/model"
 	db_zone "github.com/knervous/eqgo/internal/db/zone"
 	entity "github.com/knervous/eqgo/internal/entity"
+	"github.com/knervous/eqgo/internal/ports/client"
 	"github.com/knervous/eqgo/internal/session"
 )
 
 // spawnTick handles NPC movement along its pathgrid, updates its velocity,
 // and ensures a final update when transitioning from moving to stopped.
-func (z *ZoneInstance) spawnTick(now time.Time, npc *entity.NPC) {
-	if len(npc.GridEntries) == 0 {
+func (z *ZoneInstance) spawnTick(now time.Time, npc client.NPC) {
+	if len(npc.GridEntries()) == 0 {
 		return
 	}
 	// 1) still pausing?
-	if now.Before(npc.PauseUntil) {
-		npc.LastUpdate = now
+	if now.Before(npc.PauseUntil()) {
+		npc.SetLastUpdate(now)
 		return
 	}
 
 	// 2) save old pos and velocity for movement and transition check
-	oldX, oldY, oldZ := npc.Mob.X, npc.Mob.Y, npc.Mob.Z
-	oldVel := npc.GetVelocity()
+	oldX, oldY, oldZ := npc.Mob().X, npc.Mob().Y, npc.Mob().Z
+	oldVel := npc.Mob().GetVelocity()
 
 	// 3) interpolation logic
-	target := npc.GridEntries[npc.GridIndex]
+	target := npc.CurrentGridEntry()
 	tx, ty, tz := target.X, target.Y, target.Z
-	delta := now.Sub(npc.LastUpdate).Seconds()
-	npc.LastUpdate = now
+	delta := now.Sub(npc.LastUpdate()).Seconds()
+	npc.SetLastUpdate(now)
 
 	dx := tx - oldX
 	dy := ty - oldY
@@ -43,34 +44,36 @@ func (z *ZoneInstance) spawnTick(now time.Time, npc *entity.NPC) {
 
 	if distSq == 0 {
 		// arrived → zero velocity, schedule pause, advance index
-		npc.SetVelocity(entity.Velocity{X: 0, Y: 0, Z: 0})
-		pause := npc.GridEntries[npc.GridIndex].Pause
-		npc.PauseUntil = now.Add(time.Duration(pause) * time.Second)
-		npc.GridIndex = (npc.GridIndex + 1) % len(npc.GridEntries)
+		npc.SetVelocity(client.Velocity{X: 0, Y: 0, Z: 0})
+		pause := npc.CurrentGridEntry().Pause
+		npc.SetPauseUntil(now.Add(time.Duration(pause) * time.Second))
+		npc.SetGridIndex((npc.GridIndex() + 1) % len(npc.GridEntries()))
+
 	} else {
 		dist := math.Sqrt(float64(distSq))
-		moveAmt := float64(npc.Speed) * 5 * delta
+		moveAmt := float64(npc.Speed()) * 5 * delta
 		if moveAmt >= dist {
-			npc.Mob.X, npc.Mob.Y, npc.Mob.Z = tx, ty, tz
-			pause := npc.GridEntries[npc.GridIndex].Pause
-			npc.PauseUntil = now.Add(time.Duration(pause) * time.Second)
-			npc.GridIndex = (npc.GridIndex + 1) % len(npc.GridEntries)
+			npc.Mob().X, npc.Mob().Y, npc.Mob().Z = tx, ty, tz
+			pause := npc.CurrentGridEntry().Pause
+			npc.SetPauseUntil(now.Add(time.Duration(pause) * time.Second))
+			npc.SetGridIndex((npc.GridIndex() + 1) % len(npc.GridEntries()))
+
 		} else {
 			frac := moveAmt / dist
-			npc.Mob.X += dx * frac
-			npc.Mob.Y += dy * frac
-			npc.Mob.Z += dz * frac
+			npc.Mob().X += dx * frac
+			npc.Mob().Y += dy * frac
+			npc.Mob().Z += dz * frac
 		}
 		// compute and set velocity based on movement
-		vx := (npc.Mob.X - oldX) / (delta)
-		vy := (npc.Mob.Y - oldY) / (delta)
-		vz := (npc.Mob.Z - oldZ) / (delta)
-		npc.SetVelocity(entity.Velocity{X: vx, Y: vy, Z: vz})
+		vx := (npc.Mob().X - oldX) / (delta)
+		vy := (npc.Mob().Y - oldY) / (delta)
+		vz := (npc.Mob().Z - oldZ) / (delta)
+		npc.SetVelocity(client.Velocity{X: vx, Y: vy, Z: vz})
 
 		// update heading
-		npc.Mob.Heading = math.Atan2(
-			npc.Mob.Y-oldY,
-			npc.Mob.X-oldX,
+		npc.Mob().Heading = math.Atan2(
+			npc.Mob().Y-oldY,
+			npc.Mob().X-oldX,
 		) * (180.0 / math.Pi)
 	}
 
@@ -78,16 +81,16 @@ func (z *ZoneInstance) spawnTick(now time.Time, npc *entity.NPC) {
 	// and bucket hasn't changed, do this in zone-movement.go
 
 	// 4) if velocity transitioned from moving to stopped, emit one final update
-	newVel := npc.GetVelocity()
+	newVel := npc.Velocity()
 	wasMoving := oldVel.X != 0 || oldVel.Y != 0 || oldVel.Z != 0
 	stoppedNow := newVel.X == 0 && newVel.Y == 0 && newVel.Z == 0
 	if wasMoving && stoppedNow {
-		z.markMoved(npc.MobID, npc.Position())
+		z.markMoved(npc.ID(), npc.Position())
 	}
 
 	// 5) mark moved if position changed
-	if npc.Mob.X != oldX || npc.Mob.Y != oldY || npc.Mob.Z != oldZ {
-		z.markMoved(npc.MobID, npc.Position())
+	if npc.Mob().X != oldX || npc.Mob().Y != oldY || npc.Mob().Z != oldZ {
+		z.markMoved(npc.ID(), npc.Position())
 	}
 }
 
@@ -115,7 +118,7 @@ func (z *ZoneInstance) processSpawns() {
 			npcID := z.nextEntityID
 			z.nextEntityID++
 			npc := entity.NewNPC(
-				entity.Mob{
+				client.Mob{
 					Speed:   1,
 					Zone:    z,
 					Spawn2:  *entry.Spawn2,
@@ -146,7 +149,7 @@ func (z *ZoneInstance) processSpawns() {
 				spawn.SetCharClass(int32(npcType.Class))
 				spawn.SetLevel(int32(npcType.Level))
 				spawn.SetName(npcType.Name)
-				spawn.SetSize(float32(npc.NpcData.Size))
+				spawn.SetSize(float32(npc.Mob().Size))
 				spawn.SetIsNpc(1)
 				spawn.SetSpawnId(int32(npcID))
 				spawn.SetX(int32(entry.Spawn2.X))
@@ -158,7 +161,7 @@ func (z *ZoneInstance) processSpawns() {
 				spawn.SetBodytype(int32(npcType.Bodytype))
 				spawn.SetEquipChest(int32(npcType.Texture))
 				spawn.SetHeading(int32(entry.Spawn2.Heading))
-				c := worldToCell(npc.Mob.X, npc.Mob.Y, npc.Mob.Z)
+				c := worldToCell(npc.Mob().X, npc.Mob().Y, npc.Mob().Z)
 				spawn.SetCellX(int32(c[0]))
 				spawn.SetCellY(int32(c[1]))
 				spawn.SetCellZ(int32(c[2]))
@@ -266,8 +269,8 @@ func (z *ZoneInstance) DespawnNPC(npcID int) error {
 	delete(z.Npcs, npcID)
 
 	// b) Remove from the name index (only if it’s the same instance)
-	if existing, exists := z.npcsByName[npc.MobName]; exists && existing.MobID == npcID {
-		delete(z.npcsByName, npc.MobName)
+	if existing, exists := z.npcsByName[npc.Name()]; exists && existing.ID() == npcID {
+		delete(z.npcsByName, npc.Name())
 	}
 
 	// c) Free up the spawn2ID → npcID mapping so the next spawn can run

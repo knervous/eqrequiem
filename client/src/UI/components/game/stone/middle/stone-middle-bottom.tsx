@@ -25,7 +25,7 @@ const StoneRow: React.FC<{
   width: number;
   height: number | string;
 }> = ({ keys, stoneImages, height, width }) => (
-  <Stack direction="row" sx={{ position: 'relative' }} spacing={0}>
+  <Stack direction="row" spacing={0} sx={{ position: 'relative' }}>
     {keys.map((key) => {
       const { entry, image, bgSize } = stoneImages[key];
       const widthPx = entry.width;
@@ -195,22 +195,22 @@ export const StoneMiddleBottom: React.FC<{
     >
      
       <StoneRow
+        height={topHeight}
         keys={['topLeft', 'top', 'topRight']}
         stoneImages={stoneImages}
         width={width}
-        height={topHeight}
       />
       <StoneRow
+        height={`${middleHeight}px`}
         keys={['midLeft', 'mid', 'midRight']}
         stoneImages={stoneImages}
         width={width}
-        height={`${middleHeight}px`}
       />
       <StoneRow
+        height={topHeight}
         keys={['botLeft', 'bot', 'botRight']}
         stoneImages={stoneImages}
         width={width}
-        height={topHeight}
       />
       <Stack
         direction="row"
@@ -223,7 +223,7 @@ export const StoneMiddleBottom: React.FC<{
           background: 'transparent',
         }}
       >
-        <Stack sx={chatStyles.container} direction="column">
+        <Stack direction="column" sx={chatStyles.container}>
           <Box sx={chatStyles.messages}>
             {messages.map((chatMessage, idx) => (
               <Box
@@ -242,17 +242,17 @@ export const StoneMiddleBottom: React.FC<{
           </Box>
           <Box sx={chatStyles.inputBox}>
             <TextField
-              autoComplete="off"
               fullWidth
-              inputRef={inputRef}
-              sx={chatStyles.textField}
-              size="small"
-              variant="outlined"
+              autoComplete="off"
               InputProps={chatStyles.inputProps} // Includes className="cursor-caret"
+              inputRef={inputRef}
+              placeholder="Enter message..."
+              size="small"
+              sx={chatStyles.textField}
               value={inputValue}
+              variant="outlined"
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
-              placeholder="Enter message..."
             />
           </Box>
         </Stack>

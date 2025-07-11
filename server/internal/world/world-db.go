@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	eq "github.com/knervous/eqgo/internal/api/capnp"
+	"github.com/knervous/eqgo/internal/constants"
 	"github.com/knervous/eqgo/internal/session"
 
 	"github.com/knervous/eqgo/internal/cache"
@@ -190,7 +191,7 @@ func GetCharSelectInfo(ses *session.Session, ctx context.Context, accountID int6
 		characterSelectEntry.SetZone(int32(c.ZoneID))
 		characterSelectEntry.SetEnabled(1)
 
-		var charItems []items.ItemWithSlot
+		var charItems []constants.ItemWithSlot
 		stmt := table.ItemInstances.
 			SELECT(
 				table.ItemInstances.AllColumns,

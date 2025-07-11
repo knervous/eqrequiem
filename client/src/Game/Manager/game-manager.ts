@@ -1,18 +1,18 @@
-import BABYLON from "@bjs";
-import type * as BJS from "@babylonjs/core";
-import Player from "../Player/player";
-import CharacterSelect from "../Zone/character-select";
-import { supportedZones } from "../Constants/supportedZones";
-import { ZoneManager } from "@game/Zone/zone-manager";
-import { PlayerProfile } from "@game/Net/internal/api/capnp/player";
-import HavokPhysics from "@babylonjs/havok";
-import { NewZone, RequestClientZoneChange } from "@game/Net/internal/api/capnp/zone";
-import { WorldSocket } from "@ui/net/instances";
-import { OpCodes } from "@game/Net/opcodes";
-import { ZonePacketHandler } from "@game/Net/zone-packets";
-import EntityCache from "@game/Model/entity-cache";
-import emitter from "@game/Events/events";
-import { animateVignette, gaussianBlurTeleport } from "@game/Effects/effects";
+import type * as BJS from '@babylonjs/core';
+import HavokPhysics from '@babylonjs/havok';
+import BABYLON from '@bjs';
+import { animateVignette, gaussianBlurTeleport } from '@game/Effects/effects';
+import emitter from '@game/Events/events';
+import EntityCache from '@game/Model/entity-cache';
+import { PlayerProfile } from '@game/Net/internal/api/capnp/player';
+import { NewZone, RequestClientZoneChange } from '@game/Net/internal/api/capnp/zone';
+import { OpCodes } from '@game/Net/opcodes';
+import { ZoneManager } from '@game/Zone/zone-manager';
+import { supportedZones } from '../Constants/supportedZones';
+import Player from '../Player/player';
+import CharacterSelect from '../Zone/character-select';
+import { WorldSocket } from '@ui/net/instances';
+import { ZonePacketHandler } from '@game/Net/zone-packets';
 
 declare const window: Window;
 
@@ -71,14 +71,14 @@ export default class GameManager {
 
   public initializeSecondaryCamera() {
     if (!this.scene) {
-      console.error("Scene is not initialized");
+      console.error('Scene is not initialized');
       return;
     }
     if (this.secondaryCamera) {
       this.secondaryCamera.dispose();
     }
     this.secondaryCamera = new BABYLON.UniversalCamera(
-      "__secondary_camera__",
+      '__secondary_camera__',
       new BABYLON.Vector3(0, 0, 0),
       this.scene,
     );
@@ -102,20 +102,20 @@ export default class GameManager {
     y: number,
     width: number,
     height: number) {
-    if (!this.scene || !this.secondaryCamera) return;
+    if (!this.scene || !this.secondaryCamera) {return;}
     const dpi = window.devicePixelRatio || 1;
     x *= dpi;
     y *= dpi;
     width *= dpi;
     height *= dpi;
-    const engine       = this.scene.getEngine();
-    const rw           = engine.getRenderWidth();   // full internal pixel width
-    const rh           = engine.getRenderHeight();  // full internal pixel height
+    const engine = this.scene.getEngine();
+    const rw = engine.getRenderWidth(); // full internal pixel width
+    const rh = engine.getRenderHeight(); // full internal pixel height
 
-    const xNorm        = x / rw;
-    const yNorm        = (rh - y - height) / rh;    // invert Y from top‐origin to bottom‐origin
-    const widthNorm    = width  / rw;
-    const heightNorm   = height / rh;
+    const xNorm = x / rw;
+    const yNorm = (rh - y - height) / rh; // invert Y from top‐origin to bottom‐origin
+    const widthNorm = width / rw;
+    const heightNorm = height / rh;
 
     this.secondaryCamera.viewport = new BABYLON.Viewport(
       xNorm,
@@ -126,19 +126,19 @@ export default class GameManager {
 
   }
   public setNewViewport(x: number, y: number, width: number, height: number) {
-    if (!this.scene || !this.camera) return;
+    if (!this.scene || !this.camera) {return;}
     const dpi = window.devicePixelRatio || 1;
     x *= dpi;
     y *= dpi;
     width *= dpi;
     height *= dpi;
-    const engine       = this.scene.getEngine();
-    const rw           = engine.getRenderWidth();   // full internal pixel width
-    const rh           = engine.getRenderHeight();  // full internal pixel height
-    const xNorm        = x / rw;
-    const yNorm        = (rh - y - height) / rh;    // invert Y from top‐origin to bottom‐origin
-    const widthNorm    = width  / rw;
-    const heightNorm   = height / rh;
+    const engine = this.scene.getEngine();
+    const rw = engine.getRenderWidth(); // full internal pixel width
+    const rh = engine.getRenderHeight(); // full internal pixel height
+    const xNorm = x / rw;
+    const yNorm = (rh - y - height) / rh; // invert Y from top‐origin to bottom‐origin
+    const widthNorm = width / rw;
+    const heightNorm = height / rh;
 
     // Need to scale by DPI
     
@@ -180,11 +180,11 @@ export default class GameManager {
       if (didEnable) {
         this.scene._physicsEngine!.setGravity(worldGravity);
       } else {
-        console.error("Failed to enable physics engine");
+        console.error('Failed to enable physics engine');
       }
       return didEnable;
     } catch (error) {
-      console.error("Error initializing Havok physics:", error);
+      console.error('Error initializing Havok physics:', error);
       return false;
     }
   }
@@ -201,7 +201,7 @@ export default class GameManager {
     this.canvas = canvas;
 
     if (navigator.gpu) {
-      this.engine = new BABYLON.WebGPUEngine(canvas, { deviceDescriptor: { requiredFeatures: ["timestamp-query"] } });
+      this.engine = new BABYLON.WebGPUEngine(canvas, { deviceDescriptor: { requiredFeatures: ['timestamp-query'] } });
       
       await this.engine?.initAsync?.();
       this.engineInitialized = true;
@@ -213,7 +213,7 @@ export default class GameManager {
     }
 
     if (!this.engine) {
-      console.error("[GameManager] Failed to create engine");
+      console.error('[GameManager] Failed to create engine');
       return;
     }
     this.scene = new BABYLON.Scene(this.engine);
@@ -229,7 +229,7 @@ export default class GameManager {
     this.loadingRefCount = 0;
 
     if (!(await this.loadPhysicsEngine())) {
-      console.error("[GameManager] Could not load physics engine");
+      console.error('[GameManager] Could not load physics engine');
       return;
     }
 
@@ -237,7 +237,7 @@ export default class GameManager {
   }
 
   onPointerEvent(eventData: BJS.PointerInfo) {
-    //console.log("Pointer event:", eventData);
+    // console.log("Pointer event:", eventData);
     if (eventData.type === BABYLON.PointerEventTypes.POINTERDOWN && this.scene) {
     // Only handle left-click (button 0)
       if (eventData.event.button === 0) {
@@ -250,12 +250,12 @@ export default class GameManager {
 
           // Optional: Add custom logic based on the mesh
           // Example: Check if the mesh has a specific metadata or tag
-          if (mesh.metadata?.type === "interactive") {
+          if (mesh.metadata?.type === 'interactive') {
             console.log(`Interacting with ${mesh.name}`);
           // Trigger custom interaction logic here
           }
         } else {
-          console.log("No mesh hit");
+          console.log('No mesh hit');
         }
       }
     }
@@ -282,11 +282,11 @@ export default class GameManager {
   private instantiatingInspector: boolean = false;
   async keyDown(e: BJS.IKeyboardEvent) {
     switch (`${e?.key}`?.toLowerCase?.()) {
-      case "i": {
+      case 'i': {
         if (!this.scene || !(e.ctrlKey || e.metaKey)) {
           break;
         }
-        if (e?.target?.tagName === "INPUT") {
+        if (e?.target?.tagName === 'INPUT') {
           return;
         }
         if (this.instantiatingInspector) {
@@ -296,13 +296,13 @@ export default class GameManager {
           this.inspector.Hide();
         } else {
           this.instantiatingInspector = true;
-          await import("@babylonjs/inspector").then((i) => {
+          await import('@babylonjs/inspector').then((i) => {
             this.inspector = i.Inspector;
           });
           this.instantiatingInspector = false;
           this.inspector.Show(this.scene, {
-            embedMode: true,
-            overlay: true,
+            embedMode   : true,
+            overlay     : true,
             handleResize: true,
           });
         }
@@ -347,7 +347,7 @@ export default class GameManager {
       this.characterSelect.dispose();
     }
     this.camera = new BABYLON.UniversalCamera(
-      "__camera__",
+      '__camera__',
       new BABYLON.Vector3(0, 0, 0),
       this.scene!,
     );
@@ -367,7 +367,7 @@ export default class GameManager {
 
   public async loadZoneId(zoneId: number): Promise<void> {
     const zoneName = supportedZones[zoneId?.toString()]?.shortName;
-    console.log("Loading zone: ", zoneId, zoneName);
+    console.log('Loading zone: ', zoneId, zoneName);
     if (zoneName) {
       await this.loadZone(zoneName);
     } else {
@@ -378,7 +378,7 @@ export default class GameManager {
   public async loadZone(zoneName: string): Promise<void> {
     this.dispose();
     this.camera = new BABYLON.UniversalCamera(
-      "__camera__",
+      '__camera__',
       new BABYLON.Vector3(0, 0, 0),
       this.scene!,
     );
@@ -405,7 +405,7 @@ export default class GameManager {
   public async instantiatePlayer(
     player: Partial<PlayerProfile> | null = this.lastPlayer,
   ) {
-    console.log("Inst player", player);
+    console.log('Inst player', player);
     this.lastPlayer = player;
     if (this.player) {
       this.player.dispose();

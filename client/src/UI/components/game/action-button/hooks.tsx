@@ -81,7 +81,7 @@ export function useItemDragClone<T extends HTMLElement>(
 
   const onMouseDown = useCallback(
     (e: React.MouseEvent) => {
-      if (!elementRef.current) {return;}
+      if (!elementRef.current || e.button !== 0) {return;}
       const rect = elementRef.current.getBoundingClientRect();
 
       offsetRef.current = { x: e.clientX - rect.left, y: e.clientY - rect.top };

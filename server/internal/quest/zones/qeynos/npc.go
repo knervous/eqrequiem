@@ -40,8 +40,7 @@ func registerNpcQuests(zq *quest.ZoneQuestInterface) {
 		quest.EventSay, func(e *quest.QuestEvent) bool {
 			greetings := fmt.Sprintf("Shaddup, %s!", e.Actor.Name())
 			e.Receiver.Say(greetings)
-			fish := e.ZoneAccess.GetNPCByName("Fish_Ranamer")
-			if fish != nil {
+			if fish, ok := e.ZoneAccess.NPCByName("Fish_Ranamer"); ok && fish != nil {
 				fish.Say("Let the boy drink")
 			}
 			return true

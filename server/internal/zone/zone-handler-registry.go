@@ -27,6 +27,9 @@ func NewZoneOpCodeRegistry(zoneID int) *HandlerRegistry {
 		opcodes.ChannelMessage:          HandleChannelMessage,
 		opcodes.ClientUpdate:            HandleClientUpdate,
 		opcodes.Animation:               HandleClientAnimation,
+
+		// Items
+		opcodes.MoveItem: HandleMoveItem,
 	}
 
 	registry := &HandlerRegistry{

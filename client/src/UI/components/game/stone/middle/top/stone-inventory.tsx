@@ -138,7 +138,7 @@ export const StoneInventory: React.FC<{
         left    : width / 2 - dimensions.width / 2,
       }}
       onClickCapture={() => {
-        console.log('Click captured on StoneInventory');
+        // console.log('Click captured on StoneInventory');
       }}
     >
       <StoneRow

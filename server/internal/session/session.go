@@ -7,15 +7,9 @@ import (
 
 	capnp "capnproto.org/go/capnp/v3"
 	"github.com/knervous/eqgo/internal/api/opcodes"
-	"github.com/knervous/eqgo/internal/entity"
+	"github.com/knervous/eqgo/internal/ports/client"
 	"github.com/quic-go/webtransport-go"
 )
-
-type pendingMsg struct {
-	ctor    func(*capnp.Segment) (capnp.Struct, error)
-	opcode  uint16
-	builder func(capnp.Struct) error
-}
 
 type ClientMessenger interface {
 	SendDatagram(sessionID int, data []byte) error
@@ -32,7 +26,7 @@ type Session struct {
 	IP            string         // Client IP address
 	RootSeg       *capnp.Segment // Current segment
 	CharacterName string
-	Client        *entity.Client
+	Client        client.Client
 	Messenger     ClientMessenger // For sending replies
 	ControlStream webtransport.Stream
 	// Private

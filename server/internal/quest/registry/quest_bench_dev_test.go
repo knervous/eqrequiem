@@ -9,7 +9,6 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/knervous/eqgo/internal/db/jetgen/eqgo/model"
 	entity "github.com/knervous/eqgo/internal/entity"
 	"github.com/knervous/eqgo/internal/quest"
 )
@@ -39,11 +38,11 @@ func init() {
 	log.Printf("[dev] Set CWD to: %s", cwd)
 	questInterface = GetQuestInterface("qeynos")
 	questEvent = &quest.QuestEvent{}
-	npc = &entity.NPC{
-		NpcData: &model.NpcTypes{
-			Name: "Captaaaain Tillin",
-		},
-	}
+	// npc = &entity.NPC{
+	// 	NpcData: &model.NpcTypes{
+	// 		Name: "Captaaaain Tillin",
+	// 	},
+	// }
 }
 
 func BenchmarkQuestInvoke(b *testing.B) {

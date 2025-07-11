@@ -6,12 +6,14 @@ import emitter from '@game/Events/events';
 import type GameManager from '@game/Manager/game-manager';
 import { Entity } from '@game/Model/entity';
 import EntityCache from '@game/Model/entity-cache';
+import { MoveItem } from '@game/Net/internal/api/capnp/common';
 import { PlayerProfile } from '@game/Net/internal/api/capnp/player';
 import { ActionButtonData, ActionType } from '@ui/components/game/action-button/constants';
 import RACE_DATA from '../Constants/race-data';
 import { PlayerAbility } from './player-ability';
 import { PlayerCamera } from './player-cam';
 import { PlayerCombat } from './player-combat';
+import { InventorySlot } from './player-constants';
 import { PlayerInventory } from './player-inventory';
 import { PlayerKeyboard } from './player-keyboard';
 import { PlayerMovement } from './player-movement';
@@ -106,6 +108,10 @@ export default class Player {
       }
       this.target.setSelected(true, color);
     }
+  }
+
+  public get hasCursorItem() {
+    return this.playerInventory.get(InventorySlot.Cursor) !== null;
   }
 
 
@@ -406,5 +412,18 @@ export default class Player {
 
   public rangedAttack() {
     console.log('Ranged attack on');
+  }
+
+  public moveItem(item: MoveItem) {
+    if (!this.playerInventory) {
+      console.warn('[Player] No player inventory to move item');
+      return;
+    }
+
+    // Do texture swap logic if needed
+    // todo
+    
+    this.playerInventory.moveItem(item);
+
   }
 }

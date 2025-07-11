@@ -362,7 +362,6 @@ export const ActionHotButton: React.FC<HotButtonProps> = (props) => {
       return <ItemButton
         hotButton={true}
         hotButtonIndex={props.index}
-        item={Player.instance?.playerInventory?.get(props.actionData.index ?? 0)}
         scale={(props.scale ?? 1)}
         slot={props.actionData.index ?? -1}
       />;

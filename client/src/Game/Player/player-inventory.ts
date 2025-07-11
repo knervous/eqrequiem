@@ -1,9 +1,8 @@
 import emitter from '@game/Events/events';
-import { ItemInstance } from '@game/Net/internal/api/capnp/item';
+import type { MoveItem } from '@game/Net/internal/api/capnp/common';
 import type Player from './player';
-import { InventorySlot } from './player-constants';
+import { InventorySlot, NullableItemInstance } from './player-constants';
 
-type NullableItemInstance = ItemInstance | null;
 
 export class PlayerInventory {
   public inventorySlots: Map<InventorySlot, NullableItemInstance>;
@@ -43,5 +42,18 @@ export class PlayerInventory {
     } else {
       console.warn(`No item found in slot ${slot}`);
     }
+  }
+
+  public moveItem(item: MoveItem): void {
+    const sourceSlot = item.fromSlot as InventorySlot;
+    const targetSlot = item.toSlot as InventorySlot;
+
+    const sourceItem = this.get(sourceSlot);
+    const targetItem = this.get(targetSlot);
+
+    this.set(targetSlot, sourceItem);
+    this.set(sourceSlot, targetItem);
+    emitter.emit('updateInventorySlot', sourceSlot);
+    emitter.emit('updateInventorySlot', targetSlot);
   }
 }

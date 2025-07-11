@@ -1,15 +1,19 @@
-import { useMemo } from 'react';
+import React, { useCallback, useMemo, useRef } from 'react';
+import { useInventorySlot } from '@game/Events/event-hooks';
+import { MoveItem } from '@game/Net/internal/api/capnp/common';
 import { ItemInstance } from '@game/Net/internal/api/capnp/item';
+import { OpCodes } from '@game/Net/opcodes';
+import Player from '@game/Player/player';
 import { InventorySlot } from '@game/Player/player-constants';
 import { Box } from '@mui/material';
 import { useItemImage, useSakImage } from '@ui/hooks/use-image';
+import { WorldSocket } from '@ui/net/instances';
 import { FullItemEntryData } from './constants';
 import { useItemDragClone } from './hooks';
 
 interface ItemButtonProps {
   scale: number;
-  slot?: InventorySlot;
-  item: ItemInstance | undefined | null;
+  slot: InventorySlot;
   hotButton?: boolean;
   hotButtonIndex?: number;
 }
@@ -44,20 +48,64 @@ const backgroundMap: Record<number, string> = {
 };
 
 export const ItemButton: React.FC<ItemButtonProps> = (props) => {
-  const slot = useMemo(() => props.item?.slot ?? props.slot ?? -1, [props.item, props.slot]);
+  const item = useInventorySlot(props.slot);
+  const rightClickTimeout = useRef<NodeJS.Timeout | null>(null);
+  const rightClickTimeoutFinished = useRef<boolean>(false);
   const itemActionData = useMemo((): FullItemEntryData | null => {
     return {
-      slot,
+      slot          : props.slot,
       hotButton     : props.hotButton ?? false,
       hotButtonIndex: props.hotButtonIndex ?? -1,
     };
-  }, [props, slot]);
+  }, [props]);
 
-  const { elementRef, onMouseDown } = useItemDragClone<HTMLDivElement>(
-    itemActionData,
+  const { elementRef, onMouseDown } =
+    useItemDragClone<HTMLDivElement>(itemActionData);
+  const bgEntry = useSakImage(backgroundMap[props.slot], true);
+  const itemEntry = useItemImage(item?.icon ?? -1);
+  const onClick = useCallback(
+    (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+      // Left click
+      if (e.button === 0) {
+        WorldSocket.sendMessage(OpCodes.MoveItem, MoveItem, {
+          toSlot       : Player.instance?.hasCursorItem ? props.slot : InventorySlot.Cursor,
+          fromSlot     : Player.instance?.hasCursorItem ? InventorySlot.Cursor : props.slot,
+          numberInStack: item?.stackable ? item.quantity : 1,
+          bagSlot      : 0,
+        });
+      }
+    },
+    [props.slot, item?.stackable, item?.quantity],
   );
-  const bgEntry = useSakImage(backgroundMap[slot], true);
-  const itemEntry = useItemImage(props.item?.icon ?? -1);
+
+  const onRightClick = useCallback(
+    (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+      // Right click
+      e.preventDefault();
+      if (item) {
+        // Handle right click action here, e.g., show context menu
+        rightClickTimeout.current = setTimeout(() => {
+          // Inspect item
+          rightClickTimeoutFinished.current = true;
+        }, 500);
+      }
+    },
+    [item],
+  );
+
+  const onMouseUp = useCallback(
+    (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+      clearTimeout(rightClickTimeout.current ?? -1);
+      if (rightClickTimeoutFinished.current) {
+        rightClickTimeoutFinished.current = false;
+      } else {
+        if (e.button === 2) {
+          // Action for item
+        }
+      }
+    },
+    [],
+  );
 
   return (
     <Box
@@ -72,10 +120,13 @@ export const ItemButton: React.FC<ItemButtonProps> = (props) => {
         width          : '100%',
         height         : '100%',
       }}
-      title={props.item?.name}
+      title={item?.name}
+      onClick={onClick}
+      onContextMenu={onRightClick}
       onMouseDown={onMouseDown}
+      onMouseUp={onMouseUp}
     >
-      {props.item ? (
+      {item ? (
         <Box
           className="item-button"
           sx={{
@@ -88,7 +139,7 @@ export const ItemButton: React.FC<ItemButtonProps> = (props) => {
             top            : '10%',
           }}
         >
-          {props.item?.stackable ? (
+          {item?.stackable ? (
             <Box
               className="item-quantity"
               sx={{
@@ -104,13 +155,10 @@ export const ItemButton: React.FC<ItemButtonProps> = (props) => {
                 fontSize    : 10 / props.scale,
               }}
             >
-              {props.item.quantity}
+              {item.quantity}
             </Box>
           ) : null}
-
         </Box>
-
-        
       ) : null}
     </Box>
   );

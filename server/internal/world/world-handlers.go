@@ -132,7 +132,11 @@ func HandleZoneSession(ses *session.Session, payload []byte, wh *WorldHandler) b
 		log.Printf("failed to get character %q for accountID %d: %v", ses.CharacterName, ses.AccountID, err)
 		return false
 	}
-	ses.Client = entity.NewClient(charData)
+	ses.Client, err = entity.NewClient(charData)
+	if err != nil {
+		log.Printf("failed to create client for character %q: %v", ses.CharacterName, err)
+		return false
+	}
 	ses.ZoneID = int(req.ZoneId())
 	ses.InstanceID = int(req.InstanceId())
 
@@ -211,7 +215,7 @@ func HandleRequestClientZoneChange(ses *session.Session, payload []byte, wh *Wor
 		return false
 	}
 
-	charData := ses.Client.CharData
+	charData := ses.Client.CharData()
 	if charData == nil {
 		log.Printf("client session %d has no character data", ses.SessionID)
 		return false

@@ -1,13 +1,16 @@
 package entity
 
-import "github.com/knervous/eqgo/internal/constants"
+import (
+	"github.com/knervous/eqgo/internal/constants"
+	"github.com/knervous/eqgo/internal/ports/client"
+)
 
 func (client *Client) CalcBonuses() {
-	client.CalcItemBonuses()
-	client.CalcAABonuses()
-	client.CalcSpellBonuses()
+	// client.CalcItemBonuses()
+	// client.CalcAABonuses()
+	// client.CalcSpellBonuses()
 
-	client.CalcAC()
+	// client.CalcAC()
 	client.CalcATK()
 	client.CalcHaste()
 
@@ -42,114 +45,114 @@ func (client *Client) CalcHaste() {
 
 // Core stats
 func (client *Client) CalcSTR() {
-	client.Mob.STR = int32(client.CharData.Str)
-	if client.Mob.ItemBonuses != nil {
-		client.Mob.STR += client.Mob.ItemBonuses.STR
+	client.mob.STR = int32(client.CharData().Str)
+	if client.mob.ItemBonuses != nil {
+		client.mob.STR += client.mob.ItemBonuses.STR
 	}
-	if client.Mob.SpellBonuses != nil {
-		client.Mob.STR += client.Mob.SpellBonuses.STR
+	if client.mob.SpellBonuses != nil {
+		client.mob.STR += client.mob.SpellBonuses.STR
 	}
-	if client.Mob.AABonuses != nil {
-		client.Mob.STR += client.Mob.AABonuses.STR
+	if client.mob.AABonuses != nil {
+		client.mob.STR += client.mob.AABonuses.STR
 	}
-	if client.Mob.STR < 1 {
-		client.Mob.STR = 1
+	if client.mob.STR < 1 {
+		client.mob.STR = 1
 	}
 }
 
 func (client *Client) CalcSTA() {
-	client.Mob.STA = int32(client.CharData.Sta)
-	if client.Mob.ItemBonuses != nil {
-		client.Mob.STA += client.Mob.ItemBonuses.STA
+	client.mob.STA = int32(client.CharData().Sta)
+	if client.mob.ItemBonuses != nil {
+		client.mob.STA += client.mob.ItemBonuses.STA
 	}
-	if client.Mob.SpellBonuses != nil {
-		client.Mob.STA += client.Mob.SpellBonuses.STA
+	if client.mob.SpellBonuses != nil {
+		client.mob.STA += client.mob.SpellBonuses.STA
 	}
-	if client.Mob.AABonuses != nil {
-		client.Mob.STA += client.Mob.AABonuses.STA
+	if client.mob.AABonuses != nil {
+		client.mob.STA += client.mob.AABonuses.STA
 	}
-	if client.Mob.STA < 1 {
-		client.Mob.STA = 1
+	if client.mob.STA < 1 {
+		client.mob.STA = 1
 	}
 
 }
 func (client *Client) CalcDEX() {
-	client.Mob.DEX = int32(client.CharData.Dex)
-	if client.Mob.ItemBonuses != nil {
-		client.Mob.DEX += client.Mob.ItemBonuses.DEX
+	client.mob.DEX = int32(client.CharData().Dex)
+	if client.mob.ItemBonuses != nil {
+		client.mob.DEX += client.mob.ItemBonuses.DEX
 	}
-	if client.Mob.SpellBonuses != nil {
-		client.Mob.DEX += client.Mob.SpellBonuses.DEX
+	if client.mob.SpellBonuses != nil {
+		client.mob.DEX += client.mob.SpellBonuses.DEX
 	}
-	if client.Mob.AABonuses != nil {
-		client.Mob.DEX += client.Mob.AABonuses.DEX
+	if client.mob.AABonuses != nil {
+		client.mob.DEX += client.mob.AABonuses.DEX
 	}
-	if client.Mob.DEX < 1 {
-		client.Mob.DEX = 1
+	if client.mob.DEX < 1 {
+		client.mob.DEX = 1
 	}
 
 }
 func (client *Client) CalcAGI() {
-	client.Mob.AGI = int32(client.CharData.Agi)
-	if client.Mob.ItemBonuses != nil {
-		client.Mob.AGI += client.Mob.ItemBonuses.AGI
+	client.mob.AGI = int32(client.CharData().Agi)
+	if client.mob.ItemBonuses != nil {
+		client.mob.AGI += client.mob.ItemBonuses.AGI
 	}
-	if client.Mob.SpellBonuses != nil {
-		client.Mob.AGI += client.Mob.SpellBonuses.AGI
+	if client.mob.SpellBonuses != nil {
+		client.mob.AGI += client.mob.SpellBonuses.AGI
 	}
-	if client.Mob.AABonuses != nil {
-		client.Mob.AGI += client.Mob.AABonuses.AGI
+	if client.mob.AABonuses != nil {
+		client.mob.AGI += client.mob.AABonuses.AGI
 	}
-	if client.Mob.AGI < 1 {
-		client.Mob.AGI = 1
+	if client.mob.AGI < 1 {
+		client.mob.AGI = 1
 	}
 
 }
 func (client *Client) CalcINT() {
-	client.Mob.INT = int32(client.CharData.Int)
-	if client.Mob.ItemBonuses != nil {
-		client.Mob.INT += client.Mob.ItemBonuses.INT
+	client.mob.INT = int32(client.CharData().Int)
+	if client.mob.ItemBonuses != nil {
+		client.mob.INT += client.mob.ItemBonuses.INT
 	}
-	if client.Mob.SpellBonuses != nil {
-		client.Mob.INT += client.Mob.SpellBonuses.INT
+	if client.mob.SpellBonuses != nil {
+		client.mob.INT += client.mob.SpellBonuses.INT
 	}
-	if client.Mob.AABonuses != nil {
-		client.Mob.INT += client.Mob.AABonuses.INT
+	if client.mob.AABonuses != nil {
+		client.mob.INT += client.mob.AABonuses.INT
 	}
-	if client.Mob.INT < 1 {
-		client.Mob.INT = 1
+	if client.mob.INT < 1 {
+		client.mob.INT = 1
 	}
 
 }
 func (client *Client) CalcWIS() {
-	client.Mob.WIS = int32(client.CharData.Wis)
-	if client.Mob.ItemBonuses != nil {
-		client.Mob.WIS += client.Mob.ItemBonuses.WIS
+	client.mob.WIS = int32(client.CharData().Wis)
+	if client.mob.ItemBonuses != nil {
+		client.mob.WIS += client.mob.ItemBonuses.WIS
 	}
-	if client.Mob.SpellBonuses != nil {
-		client.Mob.WIS += client.Mob.SpellBonuses.WIS
+	if client.mob.SpellBonuses != nil {
+		client.mob.WIS += client.mob.SpellBonuses.WIS
 	}
-	if client.Mob.AABonuses != nil {
-		client.Mob.WIS += client.Mob.AABonuses.WIS
+	if client.mob.AABonuses != nil {
+		client.mob.WIS += client.mob.AABonuses.WIS
 	}
-	if client.Mob.WIS < 1 {
-		client.Mob.WIS = 1
+	if client.mob.WIS < 1 {
+		client.mob.WIS = 1
 	}
 
 }
 func (client *Client) CalcCHA() {
-	client.Mob.CHA = int32(client.CharData.Cha)
-	if client.Mob.ItemBonuses != nil {
-		client.Mob.CHA += client.Mob.ItemBonuses.CHA
+	client.mob.CHA = int32(client.CharData().Cha)
+	if client.mob.ItemBonuses != nil {
+		client.mob.CHA += client.mob.ItemBonuses.CHA
 	}
-	if client.Mob.SpellBonuses != nil {
-		client.Mob.CHA += client.Mob.SpellBonuses.CHA
+	if client.mob.SpellBonuses != nil {
+		client.mob.CHA += client.mob.SpellBonuses.CHA
 	}
-	if client.Mob.AABonuses != nil {
-		client.Mob.CHA += client.Mob.AABonuses.CHA
+	if client.mob.AABonuses != nil {
+		client.mob.CHA += client.mob.AABonuses.CHA
 	}
-	if client.Mob.CHA < 1 {
-		client.Mob.CHA = 1
+	if client.mob.CHA < 1 {
+		client.mob.CHA = 1
 	}
 
 }
@@ -175,20 +178,20 @@ var raceBaseMR = map[constants.RaceID]int32{
 }
 
 func (c *Client) CalcMR() {
-	race := constants.RaceID(c.CharData.Race)
+	race := constants.RaceID(c.CharData().Race)
 	base, ok := raceBaseMR[race]
 	if !ok {
 		base = 20
 	}
 
 	total := base
-	if b := c.Mob.ItemBonuses; b != nil {
+	if b := c.mob.ItemBonuses; b != nil {
 		total += b.MR
 	}
-	if b := c.Mob.SpellBonuses; b != nil {
+	if b := c.mob.SpellBonuses; b != nil {
 		total += b.MR
 	}
-	if b := c.Mob.AABonuses; b != nil {
+	if b := c.mob.AABonuses; b != nil {
 		total += b.MR
 	}
 
@@ -196,7 +199,7 @@ func (c *Client) CalcMR() {
 		total = 1
 	}
 
-	c.Mob.MR = total
+	c.mob.MR = total
 }
 
 var raceBaseFR = map[constants.RaceID]int32{
@@ -219,21 +222,21 @@ var raceBaseFR = map[constants.RaceID]int32{
 
 // CalcFR computes the client's Fire Resistance in an idiomatic Go manner.
 func (c *Client) CalcFR() {
-	race := constants.RaceID(c.CharData.Race)
+	race := constants.RaceID(c.CharData().Race)
 	base, ok := raceBaseFR[race]
 	if !ok {
 		base = 20
 	}
 
-	switch c.CharData.Class {
+	switch c.CharData().Class {
 	case constants.Class_Ranger, constants.Class_Monk:
 		bonus := uint32(0)
-		if c.CharData.Class == constants.Class_Ranger {
+		if c.CharData().Class == constants.Class_Ranger {
 			bonus = 4
 		} else {
 			bonus = 8
 		}
-		level := c.CharData.Level
+		level := c.CharData().Level
 		if level > 49 {
 			bonus += level - 49
 		}
@@ -241,13 +244,13 @@ func (c *Client) CalcFR() {
 	}
 
 	total := base
-	if b := c.Mob.ItemBonuses; b != nil {
+	if b := c.mob.ItemBonuses; b != nil {
 		total += b.FR
 	}
-	if b := c.Mob.SpellBonuses; b != nil {
+	if b := c.mob.SpellBonuses; b != nil {
 		total += b.FR
 	}
-	if b := c.Mob.AABonuses; b != nil {
+	if b := c.mob.AABonuses; b != nil {
 		total += b.FR
 	}
 
@@ -255,7 +258,7 @@ func (c *Client) CalcFR() {
 		total = 1
 	}
 
-	c.Mob.FR = total
+	c.mob.FR = total
 }
 
 // raceBaseCR holds the base Cold Resistance values per race.
@@ -278,29 +281,29 @@ var raceBaseCR = map[constants.RaceID]int32{
 }
 
 func (c *Client) CalcCR() {
-	race := constants.RaceID(c.CharData.Race)
+	race := constants.RaceID(c.CharData().Race)
 	base, ok := raceBaseCR[race]
 	if !ok {
 		base = 25
 	}
 
-	switch c.CharData.Class {
+	switch c.CharData().Class {
 	case constants.Class_Ranger, constants.Class_Beastlord:
 		bonus := uint32(4)
-		if level := c.CharData.Level; level > 49 {
+		if level := c.CharData().Level; level > 49 {
 			bonus += level - 49
 		}
 		base += int32(bonus)
 	}
 
 	total := base
-	if b := c.Mob.ItemBonuses; b != nil {
+	if b := c.mob.ItemBonuses; b != nil {
 		total += b.CR
 	}
-	if b := c.Mob.SpellBonuses; b != nil {
+	if b := c.mob.SpellBonuses; b != nil {
 		total += b.CR
 	}
-	if b := c.Mob.AABonuses; b != nil {
+	if b := c.mob.AABonuses; b != nil {
 		total += b.CR
 	}
 
@@ -308,7 +311,7 @@ func (c *Client) CalcCR() {
 		total = 1
 	}
 
-	c.Mob.CR = total
+	c.mob.CR = total
 }
 
 var raceBaseDR = map[constants.RaceID]int32{
@@ -331,29 +334,29 @@ var raceBaseDR = map[constants.RaceID]int32{
 
 func (c *Client) CalcDR() {
 	// Determine base DR from race, defaulting to 15 if unknown.
-	race := constants.RaceID(c.CharData.Race)
+	race := constants.RaceID(c.CharData().Race)
 	base, ok := raceBaseDR[race]
 	if !ok {
 		base = 15
 	}
 
 	// Class-based bonuses
-	switch c.CharData.Class {
+	switch c.CharData().Class {
 	case constants.Class_Monk:
-		if level := c.CharData.Level; level > 50 {
+		if level := c.CharData().Level; level > 50 {
 			base += int32(level - 50)
 		}
 
 	case constants.Class_Paladin:
 		bonus := int32(8)
-		if level := c.CharData.Level; level > 49 {
+		if level := c.CharData().Level; level > 49 {
 			bonus += int32(level - 49)
 		}
 		base += bonus
 
 	case constants.Class_ShadowKnight, constants.Class_Beastlord:
 		bonus := int32(4)
-		if level := c.CharData.Level; level > 49 {
+		if level := c.CharData().Level; level > 49 {
 			bonus += int32(level - 49)
 		}
 		base += bonus
@@ -361,13 +364,13 @@ func (c *Client) CalcDR() {
 
 	// Accumulate item, spell, and AA bonuses
 	total := base
-	if b := c.Mob.ItemBonuses; b != nil {
+	if b := c.mob.ItemBonuses; b != nil {
 		total += b.DR
 	}
-	if b := c.Mob.SpellBonuses; b != nil {
+	if b := c.mob.SpellBonuses; b != nil {
 		total += b.DR
 	}
-	if b := c.Mob.AABonuses; b != nil {
+	if b := c.mob.AABonuses; b != nil {
 		total += b.DR
 	}
 
@@ -376,7 +379,7 @@ func (c *Client) CalcDR() {
 		total = 1
 	}
 
-	c.Mob.DR = total
+	c.mob.DR = total
 }
 
 var raceBasePR = map[constants.RaceID]int32{
@@ -398,21 +401,21 @@ var raceBasePR = map[constants.RaceID]int32{
 }
 
 func (c *Client) CalcPR() {
-	race := constants.RaceID(c.CharData.Race)
+	race := constants.RaceID(c.CharData().Race)
 	base, ok := raceBasePR[race]
 	if !ok {
 		base = 15
 	}
 
-	switch c.CharData.Class {
+	switch c.CharData().Class {
 	case constants.Class_Monk:
-		if level := c.CharData.Level; level > 50 {
+		if level := c.CharData().Level; level > 50 {
 			base += int32(level - 50)
 		}
 
 	case constants.Class_Rogue:
 		bonus := int32(8)
-		if level := c.CharData.Level; level > 49 {
+		if level := c.CharData().Level; level > 49 {
 			bonus += int32(level - 49)
 		}
 		base += bonus
@@ -421,20 +424,20 @@ func (c *Client) CalcPR() {
 		fallthrough
 	case constants.Class_Beastlord:
 		bonus := int32(4)
-		if level := c.CharData.Level; level > 49 {
+		if level := c.CharData().Level; level > 49 {
 			bonus += int32(level - 49)
 		}
 		base += bonus
 	}
 
 	total := base
-	if b := c.Mob.ItemBonuses; b != nil {
+	if b := c.mob.ItemBonuses; b != nil {
 		total += b.PR
 	}
-	if b := c.Mob.SpellBonuses; b != nil {
+	if b := c.mob.SpellBonuses; b != nil {
 		total += b.PR
 	}
-	if b := c.Mob.AABonuses; b != nil {
+	if b := c.mob.AABonuses; b != nil {
 		total += b.PR
 	}
 
@@ -442,39 +445,39 @@ func (c *Client) CalcPR() {
 		total = 1
 	}
 
-	c.Mob.PR = total
+	c.mob.PR = total
 }
 
 // Hp / mana
 func (client *Client) CalcMaxHP() {
 	maxHp := client.CalcBaseHP()
-	if client.Mob.ItemBonuses != nil {
-		maxHp += int(client.Mob.ItemBonuses.HP)
+	if client.mob.ItemBonuses != nil {
+		maxHp += int(client.mob.ItemBonuses.HP)
 	}
-	if client.Mob.SpellBonuses != nil {
-		maxHp += int(client.Mob.SpellBonuses.HP)
+	if client.mob.SpellBonuses != nil {
+		maxHp += int(client.mob.SpellBonuses.HP)
 	}
-	if client.Mob.AABonuses != nil {
-		maxHp += int(client.Mob.AABonuses.HP)
+	if client.mob.AABonuses != nil {
+		maxHp += int(client.mob.AABonuses.HP)
 	}
-	if client.Mob.CurrentHp > maxHp {
-		client.Mob.CurrentHp = maxHp
+	if client.mob.CurrentHp > maxHp {
+		client.mob.CurrentHp = maxHp
 	}
-	client.Mob.MaxHp = maxHp
+	client.mob.MaxHp = maxHp
 }
 
 func (client *Client) CalcBaseHP() int {
 	baseHp := 5
 	var post255 uint32 = 0
-	lm := client.Mob.GetClassLevelFactor()
-	if (client.Mob.STA-255)/2 > 0 {
-		post255 = uint32((client.Mob.STA - 255) / 2)
+	lm := client.mob.GetClassLevelFactor()
+	if (client.mob.STA-255)/2 > 0 {
+		post255 = uint32((client.mob.STA - 255) / 2)
 	} else {
 		post255 = 0
 	}
-	baseHp += (int(client.CharData.Level) * int(lm) / 10) +
-		((int(client.Mob.STA) - int(post255)) * int(client.CharData.Level) * int(lm) / 3000) +
-		((int(post255) * int(client.CharData.Level)) * int(lm) / 6000)
+	baseHp += (int(client.CharData().Level) * int(lm) / 10) +
+		((int(client.mob.STA) - int(post255)) * int(client.CharData().Level) * int(lm) / 3000) +
+		((int(post255) * int(client.CharData().Level)) * int(lm) / 6000)
 	return baseHp
 }
 
@@ -482,13 +485,13 @@ func (c *Client) CalcBaseMana() int32 {
 	mindLesserFactor := int32(0)
 	mindFactor := int32(0)
 	baseMana := int32(0)
-	switch c.Mob.GetCasterClass() {
-	case CasterClassWisdom, CasterClassIntelligence:
+	switch c.mob.GetCasterClass() {
+	case client.CasterClassWisdom, client.CasterClassIntelligence:
 		wisInt := int32(0)
-		if c.Mob.GetCasterClass() == CasterClassWisdom {
-			wisInt = c.Mob.WIS
+		if c.mob.GetCasterClass() == client.CasterClassWisdom {
+			wisInt = c.mob.WIS
 		} else {
-			wisInt = c.Mob.INT
+			wisInt = c.mob.INT
 		}
 		if (wisInt-199)/2 > 0 {
 			mindLesserFactor = (wisInt - 199) / 2
@@ -497,11 +500,11 @@ func (c *Client) CalcBaseMana() int32 {
 		}
 		mindFactor = wisInt - mindLesserFactor
 		if wisInt > 100 {
-			baseMana = (((5 * (mindFactor + 20)) / 2) * 3 * int32(c.CharData.Level)) / 40
+			baseMana = (((5 * (mindFactor + 20)) / 2) * 3 * int32(c.CharData().Level)) / 40
 		} else {
-			baseMana = (((5 * (mindFactor + 200)) / 2) * 3 * int32(c.CharData.Level)) / 100
+			baseMana = (((5 * (mindFactor + 200)) / 2) * 3 * int32(c.CharData().Level)) / 100
 		}
-	case CasterClassNone:
+	case client.CasterClassNone:
 		baseMana = 0
 
 	}
@@ -512,7 +515,7 @@ func (c *Client) CalcBaseMana() int32 {
 func (c *Client) CalcMaxMana() {
 	spellBonusMana := int32(0)
 	itemBonusMana := int32(0)
-	m := &c.Mob
+	m := &c.mob
 	if m.SpellBonuses != nil {
 		spellBonusMana = int32(m.SpellBonuses.Mana)
 	}
@@ -520,7 +523,7 @@ func (c *Client) CalcMaxMana() {
 		itemBonusMana = int32(m.ItemBonuses.Mana)
 	}
 	switch m.GetCasterClass() {
-	case CasterClassIntelligence, CasterClassWisdom:
+	case client.CasterClassIntelligence, client.CasterClassWisdom:
 		m.MaxMana = int(c.CalcBaseMana() + spellBonusMana + itemBonusMana)
 	default:
 		m.MaxMana = 0

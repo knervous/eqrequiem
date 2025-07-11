@@ -3001,6 +3001,12 @@ export class MoveItem extends $.Struct {
   set numberInStack(value: number) {
     $.utils.setInt32(8, value, this);
   }
+  get bagSlot(): number {
+    return $.utils.getInt32(12, this);
+  }
+  set bagSlot(value: number) {
+    $.utils.setInt32(12, value, this);
+  }
   toString(): string {
     return "MoveItem_" + super.toString();
   }
@@ -3061,15 +3067,9 @@ export class MultiMoveItem extends $.Struct {
   static readonly _capnp = {
     displayName: "MultiMoveItem",
     id: "ab1ebc3e87d43ca9",
-    size: new $.ObjectSize(8, 1)
+    size: new $.ObjectSize(0, 1)
   };
   static _Moves: $.ListCtor<MultiMoveItemSub>;
-  get count(): number {
-    return $.utils.getInt32(0, this);
-  }
-  set count(value: number) {
-    $.utils.setInt32(0, value, this);
-  }
   _adoptMoves(value: $.Orphan<$.List<MultiMoveItemSub>>): void {
     $.utils.adopt(value, $.utils.getPointer(0, this));
   }

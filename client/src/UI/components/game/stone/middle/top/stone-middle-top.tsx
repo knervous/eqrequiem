@@ -1,5 +1,5 @@
-import { useInventoryOpen } from "@game/Events/event-hooks";
-import { StoneInventory } from "./stone-inventory";
+import { useInventoryOpen } from '@game/Events/event-hooks';
+import { StoneInventory } from './stone-inventory';
 
 export const StoneMiddleTop: React.FC<{
   width: number;
@@ -11,7 +11,7 @@ export const StoneMiddleTop: React.FC<{
   return (
     <>
       {inventoryOpen && (
-        <StoneInventory width={width} height={height} scale={scale} />
+        <StoneInventory height={height} scale={scale} width={width} />
       )}
     </>
   );

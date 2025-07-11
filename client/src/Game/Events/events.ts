@@ -2,6 +2,7 @@ import type * as BJS from '@babylonjs/core';
 import type { Config } from '@game/Config/types';
 import type { Entity } from '@game/Model/entity';
 import type { PlayerProfile } from '@game/Net/internal/api/capnp/player';
+import type { InventorySlot } from '@game/Player/player-constants';
 import mitt, { Emitter } from 'mitt';
 
 export type ChatMessage = {
@@ -19,6 +20,7 @@ export type Events = {
 
   // Items/inventory
   updateInventory: void;
+  updateInventorySlot: InventorySlot;
 
   zoneSpawns: void;
   playerPosition: BJS.Vector3;

@@ -10,8 +10,7 @@ func savePlayerData(ses *session.Session) error {
 		return nil // No client data to save
 	}
 
-	charData := ses.Client.CharData
-	if err := db_chardata.UpdateCharacter(charData, ses.AccountID); err != nil {
+	if err := db_chardata.UpdateCharacter(ses.Client.CharData(), ses.AccountID); err != nil {
 		return err
 	}
 

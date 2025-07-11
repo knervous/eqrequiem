@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import type { Entity } from '@game/Model/entity';
 import { PlayerProfile } from '@game/Net/internal/api/capnp/player';
 import Player from '@game/Player/player';
+import type { InventorySlot, NullableItemInstance } from '@game/Player/player-constants';
 import type { PlayerInventory } from '@game/Player/player-inventory';
 import emitter, { Events } from './events';
 
@@ -109,11 +110,27 @@ export const useTarget = () => {
   return target;
 };
 
+export const useInventorySlot = (slot: InventorySlot) => {
+  const [item, setItem] = useState<NullableItemInstance>(Player.instance?.playerInventory.get(slot) ?? null);
+  useEffect(() => {
+    const cb = () => {
+      setItem(Player.instance?.playerInventory.get(slot) ?? null);
+    };
+    emitter.on('updateInventorySlot', cb);
+    return () => {
+      emitter.off('updateInventorySlot', cb);
+    };
+  }, [slot]);
+  return item;
+};
+
 export const usePlayerInventory = () => {
   const [inventory, setInventory] = useState<PlayerInventory | null>(Player.instance?.playerInventory ?? null);
+  const [_, setCount] = useState<number>(0);
   useEffect(() => {
     const cb = () => {
       setInventory(Player.instance?.playerInventory ?? null);
+      setCount((prevCount) => prevCount + 1);
     };
     emitter.on('updateInventory', cb);
     return () => {

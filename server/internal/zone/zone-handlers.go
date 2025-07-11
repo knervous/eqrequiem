@@ -9,7 +9,7 @@ import (
 	eq "github.com/knervous/eqgo/internal/api/capnp"
 	"github.com/knervous/eqgo/internal/api/opcodes"
 	"github.com/knervous/eqgo/internal/constants"
-	entity "github.com/knervous/eqgo/internal/entity"
+	"github.com/knervous/eqgo/internal/ports/client"
 	"github.com/knervous/eqgo/internal/quest"
 
 	db_character "github.com/knervous/eqgo/internal/db/character"
@@ -37,14 +37,11 @@ func HandleChannelMessage(z *ZoneInstance, ses *session.Session, payload []byte)
 		log.Printf("failed to get message: %v", err)
 		return
 	}
-	z.QuestInterface.Invoke(targetName, z.QE().Type(quest.EventSay).SetActor(&entity.Client{
-		Mob: entity.Mob{
-			MobName: ses.Client.CharData.Name,
-		},
-	}).SetReceiver(z.GetNPCByName(targetName)))
-	charData := ses.Client.CharData
+	if recv, ok := z.NPCByName(targetName); ok && recv != nil {
+		z.QuestInterface.Invoke(targetName, z.QE().Type(quest.EventSay).SetActor(ses.Client).SetReceiver(recv))
+	}
 
-	z.BroadcastChannelMessage(charData.Name, message, int(req.ChanNum()))
+	z.BroadcastChannel(ses.Client.CharData().Name, int(req.ChanNum()), message)
 }
 
 func HandleClientUpdate(z *ZoneInstance, ses *session.Session, payload []byte) {
@@ -57,7 +54,7 @@ func HandleClientUpdate(z *ZoneInstance, ses *session.Session, payload []byte) {
 	oldPos := ses.Client.Position()
 
 	// 2) parse new position from request
-	newPosition := entity.MobPosition{
+	newPosition := client.MobPosition{
 		X:       float64(req.X()),
 		Y:       float64(req.Y()),
 		Z:       float64(req.Z()),
@@ -65,7 +62,7 @@ func HandleClientUpdate(z *ZoneInstance, ses *session.Session, payload []byte) {
 	}
 
 	// 3) compute velocity as delta position
-	vel := entity.Velocity{
+	vel := client.Velocity{
 		X: newPosition.X - oldPos.X,
 		Y: newPosition.Y - oldPos.Y,
 		Z: newPosition.Z - oldPos.Z,
@@ -83,18 +80,18 @@ func HandleClientUpdate(z *ZoneInstance, ses *session.Session, payload []byte) {
 		return
 	}
 
-	if ses.Client.Mob.Animation != anim {
-		ses.Client.Mob.Animation = anim
+	if ses.Client.Mob().Animation != anim {
+		ses.Client.Mob().Animation = anim
 		pkt := func(m eq.EntityAnimation) error {
 			err := m.SetAnimation(anim)
 			if err != nil {
 				log.Printf("failed to set animation: %v", err)
 				return err
 			}
-			m.SetSpawnId(int32(ses.Client.GetMob().ID()))
+			m.SetSpawnId(int32(ses.Client.ID()))
 			return nil
 		}
-		spawnId := int32(ses.Client.GetMob().ID())
+		spawnId := int32(ses.Client.ID())
 		for entityId := range z.subs[int(spawnId)] {
 			if entityId == int(spawnId) {
 				continue
@@ -156,7 +153,7 @@ func HandleRequestClientZoneChange(z *ZoneInstance, ses *session.Session, payloa
 		return
 	}
 
-	charData := ses.Client.CharData
+	charData := ses.Client.CharData()
 	if charData == nil {
 		log.Printf("client session %d has no character data", ses.SessionID)
 		return
@@ -241,35 +238,29 @@ func HandleRequestClientZoneChange(z *ZoneInstance, ses *session.Session, payloa
 	playerProfile.SetAaPoints(int32(charData.AaPoints))
 
 	// Inventory
-	charItems, err := db_character.GetCharacterItems(context.Background(), int(charData.ID))
-	if err != nil {
-		log.Printf("failed to get character items for character %d: %v", charData.ID, err)
-		return
-	}
-
+	charItems := ses.Client.Items()
 	charItemsLength := int32(len(charItems))
 	capCharItems, err := playerProfile.NewInventoryItems(charItemsLength)
 	if err != nil {
 		log.Printf("failed to create InventoryItems array: %v", err)
 		return
 	}
-	for itemIdx, charItem := range charItems {
-		itemTemplate, err := items.GetItemTemplateByID(charItem.ItemID)
-		if err != nil {
-			log.Printf("failed to get item template for itemID %d: %v", charItem.ItemID, err)
+	itemIdx := 0
+	for slot, charItem := range charItems {
+		if charItem == nil {
 			continue
 		}
-
 		item := capCharItems.At(itemIdx)
-		item.SetCharges(uint32(charItem.Charges))
-		item.SetQuantity(uint32(charItem.Quantity))
-		item.SetMods(*charItem.Mods)
-		item.SetSlot(int32(charItem.Slot))
-		items.ConvertItemTemplateToCapnp(ses, &itemTemplate, &item)
+		itemIdx++
+		item.SetCharges(uint32(charItem.Instance.Charges))
+		item.SetQuantity(uint32(charItem.Instance.Quantity))
+		item.SetMods(*charItem.Instance.Mods)
+		item.SetSlot(slot)
+		items.ConvertItemTemplateToCapnp(ses, &charItem.Item, &item)
 	}
 
 	// Derived stats
-	mob := ses.Client.Mob
+	mob := ses.Client.Mob()
 	playerProfile.SetAc(int32(mob.AC))
 	playerProfile.SetMagicResist(mob.MR)
 	playerProfile.SetFireResist(mob.FR)
@@ -316,23 +307,25 @@ func HandleRequestClientZoneChange(z *ZoneInstance, ses *session.Session, payloa
 		}
 		spawn := spawnArray.At(spawnIdx)
 		spawnIdx++
-		spawn.SetRace(int32(npc.NpcData.Race))
-		spawn.SetCharClass(int32(npc.NpcData.Class))
-		spawn.SetLevel(int32(npc.NpcData.Level))
+		npcData := npc.NpcData()
+		position := npc.Position()
+		spawn.SetRace(int32(npcData.Race))
+		spawn.SetCharClass(int32(npcData.Class))
+		spawn.SetLevel(int32(npcData.Level))
 		spawn.SetName(npc.Name())
-		spawn.SetSize(float32(npc.NpcData.Size))
-		spawn.SetFace(int32(npc.NpcData.Face))
+		spawn.SetSize(float32(npcData.Size))
+		spawn.SetFace(int32(npcData.Face))
 		spawn.SetSpawnId(int32(npc.ID()))
 		spawn.SetIsNpc(1)
-		spawn.SetGender(int32(npc.NpcData.Gender))
-		spawn.SetX(int32(npc.X))
-		spawn.SetY(int32(npc.Y))
-		spawn.SetZ(int32(npc.Z))
-		spawn.SetBodytype(int32(npc.NpcData.Bodytype))
-		spawn.SetHelm(int32(npc.NpcData.Helmtexture))
-		spawn.SetEquipChest(int32(npc.NpcData.Texture))
-		spawn.SetHeading(int32(npc.Heading))
-		c := worldToCell(npc.Mob.X, npc.Mob.Y, npc.Mob.Z)
+		spawn.SetGender(int32(npcData.Gender))
+		spawn.SetX(int32(position.X))
+		spawn.SetY(int32(position.Y))
+		spawn.SetZ(int32(position.Z))
+		spawn.SetBodytype(int32(npcData.Bodytype))
+		spawn.SetHelm(int32(npcData.Helmtexture))
+		spawn.SetEquipChest(int32(npcData.Texture))
+		spawn.SetHeading(int32(position.Heading))
+		c := worldToCell(position.X, position.Y, position.Z)
 		spawn.SetCellX(int32(c[0]))
 		spawn.SetCellY(int32(c[1]))
 		spawn.SetCellZ(int32(c[2]))
@@ -343,7 +336,7 @@ func HandleRequestClientZoneChange(z *ZoneInstance, ses *session.Session, payloa
 		log.Printf("failed to send Spawn message: %v", err)
 		return
 	}
-	z.registerNewClientGrid(clientEntry.EntityId, entity.MobPosition{
+	z.registerNewClientGrid(clientEntry.EntityId, client.MobPosition{
 		X: charData.X, Y: charData.Y, Z: charData.Z, Heading: charData.Heading,
 	})
 
@@ -352,7 +345,7 @@ func HandleRequestClientZoneChange(z *ZoneInstance, ses *session.Session, payloa
 		if sessionId == ses.SessionID || client.ClientSession == nil {
 			continue
 		}
-		pcData := client.ClientSession.Client.CharData
+		pcData := client.ClientSession.Client.CharData()
 		if pcData == nil {
 			log.Printf("client session %d has no character data", client.ClientSession.SessionID)
 			continue
@@ -393,4 +386,49 @@ func HandleRequestClientZoneChange(z *ZoneInstance, ses *session.Session, payloa
 			},
 		)
 	}
+}
+
+func HandleMoveItem(z *ZoneInstance, ses *session.Session, payload []byte) {
+	req, err := session.Deserialize(ses, payload, eq.ReadRootMoveItem)
+	if err != nil {
+		log.Printf("failed to read MoveItem request: %v", err)
+		return
+	}
+
+	fromSlot := req.FromSlot()
+	toSlot := req.ToSlot()
+	// numberInStack := req.NumberInStack()
+
+	// Will do the validation logic down in this function to make sure
+	// Characters can equip an item etc.
+	err = items.SwapItemSlots(int32(ses.Client.CharData().ID), fromSlot, toSlot, int8(req.BagSlot()))
+	if err != nil {
+		// Send some kind of notification if it's illegal, i.e. bypassing client logic probably
+		log.Printf("failed to swap item slots: %v", err)
+		return
+	}
+	charItems := ses.Client.Items()
+	tempFrom := charItems[fromSlot]
+	tempTo := charItems[toSlot]
+	charItems[fromSlot] = tempTo
+	charItems[toSlot] = tempFrom
+
+	if constants.IsVisibleSlot(fromSlot) && charItems[fromSlot] != nil {
+		z.broadcastWearChange(ses.Client.ID(), fromSlot, charItems[fromSlot])
+	}
+
+	if constants.IsVisibleSlot(toSlot) && charItems[toSlot] != nil {
+		z.broadcastWearChange(ses.Client.ID(), toSlot, charItems[toSlot])
+	}
+
+	moveItemPacket, err := session.NewMessage(ses, eq.NewRootMoveItem)
+	if err != nil {
+		log.Printf("failed to create ClientSpawn message: %v", err)
+		return
+	}
+	moveItemPacket.SetFromSlot(fromSlot)
+	moveItemPacket.SetToSlot(toSlot)
+	moveItemPacket.SetNumberInStack(1) // just for now until we do stacks
+	moveItemPacket.SetBagSlot(0)       // Just for now until we get bags in
+	ses.SendStream(moveItemPacket.Message(), opcodes.MoveItem)
 }

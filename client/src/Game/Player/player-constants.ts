@@ -1,4 +1,6 @@
+import { ItemInstance } from '@game/Net/internal/api/capnp/item';
 
+export type NullableItemInstance = ItemInstance | null;
 
 export enum InventorySlot {
     Charm,

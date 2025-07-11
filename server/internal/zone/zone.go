@@ -8,7 +8,7 @@ import (
 
 	"github.com/knervous/eqgo/internal/db/jetgen/eqgo/model"
 	db_zone "github.com/knervous/eqgo/internal/db/zone"
-	entity "github.com/knervous/eqgo/internal/entity"
+	"github.com/knervous/eqgo/internal/ports/client"
 	"github.com/knervous/eqgo/internal/quest"
 	questregistry "github.com/knervous/eqgo/internal/quest/registry"
 	"github.com/knervous/eqgo/internal/session"
@@ -39,9 +39,9 @@ type ZoneInstance struct {
 
 	// Entities
 	ZonePool   map[int64]*db_zone.SpawnPoolEntry
-	Npcs       map[int]*entity.NPC
-	npcsByName map[string]*entity.NPC // name → NPC
-	Entities   map[int]entity.Entity
+	Npcs       map[int]client.NPC
+	npcsByName map[string]client.NPC // name → NPC
+	Entities   map[int]client.Entity
 
 	// spatial-grid bookkeeping:
 	entityCell      map[int]int64
@@ -106,9 +106,9 @@ func NewZoneInstance(zoneID, instanceID int) *ZoneInstance {
 		ClientEntriesByEntityID: make(map[int]ClientEntry),
 		ZonePool:                zonePool,
 		QuestInterface:          QuestInterface,
-		Npcs:                    make(map[int]*entity.NPC),
-		Entities:                make(map[int]entity.Entity),
-		npcsByName:              make(map[string]*entity.NPC),
+		Npcs:                    make(map[int]client.NPC),
+		npcsByName:              make(map[string]client.NPC),
+		Entities:                make(map[int]client.Entity),
 
 		// Grid processing
 		entityCell:      make(map[int]int64),
@@ -137,7 +137,7 @@ func NewZoneInstance(zoneID, instanceID int) *ZoneInstance {
 		questregistry.RegisterReload(*zone.ShortName, func(qi *quest.ZoneQuestInterface) {
 			z.QuestInterface = qi
 			z.QuestInterface.SetZoneAccess(z)
-			z.BroadcastServerMessage("Quests were hot reloaded")
+			z.BroadcastServer("Quests were hot reloaded")
 
 		})
 	}
@@ -145,13 +145,6 @@ func NewZoneInstance(zoneID, instanceID int) *ZoneInstance {
 	z.processSpawns()
 	go z.run()
 	return z
-}
-
-// QE returns the quest event for the zone.
-func (z *ZoneInstance) QE() *quest.QuestEvent {
-	qe := z.questEvent.Reset()
-	qe.ZoneAccess = z
-	return qe
 }
 
 // AddClient adds a client session to the zone.
@@ -170,7 +163,7 @@ func (z *ZoneInstance) AddClient(sessionID int) {
 		EntityId:      nextId,
 	}
 	z.ClientEntriesByEntityID[nextId] = z.ClientEntries[sessionID]
-	clientSession.Client.Mob.MobID = nextId
+	clientSession.Client.Mob().MobID = nextId
 	z.Entities[nextId] = clientSession.Client
 	fmt.Printf("Added client session %d to zone %d instance %d\n", sessionID, z.ZoneID, z.InstanceID)
 }
