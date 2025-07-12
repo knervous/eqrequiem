@@ -105,7 +105,7 @@ func HandleEnterWorld(ses *session.Session, payload []byte, wh *WorldHandler) bo
 		return false
 	}
 	if accountMatch, err := AccountHasCharacterName(context.Background(), ses.AccountID, name); err != nil || !accountMatch {
-		log.Printf("Tried to log in unsuccessfully from account %d with character %q: %v", ses.AccountID, req.Name, err)
+		log.Printf("Tried to log in unsuccessfully from account %d with character %v", ses.AccountID, err)
 		return false
 	}
 	ses.CharacterName = name

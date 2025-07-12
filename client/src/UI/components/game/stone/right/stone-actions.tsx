@@ -46,35 +46,35 @@ export const StoneActions: React.FC<{ scale: number }> = ({ scale }) => {
           >
             <ActionButton
               useDefaultSize
-              action={CommandHandler.instance.commandWho}
+              action={CommandHandler.instance().commandWho}
               actionData={UIActions[ActionButtonType.WHO]}
               buttonName="A_BTN_WHO"
               scale={scale}
             />
             <ActionButton
               useDefaultSize
-              action={CommandHandler.instance.commandInvite}
+              action={CommandHandler.instance().commandInvite}
               actionData={UIActions[ActionButtonType.INVITE]}
               buttonName="A_BTN_INVITE"
               scale={scale}
             />
             <ActionButton
               useDefaultSize
-              action={CommandHandler.instance.commandDisband}
+              action={CommandHandler.instance().commandDisband}
               actionData={UIActions[ActionButtonType.DISBAND]}
               buttonName="A_BTN_DISBAND"
               scale={scale}
             />
             <ActionButton
               useDefaultSize
-              action={CommandHandler.instance.commandCamp}
+              action={CommandHandler.instance().commandCamp}
               actionData={UIActions[ActionButtonType.CAMP]}
               buttonName="A_BTN_CAMP"
               scale={scale}
             />
             <ActionButton
               useDefaultSize
-              action={CommandHandler.instance.commandSit}
+              action={CommandHandler.instance().commandSit}
               actionData={UIActions[ActionButtonType.SIT]}
               buttonName={sitting ? 'A_BTN_STAND' : 'A_BTN_SIT'}
               scale={scale}
@@ -82,7 +82,7 @@ export const StoneActions: React.FC<{ scale: number }> = ({ scale }) => {
 
             <ActionButton
               useDefaultSize
-              action={CommandHandler.instance.commandWalk}
+              action={CommandHandler.instance().commandWalk}
               actionData={UIActions[ActionButtonType.WALK]}
               buttonName={running ? 'A_BTN_WALK' : 'A_BTN_RUN'}
               scale={scale}

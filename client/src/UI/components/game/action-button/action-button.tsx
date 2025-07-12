@@ -135,29 +135,29 @@ export const ActionHotButton: React.FC<HotButtonProps> = (props) => {
     }
     switch (actionData.type) {
       case ActionButtonType.WHO:
-        return CommandHandler.instance.commandWho.bind(CommandHandler.instance);
+        return CommandHandler.instance().commandWho.bind(CommandHandler.instance);
       case ActionButtonType.INVITE:
-        return CommandHandler.instance.commandInvite.bind(
+        return CommandHandler.instance().commandInvite.bind(
           CommandHandler.instance,
         );
       case ActionButtonType.DISBAND:
-        return CommandHandler.instance.commandDisband.bind(
+        return CommandHandler.instance().commandDisband.bind(
           CommandHandler.instance,
         );
       case ActionButtonType.CAMP:
-        return CommandHandler.instance.commandCamp.bind(
+        return CommandHandler.instance().commandCamp.bind(
           CommandHandler.instance,
         );
       case ActionButtonType.HELP:
-        return CommandHandler.instance.commandHelp.bind(
+        return CommandHandler.instance().commandHelp.bind(
           CommandHandler.instance,
         );
       case ActionButtonType.PERSONA:
-        return CommandHandler.instance.commandPersona.bind(
+        return CommandHandler.instance().commandPersona.bind(
           CommandHandler.instance,
         );
       case ActionButtonType.OPTIONS:
-        return CommandHandler.instance.commandOptions.bind(
+        return CommandHandler.instance().commandOptions.bind(
           CommandHandler.instance,
         );
       case ActionButtonType.INVENTORY:

@@ -2226,6 +2226,40 @@ export class ChannelMessage extends $.Struct {
     return "ChannelMessage_" + super.toString();
   }
 }
+export class CommandMessage extends $.Struct {
+  static readonly _capnp = {
+    displayName: "CommandMessage",
+    id: "9044b7f5fe5563b0",
+    size: new $.ObjectSize(0, 2)
+  };
+  get command(): string {
+    return $.utils.getText(0, this);
+  }
+  set command(value: string) {
+    $.utils.setText(0, value, this);
+  }
+  _adoptArgs(value: $.Orphan<$.List<string>>): void {
+    $.utils.adopt(value, $.utils.getPointer(1, this));
+  }
+  _disownArgs(): $.Orphan<$.List<string>> {
+    return $.utils.disown(this.args);
+  }
+  get args(): $.List<string> {
+    return $.utils.getList(1, $.TextList, this);
+  }
+  _hasArgs(): boolean {
+    return !$.utils.isNull($.utils.getPointer(1, this));
+  }
+  _initArgs(length: number): $.List<string> {
+    return $.utils.initList(1, $.TextList, length, this);
+  }
+  set args(value: $.List<string>) {
+    $.utils.copyFrom(value, $.utils.getPointer(1, this));
+  }
+  toString(): string {
+    return "CommandMessage_" + super.toString();
+  }
+}
 export class SpecialMesg extends $.Struct {
   static readonly _capnp = {
     displayName: "SpecialMesg",
@@ -2859,7 +2893,7 @@ export class LevelUpdate extends $.Struct {
   static readonly _capnp = {
     displayName: "LevelUpdate",
     id: "e72726225a9f8ca8",
-    size: new $.ObjectSize(16, 0)
+    size: new $.ObjectSize(8, 0)
   };
   get level(): number {
     return $.utils.getInt32(0, this);
@@ -2867,17 +2901,11 @@ export class LevelUpdate extends $.Struct {
   set level(value: number) {
     $.utils.setInt32(0, value, this);
   }
-  get levelOld(): number {
+  get exp(): number {
     return $.utils.getInt32(4, this);
   }
-  set levelOld(value: number) {
-    $.utils.setInt32(4, value, this);
-  }
-  get exp(): number {
-    return $.utils.getInt32(8, this);
-  }
   set exp(value: number) {
-    $.utils.setInt32(8, value, this);
+    $.utils.setInt32(4, value, this);
   }
   toString(): string {
     return "LevelUpdate_" + super.toString();

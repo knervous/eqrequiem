@@ -1,6 +1,8 @@
 package zone
 
 import (
+	capnp "capnproto.org/go/capnp/v3"
+
 	eq "github.com/knervous/eqgo/internal/api/capnp"
 	"github.com/knervous/eqgo/internal/api/opcodes"
 	"github.com/knervous/eqgo/internal/constants"
@@ -151,4 +153,26 @@ func (z *ZoneInstance) BroadcastChannel(sender string, channelID int, msg string
 
 func (z *ZoneInstance) BroadcastServer(msg string) {
 	z.broadcast("", -1, msg)
+}
+
+type capnpMessage interface {
+	Message() *capnp.Message
+}
+
+func Datagram[T capnpMessage](
+	ses *session.Session,
+	ctor func(*capnp.Segment) (T, error),
+	opcode opcodes.OpCode,
+	build func(T) error,
+) error {
+	return session.QueueDatagram(ses, ctor, opcode, build)
+}
+
+func Message[T capnpMessage](
+	ses *session.Session,
+	ctor func(*capnp.Segment) (T, error),
+	opcode opcodes.OpCode,
+	build func(T) error,
+) error {
+	return session.QueueMessage(ses, ctor, opcode, build)
 }

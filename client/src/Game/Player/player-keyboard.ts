@@ -107,7 +107,7 @@ export class PlayerKeyboard {
         break;
       }
       case keyBindings.hail.toLowerCase(): {
-        CommandHandler.instance.commandHail();
+        CommandHandler.instance().commandHail();
         break;
       }
       case keyBindings.sitStand.toLowerCase(): {

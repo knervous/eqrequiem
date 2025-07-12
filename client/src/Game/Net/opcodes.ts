@@ -89,6 +89,7 @@ export enum OpCodes {
     Sneak,
     Hide,
     ChannelMessage,
+    GMCommand,
     WearChange,
     DeleteSpawn,
     SaveOnZoneReq,

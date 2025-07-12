@@ -12,86 +12,15 @@ import {
 import { OpCodes } from '@game/Net/opcodes';
 import Player from '@game/Player/player';
 import { WorldSocket } from '@ui/net/instances';
-import { chatMessage } from './chat-message';
-import { Trie } from './trie';
+import { addChatLine, addChatLines } from './chat-message';
+import { BaseCommandHandler, command } from './command-base';
 
-export function command(name: string): MethodDecorator {
-  return (target: object, propertyKey: string | symbol) => {
-    const ctor = target.constructor as any;
-    if (!ctor.commandRegistry) {
-      ctor.commandRegistry = new Map<string, string>();
-    }
-    ctor.commandRegistry.set(name, propertyKey as string);
-  };
-}
 
-const addChatLine = (message: string) => {
-  chatMessage({
-    type   : 0,
-    message,
-    color  : '#ddd',
-    chanNum: 0, 
-  });
-};
-
-const addChatLines = (lines: string | string[]) => {
-  const lineArray = Array.isArray(lines)
-    ? lines
-    : lines
-      .trim()
-      .split('\n')
-      .map((line) => line.trim());
-  lineArray.forEach((line) => addChatLine(line));
-};
-
-export class CommandHandler {
-  private trie = new Trie();
-  private commandRegistry: Map<string, string>;
-  private static _instance: CommandHandler | null = null;
+export class CommandHandler extends BaseCommandHandler {
   private setMode: React.Dispatch<React.SetStateAction<string>> | null = null;
-  public static get instance(): CommandHandler {
-    if (!this._instance) {
-      this._instance = new CommandHandler();
-    }
-    return this._instance;
-  }
+
   public setModeHandler(setMode: React.Dispatch<React.SetStateAction<string>>) {
     this.setMode = setMode;
-  }
-  constructor() {
-    const ctor = (this as any).constructor;
-    this.commandRegistry = ctor.commandRegistry ?? new Map();
-
-    for (const [cmd, methodName] of this.commandRegistry) {
-      this.trie.insert(cmd, methodName, this);
-    }
-  }
-
-  public parseCommand(input: string) {
-    const [raw, ...args] = input.trim().split(/\s+/);
-    const cmd = raw.toLowerCase();
-
-    let entry = this.trie.searchExact(cmd);
-
-    if (!entry) {
-      const matches = this.trie.searchPrefix(cmd);
-      if (matches.length === 1) {
-        entry = matches[0].entry;
-      } else if (matches.length > 1) {
-        entry = matches[0].entry;
-      }
-    }
-
-    if (entry) {
-      const fn = (this as any)[entry.method];
-      if (typeof fn === 'function') {
-        fn.call(this, args);
-      } else {
-        console.error(`Handler ${entry.method} is not a function`);
-      }
-    } else {
-      addChatLine(`Unknown command: ${cmd}`);
-    }
   }
 
   @command('speed')
@@ -136,6 +65,8 @@ export class CommandHandler {
         WASD: Movement
         Mouse: Look around
         U: Toggle UI
+        ------ GM Commands -----
+        #help - Lists GM commands
     `);
   }
 
@@ -280,6 +211,7 @@ export class CommandHandler {
   @command('camp')
   commandCamp() {
     GameManager.instance?.dispose();
+    WorldSocket.sendMessage(OpCodes.Camp, null, null);
     setTimeout(() => {
       emitter.emit('setMode', 'character-select');
     }, 100);

@@ -82,6 +82,20 @@ export const usePlayerProfile = () => {
   return profile; 
 };
 
+export const usePlayerLevel = () => {
+  const [level, setLevel] = useState<number>(Player.instance?.player?.level ?? 1);
+  useEffect(() => {
+    const cb = (level: number) => {
+      setLevel(level);
+    };
+    emitter.on('levelUpdate', cb);
+    return () => {
+      emitter.off('levelUpdate', cb);
+    };
+  }, []);
+  return level;
+};
+
 export const useInventoryOpen = () => {
   const [open, setOpen] = useState<boolean>(false);
   useEffect(() => {

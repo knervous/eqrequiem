@@ -1,5 +1,5 @@
-import { OpCodes } from "@game/Net/opcodes";
-import * as $ from "capnp-es";
+import { OpCodes } from '@game/Net/opcodes';
+import * as $ from 'capnp-es';
 
 interface WebTransportOptions {
   serverCertificateHashes?: Array<{
@@ -55,8 +55,27 @@ function setStructFields<T extends $.Struct>(
   struct: T,
   data: Partial<Record<keyof T, any>>,
 ) {
-  for (const [key, value] of Object.entries(data)) {
-    if (value !== undefined) (struct as any)[key] = value;
+  for (const [rawKey, value] of Object.entries(data)) {
+    if (value === undefined) {continue;}
+    const key = rawKey as keyof T;
+
+    // 1) Detect a JS array → list case
+    if (Array.isArray(value)) {
+      // build the "initArgs" method name
+      const initName = `_init${String(key)[0].toUpperCase()}${String(key).slice(1)}`;
+      const initFn = (struct as any)[initName] as ((n: number) => any) | undefined;
+      if (typeof initFn === 'function') {
+        const listBuilder = initFn.call(struct, value.length);
+        for (let i = 0; i < value.length; i++) {
+          listBuilder.set(i, value[i]);
+        }
+        continue;
+      }
+      // else fall‐through: maybe you have a byte‐list or something else
+    }
+
+    // 2) Fallback: simple scalar/struct assignment
+    (struct as any)[key] = value;
   }
 }
 
@@ -85,7 +104,7 @@ export class EqSocket {
     this.allowReconnect = config.allowReconnect ?? true;
     this.maxRetries = config.maxRetries ?? 5;
     this.close = this.close.bind(this);
-    window.addEventListener("beforeunload", () => this.close(false));
+    window.addEventListener('beforeunload', () => this.close(false));
   }
 
   public setSessionId(id: number) {
@@ -101,7 +120,7 @@ export class EqSocket {
       new (url: string, opts?: WebTransportOptions): WebTransport;
     };
     if (!WT) {
-      console.error("WebTransport not supported");
+      console.error('WebTransport not supported');
       return false;
     }
 
@@ -112,17 +131,17 @@ export class EqSocket {
     // if already open, shut it down first
     if (this.webtransport) {
       const closedInfo = await this.webtransport.closed.catch(() => null);
-      if (!closedInfo) this.close(false);
+      if (!closedInfo) {this.close(false);}
     }
 
     try {
-      //const _sid = this.sessionId ?? 0;
-      if (import.meta.env.VITE_LOCAL_DEV === "true") {
-        const hash = await fetch(`/api/hash?port=7100&ip=127.0.0.1`).then((r: Response) => r.text());
-        this.webtransport = new WebTransport(`https://127.0.0.1/eq`, {
-          serverCertificateHashes: [{ algorithm: "sha-256", value: base64ToArrayBuffer(hash) }],
+      // const _sid = this.sessionId ?? 0;
+      if (import.meta.env.VITE_LOCAL_DEV === 'true') {
+        const hash = await fetch('/api/hash?port=7100&ip=127.0.0.1').then((r: Response) => r.text());
+        this.webtransport = new WebTransport('https://127.0.0.1/eq', {
+          serverCertificateHashes: [{ algorithm: 'sha-256', value: base64ToArrayBuffer(hash) }],
         });
-        console.log("Got hash", hash);
+        console.log('Got hash', hash);
       } else {
         this.webtransport = new WebTransport(`https://${url}:${port}/eq`);
       }
@@ -140,8 +159,8 @@ export class EqSocket {
       (async () => {
         while (true) {
           const { value: stream, done } = await streamReader.read();
-          if (done) break;
-          if (!stream) continue;
+          if (done) {break;}
+          if (!stream) {continue;}
           // grab writer & start reader
           this.controlWriter = stream.writable.getWriter();
           this.startControlReadLoop(stream.readable);
@@ -157,7 +176,7 @@ export class EqSocket {
 
       return true;
     } catch (e) {
-      console.warn("Connect failed:", e);
+      console.warn('Connect failed:', e);
       this.scheduleReconnect();
       return false;
     }
@@ -166,10 +185,16 @@ export class EqSocket {
   /** Fire-and-forget datagram */
   public async sendMessage<T extends $.Struct>(
     opCode: number,
-    StructType: Parameters<$.Message["initRoot"]>[0] & { prototype: T },
-    data: Partial<Record<keyof T, any>>,
+    StructType: Parameters<$.Message['initRoot']>[0] & { prototype: T } | null,
+    data: Partial<Record<keyof T, any>> | null,
   ): Promise<void> {
     const msg = new $.Message();
+    if (!StructType || !data) {
+      const buf = new Uint8Array(2).buffer;
+      const op = new Uint16Array([opCode]).buffer;
+      await this.sendDatagram(new Uint8Array(concatArrayBuffer(op, buf)));
+      return;
+    }
     const root = msg.initRoot(StructType);
     setStructFields(root, data);
     const buf = $.Message.toArrayBuffer(msg);
@@ -181,11 +206,10 @@ export class EqSocket {
   /** Reliable, ordered “stream” message */
   public async sendStreamMessage<T extends $.Struct>(
     opCode: number,
-    StructType: Parameters<$.Message["initRoot"]>[0] & { prototype: T },
+    StructType: Parameters<$.Message['initRoot']>[0] & { prototype: T },
     data: Partial<Record<keyof T, any>>,
   ): Promise<void> {
-    if (!this.controlWriter)
-      throw new Error("Control stream not open");
+    if (!this.controlWriter) {throw new Error('Control stream not open');}
     const msg = new $.Message();
     const root = msg.initRoot(StructType);
     setStructFields(root, data);
@@ -205,7 +229,7 @@ export class EqSocket {
 
   public registerOpCodeHandler<T extends $.Struct>(
     opCode: OpCodes,
-    StructType: Parameters<$.Message["initRoot"]>[0] & { prototype: T },
+    StructType: Parameters<$.Message['initRoot']>[0] & { prototype: T },
     handler: (msg: T) => void,
   ) {
     this.opCodeHandlers[opCode] = (buf: Uint8Array) => {
@@ -238,7 +262,7 @@ export class EqSocket {
   // ——— private helpers ———
 
   private async sendDatagram(buf: Uint8Array) {
-    if (!this.datagramWriter) return;
+    if (!this.datagramWriter) {return;}
     this.writeQueue = this.writeQueue.then(() =>
       this.datagramWriter!.write(buf),
     );
@@ -246,20 +270,20 @@ export class EqSocket {
   }
 
   private startDatagramLoop() {
-    if (!this.webtransport) return;
+    if (!this.webtransport) {return;}
     const rdr = this.webtransport.datagrams.readable.getReader();
     (async () => {
       try {
         while (true) {
           const { value, done } = await rdr.read();
-          if (done) break;
-          if (!value) continue;
+          if (done) {break;}
+          if (!value) {continue;}
           const opcode = new Uint16Array(value.buffer.slice(0, 2))[0];
           const payload = value.slice(2);
           this.opCodeHandlers[opcode]?.(payload);
         }
       } catch (e) {
-        console.error("Datagram loop error:", e);
+        console.error('Datagram loop error:', e);
       } finally {
         rdr.releaseLock();
       }
@@ -273,11 +297,11 @@ export class EqSocket {
       try {
         while (true) {
           const { value, done } = await rdr.read();
-          if (done) break;
+          if (done) {break;}
           buffer = concatUint8(buffer, value!); 
           while (buffer.length >= 4) {
             const len = new DataView(buffer.buffer).getUint32(0, true);
-            if (buffer.length < 4 + len) break;
+            if (buffer.length < 4 + len) {break;}
             const msg = buffer.slice(4, 4 + len);
             const opcode = new Uint16Array(msg.buffer.slice(0, 2))[0];
             const payload = msg.slice(2);
@@ -286,7 +310,7 @@ export class EqSocket {
           }
         }
       } catch (e) {
-        console.error("Control stream loop error:", e);
+        console.error('Control stream loop error:', e);
       } finally {
         rdr.releaseLock();
       }
@@ -312,7 +336,7 @@ export class EqSocket {
         this.port!,
         this.onClose!,
       );
-      if (!ok) this.scheduleReconnect();
+      if (!ok) {this.scheduleReconnect();}
     }, delay);
   }
 }

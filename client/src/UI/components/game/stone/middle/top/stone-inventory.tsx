@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef } from 'react';
 import BABYLON from '@bjs';
 import { CLASS_DATA_NAMES } from '@game/Constants/class-data';
 import { getDeityName } from '@game/Constants/util';
-import { usePlayerProfile } from '@game/Events/event-hooks';
+import { usePlayerLevel, usePlayerProfile } from '@game/Events/event-hooks';
 import emitter from '@game/Events/events';
 import GameManager from '@game/Manager/game-manager';
 import Player from '@game/Player/player';
@@ -51,6 +51,7 @@ export const StoneInventory: React.FC<{
 }> = ({ width, height, scale }) => {
   const inventoryRef = useRef<HTMLDivElement>(null);
   const bgImages = useSakImages(imageNames, true);
+  const level = usePlayerLevel();
   const player = usePlayerProfile();
   const stoneImages = useMemo(
     () =>
@@ -181,7 +182,7 @@ export const StoneInventory: React.FC<{
           {player?.name || ''}
         </Typography>
         <Typography className="invui" sx={{ top: 53, left: 60 }}>
-          {player?.level || ''}
+          {level || ''}
         </Typography>
         <Typography className="invui" sx={{ top: 73, left: 25 }}>
           {CLASS_DATA_NAMES[player?.charClass ?? ''] || ''}

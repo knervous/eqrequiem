@@ -42,7 +42,7 @@ export class Trie {
     let node = this.root;
     for (const ch of prefix) {
       node = node.children.get(ch)!;
-      if (!node) return [];
+      if (!node) {return [];}
     }
     // Now collect all entries in this subtree
     const results: { command: string, entry: CommandEntry }[] = [];

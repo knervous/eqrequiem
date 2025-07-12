@@ -417,6 +417,11 @@ struct ChannelMessage {
   message @5 :Text;
 }
 
+struct CommandMessage {
+  command @0 :Text;
+  args @1 :List(Text);
+}
+
 struct SpecialMesg {
   header @0 :Text;
   msgType @1 :Int32;
@@ -539,8 +544,7 @@ struct Stamina {
 
 struct LevelUpdate {
   level @0 :Int32;
-  levelOld @1 :Int32;
-  exp @2 :Int32;
+  exp @1 :Int32;
 }
 
 struct ExpUpdate {

@@ -97,6 +97,7 @@ const (
 	Sneak
 	Hide
 	ChannelMessage
+	GMCommand
 	WearChange
 	DeleteSpawn
 	SaveOnZoneReq

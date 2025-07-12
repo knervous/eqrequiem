@@ -209,7 +209,6 @@ func HandleRequestClientZoneChange(z *ZoneInstance, ses *session.Session, payloa
 	ses.SendStream(newZone.Message(), opcodes.NewZone)
 
 	// PlayerProfile
-
 	playerProfile, err := session.NewMessage(ses, eq.NewRootPlayerProfile)
 	if err != nil {
 		log.Printf("failed to create PlayerProfile message: %v", err)
@@ -431,4 +430,35 @@ func HandleMoveItem(z *ZoneInstance, ses *session.Session, payload []byte) {
 	moveItemPacket.SetNumberInStack(1) // just for now until we do stacks
 	moveItemPacket.SetBagSlot(0)       // Just for now until we get bags in
 	ses.SendStream(moveItemPacket.Message(), opcodes.MoveItem)
+}
+
+func HandleCamp(z *ZoneInstance, ses *session.Session, payload []byte) {
+	savePlayerData(ses)
+	z.RemoveClient(ses.SessionID)
+}
+
+func HandleGMCommand(z *ZoneInstance, ses *session.Session, payload []byte) {
+	req, err := session.Deserialize(ses, payload, eq.ReadRootCommandMessage)
+	if err != nil {
+		return
+	}
+
+	command, err := req.Command()
+	if err != nil {
+		return
+	}
+	args, err := req.Args()
+	if err != nil {
+		return
+	}
+	// turns args to string slice
+	argsSlice := make([]string, 0, args.Len())
+	for i := 0; i < args.Len(); i++ {
+		arg, err := args.At(i)
+		if err != nil {
+			return
+		}
+		argsSlice = append(argsSlice, arg)
+	}
+	z.HandleCommand(ses, command, argsSlice)
 }

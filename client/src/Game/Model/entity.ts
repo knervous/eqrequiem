@@ -135,7 +135,7 @@ export class Entity extends BABYLON.TransformNode {
     raceEntry: RaceEntry,
   ) {
     super(`entity_${spawn.name}`, scene);
-    this.isPlayer = spawn instanceof PlayerProfile;
+    this.isPlayer = !((spawn as Spawn)?.isNpc ?? false);
     this.raceDataEntry = raceEntry;
     this.gameManager = gameManager;
     this.spawn = spawn;

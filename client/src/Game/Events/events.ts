@@ -18,6 +18,9 @@ export type Events = {
   playerRunning: boolean;
   playerSitting: boolean;
 
+  // Updates
+  levelUpdate: number;
+
   // Items/inventory
   updateInventory: void;
   updateInventorySlot: InventorySlot;

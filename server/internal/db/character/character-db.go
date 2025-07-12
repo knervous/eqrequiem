@@ -75,6 +75,7 @@ func UpdateCharacter(charData *model.CharacterData, accountID int64) error {
 			table.CharacterData.Y,
 			table.CharacterData.Z,
 			table.CharacterData.Heading,
+			table.CharacterData.Level,
 		).
 		SET(
 			charData.ZoneID,
@@ -83,6 +84,7 @@ func UpdateCharacter(charData *model.CharacterData, accountID int64) error {
 			charData.Y,
 			charData.Z,
 			charData.Heading,
+			charData.Level,
 		).
 		WHERE(table.CharacterData.ID.EQ(mysql.Int32(int32(charData.ID))))
 

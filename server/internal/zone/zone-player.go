@@ -6,8 +6,8 @@ import (
 )
 
 func savePlayerData(ses *session.Session) error {
-	if ses.Client == nil || ses.Client.CharData == nil {
-		return nil // No client data to save
+	if ses.Client == nil || ses.Client.CharData() == nil {
+		return nil
 	}
 
 	if err := db_chardata.UpdateCharacter(ses.Client.CharData(), ses.AccountID); err != nil {

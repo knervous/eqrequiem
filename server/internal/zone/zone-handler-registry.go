@@ -27,6 +27,8 @@ func NewZoneOpCodeRegistry(zoneID int) *HandlerRegistry {
 		opcodes.ChannelMessage:          HandleChannelMessage,
 		opcodes.ClientUpdate:            HandleClientUpdate,
 		opcodes.Animation:               HandleClientAnimation,
+		opcodes.Camp:                    HandleCamp,
+		opcodes.GMCommand:               HandleGMCommand,
 
 		// Items
 		opcodes.MoveItem: HandleMoveItem,

@@ -1,8 +1,9 @@
+import { addChatLine } from '@game/ChatCommands/chat-message';
 import emitter from '@game/Events/events';
 import type GameManager from '@game/Manager/game-manager';
 import Player from '@game/Player/player';
 import { WorldSocket } from '@ui/net/instances';
-import { ChannelMessage, EntityAnimation, EntityPositionUpdate, MoveItem, Spawn, Spawns } from './internal/api/capnp/common';
+import { ChannelMessage, EntityAnimation, EntityPositionUpdate, LevelUpdate, MoveItem, Spawn, Spawns } from './internal/api/capnp/common';
 import { PlayerProfile } from './internal/api/capnp/player';
 import { NewZone } from './internal/api/capnp/zone';
 import { OpCodes } from './opcodes';
@@ -102,5 +103,17 @@ export class ZonePacketHandler {
   @opCodeHandler(OpCodes.MoveItem, MoveItem)
   processMoveItem(item: MoveItem) {
     Player.instance?.moveItem(item);
+  }
+
+  @opCodeHandler(OpCodes.LevelUpdate, LevelUpdate)
+  processLevelUpdate(levelUpdate: LevelUpdate) {
+    const player = Player.instance?.player;
+    if (!player) {
+      return;
+    }
+    player.level = levelUpdate.level;
+    player.exp = levelUpdate.exp;
+    emitter.emit('levelUpdate', levelUpdate.level);
+    addChatLine(`You have gained a level! You are now level ${levelUpdate.level}.`);
   }
 }
