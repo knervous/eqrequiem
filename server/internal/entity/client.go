@@ -2,6 +2,7 @@ package entity
 
 import (
 	"context"
+	"encoding/json"
 	"log"
 
 	"github.com/knervous/eqgo/internal/constants"
@@ -50,9 +51,14 @@ func NewClient(charData *model.CharacterData) (client.Client, error) {
 			log.Printf("failed to get item template for itemID %d: %v", item.ItemID, err)
 			continue
 		}
+		itemInstance := items.CreateItemInstanceFromTemplateID(item.ItemID)
+		itemInstance.Quantity = item.Quantity
+		itemInstance.Charges = item.Charges
+		json.Unmarshal([]byte(*item.Mods), &itemInstance.Mods)
 		itemWithTemplate := &constants.ItemWithInstance{
 			Item:     itemTemplate,
-			Instance: item.ItemInstances,
+			Instance: *itemInstance,
+			BagSlot:  item.Bag,
 		}
 		client.items[int32(item.Slot)] = itemWithTemplate
 	}

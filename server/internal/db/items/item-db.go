@@ -1,7 +1,6 @@
 package items
 
 import (
-	"database/sql"
 	"encoding/json"
 	"fmt"
 
@@ -12,11 +11,12 @@ import (
 	"github.com/knervous/eqgo/internal/db/jetgen/eqgo/table"
 
 	"github.com/go-jet/jet/v2/mysql"
+	"github.com/go-jet/jet/v2/stmtcache"
 	_ "github.com/go-sql-driver/mysql"
 )
 
 // CreateItemInstance creates a new item_instances row and returns its auto-increment ID.
-func CreateDBItemInstance(tx *sql.Tx, itemInstance ItemInstance, ownerId int32) (int32, error) {
+func CreateDBItemInstance(tx *stmtcache.Tx, itemInstance constants.ItemInstance, ownerId int32) (int32, error) {
 	// 1) marshal mods JSON
 	modsJSON, err := json.Marshal(itemInstance.Mods)
 	if err != nil {
@@ -179,7 +179,7 @@ func SwapItemSlots(playerID, fromSlot, toSlot int32, bagSlot int8) (err error) {
 	}
 }
 
-func AddItemToPlayerInventoryFreeSlot(itemInstance ItemInstance, playerID int32) (int32, error) {
+func AddItemToPlayerInventoryFreeSlot(itemInstance constants.ItemInstance, playerID int32) (int32, error) {
 	tx, err := db.GlobalWorldDB.DB.Begin()
 	if err != nil {
 		return 0, fmt.Errorf("begin tx: %v", err)
@@ -200,7 +200,7 @@ func AddItemToPlayerInventoryFreeSlot(itemInstance ItemInstance, playerID int32)
 	// 2) move it onto the character
 	if _, err = table.ItemInstances.
 		UPDATE(table.ItemInstances.OwnerID, table.ItemInstances.OwnerType).
-		SET(mysql.Int32(playerID), OwnerTypeCharacter).
+		SET(mysql.Int32(playerID), constants.OwnerTypeCharacter).
 		WHERE(table.ItemInstances.ID.EQ(mysql.Int32(itemInstanceID))).
 		Exec(tx); err != nil {
 		return 0, fmt.Errorf("move item instance: %v", err)
@@ -269,7 +269,7 @@ func AddItemToPlayerInventoryFreeSlot(itemInstance ItemInstance, playerID int32)
 func MoveItemInPlayerInventory(itemInstanceId int32, playerId int32, slot int32) error {
 	stmt := table.ItemInstances.
 		UPDATE(table.ItemInstances.OwnerID, table.ItemInstances.OwnerType).
-		SET(playerId, OwnerTypeCharacter).
+		SET(playerId, constants.OwnerTypeCharacter).
 		WHERE(table.ItemInstances.ID.EQ(mysql.Int32(itemInstanceId)))
 
 	if _, err := stmt.Exec(db.GlobalWorldDB.DB); err != nil {
@@ -288,7 +288,7 @@ func MoveItemInPlayerInventory(itemInstanceId int32, playerId int32, slot int32)
 	return nil
 }
 
-func InsertItemInstance(instance ItemInstance) error {
+func InsertItemInstance(instance constants.ItemInstance) error {
 	modsJSON, err := json.Marshal(instance.Mods)
 	if err != nil {
 		return fmt.Errorf("failed to marshal mods: %v", err)
@@ -319,10 +319,10 @@ func InsertItemInstance(instance ItemInstance) error {
 }
 
 // GetItemInstanceByID retrieves an item instance (with caching) and its associated item
-func GetItemInstanceByID(guid int32) (ItemInstance, error) {
+func GetItemInstanceByID(guid int32) (constants.ItemInstance, error) {
 	cacheKey := fmt.Sprintf("iteminstance:guid:%d", guid)
 	if val, found, err := cache.GetCache().Get(cacheKey); err == nil && found {
-		if inst, ok := val.(ItemInstance); ok {
+		if inst, ok := val.(constants.ItemInstance); ok {
 			return inst, nil
 		}
 	}
@@ -334,22 +334,22 @@ func GetItemInstanceByID(guid int32) (ItemInstance, error) {
 
 	err := stmt.Query(db.GlobalWorldDB.DB, &jetInstance)
 	if err != nil {
-		return ItemInstance{}, fmt.Errorf("failed to query item instance: %v", err)
+		return constants.ItemInstance{}, fmt.Errorf("failed to query item instance: %v", err)
 	}
 
-	var mods Mods
+	var mods constants.Mods
 	if jetInstance.Mods != nil {
 		if err := json.Unmarshal([]byte(*jetInstance.Mods), &mods); err != nil {
-			return ItemInstance{}, fmt.Errorf("failed to unmarshal mods: %v", err)
+			return constants.ItemInstance{}, fmt.Errorf("failed to unmarshal mods: %v", err)
 		}
 	}
 
 	item, err := GetItemTemplateByID(jetInstance.ID)
 	if err != nil {
-		return ItemInstance{}, err
+		return constants.ItemInstance{}, err
 	}
 
-	inst := ItemInstance{
+	inst := constants.ItemInstance{
 		Item:      item,
 		ID:        jetInstance.ID,
 		ItemID:    jetInstance.ItemID,
@@ -357,7 +357,7 @@ func GetItemInstanceByID(guid int32) (ItemInstance, error) {
 		Charges:   jetInstance.Charges,
 		Quantity:  jetInstance.Quantity,
 		OwnerID:   jetInstance.OwnerID,
-		OwnerType: OwnerType(jetInstance.OwnerType),
+		OwnerType: constants.OwnerType(jetInstance.OwnerType),
 	}
 
 	// Cache the instance
@@ -367,7 +367,7 @@ func GetItemInstanceByID(guid int32) (ItemInstance, error) {
 }
 
 // UpdateItemInstance updates fields of an existing item instance
-func UpdateItemInstance(instance ItemInstance) error {
+func UpdateItemInstance(instance constants.ItemInstance) error {
 	// Prepare mods JSON
 	modsJSON, err := json.Marshal(instance.Mods)
 	if err != nil {

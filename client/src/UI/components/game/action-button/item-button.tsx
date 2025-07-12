@@ -16,6 +16,8 @@ interface ItemButtonProps {
   slot: InventorySlot;
   hotButton?: boolean;
   hotButtonIndex?: number;
+  height?: number | string | undefined;
+  width?: number | string | undefined;
 }
 
 const backgroundMap: Record<number, string> = {
@@ -117,8 +119,8 @@ export const ItemButton: React.FC<ItemButtonProps> = (props) => {
         },
         backgroundImage: `url(${bgEntry.image})`,
         backgroundSize : 'cover',
-        width          : '100%',
-        height         : '100%',
+        width          : props.width ?? '100%',
+        height         : props.height ?? '100%',
       }}
       title={item?.name}
       onClick={onClick}

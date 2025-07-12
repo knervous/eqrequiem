@@ -49,6 +49,35 @@ var visibleSlotsMap = map[int32]bool{
 	SlotSecondary: true,
 }
 
+// OwnerType represents the type of owner for an item instance
+type OwnerType uint8
+
+// Constants for owner types
+const (
+	OwnerTypeCharacter OwnerType = 0
+	OwnerTypeMerchant  OwnerType = 1
+	OwnerTypeGuild     OwnerType = 2
+)
+
+// Mods represents the JSON structure of the mods field
+type Mods struct {
+	Enchantment string `json:"enchantment"`
+	Durability  int    `json:"durability"`
+	// Add other fields as needed
+}
+
+// ItemInstance represents a domain model for item_instances
+type ItemInstance struct {
+	ID        int32
+	ItemID    int32
+	Mods      Mods // Rich type for JSON
+	Charges   uint8
+	Quantity  uint8
+	OwnerID   *uint32
+	OwnerType OwnerType
+	Item      model.Items
+}
+
 func IsVisibleSlot(slot int32) bool {
 	return visibleSlotsMap[slot]
 }
@@ -60,5 +89,6 @@ type ItemWithSlot struct {
 
 type ItemWithInstance struct {
 	Item     model.Items
-	Instance model.ItemInstances
+	Instance ItemInstance
+	BagSlot  int8
 }

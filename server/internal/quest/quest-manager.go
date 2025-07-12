@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/knervous/eqgo/internal/db/items"
+	"github.com/knervous/eqgo/internal/constants"
 	"github.com/knervous/eqgo/internal/db/jetgen/eqgo/model"
 	"github.com/knervous/eqgo/internal/ports/client"
 	"github.com/knervous/eqgo/internal/session"
@@ -169,12 +169,12 @@ type QuestEvent struct {
 	EventType     QuestEventType
 	Actor         client.Entity // will be Actor which can be interpreted as any type of Mob (NPC, PC, Client)
 	Receiver      client.Entity
-	Item          *[]items.ItemInstance
+	Item          *[]constants.ItemInstance
 	ZoneData      *[]interface{}
 	EncounterName string
 	ExtraData     uint32
 	SpellID       uint32
-	ItemArray     *[]items.ItemInstance
+	ItemArray     *[]constants.ItemInstance
 	ActorArray    *[]model.Spawn2
 	StringArray   []string
 	ZoneAccess    client.ZoneAccess

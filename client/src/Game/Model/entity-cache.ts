@@ -1,17 +1,17 @@
 // src/game/Model/entity-cache.ts
 
-import BABYLON from "@bjs";
-import type * as BJS from "@babylonjs/core";
-import { FileSystem } from "@game/FileSystem/filesystem";
-import { Spawn } from "@game/Net/internal/api/capnp/common";
-import RACE_DATA from "@game/Constants/race-data";
-import { Entity } from "./entity";
-import { loadBasisTexture } from "./basis-texture";
-import { createVATShaderMaterial } from "./entity-material";
-import { PlayerProfile } from "@game/Net/internal/api/capnp/player";
-import type GameManager from "@game/Manager/game-manager";
-import { InventorySlot } from "@game/Player/player-constants";
-import { Races } from "@game/Constants/constants";
+import type * as BJS from '@babylonjs/core';
+import BABYLON from '@bjs';
+import { Races } from '@game/Constants/constants';
+import RACE_DATA from '@game/Constants/race-data';
+import { FileSystem } from '@game/FileSystem/filesystem';
+import type GameManager from '@game/Manager/game-manager';
+import { Spawn } from '@game/Net/internal/api/capnp/common';
+import { PlayerProfile } from '@game/Net/internal/api/capnp/player';
+import { InventorySlot } from '@game/Player/player-constants';
+import { loadBasisTexture } from './basis-texture';
+import { Entity } from './entity';
+import { createVATShaderMaterial } from './entity-material';
 
 type ModelKey = string;
 
@@ -53,11 +53,11 @@ export class EntityCache {
    * under which all entities will be bucketed.
    */
   private static getOrCreateNodeContainer(scene: BJS.Scene): BJS.Node {
-    const existing = scene.getNodeByName("entityNodeContainer");
+    const existing = scene.getNodeByName('entityNodeContainer');
     if (existing) {
       return existing as BJS.Node;
     }
-    return new BABYLON.TransformNode("entityNodeContainer", scene);
+    return new BABYLON.TransformNode('entityNodeContainer', scene);
   }
 
   /**
@@ -81,7 +81,7 @@ export class EntityCache {
       EntityCache.containers[model] = (async () => {
         // Load .babylon
         const bytes = await FileSystem.getFileBytes(
-          `eqrequiem/babylon`,
+          'eqrequiem/babylon',
           `${model}.babylon.gz`,
         );
         if (!bytes) {
@@ -89,16 +89,16 @@ export class EntityCache {
           return null;
         }
         const file = new File([bytes], `${model}.babylon`, {
-          type: "application/babylon",
+          type: 'application/babylon',
         });
         const container = await BABYLON.LoadAssetContainerAsync(file, scene, {
-          name: `${model}.babylon`,
-          pluginExtension: ".babylon",
+          name           : `${model}.babylon`,
+          pluginExtension: '.babylon',
         }).catch((e) => {
           console.log(`[EntityCache] Error loading model ${model}:`, e);
           return null;
         });
-        if (!container) return null;
+        if (!container) {return null;}
 
         // Attach to bucket
         const root = container.rootNodes[0];
@@ -121,7 +121,7 @@ export class EntityCache {
           const vat16 = `${model}.bin.gz`;
           const vat32 = `${model}_32.bin.gz`;
           const vatBytes = await FileSystem.getFileBytes(
-            `eqrequiem/vat`,
+            'eqrequiem/vat',
             canUseFloat16 ? vat16 : vat32,
           );
           if (!vatBytes) {
@@ -141,7 +141,7 @@ export class EntityCache {
 
           // Basis textures
           const basisBytes = await FileSystem.getFileBytes(
-            `eqrequiem/basis`,
+            'eqrequiem/basis',
             `${baseModel}.basis`,
           );
           if (!basisBytes) {
@@ -176,7 +176,7 @@ export class EntityCache {
           // Atlas
           textureAtlas =
             (await FileSystem.getFileJSON<string[]>(
-              `eqrequiem/basis`,
+              'eqrequiem/basis',
               `${baseModel}.json`,
             )) ?? [];
           if (!textureAtlas.length) {
@@ -199,7 +199,7 @@ export class EntityCache {
         const infoNode = (root as any).getChildTransformNodes()?.[0];
 
         const json = await FileSystem.getFileJSON(
-          `eqrequiem/vat`,
+          'eqrequiem/vat',
           `${model}.json`,
         ) as any;
         if (json) {
@@ -211,7 +211,7 @@ export class EntityCache {
           animations = ranges.map((r) => {
             const entry = {
               from: r.from + offset,
-              to: Math.max(0, r.to + offset),
+              to  : Math.max(0, r.to + offset),
               name: r.name,
             };
             offset += r.to;
@@ -226,14 +226,14 @@ export class EntityCache {
         for (const mesh of meshes) {
           mesh.addLODLevel(500, null);
           mesh.parent = bucket;
-          mesh.name = mesh.material?.name ?? "";
+          mesh.name = mesh.material?.name ?? '';
           mesh.registerInstancedBuffer(
-            "bakedVertexAnimationSettingsInstanced",
+            'bakedVertexAnimationSettingsInstanced',
             4,
           );
           mesh.instancedBuffers.bakedVertexAnimationSettingsInstanced =
             ANIMATION_BUFFER;
-          mesh.registerInstancedBuffer("textureAttributes", 2);
+          mesh.registerInstancedBuffer('textureAttributes', 2);
           mesh.instancedBuffers.textureAttributes = TEXTURE_ATTRIBUTE_BUFFER;
           mesh.bakedVertexAnimationManager = manager!;
           mesh.parent = null;
@@ -260,7 +260,7 @@ export class EntityCache {
         return {
           container,
           model,
-          manager: manager!,
+          manager       : manager!,
           shaderMaterial: shaderMaterial!,
           meshes,
           textureAtlas,
@@ -274,10 +274,10 @@ export class EntityCache {
           if (c) {
             EntityCache.resolvedContainers[model] = c;
             return c;
-          } else {
-            delete EntityCache.containers[model];
-            return null;
-          }
+          } 
+          delete EntityCache.containers[model];
+          return null;
+          
         })
         .catch((e) => {
           console.error(`[EntityCache] Error loading model ${model}:`, e);
@@ -307,15 +307,15 @@ export class EntityCache {
       robed =
         (spawn.inventoryItems
           ?.toArray()
-          .find((i) => i.slot === InventorySlot.Chest)?.item.material ?? 0) >=
+          .find((i) => i.slot === InventorySlot.Chest)?.material ?? 0) >=
         10;
     }
     if (robed) {
-      model += "01";
+      model += '01';
     }
     model = model.toLowerCase();
     const container = await EntityCache.getContainer(model, scene);
-    if (!container) return null;
+    if (!container) {return null;}
     return new Entity(gameManager, spawn, scene, container, this, parentNode!, entry);
   }
 
@@ -327,7 +327,7 @@ export class EntityCache {
     Entity.disposeStatics();
     Object.keys(EntityCache.resolvedContainers).forEach((m) => {
       const c = EntityCache.resolvedContainers[m];
-      if (!c) return;
+      if (!c) {return;}
       c.container.dispose();
       c.manager?.dispose();
       c.shaderMaterial?.dispose(true, true);

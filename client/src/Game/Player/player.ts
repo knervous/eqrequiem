@@ -201,7 +201,7 @@ export default class Player {
     if (!this.player) {
       return 0;
     }
-    return this.playerInventory.getHeadSlot()?.itemtype ?? 0;
+    return 0;// this.playerInventory.getHeadSlot()?.itemtype ?? 0;
   }
 
   private get headModelName(): string {

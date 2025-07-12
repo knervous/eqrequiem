@@ -2,6 +2,7 @@ package zone
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"strings"
@@ -249,11 +250,17 @@ func HandleRequestClientZoneChange(z *ZoneInstance, ses *session.Session, payloa
 		if charItem == nil {
 			continue
 		}
+		mods, err := json.Marshal(charItem.Instance.Mods)
+		if err != nil {
+			log.Printf("failed to marshal mods for itemID %d: %v", charItem.Instance.ItemID, err)
+			continue
+		}
+
 		item := capCharItems.At(itemIdx)
 		itemIdx++
 		item.SetCharges(uint32(charItem.Instance.Charges))
 		item.SetQuantity(uint32(charItem.Instance.Quantity))
-		item.SetMods(*charItem.Instance.Mods)
+		item.SetMods(string(mods))
 		item.SetSlot(slot)
 		items.ConvertItemTemplateToCapnp(ses, &charItem.Item, &item)
 	}

@@ -2,6 +2,7 @@ package db_character
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"slices"
 	"strconv"
@@ -13,6 +14,7 @@ import (
 	"github.com/knervous/eqgo/internal/db/items"
 	"github.com/knervous/eqgo/internal/db/jetgen/eqgo/model"
 	"github.com/knervous/eqgo/internal/db/jetgen/eqgo/table"
+	"github.com/knervous/eqgo/internal/ports/client"
 
 	"github.com/go-jet/jet/v2/mysql"
 	_ "github.com/go-sql-driver/mysql"
@@ -118,7 +120,7 @@ func GetCharacterItems(ctx context.Context, id int) ([]constants.ItemWithSlot, e
 	return charItems, nil
 }
 
-func InstantiateStartingItems(race, classID, deity, zone int32) ([]items.ItemInstance, error) {
+func InstantiateStartingItems(race, classID, deity, zone int32) ([]constants.ItemInstance, error) {
 	// 1) load them all
 	var raw []model.StartingItems
 	if err := table.StartingItems.
@@ -129,7 +131,7 @@ func InstantiateStartingItems(race, classID, deity, zone int32) ([]items.ItemIns
 	}
 
 	// 2) filter
-	var out []items.ItemInstance
+	var out []constants.ItemInstance
 	wildcard := "0"
 
 	for _, e := range raw {
@@ -167,9 +169,152 @@ func InstantiateStartingItems(race, classID, deity, zone int32) ([]items.ItemIns
 
 		// pass → instantiate
 		inst := items.CreateItemInstanceFromTemplateID(int32(e.ItemID))
+		if inst == nil {
+			return nil, fmt.Errorf("failed to create item instance for itemID %d", e.ItemID)
+		}
 		inst.Quantity = uint8(e.ItemCharges)
-		out = append(out, inst)
+
+		out = append(out, *inst)
 	}
 
 	return out, nil
+}
+
+func GearUp(c client.Client) error {
+	var raw []model.ToolGearupArmorSets
+	if err := table.ToolGearupArmorSets.
+		SELECT(table.ToolGearupArmorSets.AllColumns).
+		FROM(table.ToolGearupArmorSets).
+		WHERE(
+			table.ToolGearupArmorSets.Class.EQ(mysql.Int32(int32(c.Class()))).AND(
+				table.ToolGearupArmorSets.Level.EQ(mysql.Int32(int32(c.Level()))),
+			),
+		).
+		Query(db.GlobalWorldDB.DB, &raw); err != nil {
+		return err
+	}
+
+	for _, e := range raw {
+
+		if e.Slot == nil || e.ItemID == nil {
+			continue
+		}
+		if *e.Slot < 0 || *e.Slot > 23 {
+			continue
+		}
+		if c.Items()[int32(*e.Slot)] != nil {
+			// already has an item in this slot, skip
+			continue
+		}
+
+		// pass → instantiate
+		inst := items.CreateItemInstanceFromTemplateID(int32(*e.ItemID))
+		if inst == nil {
+			continue
+		}
+		err := items.InsertItemInstance(*inst)
+		if err != nil {
+			return fmt.Errorf("failed to insert item instance for itemID %d: %w", *e.ItemID, err)
+		}
+
+		c.Items()[int32(*e.Slot)] = &constants.ItemWithInstance{
+			Item:     inst.Item,
+			Instance: *inst,
+			BagSlot:  -1,
+		}
+	}
+
+	return nil
+}
+
+// UpdateCharacterItems writes every non-nil slot in c.Items() into
+//  1. item_instances  (inserting if ID<=0, updating otherwise) and
+//  2. character_inventory (upsert on (character_id,slot))
+//
+// All in one TX so the FK is never broken.
+func UpdateCharacterItems(ctx context.Context, c client.Client) (err error) {
+	// 1) begin TX
+	tx, err := db.GlobalWorldDB.DB.Begin()
+	if err != nil {
+		return fmt.Errorf("begin tx: %w", err)
+	}
+	defer func() {
+		if p := recover(); p != nil {
+			_ = tx.Rollback()
+			panic(p)
+		} else if err != nil {
+			_ = tx.Rollback()
+		} else {
+			err = tx.Commit()
+		}
+	}()
+
+	charID := int32(c.ID())
+
+	for slotIdx, wi := range c.Items() {
+		if wi == nil {
+			// slot empty: we skip (or you could DELETE the inventory row here if you like)
+			continue
+		}
+
+		inst := &wi.Instance
+
+		// 2a) if new instance, INSERT and grab its ID
+		if inst.ID <= 0 {
+			newID, err2 := items.CreateDBItemInstance(tx, *inst, charID)
+			if err2 != nil {
+				return fmt.Errorf("inserting new instance for slot %d: %w", slotIdx, err2)
+			}
+			inst.ID = newID
+		} else {
+			// 2b) existing instance → UPDATE mods/quantity/owner
+			modsJSON, err2 := json.Marshal(inst.Mods)
+			if err2 != nil {
+				return fmt.Errorf("marshal mods for inst %d: %w", inst.ID, err2)
+			}
+			if _, err2 = table.ItemInstances.
+				UPDATE(
+					table.ItemInstances.Mods,
+					table.ItemInstances.Charges,
+					table.ItemInstances.Quantity,
+					table.ItemInstances.OwnerID,
+					table.ItemInstances.OwnerType,
+				).
+				SET(
+					string(modsJSON),
+					inst.Charges,
+					inst.Quantity,
+					mysql.Int32(charID),
+					constants.OwnerTypeCharacter,
+				).
+				WHERE(table.ItemInstances.ID.EQ(mysql.Int32(inst.ID))).
+				Exec(tx); err2 != nil {
+				return fmt.Errorf("updating instance %d: %w", inst.ID, err2)
+			}
+		}
+
+		// 3) upsert inventory row so (character_id, slot) → item_instance_id + bag
+		if _, err2 := table.CharacterInventory.
+			INSERT(
+				table.CharacterInventory.CharacterID,
+				table.CharacterInventory.Slot,
+				table.CharacterInventory.ItemInstanceID,
+				table.CharacterInventory.Bag,
+			).
+			VALUES(
+				mysql.Int32(charID),
+				mysql.Int32(int32(slotIdx)),
+				mysql.Int32(inst.ID),
+				mysql.Int8(wi.BagSlot),
+			).
+			ON_DUPLICATE_KEY_UPDATE(
+				table.CharacterInventory.ItemInstanceID.SET(mysql.Int32(inst.ID)),
+				table.CharacterInventory.Bag.SET(mysql.Int8(wi.BagSlot)),
+			).
+			Exec(tx); err2 != nil {
+			return fmt.Errorf("upserting inventory for slot %d: %w", slotIdx, err2)
+		}
+	}
+
+	return nil
 }

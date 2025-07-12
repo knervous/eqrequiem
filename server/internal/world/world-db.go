@@ -2,6 +2,7 @@ package world
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"strings"
@@ -220,11 +221,16 @@ func GetCharSelectInfo(ses *session.Session, ctx context.Context, accountID int6
 				log.Printf("failed to get item template for itemID %d: %v", charItem.ItemID, err)
 				continue
 			}
+			mods, err := json.Marshal(charItem.Mods)
+			if err != nil {
+				log.Printf("failed to marshal mods for itemID %d: %v", charItem.ItemID, err)
+				continue
+			}
 
 			item := capCharItems.At(itemIdx)
 			item.SetCharges(uint32(charItem.Charges))
 			item.SetQuantity(uint32(charItem.Quantity))
-			item.SetMods(*charItem.Mods)
+			item.SetMods(string(mods))
 			item.SetSlot(int32(charItem.Slot))
 			items.ConvertItemTemplateToCapnp(ses, &itemTemplate, &item)
 		}

@@ -3,10 +3,12 @@ package db
 import (
 	"database/sql"
 	"fmt"
+
+	"github.com/go-jet/jet/v2/stmtcache"
 )
 
 type WorldDB struct {
-	DB *sql.DB
+	DB *stmtcache.DB
 }
 
 var GlobalWorldDB *WorldDB
@@ -20,8 +22,8 @@ func InitWorldDB(dsn string) error {
 		_ = db.Close()
 		return fmt.Errorf("failed to ping database: %w", err)
 	}
-
+	cacheDb := stmtcache.New(db)
 	fmt.Println("Connected to database successfully")
-	GlobalWorldDB = &WorldDB{DB: db}
+	GlobalWorldDB = &WorldDB{DB: cacheDb}
 	return nil
 }

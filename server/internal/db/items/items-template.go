@@ -7,6 +7,7 @@ import (
 	"time"
 
 	eq "github.com/knervous/eqgo/internal/api/capnp"
+	"github.com/knervous/eqgo/internal/constants"
 	"github.com/knervous/eqgo/internal/session"
 
 	"github.com/knervous/eqgo/internal/db/jetgen/eqgo/model"
@@ -192,19 +193,19 @@ func ConvertItemTemplateToCapnp(ses *session.Session, item *model.Items, i *eq.I
 
 }
 
-func CreateItemInstanceFromTemplateID(id int32) ItemInstance {
+func CreateItemInstanceFromTemplateID(id int32) *constants.ItemInstance {
 	item, err := GetItemTemplateByID(id)
 	if err != nil {
-		panic(err)
+		return nil
 	}
 
-	return ItemInstance{
+	return &constants.ItemInstance{
 		ItemID:    item.ID,
-		Mods:      Mods{},
+		Mods:      constants.Mods{},
 		Charges:   0,
 		Quantity:  0,
 		OwnerID:   nil,
-		OwnerType: OwnerTypeCharacter,
+		OwnerType: constants.OwnerTypeCharacter,
 		Item:      item,
 	}
 }

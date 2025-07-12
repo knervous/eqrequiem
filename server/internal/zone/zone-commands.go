@@ -1,10 +1,12 @@
 package zone
 
 import (
+	"context"
 	"strconv"
 	"sync"
 
 	eq "github.com/knervous/eqgo/internal/api/capnp"
+	db_character "github.com/knervous/eqgo/internal/db/character"
 
 	"github.com/knervous/eqgo/internal/api/opcodes"
 	"github.com/knervous/eqgo/internal/session"
@@ -12,7 +14,8 @@ import (
 
 var (
 	commandRegistry = map[string]func(*ZoneInstance, *session.Session, []string){
-		"level": commandLevel,
+		"level":  commandLevel,
+		"gearup": commandGearup,
 	}
 	commandRegistryMutex = &sync.Mutex{}
 )
@@ -30,6 +33,11 @@ func (z *ZoneInstance) HandleCommand(session *session.Session, command string, a
 	if handler, exists := commandRegistry[command]; exists {
 		handler(z, session, args)
 	}
+}
+
+func commandGearup(z *ZoneInstance, ses *session.Session, args []string) {
+	db_character.GearUp(ses.Client)
+	db_character.UpdateCharacterItems(context.Background(), ses.Client)
 }
 
 func commandLevel(z *ZoneInstance, ses *session.Session, args []string) {
