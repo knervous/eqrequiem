@@ -3,6 +3,7 @@ package entity
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 
 	"github.com/knervous/eqgo/internal/constants"
@@ -66,6 +67,46 @@ func NewClient(charData *model.CharacterData) (client.Client, error) {
 	client.CalcBonuses()
 
 	return client, nil
+}
+
+func (c *Client) CanEquipItem(item *constants.ItemWithInstance) bool {
+	if item == nil {
+		return false
+	}
+	if item.Item.Slots == 0 {
+		return false
+	}
+	if item.Instance.OwnerType != constants.OwnerTypeCharacter {
+		return false
+	}
+
+	if item.Instance.Charges > 0 && item.Item.Slots&constants.SlotAmmo == 0 {
+		return false
+	}
+
+	// class check: if *your* class bit is NOT set, you can’t equip
+	classBit := uint32(1) << (uint32(c.Class()) - 1)
+	fmt.Println("Class check:", item.Item.Classes, c.Class(), classBit)
+	if uint32(item.Item.Classes)&classBit == 0 {
+		return false
+	}
+
+	// race check (same story—if your race bit isn’t set, no equip):
+	raceBit := uint32(1) << (uint32(c.Race()) - 1)
+	fmt.Println("Race check:", item.Item.Races, c.Race(), raceBit)
+	if uint32(item.Item.Races)&raceBit == 0 {
+		return false
+	}
+
+	return true
+}
+
+func (c *Client) Race() uint8 {
+	return uint8(c.charData.Race)
+}
+
+func (c *Client) UpdateStats() {
+	c.CalcBonuses()
 }
 
 func (c *Client) CharData() *model.CharacterData {

@@ -10,6 +10,7 @@ import (
 	eq "github.com/knervous/eqgo/internal/api/capnp"
 	"github.com/knervous/eqgo/internal/api/opcodes"
 	"github.com/knervous/eqgo/internal/constants"
+
 	"github.com/knervous/eqgo/internal/ports/client"
 	"github.com/knervous/eqgo/internal/quest"
 
@@ -403,28 +404,46 @@ func HandleMoveItem(z *ZoneInstance, ses *session.Session, payload []byte) {
 
 	fromSlot := req.FromSlot()
 	toSlot := req.ToSlot()
-	// numberInStack := req.NumberInStack()
 
-	// Will do the validation logic down in this function to make sure
-	// Characters can equip an item etc.
-	err = items.SwapItemSlots(int32(ses.Client.CharData().ID), fromSlot, toSlot, int8(req.BagSlot()))
+	client := ses.Client
+	fromItem := ses.Client.Items()[fromSlot]
+	toItem := ses.Client.Items()[toSlot]
+
+	if !fromItem.AllowedInSlot(toSlot) {
+		log.Printf("from item not allowed in to slot %d", toSlot)
+		return
+	}
+	if !toItem.AllowedInSlot(fromSlot) {
+		log.Printf("to item not allowed in slot %d", fromSlot)
+		return
+	}
+	if constants.IsEquipSlot(toSlot) && fromItem != nil && !client.CanEquipItem(fromItem) {
+		log.Printf("client %d cannot equip item %d in slot %d", client.ID(), fromItem.Instance.ItemID, toSlot)
+		return
+	}
+	if constants.IsEquipSlot(fromSlot) && toItem != nil && !client.CanEquipItem(toItem) {
+		log.Printf("client %d cannot equip item %d in slot %d", client.ID(), toItem.Instance.ItemID, fromSlot)
+		return
+	}
+
+	err = items.SwapItemSlots(int32(client.CharData().ID), fromSlot, toSlot, int8(req.BagSlot()))
 	if err != nil {
 		// Send some kind of notification if it's illegal, i.e. bypassing client logic probably
 		log.Printf("failed to swap item slots: %v", err)
 		return
 	}
-	charItems := ses.Client.Items()
+	charItems := client.Items()
 	tempFrom := charItems[fromSlot]
 	tempTo := charItems[toSlot]
 	charItems[fromSlot] = tempTo
 	charItems[toSlot] = tempFrom
 
 	if constants.IsVisibleSlot(fromSlot) && charItems[fromSlot] != nil {
-		z.broadcastWearChange(ses.Client.ID(), fromSlot, charItems[fromSlot])
+		z.broadcastWearChange(client.ID(), fromSlot, charItems[fromSlot])
 	}
 
 	if constants.IsVisibleSlot(toSlot) && charItems[toSlot] != nil {
-		z.broadcastWearChange(ses.Client.ID(), toSlot, charItems[toSlot])
+		z.broadcastWearChange(client.ID(), toSlot, charItems[toSlot])
 	}
 
 	moveItemPacket, err := session.NewMessage(ses, eq.NewRootMoveItem)

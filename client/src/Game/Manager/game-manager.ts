@@ -7,12 +7,12 @@ import EntityCache from '@game/Model/entity-cache';
 import { PlayerProfile } from '@game/Net/internal/api/capnp/player';
 import { NewZone, RequestClientZoneChange } from '@game/Net/internal/api/capnp/zone';
 import { OpCodes } from '@game/Net/opcodes';
+import { ZonePacketHandler } from '@game/Net/zone-packets';
 import { ZoneManager } from '@game/Zone/zone-manager';
+import { WorldSocket } from '@ui/net/instances';
 import { supportedZones } from '../Constants/supportedZones';
 import Player from '../Player/player';
 import CharacterSelect from '../Zone/character-select';
-import { WorldSocket } from '@ui/net/instances';
-import { ZonePacketHandler } from '@game/Net/zone-packets';
 
 declare const window: Window;
 
@@ -104,11 +104,14 @@ export default class GameManager {
     height: number) {
     if (!this.scene || !this.secondaryCamera) {return;}
     const dpi = window.devicePixelRatio || 1;
+    
     x *= dpi;
     y *= dpi;
     width *= dpi;
     height *= dpi;
     const engine = this.scene.getEngine();
+    engine.setHardwareScalingLevel(1 / window.devicePixelRatio);
+
     const rw = engine.getRenderWidth(); // full internal pixel width
     const rh = engine.getRenderHeight(); // full internal pixel height
 
@@ -133,6 +136,8 @@ export default class GameManager {
     width *= dpi;
     height *= dpi;
     const engine = this.scene.getEngine();
+    engine.setHardwareScalingLevel(1 / window.devicePixelRatio);
+
     const rw = engine.getRenderWidth(); // full internal pixel width
     const rh = engine.getRenderHeight(); // full internal pixel height
     const xNorm = x / rw;
@@ -140,8 +145,6 @@ export default class GameManager {
     const widthNorm = width / rw;
     const heightNorm = height / rh;
 
-    // Need to scale by DPI
-    
     this.camera.viewport = new BABYLON.Viewport(
       xNorm,
       yNorm,

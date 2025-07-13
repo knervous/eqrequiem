@@ -36,6 +36,35 @@ const (
 	SlotCursor
 )
 
+func IsEquipSlot(slot int32) bool {
+	return slot >= SlotCharm && slot <= SlotAmmo
+}
+
+var EquipmentSlots = []int32{
+	SlotCharm,
+	SlotEar1,
+	SlotHead,
+	SlotFace,
+	SlotEar2,
+	SlotNeck,
+	SlotShoulders,
+	SlotArms,
+	SlotBack,
+	SlotWrist1,
+	SlotWrist2,
+	SlotRange,
+	SlotHands,
+	SlotPrimary,
+	SlotSecondary,
+	SlotFinger1,
+	SlotFinger2,
+	SlotChest,
+	SlotLegs,
+	SlotFeet,
+	SlotWaist,
+	SlotAmmo,
+}
+
 var visibleSlotsMap = map[int32]bool{
 	SlotHead:      true,
 	SlotHands:     true,
@@ -80,6 +109,25 @@ type ItemInstance struct {
 
 func IsVisibleSlot(slot int32) bool {
 	return visibleSlotsMap[slot]
+}
+
+func (item *ItemWithInstance) AllowedInSlot(slot int32) bool {
+	if item == nil {
+		return true
+	}
+	if slot == SlotCursor {
+		return true
+	}
+	if !IsEquipSlot(slot) {
+		return true
+	}
+	if item.Item.Slots&(1<<slot) == 0 {
+		return false
+	}
+	if item.Item.Slots&(1<<SlotAmmo) != 0 && slot == SlotAmmo {
+		return true
+	}
+	return true
 }
 
 type ItemWithSlot struct {

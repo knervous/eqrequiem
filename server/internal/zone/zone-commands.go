@@ -36,6 +36,8 @@ func (z *ZoneInstance) HandleCommand(session *session.Session, command string, a
 }
 
 func commandGearup(z *ZoneInstance, ses *session.Session, args []string) {
+	db_character.PurgeCharacterEquipment(context.Background(), int32(ses.Client.CharData().ID))
+
 	db_character.GearUp(ses.Client)
 	db_character.UpdateCharacterItems(context.Background(), ses.Client)
 }
@@ -55,6 +57,9 @@ func commandLevel(z *ZoneInstance, ses *session.Session, args []string) {
 
 	charData := ses.Client.CharData()
 	charData.Level = uint32(levelInt)
+	ses.Client.UpdateStats()
+
+	// Send level
 	Datagram(
 		ses,
 		eq.NewRootLevelUpdate,

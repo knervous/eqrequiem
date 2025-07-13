@@ -10,10 +10,13 @@ import (
 type Client interface {
 	Level() uint8
 	Class() uint8
+	Race() uint8
 	Position() MobPosition
 	Items() map[int32]*constants.ItemWithInstance
 	SetPosition(MobPosition)
 	SetVelocity(Velocity)
+	CanEquipItem(item *constants.ItemWithInstance) bool
+	UpdateStats()
 	CharData() *model.CharacterData
 	Mob() *Mob
 	GetMob() *Mob

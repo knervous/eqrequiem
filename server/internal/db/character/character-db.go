@@ -180,6 +180,43 @@ func InstantiateStartingItems(race, classID, deity, zone int32) ([]constants.Ite
 	return out, nil
 }
 
+func PurgeCharacterEquipment(ctx context.Context, charID int32) error {
+	// build a list of equipment-slot literals
+	var slotExprs []mysql.Expression
+	for _, slot := range constants.EquipmentSlots {
+		slotExprs = append(slotExprs, mysql.Int32(slot))
+	}
+
+	// 1) delete only those item_instances that are in equipment slots for this character
+	subQ := table.CharacterInventory.
+		SELECT(table.CharacterInventory.ItemInstanceID).
+		FROM(table.CharacterInventory).
+		WHERE(
+			table.CharacterInventory.CharacterID.EQ(mysql.Int32(charID)).
+				AND(table.CharacterInventory.Slot.IN(slotExprs...)),
+		)
+
+	if _, err := table.ItemInstances.
+		DELETE().
+		WHERE(table.ItemInstances.ID.IN(subQ)).
+		ExecContext(ctx, db.GlobalWorldDB.DB); err != nil {
+		return fmt.Errorf("delete equipped instances for char %d: %w", charID, err)
+	}
+
+	// 2) then delete the inventory rows for those slots
+	if _, err := table.CharacterInventory.
+		DELETE().
+		WHERE(
+			table.CharacterInventory.CharacterID.EQ(mysql.Int32(charID)).
+				AND(table.CharacterInventory.Slot.IN(slotExprs...)),
+		).
+		ExecContext(ctx, db.GlobalWorldDB.DB); err != nil {
+		return fmt.Errorf("delete character_inventory for char %d: %w", charID, err)
+	}
+
+	return nil
+}
+
 func GearUp(c client.Client) error {
 	var raw []model.ToolGearupArmorSets
 	if err := table.ToolGearupArmorSets.
@@ -193,21 +230,53 @@ func GearUp(c client.Client) error {
 		Query(db.GlobalWorldDB.DB, &raw); err != nil {
 		return err
 	}
+	slotsFilled := map[int32]bool{
+		constants.SlotHead:      false,
+		constants.SlotHands:     false,
+		constants.SlotFeet:      false,
+		constants.SlotChest:     false,
+		constants.SlotArms:      false,
+		constants.SlotLegs:      false,
+		constants.SlotWrist1:    false,
+		constants.SlotWrist2:    false,
+		constants.SlotPrimary:   false,
+		constants.SlotSecondary: false,
+		constants.SlotCursor:    false,
+		constants.SlotEar1:      false,
+		constants.SlotEar2:      false,
+		constants.SlotNeck:      false,
+		constants.SlotShoulders: false,
+		constants.SlotBack:      false,
+		constants.SlotRange:     false,
+		constants.SlotFinger1:   false,
+		constants.SlotFinger2:   false,
+		constants.SlotWaist:     false,
+		constants.SlotAmmo:      false,
+	}
 
 	for _, e := range raw {
 
 		if e.Slot == nil || e.ItemID == nil {
 			continue
 		}
-		if *e.Slot < 0 || *e.Slot > 23 {
+		slot := int32(*e.Slot)
+		if slot < 0 || slot > 23 {
 			continue
 		}
-		if c.Items()[int32(*e.Slot)] != nil {
-			// already has an item in this slot, skip
+		if slot == constants.SlotWrist1 && slotsFilled[constants.SlotWrist1] {
+			slot = constants.SlotWrist2
+		}
+		if slot == constants.SlotEar1 && slotsFilled[constants.SlotEar1] {
+			slot = constants.SlotEar2
+		}
+		if slot == constants.SlotFinger1 && slotsFilled[constants.SlotFinger1] {
+			slot = constants.SlotFinger2
+		}
+
+		if slotsFilled[slot] {
 			continue
 		}
 
-		// pass → instantiate
 		inst := items.CreateItemInstanceFromTemplateID(int32(*e.ItemID))
 		if inst == nil {
 			continue
@@ -216,8 +285,8 @@ func GearUp(c client.Client) error {
 		if err != nil {
 			return fmt.Errorf("failed to insert item instance for itemID %d: %w", *e.ItemID, err)
 		}
-
-		c.Items()[int32(*e.Slot)] = &constants.ItemWithInstance{
+		slotsFilled[slot] = true
+		c.Items()[int32(slot)] = &constants.ItemWithInstance{
 			Item:     inst.Item,
 			Instance: *inst,
 			BagSlot:  -1,
