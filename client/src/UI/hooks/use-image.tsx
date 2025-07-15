@@ -25,7 +25,7 @@ export const useSakImage = (
   crop: boolean = false,
 ): ImageEntry => {
   const entry = useMemo<AtlasEntry>(
-    () => sakAtlas[path] || atlas[path],
+    () => sakAtlas[path] || stoneAtlas[path] || atlas[path],
     [path],
   );
   const [image, setImage] = useState<string | null>(null);

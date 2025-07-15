@@ -1,5 +1,4 @@
-// internal/ports/client/interface.go
-package client
+package entity
 
 import (
 	"github.com/knervous/eqgo/internal/constants"
@@ -12,7 +11,7 @@ type Client interface {
 	Class() uint8
 	Race() uint8
 	Position() MobPosition
-	Items() map[int32]*constants.ItemWithInstance
+	Items() map[constants.InventoryKey]*constants.ItemWithInstance
 	SetPosition(MobPosition)
 	SetVelocity(Velocity)
 	CanEquipItem(item *constants.ItemWithInstance) bool

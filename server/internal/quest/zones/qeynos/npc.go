@@ -3,8 +3,8 @@ package qeynos
 import (
 	"fmt"
 
-	entity "github.com/knervous/eqgo/internal/entity"
 	"github.com/knervous/eqgo/internal/quest"
+	"github.com/knervous/eqgo/internal/zone/npc"
 )
 
 func registerNpcQuests(zq *quest.ZoneQuestInterface) {
@@ -12,7 +12,7 @@ func registerNpcQuests(zq *quest.ZoneQuestInterface) {
 		"Captain_Tillin",
 		quest.EventSay, func(e *quest.QuestEvent) bool {
 			switch e.Actor.(type) {
-			case *entity.NPC:
+			case *npc.NPC:
 				return true
 			default:
 				return false

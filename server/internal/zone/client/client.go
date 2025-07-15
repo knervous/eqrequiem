@@ -1,37 +1,37 @@
-package entity
+package client
 
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"log"
 
 	"github.com/knervous/eqgo/internal/constants"
-
 	db_character "github.com/knervous/eqgo/internal/db/character"
 	"github.com/knervous/eqgo/internal/db/items"
 	"github.com/knervous/eqgo/internal/db/jetgen/eqgo/model"
-	"github.com/knervous/eqgo/internal/ports/client"
+	entity "github.com/knervous/eqgo/internal/zone/interface"
 )
 
-var _ client.Client = (*Client)(nil)
+var _ entity.Client = (*Client)(nil)
 
 type Client struct {
-	mob          client.Mob
-	items        map[int32]*constants.ItemWithInstance
-	charData     *model.CharacterData
-	ConnectionID string
+	mob            entity.Mob
+	items          map[constants.InventoryKey]*constants.ItemWithInstance
+	packetHandlers *HandlerRegistry
+	charData       *model.CharacterData
+	ConnectionID   string
 }
 
-func (c *Client) Items() map[int32]*constants.ItemWithInstance {
+func (c *Client) Items() map[constants.InventoryKey]*constants.ItemWithInstance {
 	return c.items
 }
 
-func NewClient(charData *model.CharacterData) (client.Client, error) {
+func NewClient(charData *model.CharacterData) (entity.Client, error) {
 	client := &Client{
 		charData: charData,
-		items:    make(map[int32]*constants.ItemWithInstance),
+		items:    make(map[constants.InventoryKey]*constants.ItemWithInstance),
 	}
+	client.packetHandlers = client.NewClientRegistry()
 	client.mob.CurrentHp = int(charData.CurHp)
 	client.mob.DataSource = client
 
@@ -61,7 +61,11 @@ func NewClient(charData *model.CharacterData) (client.Client, error) {
 			Instance: *itemInstance,
 			BagSlot:  item.Bag,
 		}
-		client.items[int32(item.Slot)] = itemWithTemplate
+		key := constants.InventoryKey{
+			Bag:  item.Bag,
+			Slot: int32(item.Slot),
+		}
+		client.items[key] = itemWithTemplate
 	}
 
 	client.CalcBonuses()
@@ -84,21 +88,7 @@ func (c *Client) CanEquipItem(item *constants.ItemWithInstance) bool {
 		return false
 	}
 
-	// class check: if *your* class bit is NOT set, you can’t equip
-	classBit := uint32(1) << (uint32(c.Class()) - 1)
-	fmt.Println("Class check:", item.Item.Classes, c.Class(), classBit)
-	if uint32(item.Item.Classes)&classBit == 0 {
-		return false
-	}
-
-	// race check (same story—if your race bit isn’t set, no equip):
-	raceBit := uint32(1) << (uint32(c.Race()) - 1)
-	fmt.Println("Race check:", item.Item.Races, c.Race(), raceBit)
-	if uint32(item.Item.Races)&raceBit == 0 {
-		return false
-	}
-
-	return true
+	return item.IsEquippable(constants.RaceID(c.Race()), c.Class())
 }
 
 func (c *Client) Race() uint8 {
@@ -125,7 +115,7 @@ func (c *Client) Say(msg string) {
 }
 
 func (c *Client) Type() int32 {
-	return client.EntityTypePlayer
+	return entity.EntityTypePlayer
 }
 
 func (c *Client) ID() int {
@@ -135,11 +125,11 @@ func (c *Client) ID() int {
 	return int(c.charData.ID)
 }
 
-func (c *Client) Mob() *client.Mob {
+func (c *Client) Mob() *entity.Mob {
 	return &c.mob
 }
 
-func (c *Client) GetMob() *client.Mob {
+func (c *Client) GetMob() *entity.Mob {
 	return &c.mob
 }
 
@@ -151,8 +141,8 @@ func (c *Client) Class() uint8 {
 	return uint8(c.CharData().Class)
 }
 
-func (c *Client) Position() client.MobPosition {
-	return client.MobPosition{
+func (c *Client) Position() entity.MobPosition {
+	return entity.MobPosition{
 		X:       c.charData.X,
 		Y:       c.charData.Y,
 		Z:       c.charData.Z,
@@ -160,13 +150,13 @@ func (c *Client) Position() client.MobPosition {
 	}
 }
 
-func (c *Client) SetPosition(pos client.MobPosition) {
+func (c *Client) SetPosition(pos entity.MobPosition) {
 	c.charData.X = pos.X
 	c.charData.Y = pos.Y
 	c.charData.Z = pos.Z
 	c.charData.Heading = pos.Heading
 }
 
-func (c *Client) SetVelocity(vel client.Velocity) {
+func (c *Client) SetVelocity(vel entity.Velocity) {
 	c.mob.SetVelocity(vel)
 }

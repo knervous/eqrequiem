@@ -1,6 +1,7 @@
-package client
+package entity
 
 import (
+	"github.com/knervous/eqgo/internal/constants"
 	"github.com/knervous/eqgo/internal/db/jetgen/eqgo/model"
 )
 
@@ -30,4 +31,5 @@ type ZoneAccess interface {
 	// Messaging
 	BroadcastChannel(sender string, channelID int, msg string)
 	BroadcastServer(msg string)
+	BroadcastWearChange(sender int, slot int32, item *constants.ItemWithInstance)
 }

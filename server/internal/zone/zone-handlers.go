@@ -10,8 +10,8 @@ import (
 	eq "github.com/knervous/eqgo/internal/api/capnp"
 	"github.com/knervous/eqgo/internal/api/opcodes"
 	"github.com/knervous/eqgo/internal/constants"
+	entity "github.com/knervous/eqgo/internal/zone/interface"
 
-	"github.com/knervous/eqgo/internal/ports/client"
 	"github.com/knervous/eqgo/internal/quest"
 
 	db_character "github.com/knervous/eqgo/internal/db/character"
@@ -56,7 +56,7 @@ func HandleClientUpdate(z *ZoneInstance, ses *session.Session, payload []byte) {
 	oldPos := ses.Client.Position()
 
 	// 2) parse new position from request
-	newPosition := client.MobPosition{
+	newPosition := entity.MobPosition{
 		X:       float64(req.X()),
 		Y:       float64(req.Y()),
 		Z:       float64(req.Z()),
@@ -64,7 +64,7 @@ func HandleClientUpdate(z *ZoneInstance, ses *session.Session, payload []byte) {
 	}
 
 	// 3) compute velocity as delta position
-	vel := client.Velocity{
+	vel := entity.Velocity{
 		X: newPosition.X - oldPos.X,
 		Y: newPosition.Y - oldPos.Y,
 		Z: newPosition.Z - oldPos.Z,
@@ -262,7 +262,8 @@ func HandleRequestClientZoneChange(z *ZoneInstance, ses *session.Session, payloa
 		item.SetCharges(uint32(charItem.Instance.Charges))
 		item.SetQuantity(uint32(charItem.Instance.Quantity))
 		item.SetMods(string(mods))
-		item.SetSlot(slot)
+		item.SetSlot(slot.Slot)
+		item.SetBagSlot(int32(slot.Bag))
 		items.ConvertItemTemplateToCapnp(ses, &charItem.Item, &item)
 	}
 
@@ -343,7 +344,7 @@ func HandleRequestClientZoneChange(z *ZoneInstance, ses *session.Session, payloa
 		log.Printf("failed to send Spawn message: %v", err)
 		return
 	}
-	z.registerNewClientGrid(clientEntry.EntityId, client.MobPosition{
+	z.registerNewClientGrid(clientEntry.EntityId, entity.MobPosition{
 		X: charData.X, Y: charData.Y, Z: charData.Z, Heading: charData.Heading,
 	})
 
@@ -393,69 +394,6 @@ func HandleRequestClientZoneChange(z *ZoneInstance, ses *session.Session, payloa
 			},
 		)
 	}
-}
-
-func HandleMoveItem(z *ZoneInstance, ses *session.Session, payload []byte) {
-	req, err := session.Deserialize(ses, payload, eq.ReadRootMoveItem)
-	if err != nil {
-		log.Printf("failed to read MoveItem request: %v", err)
-		return
-	}
-
-	fromSlot := req.FromSlot()
-	toSlot := req.ToSlot()
-
-	client := ses.Client
-	fromItem := ses.Client.Items()[fromSlot]
-	toItem := ses.Client.Items()[toSlot]
-
-	if !fromItem.AllowedInSlot(toSlot) {
-		log.Printf("from item not allowed in to slot %d", toSlot)
-		return
-	}
-	if !toItem.AllowedInSlot(fromSlot) {
-		log.Printf("to item not allowed in slot %d", fromSlot)
-		return
-	}
-	if constants.IsEquipSlot(toSlot) && fromItem != nil && !client.CanEquipItem(fromItem) {
-		log.Printf("client %d cannot equip item %d in slot %d", client.ID(), fromItem.Instance.ItemID, toSlot)
-		return
-	}
-	if constants.IsEquipSlot(fromSlot) && toItem != nil && !client.CanEquipItem(toItem) {
-		log.Printf("client %d cannot equip item %d in slot %d", client.ID(), toItem.Instance.ItemID, fromSlot)
-		return
-	}
-
-	err = items.SwapItemSlots(int32(client.CharData().ID), fromSlot, toSlot, int8(req.BagSlot()))
-	if err != nil {
-		// Send some kind of notification if it's illegal, i.e. bypassing client logic probably
-		log.Printf("failed to swap item slots: %v", err)
-		return
-	}
-	charItems := client.Items()
-	tempFrom := charItems[fromSlot]
-	tempTo := charItems[toSlot]
-	charItems[fromSlot] = tempTo
-	charItems[toSlot] = tempFrom
-
-	if constants.IsVisibleSlot(fromSlot) && charItems[fromSlot] != nil {
-		z.broadcastWearChange(client.ID(), fromSlot, charItems[fromSlot])
-	}
-
-	if constants.IsVisibleSlot(toSlot) && charItems[toSlot] != nil {
-		z.broadcastWearChange(client.ID(), toSlot, charItems[toSlot])
-	}
-
-	moveItemPacket, err := session.NewMessage(ses, eq.NewRootMoveItem)
-	if err != nil {
-		log.Printf("failed to create ClientSpawn message: %v", err)
-		return
-	}
-	moveItemPacket.SetFromSlot(fromSlot)
-	moveItemPacket.SetToSlot(toSlot)
-	moveItemPacket.SetNumberInStack(1) // just for now until we do stacks
-	moveItemPacket.SetBagSlot(0)       // Just for now until we get bags in
-	ses.SendStream(moveItemPacket.Message(), opcodes.MoveItem)
 }
 
 func HandleCamp(z *ZoneInstance, ses *session.Session, payload []byte) {

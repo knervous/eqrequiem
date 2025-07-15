@@ -552,9 +552,6 @@ struct ExpUpdate {
   aaxp @1 :Int32;
 }
 
-struct BulkItemPacket {
-  serializedItem @0 :Text;
-}
 
 struct Consume {
   slot @0 :Int32;
@@ -572,7 +569,8 @@ struct MoveItem {
   fromSlot @0 :Int32;
   toSlot @1 :Int32;
   numberInStack @2 :Int32;
-  bagSlot @3 :Int32;
+  fromBagSlot @3 :Int32;
+  toBagSlot @4 :Int32;
 }
 
 struct MultiMoveItemSub {

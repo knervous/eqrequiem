@@ -7,18 +7,17 @@ import (
 	"testing"
 
 	"github.com/knervous/eqgo/internal/db/jetgen/eqgo/model"
-	entity "github.com/knervous/eqgo/internal/entity"
 	"github.com/knervous/eqgo/internal/quest"
 )
 
 var questInterface *quest.ZoneQuestInterface
 var questEvent *quest.QuestEvent
-var npc *entity.NPC
+var npc *clientz.NPC
 
 func init() {
 	questInterface = GetQuestInterface("qeynos")
 	questEvent = &quest.QuestEvent{}
-	npc = &entity.NPC{
+	npc = &clientz.NPC{
 		NpcData: model.NpcTypes{
 			Name: "Captaaaain Tillin",
 		},

@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback } from "react";
+import { useRef, useState, useCallback } from 'react';
 
 export 
 // Custom hook for dragging logic
@@ -11,7 +11,7 @@ const useDrag = (initialX: number, initialY: number) => {
 
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
-    if (!draggingRef.current) return;
+    if (!draggingRef.current) {return;}
     const dx = e.clientX - dragStartPos.current.x;
     const dy = e.clientY - dragStartPos.current.y;
     setX(windowStartPos.current.x + dx);
@@ -20,17 +20,17 @@ const useDrag = (initialX: number, initialY: number) => {
 
   const handleMouseUp = useCallback(() => {
     draggingRef.current = false;
-    document.removeEventListener("mousemove", handleMouseMove);
-    document.removeEventListener("mouseup", handleMouseUp);
+    document.removeEventListener('mousemove', handleMouseMove);
+    document.removeEventListener('mouseup', handleMouseUp);
   }, [handleMouseMove]);
   
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     draggingRef.current = true;
     dragStartPos.current = { x: e.clientX, y: e.clientY };
     windowStartPos.current = { x, y };
-    document.addEventListener("mousemove", handleMouseMove);
-    document.addEventListener("mouseup", handleMouseUp);
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
   }, [x, y, handleMouseMove, handleMouseUp]);
 
-  return { x, y, handleMouseDown };
+  return { x, y, handleMouseDown, setX, setY };
 };

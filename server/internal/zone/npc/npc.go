@@ -1,16 +1,16 @@
-package entity
+package npc
 
 import (
 	"time"
 
 	"github.com/knervous/eqgo/internal/db/jetgen/eqgo/model"
 	db_zone "github.com/knervous/eqgo/internal/db/zone"
-	"github.com/knervous/eqgo/internal/ports/client"
+	entity "github.com/knervous/eqgo/internal/zone/interface"
 )
 
 type NPC struct {
 	npcData         *model.NpcTypes // NPC data from the database
-	mob             client.Mob
+	mob             entity.Mob
 	aggressionLevel int
 	gridEntries     []db_zone.GridEntries // the full path
 	gridIndex       int                   // which entry we’re on
@@ -19,9 +19,9 @@ type NPC struct {
 	lastUpdate      time.Time             // last time we moved/interpolated
 }
 
-func (n *NPC) Type() int32 { return client.EntityTypeNPC }
+func (n *NPC) Type() int32 { return entity.EntityTypeNPC }
 
-func (n *NPC) SetPosition(pos client.MobPosition) {
+func (n *NPC) SetPosition(pos entity.MobPosition) {
 	n.mob.X = pos.X
 	n.mob.Y = pos.Y
 	n.mob.Z = pos.Z
@@ -29,15 +29,15 @@ func (n *NPC) SetPosition(pos client.MobPosition) {
 	n.mob.Dirty = true
 }
 
-func (n *NPC) Position() client.MobPosition {
-	return client.MobPosition{X: n.mob.X, Y: n.mob.Y, Z: n.mob.Z, Heading: n.mob.Heading}
+func (n *NPC) Position() entity.MobPosition {
+	return entity.MobPosition{X: n.mob.X, Y: n.mob.Y, Z: n.mob.Z, Heading: n.mob.Heading}
 }
 
-func (c *NPC) Mob() *client.Mob {
+func (c *NPC) Mob() *entity.Mob {
 	return &c.mob
 }
 
-func (c *NPC) GetMob() *client.Mob {
+func (c *NPC) GetMob() *entity.Mob {
 	return &c.mob
 }
 
@@ -113,10 +113,10 @@ func (n *NPC) Speed() float32 {
 	return n.mob.Speed
 }
 
-func (n *NPC) SetVelocity(vel client.Velocity) {
+func (n *NPC) SetVelocity(vel entity.Velocity) {
 	n.mob.SetVelocity(vel)
 }
-func (n *NPC) Velocity() client.Velocity {
+func (n *NPC) Velocity() entity.Velocity {
 	return n.mob.GetVelocity()
 }
 
@@ -124,7 +124,7 @@ func (n *NPC) NpcData() *model.NpcTypes {
 	return n.npcData
 }
 
-func NewNPC(mob client.Mob, npcData *model.NpcTypes, gridEntries []db_zone.GridEntries, gridIndex int, nextGridMove time.Time, pauseUntil time.Time, lastUpdate time.Time) *NPC {
+func NewNPC(mob entity.Mob, npcData *model.NpcTypes, gridEntries []db_zone.GridEntries, gridIndex int, nextGridMove time.Time, pauseUntil time.Time, lastUpdate time.Time) *NPC {
 	npc := &NPC{
 		npcData:         npcData,
 		mob:             mob,

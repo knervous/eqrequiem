@@ -5,7 +5,7 @@ import { Box } from '@mui/material';
 import { useItemImage } from '@ui/hooks/use-image';
 
 export const ItemCursor: React.FC = () => {
-  const item = useInventorySlot(InventorySlot.Cursor);
+  const item = useInventorySlot(InventorySlot.Cursor, 0);
   const itemEntry = useItemImage(item?.icon ?? -1);
   const elementRef = useRef<HTMLDivElement>(null);
   const mousePositionRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });

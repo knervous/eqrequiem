@@ -14,7 +14,7 @@ import (
 	"github.com/knervous/eqgo/internal/db/items"
 	"github.com/knervous/eqgo/internal/db/jetgen/eqgo/model"
 	"github.com/knervous/eqgo/internal/db/jetgen/eqgo/table"
-	"github.com/knervous/eqgo/internal/ports/client"
+	entity "github.com/knervous/eqgo/internal/zone/interface"
 
 	"github.com/go-jet/jet/v2/mysql"
 	_ "github.com/go-sql-driver/mysql"
@@ -181,11 +181,6 @@ func InstantiateStartingItems(race, classID, deity, zone int32) ([]constants.Ite
 }
 
 func PurgeCharacterEquipment(ctx context.Context, charID int32) error {
-	// build a list of equipment-slot literals
-	var slotExprs []mysql.Expression
-	for _, slot := range constants.EquipmentSlots {
-		slotExprs = append(slotExprs, mysql.Int32(slot))
-	}
 
 	// 1) delete only those item_instances that are in equipment slots for this character
 	subQ := table.CharacterInventory.
@@ -193,7 +188,7 @@ func PurgeCharacterEquipment(ctx context.Context, charID int32) error {
 		FROM(table.CharacterInventory).
 		WHERE(
 			table.CharacterInventory.CharacterID.EQ(mysql.Int32(charID)).
-				AND(table.CharacterInventory.Slot.IN(slotExprs...)),
+				AND(table.CharacterInventory.Bag.EQ(mysql.Int8(-1))),
 		)
 
 	if _, err := table.ItemInstances.
@@ -203,12 +198,11 @@ func PurgeCharacterEquipment(ctx context.Context, charID int32) error {
 		return fmt.Errorf("delete equipped instances for char %d: %w", charID, err)
 	}
 
-	// 2) then delete the inventory rows for those slots
 	if _, err := table.CharacterInventory.
 		DELETE().
 		WHERE(
 			table.CharacterInventory.CharacterID.EQ(mysql.Int32(charID)).
-				AND(table.CharacterInventory.Slot.IN(slotExprs...)),
+				AND(table.CharacterInventory.Bag.EQ(mysql.Int8(-1))),
 		).
 		ExecContext(ctx, db.GlobalWorldDB.DB); err != nil {
 		return fmt.Errorf("delete character_inventory for char %d: %w", charID, err)
@@ -217,7 +211,38 @@ func PurgeCharacterEquipment(ctx context.Context, charID int32) error {
 	return nil
 }
 
-func GearUp(c client.Client) error {
+func PurgeCharacterItem(ctx context.Context, charID, slot int32) error {
+
+	// 1) delete only those item_instances that are in equipment slots for this character
+	subQ := table.CharacterInventory.
+		SELECT(table.CharacterInventory.ItemInstanceID).
+		FROM(table.CharacterInventory).
+		WHERE(
+			table.CharacterInventory.CharacterID.EQ(mysql.Int32(charID)).
+				AND(table.CharacterInventory.Slot.EQ(mysql.Int32(slot))),
+		)
+
+	if _, err := table.ItemInstances.
+		DELETE().
+		WHERE(table.ItemInstances.ID.IN(subQ)).
+		ExecContext(ctx, db.GlobalWorldDB.DB); err != nil {
+		return fmt.Errorf("delete equipped instances for char %d: %w", charID, err)
+	}
+
+	if _, err := table.CharacterInventory.
+		DELETE().
+		WHERE(
+			table.CharacterInventory.CharacterID.EQ(mysql.Int32(charID)).
+				AND(table.CharacterInventory.Slot.EQ(mysql.Int32(slot))),
+		).
+		ExecContext(ctx, db.GlobalWorldDB.DB); err != nil {
+		return fmt.Errorf("delete character_inventory for char %d: %w", charID, err)
+	}
+
+	return nil
+}
+
+func GearUp(c entity.Client) error {
 	var raw []model.ToolGearupArmorSets
 	if err := table.ToolGearupArmorSets.
 		SELECT(table.ToolGearupArmorSets.AllColumns).
@@ -286,7 +311,11 @@ func GearUp(c client.Client) error {
 			return fmt.Errorf("failed to insert item instance for itemID %d: %w", *e.ItemID, err)
 		}
 		slotsFilled[slot] = true
-		c.Items()[int32(slot)] = &constants.ItemWithInstance{
+		key := constants.InventoryKey{
+			Bag:  -1, // -1 means no bag, i.e. equipped
+			Slot: slot,
+		}
+		c.Items()[key] = &constants.ItemWithInstance{
 			Item:     inst.Item,
 			Instance: *inst,
 			BagSlot:  -1,
@@ -301,7 +330,7 @@ func GearUp(c client.Client) error {
 //  2. character_inventory (upsert on (character_id,slot))
 //
 // All in one TX so the FK is never broken.
-func UpdateCharacterItems(ctx context.Context, c client.Client) (err error) {
+func UpdateCharacterItems(ctx context.Context, c entity.Client) (err error) {
 	// 1) begin TX
 	tx, err := db.GlobalWorldDB.DB.Begin()
 	if err != nil {
@@ -320,7 +349,7 @@ func UpdateCharacterItems(ctx context.Context, c client.Client) (err error) {
 
 	charID := int32(c.ID())
 
-	for slotIdx, wi := range c.Items() {
+	for itemSlot, wi := range c.Items() {
 		if wi == nil {
 			// slot empty: we skip (or you could DELETE the inventory row here if you like)
 			continue
@@ -332,7 +361,7 @@ func UpdateCharacterItems(ctx context.Context, c client.Client) (err error) {
 		if inst.ID <= 0 {
 			newID, err2 := items.CreateDBItemInstance(tx, *inst, charID)
 			if err2 != nil {
-				return fmt.Errorf("inserting new instance for slot %d: %w", slotIdx, err2)
+				return fmt.Errorf("inserting new instance for slot %d: %w", itemSlot, err2)
 			}
 			inst.ID = newID
 		} else {
@@ -372,7 +401,7 @@ func UpdateCharacterItems(ctx context.Context, c client.Client) (err error) {
 			).
 			VALUES(
 				mysql.Int32(charID),
-				mysql.Int32(int32(slotIdx)),
+				mysql.Int32(int32(itemSlot.Slot)),
 				mysql.Int32(inst.ID),
 				mysql.Int8(wi.BagSlot),
 			).
@@ -381,7 +410,7 @@ func UpdateCharacterItems(ctx context.Context, c client.Client) (err error) {
 				table.CharacterInventory.Bag.SET(mysql.Int8(wi.BagSlot)),
 			).
 			Exec(tx); err2 != nil {
-			return fmt.Errorf("upserting inventory for slot %d: %w", slotIdx, err2)
+			return fmt.Errorf("upserting inventory for slot %d: %w", itemSlot, err2)
 		}
 	}
 

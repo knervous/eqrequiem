@@ -5,17 +5,17 @@ package yaegi_wrappers
 import (
 	"reflect"
 
-	"github.com/knervous/eqgo/internal/entity"
-	"github.com/knervous/eqgo/internal/ports/client"
+	entity "github.com/knervous/eqgo/internal/zone/interface"
+	"github.com/knervous/eqgo/internal/zone/npc"
 )
 
 func init() {
 	Symbols["github.com/knervous/eqgo/internal/entity/entity"] = map[string]reflect.Value{
 		// type definitions
-		"Client":  reflect.ValueOf((*client.Client)(nil)),
-		"Mob":     reflect.ValueOf((*client.Mob)(nil)),
-		"Entity": reflect.ValueOf((*client.Entity)(nil)),
-		"NPC":     reflect.ValueOf((*entity.NPC)(nil)),
+		"Client":  reflect.ValueOf((*entity.Client)(nil)),
+		"Mob":     reflect.ValueOf((*entity.Mob)(nil)),
+		"Entity": reflect.ValueOf((*entity.Entity)(nil)),
+		"NPC":     reflect.ValueOf((*npc.NPC)(nil)),
 
 		// interface wrapper definitions
 		"_Moblike": reflect.ValueOf((*_github_com_knervous_eqgo_internal_entity_Moblike)(nil)),

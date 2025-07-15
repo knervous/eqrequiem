@@ -57,7 +57,7 @@ func CreateDBItemInstance(tx *stmtcache.Tx, itemInstance constants.ItemInstance,
 	return int32(lastID), nil
 }
 
-func SwapItemSlots(playerID, fromSlot, toSlot int32, bagSlot int8) (err error) {
+func SwapItemSlots(playerID, fromSlot, toSlot int32, toBagSlot, fromBagSlot int8) (err error) {
 	tx, err := db.GlobalWorldDB.DB.Begin()
 	if err != nil {
 		return fmt.Errorf("begin tx: %w", err)
@@ -73,6 +73,8 @@ func SwapItemSlots(playerID, fromSlot, toSlot int32, bagSlot int8) (err error) {
 		}
 	}()
 
+	generalSwap := toBagSlot == 0 && fromBagSlot == 0
+
 	// 1) Lock both slots FOR UPDATE (gap lock if missing)
 	var inv []model.CharacterInventory
 	if err = table.CharacterInventory.
@@ -86,7 +88,13 @@ func SwapItemSlots(playerID, fromSlot, toSlot int32, bagSlot int8) (err error) {
 				AND(table.CharacterInventory.Slot.IN(
 					mysql.Int32(fromSlot),
 					mysql.Int32(toSlot),
-				)),
+				),
+				).AND(
+				table.CharacterInventory.Bag.IN(
+					mysql.Int8(fromBagSlot),
+					mysql.Int8(toBagSlot),
+				),
+			),
 		).
 		FOR(mysql.UPDATE()).
 		Query(tx, &inv); err != nil {
@@ -94,24 +102,28 @@ func SwapItemSlots(playerID, fromSlot, toSlot int32, bagSlot int8) (err error) {
 	}
 
 	// Map existing rows by slot
-	rows := make(map[int32]model.CharacterInventory, 2)
-	for _, ci := range inv {
-		rows[int32(ci.Slot)] = ci
+	type loc struct {
+		Slot int32
+		Bag  int8
 	}
-	fromRow, hasFrom := rows[fromSlot]
-	toRow, hasTo := rows[toSlot]
+	rows := map[loc]model.CharacterInventory{}
+	for _, ci := range inv {
+		rows[loc{int32(ci.Slot), ci.Bag}] = ci
+	}
+	fromRow, hasFrom := rows[loc{fromSlot, fromBagSlot}]
+	toRow, hasTo := rows[loc{toSlot, toBagSlot}]
 
 	// 2) Four cases
 	switch {
 	case !hasFrom && !hasTo:
 		// nothing to do
-		return nil
+		break
 
 	case hasFrom && !hasTo:
 		// simple move fromSlot -> toSlot
 		if _, err = table.CharacterInventory.
 			UPDATE(table.CharacterInventory.Slot, table.CharacterInventory.Bag).
-			SET(mysql.Int32(toSlot), mysql.Int8(bagSlot)).
+			SET(mysql.Int32(toSlot), mysql.Int8(toBagSlot)).
 			WHERE(
 				table.CharacterInventory.CharacterID.EQ(mysql.Int32(playerID)).
 					AND(table.CharacterInventory.ItemInstanceID.EQ(mysql.Int32(fromRow.ItemInstanceID))),
@@ -119,7 +131,6 @@ func SwapItemSlots(playerID, fromSlot, toSlot int32, bagSlot int8) (err error) {
 			Exec(tx); err != nil {
 			return fmt.Errorf("move fromSlot→toSlot: %w", err)
 		}
-		return nil
 
 	case !hasFrom && hasTo:
 		// simple move toSlot -> fromSlot
@@ -133,7 +144,6 @@ func SwapItemSlots(playerID, fromSlot, toSlot int32, bagSlot int8) (err error) {
 			Exec(tx); err != nil {
 			return fmt.Errorf("move toSlot→fromSlot: %w", err)
 		}
-		return nil
 
 	default: // hasFrom && hasTo
 		// full swap via temp slot to avoid unique-key collision
@@ -154,7 +164,7 @@ func SwapItemSlots(playerID, fromSlot, toSlot int32, bagSlot int8) (err error) {
 		// 2b) move fromSlot item into toSlot
 		if _, err = table.CharacterInventory.
 			UPDATE(table.CharacterInventory.Slot, table.CharacterInventory.Bag).
-			SET(mysql.Int32(toSlot), mysql.Int8(bagSlot)).
+			SET(mysql.Int32(toSlot), mysql.Int8(toBagSlot)).
 			WHERE(
 				table.CharacterInventory.CharacterID.EQ(mysql.Int32(playerID)).
 					AND(table.CharacterInventory.ItemInstanceID.EQ(mysql.Int32(fromRow.ItemInstanceID))),
@@ -175,8 +185,22 @@ func SwapItemSlots(playerID, fromSlot, toSlot int32, bagSlot int8) (err error) {
 			return fmt.Errorf("restore tempSlot→fromSlot: %w", err)
 		}
 
-		return nil
 	}
+	if generalSwap {
+		if _, err = table.CharacterInventory.
+			UPDATE(table.CharacterInventory.Slot).
+			SET(mysql.Int32(toSlot)).
+			WHERE(
+				table.CharacterInventory.CharacterID.EQ(mysql.Int32(playerID)).AND(
+					table.CharacterInventory.Slot.EQ(mysql.Int32(fromSlot)),
+				).AND(
+					table.CharacterInventory.Bag.GT(mysql.Int8(0)),
+				),
+			).Exec(tx); err != nil {
+			return fmt.Errorf("update child slots: %w", err)
+		}
+	}
+	return nil
 }
 
 func AddItemToPlayerInventoryFreeSlot(itemInstance constants.ItemInstance, playerID int32) (int32, error) {

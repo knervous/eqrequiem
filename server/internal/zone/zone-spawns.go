@@ -10,14 +10,14 @@ import (
 	"github.com/knervous/eqgo/internal/api/opcodes"
 	"github.com/knervous/eqgo/internal/db/jetgen/eqgo/model"
 	db_zone "github.com/knervous/eqgo/internal/db/zone"
-	entity "github.com/knervous/eqgo/internal/entity"
-	"github.com/knervous/eqgo/internal/ports/client"
 	"github.com/knervous/eqgo/internal/session"
+	entity "github.com/knervous/eqgo/internal/zone/interface"
+	"github.com/knervous/eqgo/internal/zone/npc"
 )
 
 // spawnTick handles NPC movement along its pathgrid, updates its velocity,
 // and ensures a final update when transitioning from moving to stopped.
-func (z *ZoneInstance) spawnTick(now time.Time, npc client.NPC) {
+func (z *ZoneInstance) spawnTick(now time.Time, npc entity.NPC) {
 	if len(npc.GridEntries()) == 0 {
 		return
 	}
@@ -44,7 +44,7 @@ func (z *ZoneInstance) spawnTick(now time.Time, npc client.NPC) {
 
 	if distSq == 0 {
 		// arrived → zero velocity, schedule pause, advance index
-		npc.SetVelocity(client.Velocity{X: 0, Y: 0, Z: 0})
+		npc.SetVelocity(entity.Velocity{X: 0, Y: 0, Z: 0})
 		pause := npc.CurrentGridEntry().Pause
 		npc.SetPauseUntil(now.Add(time.Duration(pause) * time.Second))
 		npc.SetGridIndex((npc.GridIndex() + 1) % len(npc.GridEntries()))
@@ -68,7 +68,7 @@ func (z *ZoneInstance) spawnTick(now time.Time, npc client.NPC) {
 		vx := (npc.Mob().X - oldX) / (delta)
 		vy := (npc.Mob().Y - oldY) / (delta)
 		vz := (npc.Mob().Z - oldZ) / (delta)
-		npc.SetVelocity(client.Velocity{X: vx, Y: vy, Z: vz})
+		npc.SetVelocity(entity.Velocity{X: vx, Y: vy, Z: vz})
 
 		// update heading
 		npc.Mob().Heading = math.Atan2(
@@ -117,8 +117,8 @@ func (z *ZoneInstance) processSpawns() {
 			}
 			npcID := z.nextEntityID
 			z.nextEntityID++
-			npc := entity.NewNPC(
-				client.Mob{
+			npc := npc.NewNPC(
+				entity.Mob{
 					Speed:   1,
 					Zone:    z,
 					Spawn2:  *entry.Spawn2,

@@ -1,7 +1,7 @@
-import { Box, BoxProps, SxProps, Typography } from "@mui/material";
-import React, { useMemo, useState, useCallback } from "react";
-import { ImageEntry, useStoneImage } from "../hooks/use-image";
-import classNames from "classnames";
+import React, { useMemo, useState, useCallback } from 'react';
+import { Box, BoxProps, SxProps, Typography } from '@mui/material';
+import classNames from 'classnames';
+import { ImageEntry, useStoneImage } from '../hooks/use-image';
 
 type AtlasEntry = {
   texture: string; // Path to the texture file (e.g., "uifiles/default/atlas.tga")
@@ -35,7 +35,7 @@ type Props = {
 const emptySx = {};
 
 export const UiButtonComponent: React.FC<Props> = (props: Props) => {
-  const buttonName = props.buttonName ?? "A_BigBtn";
+  const buttonName = props.buttonName ?? 'A_BigBtn';
   const normal = useStoneImage(`${buttonName}Normal`, true);
   const pressed = useStoneImage(`${buttonName}Pressed`, true);
   const hover = useStoneImage(`${buttonName}Flyby`, true);
@@ -44,7 +44,7 @@ export const UiButtonComponent: React.FC<Props> = (props: Props) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isPressed, setIsPressed] = useState(false);
 
-  const selectedEntry = useMemo(
+  const stateEntry = useMemo(
     () =>
       props.isDisabled
         ? disabled
@@ -64,6 +64,7 @@ export const UiButtonComponent: React.FC<Props> = (props: Props) => {
       disabled,
     ],
   );
+  const selectedEntry = useMemo(() => stateEntry.entry ? stateEntry : normal, [stateEntry, normal]);
 
   const doClick = useCallback(() => {
     if (props.isDisabled || !props.onClick) {
@@ -74,43 +75,43 @@ export const UiButtonComponent: React.FC<Props> = (props: Props) => {
 
   return !selectedEntry.entry ? null : (
     <Box
-      className={classNames("cursor-default", "eq-button", props.className)}
+      className={classNames('cursor-default', 'eq-button', props.className)}
       sx={{
-        userSelect: "none",
-        color: "white",
-        width: `${selectedEntry.entry?.width}px`,
-        height: `${selectedEntry.entry?.height}px`,
+        userSelect     : 'none',
+        color          : 'white',
+        width          : `${selectedEntry.entry?.width}px`,
+        height         : `${selectedEntry.entry?.height}px`,
         backgroundImage: `url(${selectedEntry.image})`,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        alignContent: "center",
-        backgroundSize: "cover",
+        display        : 'flex',
+        alignItems     : 'center',
+        justifyContent : 'center',
+        alignContent   : 'center',
+        backgroundSize : 'cover',
         ...(props.scale ? { transform: `scale(${props.scale})` } : emptySx),
         ...(props.sx ?? {}),
         ...(props.entrySx ? props.entrySx(selectedEntry) : emptySx),
       }}
+      tabIndex={0}
+      onBlur={props.onBlur}
+      onClick={doClick}
+      onFocus={props.onFocus}
+      onMouseDown={() => !props.isDisabled && setIsPressed(true)}
       onMouseEnter={() => !props.isDisabled && setIsHovered(true)}
       onMouseLeave={() => {
         setIsHovered(false);
         setIsPressed(false);
       }}
-      onMouseDown={() => !props.isDisabled && setIsPressed(true)}
       onMouseUp={() => setIsPressed(false)}
-      onClick={doClick}
-      onFocus={props.onFocus}
-      onBlur={props.onBlur}
-      tabIndex={0}
     >
       {props.children}
       {props.icon}
       {props.text && (
         <Typography
           sx={{
-            display: "inline-block",
-            fontSize: props.textFontSize ?? "12px",
-            textAlign: "center",
-            color: props.isDisabled ? "gray" : "#111",
+            display  : 'inline-block',
+            fontSize : props.textFontSize ?? '12px',
+            textAlign: 'center',
+            color    : props.isDisabled ? 'gray' : '#111',
             ...(props.textSx ?? {}),
           }}
         >

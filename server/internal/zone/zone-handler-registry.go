@@ -5,12 +5,9 @@ import (
 	"log"
 
 	"github.com/knervous/eqgo/internal/api/opcodes"
-
 	"github.com/knervous/eqgo/internal/session"
+	"github.com/knervous/eqgo/internal/zone/client"
 )
-
-type ClientMessage struct {
-}
 
 // DatagramHandler defines the signature for handling datagrams.
 type DatagramHandler func(z *ZoneInstance, clientSession *session.Session, payload []byte)
@@ -29,9 +26,6 @@ func NewZoneOpCodeRegistry(zoneID int) *HandlerRegistry {
 		opcodes.Animation:               HandleClientAnimation,
 		opcodes.Camp:                    HandleCamp,
 		opcodes.GMCommand:               HandleGMCommand,
-
-		// Items
-		opcodes.MoveItem: HandleMoveItem,
 	}
 
 	registry := &HandlerRegistry{
@@ -51,6 +45,12 @@ func (r *HandlerRegistry) HandleZonePacket(z *ZoneInstance, session *session.Ses
 	payload := data[2:]
 	if h, ok := r.handlers[(opcodes.OpCode)(op)]; ok {
 		h(z, session, payload)
+	} else if session != nil && session.Client != nil {
+		client, ok := session.Client.(*client.Client)
+		if !ok {
+			return
+		}
+		client.HandleZonePacket(z, session, (opcodes.OpCode)(op), payload)
 	} else {
 		log.Printf("no handler for opcode %d from session %d", op, session.SessionID)
 	}

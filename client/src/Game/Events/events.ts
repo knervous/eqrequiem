@@ -3,6 +3,7 @@ import type { Config } from '@game/Config/types';
 import type { Entity } from '@game/Model/entity';
 import type { PlayerProfile } from '@game/Net/internal/api/capnp/player';
 import type { InventorySlot } from '@game/Player/player-constants';
+import type { BagState } from '@game/Player/player-inventory';
 import mitt, { Emitter } from 'mitt';
 
 export type ChatMessage = {
@@ -23,7 +24,9 @@ export type Events = {
 
   // Items/inventory
   updateInventory: void;
-  updateInventorySlot: InventorySlot;
+  updateInventorySlot: { slot: InventorySlot; bag?: number };
+  updateBagState: { slot: InventorySlot; state: BagState };
+  bagClick: number;
 
   zoneSpawns: void;
   playerPosition: BJS.Vector3;
@@ -51,13 +54,21 @@ export type Events = {
   hotkey: number;
 };
 
-type EnhancedEmitter<Events extends Record<string, unknown>> = Emitter<Events> & {
-  once: <K extends keyof Events>(type: K, handler: (event: Events[K]) => void) => void;
-};
+type EnhancedEmitter<Events extends Record<string, unknown>> =
+  Emitter<Events> & {
+    once: <K extends keyof Events>(
+      type: K,
+      handler: (event: Events[K]) => void,
+    ) => void;
+  };
 
-export const emitter: EnhancedEmitter<Events> = mitt<Events>() as EnhancedEmitter<Events>;
+export const emitter: EnhancedEmitter<Events> =
+  mitt<Events>() as EnhancedEmitter<Events>;
 
-emitter.once = <K extends keyof Events>(type: K, handler: (event: Events[K]) => void) => {
+emitter.once = <K extends keyof Events>(
+  type: K,
+  handler: (event: Events[K]) => void,
+) => {
   const onceHandler = (event: Events[K]) => {
     handler(event);
     emitter.off(type, onceHandler);

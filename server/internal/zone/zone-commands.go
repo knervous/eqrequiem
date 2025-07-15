@@ -2,11 +2,14 @@ package zone
 
 import (
 	"context"
+	"encoding/json"
+	"log"
 	"strconv"
 	"sync"
 
 	eq "github.com/knervous/eqgo/internal/api/capnp"
 	db_character "github.com/knervous/eqgo/internal/db/character"
+	"github.com/knervous/eqgo/internal/db/items"
 
 	"github.com/knervous/eqgo/internal/api/opcodes"
 	"github.com/knervous/eqgo/internal/session"
@@ -37,9 +40,43 @@ func (z *ZoneInstance) HandleCommand(session *session.Session, command string, a
 
 func commandGearup(z *ZoneInstance, ses *session.Session, args []string) {
 	db_character.PurgeCharacterEquipment(context.Background(), int32(ses.Client.CharData().ID))
-
 	db_character.GearUp(ses.Client)
 	db_character.UpdateCharacterItems(context.Background(), ses.Client)
+	charItems := ses.Client.Items()
+	charItemsLength := int32(len(charItems))
+	Message(
+		ses,
+		eq.NewRootBulkItemPacket,
+		opcodes.ItemPacket,
+		func(m eq.BulkItemPacket) error {
+			itemsList, err := m.NewItems(charItemsLength)
+			if err != nil {
+				return err
+			}
+			itemIdx := 0
+			for slot, charItem := range charItems {
+				if charItem == nil {
+					continue
+				}
+				mods, err := json.Marshal(charItem.Instance.Mods)
+				if err != nil {
+					log.Printf("failed to marshal mods for itemID %d: %v", charItem.Instance.ItemID, err)
+					continue
+				}
+
+				item := itemsList.At(itemIdx)
+				itemIdx++
+				item.SetCharges(uint32(charItem.Instance.Charges))
+				item.SetQuantity(uint32(charItem.Instance.Quantity))
+				item.SetMods(string(mods))
+				item.SetSlot(slot.Slot)
+				item.SetBagSlot(int32(slot.Bag))
+				items.ConvertItemTemplateToCapnp(ses, &charItem.Item, &item)
+			}
+			return nil
+		},
+	)
+
 }
 
 func commandLevel(z *ZoneInstance, ses *session.Session, args []string) {

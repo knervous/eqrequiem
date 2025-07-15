@@ -3,8 +3,8 @@ package qeynos2
 import (
 	"fmt"
 
-	entity "github.com/knervous/eqgo/internal/entity"
 	"github.com/knervous/eqgo/internal/quest"
+	"github.com/knervous/eqgo/internal/zone/npc"
 )
 
 func registerZoneQuests(zq *quest.ZoneQuestInterface) {
@@ -12,7 +12,7 @@ func registerZoneQuests(zq *quest.ZoneQuestInterface) {
 		"",
 		quest.EventSay, func(e *quest.QuestEvent) bool {
 			switch e.Receiver.(type) {
-			case *entity.NPC:
+			case *npc.NPC:
 				if e.Receiver == nil || e.Actor == nil {
 					return false
 				}
@@ -20,7 +20,7 @@ func registerZoneQuests(zq *quest.ZoneQuestInterface) {
 				e.Receiver.Say(greetings)
 			}
 			switch e.Actor.(type) {
-			case *entity.NPC:
+			case *npc.NPC:
 				return true
 
 			default:

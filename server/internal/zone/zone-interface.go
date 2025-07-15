@@ -7,13 +7,13 @@ import (
 	"github.com/knervous/eqgo/internal/api/opcodes"
 	"github.com/knervous/eqgo/internal/constants"
 	"github.com/knervous/eqgo/internal/db/jetgen/eqgo/model"
-	"github.com/knervous/eqgo/internal/ports/client"
 	"github.com/knervous/eqgo/internal/quest"
 	"github.com/knervous/eqgo/internal/session"
+	entity "github.com/knervous/eqgo/internal/zone/interface"
 )
 
 // ensure ZoneInstance implements ZoneAccess
-var _ client.ZoneAccess = (*ZoneInstance)(nil)
+var _ entity.ZoneAccess = (*ZoneInstance)(nil)
 
 // ZoneAccess methods on your existing struct:
 func (z *ZoneInstance) GetZone() *model.Zone {
@@ -23,65 +23,65 @@ func (z *ZoneInstance) GetZone() *model.Zone {
 func (z *ZoneInstance) GetZoneID() int     { return z.ZoneID }
 func (z *ZoneInstance) GetInstanceID() int { return z.InstanceID }
 
-func (z *ZoneInstance) Clients() []client.Client {
+func (z *ZoneInstance) Clients() []entity.Client {
 	z.mutex.RLock()
 	defer z.mutex.RUnlock()
-	out := make([]client.Client, 0, len(z.ClientEntries))
+	out := make([]entity.Client, 0, len(z.ClientEntries))
 	for _, ce := range z.ClientEntries {
 		out = append(out, ce.ClientSession.Client)
 	}
 	return out
 }
 
-func (z *ZoneInstance) ClientBySession(sessionID int) (client.Client, bool) {
+func (z *ZoneInstance) ClientBySession(sessionID int) (entity.Client, bool) {
 	z.mutex.RLock()
 	defer z.mutex.RUnlock()
 	ce, ok := z.ClientEntries[sessionID]
 	return ce.ClientSession.Client, ok
 }
 
-func (z *ZoneInstance) ClientByEntity(entityID int) (client.Client, bool) {
+func (z *ZoneInstance) ClientByEntity(entityID int) (entity.Client, bool) {
 	z.mutex.RLock()
 	defer z.mutex.RUnlock()
 	ce, ok := z.ClientEntriesByEntityID[entityID]
 	return ce.ClientSession.Client, ok
 }
 
-func (z *ZoneInstance) NPCs() []client.NPC {
+func (z *ZoneInstance) NPCs() []entity.NPC {
 	z.mutex.RLock()
 	defer z.mutex.RUnlock()
-	out := make([]client.NPC, 0, len(z.Npcs))
+	out := make([]entity.NPC, 0, len(z.Npcs))
 	for _, npc := range z.Npcs {
 		out = append(out, npc)
 	}
 	return out
 }
 
-func (z *ZoneInstance) NPCByID(npcID int) (client.NPC, bool) {
+func (z *ZoneInstance) NPCByID(npcID int) (entity.NPC, bool) {
 	z.mutex.RLock()
 	defer z.mutex.RUnlock()
 	npc, ok := z.Npcs[npcID]
 	return npc, ok
 }
 
-func (z *ZoneInstance) NPCByName(name string) (client.NPC, bool) {
+func (z *ZoneInstance) NPCByName(name string) (entity.NPC, bool) {
 	z.mutex.RLock()
 	defer z.mutex.RUnlock()
 	npc, ok := z.npcsByName[name]
 	return npc, ok
 }
 
-func (z *ZoneInstance) ZoneEntities() []client.Entity {
+func (z *ZoneInstance) ZoneEntities() []entity.Entity {
 	z.mutex.RLock()
 	defer z.mutex.RUnlock()
-	out := make([]client.Entity, 0, len(z.Entities))
+	out := make([]entity.Entity, 0, len(z.Entities))
 	for _, e := range z.Entities {
 		out = append(out, e)
 	}
 	return out
 }
 
-func (z *ZoneInstance) EntityByID(id int) (client.Entity, bool) {
+func (z *ZoneInstance) EntityByID(id int) (entity.Entity, bool) {
 	z.mutex.RLock()
 	defer z.mutex.RUnlock()
 	e, ok := z.Entities[id]
@@ -94,7 +94,7 @@ func (z *ZoneInstance) QE() *quest.QuestEvent {
 	return qe
 }
 
-func (z *ZoneInstance) broadcastWearChange(
+func (z *ZoneInstance) BroadcastWearChange(
 	sender int,
 	slot int32,
 	item *constants.ItemWithInstance,

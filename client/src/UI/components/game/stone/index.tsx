@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import GameManager from '@game/Manager/game-manager';
 import { Box } from '@mui/material';
 import { Allotment, AllotmentHandle } from 'allotment';
+import { BagsContainer } from '../inventory/bags-container';
 import { StoneLeft } from './left/stone-left';
 import { StoneMiddleBottom } from './middle/stone-middle-bottom';
 import { StoneMiddleTop } from './middle/top/stone-middle-top';
@@ -135,6 +136,10 @@ export const StoneUIBase: React.FC = () => {
           <StoneRight width={rightPaneWidth} />
         </Allotment.Pane>
       </Allotment>
+
+      {/* Bags Container */}
+      <BagsContainer scale={scaleFactor} />
+      
     </Box>
   );
 };

@@ -8,10 +8,10 @@ import (
 
 	"github.com/knervous/eqgo/internal/db/jetgen/eqgo/model"
 	db_zone "github.com/knervous/eqgo/internal/db/zone"
-	"github.com/knervous/eqgo/internal/ports/client"
 	"github.com/knervous/eqgo/internal/quest"
 	questregistry "github.com/knervous/eqgo/internal/quest/registry"
 	"github.com/knervous/eqgo/internal/session"
+	entity "github.com/knervous/eqgo/internal/zone/interface"
 )
 
 // ClientEntry represents a client session in the zone.
@@ -39,9 +39,9 @@ type ZoneInstance struct {
 
 	// Entities
 	ZonePool   map[int64]*db_zone.SpawnPoolEntry
-	Npcs       map[int]client.NPC
-	npcsByName map[string]client.NPC // name → NPC
-	Entities   map[int]client.Entity
+	Npcs       map[int]entity.NPC
+	npcsByName map[string]entity.NPC // name → NPC
+	Entities   map[int]entity.Entity
 
 	// spatial-grid bookkeeping:
 	entityCell      map[int]int64
@@ -106,9 +106,9 @@ func NewZoneInstance(zoneID, instanceID int) *ZoneInstance {
 		ClientEntriesByEntityID: make(map[int]ClientEntry),
 		ZonePool:                zonePool,
 		QuestInterface:          QuestInterface,
-		Npcs:                    make(map[int]client.NPC),
-		npcsByName:              make(map[string]client.NPC),
-		Entities:                make(map[int]client.Entity),
+		Npcs:                    make(map[int]entity.NPC),
+		npcsByName:              make(map[string]entity.NPC),
+		Entities:                make(map[int]entity.Entity),
 
 		// Grid processing
 		entityCell:      make(map[int]int64),

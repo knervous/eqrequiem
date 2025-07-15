@@ -177,4 +177,9 @@ struct ItemInstance {
   minstatus @169 :Int32;
   name @170 :Text;
   aagi @171 :Int32;
+  bagSlot @172 :Int32;
+}
+
+struct BulkItemPacket {
+  items @0 :List(ItemInstance);
 }

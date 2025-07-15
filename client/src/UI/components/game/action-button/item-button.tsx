@@ -1,7 +1,10 @@
-import React, { useCallback, useMemo, useRef } from 'react';
+import React, {
+  useCallback,
+  useMemo,
+  useRef,
+} from 'react';
 import { useInventorySlot } from '@game/Events/event-hooks';
 import { MoveItem } from '@game/Net/internal/api/capnp/common';
-import { ItemInstance } from '@game/Net/internal/api/capnp/item';
 import { OpCodes } from '@game/Net/opcodes';
 import Player from '@game/Player/player';
 import { InventorySlot } from '@game/Player/player-constants';
@@ -14,10 +17,12 @@ import { useItemDragClone } from './hooks';
 interface ItemButtonProps {
   scale: number;
   slot: InventorySlot;
+  bagSlot: number;
   hotButton?: boolean;
   hotButtonIndex?: number;
   height?: number | string | undefined;
   width?: number | string | undefined;
+  insideBag?: boolean;
 }
 
 const backgroundMap: Record<number, string> = {
@@ -49,8 +54,11 @@ const backgroundMap: Record<number, string> = {
   [InventorySlot.Ammo]     : 'A_InvAmmo',
 };
 
+const emptyInventoryBg = 'Jib_RecessedBox';
+
 export const ItemButton: React.FC<ItemButtonProps> = (props) => {
-  const item = useInventorySlot(props.slot);
+  const item = useInventorySlot(props.slot, props.bagSlot);
+  const isBag = useMemo(() => item?.bagslots ?? 0 > 0, [item]);
   const rightClickTimeout = useRef<NodeJS.Timeout | null>(null);
   const rightClickTimeoutFinished = useRef<boolean>(false);
   const itemActionData = useMemo((): FullItemEntryData | null => {
@@ -63,21 +71,59 @@ export const ItemButton: React.FC<ItemButtonProps> = (props) => {
 
   const { elementRef, onMouseDown } =
     useItemDragClone<HTMLDivElement>(itemActionData);
-  const bgEntry = useSakImage(backgroundMap[props.slot], true);
+  const bgEntry = useSakImage(
+    props.insideBag ? emptyInventoryBg : backgroundMap[props.slot],
+    true,
+  );
   const itemEntry = useItemImage(item?.icon ?? -1);
   const onClick = useCallback(
     (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
       // Left click
       if (e.button === 0) {
-        WorldSocket.sendMessage(OpCodes.MoveItem, MoveItem, {
-          toSlot       : Player.instance?.hasCursorItem ? props.slot : InventorySlot.Cursor,
-          fromSlot     : Player.instance?.hasCursorItem ? InventorySlot.Cursor : props.slot,
+        const hasCursorItem = Player.instance?.hasCursorItem;
+        if (!hasCursorItem && !item) {
+          // If no item and no cursor item, do nothing
+          console.log(
+            'Left click on empty item button',
+            props.slot,
+            props.bagSlot,
+          );
+          return;
+        }
+        console.log('Left click on item button', props.slot, props.bagSlot);
+        console.log('Has cursor item:', Player.instance?.hasCursorItem);
+        if (isBag) {
+          Player.instance?.playerInventory.closeBag(props.slot);
+        }
+        console.log({
+          toSlot: Player.instance?.hasCursorItem
+            ? props.slot
+            : InventorySlot.Cursor,
+          fromSlot: Player.instance?.hasCursorItem
+            ? InventorySlot.Cursor
+            : props.slot,
           numberInStack: item?.stackable ? item.quantity : 1,
-          bagSlot      : 0,
+          fromBagSlot  : Player.instance?.hasCursorItem
+            ? 0
+            : (props?.bagSlot ?? 0),
+          toBagSlot: Player.instance?.hasCursorItem ? props.bagSlot : 0,
+        });
+        WorldSocket.sendMessage(OpCodes.MoveItem, MoveItem, {
+          toSlot: Player.instance?.hasCursorItem
+            ? props.slot
+            : InventorySlot.Cursor,
+          fromSlot: Player.instance?.hasCursorItem
+            ? InventorySlot.Cursor
+            : props.slot,
+          numberInStack: item?.stackable ? item.quantity : 1,
+          fromBagSlot  : Player.instance?.hasCursorItem
+            ? 0
+            : (props?.bagSlot ?? 0),
+          toBagSlot: Player.instance?.hasCursorItem ? props.bagSlot : 0,
         });
       }
     },
-    [props.slot, item?.stackable, item?.quantity],
+    [props.slot, props.bagSlot, item, isBag],
   );
 
   const onRightClick = useCallback(
@@ -85,6 +131,7 @@ export const ItemButton: React.FC<ItemButtonProps> = (props) => {
       // Right click
       e.preventDefault();
       if (item) {
+        Player.instance?.playerInventory?.useItem(props.slot);
         // Handle right click action here, e.g., show context menu
         rightClickTimeout.current = setTimeout(() => {
           // Inspect item
@@ -92,7 +139,7 @@ export const ItemButton: React.FC<ItemButtonProps> = (props) => {
         }, 500);
       }
     },
-    [item],
+    [item, props.slot],
   );
 
   const onMouseUp = useCallback(
@@ -110,58 +157,60 @@ export const ItemButton: React.FC<ItemButtonProps> = (props) => {
   );
 
   return (
-    <Box
-      ref={elementRef}
-      className="item-button-container"
-      sx={{
-        ['&:hover']: {
-          boxShadow: '0px 0px 10px 5px inset rgba(216, 215, 208, 0.27)',
-        },
-        backgroundImage: `url(${bgEntry.image})`,
-        backgroundSize : 'cover',
-        width          : props.width ?? '100%',
-        height         : props.height ?? '100%',
-      }}
-      title={item?.name}
-      onClick={onClick}
-      onContextMenu={onRightClick}
-      onMouseDown={onMouseDown}
-      onMouseUp={onMouseUp}
-    >
-      {item ? (
-        <Box
-          className="item-button"
-          sx={{
-            backgroundImage: `url(${itemEntry})`,
-            backgroundSize : 'cover',
-            width          : 'calc(80%)',
-            height         : 'calc(80%)',
-            position       : 'relative',
-            left           : '10%',
-            top            : '10%',
-          }}
-        >
-          {item?.stackable ? (
-            <Box
-              className="item-quantity"
-              sx={{
-                position    : 'relative',
-                left        : 'calc(80%)',
-                top         : 'calc(70%)',
-                textAlign   : 'center',
-                width       : '10%',
-                background  : 'rgba(0, 0, 0, 0.3)',
-                p           : '1px',
-                borderRadius: '4px',
-                color       : 'white',
-                fontSize    : 10 / props.scale,
-              }}
-            >
-              {item.quantity}
-            </Box>
-          ) : null}
-        </Box>
-      ) : null}
-    </Box>
+    <>
+      <Box
+        ref={elementRef}
+        className="item-button-container"
+        sx={{
+          ['&:hover']: {
+            boxShadow: '0px 0px 10px 5px inset rgba(216, 215, 208, 0.27)',
+          },
+          backgroundImage: `url(${bgEntry.image})`,
+          backgroundSize : 'cover',
+          width          : props.width ?? '100%',
+          height         : props.height ?? '100%',
+        }}
+        title={item?.name}
+        onClick={onClick}
+        onContextMenu={onRightClick}
+        onMouseDown={onMouseDown}
+        onMouseUp={onMouseUp}
+      >
+        {item ? (
+          <Box
+            className="item-button"
+            sx={{
+              backgroundImage: `url(${itemEntry})`,
+              backgroundSize : 'cover',
+              width          : 'calc(80%)',
+              height         : 'calc(80%)',
+              position       : 'relative',
+              left           : '10%',
+              top            : '10%',
+            }}
+          >
+            {item?.stackable ? (
+              <Box
+                className="item-quantity"
+                sx={{
+                  position    : 'relative',
+                  left        : 'calc(80%)',
+                  top         : 'calc(70%)',
+                  textAlign   : 'center',
+                  width       : '10%',
+                  background  : 'rgba(0, 0, 0, 0.3)',
+                  p           : '1px',
+                  borderRadius: '4px',
+                  color       : 'white',
+                  fontSize    : 10 / props.scale,
+                }}
+              >
+                {item.quantity}
+              </Box>
+            ) : null}
+          </Box>
+        ) : null}
+      </Box>
+    </>
   );
 };

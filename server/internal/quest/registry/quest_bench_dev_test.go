@@ -9,13 +9,13 @@ import (
 	"path/filepath"
 	"testing"
 
-	entity "github.com/knervous/eqgo/internal/entity"
 	"github.com/knervous/eqgo/internal/quest"
+	entity "github.com/knervous/eqgo/internal/zone/interface"
 )
 
 var questInterface *quest.ZoneQuestInterface
 var questEvent *quest.QuestEvent
-var npc *entity.NPC
+var npc entity.NPC
 
 func init() {
 	testDir, err := os.Getwd()
@@ -38,7 +38,7 @@ func init() {
 	log.Printf("[dev] Set CWD to: %s", cwd)
 	questInterface = GetQuestInterface("qeynos")
 	questEvent = &quest.QuestEvent{}
-	// npc = &entity.NPC{
+	// npc = &clientz.NPC{
 	// 	NpcData: &model.NpcTypes{
 	// 		Name: "Captaaaain Tillin",
 	// 	},

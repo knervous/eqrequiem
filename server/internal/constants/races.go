@@ -592,4 +592,569 @@ const (
 	RaceAllBitmask RaceID = 65535
 )
 
+var raceNames = map[RaceID]string{
+	RaceAbhorrent:          "Abhorrent",
+	RaceAirElemental2:      "Air Elemental",
+	RaceAirMephit:          "Air Mephit",
+	RaceAlligator2:         "Alligator",
+	RaceAneuk:              "Aneuk",
+	RaceAnimatedArmor:      "Animated Armor",
+	RaceAnimatedHand:       "Animated Hand",
+	RaceAnimatedStatue2:    "Animated Statue",
+	RaceArachnid:           "Arachnid",
+	RaceArcanistOfHate:     "Arcanist of Hate",
+	RaceArmadillo:          "Armadillo",
+	RaceAyonaeRo:           "Ayonae Ro",
+	RaceBanshee3:           "Banshee",
+	RaceHalasCitizen:       "Barbarian",
+	RaceBarrel:             "Barrel",
+	RaceBasilisk:           "Basilisk",
+	RaceBat2:               "Bat",
+	RaceBazu:               "Bazu",
+	RaceBear3:              "Bear",
+	RaceBearTrap:           "Bear Trap",
+	RaceHumanBeggar:        "Beggar",
+	RaceBertoxxulousNew:    "Bertoxxulous",
+	RaceBixie2:             "Bixie",
+	RaceBloodRaven:         "Blood Raven",
+	RaceBolvirk:            "Bolvirk",
+	RaceBoneGolem2:         "Bone Golem",
+	RaceBones:              "Bones",
+	RacePortal:             "BoT Portal",
+	RaceBox:                "Box",
+	RaceBristlebane:        "Bristlebane",
+	RaceBrokenClockwork:    "Broken Clockwork",
+	RaceBrontotherium:      "Brontotherium",
+	RaceBubonian:           "Bubonian",
+	RaceBubonianUnderling:  "Bubonian Underling",
+	RaceCentaur2:           "Centaur",
+	RaceChokidai:           "Chokidai",
+	RaceClam:               "Clam",
+	RaceClockworkBeetle:    "Clockwork Beetle",
+	RaceClockworkBoar:      "Clockwork Boar",
+	RaceClockworkBomb:      "Clockwork Bomb",
+	RaceClockworkBrain:     "Clockwork Brain",
+	RaceClockworkGnome:     "Clockwork Gnome",
+	RaceClockworkGolem:     "Clockwork Golem",
+	RaceCockatrice:         "Cockatrice",
+	RaceCoinPurse:          "Coin Purse",
+	RaceCoral:              "Coral",
+	RaceCorathus:           "Corathus",
+	RaceCrab:               "Crab",
+	RaceCragbeast:          "Cragbeast",
+	RaceCrocodile:          "Crocodile",
+	RaceCrystalShard:       "Crystal Shard",
+	RaceCrystalSpider:      "Crystal Spider",
+	RaceDaisyMan:           "Daisy Man",
+	RaceNeriakCitizen:      "Dark Elf",
+	RaceDarkLord:           "Dark Lord",
+	RaceDemiLich:           "Demi Lich",
+	RaceDevourer:           "Devourer",
+	RaceDireWolf:           "Dire Wolf",
+	RaceDiscordShip:        "Discord Ship",
+	RaceDiscordling:        "Discordling",
+	RaceDiseasedFiend:      "Diseased Fiend",
+	RaceDjinn:              "Djinn",
+	RaceDrachnid2:          "Drachnid",
+	RaceDrachnidCocoon:     "Drachnid Cocoon",
+	RaceDraglock:           "Draglock",
+	RaceDragonBones:        "Dragon Bones",
+	RaceDragonEgg:          "Dragon Egg",
+	RaceDragonStatue:       "Dragon Statue",
+	RaceDragorn:            "Dragorn",
+	RaceDragornBox:         "Dragorn Box",
+	RaceDrake3:             "Drake",
+	RaceDrixie:             "Drixie",
+	RaceDrogmor:            "Drogmore",
+	RaceDrolvarg:           "Drolvarg",
+	RaceDryad:              "Dryad",
+	RaceKaladimCitizen:     "Dwarf",
+	RaceDynamiteKeg:        "Dynamite Keg",
+	RaceEarthElemental2:    "Earth Elemental",
+	RaceEarthMephit:        "Earth Mephit",
+	RaceGiantEel:           "Eel",
+	RaceEfreeti2:           "Efreeti",
+	RaceElddar:             "Elddar",
+	RaceEnchantedArmor:     "Enchanted Armor",
+	RaceErollisi:           "Erollisi",
+	RaceEvanTest:           "Evan Test",
+	RaceEvilEye3:           "Evil Eye",
+	RaceFairy2:             "Fairy",
+	RaceFaun:               "Faun",
+	RaceFayDrake:           "Fay Drake",
+	RaceFenninRo:           "Fennin Ro",
+	RaceFeran:              "Feran",
+	RaceFiend:              "Fiend",
+	RaceFireElemental2:     "Fire Elemental",
+	RaceFireMephit:         "Fire Mephit",
+	RaceKunarkFish:         "Fish",
+	RaceFlag:               "Flag",
+	RaceFloatingSkull:      "Floating Skull",
+	RaceFly:                "Fly",
+	RaceForestGiant2:       "Forest Giant",
+	RaceFroglokGhost:       "Froglok Ghost",
+	RaceFroglokSkeleton:    "Froglok Skeleton",
+	RaceFungalFiend:        "Fungal Fiend",
+	RaceFungusPatch:        "Fungus Patch",
+	RaceFungusman:          "Fungusman",
+	RaceGalorian:           "Galorian",
+	RaceGargoyle2:          "Gargoyle",
+	RaceGasbag:             "Gasbag",
+	RaceGelidran:           "Gelidran",
+	RaceGeonid:             "Geonid",
+	RacePirateGhost:        "Ghost",
+	RaceGiant3:             "Giant",
+	RaceGiantClockwork:     "Giant Clockwork",
+	RaceGirplan:            "Girplan",
+	RaceGnome:              "Gnome",
+	RaceGnomework:          "Gnomework",
+	RaceGoblin2:            "Goblin",
+	RaceGolem2:             "Golem",
+	RaceGorgon:             "Gorgon",
+	RaceGriegVeneficus:     "Grieg Veneficus",
+	RaceGriffin2:           "Griffin",
+	RaceGrimling:           "Grimling",
+	RaceGroundShaker:       "Ground Shaker",
+	RaceVahShirGuard:       "Guard",
+	RaceGuardOfJustice:     "Guard of Justice",
+	RaceHag:                "Hag",
+	RaceHalfElf:            "Half Elf",
+	RaceRivervaleCitizen:   "Halfling",
+	RaceHighElf:            "High Elf",
+	RaceHippogriff:         "Hippogriff",
+	RaceHorse3:             "Horse",
+	RaceHraquis:            "Hraquis",
+	RaceHuvul:              "Huvul",
+	RaceHynid:              "Hynid",
+	RaceIceSpectre:         "Ice Spectre",
+	RaceIkaav:              "Ikaav",
+	RaceIksarCitizen:       "Iksar",
+	RaceIksarGolem:         "Iksar Golem",
+	RaceIksarSpirit:        "Iksar Spirit",
+	RaceImp:                "Imp",
+	RaceInnoruuk:           "Innoruuk",
+	RaceInsect:             "Insect",
+	RaceIxt:                "Ixt",
+	RaceJokester:           "Jokester",
+	RaceJunkBeast:          "Junk Beast",
+	RaceKarana:             "Karana",
+	RaceKnightOfHate:       "Knight of Hate",
+	RaceKnightOfPestilence: "Knight of Pestilence",
+	RaceKobold2:            "Kobold",
+	RaceKraken:             "Kraken",
+	RaceKyv:                "Kyv",
+	RaceLaunch:             "Launch",
+	RaceLavaRock:           "Lava Rock",
+	RaceLavaSpider:         "Lava Spider",
+	RaceLavaSpiderQueen:    "Lava Spider Queen",
+	RaceLeech:              "Leech",
+	RaceLepertoloth:        "Lepertoloth",
+	RaceLightcrawler:       "Lightcrawler",
+	RaceLightingWarrior:    "Lightning Warrior",
+	RaceLion:               "Lion",
+	RaceLizardMan:          "Lizard Man",
+	RaceLuggald2:           "Luggald",
+	RaceLuggald3:           "Luggalds",
+	RaceMalarian:           "Malarian",
+	RaceManEatingPlant:     "Man - Eating Plant",
+	RaceManticore:          "Manticore",
+	RaceMastruq:            "Mastruq",
+	RaceMataMuram:          "Mata Muram",
+	RaceMermaid:            "Mermaid",
+	RaceMimic:              "Mimic",
+	RaceMiniPom:            "Mini POM",
+	RaceMithanielMarr:      "Mithaniel Marr",
+	RaceMosquito:           "Mosquito",
+	RaceMouthOfInsanity:    "Mouth of Insanity",
+	RaceMummy:              "Mummy",
+	RaceMuramiteArmorPile:  "Muramite Armor Pile",
+	RaceMurkglider:         "Murkglider",
+	RaceMurkgliderEggSack:  "Murkglider Egg Sac",
+	RaceMutna:              "Mutna",
+	RaceNetherbian:         "Netherbian",
+	RaceNightmare:          "Nightmare",
+	RaceNightmareGargoyle:  "Nightmare Gargoyle",
+	RaceNightmareGoblin:    "Nightmare Goblin",
+	RaceNightmareMephit:    "Nightmare Mephit",
+	RaceUnicorn3:           "Nightmare / Unicorn",
+	RaceNightmareWraith:    "Nightmare Wraith",
+	RaceNihil:              "Nihil",
+	RaceNilborien:          "Nilborien",
+	RaceNoc:                "Noc",
+	RaceNymph:              "Nymph",
+	RaceOrc2:               "Orc",
+	RaceOthmir:             "Othmir",
+	RaceOwlbear:            "Owlbear",
+	RacePhoenix:            "Phoenix",
+	RacePiranha:            "Piranha",
+	RaceEruditePirate:      "Pirate",
+	RacePixie:              "Pixie",
+	RacePoisonFrog:         "Poison Frog",
+	RacePortal2:            "Portal",
+	RacePressurePlate:      "Pressure Plate",
+	RacePufferSpore:        "Puffer Spore",
+	RacePusling:            "Pusling",
+	RacePyrilen:            "Pyrilen",
+	RaceRatuk:              "Ra`tuk",
+	RaceNewRallosZek:       "Rallos Zek",
+	RaceRallosOgre:         "Rallos Zek Minion",
+
+	RaceRat: "Rat",
+
+	RaceReanimatedHand: "Reanimated Hand",
+	RaceRecuso:         "Recuso",
+
+	RaceRhinoBeetle:  "Rhino Beetle",
+	RaceRhinoceros:   "Rhinoceros",
+	RaceRockPile:     "Rock Pile",
+	RaceRockhopper:   "Rockhopper",
+	RaceRonnieTest:   "Ronnie Test",
+	RaceRootTentacle: "Root Tentacle",
+
+	RaceRowboat: "Rowboat",
+
+	RaceMasterOrc:      "Rujarkian Orc",
+	RaceRunedOrb:       "Runed Orb",
+	RaceRunicSymbol:    "Runic Symbol",
+	RaceSabertooth:     "Saber - toothed Cat",
+	RaceSaltpetterBomb: "Saltpetter Bomb",
+	RaceSandElf:        "Sand Elf",
+	RaceSarnakGolem:    "Sarnak Golem",
+	RaceSarnakSpirit:   "Sarnak Spirit",
+	RaceSaryrn:         "Saryrn",
+	RaceScaledWolf:     "Scaled Wolf",
+	RaceScarletCheetah: "Scarlet Cheetah",
+
+	RaceScrykin:   "Scrykin",
+	RaceSeaTurtle: "Sea Turtle",
+	RaceSeaHorse:  "Seahorse",
+
+	RaceLordInquisitorSeru: "Seru",
+
+	RaceKhatiSha:       "Shadel",
+	RaceShamblingMound: "Shambling Mound",
+	RaceShark:          "Shark",
+	RaceShiknar:        "Shik'Nar",
+	RaceShiliskin:      "Shiliskin",
+	RaceShip:           "Ship",
+
+	RaceShrieker: "Shrieker",
+
+	RaceSkeletalHorse: "Skeletal Horse",
+	RaceSkeleton3:     "Skeleton",
+	RaceSkunk:         "Skunk",
+
+	RaceSnake:          "Snake",
+	RaceSnakeElemental: "Snake Elemental",
+	RaceSnowDervish:    "Snow Dervish",
+	RaceSnowRabbit:     "Snow Rabbit",
+
+	RaceSolusekRo2:     "Solusek Ro",
+	RaceSolusekRoGuard: "Solusek Ro Guard",
+	RaceSonicWolf:      "Sonic Wolf",
+	RaceSoulDevourer:   "Soul Devourer",
+	RaceSpectre2:       "Spectre",
+
+	RaceSpider:        "Spider",
+	RaceSpiderEggSack: "Spider Egg Sack",
+	RaceSpiderQueen:   "Spider Queen",
+	RaceSpikeTrap:     "Spike Trap",
+	RaceSpiritWolf:    "Spirit Wolf",
+	RaceSporali:       "Sporali",
+
+	RaceStoneRing:      "Stone Ring",
+	RaceStoneWorker2:   "Stone Worker",
+	RaceStonegrabber:   "Stonegrabber",
+	RaceStonemite:      "Stonemite",
+	RaceStormrider:     "Stormrider",
+	RaceSuccubus:       "Succubus",
+	RaceSucculent:      "Succulent",
+	RaceSullonZek:      "Sullon Zek",
+	RaceShadel:         "Sun Revenant",
+	RaceSunflower:      "Sunflower",
+	RaceSwordfish:      "Swordfish",
+	RaceSynarcana:      "Synarcana",
+	RaceTable:          "Table",
+	RaceFroglokTadpole: "Tadpole",
+	RaceTaelosian:      "Taelosian",
+	RaceTallonZek:      "Tallon Zek",
+	RaceTaneth:         "Taneth",
+	RaceTarewMarr:      "Tarew Marr",
+	RaceTegi:           "Tegi",
+	RaceTeleportMan:    "Teleport Man",
+
+	RaceTerrisThule:   "Terris Thule",
+	RaceTestObject:    "Test Object",
+	RaceRathe:         "The Rathe",
+	RaceTribunalNew:   "The Tribunal",
+	RaceThoughtHorror: "Thought Horror",
+	RaceTinSoldier:    "Tin Soldier",
+
+	RaceTormentor:         "Tormentor",
+	RaceTotem2:            "Totem",
+	RaceTrakanon:          "Trakanon",
+	RaceTranquilion:       "Tranquilion",
+	RaceTreant3:           "Treant",
+	RaceTribunal:          "Tribunal",
+	RaceBrokenSkullPirate: "Troll",
+	RaceTrollZombie:       "Troll Zombie",
+	RaceTrusik:            "Trusik",
+
+	RaceTunare:          "Tunare",
+	RaceTurepta:         "Turepta",
+	RaceUkun:            "Ukun",
+	RaceUlthork:         "Ulthork",
+	RaceUndeadChokidai:  "Undead Chokidai",
+	RaceUndeadFootman:   "Undead Footman",
+	RaceUndeadFroglok:   "Undead Froglok",
+	RaceUndeadIksar:     "Undead Iksar",
+	RaceUndeadKnight:    "Undead Knight",
+	RaceUndeadSarnak:    "Undead Sarnak",
+	RaceUndeadVeksar:    "Undead Veksar",
+	RaceUnderbulk:       "Underbulk",
+	RaceUnicorn:         "Unicorn",
+	RaceUnknown4:        "UNKNOWN RACE",
+	RaceVahShirKing:     "Vah Shir",
+	RaceVahShirSkeleton: "Vah Shir Skeleton",
+	RaceVallonZek:       "Vallon Zek",
+	RaceValorian2:       "Valorian",
+	RaceVampire4:        "Vampire",
+	RaceVase:            "Vase",
+	RaceVegerog:         "Vegerog",
+	RaceVeksar3:         "Veksar",
+	RaceVenrilSathir:    "Venril Sathir",
+
+	RaceWalrus:          "Walrus",
+	RaceWarBoar2:        "War Boar",
+	RaceWarWraith:       "War Wraith",
+	RaceWasp:            "Wasp",
+	RaceWaterElemental2: "Water Elemental",
+	RaceWaterMephit:     "Water Mephit",
+
+	RaceWeb: "Web",
+
+	RaceWerewolf3:     "Werewolf",
+	RaceWetfangMinnow: "Wetfang Minnow",
+	RaceWickerBasket:  "Wicker Basket",
+	RaceWisp:          "Will - O - Wisp",
+	RaceWitheran2:     "Witheran",
+	RaceWolf2:         "Wolf",
+	RaceWoodElf:       "Wood Elf",
+	RaceWorm:          "Worm",
+	RaceWretch:        "Wretch",
+
+	RaceXalgoz:         "Xalgoz",
+	RaceXegony:         "Xegony",
+	RaceYakkar:         "Yakkar",
+	RaceYeti:           "Yeti",
+	RaceZebuxoruk:      "Zebuxoruk",
+	RaceZebuxoruksCage: "Zebuxoruk's Cage",
+	RaceZelniak:        "Zelniak",
+	RaceZombie2:        "Zombie",
+	RaceHuman:          "HUM",
+	RaceBarbarian:      "BAR",
+	RaceErudite:        "ERU",
+	RaceDarkElf:        "DEF",
+	RaceDwarf:          "DWF",
+	RaceTroll:          "TRL",
+	RaceOgre:           "OGR",
+	RaceHalfling:       "HFL",
+	RaceIksar:          "IKS",
+	RaceVahShir:        "VAH",
+}
+
+func GetRaceIDName(race RaceID) string {
+	if name, ok := raceNames[race]; ok {
+		return name
+	}
+	return "UNKNOWN RACE"
+}
+
+// GetPlayerRaceName returns the name of a player race value.
+func GetPlayerRaceName(val PlayerRace) string {
+	return GetRaceIDName(GetRaceIDFromPlayerRaceValue(uint32(val)))
+}
+
+// GetPlayerRaceValue converts a RaceID into its PlayerRace equivalent.
+func GetPlayerRaceValue(race RaceID) PlayerRace {
+	switch race {
+	case RaceHuman, RaceBarbarian, RaceErudite, RaceWoodElf,
+		RaceHighElf, RaceDarkElf, RaceHalfElf, RaceDwarf,
+		RaceTroll, RaceOgre, RaceHalfling, RaceGnome:
+		return PlayerRace(race)
+	case RaceIksar:
+		return PlayerRaceIksar
+	case RaceVahShir:
+		return PlayerRaceVahshir
+	case RaceFroglok:
+		return PlayerRaceFroglok
+	default:
+		return PlayerRaceUnknown
+	}
+}
+
+// GetPlayerRaceBit returns the bitmask for a given RaceID.
+func GetPlayerRaceBit(race RaceID) uint32 {
+	switch race {
+	case RaceHuman:
+		return PlayerRaceHumanBit
+	case RaceBarbarian:
+		return PlayerRaceBarbarianBit
+	case RaceErudite:
+		return PlayerRaceEruditeBit
+	case RaceWoodElf:
+		return PlayerRaceWoodElfBit
+	case RaceHighElf:
+		return PlayerRaceHighElfBit
+	case RaceDarkElf:
+		return PlayerRaceDarkElfBit
+	case RaceHalfElf:
+		return PlayerRaceHalfElfBit
+	case RaceDwarf:
+		return PlayerRaceDwarfBit
+	case RaceTroll:
+		return PlayerRaceTrollBit
+	case RaceOgre:
+		return PlayerRaceOgreBit
+	case RaceHalfling:
+		return PlayerRaceHalflingBit
+	case RaceGnome:
+		return PlayerRaceGnomeBit
+	case RaceIksar:
+		return PlayerRaceIksarBit
+	case RaceVahShir:
+		return PlayerRaceVahshirBit
+	case RaceFroglok:
+		return PlayerRaceFroglokBit
+	default:
+		return PlayerRaceUnknownBit
+	}
+}
+
+// GetRaceIDFromPlayerRaceValue converts a PlayerRace back to RaceID.
+func GetRaceIDFromPlayerRaceValue(val uint32) RaceID {
+	switch PlayerRace(val) {
+	case PlayerRaceHuman, PlayerRaceBarbarian, PlayerRaceErudite,
+		PlayerRaceWoodElf, PlayerRaceHighElf, PlayerRaceDarkElf,
+		PlayerRaceHalfElf, PlayerRaceDwarf, PlayerRaceTroll,
+		PlayerRaceOgre, PlayerRaceHalfling, PlayerRaceGnome:
+		return RaceID(val)
+	case PlayerRaceIksar:
+		return RaceIksar
+	case PlayerRaceVahshir:
+		return RaceVahShir
+	case PlayerRaceFroglok:
+		return RaceFroglok
+	default:
+		return RaceUnknown
+	}
+}
+
+// GetRaceIDFromPlayerRaceBit converts a player race bitmask back to RaceID.
+func GetRaceIDFromPlayerRaceBit(bit uint32) RaceID {
+	switch bit {
+	case PlayerRaceHumanBit:
+		return RaceHuman
+	case PlayerRaceBarbarianBit:
+		return RaceBarbarian
+	case PlayerRaceEruditeBit:
+		return RaceErudite
+	case PlayerRaceWoodElfBit:
+		return RaceWoodElf
+	case PlayerRaceHighElfBit:
+		return RaceHighElf
+	case PlayerRaceDarkElfBit:
+		return RaceDarkElf
+	case PlayerRaceHalfElfBit:
+		return RaceHalfElf
+	case PlayerRaceDwarfBit:
+		return RaceDwarf
+	case PlayerRaceTrollBit:
+		return RaceTroll
+	case PlayerRaceOgreBit:
+		return RaceOgre
+	case PlayerRaceHalflingBit:
+		return RaceHalfling
+	case PlayerRaceGnomeBit:
+		return RaceGnome
+	case PlayerRaceIksarBit:
+		return RaceIksar
+	case PlayerRaceVahshirBit:
+		return RaceVahShir
+	case PlayerRaceFroglokBit:
+		return RaceFroglok
+	default:
+		return RaceUnknown
+	}
+}
+
+// GetGenderName returns the string name for a Gender.
+func GetGenderName(g Gender) string {
+	switch g {
+	case Gender_Male:
+		return "Male"
+	case Gender_Female:
+		return "Female"
+	case Gender_Neuter:
+		return "Neuter"
+	default:
+		return "Unknown"
+	}
+}
+
+// GetPlayerRaceAbbreviation gives a 3-letter code for core player races.
+func GetPlayerRaceAbbreviation(race RaceID) string {
+	if !IsPlayerRace(uint16(race)) {
+		return "UNK"
+	}
+	switch race {
+	case RaceHuman:
+		return "HUM"
+	case RaceBarbarian:
+		return "BAR"
+	case RaceErudite:
+		return "ERU"
+	case RaceWoodElf:
+		return "ELF"
+	case RaceHighElf:
+		return "HIE"
+	case RaceDarkElf:
+		return "DEF"
+	case RaceHalfElf:
+		return "HEF"
+	case RaceDwarf:
+		return "DWF"
+	case RaceTroll:
+		return "TRL"
+	case RaceOgre:
+		return "OGR"
+	case RaceHalfling:
+		return "HFL"
+	case RaceGnome:
+		return "GNM"
+	case RaceIksar:
+		return "IKS"
+	case RaceVahShir:
+		return "VAH"
+	case RaceFroglok:
+		return "FRG"
+
+	default:
+		return "UNK"
+	}
+}
+
+// IsPlayerRace returns true if the RaceID represents a playable race.
+func IsPlayerRace(r uint16) bool {
+	switch RaceID(r) {
+	case RaceHuman, RaceBarbarian, RaceErudite, RaceWoodElf,
+		RaceHighElf, RaceDarkElf, RaceHalfElf, RaceDwarf,
+		RaceTroll, RaceOgre, RaceHalfling, RaceGnome,
+		RaceIksar, RaceVahShir, RaceFroglok:
+		return true
+	default:
+		return false
+	}
+}
+
 // END of races.go

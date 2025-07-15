@@ -2,8 +2,10 @@ import { addChatLine } from '@game/ChatCommands/chat-message';
 import emitter from '@game/Events/events';
 import type GameManager from '@game/Manager/game-manager';
 import Player from '@game/Player/player';
+import { InventorySlot } from '@game/Player/player-constants';
 import { WorldSocket } from '@ui/net/instances';
-import { ChannelMessage, EntityAnimation, EntityPositionUpdate, LevelUpdate, MoveItem, Spawn, Spawns } from './internal/api/capnp/common';
+import { ChannelMessage, DeleteItem, EntityAnimation, EntityPositionUpdate, LevelUpdate, MoveItem, Spawn, Spawns } from './internal/api/capnp/common';
+import { BulkItemPacket } from './internal/api/capnp/item';
 import { PlayerProfile } from './internal/api/capnp/player';
 import { NewZone } from './internal/api/capnp/zone';
 import { OpCodes } from './opcodes';
@@ -103,6 +105,32 @@ export class ZonePacketHandler {
   @opCodeHandler(OpCodes.MoveItem, MoveItem)
   processMoveItem(item: MoveItem) {
     Player.instance?.moveItem(item);
+  }
+
+  @opCodeHandler(OpCodes.DeleteItem, DeleteItem)
+  processDeleteItem(deleteItem: DeleteItem) {
+    Player.instance?.playerInventory?.set(
+      deleteItem.fromSlot as InventorySlot,
+      null,
+      0,
+    );
+    emitter.emit('updateInventorySlot', {
+      slot: deleteItem.fromSlot as InventorySlot,
+      bag : 0,
+    });
+  }
+
+  @opCodeHandler(OpCodes.ItemPacket, BulkItemPacket)
+  processBulkItemPacket(bulkItem: BulkItemPacket) {
+    if (!Player.instance?.playerInventory) {
+      return;
+    }
+    for (const item of bulkItem.items ?? []) {
+      Player.instance?.playerInventory?.set(item.slot as InventorySlot, item, item.bagSlot);
+      emitter.emit('updateInventorySlot', { slot: item.slot as InventorySlot, bag: item.bagSlot });
+
+    }
+    
   }
 
   @opCodeHandler(OpCodes.LevelUpdate, LevelUpdate)

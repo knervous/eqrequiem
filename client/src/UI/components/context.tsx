@@ -1,7 +1,7 @@
-import React from "react";
-import { Context, createContext, useContextSelector } from "use-context-selector";
-import { UiState } from "../state/initial-state";
-import { UiAction } from "../state/reducer";
+import React from 'react';
+import { Context, createContext, useContextSelector } from 'use-context-selector';
+import { UiState } from '../state/initial-state';
+import { UiAction } from '../state/reducer';
 
 export type State = {
   ui: UiState;
@@ -14,7 +14,7 @@ export type State = {
 };
 
 export const UIContext = createContext<State | undefined>(undefined);
-export const useUIContext = <T,>(selector: (state: State) => T): T => {
+export const useUIContext = <T, >(selector: (state: State) => T): T => {
   const actualSelector = selector ?? ((state: State) => state as unknown as T);
   return useContextSelector(UIContext as Context<State>, actualSelector);
 };

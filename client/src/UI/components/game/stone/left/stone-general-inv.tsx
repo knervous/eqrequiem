@@ -40,6 +40,7 @@ export const StoneGeneralInv: React.FC<{
             sx={{ height: 'calc(100% / 4)' }}
           >
             <ItemButton
+              bagSlot={0}
               scale={scale}
               slot={slot}
             />

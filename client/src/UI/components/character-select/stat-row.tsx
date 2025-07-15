@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { memo } from 'react';
 import {
   Divider,
   MenuItem,
@@ -6,8 +6,8 @@ import {
   Stack,
   TextField,
   Typography,
-} from "@mui/material";
-import { UiButtonComponent } from "@ui/common/ui-button";
+} from '@mui/material';
+import { UiButtonComponent } from '@ui/common/ui-button';
 
 // ↑ at top of file, outside of CharacterCreate
 export const StatRow = memo(function StatRow({
@@ -21,23 +21,23 @@ export const StatRow = memo(function StatRow({
   onIncrement,
 }) {
   return (
-    <Stack sx={{ marginTop: "0px" }} direction={"row"}>
+    <Stack direction={'row'} sx={{ marginTop: '0px' }}>
       <Stack
+        direction={'column'}
+        justifyContent={'center'}
         minWidth={200}
-        sx={{ marginTop: "15px" }}
-        justifyContent={"center"}
-        direction={"column"}
+        sx={{ marginTop: '15px' }}
       >
         <Typography
-          textAlign={"left"}
-          paddingLeft={3}
-          fontSize={"15px"}
           noWrap
           component="div"
+          fontSize={'15px'}
+          paddingLeft={3}
+          textAlign={'left'}
         >
-          {label}:{" "}
+          {label}:{' '}
           <Typography
-            sx={{ color: isPreferred ? "lightgreen" : "white" }}
+            sx={{ color: isPreferred ? 'lightgreen' : 'white' }}
             variant="p"
           >
             {value}
@@ -45,21 +45,21 @@ export const StatRow = memo(function StatRow({
         </Typography>
       </Stack>
       <Stack
-        sx={{ marginTop: "15px" }}
-        width={"40px"}
-        justifyContent={"space-between"}
-        direction={"row"}
+        direction={'row'}
+        justifyContent={'space-between'}
+        sx={{ marginTop: '15px' }}
+        width={'40px'}
       >
         <UiButtonComponent
-          scale={1.5}
           buttonName="A_MinusBtn"
           isDisabled={value === baseValue}
+          scale={1.5}
           onClick={() => onDecrement(stat)}
         />
         <UiButtonComponent
-          scale={1.5}
-          isDisabled={isDisabled}
           buttonName="A_PlusBtn"
+          isDisabled={isDisabled}
+          scale={1.5}
           onClick={() => onIncrement(stat)}
         />
       </Stack>

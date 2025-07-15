@@ -1039,7 +1039,43 @@ export class ItemInstance extends $.Struct {
   set aagi(value: number) {
     $.utils.setInt32(664, value, this);
   }
+  get bagSlot(): number {
+    return $.utils.getInt32(668, this);
+  }
+  set bagSlot(value: number) {
+    $.utils.setInt32(668, value, this);
+  }
   toString(): string {
     return "ItemInstance_" + super.toString();
   }
 }
+export class BulkItemPacket extends $.Struct {
+  static readonly _capnp = {
+    displayName: "BulkItemPacket",
+    id: "817d8fbf84fe89c1",
+    size: new $.ObjectSize(0, 1)
+  };
+  static _Items: $.ListCtor<ItemInstance>;
+  _adoptItems(value: $.Orphan<$.List<ItemInstance>>): void {
+    $.utils.adopt(value, $.utils.getPointer(0, this));
+  }
+  _disownItems(): $.Orphan<$.List<ItemInstance>> {
+    return $.utils.disown(this.items);
+  }
+  get items(): $.List<ItemInstance> {
+    return $.utils.getList(0, BulkItemPacket._Items, this);
+  }
+  _hasItems(): boolean {
+    return !$.utils.isNull($.utils.getPointer(0, this));
+  }
+  _initItems(length: number): $.List<ItemInstance> {
+    return $.utils.initList(0, BulkItemPacket._Items, length, this);
+  }
+  set items(value: $.List<ItemInstance>) {
+    $.utils.copyFrom(value, $.utils.getPointer(0, this));
+  }
+  toString(): string {
+    return "BulkItemPacket_" + super.toString();
+  }
+}
+BulkItemPacket._Items = $.CompositeList(ItemInstance);

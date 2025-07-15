@@ -1,4 +1,4 @@
-package client
+package entity
 
 const (
 	EntityTypeNPC = iota

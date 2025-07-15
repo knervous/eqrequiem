@@ -8,9 +8,11 @@ import GameManager from '@game/Manager/game-manager';
 import Player from '@game/Player/player';
 import { InventorySlot } from '@game/Player/player-constants';
 import { Box, Stack, Typography } from '@mui/material';
+import { UiButtonComponent } from '@ui/common/ui-button';
 import { UiImageComponent } from '@ui/common/ui-image';
 import { ItemButton } from '@ui/components/game/action-button/item-button';
 import { useSakImages } from '@ui/hooks/use-image';
+import { WorldSocket } from '@ui/net/instances';
 import { StoneGeneralInv } from '../../left/stone-general-inv';
 
 const stoneConfigs = [
@@ -47,10 +49,11 @@ const StoneRow: React.FC<{
 const imageNames = stoneConfigs.map(({ name }) => `${name}`);
 
 export const StoneInventory: React.FC<{
+  open: boolean;
   width: number;
   height: number;
   scale: number;
-}> = ({ width, height, scale }) => {
+}> = ({ width, height, scale, open }) => {
   const inventoryRef = useRef<HTMLDivElement>(null);
   const bgImages = useSakImages(imageNames, true);
   const level = usePlayerLevel();
@@ -71,16 +74,13 @@ export const StoneInventory: React.FC<{
     [bgImages],
   );
   useEffect(() => {
-    if (!GameManager.instance) {
-      return;
+    console.log('StoneInventory mounted', open);
+    if (open) {
+      GameManager.instance.initializeSecondaryCamera();
+    } else {
+      GameManager.instance.removeSecondaryCamera();
     }
-    GameManager.instance.initializeSecondaryCamera();
-    return () => {
-      if (GameManager.instance) {
-        GameManager.instance.removeSecondaryCamera();
-      }
-    };
-  }, []);
+  }, [open]);
 
   // Camera update useEffect
   useEffect(() => {
@@ -88,7 +88,9 @@ export const StoneInventory: React.FC<{
       if (
         !GameManager.instance?.SecondaryCamera ||
         !Player.instance?.playerEntity
-      ) {return;}
+      ) {
+        return;
+      }
       const camera = GameManager.instance.SecondaryCamera;
       const hDist = 14;
       const vDist = 5;
@@ -112,7 +114,9 @@ export const StoneInventory: React.FC<{
   }, []);
   useEffect(() => {
     const clientRect = inventoryRef.current?.getBoundingClientRect();
-    if (!clientRect) {return;}
+    if (!clientRect) {
+      return;
+    }
 
     GameManager.instance.setInventoryViewport(
       clientRect.right - 132 * scale,
@@ -120,7 +124,7 @@ export const StoneInventory: React.FC<{
       118 * scale,
       225 * scale,
     );
-  }, [width, height, scale]);
+  }, [width, height, scale, open]);
 
   const dimensions = useMemo(() => {
     const { invTopLeft, invTopRight, invBottomLeft } = stoneImages;
@@ -134,6 +138,7 @@ export const StoneInventory: React.FC<{
       ref={inventoryRef}
       sx={{
         position: 'absolute',
+        display : open ? 'initial' : 'none',
         zIndex  : 5,
         width   : dimensions.width,
         height  : dimensions.height,
@@ -300,276 +305,300 @@ export const StoneInventory: React.FC<{
             </Typography>
           </Stack>
         </Stack>
-        { /* Equipment Slots */}
-        { /* Row 1 */}
-        <Box className="invui"
+
+        {/* Bottom Buttons */}
+        <Box
+          className="invui"
+          sx={{
+            top : 425,
+            left: 400,
+          }}
+        >
+          <UiButtonComponent
+            buttonName="DESTROYButton_"
+            scale={0.5}
+            onClick={() => {
+              if (!Player.instance?.hasCursorItem) {
+                return;
+              }
+              Player.instance?.playerInventory?.destroyCursorItem();
+            }}
+          />
+        </Box>
+        <Box
+          className="invui"
+          sx={{
+            top : 455,
+            left: 435,
+          }}
+        >
+          <UiButtonComponent
+            buttonName="DONEButton_"
+            scale={0.5}
+            onClick={() => {
+              emitter.emit('toggleInventory');
+            }}
+          />
+        </Box>
+        {/* Equipment Slots */}
+        {/* Row 1 */}
+        <Box
+          className="invui"
           sx={{
             top   : 23,
             left  : 195,
             width : 62,
             height: 62,
-          }}>
-          <ItemButton 
-            scale={scale} 
-            slot={InventorySlot.Ear1}
-          />
+          }}
+        >
+          <ItemButton bagSlot={-1} scale={scale} slot={InventorySlot.Ear1} />
         </Box>
-        <Box className="invui"
+        <Box
+          className="invui"
           sx={{
             top   : 23,
             left  : 261,
             width : 62,
             height: 62,
-          }}>
-          <ItemButton 
-            scale={scale} 
-            slot={InventorySlot.Neck}
-          />
+          }}
+        >
+          <ItemButton bagSlot={-1} scale={scale} slot={InventorySlot.Neck} />
         </Box>
-        <Box className="invui"
+        <Box
+          className="invui"
           sx={{
             top   : 23,
             left  : 327,
             width : 62,
             height: 62,
-          }}>
-          <ItemButton 
-            scale={scale} 
-            slot={InventorySlot.Face}
-          />
+          }}
+        >
+          <ItemButton bagSlot={-1} scale={scale} slot={InventorySlot.Face} />
         </Box>
-        <Box className="invui"
+        <Box
+          className="invui"
           sx={{
             top   : 23,
             left  : 393,
             width : 62,
             height: 62,
-          }}>
-          <ItemButton 
-            scale={scale} 
-            slot={InventorySlot.Head}
-          />
+          }}
+        >
+          <ItemButton bagSlot={-1} scale={scale} slot={InventorySlot.Head} />
         </Box>
-        <Box className="invui"
+        <Box
+          className="invui"
           sx={{
             top   : 23,
             left  : 459,
             width : 62,
             height: 62,
-          }}>
-          <ItemButton 
-            scale={scale} 
-            slot={InventorySlot.Ear2}
-          />
+          }}
+        >
+          <ItemButton bagSlot={-1} scale={scale} slot={InventorySlot.Ear2} />
         </Box>
 
-        { /* Row 2 */}
-        <Box className="invui"
+        {/* Row 2 */}
+        <Box
+          className="invui"
           sx={{
             top   : 107,
             left  : 161,
             width : 62,
             height: 62,
-          }}>
-          <ItemButton 
-            scale={scale} 
-            slot={InventorySlot.Finger1}
-          />
+          }}
+        >
+          <ItemButton bagSlot={-1} scale={scale} slot={InventorySlot.Finger1} />
         </Box>
 
-        <Box className="invui"
+        <Box
+          className="invui"
           sx={{
             top   : 107,
             left  : 227,
             width : 62,
             height: 62,
-          }}>
-          <ItemButton 
-            scale={scale} 
-            slot={InventorySlot.Wrist1}
-          />
+          }}
+        >
+          <ItemButton bagSlot={-1} scale={scale} slot={InventorySlot.Wrist1} />
         </Box>
-        <Box className="invui"
+        <Box
+          className="invui"
           sx={{
             top   : 107,
             left  : 293,
             width : 62,
             height: 62,
-          }}>
-          <ItemButton 
-            scale={scale} 
-            slot={InventorySlot.Arms}
-          />
+          }}
+        >
+          <ItemButton bagSlot={-1} scale={scale} slot={InventorySlot.Arms} />
         </Box>
-        <Box className="invui"
+        <Box
+          className="invui"
           sx={{
             top   : 107,
             left  : 359,
             width : 62,
             height: 62,
-          }}>
-          <ItemButton 
-            scale={scale} 
-            slot={InventorySlot.Hands}
-          />
+          }}
+        >
+          <ItemButton bagSlot={-1} scale={scale} slot={InventorySlot.Hands} />
         </Box>
-        <Box className="invui"
+        <Box
+          className="invui"
           sx={{
             top   : 107,
             left  : 425,
             width : 62,
             height: 62,
-          }}>
-          <ItemButton 
-            scale={scale} 
-            slot={InventorySlot.Wrist2}
-          />
+          }}
+        >
+          <ItemButton bagSlot={-1} scale={scale} slot={InventorySlot.Wrist2} />
         </Box>
-        <Box className="invui"
+        <Box
+          className="invui"
           sx={{
             top   : 107,
             left  : 491,
             width : 62,
             height: 62,
-          }}>
-          <ItemButton 
-            scale={scale} 
-            slot={InventorySlot.Finger2}
-          />
+          }}
+        >
+          <ItemButton bagSlot={-1} scale={scale} slot={InventorySlot.Finger2} />
         </Box>
 
-        { /* Row 3 */}
-        <Box className="invui"
+        {/* Row 3 */}
+        <Box
+          className="invui"
           sx={{
             top   : 191,
             left  : 161,
             width : 62,
             height: 62,
-          }}>
-          <ItemButton 
-            scale={scale} 
+          }}
+        >
+          <ItemButton
+            bagSlot={-1}
+            scale={scale}
             slot={InventorySlot.Shoulders}
           />
         </Box>
-        <Box className="invui"
+        <Box
+          className="invui"
           sx={{
             top   : 191,
             left  : 227,
             width : 62,
             height: 62,
-          }}>
-          <ItemButton 
-            scale={scale} 
-            slot={InventorySlot.Chest}
-          />
+          }}
+        >
+          <ItemButton bagSlot={-1} scale={scale} slot={InventorySlot.Chest} />
         </Box>
-        <Box className="invui"
+        <Box
+          className="invui"
           sx={{
             top   : 191,
             left  : 293,
             width : 62,
             height: 62,
-          }}>
-          <ItemButton 
-            scale={scale} 
-            slot={InventorySlot.Back}
-          />
+          }}
+        >
+          <ItemButton bagSlot={-1} scale={scale} slot={InventorySlot.Back} />
         </Box>
-        <Box className="invui"
+        <Box
+          className="invui"
           sx={{
             top   : 191,
             left  : 359,
             width : 62,
             height: 62,
-          }}>
-          <ItemButton 
-            scale={scale} 
-            slot={InventorySlot.Waist}
-          />
+          }}
+        >
+          <ItemButton bagSlot={-1} scale={scale} slot={InventorySlot.Waist} />
         </Box>
-        <Box className="invui"
+        <Box
+          className="invui"
           sx={{
             top   : 191,
             left  : 425,
             width : 62,
             height: 62,
-          }}>
-          <ItemButton 
-            scale={scale} 
-            slot={InventorySlot.Legs}
-          />
+          }}
+        >
+          <ItemButton bagSlot={-1} scale={scale} slot={InventorySlot.Legs} />
         </Box>
-        <Box className="invui"
+        <Box
+          className="invui"
           sx={{
             top   : 191,
             left  : 491,
             width : 62,
             height: 62,
-          }}>
-          <ItemButton 
-            scale={scale} 
-            slot={InventorySlot.Feet}
-          />
+          }}
+        >
+          <ItemButton bagSlot={-1} scale={scale} slot={InventorySlot.Feet} />
         </Box>
 
-        { /* Row 4 */}
-        <Box className="invui"
+        {/* Row 4 */}
+        <Box
+          className="invui"
           sx={{
             top   : 275,
             left  : 227,
             width : 62,
             height: 62,
-          }}>
-          <ItemButton 
-            scale={scale} 
-            slot={InventorySlot.Primary}
-          />
+          }}
+        >
+          <ItemButton bagSlot={-1} scale={scale} slot={InventorySlot.Primary} />
         </Box>
-        <Box className="invui"
+        <Box
+          className="invui"
           sx={{
             top   : 275,
             left  : 293,
             width : 62,
             height: 62,
-          }}>
-          <ItemButton 
-            scale={scale} 
+          }}
+        >
+          <ItemButton
+            bagSlot={-1}
+            scale={scale}
             slot={InventorySlot.Secondary}
           />
         </Box>
-        <Box className="invui"
+        <Box
+          className="invui"
           sx={{
             top   : 275,
             left  : 359,
             width : 62,
             height: 62,
-          }}>
-          <ItemButton 
-            scale={scale} 
-            slot={InventorySlot.Range}
-          />
+          }}
+        >
+          <ItemButton bagSlot={-1} scale={scale} slot={InventorySlot.Range} />
         </Box>
-        <Box className="invui"
+        <Box
+          className="invui"
           sx={{
             top   : 275,
             left  : 425,
             width : 62,
             height: 62,
-          }}>
-          <ItemButton 
-            scale={scale} 
-            slot={InventorySlot.Ammo}
-          />
+          }}
+        >
+          <ItemButton bagSlot={-1} scale={scale} slot={InventorySlot.Ammo} />
         </Box>
 
-        { /* Inventory Slots */ }
-        <Box className="invui"
+        {/* Inventory Slots */}
+        <Box
+          className="invui"
           sx={{
             top   : 256,
             left  : 578,
             width : 125,
             height: 254,
-          }}>
+          }}
+        >
           <StoneGeneralInv contain scale={scale} />
         </Box>
       </Box>

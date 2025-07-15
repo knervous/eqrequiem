@@ -23,10 +23,16 @@ export const usePlayerName = () => {
 export const useEventArg = <T extends keyof Events>(
   eventName: T,
   callback: (arg: Events[T]) => void,
-  expectedValue: Events[T],
+  expectedValue: Events[T] | ((val: any) => boolean) = () => true,
 ) => {
   useEffect(() => {
     const internalCallback = (arg: Events[T]) => {
+      if (typeof expectedValue === 'function') {
+        if (expectedValue(arg)) {
+          callback(arg);
+        }
+        return;
+      }
       if (arg === expectedValue) {
         callback(arg);
       }
@@ -36,6 +42,32 @@ export const useEventArg = <T extends keyof Events>(
       emitter.off(eventName, internalCallback);
     };
   }, [eventName, expectedValue, callback]);
+};
+
+export const useEventArgState = <T extends keyof Events>(
+  eventName: T,
+  expectedValue: Events[T] | ((val: any) => boolean) = () => true,
+  initialState: Events[T] | null = null,
+) => {
+  const [state, setState] = useState<Events[T] | null>(initialState);
+  useEffect(() => {
+    const internalCallback = (arg: Events[T]) => {
+      if (typeof expectedValue === 'function') {
+        if (expectedValue(arg)) {
+          setState(arg);
+        }
+        return;
+      }
+      if (arg === expectedValue) {
+        setState(arg);
+      }
+    };
+    emitter.on(eventName, internalCallback);
+    return () => {
+      emitter.off(eventName, internalCallback);
+    };
+  }, [eventName, expectedValue]);
+  return state;
 };
 
 export const useEvent = <T extends keyof Events>(
@@ -124,17 +156,20 @@ export const useTarget = () => {
   return target;
 };
 
-export const useInventorySlot = (slot: InventorySlot) => {
-  const [item, setItem] = useState<NullableItemInstance>(Player.instance?.playerInventory.get(slot) ?? null);
+export const useInventorySlot = (slot: InventorySlot, bagSlot: number) => {
+  const [item, setItem] = useState<NullableItemInstance>(Player.instance?.playerInventory.get(slot, bagSlot) ?? null);
   useEffect(() => {
-    const cb = () => {
-      setItem(Player.instance?.playerInventory.get(slot) ?? null);
+    const cb = (data: { slot: number, bag?: number }) => {
+      if (data.slot !== slot || (data.bag !== undefined && data.bag !== bagSlot)) {
+        return;
+      }
+      setItem(Player.instance?.playerInventory.get(data.slot, data.bag) ?? null);
     };
     emitter.on('updateInventorySlot', cb);
     return () => {
       emitter.off('updateInventorySlot', cb);
     };
-  }, [slot]);
+  }, [slot, bagSlot]);
   return item;
 };
 

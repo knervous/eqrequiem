@@ -10,8 +10,8 @@ import (
 	"github.com/knervous/eqgo/internal/config"
 	db_character "github.com/knervous/eqgo/internal/db/character"
 	"github.com/knervous/eqgo/internal/discord"
-	"github.com/knervous/eqgo/internal/entity"
 	"github.com/knervous/eqgo/internal/session"
+	"github.com/knervous/eqgo/internal/zone/client"
 )
 
 func sendCharInfo(ses *session.Session, accountId int64) {
@@ -132,7 +132,7 @@ func HandleZoneSession(ses *session.Session, payload []byte, wh *WorldHandler) b
 		log.Printf("failed to get character %q for accountID %d: %v", ses.CharacterName, ses.AccountID, err)
 		return false
 	}
-	ses.Client, err = entity.NewClient(charData)
+	ses.Client, err = client.NewClient(charData)
 	if err != nil {
 		log.Printf("failed to create client for character %q: %v", ses.CharacterName, err)
 		return false

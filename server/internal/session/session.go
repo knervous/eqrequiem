@@ -7,7 +7,7 @@ import (
 
 	capnp "capnproto.org/go/capnp/v3"
 	"github.com/knervous/eqgo/internal/api/opcodes"
-	"github.com/knervous/eqgo/internal/ports/client"
+	entity "github.com/knervous/eqgo/internal/zone/interface"
 	"github.com/quic-go/webtransport-go"
 )
 
@@ -26,7 +26,7 @@ type Session struct {
 	IP            string         // Client IP address
 	RootSeg       *capnp.Segment // Current segment
 	CharacterName string
-	Client        client.Client
+	Client        entity.Client
 	Messenger     ClientMessenger // For sending replies
 	ControlStream webtransport.Stream
 	// Private

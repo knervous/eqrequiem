@@ -3,8 +3,8 @@ package qeynos2
 import (
 	"fmt"
 
-	entity "github.com/knervous/eqgo/internal/entity"
 	"github.com/knervous/eqgo/internal/quest"
+	"github.com/knervous/eqgo/internal/zone/npc"
 )
 
 func registerNpcQuests(zq *quest.ZoneQuestInterface) {
@@ -14,7 +14,7 @@ func registerNpcQuests(zq *quest.ZoneQuestInterface) {
 			greetings := fmt.Sprintf("Hello, %s! How can I assist you today?", e.Actor.Name())
 			e.Receiver.Say(greetings)
 			switch e.Actor.(type) {
-			case *entity.NPC:
+			case *npc.NPC:
 				return true
 
 			default:
@@ -32,7 +32,7 @@ func registerNpcQuests(zq *quest.ZoneQuestInterface) {
 			greetings := fmt.Sprintf("Hello, %s!", e.Actor.Name())
 			e.Receiver.Say(greetings)
 			switch e.Actor.(type) {
-			case *entity.NPC:
+			case *npc.NPC:
 				return true
 
 			default:

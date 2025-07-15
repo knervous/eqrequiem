@@ -6,8 +6,8 @@ import (
 
 	"github.com/knervous/eqgo/internal/constants"
 	"github.com/knervous/eqgo/internal/db/jetgen/eqgo/model"
-	"github.com/knervous/eqgo/internal/ports/client"
 	"github.com/knervous/eqgo/internal/session"
+	entity "github.com/knervous/eqgo/internal/zone/interface"
 )
 
 // ClientEntry mirrors zone.ClientEntry for quest access.
@@ -167,8 +167,8 @@ const (
 // Big TBD on what data is going in here
 type QuestEvent struct {
 	EventType     QuestEventType
-	Actor         client.Entity // will be Actor which can be interpreted as any type of Mob (NPC, PC, Client)
-	Receiver      client.Entity
+	Actor         entity.Entity // will be Actor which can be interpreted as any type of Mob (NPC, PC, Client)
+	Receiver      entity.Entity
 	Item          *[]constants.ItemInstance
 	ZoneData      *[]interface{}
 	EncounterName string
@@ -177,17 +177,17 @@ type QuestEvent struct {
 	ItemArray     *[]constants.ItemInstance
 	ActorArray    *[]model.Spawn2
 	StringArray   []string
-	ZoneAccess    client.ZoneAccess
+	ZoneAccess    entity.ZoneAccess
 }
 
 type QuestHandler func(*QuestEvent) bool
 type ZoneQuestInterface struct {
-	ZoneAccess client.ZoneAccess //
+	ZoneAccess entity.ZoneAccess //
 	Mu         sync.RWMutex
 	Handlers   map[string]map[QuestEventType]QuestHandler
 }
 
-func (z *ZoneQuestInterface) SetZoneAccess(za client.ZoneAccess) {
+func (z *ZoneQuestInterface) SetZoneAccess(za entity.ZoneAccess) {
 	z.ZoneAccess = za
 }
 
@@ -274,11 +274,11 @@ func (e *QuestEvent) Type(t QuestEventType) *QuestEvent {
 	e.EventType = t
 	return e
 }
-func (e *QuestEvent) SetActor(a client.Entity) *QuestEvent {
+func (e *QuestEvent) SetActor(a entity.Entity) *QuestEvent {
 	e.Actor = a
 	return e
 }
-func (e *QuestEvent) SetReceiver(r client.Entity) *QuestEvent {
+func (e *QuestEvent) SetReceiver(r entity.Entity) *QuestEvent {
 	e.Receiver = r
 	return e
 }

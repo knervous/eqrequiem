@@ -19,4 +19,4 @@ export interface IMessageTarget {
   ): void;
 }
 
-export const stateKey = "uiState";
+export const stateKey = 'uiState';

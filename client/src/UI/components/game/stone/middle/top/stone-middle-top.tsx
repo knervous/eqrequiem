@@ -9,10 +9,6 @@ export const StoneMiddleTop: React.FC<{
   const inventoryOpen = useInventoryOpen();
   
   return (
-    <>
-      {inventoryOpen && (
-        <StoneInventory height={height} scale={scale} width={width} />
-      )}
-    </>
+    <StoneInventory height={height} open={inventoryOpen} scale={scale} width={width} />
   );
 };

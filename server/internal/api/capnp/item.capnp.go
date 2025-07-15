@@ -1491,6 +1491,14 @@ func (s ItemInstance) SetAagi(v int32) {
 	capnp.Struct(s).SetUint32(664, uint32(v))
 }
 
+func (s ItemInstance) BagSlot() int32 {
+	return int32(capnp.Struct(s).Uint32(668))
+}
+
+func (s ItemInstance) SetBagSlot(v int32) {
+	capnp.Struct(s).SetUint32(668, uint32(v))
+}
+
 // ItemInstance_List is a list of ItemInstance.
 type ItemInstance_List = capnp.StructList[ItemInstance]
 
@@ -1506,4 +1514,92 @@ type ItemInstance_Future struct{ *capnp.Future }
 func (f ItemInstance_Future) Struct() (ItemInstance, error) {
 	p, err := f.Future.Ptr()
 	return ItemInstance(p.Struct()), err
+}
+
+type BulkItemPacket capnp.Struct
+
+// BulkItemPacket_TypeID is the unique identifier for the type BulkItemPacket.
+const BulkItemPacket_TypeID = 0x817d8fbf84fe89c1
+
+func NewBulkItemPacket(s *capnp.Segment) (BulkItemPacket, error) {
+	st, err := capnp.NewStruct(s, capnp.ObjectSize{DataSize: 0, PointerCount: 1})
+	return BulkItemPacket(st), err
+}
+
+func NewRootBulkItemPacket(s *capnp.Segment) (BulkItemPacket, error) {
+	st, err := capnp.NewRootStruct(s, capnp.ObjectSize{DataSize: 0, PointerCount: 1})
+	return BulkItemPacket(st), err
+}
+
+func ReadRootBulkItemPacket(msg *capnp.Message) (BulkItemPacket, error) {
+	root, err := msg.Root()
+	return BulkItemPacket(root.Struct()), err
+}
+
+func (s BulkItemPacket) String() string {
+	str, _ := text.Marshal(0x817d8fbf84fe89c1, capnp.Struct(s))
+	return str
+}
+
+func (s BulkItemPacket) EncodeAsPtr(seg *capnp.Segment) capnp.Ptr {
+	return capnp.Struct(s).EncodeAsPtr(seg)
+}
+
+func (BulkItemPacket) DecodeFromPtr(p capnp.Ptr) BulkItemPacket {
+	return BulkItemPacket(capnp.Struct{}.DecodeFromPtr(p))
+}
+
+func (s BulkItemPacket) ToPtr() capnp.Ptr {
+	return capnp.Struct(s).ToPtr()
+}
+func (s BulkItemPacket) IsValid() bool {
+	return capnp.Struct(s).IsValid()
+}
+
+func (s BulkItemPacket) Message() *capnp.Message {
+	return capnp.Struct(s).Message()
+}
+
+func (s BulkItemPacket) Segment() *capnp.Segment {
+	return capnp.Struct(s).Segment()
+}
+func (s BulkItemPacket) Items() (ItemInstance_List, error) {
+	p, err := capnp.Struct(s).Ptr(0)
+	return ItemInstance_List(p.List()), err
+}
+
+func (s BulkItemPacket) HasItems() bool {
+	return capnp.Struct(s).HasPtr(0)
+}
+
+func (s BulkItemPacket) SetItems(v ItemInstance_List) error {
+	return capnp.Struct(s).SetPtr(0, v.ToPtr())
+}
+
+// NewItems sets the items field to a newly
+// allocated ItemInstance_List, preferring placement in s's segment.
+func (s BulkItemPacket) NewItems(n int32) (ItemInstance_List, error) {
+	l, err := NewItemInstance_List(capnp.Struct(s).Segment(), n)
+	if err != nil {
+		return ItemInstance_List{}, err
+	}
+	err = capnp.Struct(s).SetPtr(0, l.ToPtr())
+	return l, err
+}
+
+// BulkItemPacket_List is a list of BulkItemPacket.
+type BulkItemPacket_List = capnp.StructList[BulkItemPacket]
+
+// NewBulkItemPacket creates a new list of BulkItemPacket.
+func NewBulkItemPacket_List(s *capnp.Segment, sz int32) (BulkItemPacket_List, error) {
+	l, err := capnp.NewCompositeList(s, capnp.ObjectSize{DataSize: 0, PointerCount: 1}, sz)
+	return capnp.StructList[BulkItemPacket](l), err
+}
+
+// BulkItemPacket_Future is a wrapper for a BulkItemPacket promised by a client call.
+type BulkItemPacket_Future struct{ *capnp.Future }
+
+func (f BulkItemPacket_Future) Struct() (BulkItemPacket, error) {
+	p, err := f.Future.Ptr()
+	return BulkItemPacket(p.Struct()), err
 }

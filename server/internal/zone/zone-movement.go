@@ -5,8 +5,8 @@ import (
 
 	eq "github.com/knervous/eqgo/internal/api/capnp"
 	"github.com/knervous/eqgo/internal/api/opcodes"
-	"github.com/knervous/eqgo/internal/ports/client"
 	"github.com/knervous/eqgo/internal/session"
+	entity "github.com/knervous/eqgo/internal/zone/interface"
 )
 
 const (
@@ -37,7 +37,7 @@ func worldToCell(x, y, z float64) [3]int {
 }
 
 // markMoved flags an entity for broadcast and rebuckets it if its cell changed.
-func (z *ZoneInstance) markMoved(id int, pos client.MobPosition) {
+func (z *ZoneInstance) markMoved(id int, pos entity.MobPosition) {
 	if (z.Entities[id] == nil) || (z.Entities[id].GetMob() == nil) {
 		return // entity not found or not a mob
 	}
@@ -115,7 +115,7 @@ func (z *ZoneInstance) resubscribe(id int, cell [3]int) {
 
 // RegisterNewClientGrid handles placing a freshly connected client into the spatial grid
 // and wiring up bidirectional subscriptions so everyone immediately sees each other.
-func (z *ZoneInstance) registerNewClientGrid(id int, pos client.MobPosition) {
+func (z *ZoneInstance) registerNewClientGrid(id int, pos entity.MobPosition) {
 	// 1) Bucket the new client and subscribe them to neighbors
 	z.markMoved(id, pos)
 
@@ -129,7 +129,7 @@ func (z *ZoneInstance) registerNewClientGrid(id int, pos client.MobPosition) {
 // subscribeExistingToNew adds the new client (newID) as a subscriber on all entities
 // in the 3×3×3 neighborhood around its spawn cell, and flags them dirty so an
 // immediate position update (spawn) goes out.
-func (z *ZoneInstance) subscribeExistingToNew(newID int, pos client.MobPosition) {
+func (z *ZoneInstance) subscribeExistingToNew(newID int, pos entity.MobPosition) {
 	cell := worldToCell(pos.X, pos.Y, pos.Z)
 	for di := -1; di <= 1; di++ {
 		for dj := -1; dj <= 1; dj++ {

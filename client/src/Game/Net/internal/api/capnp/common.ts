@@ -2933,22 +2933,6 @@ export class ExpUpdate extends $.Struct {
     return "ExpUpdate_" + super.toString();
   }
 }
-export class BulkItemPacket extends $.Struct {
-  static readonly _capnp = {
-    displayName: "BulkItemPacket",
-    id: "fb1ba86c82d8b9b1",
-    size: new $.ObjectSize(0, 1)
-  };
-  get serializedItem(): string {
-    return $.utils.getText(0, this);
-  }
-  set serializedItem(value: string) {
-    $.utils.setText(0, value, this);
-  }
-  toString(): string {
-    return "BulkItemPacket_" + super.toString();
-  }
-}
 export class Consume extends $.Struct {
   static readonly _capnp = {
     displayName: "Consume",
@@ -3009,7 +2993,7 @@ export class MoveItem extends $.Struct {
   static readonly _capnp = {
     displayName: "MoveItem",
     id: "8b2666611a37b434",
-    size: new $.ObjectSize(16, 0)
+    size: new $.ObjectSize(24, 0)
   };
   get fromSlot(): number {
     return $.utils.getInt32(0, this);
@@ -3029,11 +3013,17 @@ export class MoveItem extends $.Struct {
   set numberInStack(value: number) {
     $.utils.setInt32(8, value, this);
   }
-  get bagSlot(): number {
+  get fromBagSlot(): number {
     return $.utils.getInt32(12, this);
   }
-  set bagSlot(value: number) {
+  set fromBagSlot(value: number) {
     $.utils.setInt32(12, value, this);
+  }
+  get toBagSlot(): number {
+    return $.utils.getInt32(16, this);
+  }
+  set toBagSlot(value: number) {
+    $.utils.setInt32(16, value, this);
   }
   toString(): string {
     return "MoveItem_" + super.toString();

@@ -1,38 +1,38 @@
-package entity
+package client
 
 import (
 	"github.com/knervous/eqgo/internal/constants"
-	"github.com/knervous/eqgo/internal/ports/client"
+	entity "github.com/knervous/eqgo/internal/zone/interface"
 )
 
-func (client *Client) CalcBonuses() {
+func (c *Client) CalcBonuses() {
 	// client.CalcItemBonuses()
 	// client.CalcAABonuses()
 	// client.CalcSpellBonuses()
 
 	// client.CalcAC()
-	client.CalcATK()
-	client.CalcHaste()
+	c.CalcATK()
+	c.CalcHaste()
 
 	// Base stats
-	client.CalcSTR()
-	client.CalcSTA()
-	client.CalcDEX()
-	client.CalcAGI()
-	client.CalcINT()
-	client.CalcWIS()
-	client.CalcCHA()
+	c.CalcSTR()
+	c.CalcSTA()
+	c.CalcDEX()
+	c.CalcAGI()
+	c.CalcINT()
+	c.CalcWIS()
+	c.CalcCHA()
 
 	// Resists
-	client.CalcMR()
-	client.CalcFR()
-	client.CalcDR()
-	client.CalcPR()
-	client.CalcCR()
+	c.CalcMR()
+	c.CalcFR()
+	c.CalcDR()
+	c.CalcPR()
+	c.CalcCR()
 
 	// HP / Mana
-	client.CalcMaxHP()
-	client.CalcMaxMana()
+	c.CalcMaxHP()
+	c.CalcMaxMana()
 }
 
 func (client *Client) CalcATK() {
@@ -486,9 +486,9 @@ func (c *Client) CalcBaseMana() int32 {
 	mindFactor := int32(0)
 	baseMana := int32(0)
 	switch c.mob.GetCasterClass() {
-	case client.CasterClassWisdom, client.CasterClassIntelligence:
+	case entity.CasterClassWisdom, entity.CasterClassIntelligence:
 		wisInt := int32(0)
-		if c.mob.GetCasterClass() == client.CasterClassWisdom {
+		if c.mob.GetCasterClass() == entity.CasterClassWisdom {
 			wisInt = c.mob.WIS
 		} else {
 			wisInt = c.mob.INT
@@ -504,7 +504,7 @@ func (c *Client) CalcBaseMana() int32 {
 		} else {
 			baseMana = (((5 * (mindFactor + 200)) / 2) * 3 * int32(c.CharData().Level)) / 100
 		}
-	case client.CasterClassNone:
+	case entity.CasterClassNone:
 		baseMana = 0
 
 	}
@@ -523,7 +523,7 @@ func (c *Client) CalcMaxMana() {
 		itemBonusMana = int32(m.ItemBonuses.Mana)
 	}
 	switch m.GetCasterClass() {
-	case client.CasterClassIntelligence, client.CasterClassWisdom:
+	case entity.CasterClassIntelligence, entity.CasterClassWisdom:
 		m.MaxMana = int(c.CalcBaseMana() + spellBonusMana + itemBonusMana)
 	default:
 		m.MaxMana = 0

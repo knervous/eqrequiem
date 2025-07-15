@@ -1,6 +1,59 @@
 package constants
 
-import "github.com/knervous/eqgo/internal/db/jetgen/eqgo/model"
+import (
+	"github.com/knervous/eqgo/internal/db/jetgen/eqgo/model"
+)
+
+// OwnerType represents the type of owner for an item instance
+type OwnerType uint8
+
+// Constants for owner types
+const (
+	OwnerTypeCharacter OwnerType = 0
+	OwnerTypeMerchant  OwnerType = 1
+	OwnerTypeGuild     OwnerType = 2
+)
+
+const (
+	ItemClassCommon uint8 = iota
+	ItemClassBag
+	ItemClassBook
+)
+
+type InventoryKey struct {
+	Bag  int8
+	Slot int32
+}
+
+// Mods represents the JSON structure of the mods field
+type Mods struct {
+	Enchantment string `json:"enchantment"`
+	Durability  int    `json:"durability"`
+	// Add other fields as needed
+}
+
+// ItemInstance represents a domain model for item_instances
+type ItemInstance struct {
+	ID        int32
+	ItemID    int32
+	Mods      Mods // Rich type for JSON
+	Charges   uint8
+	Quantity  uint8
+	OwnerID   *uint32
+	OwnerType OwnerType
+	Item      model.Items
+}
+
+type ItemWithSlot struct {
+	model.ItemInstances
+	model.CharacterInventory
+}
+
+type ItemWithInstance struct {
+	Item     model.Items
+	Instance ItemInstance
+	BagSlot  int8
+}
 
 const (
 	SlotCharm int32 = iota
@@ -36,8 +89,23 @@ const (
 	SlotCursor
 )
 
+const (
+	ItemTypeShield uint8 = iota + 10 // placeholder start
+	ItemType1HBlunt
+	ItemType1HSlash
+	ItemType1HPiercing
+	ItemType2HBlunt
+	ItemType2HSlash
+	ItemType2HPiercing
+	ItemTypeMartial
+)
+
 func IsEquipSlot(slot int32) bool {
 	return slot >= SlotCharm && slot <= SlotAmmo
+}
+
+func IsGeneralSlot(slot int32) bool {
+	return slot >= SlotGeneral1 && slot <= SlotGeneral8
 }
 
 var EquipmentSlots = []int32{
@@ -78,35 +146,6 @@ var visibleSlotsMap = map[int32]bool{
 	SlotSecondary: true,
 }
 
-// OwnerType represents the type of owner for an item instance
-type OwnerType uint8
-
-// Constants for owner types
-const (
-	OwnerTypeCharacter OwnerType = 0
-	OwnerTypeMerchant  OwnerType = 1
-	OwnerTypeGuild     OwnerType = 2
-)
-
-// Mods represents the JSON structure of the mods field
-type Mods struct {
-	Enchantment string `json:"enchantment"`
-	Durability  int    `json:"durability"`
-	// Add other fields as needed
-}
-
-// ItemInstance represents a domain model for item_instances
-type ItemInstance struct {
-	ID        int32
-	ItemID    int32
-	Mods      Mods // Rich type for JSON
-	Charges   uint8
-	Quantity  uint8
-	OwnerID   *uint32
-	OwnerType OwnerType
-	Item      model.Items
-}
-
 func IsVisibleSlot(slot int32) bool {
 	return visibleSlotsMap[slot]
 }
@@ -130,13 +169,64 @@ func (item *ItemWithInstance) AllowedInSlot(slot int32) bool {
 	return true
 }
 
-type ItemWithSlot struct {
-	model.ItemInstances
-	model.CharacterInventory
+func (item *ItemWithInstance) IsClassEquippable(classId uint8) bool {
+	return (uint16(item.Item.Classes) & GetPlayerClassBit(GetPlayerClassValue(classId))) != 0
 }
 
-type ItemWithInstance struct {
-	Item     model.Items
-	Instance ItemInstance
-	BagSlot  int8
+func (item *ItemWithInstance) IsRaceEquippable(raceId RaceID) bool {
+	return (uint32(item.Item.Races) & GetPlayerRaceBit(raceId)) != 0
+}
+
+func (item *ItemWithInstance) IsEquippable(raceId RaceID, classId uint8) bool {
+	return item.IsRaceEquippable(raceId) && item.IsClassEquippable(classId)
+}
+func (item *ItemWithInstance) IsClassCommon() bool {
+	return uint8(item.Item.Classes) == ItemClassCommon
+}
+
+func (item *ItemWithInstance) IsClassBag() bool {
+	return uint8(item.Item.Classes) == ItemClassBag
+}
+func (item *ItemWithInstance) IsClassBook() bool {
+	return uint8(item.Item.Classes) == ItemClassBook
+}
+
+func (item *ItemWithInstance) IsType1HWeapon() bool {
+	return uint8(item.Item.Itemtype) >= ItemType1HBlunt && uint8(item.Item.Itemtype) <= ItemType1HPiercing
+}
+func (item *ItemWithInstance) IsType2HWeapon() bool {
+	return uint8(item.Item.Itemtype) >= ItemType2HBlunt && uint8(item.Item.Itemtype) <= ItemType2HPiercing
+}
+func (item *ItemWithInstance) IsTypeMartial() bool {
+	return uint8(item.Item.Itemtype) == ItemTypeMartial
+}
+func (item *ItemWithInstance) IsTypeShield() bool {
+	return uint8(item.Item.Itemtype) == ItemTypeShield
+}
+func (item *ItemWithInstance) IsType1H() bool {
+	return item.IsType1HWeapon() || item.IsTypeShield()
+}
+func (item *ItemWithInstance) IsType2H() bool {
+	return item.IsType2HWeapon() || item.IsTypeMartial()
+}
+func (item *ItemWithInstance) IsTypeWeapon() bool {
+	return item.IsType1HWeapon() || item.IsType2HWeapon() || item.IsTypeMartial() || item.IsTypeShield()
+}
+func (item *ItemWithInstance) CheckLoreConflict(other *ItemWithInstance) bool {
+	if item == nil || other == nil {
+		return false
+	}
+	if item.Item.Loregroup != 0 && item.Item.Loregroup == other.Item.Loregroup {
+		return true
+	}
+	if item.Item.Name == other.Item.Name && item.Item.ID != other.Item.ID {
+		return true
+	}
+	return false
+}
+func (item *ItemWithInstance) IsLore() bool {
+	if item == nil {
+		return false
+	}
+	return item.Item.Loregroup != 0 || item.Item.Name == "Lore Item"
 }
