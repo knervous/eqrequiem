@@ -150,6 +150,13 @@ func IsVisibleSlot(slot int32) bool {
 	return visibleSlotsMap[slot]
 }
 
+func (item *ItemWithInstance) IsContainer() bool {
+	if item == nil {
+		return false
+	}
+	return item.Item.Bagslots > 0
+}
+
 func (item *ItemWithInstance) AllowedInSlot(slot int32) bool {
 	if item == nil {
 		return true

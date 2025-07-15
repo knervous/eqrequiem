@@ -15,6 +15,14 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
+type SlotUpdate struct {
+	ItemInstanceID int32
+	FromSlot       int32
+	FromBag        int8
+	ToSlot         int32
+	ToBag          int8
+}
+
 // CreateItemInstance creates a new item_instances row and returns its auto-increment ID.
 func CreateDBItemInstance(tx *stmtcache.Tx, itemInstance constants.ItemInstance, ownerId int32) (int32, error) {
 	// 1) marshal mods JSON
@@ -57,10 +65,17 @@ func CreateDBItemInstance(tx *stmtcache.Tx, itemInstance constants.ItemInstance,
 	return int32(lastID), nil
 }
 
-func SwapItemSlots(playerID, fromSlot, toSlot int32, toBagSlot, fromBagSlot int8) (err error) {
+// SwapItemSlots swaps (or moves) two character‐inventory slots (and all children
+// if general inventory‐level), returning a slice of SlotUpdate records for
+// every row that actually changed.
+func SwapItemSlots(
+	playerID, fromSlot, toSlot int32,
+	toBagSlot, fromBagSlot int8,
+	fromItem, toItem *constants.ItemWithInstance,
+) (updates []SlotUpdate, err error) {
 	tx, err := db.GlobalWorldDB.DB.Begin()
 	if err != nil {
-		return fmt.Errorf("begin tx: %w", err)
+		return nil, fmt.Errorf("begin tx: %w", err)
 	}
 	defer func() {
 		if p := recover(); p != nil {
@@ -73,9 +88,7 @@ func SwapItemSlots(playerID, fromSlot, toSlot int32, toBagSlot, fromBagSlot int8
 		}
 	}()
 
-	generalSwap := toBagSlot == 0 && fromBagSlot == 0
-
-	// 1) Lock both slots FOR UPDATE (gap lock if missing)
+	// 1) Lock the two target slots for update
 	var inv []model.CharacterInventory
 	if err = table.CharacterInventory.
 		SELECT(
@@ -88,39 +101,40 @@ func SwapItemSlots(playerID, fromSlot, toSlot int32, toBagSlot, fromBagSlot int8
 				AND(table.CharacterInventory.Slot.IN(
 					mysql.Int32(fromSlot),
 					mysql.Int32(toSlot),
-				),
-				).AND(
-				table.CharacterInventory.Bag.IN(
-					mysql.Int8(fromBagSlot),
-					mysql.Int8(toBagSlot),
-				),
-			),
+				)),
 		).
 		FOR(mysql.UPDATE()).
 		Query(tx, &inv); err != nil {
-		return fmt.Errorf("lock inventory rows: %w", err)
+		return nil, fmt.Errorf("lock inventory rows: %w", err)
 	}
 
-	// Map existing rows by slot
+	// Map existing rows by (slot, bag)
 	type loc struct {
 		Slot int32
 		Bag  int8
 	}
-	rows := map[loc]model.CharacterInventory{}
+	baseRows := make(map[loc]model.CharacterInventory, len(inv))
+	childFromRows := make(map[loc]model.CharacterInventory, len(inv))
+	childToRows := make(map[loc]model.CharacterInventory, len(inv))
 	for _, ci := range inv {
-		rows[loc{int32(ci.Slot), ci.Bag}] = ci
+		if ci.Bag == fromBagSlot || ci.Bag == toBagSlot {
+			baseRows[loc{int32(ci.Slot), ci.Bag}] = ci
+		} else if int32(ci.Slot) == fromSlot {
+			childFromRows[loc{int32(ci.Slot), ci.Bag}] = ci
+		} else if int32(ci.Slot) == toSlot {
+			childToRows[loc{int32(ci.Slot), ci.Bag}] = ci
+		}
 	}
-	fromRow, hasFrom := rows[loc{fromSlot, fromBagSlot}]
-	toRow, hasTo := rows[loc{toSlot, toBagSlot}]
+	fromRow, hasFrom := baseRows[loc{fromSlot, fromBagSlot}]
+	toRow, hasTo := baseRows[loc{toSlot, toBagSlot}]
 
-	// 2) Four cases
+	// 2) Handle the four move/swap cases
 	switch {
 	case !hasFrom && !hasTo:
 		// nothing to do
-		break
 
 	case hasFrom && !hasTo:
-		// simple move fromSlot -> toSlot
+		// simple move: fromSlot → toSlot
 		if _, err = table.CharacterInventory.
 			UPDATE(table.CharacterInventory.Slot, table.CharacterInventory.Bag).
 			SET(mysql.Int32(toSlot), mysql.Int8(toBagSlot)).
@@ -129,39 +143,38 @@ func SwapItemSlots(playerID, fromSlot, toSlot int32, toBagSlot, fromBagSlot int8
 					AND(table.CharacterInventory.ItemInstanceID.EQ(mysql.Int32(fromRow.ItemInstanceID))),
 			).
 			Exec(tx); err != nil {
-			return fmt.Errorf("move fromSlot→toSlot: %w", err)
+			return nil, fmt.Errorf("move fromSlot→toSlot: %w", err)
 		}
 
 	case !hasFrom && hasTo:
-		// simple move toSlot -> fromSlot
-		if _, err = table.CharacterInventory.
-			UPDATE(table.CharacterInventory.Slot).
-			SET(mysql.Int32(fromSlot)).
-			WHERE(
-				table.CharacterInventory.CharacterID.EQ(mysql.Int32(playerID)).
-					AND(table.CharacterInventory.ItemInstanceID.EQ(mysql.Int32(toRow.ItemInstanceID))),
-			).
-			Exec(tx); err != nil {
-			return fmt.Errorf("move toSlot→fromSlot: %w", err)
-		}
-
-	default: // hasFrom && hasTo
-		// full swap via temp slot to avoid unique-key collision
-		const tempSlot = -1
-
-		// 2a) stash toSlot occupant into tempSlot
+		// simple move: toSlot → fromSlot
 		if _, err = table.CharacterInventory.
 			UPDATE(table.CharacterInventory.Slot, table.CharacterInventory.Bag).
-			SET(mysql.Int32(tempSlot), mysql.Int8(toRow.Bag)).
+			SET(mysql.Int32(fromSlot), mysql.Int8(fromBagSlot)).
 			WHERE(
 				table.CharacterInventory.CharacterID.EQ(mysql.Int32(playerID)).
 					AND(table.CharacterInventory.ItemInstanceID.EQ(mysql.Int32(toRow.ItemInstanceID))),
 			).
 			Exec(tx); err != nil {
-			return fmt.Errorf("stash toSlot→tempSlot: %w", err)
+			return nil, fmt.Errorf("move toSlot→fromSlot: %w", err)
 		}
 
-		// 2b) move fromSlot item into toSlot
+	default: // hasFrom && hasTo → full swap via temp
+		const tempSlot = -1
+
+		// a) stash toSlot occupant → tempSlot
+		if _, err = table.CharacterInventory.
+			UPDATE(table.CharacterInventory.Slot).
+			SET(mysql.Int32(tempSlot)).
+			WHERE(
+				table.CharacterInventory.CharacterID.EQ(mysql.Int32(playerID)).
+					AND(table.CharacterInventory.ItemInstanceID.EQ(mysql.Int32(toRow.ItemInstanceID))),
+			).
+			Exec(tx); err != nil {
+			return nil, fmt.Errorf("stash toSlot→tempSlot: %w", err)
+		}
+
+		// b) move fromSlot → toSlot
 		if _, err = table.CharacterInventory.
 			UPDATE(table.CharacterInventory.Slot, table.CharacterInventory.Bag).
 			SET(mysql.Int32(toSlot), mysql.Int8(toBagSlot)).
@@ -170,39 +183,77 @@ func SwapItemSlots(playerID, fromSlot, toSlot int32, toBagSlot, fromBagSlot int8
 					AND(table.CharacterInventory.ItemInstanceID.EQ(mysql.Int32(fromRow.ItemInstanceID))),
 			).
 			Exec(tx); err != nil {
-			return fmt.Errorf("move fromSlot→toSlot: %w", err)
+			return nil, fmt.Errorf("move fromSlot→toSlot: %w", err)
 		}
-
-		// 2c) restore occupant from tempSlot → fromSlot
+		// c) restore tempSlot → fromSlot
 		if _, err = table.CharacterInventory.
-			UPDATE(table.CharacterInventory.Slot).
-			SET(mysql.Int32(fromSlot)).
+			UPDATE(table.CharacterInventory.Slot, table.CharacterInventory.Bag).
+			SET(mysql.Int32(fromSlot), mysql.Int8(toRow.Bag)).
 			WHERE(
 				table.CharacterInventory.CharacterID.EQ(mysql.Int32(playerID)).
 					AND(table.CharacterInventory.ItemInstanceID.EQ(mysql.Int32(toRow.ItemInstanceID))),
 			).
 			Exec(tx); err != nil {
-			return fmt.Errorf("restore tempSlot→fromSlot: %w", err)
+			return nil, fmt.Errorf("restore tempSlot→fromSlot: %w", err)
+		}
+	}
+
+	updates = append(updates, SlotUpdate{
+		ItemInstanceID: fromRow.ItemInstanceID,
+		FromSlot:       fromSlot,
+		FromBag:        fromBagSlot,
+		ToSlot:         toSlot,
+		ToBag:          toBagSlot,
+	})
+	// TODO handle case for when these are both containers
+	// Will have to lock rows and swap out the child rows temporarily
+	// to prevent index collision
+	if fromItem.IsContainer() {
+		for _, childRow := range childFromRows {
+			if _, err = table.CharacterInventory.
+				UPDATE(table.CharacterInventory.Slot).
+				SET(mysql.Int32(toSlot)).
+				WHERE(
+					table.CharacterInventory.CharacterID.EQ(mysql.Int32(playerID)).
+						AND(table.CharacterInventory.ItemInstanceID.EQ(mysql.Int32(childRow.ItemInstanceID))),
+				).
+				Exec(tx); err != nil {
+				return nil, fmt.Errorf("move child fromSlot→toSlot: %w", err)
+			}
+			updates = append(updates, SlotUpdate{
+				ItemInstanceID: childRow.ItemInstanceID,
+				FromSlot:       fromSlot,
+				FromBag:        childRow.Bag,
+				ToSlot:         toSlot,
+				ToBag:          childRow.Bag,
+			})
 		}
 
 	}
-	if generalSwap {
-		if _, err = table.CharacterInventory.
-			UPDATE(table.CharacterInventory.Slot).
-			SET(mysql.Int32(toSlot)).
-			WHERE(
-				table.CharacterInventory.CharacterID.EQ(mysql.Int32(playerID)).AND(
-					table.CharacterInventory.Slot.EQ(mysql.Int32(fromSlot)),
-				).AND(
-					table.CharacterInventory.Bag.GT(mysql.Int8(0)),
-				),
-			).Exec(tx); err != nil {
-			return fmt.Errorf("update child slots: %w", err)
+	if toItem.IsContainer() {
+		for _, childRow := range childToRows {
+			if _, err = table.CharacterInventory.
+				UPDATE(table.CharacterInventory.Slot).
+				SET(mysql.Int32(fromSlot)).
+				WHERE(
+					table.CharacterInventory.CharacterID.EQ(mysql.Int32(playerID)).
+						AND(table.CharacterInventory.ItemInstanceID.EQ(mysql.Int32(childRow.ItemInstanceID))),
+				).
+				Exec(tx); err != nil {
+				return nil, fmt.Errorf("move child toSlot→fromSlot: %w", err)
+			}
+			updates = append(updates, SlotUpdate{
+				ItemInstanceID: childRow.ItemInstanceID,
+				FromSlot:       toSlot,
+				FromBag:        childRow.Bag,
+				ToSlot:         fromSlot,
+				ToBag:          childRow.Bag,
+			})
 		}
 	}
-	return nil
+
+	return updates, nil
 }
-
 func AddItemToPlayerInventoryFreeSlot(itemInstance constants.ItemInstance, playerID int32) (int32, error) {
 	tx, err := db.GlobalWorldDB.DB.Begin()
 	if err != nil {

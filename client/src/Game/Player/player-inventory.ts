@@ -1,6 +1,7 @@
 import { capnpToPlainObject } from '@game/Constants/util';
 import emitter from '@game/Events/events';
 import { DeleteItem, type MoveItem } from '@game/Net/internal/api/capnp/common';
+import { ItemInstance } from '@game/Net/internal/api/capnp/item';
 import { OpCodes } from '@game/Net/opcodes';
 import { WorldSocket } from '@ui/net/instances';
 import type Player from './player';
@@ -113,11 +114,11 @@ export class PlayerInventory {
     return !!item && item.bagslots > 0;
   }
 
-  private getBagChildren(slot: InventorySlot): NullableItemInstance[] {
-    const children: NullableItemInstance[] = [];
+  private getBagChildren(slot: InventorySlot): ItemInstance[] {
+    const children: ItemInstance[] = [];
     for (const [key, item] of this.inventorySlots.entries()) {
-      const [itemSlot, itemBagSlot] = key.split(':').map(Number);
-      if (itemSlot === slot && itemBagSlot > 0) {
+      const [itemSlot] = key.split(':').map(Number);
+      if (item && itemSlot === slot && item.bagSlot > 0) {
         children.push(item);
       }
     }
@@ -135,35 +136,19 @@ export class PlayerInventory {
 
     const srcItem = this.inventorySlots.get(srcKey) || null;
     const dstItem = this.inventorySlots.get(dstKey) || null;
-    console.log('Got move packet', capnpToPlainObject(move));
+
     if (srcItem) {
-      srcItem.bagSlot = fromBagSlot; // update bagSlot for the source item
+      srcItem.bagSlot = fromBagSlot;
     }
     if (dstItem) {
-      dstItem.bagSlot = toBagSlot; // update bagSlot for the destination item
+      dstItem.bagSlot = toBagSlot;
     }
-    // swap
+
     this.inventorySlots.set(dstKey, srcItem);
     this.inventorySlots.set(srcKey, dstItem);
 
     emitter.emit('updateInventorySlot', { slot: fromSlot, bag: fromBagSlot });
     emitter.emit('updateInventorySlot', { slot: toSlot, bag: toBagSlot });
-
-    if (this.isBagSlot(toSlot as InventorySlot, 0)) {
-      // if we moved a bag, update its children
-      const children = this.getBagChildren(fromSlot as InventorySlot);
-      for (const child of children.filter((c) => c !== null)) {
-        this.inventorySlots.set(
-          this.makeKey(toSlot as InventorySlot, child.bagSlot),
-          child,
-        );
-        this.inventorySlots.delete(this.makeKey(fromSlot as InventorySlot, child.bagSlot));
-      }
-      emitter.emit('updateBagState', {
-        slot : toSlot as InventorySlot,
-        state: this.getBagState(toSlot as InventorySlot),
-      });
-    }
   }
 
   destroyCursorItem(): void {

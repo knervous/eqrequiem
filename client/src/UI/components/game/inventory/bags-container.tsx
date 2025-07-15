@@ -12,7 +12,7 @@ export const BagsContainer: React.FC<{scale: number}> = ({ scale }) => {
       ...prev,
       [e.slot]: e.state,
     }));
-  }); 
+  });
   return Object.entries(localBagStates)
     .filter(([_, state]) => state.open)
     .map(([slot, state]) =>
