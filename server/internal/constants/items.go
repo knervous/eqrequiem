@@ -50,9 +50,10 @@ type ItemWithSlot struct {
 }
 
 type ItemWithInstance struct {
-	Item     model.Items
-	Instance ItemInstance
-	BagSlot  int8
+	Item           model.Items
+	Instance       ItemInstance
+	BagSlot        int8
+	ItemInstanceID int32
 }
 
 const (

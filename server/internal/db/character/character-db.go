@@ -272,6 +272,20 @@ func PurgeCharacterItem(ctx context.Context, charID int32, slot int8) error {
 }
 
 func GearUp(c entity.Client) error {
+	tx, err := db.GlobalWorldDB.DB.Begin()
+	if err != nil {
+		return fmt.Errorf("begin tx: %w", err)
+	}
+	defer func() {
+		if p := recover(); p != nil {
+			_ = tx.Rollback()
+			panic(p)
+		} else if err != nil {
+			_ = tx.Rollback()
+		} else {
+			err = tx.Commit()
+		}
+	}()
 	var raw []model.ToolGearupArmorSets
 	if err := table.ToolGearupArmorSets.
 		SELECT(table.ToolGearupArmorSets.AllColumns).
@@ -335,7 +349,7 @@ func GearUp(c entity.Client) error {
 		if inst == nil {
 			continue
 		}
-		err := items.InsertItemInstance(*inst)
+		itemInstanceId, err := items.CreateDBItemInstance(tx, *inst, int32(c.ID()))
 		if err != nil {
 			return fmt.Errorf("failed to insert item instance for itemID %d: %w", *e.ItemID, err)
 		}
@@ -345,9 +359,31 @@ func GearUp(c entity.Client) error {
 			Slot: slot,
 		}
 		c.Items()[key] = &constants.ItemWithInstance{
-			Item:     inst.Item,
-			Instance: *inst,
-			BagSlot:  -1,
+			Item:           inst.Item,
+			Instance:       *inst,
+			BagSlot:        -1,
+			ItemInstanceID: itemInstanceId,
+		}
+
+		if _, err2 := table.CharacterInventory.
+			INSERT(
+				table.CharacterInventory.CharacterID,
+				table.CharacterInventory.Slot,
+				table.CharacterInventory.ItemInstanceID,
+				table.CharacterInventory.Bag,
+			).
+			VALUES(
+				mysql.Int32(int32(c.ID())),
+				mysql.Int32(int32(slot)),
+				mysql.Int32(itemInstanceId),
+				mysql.Int8(-1),
+			).
+			ON_DUPLICATE_KEY_UPDATE(
+				table.CharacterInventory.ItemInstanceID.SET(mysql.Int32(inst.ID)),
+				table.CharacterInventory.Bag.SET(mysql.Int8(-1)),
+			).
+			Exec(tx); err2 != nil {
+			return fmt.Errorf("upserting inventory for slot %d: %w", slot, err2)
 		}
 	}
 
@@ -387,11 +423,12 @@ func UpdateCharacterItems(ctx context.Context, c entity.Client) (err error) {
 		inst := &wi.Instance
 
 		// 2a) if new instance, INSERT and grab its ID
-		if inst.ID <= 0 {
+		if wi.ItemInstanceID <= 0 {
 			newID, err2 := items.CreateDBItemInstance(tx, *inst, charID)
 			if err2 != nil {
 				return fmt.Errorf("inserting new instance for slot %d: %w", itemSlot, err2)
 			}
+			wi.ItemInstanceID = newID
 			inst.ID = newID
 		} else {
 			// 2b) existing instance → UPDATE mods/quantity/owner

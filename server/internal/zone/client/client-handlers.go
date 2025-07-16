@@ -44,6 +44,14 @@ func (c *Client) HandleMoveItem(z entity.ZoneAccess, ses *session.Session, paylo
 		log.Printf("to item not allowed in slot %d", fromSlot)
 		return
 	}
+	if toBag > 0 && fromItem.IsContainer() {
+		log.Printf("cannot move container item %d to bag %d", fromItem.Instance.ItemID, toBag)
+		return
+	}
+	if fromBag > 0 && toItem.IsContainer() {
+		log.Printf("cannot move container item %d to bag %d", toItem.Instance.ItemID, fromBag)
+		return
+	}
 	if constants.IsEquipSlot(toSlot) && fromItem != nil && !c.CanEquipItem(fromItem) {
 		log.Printf("client %d cannot equip item %d in slot %d", c.ID(), fromItem.Instance.ItemID, toSlot)
 		return

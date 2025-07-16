@@ -68,9 +68,10 @@ func NewClient(charData *model.CharacterData) (entity.Client, error) {
 		itemInstance.ID = item.ItemInstanceID
 		json.Unmarshal([]byte(*item.Mods), &itemInstance.Mods)
 		itemWithTemplate := &constants.ItemWithInstance{
-			Item:     itemTemplate,
-			Instance: *itemInstance,
-			BagSlot:  item.Bag,
+			Item:           itemTemplate,
+			Instance:       *itemInstance,
+			BagSlot:        item.Bag,
+			ItemInstanceID: item.ItemInstanceID,
 		}
 		key := constants.InventoryKey{
 			Bag:  item.Bag,

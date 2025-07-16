@@ -62,16 +62,17 @@ func summonItem(z *ZoneInstance, ses *session.Session, args []string) {
 		log.Printf("failed to create item instance for item ID: %d", itemID)
 		return
 	}
-	slot, bagslot, err := items.AddItemToPlayerInventoryFreeSlot(*instance, int32(ses.Client.CharData().ID))
+	slot, bagslot, itemInstanceId, err := items.AddItemToPlayerInventoryFreeSlot(*instance, int32(ses.Client.CharData().ID))
 	if err != nil {
 		log.Printf("failed to add item to inventory: %v", err)
 		return
 	}
 	ses.Client.WithItems(func(items map[constants.InventoryKey]*constants.ItemWithInstance) {
 		items[constants.InventoryKey{Bag: int8(bagslot), Slot: int8(slot)}] = &constants.ItemWithInstance{
-			Item:     instance.Item,
-			Instance: *instance,
-			BagSlot:  int8(bagslot),
+			Item:           instance.Item,
+			Instance:       *instance,
+			BagSlot:        int8(bagslot),
+			ItemInstanceID: itemInstanceId,
 		}
 	})
 	Message(
@@ -151,7 +152,7 @@ func purgeItems(z *ZoneInstance, ses *session.Session, args []string) {
 func commandGearup(z *ZoneInstance, ses *session.Session, args []string) {
 	db_character.PurgeCharacterEquipment(context.Background(), int32(ses.Client.CharData().ID))
 	db_character.GearUp(ses.Client)
-	db_character.UpdateCharacterItems(context.Background(), ses.Client)
+	// db_character.UpdateCharacterItems(context.Background(), ses.Client)
 	charItems := ses.Client.Items()
 	charItemsLength := int32(len(charItems))
 	Message(
