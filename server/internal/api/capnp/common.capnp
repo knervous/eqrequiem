@@ -559,18 +559,13 @@ struct Consume {
   type @2 :Int32;
 }
 
-struct DeleteItem {
-  fromSlot @0 :Int32;
-  toSlot @1 :Int32;
-  numberInStack @2 :Int32;
-}
 
 struct MoveItem {
-  fromSlot @0 :Int32;
-  toSlot @1 :Int32;
+  fromSlot @0 :Int8;
+  toSlot @1 :Int8;
   numberInStack @2 :Int32;
-  fromBagSlot @3 :Int32;
-  toBagSlot @4 :Int32;
+  fromBagSlot @3 :Int8;
+  toBagSlot @4 :Int8;
 }
 
 struct MultiMoveItemSub {

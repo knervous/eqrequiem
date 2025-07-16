@@ -83,7 +83,6 @@ export const CharacterCreate = ({ setView, charInfo }) => {
   const [startingCities, setStartingCities] = useState([]);
   const [character, setCharacter] = useState({});
   const [baseCharacter, setBaseCharacter] = useState({});
-  const [initialLength] = useState(charInfo?.characters?.length);
   const [description, setDescription] = useState(CharClassStrings[1]);
   const refreshNameplate = useRef(() => {});
 
@@ -414,6 +413,7 @@ export const CharacterCreate = ({ setView, charInfo }) => {
               isPreferred={preferredStatSet.has(key)}
               label={label}
               stat={key}
+              statPoints={character.statPoints}
               value={character[key]}
               onDecrement={statDecrement}
               onIncrement={statIncrement}

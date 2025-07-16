@@ -20,8 +20,8 @@ func (c *Client) HandleMoveItem(z entity.ZoneAccess, ses *session.Session, paylo
 		return
 	}
 
-	fromSlot := req.FromSlot()
-	toSlot := req.ToSlot()
+	fromSlot := int8(req.FromSlot())
+	toSlot := int8(req.ToSlot())
 	fromBag := int8(req.FromBagSlot())
 	toBag := int8(req.ToBagSlot())
 	fromKey := constants.InventoryKey{
@@ -113,8 +113,8 @@ func (c *Client) HandleMoveItem(z entity.ZoneAccess, ses *session.Session, paylo
 		}
 		pkt.SetFromSlot(u.FromSlot)
 		pkt.SetToSlot(u.ToSlot)
-		pkt.SetFromBagSlot(int32(u.FromBag))
-		pkt.SetToBagSlot(int32(u.ToBag))
+		pkt.SetFromBagSlot((u.FromBag))
+		pkt.SetToBagSlot((u.ToBag))
 		pkt.SetNumberInStack(1) // or your actual stack count
 
 		ses.SendStream(pkt.Message(), opcodes.MoveItem)
@@ -129,8 +129,8 @@ func (c *Client) HandleDeleteItem(z entity.ZoneAccess, ses *session.Session, pay
 		return
 	}
 
-	slot := req.FromSlot()
-	if slot != constants.SlotCursor {
+	slot := req.Slot()
+	if slot != int8(constants.SlotCursor) {
 		log.Printf("invalid slot for DeleteItem: %d", slot)
 		return
 	}

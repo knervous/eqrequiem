@@ -22,7 +22,7 @@ const (
 
 type InventoryKey struct {
 	Bag  int8
-	Slot int32
+	Slot int8
 }
 
 // Mods represents the JSON structure of the mods field
@@ -56,7 +56,7 @@ type ItemWithInstance struct {
 }
 
 const (
-	SlotCharm int32 = iota
+	SlotCharm int8 = iota
 	SlotEar1
 	SlotHead
 	SlotFace
@@ -100,15 +100,15 @@ const (
 	ItemTypeMartial
 )
 
-func IsEquipSlot(slot int32) bool {
+func IsEquipSlot(slot int8) bool {
 	return slot >= SlotCharm && slot <= SlotAmmo
 }
 
-func IsGeneralSlot(slot int32) bool {
+func IsGeneralSlot(slot int8) bool {
 	return slot >= SlotGeneral1 && slot <= SlotGeneral8
 }
 
-var EquipmentSlots = []int32{
+var EquipmentSlots = []int8{
 	SlotCharm,
 	SlotEar1,
 	SlotHead,
@@ -133,7 +133,7 @@ var EquipmentSlots = []int32{
 	SlotAmmo,
 }
 
-var visibleSlotsMap = map[int32]bool{
+var visibleSlotsMap = map[int8]bool{
 	SlotHead:      true,
 	SlotHands:     true,
 	SlotFeet:      true,
@@ -146,7 +146,7 @@ var visibleSlotsMap = map[int32]bool{
 	SlotSecondary: true,
 }
 
-func IsVisibleSlot(slot int32) bool {
+func IsVisibleSlot(slot int8) bool {
 	return visibleSlotsMap[slot]
 }
 
@@ -157,7 +157,7 @@ func (item *ItemWithInstance) IsContainer() bool {
 	return item.Item.Bagslots > 0
 }
 
-func (item *ItemWithInstance) AllowedInSlot(slot int32) bool {
+func (item *ItemWithInstance) AllowedInSlot(slot int8) bool {
 	if item == nil {
 		return true
 	}

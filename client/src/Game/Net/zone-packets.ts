@@ -4,8 +4,21 @@ import type GameManager from '@game/Manager/game-manager';
 import Player from '@game/Player/player';
 import { InventorySlot } from '@game/Player/player-constants';
 import { WorldSocket } from '@ui/net/instances';
-import { ChannelMessage, DeleteItem, EntityAnimation, EntityPositionUpdate, LevelUpdate, MoveItem, Spawn, Spawns } from './internal/api/capnp/common';
-import { BulkItemPacket } from './internal/api/capnp/item';
+import {
+  ChannelMessage,
+  EntityAnimation,
+  EntityPositionUpdate,
+  LevelUpdate,
+  MoveItem,
+  Spawn,
+  Spawns,
+} from './internal/api/capnp/common';
+import {
+  BulkDeleteItem,
+  BulkItemPacket,
+  DeleteItem,
+  ItemInstance,
+} from './internal/api/capnp/item';
 import { PlayerProfile } from './internal/api/capnp/player';
 import { NewZone } from './internal/api/capnp/zone';
 import { OpCodes } from './opcodes';
@@ -50,13 +63,17 @@ export class ZonePacketHandler {
 
   @opCodeHandler(OpCodes.BatchZoneSpawns, Spawns)
   loadBatchZoneSpawns(spawns: Spawns) {
-    Promise.all(spawns.spawns.map((spawn) => {
-      return this.gameManager.ZoneManager?.EntityPool?.AddSpawn(spawn);
-    })).then(() => {
-      emitter.emit('zoneSpawns');
-    }).catch((err) => {
-      console.error('Error adding spawns:', err);
-    });
+    Promise.all(
+      spawns.spawns.map((spawn) => {
+        return this.gameManager.ZoneManager?.EntityPool?.AddSpawn(spawn);
+      }),
+    )
+      .then(() => {
+        emitter.emit('zoneSpawns');
+      })
+      .catch((err) => {
+        console.error('Error adding spawns:', err);
+      });
   }
 
   @opCodeHandler(OpCodes.ZoneSpawns, Spawn)
@@ -85,7 +102,7 @@ export class ZonePacketHandler {
       color  : '#ddd',
       type   : 0,
     };
-    switch (channelMessage.chanNum) { 
+    switch (channelMessage.chanNum) {
       case -1:
         msg.message = `[Server Message] '${channelMessage.message}'`;
         msg.color = '#00AAEE';
@@ -94,7 +111,9 @@ export class ZonePacketHandler {
         if (channelMessage.sender === Player.instance?.player?.name) {
           return;
         }
-        msg.message = `${channelMessage.sender} says, '${channelMessage.message}'`;
+        msg.message = channelMessage.sender
+          ? `${channelMessage.sender} says, '${channelMessage.message}'`
+          : channelMessage.message;
         break;
       default:
         break;
@@ -107,17 +126,43 @@ export class ZonePacketHandler {
     Player.instance?.moveItem(item);
   }
 
-  @opCodeHandler(OpCodes.DeleteItem, DeleteItem)
-  processDeleteItem(deleteItem: DeleteItem) {
-    Player.instance?.playerInventory?.set(
-      deleteItem.fromSlot as InventorySlot,
-      null,
-      0,
+  @opCodeHandler(OpCodes.AddItemPacket, ItemInstance)
+  processItemPacket(item: ItemInstance) {
+    if (!Player.instance?.playerInventory) {
+      return;
+    }
+    Player.instance.playerInventory.set(
+      item.slot as InventorySlot,
+      item,
+      item.bagSlot,
     );
     emitter.emit('updateInventorySlot', {
-      slot: deleteItem.fromSlot as InventorySlot,
-      bag : 0,
+      slot: item.slot as InventorySlot,
+      bag : item.bagSlot,
     });
+    addChatLine(`You have received an item: ${item.name}`);
+  }
+
+  @opCodeHandler(OpCodes.DeleteItems, BulkDeleteItem)
+  processBulkDeleteItems(bulkDelete: BulkDeleteItem) {
+    if (!Player.instance?.playerInventory) {
+      return;
+    }
+    for (const item of bulkDelete.items ?? []) {
+      Player.instance?.playerInventory?.delete(
+        item.slot as InventorySlot,
+        item.bag as number,
+      );
+    }
+    addChatLine(`You have deleted ${bulkDelete.items.length} items.`);
+  }
+
+  @opCodeHandler(OpCodes.DeleteItem, DeleteItem)
+  processDeleteItem(deleteItem: DeleteItem) {
+    Player.instance?.playerInventory?.delete(
+      deleteItem.slot as InventorySlot,
+      deleteItem.bag as number,
+    );
   }
 
   @opCodeHandler(OpCodes.ItemPacket, BulkItemPacket)
@@ -126,11 +171,16 @@ export class ZonePacketHandler {
       return;
     }
     for (const item of bulkItem.items ?? []) {
-      Player.instance?.playerInventory?.set(item.slot as InventorySlot, item, item.bagSlot);
-      emitter.emit('updateInventorySlot', { slot: item.slot as InventorySlot, bag: item.bagSlot });
-
+      Player.instance?.playerInventory?.set(
+        item.slot as InventorySlot,
+        item,
+        item.bagSlot,
+      );
+      emitter.emit('updateInventorySlot', {
+        slot: item.slot as InventorySlot,
+        bag : item.bagSlot,
+      });
     }
-    
   }
 
   @opCodeHandler(OpCodes.LevelUpdate, LevelUpdate)
@@ -142,6 +192,8 @@ export class ZonePacketHandler {
     player.level = levelUpdate.level;
     player.exp = levelUpdate.exp;
     emitter.emit('levelUpdate', levelUpdate.level);
-    addChatLine(`You have gained a level! You are now level ${levelUpdate.level}.`);
+    addChatLine(
+      `You have gained a level! You are now level ${levelUpdate.level}.`,
+    );
   }
 }

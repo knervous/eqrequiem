@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	eq "github.com/knervous/eqgo/internal/api/capnp"
+	"github.com/knervous/eqgo/internal/constants"
 	db_character "github.com/knervous/eqgo/internal/db/character"
 	"github.com/knervous/eqgo/internal/db/items"
 
@@ -17,8 +18,11 @@ import (
 
 var (
 	commandRegistry = map[string]func(*ZoneInstance, *session.Session, []string){
-		"level":  commandLevel,
-		"gearup": commandGearup,
+		"level":      commandLevel,
+		"gearup":     commandGearup,
+		"purgeitems": purgeItems,
+		"searchitem": searchItem,
+		"summonitem": summonItem,
 	}
 	commandRegistryMutex = &sync.Mutex{}
 )
@@ -36,6 +40,112 @@ func (z *ZoneInstance) HandleCommand(session *session.Session, command string, a
 	if handler, exists := commandRegistry[command]; exists {
 		handler(z, session, args)
 	}
+}
+
+func summonItem(z *ZoneInstance, ses *session.Session, args []string) {
+	if len(args) < 1 {
+		return
+	}
+	itemIDStr := args[0]
+	if itemIDStr == "" {
+		return
+	}
+
+	itemID, err := strconv.Atoi(itemIDStr)
+	if err != nil || itemID <= 0 {
+		log.Printf("invalid item ID: %s", itemIDStr)
+		return
+	}
+
+	instance := items.CreateItemInstanceFromTemplateID(int32(itemID))
+	if instance == nil {
+		log.Printf("failed to create item instance for item ID: %d", itemID)
+		return
+	}
+	slot, bagslot, err := items.AddItemToPlayerInventoryFreeSlot(*instance, int32(ses.Client.CharData().ID))
+	if err != nil {
+		log.Printf("failed to add item to inventory: %v", err)
+		return
+	}
+	ses.Client.WithItems(func(items map[constants.InventoryKey]*constants.ItemWithInstance) {
+		items[constants.InventoryKey{Bag: int8(bagslot), Slot: int8(slot)}] = &constants.ItemWithInstance{
+			Item:     instance.Item,
+			Instance: *instance,
+			BagSlot:  int8(bagslot),
+		}
+	})
+	Message(
+		ses,
+		eq.NewRootItemInstance,
+		opcodes.AddItemPacket,
+		func(m eq.ItemInstance) error {
+			items.ConvertItemTemplateToCapnp(ses, &instance.Item, &m)
+			m.SetSlot(int32(slot))
+			m.SetBagSlot(int32(bagslot))
+			m.SetCharges(uint32(instance.Charges))
+			return nil
+		},
+	)
+}
+
+func searchItem(z *ZoneInstance, ses *session.Session, args []string) {
+	if len(args) < 1 {
+		return
+	}
+	itemName := args[0]
+	if itemName == "" {
+		return
+	}
+
+	searchItems := items.SearchItems(itemName)
+	for _, item := range searchItems {
+		_ = session.QueueMessage(
+			ses,
+			eq.NewRootChannelMessage,
+			opcodes.ChannelMessage,
+			func(m eq.ChannelMessage) error {
+				m.SetChanNum(0)
+				m.SetSender("")
+				m.SetMessage_(item.Name + ": (" + strconv.Itoa(int(item.ID)) + ")")
+				return nil
+			},
+		)
+	}
+}
+
+func purgeItems(z *ZoneInstance, ses *session.Session, args []string) {
+	charData := ses.Client.CharData()
+	err := db_character.PurgeCharacterItems(context.Background(), int32(charData.ID))
+	if err != nil {
+		log.Printf("failed to purge item for character %d: %v", charData.ID, err)
+		return
+	}
+
+	ses.Client.UpdateStats()
+	Message(
+		ses,
+		eq.NewRootBulkDeleteItem,
+		opcodes.DeleteItems,
+		func(m eq.BulkDeleteItem) error {
+			ses.Client.WithItems(func(items map[constants.InventoryKey]*constants.ItemWithInstance) {
+				charItems := ses.Client.Items()
+				list, err := m.NewItems(int32(len(charItems)))
+				if err != nil {
+					log.Printf("failed to create items list for BulkDeleteItem: %v", err)
+					return
+				}
+				itemIdx := 0
+				for key := range charItems {
+					item := list.At(itemIdx)
+					itemIdx++
+					item.SetSlot(key.Slot)
+					item.SetBag(key.Bag)
+					delete(charItems, key)
+				}
+			})
+			return nil
+		},
+	)
 }
 
 func commandGearup(z *ZoneInstance, ses *session.Session, args []string) {
@@ -69,7 +179,7 @@ func commandGearup(z *ZoneInstance, ses *session.Session, args []string) {
 				item.SetCharges(uint32(charItem.Instance.Charges))
 				item.SetQuantity(uint32(charItem.Instance.Quantity))
 				item.SetMods(string(mods))
-				item.SetSlot(slot.Slot)
+				item.SetSlot(int32(slot.Slot))
 				item.SetBagSlot(int32(slot.Bag))
 				items.ConvertItemTemplateToCapnp(ses, &charItem.Item, &item)
 			}

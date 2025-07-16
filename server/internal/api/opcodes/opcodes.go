@@ -127,6 +127,7 @@ const (
 	SwapSpell
 	CastSpell
 	DeleteItem
+	DeleteItems
 	CombatAbility
 	Taunt
 	InstillDoubt
@@ -244,6 +245,7 @@ const (
 	FinishWindow
 	FinishWindow2
 	ItemPacket
+	AddItemPacket
 	ColoredText
 	ItemRecastDelay
 	FormattedMessage

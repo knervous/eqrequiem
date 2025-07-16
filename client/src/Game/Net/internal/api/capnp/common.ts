@@ -2961,69 +2961,41 @@ export class Consume extends $.Struct {
     return "Consume_" + super.toString();
   }
 }
-export class DeleteItem extends $.Struct {
-  static readonly _capnp = {
-    displayName: "DeleteItem",
-    id: "de9db2015f39bf49",
-    size: new $.ObjectSize(16, 0)
-  };
-  get fromSlot(): number {
-    return $.utils.getInt32(0, this);
-  }
-  set fromSlot(value: number) {
-    $.utils.setInt32(0, value, this);
-  }
-  get toSlot(): number {
-    return $.utils.getInt32(4, this);
-  }
-  set toSlot(value: number) {
-    $.utils.setInt32(4, value, this);
-  }
-  get numberInStack(): number {
-    return $.utils.getInt32(8, this);
-  }
-  set numberInStack(value: number) {
-    $.utils.setInt32(8, value, this);
-  }
-  toString(): string {
-    return "DeleteItem_" + super.toString();
-  }
-}
 export class MoveItem extends $.Struct {
   static readonly _capnp = {
     displayName: "MoveItem",
     id: "8b2666611a37b434",
-    size: new $.ObjectSize(24, 0)
+    size: new $.ObjectSize(8, 0)
   };
   get fromSlot(): number {
-    return $.utils.getInt32(0, this);
+    return $.utils.getInt8(0, this);
   }
   set fromSlot(value: number) {
-    $.utils.setInt32(0, value, this);
+    $.utils.setInt8(0, value, this);
   }
   get toSlot(): number {
-    return $.utils.getInt32(4, this);
+    return $.utils.getInt8(1, this);
   }
   set toSlot(value: number) {
-    $.utils.setInt32(4, value, this);
+    $.utils.setInt8(1, value, this);
   }
   get numberInStack(): number {
-    return $.utils.getInt32(8, this);
+    return $.utils.getInt32(4, this);
   }
   set numberInStack(value: number) {
-    $.utils.setInt32(8, value, this);
+    $.utils.setInt32(4, value, this);
   }
   get fromBagSlot(): number {
-    return $.utils.getInt32(12, this);
+    return $.utils.getInt8(2, this);
   }
   set fromBagSlot(value: number) {
-    $.utils.setInt32(12, value, this);
+    $.utils.setInt8(2, value, this);
   }
   get toBagSlot(): number {
-    return $.utils.getInt32(16, this);
+    return $.utils.getInt8(3, this);
   }
   set toBagSlot(value: number) {
-    $.utils.setInt32(16, value, this);
+    $.utils.setInt8(3, value, this);
   }
   toString(): string {
     return "MoveItem_" + super.toString();

@@ -1,7 +1,7 @@
 import { capnpToPlainObject } from '@game/Constants/util';
 import emitter from '@game/Events/events';
-import { DeleteItem, type MoveItem } from '@game/Net/internal/api/capnp/common';
-import { ItemInstance } from '@game/Net/internal/api/capnp/item';
+import { type MoveItem } from '@game/Net/internal/api/capnp/common';
+import { DeleteItem, ItemInstance } from '@game/Net/internal/api/capnp/item';
 import { OpCodes } from '@game/Net/opcodes';
 import { WorldSocket } from '@ui/net/instances';
 import type Player from './player';
@@ -52,6 +52,12 @@ export class PlayerInventory {
   ): void {
     const key = this.makeKey(slot, bagSlot);
     this.inventorySlots.set(key, item);
+  }
+
+  public delete(slot: InventorySlot, bagSlot = 0): void {
+    const key = this.makeKey(slot, bagSlot);
+    this.inventorySlots.delete(key);
+    emitter.emit('updateInventorySlot', { slot, bag: bagSlot });
   }
 
   /** Load from server; uses each item’s own bagSlot property */
@@ -153,9 +159,8 @@ export class PlayerInventory {
 
   destroyCursorItem(): void {
     WorldSocket.sendMessage(OpCodes.DeleteItem, DeleteItem, {
-      fromSlot     : InventorySlot.Cursor,
-      toSlot       : InventorySlot.Cursor,
-      numberInStack: 1,
+      slot: InventorySlot.Cursor,
+      bag : 0,
     });
   }
 }

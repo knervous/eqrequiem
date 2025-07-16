@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"log"
+	"sync"
 
 	"github.com/knervous/eqgo/internal/constants"
 	db_character "github.com/knervous/eqgo/internal/db/character"
@@ -17,6 +18,7 @@ var _ entity.Client = (*Client)(nil)
 type Client struct {
 	mob            entity.Mob
 	items          map[constants.InventoryKey]*constants.ItemWithInstance
+	itemsMu        sync.RWMutex
 	packetHandlers *HandlerRegistry
 	charData       *model.CharacterData
 	ConnectionID   string
@@ -26,10 +28,17 @@ func (c *Client) Items() map[constants.InventoryKey]*constants.ItemWithInstance 
 	return c.items
 }
 
+func (c *Client) WithItems(caller func(map[constants.InventoryKey]*constants.ItemWithInstance)) {
+	c.itemsMu.RLock()
+	defer c.itemsMu.RUnlock()
+	caller(c.items)
+}
+
 func NewClient(charData *model.CharacterData) (entity.Client, error) {
 	client := &Client{
 		charData: charData,
 		items:    make(map[constants.InventoryKey]*constants.ItemWithInstance),
+		itemsMu:  sync.RWMutex{},
 	}
 	client.packetHandlers = client.NewClientRegistry()
 	client.mob.CurrentHp = int(charData.CurHp)
@@ -55,6 +64,8 @@ func NewClient(charData *model.CharacterData) (entity.Client, error) {
 		itemInstance := items.CreateItemInstanceFromTemplateID(item.ItemID)
 		itemInstance.Quantity = item.Quantity
 		itemInstance.Charges = item.Charges
+		itemInstance.ItemID = item.ItemID
+		itemInstance.ID = item.ItemInstanceID
 		json.Unmarshal([]byte(*item.Mods), &itemInstance.Mods)
 		itemWithTemplate := &constants.ItemWithInstance{
 			Item:     itemTemplate,
@@ -63,7 +74,7 @@ func NewClient(charData *model.CharacterData) (entity.Client, error) {
 		}
 		key := constants.InventoryKey{
 			Bag:  item.Bag,
-			Slot: int32(item.Slot),
+			Slot: item.Slot,
 		}
 		client.items[key] = itemWithTemplate
 	}
@@ -84,7 +95,7 @@ func (c *Client) CanEquipItem(item *constants.ItemWithInstance) bool {
 		return false
 	}
 
-	if item.Instance.Charges > 0 && item.Item.Slots&constants.SlotAmmo == 0 {
+	if item.Instance.Charges > 0 && item.Item.Slots&int32(constants.SlotAmmo) == 0 {
 		return false
 	}
 

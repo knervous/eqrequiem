@@ -1603,3 +1603,171 @@ func (f BulkItemPacket_Future) Struct() (BulkItemPacket, error) {
 	p, err := f.Future.Ptr()
 	return BulkItemPacket(p.Struct()), err
 }
+
+type BulkDeleteItem capnp.Struct
+
+// BulkDeleteItem_TypeID is the unique identifier for the type BulkDeleteItem.
+const BulkDeleteItem_TypeID = 0xab1d6befe41d5e7c
+
+func NewBulkDeleteItem(s *capnp.Segment) (BulkDeleteItem, error) {
+	st, err := capnp.NewStruct(s, capnp.ObjectSize{DataSize: 0, PointerCount: 1})
+	return BulkDeleteItem(st), err
+}
+
+func NewRootBulkDeleteItem(s *capnp.Segment) (BulkDeleteItem, error) {
+	st, err := capnp.NewRootStruct(s, capnp.ObjectSize{DataSize: 0, PointerCount: 1})
+	return BulkDeleteItem(st), err
+}
+
+func ReadRootBulkDeleteItem(msg *capnp.Message) (BulkDeleteItem, error) {
+	root, err := msg.Root()
+	return BulkDeleteItem(root.Struct()), err
+}
+
+func (s BulkDeleteItem) String() string {
+	str, _ := text.Marshal(0xab1d6befe41d5e7c, capnp.Struct(s))
+	return str
+}
+
+func (s BulkDeleteItem) EncodeAsPtr(seg *capnp.Segment) capnp.Ptr {
+	return capnp.Struct(s).EncodeAsPtr(seg)
+}
+
+func (BulkDeleteItem) DecodeFromPtr(p capnp.Ptr) BulkDeleteItem {
+	return BulkDeleteItem(capnp.Struct{}.DecodeFromPtr(p))
+}
+
+func (s BulkDeleteItem) ToPtr() capnp.Ptr {
+	return capnp.Struct(s).ToPtr()
+}
+func (s BulkDeleteItem) IsValid() bool {
+	return capnp.Struct(s).IsValid()
+}
+
+func (s BulkDeleteItem) Message() *capnp.Message {
+	return capnp.Struct(s).Message()
+}
+
+func (s BulkDeleteItem) Segment() *capnp.Segment {
+	return capnp.Struct(s).Segment()
+}
+func (s BulkDeleteItem) Items() (DeleteItem_List, error) {
+	p, err := capnp.Struct(s).Ptr(0)
+	return DeleteItem_List(p.List()), err
+}
+
+func (s BulkDeleteItem) HasItems() bool {
+	return capnp.Struct(s).HasPtr(0)
+}
+
+func (s BulkDeleteItem) SetItems(v DeleteItem_List) error {
+	return capnp.Struct(s).SetPtr(0, v.ToPtr())
+}
+
+// NewItems sets the items field to a newly
+// allocated DeleteItem_List, preferring placement in s's segment.
+func (s BulkDeleteItem) NewItems(n int32) (DeleteItem_List, error) {
+	l, err := NewDeleteItem_List(capnp.Struct(s).Segment(), n)
+	if err != nil {
+		return DeleteItem_List{}, err
+	}
+	err = capnp.Struct(s).SetPtr(0, l.ToPtr())
+	return l, err
+}
+
+// BulkDeleteItem_List is a list of BulkDeleteItem.
+type BulkDeleteItem_List = capnp.StructList[BulkDeleteItem]
+
+// NewBulkDeleteItem creates a new list of BulkDeleteItem.
+func NewBulkDeleteItem_List(s *capnp.Segment, sz int32) (BulkDeleteItem_List, error) {
+	l, err := capnp.NewCompositeList(s, capnp.ObjectSize{DataSize: 0, PointerCount: 1}, sz)
+	return capnp.StructList[BulkDeleteItem](l), err
+}
+
+// BulkDeleteItem_Future is a wrapper for a BulkDeleteItem promised by a client call.
+type BulkDeleteItem_Future struct{ *capnp.Future }
+
+func (f BulkDeleteItem_Future) Struct() (BulkDeleteItem, error) {
+	p, err := f.Future.Ptr()
+	return BulkDeleteItem(p.Struct()), err
+}
+
+type DeleteItem capnp.Struct
+
+// DeleteItem_TypeID is the unique identifier for the type DeleteItem.
+const DeleteItem_TypeID = 0xea44e8bfb6132911
+
+func NewDeleteItem(s *capnp.Segment) (DeleteItem, error) {
+	st, err := capnp.NewStruct(s, capnp.ObjectSize{DataSize: 8, PointerCount: 0})
+	return DeleteItem(st), err
+}
+
+func NewRootDeleteItem(s *capnp.Segment) (DeleteItem, error) {
+	st, err := capnp.NewRootStruct(s, capnp.ObjectSize{DataSize: 8, PointerCount: 0})
+	return DeleteItem(st), err
+}
+
+func ReadRootDeleteItem(msg *capnp.Message) (DeleteItem, error) {
+	root, err := msg.Root()
+	return DeleteItem(root.Struct()), err
+}
+
+func (s DeleteItem) String() string {
+	str, _ := text.Marshal(0xea44e8bfb6132911, capnp.Struct(s))
+	return str
+}
+
+func (s DeleteItem) EncodeAsPtr(seg *capnp.Segment) capnp.Ptr {
+	return capnp.Struct(s).EncodeAsPtr(seg)
+}
+
+func (DeleteItem) DecodeFromPtr(p capnp.Ptr) DeleteItem {
+	return DeleteItem(capnp.Struct{}.DecodeFromPtr(p))
+}
+
+func (s DeleteItem) ToPtr() capnp.Ptr {
+	return capnp.Struct(s).ToPtr()
+}
+func (s DeleteItem) IsValid() bool {
+	return capnp.Struct(s).IsValid()
+}
+
+func (s DeleteItem) Message() *capnp.Message {
+	return capnp.Struct(s).Message()
+}
+
+func (s DeleteItem) Segment() *capnp.Segment {
+	return capnp.Struct(s).Segment()
+}
+func (s DeleteItem) Slot() int8 {
+	return int8(capnp.Struct(s).Uint8(0))
+}
+
+func (s DeleteItem) SetSlot(v int8) {
+	capnp.Struct(s).SetUint8(0, uint8(v))
+}
+
+func (s DeleteItem) Bag() int8 {
+	return int8(capnp.Struct(s).Uint8(1))
+}
+
+func (s DeleteItem) SetBag(v int8) {
+	capnp.Struct(s).SetUint8(1, uint8(v))
+}
+
+// DeleteItem_List is a list of DeleteItem.
+type DeleteItem_List = capnp.StructList[DeleteItem]
+
+// NewDeleteItem creates a new list of DeleteItem.
+func NewDeleteItem_List(s *capnp.Segment, sz int32) (DeleteItem_List, error) {
+	l, err := capnp.NewCompositeList(s, capnp.ObjectSize{DataSize: 8, PointerCount: 0}, sz)
+	return capnp.StructList[DeleteItem](l), err
+}
+
+// DeleteItem_Future is a wrapper for a DeleteItem promised by a client call.
+type DeleteItem_Future struct{ *capnp.Future }
+
+func (f DeleteItem_Future) Struct() (DeleteItem, error) {
+	p, err := f.Future.Ptr()
+	return DeleteItem(p.Struct()), err
+}

@@ -12,7 +12,7 @@ type AtlasEntry = {
 };
 
 type Props = {
-  onClick?: () => void;
+  onClick?: React.MouseEventHandler<HTMLDivElement>;
   children?: React.ReactNode;
   className?: string;
   icon?: React.ReactNode;
@@ -66,11 +66,11 @@ export const UiButtonComponent: React.FC<Props> = (props: Props) => {
   );
   const selectedEntry = useMemo(() => stateEntry.entry ? stateEntry : normal, [stateEntry, normal]);
 
-  const doClick = useCallback(() => {
+  const doClick = useCallback((e: React.MouseEvent) => {
     if (props.isDisabled || !props.onClick) {
       return;
     }
-    props.onClick();
+    props.onClick(e);
   }, [props]);
 
   return !selectedEntry.entry ? null : (
@@ -94,6 +94,11 @@ export const UiButtonComponent: React.FC<Props> = (props: Props) => {
       tabIndex={0}
       onBlur={props.onBlur}
       onClick={doClick}
+      onContextMenu={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        doClick?.(e);
+      }}
       onFocus={props.onFocus}
       onMouseDown={() => !props.isDisabled && setIsPressed(true)}
       onMouseEnter={() => !props.isDisabled && setIsHovered(true)}

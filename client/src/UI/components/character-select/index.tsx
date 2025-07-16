@@ -171,7 +171,7 @@ export const CharacterSelectUIComponent: React.FC = () => {
     return 8 - (charInfo?.characterCount ?? 0);
   }, [charInfo?.characterCount]);
 
-  useEffect(() => {
+  const debouncedLoad = useDebouncedCallback(() => {
     if (view === VIEWS.CHAR_CREATE) {
       return;
     }
@@ -186,7 +186,9 @@ export const CharacterSelectUIComponent: React.FC = () => {
         face     : 1,
       } as CharacterSelectEntry);
     GameManager.instance.CharacterSelect?.loadModel(char);
-  }, [selectedChar, view]);
+  }, 250);
+
+  useEffect(debouncedLoad, [selectedChar, view, debouncedLoad]);
 
   return !gotCharInfo.current ? null : (
     <Box className="char-select">

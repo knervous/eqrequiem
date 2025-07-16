@@ -12,6 +12,7 @@ type Client interface {
 	Race() uint8
 	Position() MobPosition
 	Items() map[constants.InventoryKey]*constants.ItemWithInstance
+	WithItems(caller func(map[constants.InventoryKey]*constants.ItemWithInstance))
 	SetPosition(MobPosition)
 	SetVelocity(Velocity)
 	CanEquipItem(item *constants.ItemWithInstance) bool

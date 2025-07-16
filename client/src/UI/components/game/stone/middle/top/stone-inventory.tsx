@@ -12,7 +12,6 @@ import { UiButtonComponent } from '@ui/common/ui-button';
 import { UiImageComponent } from '@ui/common/ui-image';
 import { ItemButton } from '@ui/components/game/action-button/item-button';
 import { useSakImages } from '@ui/hooks/use-image';
-import { WorldSocket } from '@ui/net/instances';
 import { StoneGeneralInv } from '../../left/stone-general-inv';
 
 const stoneConfigs = [

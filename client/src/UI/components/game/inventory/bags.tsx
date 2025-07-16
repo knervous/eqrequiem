@@ -73,7 +73,7 @@ export const Bag: React.FC<{
       marginTop={-2}
       name={name}
     />
-    <Grid container columns={16} sx={{ height: '100%' }}>
+    <Grid container columns={16}>
       {Array.from({ length: slots }).map((_, idx) => {
         return (
           <Grid key={`${idx}`} size={8} sx={{ height: 'calc(100% / 4)' }}>

@@ -96,7 +96,7 @@ func (z *ZoneInstance) QE() *quest.QuestEvent {
 
 func (z *ZoneInstance) BroadcastWearChange(
 	sender int,
-	slot int32,
+	slot int8,
 	item *constants.ItemWithInstance,
 ) {
 	z.mutex.RLock()
@@ -113,7 +113,7 @@ func (z *ZoneInstance) BroadcastWearChange(
 				m.SetColor(int32(item.Item.Color))
 				m.SetMaterial(item.Item.Material)
 				m.SetSpawnId(int32(sender))
-				m.SetWearSlotId(slot)
+				m.SetWearSlotId(int32(slot))
 				return nil
 			},
 		)

@@ -66,7 +66,15 @@ export class GMCommandHandler extends BaseCommandHandler {
       command: 'summonitem',
       args   : [itemId],
     });
-  } 
+  }
+
+  @command('purgeitems')
+  commandPurgeItems() {
+    WorldSocket.sendMessage(OpCodes.GMCommand, CommandMessage, {
+      command: 'purgeitems',
+      args   : [],
+    });
+  }
 
   @command('gearup')
   commandGearUp() {

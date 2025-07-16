@@ -102,6 +102,7 @@ func GetCharacterItems(ctx context.Context, id int) ([]constants.ItemWithSlot, e
 	var charItems []constants.ItemWithSlot
 	stmt := table.ItemInstances.
 		SELECT(
+			table.ItemInstances.ID.AS("ItemInstanceID"),
 			table.ItemInstances.AllColumns,
 			table.CharacterInventory.AllColumns,
 		).
@@ -211,7 +212,35 @@ func PurgeCharacterEquipment(ctx context.Context, charID int32) error {
 	return nil
 }
 
-func PurgeCharacterItem(ctx context.Context, charID, slot int32) error {
+func PurgeCharacterItems(ctx context.Context, charID int32) error {
+	// 1) delete all item_instances that are not equipped
+	if _, err := table.ItemInstances.
+		DELETE().
+		WHERE(
+			table.ItemInstances.OwnerID.EQ(mysql.Int32(charID)).
+				AND(table.ItemInstances.OwnerType.EQ(mysql.Int8(int8(constants.OwnerTypeCharacter)))).
+				AND(table.ItemInstances.ID.NOT_IN(
+					table.CharacterInventory.SELECT(table.CharacterInventory.ItemInstanceID).
+						FROM(table.CharacterInventory).
+						WHERE(table.CharacterInventory.CharacterID.EQ(mysql.Int32(charID))),
+				)),
+		).
+		ExecContext(ctx, db.GlobalWorldDB.DB); err != nil {
+		return fmt.Errorf("delete non-equipped instances for char %d: %w", charID, err)
+	}
+
+	// 2) delete all character_inventory rows for this character
+	if _, err := table.CharacterInventory.
+		DELETE().
+		WHERE(table.CharacterInventory.CharacterID.EQ(mysql.Int32(charID))).
+		ExecContext(ctx, db.GlobalWorldDB.DB); err != nil {
+		return fmt.Errorf("delete character_inventory for char %d: %w", charID, err)
+	}
+
+	return nil
+}
+
+func PurgeCharacterItem(ctx context.Context, charID int32, slot int8) error {
 
 	// 1) delete only those item_instances that are in equipment slots for this character
 	subQ := table.CharacterInventory.
@@ -219,7 +248,7 @@ func PurgeCharacterItem(ctx context.Context, charID, slot int32) error {
 		FROM(table.CharacterInventory).
 		WHERE(
 			table.CharacterInventory.CharacterID.EQ(mysql.Int32(charID)).
-				AND(table.CharacterInventory.Slot.EQ(mysql.Int32(slot))),
+				AND(table.CharacterInventory.Slot.EQ(mysql.Int8(slot))),
 		)
 
 	if _, err := table.ItemInstances.
@@ -233,7 +262,7 @@ func PurgeCharacterItem(ctx context.Context, charID, slot int32) error {
 		DELETE().
 		WHERE(
 			table.CharacterInventory.CharacterID.EQ(mysql.Int32(charID)).
-				AND(table.CharacterInventory.Slot.EQ(mysql.Int32(slot))),
+				AND(table.CharacterInventory.Slot.EQ(mysql.Int8(slot))),
 		).
 		ExecContext(ctx, db.GlobalWorldDB.DB); err != nil {
 		return fmt.Errorf("delete character_inventory for char %d: %w", charID, err)
@@ -255,7 +284,7 @@ func GearUp(c entity.Client) error {
 		Query(db.GlobalWorldDB.DB, &raw); err != nil {
 		return err
 	}
-	slotsFilled := map[int32]bool{
+	slotsFilled := map[int8]bool{
 		constants.SlotHead:      false,
 		constants.SlotHands:     false,
 		constants.SlotFeet:      false,
@@ -284,7 +313,7 @@ func GearUp(c entity.Client) error {
 		if e.Slot == nil || e.ItemID == nil {
 			continue
 		}
-		slot := int32(*e.Slot)
+		slot := *e.Slot
 		if slot < 0 || slot > 23 {
 			continue
 		}

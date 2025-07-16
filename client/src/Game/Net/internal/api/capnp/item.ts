@@ -1078,4 +1078,56 @@ export class BulkItemPacket extends $.Struct {
     return "BulkItemPacket_" + super.toString();
   }
 }
+export class BulkDeleteItem extends $.Struct {
+  static readonly _capnp = {
+    displayName: "BulkDeleteItem",
+    id: "ab1d6befe41d5e7c",
+    size: new $.ObjectSize(0, 1)
+  };
+  static _Items: $.ListCtor<DeleteItem>;
+  _adoptItems(value: $.Orphan<$.List<DeleteItem>>): void {
+    $.utils.adopt(value, $.utils.getPointer(0, this));
+  }
+  _disownItems(): $.Orphan<$.List<DeleteItem>> {
+    return $.utils.disown(this.items);
+  }
+  get items(): $.List<DeleteItem> {
+    return $.utils.getList(0, BulkDeleteItem._Items, this);
+  }
+  _hasItems(): boolean {
+    return !$.utils.isNull($.utils.getPointer(0, this));
+  }
+  _initItems(length: number): $.List<DeleteItem> {
+    return $.utils.initList(0, BulkDeleteItem._Items, length, this);
+  }
+  set items(value: $.List<DeleteItem>) {
+    $.utils.copyFrom(value, $.utils.getPointer(0, this));
+  }
+  toString(): string {
+    return "BulkDeleteItem_" + super.toString();
+  }
+}
+export class DeleteItem extends $.Struct {
+  static readonly _capnp = {
+    displayName: "DeleteItem",
+    id: "ea44e8bfb6132911",
+    size: new $.ObjectSize(8, 0)
+  };
+  get slot(): number {
+    return $.utils.getInt8(0, this);
+  }
+  set slot(value: number) {
+    $.utils.setInt8(0, value, this);
+  }
+  get bag(): number {
+    return $.utils.getInt8(1, this);
+  }
+  set bag(value: number) {
+    $.utils.setInt8(1, value, this);
+  }
+  toString(): string {
+    return "DeleteItem_" + super.toString();
+  }
+}
 BulkItemPacket._Items = $.CompositeList(ItemInstance);
+BulkDeleteItem._Items = $.CompositeList(DeleteItem);

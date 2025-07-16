@@ -1,16 +1,22 @@
-import { memo } from 'react';
+import React, { memo } from 'react';
 import {
-  Divider,
-  MenuItem,
-  Select,
   Stack,
-  TextField,
   Typography,
 } from '@mui/material';
 import { UiButtonComponent } from '@ui/common/ui-button';
 
 // ↑ at top of file, outside of CharacterCreate
-export const StatRow = memo(function StatRow({
+export const StatRow : React.FC<{
+  label: string;
+  stat: string;
+  value: number;
+  isPreferred: boolean;
+  baseValue: number;
+  isDisabled?: boolean;
+  onDecrement: (stat: string) => void;
+  onIncrement: (stat: string) => void;
+  statPoints?: number;
+}> = memo(function StatRow({
   label,
   stat,
   value,
@@ -19,6 +25,7 @@ export const StatRow = memo(function StatRow({
   isDisabled,
   onDecrement,
   onIncrement,
+  statPoints = 1,
 }) {
   return (
     <Stack direction={'row'} sx={{ marginTop: '0px' }}>
@@ -60,7 +67,17 @@ export const StatRow = memo(function StatRow({
           buttonName="A_PlusBtn"
           isDisabled={isDisabled}
           scale={1.5}
-          onClick={() => onIncrement(stat)}
+          onClick={(e) => {
+            console.log('Incrementing stat:', e.button);
+            if (e.button === 2) {
+              for (let i = 0; i < statPoints ?? 1; i++) {
+                onIncrement(stat);
+              }
+            } else {
+              onIncrement(stat);
+
+            }
+          }}
         />
       </Stack>
     </Stack>

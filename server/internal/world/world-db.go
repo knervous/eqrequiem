@@ -658,7 +658,7 @@ func SaveCharacterCreate(ctx context.Context, accountID int64, pp *eq.PlayerProf
 		return false
 	}
 	for _, item := range startingItems {
-		_, err = items.AddItemToPlayerInventoryFreeSlot(item, int32(charID))
+		_, _, err = items.AddItemToPlayerInventoryFreeSlot(item, int32(charID))
 		if err != nil {
 			log.Printf("Failed to add item to inventory for %s: %v", name, err)
 			return false

@@ -183,3 +183,12 @@ struct ItemInstance {
 struct BulkItemPacket {
   items @0 :List(ItemInstance);
 }
+
+struct BulkDeleteItem {
+  items @0 :List(DeleteItem);
+}
+
+struct DeleteItem {
+  slot @0 :Int8;
+  bag @1 :Int8;
+}

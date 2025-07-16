@@ -31,5 +31,5 @@ type ZoneAccess interface {
 	// Messaging
 	BroadcastChannel(sender string, channelID int, msg string)
 	BroadcastServer(msg string)
-	BroadcastWearChange(sender int, slot int32, item *constants.ItemWithInstance)
+	BroadcastWearChange(sender int, slot int8, item *constants.ItemWithInstance)
 }

@@ -262,7 +262,7 @@ func HandleRequestClientZoneChange(z *ZoneInstance, ses *session.Session, payloa
 		item.SetCharges(uint32(charItem.Instance.Charges))
 		item.SetQuantity(uint32(charItem.Instance.Quantity))
 		item.SetMods(string(mods))
-		item.SetSlot(slot.Slot)
+		item.SetSlot(int32(slot.Slot))
 		item.SetBagSlot(int32(slot.Bag))
 		items.ConvertItemTemplateToCapnp(ses, &charItem.Item, &item)
 	}
