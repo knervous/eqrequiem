@@ -68,7 +68,9 @@ export const Classes = {
     NEC: 11,
     WIZ: 12,
     MAG: 13,
-    ENC: 14
+    ENC: 14,
+    BST: 15,
+    BER: 16
 }
 
 

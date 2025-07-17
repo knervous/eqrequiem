@@ -1,6 +1,9 @@
 // src/components/CommandLink.tsx
 import React, { useMemo } from 'react';
-import { Typography } from '@mui/material';
+import { capnpToPlainObject } from '@game/Constants/util';
+import { ItemInstance } from '@game/Net/internal/api/capnp/item';
+import { Box, Typography } from '@mui/material';
+import * as $ from 'capnp-es';
 import { ItemTooltip } from '../../action-button/item-tooltip';
 
 export interface JsonCommandLink {
@@ -30,7 +33,7 @@ export const CommandLink: React.FC<{
         display    : 'inline-block',
         ['&:hover']: { textDecoration: 'underline', color: '#1e81c3' },
       }}
-      title={`${linkTypeLabels[payload.linkType]}: ${payload.label}`}
+      // title={`${linkTypeLabels[payload.linkType]}: ${payload.label}`}
       onClick={() => onExecute(payload)}
     >
       {payload.label}
@@ -56,18 +59,30 @@ export const ParsedMessage: React.FC<{
           const payload = JSON.parse(
             `${Buffer.from(match[1], 'base64').toString('utf-8')}`,
           ) as JsonCommandLink;
-          return payload.linkType === LinkTypes.ItemLink ? (
-            <ItemTooltip key={i} item={payload.data}>
-              <CommandLink
-                key={i}
-                payload={payload}
-                onExecute={onExecute}
-              />
-            </ItemTooltip>
-          ) : (
-            <CommandLink key={i} payload={payload} onExecute={onExecute} />
-          );
+          console.log('Parsed payload:', payload);
+          if (payload.linkType === LinkTypes.ItemLink) {
+            const bytes = Buffer.from(payload.data, 'base64');
+            const reader = new $.Message(bytes, false);
+            const root = reader.getRoot(ItemInstance);
+            const item = capnpToPlainObject(root);
+            console.log('Item', item);
+            return (
+              <ItemTooltip key={i} item={item}>
+                <Box sx={{ display: 'inline-block' }}>
+                  <CommandLink
+                    key={i}
+                    payload={payload}
+                    onExecute={onExecute}
+                  />
+                </Box>
+     
+              </ItemTooltip>
+            );
+          }
+          return <CommandLink key={i} payload={payload} onExecute={onExecute} />;
+      
         } catch (e) {
+          console.log('Error parsing command link:', e);
           return <React.Fragment key={i}>{part}</React.Fragment>;
         }
       }),

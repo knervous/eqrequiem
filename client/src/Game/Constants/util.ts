@@ -116,20 +116,100 @@ const {
   NeriakThirdGate,
 } = StartingZones;
 
+// playerClassBitmasks maps uint8 to its bitmask
+const playerClassBitmasks = {
+  [Classes.WAR]: 1,
+  [Classes.CLR]: 2,
+  [Classes.PAL]: 4,
+  [Classes.RNG]: 8,
+  [Classes.SHD]: 16,
+  [Classes.DRU]: 32,
+  [Classes.MNK]: 64,
+  [Classes.BRD]: 128,
+  [Classes.ROG]: 256,
+  [Classes.SHM]: 512,
+  [Classes.NEC]: 1024,
+  [Classes.WIZ]: 2048,
+  [Classes.MAG]: 4096,
+  [Classes.ENC]: 8192,
+  [Classes.BST]: 16384,
+  [Classes.BER]: 32768,
+};
+
+
+const PlayerRaceUnknownBit = 0;
+const PlayerRaceHumanBit = 1;
+const PlayerRaceBarbarianBit = 2;
+const PlayerRaceEruditeBit = 4;
+const PlayerRaceWoodElfBit = 8;
+const PlayerRaceHighElfBit = 16;
+const PlayerRaceDarkElfBit = 32;
+const PlayerRaceHalfElfBit = 64;
+const PlayerRaceDwarfBit = 128;
+const PlayerRaceTrollBit = 256;
+const PlayerRaceOgreBit = 512;
+const PlayerRaceHalflingBit = 1024;
+const PlayerRaceGnomeBit = 2048;
+const PlayerRaceIksarBit = 4096;
+const PlayerRaceVahshirBit = 8192;
+const PlayerRaceFroglokBit = 16384;
+const PlayerRaceDrakkinBit = 32768;
+const PlayerRaceAllMask = 65535;
+
+
+
+// GetPlayerRaceBit returns the bitmask for a given RaceID.
+const getPlayerRaceBit = (race: number): number => {
+  switch (race) {
+    case Races.HUMAN:
+      return PlayerRaceHumanBit;
+    case Races.BARBARIAN:
+      return PlayerRaceBarbarianBit;
+    case Races.ERUDITE:
+      return PlayerRaceEruditeBit;
+    case Races.WOODELF:
+      return PlayerRaceWoodElfBit;
+    case Races.HIGHELF:
+      return PlayerRaceHighElfBit;
+    case Races.DARKELF:
+      return PlayerRaceDarkElfBit;
+    case Races.HALFELF:
+      return PlayerRaceHalfElfBit;
+    case Races.DWARF:
+      return PlayerRaceDwarfBit;
+    case Races.TROLL:
+      return PlayerRaceTrollBit;
+    case Races.OGRE:
+      return PlayerRaceOgreBit;
+    case Races.HALFLING:
+      return PlayerRaceHalflingBit;
+    case Races.GNOME:
+      return PlayerRaceGnomeBit;
+    // case Races.IKSAR:
+    //   return PlayerRaceIksarBit;
+    // case Races.VAHSHIR:
+    //   return PlayerRaceVahshirBit;
+    // case Races.FROGLOK:
+    //   return PlayerRaceFroglokBit;
+    default:
+      return PlayerRaceUnknownBit;
+  }
+};
+
 export const getRaceStringListFromRaceBitmask = (raceBitmask: number): string => {
   return raceBitmask === 65535 ? 'ALL' : Object.entries(AbbreviatedRaces)
-    .filter(([_, raceId]) => (raceBitmask & raceId) !== 0)
+    .filter(([_, raceId]) => (raceBitmask & getPlayerRaceBit(raceId)) !== 0)
     .map(([raceName]) => raceName).join(' ');
 };
 
 export const getClassStringListFromClassBitmask = (classBitmask: number): string => {
   return classBitmask === 65535 ? 'ALL' : Object.entries(Classes)
-    .filter(([_, classId]) => (classBitmask & classId) !== 0)
+    .filter(([_, classId]) => (classBitmask & (playerClassBitmasks[classId])) !== 0)
     .map(([className]) => className).join(' ');
 };
 
 export const getClassListFromClassBitmask = (classBitmask: number): number[] => {
-  return Object.values(Classes).filter((classId) => (classBitmask & classId) !== 0);
+  return Object.values(Classes).filter((classId) => (classBitmask & (playerClassBitmasks[classId])) !== 0);
 };
 
 export const startingCityMap = {

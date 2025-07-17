@@ -1,11 +1,15 @@
 package zone
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"strconv"
 	"sync"
+
+	capnp "capnproto.org/go/capnp/v3"
 
 	eq "github.com/knervous/eqgo/internal/api/capnp"
 	"github.com/knervous/eqgo/internal/constants"
@@ -99,6 +103,7 @@ func searchItem(z *ZoneInstance, ses *session.Session, args []string) {
 	}
 
 	searchItems := items.SearchItems(itemName)
+
 	for _, item := range searchItems {
 		_ = session.QueueMessage(
 			ses,
@@ -106,9 +111,21 @@ func searchItem(z *ZoneInstance, ses *session.Session, args []string) {
 			opcodes.ChannelMessage,
 			func(m eq.ChannelMessage) error {
 				itemInstance := items.CreateItemInstanceFromTemplateID(int32(item.ID))
+				msg, seg := capnp.NewMultiSegmentMessage(nil)
+
+				capnItem, err := eq.NewRootItemInstance(seg)
+				if err != nil {
+					return fmt.Errorf("NewRootItemInstance: %w", err)
+				}
+
+				items.ConvertItemTemplateToCapnp(ses, &itemInstance.Item, &capnItem)
+				var buf bytes.Buffer
+				if err := capnp.NewEncoder(&buf).Encode(msg); err != nil {
+					return fmt.Errorf("capnp encode: %w", err)
+				}
 				m.SetChanNum(0)
 				m.SetSender("")
-				m.SetMessage_(item.Name + ": (" + z.createJsonCommandLink(CommandTypeSummon, "Summon "+strconv.Itoa(int(item.ID)), item.ID) + ")" + " - (" + z.createJsonCommandLink(CommandTypeLink, "Item Link", itemInstance) + ")")
+				m.SetMessage_(item.Name + ": (" + z.createJsonCommandLink(CommandTypeSummon, "Summon "+strconv.Itoa(int(item.ID)), item.ID) + ")" + " - (" + z.createJsonCommandLink(CommandTypeLink, "Item Link", buf.Bytes()) + ")")
 				return nil
 			},
 		)
