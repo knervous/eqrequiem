@@ -1,4 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useReducer, useRef } from 'react';
+import { useEvent } from '@game/Events/event-hooks';
+import emitter from '@game/Events/events';
 import { SxProps } from '@mui/material';
 import Box from '@mui/material/Box';
 import { UiState, initialUiState } from '../state/initial-state';
@@ -12,9 +14,6 @@ import { stateKey } from './overlay-types';
 import { Theme } from './theme';
 import { fsBindings } from '@/Core/bindings';
 import './overlay.css';
-import { ZonePacketHandler } from '@game/Net/zone-packets';
-import emitter from '@game/Events/events';
-import { useEvent } from '@game/Events/event-hooks';
 
 
 let storedState: UiState | string | null = localStorage.getItem(stateKey);
@@ -48,9 +47,10 @@ export const Overlay: React.FC<Props> = (props: Props) => {
 
   useEffect(() => {
     if (mode === 'game') {
-      emitter.emit('chatMessage', { chanNum: 0, type: 0, message: 'Welcome to EQ Requiem!', color: '#ddd' });
-      emitter.emit('chatMessage', { chanNum: 0, type: 0, message: 'This is currently a demo sandbox with development features.', color: '#ddd' });
-      emitter.emit('chatMessage', { chanNum: 0, type: 0, message: 'Type /help to get started.', color: '#ddd' });
+      emitter.emit('chatMessage', { chanNum: 0, type: 0, message: 'Welcome to EQ Requiem!' });
+      emitter.emit('chatMessage', { chanNum: 0, type: 0, message: 'This is currently a demo sandbox with development features.' });
+      emitter.emit('chatMessage', { chanNum: 0, type: 0, message: 'Type /help to get started with basic commands.' });
+      emitter.emit('chatMessage', { chanNum: 0, type: 0, message: 'And #help to list GM commands.' });
     }
 
   }, [mode]);

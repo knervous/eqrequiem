@@ -111,6 +111,7 @@ export class ZonePacketHandler {
         if (channelMessage.sender === Player.instance?.player?.name) {
           return;
         }
+        msg.color = '#111';
         msg.message = channelMessage.sender
           ? `${channelMessage.sender} says, '${channelMessage.message}'`
           : channelMessage.message;

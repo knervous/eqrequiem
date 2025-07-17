@@ -1,9 +1,11 @@
 // src/components/ChatWindowComponent.tsx
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { CommandParser } from '@game/ChatCommands/command-parser';
 import emitter, { ChatMessage } from '@game/Events/events';
 import { Box, Stack, TextField } from '@mui/material';
 import { useSakImage, useSakImages } from '@ui/hooks/use-image';
 import { useChatInput } from '../../../../hooks/use-chat-input';
+import { JsonCommandLink, ParsedMessage } from './command-link';
 
 // Configuration for all stone frame pieces
 const stoneConfigs = [
@@ -79,6 +81,19 @@ export const StoneMiddleBottom: React.FC<{
   const middleHeight = height - (topHeight * 2);
   const chatBg = useSakImage('A_ChatBackground', true);
 
+  const onExecuteCommand = useCallback((payload: JsonCommandLink) => {
+    switch (payload.linkType) {
+      case 0: // Item Link
+        
+        break;
+      case 1: // Summon Item
+        CommandParser.parseCommand(`#si ${payload.data}`);
+        break;
+      default:
+        console.warn(`Unknown link type: ${payload.linkType}`);
+    }
+  }, []);
+
   useEffect(() => {
     const addMessage = (message: ChatMessage) => {
       setMessages((prevMessages) => [...prevMessages, message]);
@@ -87,7 +102,7 @@ export const StoneMiddleBottom: React.FC<{
     return () => {
       emitter.off('chatMessage', addMessage);
     };
-  }, []);
+  }, [onExecuteCommand]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -150,7 +165,7 @@ export const StoneMiddleBottom: React.FC<{
 
       },
       messages: {
-        userSelect                  : 'none' as const,
+        // userSelect                  : 'none' as const,
         flexGrow                    : 1,
         overflowY                   : 'auto' as const,
         p                           : 1,
@@ -173,7 +188,6 @@ export const StoneMiddleBottom: React.FC<{
       inputProps: {
         className: 'cursor-caret',
         style    : {
-          // border: "1px solid gray",
           color          : '#dedede',
           backgroundColor: 'rgba(0, 0, 0, 0.5)',
           fontSize       : '14px',
@@ -232,10 +246,13 @@ export const StoneMiddleBottom: React.FC<{
                   wordBreak : 'break-word',
                   fontSize  : '16px',
                   fontFamily: 'Arial, sans-serif',
-                  color     : '#222', // chatMessage.color ?? "black",
+                  color     : chatMessage.color || '#111',
                 }}
               >
-                {chatMessage.message}
+                <ParsedMessage
+                  text={chatMessage.message as string}
+                  onExecute={onExecuteCommand}
+                />
               </Box>
             ))}
             <div ref={messagesEndRef} />

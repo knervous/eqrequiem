@@ -4,7 +4,7 @@ import { Box } from '@mui/material';
 import { Allotment, AllotmentHandle } from 'allotment';
 import { BagsContainer } from '../inventory/bags-container';
 import { StoneLeft } from './left/stone-left';
-import { StoneMiddleBottom } from './middle/stone-middle-bottom';
+import { StoneMiddleBottom } from './middle/stone-chat';
 import { StoneMiddleTop } from './middle/top/stone-middle-top';
 import { StoneRight } from './right/stone-right';
 import 'allotment/dist/style.css';

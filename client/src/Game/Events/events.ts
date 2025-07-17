@@ -10,7 +10,7 @@ export type ChatMessage = {
   type: number;
   message: string;
   chanNum: number;
-  color: string;
+  color?: string;
 };
 
 export type Events = {

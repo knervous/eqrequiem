@@ -105,9 +105,10 @@ func searchItem(z *ZoneInstance, ses *session.Session, args []string) {
 			eq.NewRootChannelMessage,
 			opcodes.ChannelMessage,
 			func(m eq.ChannelMessage) error {
+				itemInstance := items.CreateItemInstanceFromTemplateID(int32(item.ID))
 				m.SetChanNum(0)
 				m.SetSender("")
-				m.SetMessage_(item.Name + ": (" + strconv.Itoa(int(item.ID)) + ")")
+				m.SetMessage_(item.Name + ": (" + z.createJsonCommandLink(CommandTypeSummon, "Summon "+strconv.Itoa(int(item.ID)), item.ID) + ")" + " - (" + z.createJsonCommandLink(CommandTypeLink, "Item Link", itemInstance) + ")")
 				return nil
 			},
 		)

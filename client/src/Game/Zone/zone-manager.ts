@@ -133,13 +133,11 @@ export class ZoneManager {
     const msg: ChatMessage = {
       message: `You have entered ${longName}`,
       chanNum: 0,
-      color  : '#ddd',
       type   : 0,
     };
     setTimeout(() => {
       emitter.emit('chatMessage', msg);
     }, 500);
-    console.log(`You have entered ${longName}`);
     this.zoneName = zoneName;
 
 
