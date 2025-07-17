@@ -1,6 +1,7 @@
 // src/components/CommandLink.tsx
 import React, { useMemo } from 'react';
 import { Typography } from '@mui/material';
+import { ItemTooltip } from '../../action-button/item-tooltip';
 
 export interface JsonCommandLink {
   linkType: number;
@@ -8,9 +9,14 @@ export interface JsonCommandLink {
   data: any;
 }
 
+export const LinkTypes = {
+  ItemLink  : 0,
+  SummonItem: 1,
+} as const;
+
 const linkTypeLabels: Record<number, string> = {
-  0: 'Item Link',
-  1: 'Summon Item',
+  [LinkTypes.ItemLink]  : 'Item Link',
+  [LinkTypes.SummonItem]: 'Summon Item',
 };
 
 export const CommandLink: React.FC<{
@@ -50,7 +56,15 @@ export const ParsedMessage: React.FC<{
           const payload = JSON.parse(
             `${Buffer.from(match[1], 'base64').toString('utf-8')}`,
           ) as JsonCommandLink;
-          return (
+          return payload.linkType === LinkTypes.ItemLink ? (
+            <ItemTooltip key={i} item={payload.data}>
+              <CommandLink
+                key={i}
+                payload={payload}
+                onExecute={onExecute}
+              />
+            </ItemTooltip>
+          ) : (
             <CommandLink key={i} payload={payload} onExecute={onExecute} />
           );
         } catch (e) {

@@ -1,8 +1,4 @@
-import React, {
-  useCallback,
-  useMemo,
-  useRef,
-} from 'react';
+import React, { useCallback, useMemo, useRef } from 'react';
 import { useInventorySlot } from '@game/Events/event-hooks';
 import { MoveItem } from '@game/Net/internal/api/capnp/common';
 import { OpCodes } from '@game/Net/opcodes';
@@ -13,6 +9,7 @@ import { useItemImage, useSakImage } from '@ui/hooks/use-image';
 import { WorldSocket } from '@ui/net/instances';
 import { FullItemEntryData } from './constants';
 import { useItemDragClone } from './hooks';
+import { ItemTooltip } from './item-tooltip';
 
 interface ItemButtonProps {
   scale: number;
@@ -170,45 +167,46 @@ export const ItemButton: React.FC<ItemButtonProps> = (props) => {
           width          : props.width ?? '100%',
           height         : props.height ?? '100%',
         }}
-        title={item?.name}
         onClick={onClick}
         onContextMenu={onRightClick}
         onMouseDown={onMouseDown}
         onMouseUp={onMouseUp}
       >
         {item ? (
-          <Box
-            className="item-button"
-            sx={{
-              backgroundImage: `url(${itemEntry})`,
-              backgroundSize : 'cover',
-              width          : 'calc(80%)',
-              height         : 'calc(80%)',
-              position       : 'relative',
-              left           : '10%',
-              top            : '10%',
-            }}
-          >
-            {item?.stackable ? (
-              <Box
-                className="item-quantity"
-                sx={{
-                  position    : 'relative',
-                  left        : 'calc(80%)',
-                  top         : 'calc(70%)',
-                  textAlign   : 'center',
-                  width       : '10%',
-                  background  : 'rgba(0, 0, 0, 0.3)',
-                  p           : '1px',
-                  borderRadius: '4px',
-                  color       : 'white',
-                  fontSize    : 10 / props.scale,
-                }}
-              >
-                {item.quantity}
-              </Box>
-            ) : null}
-          </Box>
+          <ItemTooltip item={item}>
+            <Box
+              className="item-button"
+              sx={{
+                backgroundImage: `url(${itemEntry})`,
+                backgroundSize : 'cover',
+                width          : 'calc(80%)',
+                height         : 'calc(80%)',
+                position       : 'relative',
+                left           : '10%',
+                top            : '10%',
+              }}
+            >
+              {item?.stackable ? (
+                <Box
+                  className="item-quantity"
+                  sx={{
+                    position    : 'relative',
+                    left        : 'calc(80%)',
+                    top         : 'calc(70%)',
+                    textAlign   : 'center',
+                    width       : '10%',
+                    background  : 'rgba(0, 0, 0, 0.3)',
+                    p           : '1px',
+                    borderRadius: '4px',
+                    color       : 'white',
+                    fontSize    : 10 / props.scale,
+                  }}
+                >
+                  {item.quantity}
+                </Box>
+              ) : null}
+            </Box>
+          </ItemTooltip>
         ) : null}
       </Box>
     </>

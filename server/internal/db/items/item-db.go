@@ -86,7 +86,7 @@ func SwapItemSlots(
 	playerID int32, fromSlot, toSlot,
 	toBagSlot, fromBagSlot int8,
 	fromItem, toItem *constants.ItemWithInstance,
-) (updates []SlotUpdate, err error) {
+) (u []SlotUpdate, err error) {
 	const tempSlot = -1
 	tx, err := db.GlobalWorldDB.DB.Begin()
 	if err != nil {
@@ -223,6 +223,11 @@ func SwapItemSlots(
 		}
 	}
 
+	childFromRowLength, childToRowLength := len(childFromRows), len(childToRows)
+
+	// Allocate with exact capacity. Updates will always contain items
+	// So we can preallocate the slice
+	updates := make([]SlotUpdate, 0, 1+childFromRowLength+childToRowLength)
 	updates = append(updates, SlotUpdate{
 		ItemInstanceID: fromRow.ItemInstanceID,
 		FromSlot:       fromSlot,
@@ -231,12 +236,11 @@ func SwapItemSlots(
 		ToBag:          toBagSlot,
 	})
 
-	// how to provide initial length for array
-
+	// Defer allocation with make until we know if we have children
 	var fromChildIDs, toChildIDs []mysql.Expression
-	if len(childFromRows) > 0 || len(childToRows) > 0 {
-		fromChildIDs = make([]mysql.Expression, 0, len(childFromRows))
-		toChildIDs = make([]mysql.Expression, 0, len(childToRows))
+	if childFromRowLength > 0 || childToRowLength > 0 {
+		fromChildIDs = make([]mysql.Expression, 0, childFromRowLength)
+		toChildIDs = make([]mysql.Expression, 0, childToRowLength)
 		for _, c := range childFromRows {
 			fromChildIDs = append(fromChildIDs, mysql.Int32(c.ItemInstanceID))
 			updates = append(updates, SlotUpdate{

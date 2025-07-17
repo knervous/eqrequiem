@@ -35,3 +35,34 @@ export enum InventorySlot {
     General8,
     Cursor
   }
+
+export const InventorySlotNames = {
+  [InventorySlot.Charm]    : 'Charm',
+  [InventorySlot.Ear1]     : 'Ear',
+  [InventorySlot.Head]     : 'Head',
+  [InventorySlot.Face]     : 'Face',
+  [InventorySlot.Ear2]     : 'Ear',
+  [InventorySlot.Neck]     : 'Neck',
+  [InventorySlot.Shoulders]: 'Shoulders',
+  [InventorySlot.Arms]     : 'Arms',
+  [InventorySlot.Back]     : 'Back',
+  [InventorySlot.Wrist1]   : 'Wrist',
+  [InventorySlot.Wrist2]   : 'Wrist',
+  [InventorySlot.Range]    : 'Range',
+  [InventorySlot.Hands]    : 'Hands',
+  [InventorySlot.Primary]  : 'Primary',
+  [InventorySlot.Secondary]: 'Secondary',
+  [InventorySlot.Finger1]  : 'Finger',
+  [InventorySlot.Finger2]  : 'Finger',
+  [InventorySlot.Chest]    : 'Chest',
+  [InventorySlot.Legs]     : 'Legs',
+  [InventorySlot.Feet]     : 'Feet',
+  [InventorySlot.Waist]    : 'Waist',
+  [InventorySlot.Ammo]     : 'Ammo',
+} as const;
+
+export const getSlotNamesFromBitmask = (bitmask: number): string => {
+  return Array.from(new Set(Object.entries(InventorySlotNames)
+    .filter(([slot, _]) => (bitmask & (1 << +slot)) !== 0)
+    .map(([, name]) => name))).join(' ');
+};   

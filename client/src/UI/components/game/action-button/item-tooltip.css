@@ -1,0 +1,7 @@
+.item-tooltip {
+  border-radius: 5px;
+  border-width: 2px;
+  border-style: solid;
+  border-color: rgb(180, 173, 134) rgb(142, 134, 107) rgb(61, 58, 48)
+    rgb(177, 170, 142);
+}

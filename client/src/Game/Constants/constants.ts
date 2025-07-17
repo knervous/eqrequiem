@@ -37,7 +37,21 @@ export const Races = {
     GNOME:    12,
     AVIAK:    13,
     WEREWOLF: 14,
-    
+}
+
+export const AbbreviatedRaces ={
+    HUM: 1,
+    BAR: 2,
+    ERU: 3,
+    ELF: 4,
+    HIE: 5,
+    DEF: 6,
+    HEF: 7,
+    DWF: 8,
+    TRL: 9,
+    OGR: 10,
+    HLF: 11,
+    GNM: 12,
 }
 
 export const Classes = {
