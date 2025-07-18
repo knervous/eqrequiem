@@ -360,6 +360,7 @@ export const ActionHotButton: React.FC<HotButtonProps> = (props) => {
   const linkedButton = useMemo(() => { 
     if (props.actionData?.type === ActionButtonType.INVENTORY) {
       return <ItemButton
+        bagSlot={0}
         hotButton={true}
         hotButtonIndex={props.index}
         scale={(props.scale ?? 1)}

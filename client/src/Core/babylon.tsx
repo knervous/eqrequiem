@@ -1,10 +1,10 @@
-import React, { useEffect, useRef } from "react";
-import "./ui.css";
-import "./player.css";
-import Overlay from "@ui/components/overlay";
-import { Box } from "@mui/material";
-import { sleep } from "@game/Constants/util";
-import GameManager from "@game/Manager/game-manager";
+import { useEffect, useRef } from 'react';
+import { sleep } from '@game/Constants/util';
+import GameManager from '@game/Manager/game-manager';
+import { Box } from '@mui/material';
+import Overlay from '@ui/components/overlay';
+import './player.css';
+import './ui.css';
 
 export const BabylonWrapper = ({ splash }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -17,11 +17,13 @@ export const BabylonWrapper = ({ splash }) => {
       await GameManager.instance.loadEngine(canvasRef.current);
       window.addEventListener('resize', GameManager.instance.resize);
       window.addEventListener('keydown', GameManager.instance.keyDown);
+      window.addEventListener('keyup', GameManager.instance.keyUp);
     })();
 
     return () => {
       window.removeEventListener('resize', GameManager.instance.resize);
       window.removeEventListener('keydown', GameManager.instance.keyDown);
+      window.removeEventListener('keyup', GameManager.instance.keyUp);
     };
   }, [
   ]);
@@ -34,22 +36,22 @@ export const BabylonWrapper = ({ splash }) => {
       }
       if (
         e.target instanceof HTMLElement &&
-        (e.target.closest(".ui-window") ||
-          ["input", "textarea", "button", "select", "li"].includes(
+        (e.target.closest('.ui-window') ||
+          ['input', 'textarea', 'button', 'select', 'li'].includes(
             e.target.tagName.toLowerCase(),
           ))
       ) {
         // Do not forward the event so that interactive UI elements can function normally.
         return;
       }
-      const uiViewport = document.getElementById("ui-viewport");
-      const mouseEvents = ["mousedown", "mouseup", "mousemove", "wheel"];
+      const uiViewport = document.getElementById('ui-viewport');
+      const mouseEvents = ['mousedown', 'mouseup', 'mousemove', 'wheel'];
       if (mouseEvents.includes(e.type) && !e.target?.contains(uiViewport)) {
         return;
       }
       // Otherwise, forward the event to the canvas
       if (canvasRef.current) {
-        if (e.key === "F12" || (e.metaKey && e.altKey)) { 
+        if (e.key === 'F12' || (e.metaKey && e.altKey)) { 
           return;
         }
         // Create a new event of the same type and dispatch it on the canvas
@@ -57,7 +59,7 @@ export const BabylonWrapper = ({ splash }) => {
         newEvent.handled = true;
         canvasRef.current.dispatchEvent(newEvent);
         // Optionally prevent default behavior so the event isn't processed twice
-        if (e.type === "mousedown") {
+        if (e.type === 'mousedown') {
           if (![document.body, canvasRef.current].includes(document.activeElement)) {
             document.body.focus();
             return;
@@ -69,13 +71,13 @@ export const BabylonWrapper = ({ splash }) => {
 
     // List of events to forward
     const events = [
-      "mousedown",
-      "mouseup",
-      "mousemove",
-      "wheel",
-      "keydown",
-      "keyup",
-      "contextmenu",
+      'mousedown',
+      'mouseup',
+      'mousemove',
+      'wheel',
+      'keydown',
+      'keyup',
+      'contextmenu',
     ];
 
     events.forEach((eventName) => {
@@ -93,20 +95,20 @@ export const BabylonWrapper = ({ splash }) => {
     <>
       <Overlay
         sx={{
-          width: "100vw",
-          height: "100vh",
-          display: splash ? "none" : "initial",
+          width  : '100vw',
+          height : '100vh',
+          display: splash ? 'none' : 'initial',
         }}
       />
 
       <Box
+        height="100vh"
+        id="renderCanvas"
         tabIndex={0}
+        width="100vw"
         component={"canvas"}
         //sx={{ flexGrow: "1", position: "fixed" }}
         ref={canvasRef}
-        id="renderCanvas"
-        width="100vw"
-        height="100vh"
       />
     </>
   );

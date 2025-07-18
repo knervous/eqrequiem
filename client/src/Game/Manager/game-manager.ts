@@ -65,6 +65,7 @@ export default class GameManager {
 
   constructor() {
     this.keyDown = this.keyDown.bind(this);
+    this.keyUp = this.keyUp.bind(this);
     this.resize = this.resize.bind(this);
     this.renderLoop = this.renderLoop.bind(this);
   }
@@ -283,7 +284,23 @@ export default class GameManager {
 
   private inspector: any | null = null;
   private instantiatingInspector: boolean = false;
+  public modifierKeys = {
+    ctrl : false,
+    shift: false,
+    alt  : false,
+    meta : false,
+  };
+  async keyUp(e: BJS.IKeyboardEvent) {
+    this.modifierKeys.ctrl = e.ctrlKey;
+    this.modifierKeys.shift = e.shiftKey;
+    this.modifierKeys.alt = e.altKey;
+    this.modifierKeys.meta = e.metaKey;
+  }
   async keyDown(e: BJS.IKeyboardEvent) {
+    this.modifierKeys.ctrl = e.ctrlKey;
+    this.modifierKeys.shift = e.shiftKey;
+    this.modifierKeys.alt = e.altKey;
+    this.modifierKeys.meta = e.metaKey;
     switch (`${e?.key}`?.toLowerCase?.()) {
       case 'i': {
         if (!this.scene || !(e.ctrlKey || e.metaKey)) {

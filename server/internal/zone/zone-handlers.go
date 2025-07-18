@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"strings"
 
 	eq "github.com/knervous/eqgo/internal/api/capnp"
 	"github.com/knervous/eqgo/internal/api/opcodes"
@@ -26,21 +25,21 @@ func HandleChannelMessage(z *ZoneInstance, ses *session.Session, payload []byte)
 		log.Printf("failed to read JWTLogin struct: %v", err)
 		return
 	}
-	targetName, err := req.Targetname()
-	if err != nil {
-		log.Printf("failed to get target name: %v", err)
-		return
-	}
-	if strings.Trim(targetName, " ") == "" {
-		return
-	}
+
 	message, err := req.Message_()
 	if err != nil {
 		log.Printf("failed to get message: %v", err)
 		return
 	}
-	if recv, ok := z.NPCByName(targetName); ok && recv != nil {
-		z.QuestInterface.Invoke(targetName, z.QE().Type(quest.EventSay).SetActor(ses.Client).SetReceiver(recv))
+	if z.QuestInterface != nil {
+		targetName, err := req.Targetname()
+		if err != nil {
+			log.Printf("failed to get target name: %v", err)
+			return
+		}
+		if recv, ok := z.NPCByName(targetName); ok && recv != nil {
+			z.QuestInterface.Invoke(targetName, z.QE().Type(quest.EventSay).SetActor(ses.Client).SetReceiver(recv))
+		}
 	}
 
 	z.BroadcastChannel(ses.Client.CharData().Name, int(req.ChanNum()), message)

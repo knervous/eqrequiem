@@ -1,11 +1,12 @@
-// src/components/ChatWindowComponent.tsx
+// src/UI/components/game/stone/middle/stone-chat.tsx
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { CommandParser } from '@game/ChatCommands/command-parser';
 import emitter, { ChatMessage } from '@game/Events/events';
-import { Box, Stack, TextField } from '@mui/material';
+import { Box, Stack } from '@mui/material';
 import { useSakImage, useSakImages } from '@ui/hooks/use-image';
-import { useChatInput } from '../../../../hooks/use-chat-input';
-import { JsonCommandLink, ParsedMessage } from './command-link';
+import { ParsedMessage } from './command-link';
+import type { JsonCommandLink } from './command-link-util';
+import { ChatInputSlate } from './stone-chat-input';
 
 // Configuration for all stone frame pieces
 const stoneConfigs = [
@@ -52,15 +53,9 @@ export const StoneMiddleBottom: React.FC<{
   width: number;
   height: number;
 }> = ({ width, height }) => {
-  const {
-    inputValue,
-    inputRef,
-    messagesEndRef,
-    handleInputChange,
-    handleKeyDown,
-  } = useChatInput();
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
 
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const chatRef = React.useRef<HTMLDivElement>(null);
   const bgImages = useSakImages(imageNames, true);
   const stoneImages = useMemo(
     () =>
@@ -84,7 +79,6 @@ export const StoneMiddleBottom: React.FC<{
   const onExecuteCommand = useCallback((payload: JsonCommandLink) => {
     switch (payload.linkType) {
       case 0: // Item Link
-        
         break;
       case 1: // Summon Item
         CommandParser.parseCommand(`#si ${payload.data}`);
@@ -105,27 +99,10 @@ export const StoneMiddleBottom: React.FC<{
   }, [onExecuteCommand]);
 
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === '/' && inputRef.current !== document.activeElement) {
-        inputRef.current?.focus();
-        handleInputChange({
-          target: { value: e.key },
-        } as React.ChangeEvent<HTMLInputElement>);
-      } else if (
-        e.key === 'Enter' &&
-        inputRef.current !== document.activeElement
-      ) {
-        inputRef.current?.focus();
-      }
-    };
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [inputRef, handleInputChange]);
-
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
-  }, [messages, messagesEndRef]);
+    if (chatRef.current) {
+      chatRef.current.scrollTop = chatRef.current.scrollHeight;
+    }
+  }, [messages]);
 
 
   // Memoized styles for performance
@@ -238,7 +215,7 @@ export const StoneMiddleBottom: React.FC<{
         }}
       >
         <Stack direction="column" sx={chatStyles.container}>
-          <Box sx={chatStyles.messages}>
+          <Box ref={chatRef} sx={chatStyles.messages}>
             {messages.map((chatMessage, idx) => (
               <Box
                 key={idx}
@@ -255,21 +232,13 @@ export const StoneMiddleBottom: React.FC<{
                 />
               </Box>
             ))}
-            <div ref={messagesEndRef} />
           </Box>
           <Box sx={chatStyles.inputBox}>
-            <TextField
-              fullWidth
-              autoComplete="off"
-              InputProps={chatStyles.inputProps} // Includes className="cursor-caret"
-              inputRef={inputRef}
-              placeholder="Enter message..."
-              size="small"
-              sx={chatStyles.textField}
-              value={inputValue}
-              variant="outlined"
-              onChange={handleInputChange}
-              onKeyDown={handleKeyDown}
+            <ChatInputSlate
+              onExecuteCommand={onExecuteCommand}
+              onSubmit={(msg) => {
+                CommandParser.parseCommand(msg);
+              }}
             />
           </Box>
         </Stack>

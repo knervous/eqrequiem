@@ -102,6 +102,7 @@ export class ZonePacketHandler {
       color  : '#ddd',
       type   : 0,
     };
+    console.log('Channel message received:', msg);
     switch (channelMessage.chanNum) {
       case -1:
         msg.message = `[Server Message] '${channelMessage.message}'`;

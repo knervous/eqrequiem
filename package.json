@@ -44,5 +44,10 @@
     "stylelint": "^16.20.0",
     "typescript": "~5.7.2",
     "typescript-eslint": "^8.24.1"
+  },
+  "dependencies": {
+    "slate": "^0.117.2",
+    "slate-history": "^0.113.1",
+    "slate-react": "^0.117.4"
   }
 }

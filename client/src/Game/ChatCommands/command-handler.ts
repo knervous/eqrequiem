@@ -199,7 +199,7 @@ export class CommandHandler extends BaseCommandHandler {
     const message = args.join(' ');
     if (message) {
       addChatLine(`You say, '${message}'`);
-      WorldSocket.sendMessage(OpCodes.ChannelMessage, ChannelMessage, {
+      WorldSocket.sendStreamMessage(OpCodes.ChannelMessage, ChannelMessage, {
         sender    : Player.instance?.player?.name ?? '',
         targetname: Player.instance?.Target?.spawn?.name,
         chanNum   : 0,

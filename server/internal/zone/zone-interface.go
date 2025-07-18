@@ -99,6 +99,9 @@ func (z *ZoneInstance) BroadcastWearChange(
 	slot int8,
 	item *constants.ItemWithInstance,
 ) {
+	if item == nil {
+		return
+	}
 	z.mutex.RLock()
 	defer z.mutex.RUnlock()
 	for _, ce := range z.ClientEntries {

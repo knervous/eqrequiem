@@ -90,7 +90,7 @@ export const ItemTooltip: React.FC<{
             className="item-tooltip"
             sx={{
               backgroundColor: 'rgba(0, 0, 20, 0.7)',
-              padding        : '18px 10px',
+              padding        : '18px 10px 8px 10px',
               color          : '#fff',
               display        : 'flex',
               flexDirection  : 'column',
@@ -166,6 +166,13 @@ export const ItemTooltip: React.FC<{
             <Typography sx={{ fontSize: '11px' }}>
               Race: {getRaceStringListFromRaceBitmask(item.races)}
             </Typography>
+
+            <Typography sx={{ fontSize: '10px', mt: 2 }}>
+              Ctrl + Left Click to Link
+            </Typography>
+            {/* <Typography sx={{ fontSize: '10px', mt: 0 }}>
+              Shift + Click: Persist Window
+            </Typography> */}
           </Box>
         </Box>
       }

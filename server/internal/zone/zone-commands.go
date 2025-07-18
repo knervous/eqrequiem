@@ -2,6 +2,7 @@ package zone
 
 import (
 	"bytes"
+	"compress/zlib"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -66,6 +67,8 @@ func summonItem(z *ZoneInstance, ses *session.Session, args []string) {
 		log.Printf("failed to create item instance for item ID: %d", itemID)
 		return
 	}
+	instance.Quantity = 1 // Set quantity to 1 for summoned items
+	instance.Charges = 1  // Set charges to 1 for summoned items
 	slot, bagslot, itemInstanceId, err := items.AddItemToPlayerInventoryFreeSlot(*instance, int32(ses.Client.CharData().ID))
 	if err != nil {
 		log.Printf("failed to add item to inventory: %v", err)
@@ -88,9 +91,24 @@ func summonItem(z *ZoneInstance, ses *session.Session, args []string) {
 			m.SetSlot(int32(slot))
 			m.SetBagSlot(int32(bagslot))
 			m.SetCharges(uint32(instance.Charges))
+			m.SetQuantity(uint32(instance.Quantity))
 			return nil
 		},
 	)
+}
+
+func compressZlib(data []byte) ([]byte, error) {
+	var buf bytes.Buffer
+	// create and write
+	w := zlib.NewWriter(&buf)
+	if _, err := w.Write(data); err != nil {
+		return nil, err
+	}
+	// flush header/footer
+	if err := w.Close(); err != nil {
+		return nil, err
+	}
+	return buf.Bytes(), nil
 }
 
 func searchItem(z *ZoneInstance, ses *session.Session, args []string) {
@@ -112,7 +130,6 @@ func searchItem(z *ZoneInstance, ses *session.Session, args []string) {
 			func(m eq.ChannelMessage) error {
 				itemInstance := items.CreateItemInstanceFromTemplateID(int32(item.ID))
 				msg, seg := capnp.NewMultiSegmentMessage(nil)
-
 				capnItem, err := eq.NewRootItemInstance(seg)
 				if err != nil {
 					return fmt.Errorf("NewRootItemInstance: %w", err)
@@ -123,9 +140,13 @@ func searchItem(z *ZoneInstance, ses *session.Session, args []string) {
 				if err := capnp.NewEncoder(&buf).Encode(msg); err != nil {
 					return fmt.Errorf("capnp encode: %w", err)
 				}
+				compressedData, err := compressZlib(buf.Bytes())
+				if err != nil {
+					return fmt.Errorf("compress zlib: %w", err)
+				}
 				m.SetChanNum(0)
 				m.SetSender("")
-				m.SetMessage_(item.Name + ": (" + z.createJsonCommandLink(CommandTypeSummon, "Summon "+strconv.Itoa(int(item.ID)), item.ID) + ")" + " - (" + z.createJsonCommandLink(CommandTypeLink, "Item Link", buf.Bytes()) + ")")
+				m.SetMessage_(z.createJsonCommandLink(CommandTypeLink, item.Name, compressedData) + ": (" + z.createJsonCommandLink(CommandTypeSummon, "Summon "+strconv.Itoa(int(item.ID)), item.ID) + ")")
 				return nil
 			},
 		)

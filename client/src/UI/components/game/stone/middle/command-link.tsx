@@ -1,26 +1,9 @@
-// src/components/CommandLink.tsx
+// src/UI/components/game/stone/middle/command-link.tsx
 import React, { useMemo } from 'react';
-import { capnpToPlainObject } from '@game/Constants/util';
-import { ItemInstance } from '@game/Net/internal/api/capnp/item';
+import emitter from '@game/Events/events';
 import { Box, Typography } from '@mui/material';
-import * as $ from 'capnp-es';
 import { ItemTooltip } from '../../action-button/item-tooltip';
-
-export interface JsonCommandLink {
-  linkType: number;
-  label: string;
-  data: any;
-}
-
-export const LinkTypes = {
-  ItemLink  : 0,
-  SummonItem: 1,
-} as const;
-
-const linkTypeLabels: Record<number, string> = {
-  [LinkTypes.ItemLink]  : 'Item Link',
-  [LinkTypes.SummonItem]: 'Summon Item',
-};
+import { decodeItem, type JsonCommandLink, linkItemToChat, LinkTypes, parseCommandLink } from './command-link-util';
 
 export const CommandLink: React.FC<{
   payload: JsonCommandLink;
@@ -29,11 +12,10 @@ export const CommandLink: React.FC<{
   return (
     <Typography
       sx={{
-        color      : '#9c27b0',
+        color      : 'aquamarine',
         display    : 'inline-block',
         ['&:hover']: { textDecoration: 'underline', color: '#1e81c3' },
       }}
-      // title={`${linkTypeLabels[payload.linkType]}: ${payload.label}`}
       onClick={() => onExecute(payload)}
     >
       {payload.label}
@@ -55,36 +37,27 @@ export const ParsedMessage: React.FC<{
         if (!match) {
           return <React.Fragment key={i}>{part}</React.Fragment>;
         }
-        try {
-          const payload = JSON.parse(
-            `${Buffer.from(match[1], 'base64').toString('utf-8')}`,
-          ) as JsonCommandLink;
-          console.log('Parsed payload:', payload);
-          if (payload.linkType === LinkTypes.ItemLink) {
-            const bytes = Buffer.from(payload.data, 'base64');
-            const reader = new $.Message(bytes, false);
-            const root = reader.getRoot(ItemInstance);
-            const item = capnpToPlainObject(root);
-            console.log('Item', item);
-            return (
-              <ItemTooltip key={i} item={item}>
-                <Box sx={{ display: 'inline-block' }}>
-                  <CommandLink
-                    key={i}
-                    payload={payload}
-                    onExecute={onExecute}
-                  />
-                </Box>
-     
-              </ItemTooltip>
-            );
-          }
-          return <CommandLink key={i} payload={payload} onExecute={onExecute} />;
-      
-        } catch (e) {
-          console.log('Error parsing command link:', e);
+        const commandLink = parseCommandLink(match[1]);
+        if (!commandLink) {
           return <React.Fragment key={i}>{part}</React.Fragment>;
         }
+
+        if (commandLink.linkType === LinkTypes.ItemLink) {
+          const item = decodeItem(commandLink);
+          return (
+            <ItemTooltip key={i} item={item}>
+              <Box sx={{ display: 'inline-block' }}>
+                <CommandLink
+                  key={i}
+                  payload={commandLink}
+                  onExecute={() => linkItemToChat(item)}
+                />
+              </Box>
+            </ItemTooltip>
+          );
+        }
+        return <CommandLink key={i} payload={commandLink} onExecute={onExecute} />;
+
       }),
     [parts, onExecute],
   );

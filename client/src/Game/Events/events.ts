@@ -4,6 +4,7 @@ import type { Entity } from '@game/Model/entity';
 import type { PlayerProfile } from '@game/Net/internal/api/capnp/player';
 import type { InventorySlot } from '@game/Player/player-constants';
 import type { BagState } from '@game/Player/player-inventory';
+import type { JsonCommandLink } from '@ui/components/game/stone/middle/command-link-util';
 import mitt, { Emitter } from 'mitt';
 
 export type ChatMessage = {
@@ -18,6 +19,9 @@ export type Events = {
   playerLoaded: void;
   playerRunning: boolean;
   playerSitting: boolean;
+
+  // Chat
+  chatCommandLink: JsonCommandLink;
 
   // Updates
   levelUpdate: number;

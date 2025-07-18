@@ -356,7 +356,6 @@ func AddItemToPlayerInventoryFreeSlot(itemInstance constants.ItemInstance, playe
 			tx.Rollback()
 		}
 	}()
-
 	// 1) create the item_instance
 	itemInstanceID, err := CreateDBItemInstance(tx, itemInstance, playerID)
 	if err != nil {

@@ -1,5 +1,6 @@
 import React, { useCallback, useMemo, useRef } from 'react';
 import { useInventorySlot } from '@game/Events/event-hooks';
+import GameManager from '@game/Manager/game-manager';
 import { MoveItem } from '@game/Net/internal/api/capnp/common';
 import { OpCodes } from '@game/Net/opcodes';
 import Player from '@game/Player/player';
@@ -7,6 +8,7 @@ import { InventorySlot } from '@game/Player/player-constants';
 import { Box } from '@mui/material';
 import { useItemImage, useSakImage } from '@ui/hooks/use-image';
 import { WorldSocket } from '@ui/net/instances';
+import { linkItemToChat } from '../stone/middle/command-link-util';
 import { FullItemEntryData } from './constants';
 import { useItemDragClone } from './hooks';
 import { ItemTooltip } from './item-tooltip';
@@ -75,20 +77,17 @@ export const ItemButton: React.FC<ItemButtonProps> = (props) => {
   const itemEntry = useItemImage(item?.icon ?? -1);
   const onClick = useCallback(
     (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-      // Left click
       if (e.button === 0) {
         const hasCursorItem = Player.instance?.hasCursorItem;
         if (!hasCursorItem && !item) {
-          // If no item and no cursor item, do nothing
-          console.log(
-            'Left click on empty item button',
-            props.slot,
-            props.bagSlot,
-          );
           return;
         }
-        console.log('Left click on item button', props.slot, props.bagSlot);
-        console.log('Has cursor item:', Player.instance?.hasCursorItem);
+       
+        if (GameManager.instance?.modifierKeys.ctrl) {
+          linkItemToChat(item!);
+          return;
+        }
+
         if (isBag) {
           Player.instance?.playerInventory.closeBag(props.slot);
         }
@@ -125,6 +124,10 @@ export const ItemButton: React.FC<ItemButtonProps> = (props) => {
 
   const onRightClick = useCallback(
     (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+      if (e.button !== 2) {
+        onClick(e);
+        return;
+      } // Only handle right click
       // Right click
       e.preventDefault();
       if (item) {
@@ -136,7 +139,7 @@ export const ItemButton: React.FC<ItemButtonProps> = (props) => {
         }, 500);
       }
     },
-    [item, props.slot],
+    [item, props.slot, onClick],
   );
 
   const onMouseUp = useCallback(

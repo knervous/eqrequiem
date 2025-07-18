@@ -10,7 +10,7 @@ export class PlayerKeyboard {
   private player: Player;
   private scene: BJS.Scene;
   private handler: (kbInfo: BJS.KeyboardInfo) => void;
-  private modifierKeys: { [key: string]: boolean } = {
+  public modifierKeys: { [key: string]: boolean } = {
     alt  : false,
     ctrl : false,
     shift: false,

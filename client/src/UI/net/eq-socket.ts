@@ -1,3 +1,4 @@
+import { setStructFields } from '@game/Constants/util';
 import { OpCodes } from '@game/Net/opcodes';
 import * as $ from 'capnp-es';
 
@@ -51,33 +52,6 @@ function concatUint8(a: Uint8Array, b: Uint8Array): Uint8Array {
   return c;
 }
 
-function setStructFields<T extends $.Struct>(
-  struct: T,
-  data: Partial<Record<keyof T, any>>,
-) {
-  for (const [rawKey, value] of Object.entries(data)) {
-    if (value === undefined) {continue;}
-    const key = rawKey as keyof T;
-
-    // 1) Detect a JS array → list case
-    if (Array.isArray(value)) {
-      // build the "initArgs" method name
-      const initName = `_init${String(key)[0].toUpperCase()}${String(key).slice(1)}`;
-      const initFn = (struct as any)[initName] as ((n: number) => any) | undefined;
-      if (typeof initFn === 'function') {
-        const listBuilder = initFn.call(struct, value.length);
-        for (let i = 0; i < value.length; i++) {
-          listBuilder.set(i, value[i]);
-        }
-        continue;
-      }
-      // else fall‐through: maybe you have a byte‐list or something else
-    }
-
-    // 2) Fallback: simple scalar/struct assignment
-    (struct as any)[key] = value;
-  }
-}
 
 export class EqSocket {
   private webtransport: WebTransport | null = null;

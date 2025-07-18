@@ -1,8 +1,37 @@
  
 
+import * as $ from 'capnp-es';
 import { AbbreviatedRaces, Classes, Deity, Races, StartingZones } from './constants';
 
 export const sleep = (ms) => new Promise((res) => setTimeout(res, ms));
+
+export function setStructFields<T extends $.Struct>(
+  struct: T,
+  data: Partial<Record<keyof T, any>>,
+) {
+  for (const [rawKey, value] of Object.entries(data)) {
+    if (value === undefined) {continue;}
+    const key = rawKey as keyof T;
+
+    // 1) Detect a JS array → list case
+    if (Array.isArray(value)) {
+      // build the "initArgs" method name
+      const initName = `_init${String(key)[0].toUpperCase()}${String(key).slice(1)}`;
+      const initFn = (struct as any)[initName] as ((n: number) => any) | undefined;
+      if (typeof initFn === 'function') {
+        const listBuilder = initFn.call(struct, value.length);
+        for (let i = 0; i < value.length; i++) {
+          listBuilder.set(i, value[i]);
+        }
+        continue;
+      }
+      // else fall‐through: maybe you have a byte‐list or something else
+    }
+
+    // 2) Fallback: simple scalar/struct assignment
+    (struct as any)[key] = value;
+  }
+}
 
 export function capnpToPlainObject(obj: any): any {
   // Handle null or non-object types
@@ -84,7 +113,7 @@ const {
   TheTribunal,
   Tunare,
   Veeshan,
-} = Deity;
+} : any = Deity;
 
 export const getDeityName = (deity: number) => {
   return Object.values(Deity).find((d) => d[0] === deity)?.[1] || 'Unknown';
@@ -618,7 +647,7 @@ export const startingCityMap = {
       [SolusekRo]    : [SouthQeynos, WestFreeport],
     },
   },
-};
+} as const;
 
 export const getAvailableDeities = (race, classId) => {
   switch (classId) {
