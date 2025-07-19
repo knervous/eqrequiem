@@ -62,7 +62,7 @@ export default class EntityPool {
       return;
     }
     if (spawn.isNpc) {
-      return;
+      // return;
     }
 
     if (!spawn.name.includes('Discord')) {
