@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect } from 'react';
 import { USE_SAGE } from '@game/Constants/constants';
 import { supportedZones } from '@game/Constants/supportedZones';
-import { qeynos2_spawns } from '@game/Constants/test-data';
 import GameManager from '@game/Manager/game-manager';
 import { Spawn } from '@game/Net/internal/api/capnp/common';
 import { Box, Button, List, ListItem, Stack, Typography } from '@mui/material';
@@ -34,18 +33,11 @@ export const LoginWindowComponent: React.FC = () => {
   const [selectedServer, setSelectedServer] = React.useState<number>(0);
   const [playerCount, setPlayerCount] = React.useState<number>(-1);
 
-  const enterSandbox = useCallback(() => {
+  const enterSandbox = useCallback(async () => {
+    const { qeynos2_spawns, player } = await import('@/Game/Constants/test-data');
     setMode('game');
     GameManager.instance.loadZoneId(2);
-    GameManager.instance.instantiatePlayer({
-      race     : 1,
-      charClass: 1,
-      name     : 'Soandso',
-      x        : 15,
-      y        : 15,
-      z        : 15,
-      face     : 4,
-    });
+    GameManager.instance.instantiatePlayer(player as any);
     qeynos2_spawns.forEach((spawn) => { 
       GameManager.instance.ZoneManager?.EntityPool?.AddSpawn(spawn as Spawn);
     });

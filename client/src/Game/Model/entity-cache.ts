@@ -233,7 +233,7 @@ export class EntityCache {
           );
           mesh.instancedBuffers.bakedVertexAnimationSettingsInstanced =
             ANIMATION_BUFFER;
-          mesh.registerInstancedBuffer('textureAttributes', 2);
+          mesh.registerInstancedBuffer('textureAttributes', 4);
           mesh.instancedBuffers.textureAttributes = TEXTURE_ATTRIBUTE_BUFFER;
           mesh.bakedVertexAnimationManager = manager!;
           mesh.parent = null;

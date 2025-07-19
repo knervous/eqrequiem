@@ -1,5 +1,5 @@
-import BABYLON from "@bjs";
-import type * as BJS from "@babylonjs/core";
+import type * as BJS from '@babylonjs/core';
+import BABYLON from '@bjs';
 
 
 const VS_GL = `
@@ -8,11 +8,12 @@ const VS_GL = `
         // Attributes
         attribute vec3 position;
         attribute vec2 uv;
-        attribute vec2 textureAttributes;
+        attribute vec4 textureAttributes;
 
         // Varyings → fragment
         varying vec2 vUV;
         flat varying int vSlice;
+        varying vec3 vTint;
 
         // Uniforms
         uniform mat4 worldViewProjection;
@@ -36,6 +37,7 @@ const VS_GL = `
 
             // Pass through to fragment
             vUV = uv;
+            vTint = textureAttributes.yzw;
             vSlice = int(textureAttributes.x);
         }
     `;
@@ -46,6 +48,7 @@ const FS_GL = `
         // Varyings from vertex
         varying vec2 vUV;
         flat varying int vSlice;
+        varying vec3 vTint;
 
         // On WebGPU, sampler2DArray is still bound as sampler2DArray in GLSL;
         // Babylon.js will transpile this to WGSL under the hood :contentReference[oaicite:2]{index=2}.
@@ -54,46 +57,46 @@ const FS_GL = `
         void main() {
             int slice = vSlice;
             vec4 c = texture(uAtlasArray, vec3(vUV, float(slice)));
-            gl_FragColor = vec4(c.rgb, 1.0);
+            gl_FragColor = vec4(c.rgb * vTint, 1.0);
         }
     `;
 
-BABYLON.Effect.ShadersStore["vatVertexShader"] = VS_GL;
-BABYLON.Effect.ShadersStore["vatFragmentShader"] = FS_GL;
+BABYLON.Effect.ShadersStore['vatVertexShader'] = VS_GL;
+BABYLON.Effect.ShadersStore['vatFragmentShader'] = FS_GL;
 
 export function createVATShaderMaterial(scene, texArr, vatTexture): BJS.ShaderMaterial {
   
 
   const shaderMat = new BABYLON.ShaderMaterial(
-    "vatShader",
+    'vatShader',
     scene,
     {
-      vertex: "vat",
-      fragment: "vat",
+      vertex  : 'vat',
+      fragment: 'vat',
     },
     {
       attributes: [
-        "position",
-        "uv",
-        "textureAttributes",
-        "bakedVertexAnimationSettingsInstanced",
+        'position',
+        'uv',
+        'textureAttributes',
+        'bakedVertexAnimationSettingsInstanced',
       ],
-      uniforms: ["worldViewProjection"],
-      samplers: ["uAtlasArray"],
-      defines: ["INSTANCES", "BAKED_VERTEX_ANIMATION_TEXTURE"],
+      uniforms         : ['worldViewProjection'],
+      samplers         : ['uAtlasArray'],
+      defines          : ['INSTANCES', 'BAKED_VERTEX_ANIMATION_TEXTURE'],
       needAlphaBlending: false,
-      needAlphaTesting: false,
+      needAlphaTesting : false,
     },
     true,
   );
 
-  shaderMat.setTexture("uAtlasArray", texArr);
-  shaderMat.setTexture("bakedVertexAnimationTexture", vatTexture);
+  shaderMat.setTexture('uAtlasArray', texArr);
+  shaderMat.setTexture('bakedVertexAnimationTexture', vatTexture);
 
   if (vatTexture) {
     const sz = vatTexture.getSize();
     shaderMat.setVector2(
-      "bakedVertexAnimationTextureSizeInverted",
+      'bakedVertexAnimationTextureSizeInverted',
       new BABYLON.Vector2(1.0 / sz.width, 1.0 / sz.height),
     );
   }
@@ -101,7 +104,7 @@ export function createVATShaderMaterial(scene, texArr, vatTexture): BJS.ShaderMa
   shaderMat.onBind = (mesh) => {
     if (mesh.bakedVertexAnimationManager) {
       shaderMat.setFloat(
-        "bakedVertexAnimationTime",
+        'bakedVertexAnimationTime',
         mesh.bakedVertexAnimationManager.time,
       );
     }
@@ -109,12 +112,12 @@ export function createVATShaderMaterial(scene, texArr, vatTexture): BJS.ShaderMa
 
   shaderMat.onError = (effect, errors) => {
     if (errors) {
-      console.log("Vertex Shader Source:", effect._vertexSourceCode);
-      console.log("Fragment Shader Source:", effect._fragmentSourceCode);
-      console.log("Shader compilation errors:", errors);
+      console.log('Vertex Shader Source:', effect._vertexSourceCode);
+      console.log('Fragment Shader Source:', effect._fragmentSourceCode);
+      console.log('Shader compilation errors:', errors);
     }
   };
 
-  //shaderMat.backFaceCulling = false;
+  // shaderMat.backFaceCulling = false;
   return shaderMat;
 }

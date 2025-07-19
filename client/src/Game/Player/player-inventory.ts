@@ -155,6 +155,10 @@ export class PlayerInventory {
 
     emitter.emit('updateInventorySlot', { slot: fromSlot, bag: fromBagSlot });
     emitter.emit('updateInventorySlot', { slot: toSlot, bag: toBagSlot });
+
+    if (fromBagSlot === -1 || toBagSlot === -1) {
+      this.player.playerEntity?.updateModelTextures();
+    }
   }
 
   destroyCursorItem(): void {

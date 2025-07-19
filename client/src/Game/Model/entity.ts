@@ -12,7 +12,13 @@ import { sleep } from '@game/Constants/util';
 import type GameManager from '@game/Manager/game-manager';
 import { Spawn } from '@game/Net/internal/api/capnp/common';
 import { PlayerProfile } from '@game/Net/internal/api/capnp/player';
-import { InventorySlot } from '@game/Player/player-constants';
+import Player from '@game/Player/player';
+import {
+  InventorySlot,
+  InventorySlotTextures,
+  NullableItemInstance,
+  TextureProfileMap,
+} from '@game/Player/player-constants';
 import type { EntityContainer, EntityCache } from './entity-cache';
 import { createTargetRingMaterial } from './entity-select-ring';
 import { Nameplate } from './nameplate';
@@ -102,7 +108,7 @@ export class Entity extends BABYLON.TransformNode {
     }
   }
 
-  private textureBuffers: Record<string, BJS.Vector2> = {};
+  private textureBuffers: Record<string, BJS.Vector4> = {};
 
   private gameManager: GameManager;
   private scene: BJS.Scene;
@@ -135,7 +141,7 @@ export class Entity extends BABYLON.TransformNode {
     raceEntry: RaceEntry,
   ) {
     super(`entity_${spawn.name}`, scene);
-    this.isPlayer = !((spawn as Spawn)?.isNpc ?? false);
+    this.isPlayer = !!((spawn as PlayerProfile)?.inventoryItems ?? false);
     this.raceDataEntry = raceEntry;
     this.gameManager = gameManager;
     this.spawn = spawn;
@@ -418,7 +424,8 @@ export class Entity extends BABYLON.TransformNode {
       bodyInst.metadata = {
         name: mesh.name,
       };
-      const vec = this.textureBuffers[mesh.name] || new BABYLON.Vector2(0, 0);
+      const vec =
+        this.textureBuffers[mesh.name] || new BABYLON.Vector4(0, 1, 1, 1);
       this.textureBuffers[mesh.name] = vec;
       bodyInst.instancedBuffers.textureAttributes = vec;
       this.bodyInstances.push(bodyInst);
@@ -431,39 +438,88 @@ export class Entity extends BABYLON.TransformNode {
       const hasRobe = this.entityContainer.model.endsWith('01');
       let idx = this.getTextureIndex(
         name,
-        !this.isPlayer ? (this.spawn as Spawn).equipChest : 22,
+        !this.isPlayer ? (this.spawn as Spawn).equipChest : 0,
       );
+      let idxSet = false;
+      let r: number = 1,
+        g: number = 1,
+        b: number = 1;
+
+      let associatedItem: NullableItemInstance = null;
+
       const nameMatch = name.match(charFileRegex);
       if (nameMatch) {
         const [, , piece, ,] = nameMatch;
+        const matchingInventorySlot = InventorySlotTextures[piece as string];
+        if (this.isPlayer) {
+          associatedItem =
+            Player.instance?.playerInventory.get(matchingInventorySlot, -1) ??
+            Player.instance?.playerInventory.get(matchingInventorySlot, 0) ??
+            null;
+        }
+        if (
+          matchingInventorySlot &&
+          this.isHumanoid &&
+          !(this.spawn as Spawn).isNpc
+        ) {
+          if (this.isPlayer) {
+            // TODO handle partial texture mapping with face/helmet later
+            if (associatedItem && associatedItem.slot !== InventorySlot.Head) {
+              const color = associatedItem.color;
+              const _alpha = ((color >> 24) & 0xff) / 255;
+              r = ((color >> 16) & 0xff) / 255;
+              g = ((color >> 8) & 0xff) / 255;
+              b = (color & 0xff) / 255;
+              if (r === 0) {
+                r = 1;
+              }
+              if (g === 0) {
+                g = 1;
+              }
+              if (b === 0) {
+                b = 1;
+              }
+              idx = this.getTextureIndex(name, associatedItem.material);
+              idxSet = true;
+            }
+          } else {
+            // TODO get equipmentTint mapped out
+            // const spawn = this.spawn as Spawn;
+            // idx = this.getTextureIndex(name, spawn.equipment[TextureProfileMap[piece]] ?? 0);
+          }
+        }
+
         // Drive texture from equipment for PC humanoids
         if (piece === MaterialPrefixes.Face && this.isHumanoid) {
           idx = this.getTextureIndex(name, this.spawn.face);
+          r = 1;
+          g = 1;
+          b = 1;
+          idxSet = true;
         }
       }
-      if (this.textureBuffers[name]) {
-        if (hasRobe && name.startsWith('clk')) {
-          let material = 10;
-          if (this.spawn instanceof Spawn) {
-            material = this.spawn.isNpc
-              ? this.spawn.equipChest
-              : this.spawn.equipment.chest;
-          } else {
-            material =
-              this.spawn.inventoryItems
-                .toArray()
-                .find((item) => item.slot === InventorySlot.Chest)?.item
-                ?.material ?? 10;
-          }
-          // material -= 6; // Adjust index for robe textures
-          idx = this.getTextureIndex(name, material);
-        } else if (hasRobe && this.spawn instanceof Spawn) {
-          idx = this.getTextureIndex(name, 0);
+      if (this.textureBuffers[name] && !idxSet) {
+        const defaultMaterial = hasRobe && name.startsWith('clk') ? 10 : 0;
+        let material = defaultMaterial;
+        if (!this.isPlayer) {
+          const spawn = this.spawn as Spawn;
+          material = spawn.isNpc ? spawn.equipChest : spawn.equipment.chest;
+        } else {
+          material = associatedItem?.material ?? defaultMaterial;
         }
-      } else {
-        idx = this.getTextureIndex(name, 22); // Default to 1 if not found for now
+        if (hasRobe && !this.isPlayer) {
+          idx = this.getTextureIndex(name, 0);
+        } else {
+          idx = this.getTextureIndex(name, material);
+        }
+      } else if (!idxSet) {
+        idx = this.getTextureIndex(name, 0);
       }
       this.textureBuffers[name].x = idx;
+      this.textureBuffers[name].y = r;
+      this.textureBuffers[name].z = g;
+      this.textureBuffers[name].w = b;
+      console.log('RGB', r, g, b);
     }
   }
 
@@ -633,7 +689,8 @@ export class Entity extends BABYLON.TransformNode {
       if (piece === MaterialPrefixes.Face && this.isHumanoid) {
         idx = this.getTextureIndex(mesh.name, this.spawn.face);
       }
-      const vec = this.textureBuffers[mesh.name] || new BABYLON.Vector2(idx, 0);
+      const vec =
+        this.textureBuffers[mesh.name] || new BABYLON.Vector4(idx, 1, 1, 1);
       this.textureBuffers[mesh.name] = vec;
       mesh.instancedBuffers.textureAttributes = vec;
       secondaryInstance.instancedBuffers.textureAttributes = vec;
@@ -727,9 +784,7 @@ export class Entity extends BABYLON.TransformNode {
     let retValue = this.getTextureIndexImpl(originalName, variation);
     const maxVariation = 10;
     while (retValue < 0 && variation < maxVariation) {
-      retValue = this.getTextureIndexImpl(
-        originalName,
-        variation++);
+      retValue = this.getTextureIndexImpl(originalName, variation++);
     }
     return retValue;
   }
@@ -780,17 +835,15 @@ export class Entity extends BABYLON.TransformNode {
         ) ?? -1
       );
     }
-    let retValue = (
+    let retValue =
       this.entityContainer?.textureAtlas.indexOf(
         `${model}${piece}${variation.toString().padStart(2, '0')}${texIdx}`,
-      ) ?? -1
-    );
+      ) ?? -1;
     while (retValue < 0 && +texIdx > 0) {
-      retValue = (
+      retValue =
         this.entityContainer?.textureAtlas.indexOf(
           `${model}${piece}${(variation++).toString().padStart(2, '0')}${(texIdx--).toString().padStart(2, '0')}`,
-        ) ?? -1
-      );
+        ) ?? -1;
     }
     return retValue;
   }

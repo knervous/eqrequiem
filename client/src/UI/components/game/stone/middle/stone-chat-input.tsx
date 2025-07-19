@@ -81,8 +81,6 @@ export const ChatInputSlate: React.FC<ChatInputSlateProps> = ({
       editableRef.current.scrollLeft = editableRef.current.scrollWidth;
     }
   });
-  console.log('value', value);
-  console.log('editor', editor);
   useEffect(() => {
     const handleGlobalKey = (e: KeyboardEvent) => {
       const isFocused = ReactEditor.isFocused(editor);

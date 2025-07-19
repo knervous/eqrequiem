@@ -280,7 +280,7 @@ export default class Player {
       await this.playerEntity.dispose();
       this.playerEntity = null;
     }
-    this.player = capnpToPlainObject(player) as PlayerProfile;
+    this.player = (player as any).testData ? player : capnpToPlainObject(player) as PlayerProfile;
     console.log('player', this.player, player);
     this.currentAnimation = '';
     this.playerInventory.load();

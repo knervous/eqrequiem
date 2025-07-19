@@ -36,6 +36,27 @@ export enum InventorySlot {
     Cursor
   }
 
+export const InventorySlotTextures = {
+  'he': InventorySlot.Head,
+  'ch': InventorySlot.Chest,
+  'ua': InventorySlot.Arms,
+  'fa': InventorySlot.Wrist1,
+  'lg': InventorySlot.Legs,
+  'hn': InventorySlot.Hands,
+  'ft': InventorySlot.Feet,
+} as Record<string, InventorySlot>;
+
+export const TextureProfileMap = {
+  'he': 'head',
+  'ch': 'chest',
+  'ua': 'arms',
+  'fa': 'wrist',
+  'lg': 'legs',
+  'hn': 'hands',
+  'ft': 'feet',
+} as Record<string, string>;
+
+
 export const InventorySlotNames = {
   [InventorySlot.Charm]    : 'Charm',
   [InventorySlot.Ear1]     : 'Ear',
