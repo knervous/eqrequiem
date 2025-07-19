@@ -68,7 +68,7 @@ export default class EntityPool {
     if (!spawn.name.includes('Discord')) {
       // return;
     }
-
+    spawn.y += 5;
     this.spawns[spawn.spawnId] = spawn;
 
     const entity = await EntityCache.getInstance(this.gameManager, spawn, this.scene!, this.parent);

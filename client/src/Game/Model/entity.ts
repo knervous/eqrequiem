@@ -157,7 +157,7 @@ export class Entity extends BABYLON.TransformNode {
     const finalScale = spawnScale / height;
 
     this.spawnScale = finalScale; // Use spawn scale if available, otherwise default to 1.5
-    this.spawnPosition = new BABYLON.Vector3(spawn.x, spawn.y + 5, spawn.z);
+    this.spawnPosition = new BABYLON.Vector3(spawn.x, spawn.y, spawn.z);
     // this.debugWireframe = new DebugWireframe(this, scene);
     this.playAnimation(AnimationDefinitions.Idle1);
     Entity.instantiateStatics(scene);

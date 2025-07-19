@@ -91,12 +91,12 @@ export const StoneInventory: React.FC<{
         return;
       }
       const camera = GameManager.instance.SecondaryCamera;
-      const hDist = 14;
-      const vDist = 5;
+      const hDist = 10;
+      const vDist = 3;
       const forward = Player.instance?.playerEntity
         .getDirection(BABYLON.Axis.X)
         .scale(-hDist);
-      const lookatOffset = new BABYLON.Vector3(0, 1.7, 0);
+      const lookatOffset = new BABYLON.Vector3(0, 1.0, 0);
       camera.position
         .copyFrom(Player.instance.getPlayerPosition()!)
         .addInPlace(new BABYLON.Vector3(0, vDist, 0))
