@@ -8,6 +8,7 @@ import { FileSystem } from '@game/FileSystem/filesystem';
 import type GameManager from '@game/Manager/game-manager';
 import { Spawn } from '@game/Net/internal/api/capnp/common';
 import { PlayerProfile } from '@game/Net/internal/api/capnp/player';
+import Player from '@game/Player/player';
 import { InventorySlot } from '@game/Player/player-constants';
 import { loadBasisTexture } from './basis-texture';
 import { Entity } from './entity';
@@ -98,7 +99,9 @@ export class EntityCache {
           console.log(`[EntityCache] Error loading model ${model}:`, e);
           return null;
         });
-        if (!container) {return null;}
+        if (!container) {
+          return null;
+        }
 
         // Attach to bucket
         const root = container.rootNodes[0];
@@ -198,10 +201,10 @@ export class EntityCache {
         let animations: BJS.AnimationRange[] = [];
         const infoNode = (root as any).getChildTransformNodes()?.[0];
 
-        const json = await FileSystem.getFileJSON(
+        const json = (await FileSystem.getFileJSON(
           'eqrequiem/vat',
           `${model}.json`,
-        ) as any;
+        )) as any;
         if (json) {
           animations = json.animations as BJS.AnimationRange[];
         } else {
@@ -274,10 +277,9 @@ export class EntityCache {
           if (c) {
             EntityCache.resolvedContainers[model] = c;
             return c;
-          } 
+          }
           delete EntityCache.containers[model];
           return null;
-          
         })
         .catch((e) => {
           console.error(`[EntityCache] Error loading model ${model}:`, e);
@@ -303,20 +305,30 @@ export class EntityCache {
     let robed = false;
     if (spawn instanceof Spawn) {
       robed = (spawn.isNpc ? spawn.equipChest : spawn.equipment.chest) >= 10;
-    } else if (spawn instanceof PlayerProfile) {
-      robed =
-        (spawn.inventoryItems
-          ?.toArray()
-          .find((i) => i.slot === InventorySlot.Chest)?.material ?? 0) >=
-        10;
+    } else {
+      const chestItem =
+        Player.instance?.playerInventory.get(InventorySlot.Chest, -1) ??
+        Player.instance?.playerInventory.get(InventorySlot.Chest, 0) ??
+        null;
+      robed = (chestItem?.material ?? 0) >= 10;
     }
     if (robed) {
       model += '01';
     }
     model = model.toLowerCase();
     const container = await EntityCache.getContainer(model, scene);
-    if (!container) {return null;}
-    return new Entity(gameManager, spawn, scene, container, this, parentNode!, entry);
+    if (!container) {
+      return null;
+    }
+    return new Entity(
+      gameManager,
+      spawn,
+      scene,
+      container,
+      this,
+      parentNode!,
+      entry,
+    );
   }
 
   public static dispose(model: ModelKey): void {
@@ -327,7 +339,9 @@ export class EntityCache {
     Entity.disposeStatics();
     Object.keys(EntityCache.resolvedContainers).forEach((m) => {
       const c = EntityCache.resolvedContainers[m];
-      if (!c) {return;}
+      if (!c) {
+        return;
+      }
       c.container.dispose();
       c.manager?.dispose();
       c.shaderMaterial?.dispose(true, true);

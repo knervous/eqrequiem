@@ -8,7 +8,10 @@ import { Entity } from '@game/Model/entity';
 import EntityCache from '@game/Model/entity-cache';
 import { MoveItem } from '@game/Net/internal/api/capnp/common';
 import { PlayerProfile } from '@game/Net/internal/api/capnp/player';
-import { ActionButtonData, ActionType } from '@ui/components/game/action-button/constants';
+import {
+  ActionButtonData,
+  ActionType,
+} from '@ui/components/game/action-button/constants';
 import RACE_DATA from '../Constants/race-data';
 import { PlayerAbility } from './player-ability';
 import { PlayerCamera } from './player-cam';
@@ -67,7 +70,6 @@ export default class Player {
     this.sitting = value;
     emitter.emit('playerSitting', value);
     if (this.playerEntity) {
-    
     }
   }
 
@@ -114,7 +116,6 @@ export default class Player {
     return this.playerInventory.get(InventorySlot.Cursor) !== null;
   }
 
-
   constructor(
     gameManager: GameManager,
     camera: BJS.UniversalCamera,
@@ -151,7 +152,10 @@ export default class Player {
   }
 
   public getPlayerRotation() {
-    return this.playerEntity?.rotationQuaternion?.toEulerAngles() ?? BABYLON.Vector3.Zero();
+    return (
+      this.playerEntity?.rotationQuaternion?.toEulerAngles() ??
+      BABYLON.Vector3.Zero()
+    );
   }
 
   public getPlayerPosition() {
@@ -177,7 +181,9 @@ export default class Player {
 
   public setCollision(on: boolean) {
     if (this.playerEntity?.physicsBody?.shape) {
-      this.playerEntity.physicsBody.shape.filterCollideMask = on ? this.originalCollisionFilter : 8;
+      this.playerEntity.physicsBody.shape.filterCollideMask = on
+        ? this.originalCollisionFilter
+        : 8;
     }
   }
 
@@ -196,12 +202,12 @@ export default class Player {
       this.playerEntity.checkBelowAndReposition();
     }
   }
-  
+
   private get headVariation(): number {
     if (!this.player) {
       return 0;
     }
-    return 0;// this.playerInventory.getHeadSlot()?.itemtype ?? 0;
+    return 0; // this.playerInventory.getHeadSlot()?.itemtype ?? 0;
   }
 
   private get headModelName(): string {
@@ -215,7 +221,7 @@ export default class Player {
   }
 
   public setRotation(yaw: number) {
-    if (!this.playerEntity) {
+    if (!this.playerEntity?.physicsBody) {
       return;
     }
     const physicsBody = this.playerEntity.physicsBody!;
@@ -249,10 +255,11 @@ export default class Player {
       .scene!.getPhysicsEngine()!
       .getPhysicsPlugin() as BJS.HavokPlugin;
 
-    plugin._hknp.HP_Body_SetPosition(
-      physicsBody._pluginData.hpBodyId,
-      [x, y, z],
-    );
+    plugin._hknp.HP_Body_SetPosition(physicsBody._pluginData.hpBodyId, [
+      x,
+      y,
+      z,
+    ]);
   }
 
   public async UpdateNameplate(lines: string[]) {
@@ -261,6 +268,71 @@ export default class Player {
       return;
     }
     await this.playerEntity.instantiateNameplate(lines);
+  }
+
+  public async swapToRobe() {
+    if (!this.playerEntity) {
+      console.warn('[Player] No player entity to swap to robe');
+      return;
+    }
+    if (!this.player) {
+      console.warn('[Player] No player data available for robe swap');
+      return;
+    }
+    if (this.model.length === 5) {
+      this.playerEntity.dispose();
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      const container = this.getOrCreateNodeContainer(this.gameManager.scene!);
+      this.model = `${this.model.slice(0, 3)}`;
+      this.playerEntity = await EntityCache.getInstance(
+        this.gameManager,
+        this.player,
+      this.gameManager.scene!,
+      container,
+      );
+      if (!this.playerEntity) {
+        console.error('[Player] Failed to create player entity');
+        return;
+      }
+      await this.playerEntity.initialize();
+      await this.playerEntity.instantiateSecondaryMesh(this.headModelName, 0);
+      this.playerEntity.updateModelTextures();
+      return; // Already in robe mode
+    }
+    const robeWearingModels = [
+      'HUM',
+      'HUF',
+      'HIM',
+      'HIF',
+      'DAF',
+      'DAM',
+      'ERF',
+      'ERM',
+      'GNF',
+      'GNM',
+    ];
+    if (!robeWearingModels.includes(this.model)) {
+      console.warn(
+        `[Player] Model ${this.model} does not support robe swapping`,
+      );
+      return;
+    }
+    this.playerEntity.dispose();
+    const container = this.getOrCreateNodeContainer(this.gameManager.scene!);
+    this.model = `${this.model}01`;
+    this.playerEntity = await EntityCache.getInstance(
+      this.gameManager,
+      this.player,
+      this.gameManager.scene!,
+      container,
+    );
+    if (!this.playerEntity) {
+      console.error('[Player] Failed to create player entity');
+      return;
+    }
+    await this.playerEntity.initialize();
+    await this.playerEntity.instantiateSecondaryMesh(this.headModelName, 0);
+    this.playerEntity.updateModelTextures();
   }
 
   /**
@@ -280,7 +352,9 @@ export default class Player {
       await this.playerEntity.dispose();
       this.playerEntity = null;
     }
-    this.player = (player as any).testData ? player : capnpToPlainObject(player) as PlayerProfile;
+    this.player = (player as any).testData
+      ? player
+      : (capnpToPlainObject(player) as PlayerProfile);
     console.log('player', this.player, player);
     this.currentAnimation = '';
     this.playerInventory.load();
@@ -295,7 +369,12 @@ export default class Player {
     this.model = model;
     const container = this.getOrCreateNodeContainer(this.gameManager.scene!);
     // player.y = player.z = player.x = 15;
-    const playerEntity = await EntityCache.getInstance(this.gameManager, player, this.gameManager.scene!, container);
+    const playerEntity = await EntityCache.getInstance(
+      this.gameManager,
+      player,
+      this.gameManager.scene!,
+      container,
+    );
     if (!playerEntity) {
       console.error('[Player] Failed to create player entity');
       return;
@@ -306,7 +385,7 @@ export default class Player {
     if (this.inGame) {
       this.playerMovement = new PlayerMovement(this, this.gameManager.scene!);
     }
- 
+
     this.gameManager.scene?.registerBeforeRender(this.tick.bind(this));
     if (this.playerCamera.isFirstPerson && !fromCharSelect) {
       this.playerEntity.toggleVisibility(false);
@@ -322,14 +401,8 @@ export default class Player {
     this.playerMovement?.toggleAutoRun();
   }
 
-  public playAnimation(
-    animationName: string,
-    playThrough: boolean = true,
-  ) {
+  public playAnimation(animationName: string, playThrough: boolean = true) {
     this.playerEntity?.playAnimation(animationName, playThrough);
-  
-
-
   }
 
   public playPos() {
@@ -363,7 +436,6 @@ export default class Player {
     this.playAnimation(AnimationDefinitions.Idle2, false);
   }
 
-
   // Action types
 
   public doAction(actionData?: ActionButtonData) {
@@ -375,7 +447,7 @@ export default class Player {
       console.warn('[Player] No action data provided');
       return;
     }
-  
+
     console.log('Action data', actionData);
     switch (actionData.action as ActionType) {
       case ActionType.MELEE_ATTACK:
@@ -422,8 +494,7 @@ export default class Player {
 
     // Do texture swap logic if needed
     // todo
-    
-    this.playerInventory.moveItem(item);
 
+    this.playerInventory.moveItem(item);
   }
 }

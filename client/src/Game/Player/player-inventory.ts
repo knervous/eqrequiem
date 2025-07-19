@@ -135,7 +135,7 @@ export class PlayerInventory {
    * Move an item from (fromSlot, fromBag) to (toSlot, toBag).
    * MoveItem on the wire now should include .fromBag and .toBag
    */
-  public moveItem(move: MoveItem): void {
+  public async moveItem(move: MoveItem): Promise<void> {
     const { fromSlot, fromBagSlot, toSlot, toBagSlot } = move;
     const srcKey = this.makeKey(fromSlot as InventorySlot, fromBagSlot);
     const dstKey = this.makeKey(toSlot as InventorySlot, toBagSlot);
@@ -155,8 +155,14 @@ export class PlayerInventory {
 
     emitter.emit('updateInventorySlot', { slot: fromSlot, bag: fromBagSlot });
     emitter.emit('updateInventorySlot', { slot: toSlot, bag: toBagSlot });
+    
 
     if (fromBagSlot === -1 || toBagSlot === -1) {
+      if ((toSlot === InventorySlot.Chest && (srcItem?.material ?? 0) >= 10)
+      || (fromSlot === InventorySlot.Chest && (srcItem?.material ?? 0) >= 10)
+      ) {
+        await this.player.swapToRobe();
+      }
       this.player.playerEntity?.updateModelTextures();
     }
   }

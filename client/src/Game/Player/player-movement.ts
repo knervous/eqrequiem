@@ -17,7 +17,6 @@ type SimpleVector4 = {
 export class PlayerMovement {
   private player: Player;
   private scene: BJS.Scene;
-  private physicsBody: BJS.PhysicsBody;
   public moveSpeed: number = 20;
   public turnSpeed: number = 1.5;
   public gravity: boolean = true;
@@ -31,10 +30,13 @@ export class PlayerMovement {
   private autoRun: boolean = false;
   public moveForward: boolean = false;
 
+  private get physicsBody(): BJS.PhysicsBody {
+    return this.player.playerEntity?.physicsBody!;
+  }
+
   constructor(player: Player, scene: BJS.Scene) {
     this.player = player;
     this.scene = scene;
-    this.physicsBody = this.player.playerEntity!.physicsBody!;
 
     // Register keyboard listeners
     this.scene.onKeyboardObservable.add((kbInfo) => {
