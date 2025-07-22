@@ -66,7 +66,7 @@ export default class EntityPool {
     }
 
     if (!spawn.name.includes('Sneed')) {
-      return;
+      // return;
     }
     spawn.y += 5;
     this.spawns[spawn.spawnId] = spawn;
