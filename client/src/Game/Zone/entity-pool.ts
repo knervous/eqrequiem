@@ -65,8 +65,8 @@ export default class EntityPool {
       // return;
     }
 
-    if (!spawn.name.includes('Discord')) {
-      // return;
+    if (!spawn.name.includes('Sneed')) {
+      return;
     }
     spawn.y += 5;
     this.spawns[spawn.spawnId] = spawn;

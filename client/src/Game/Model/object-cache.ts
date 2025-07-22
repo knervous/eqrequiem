@@ -165,7 +165,7 @@ export default class ObjectCache {
 
       const translation = BABYLON.Matrix.Translation(x, y, z);
       const rotation = BABYLON.Matrix.RotationYawPitchRoll(
-        BABYLON.Tools.ToRadians(rotateY + 180),
+        BABYLON.Tools.ToRadians(rotateY),
         BABYLON.Tools.ToRadians(rotateX),
         BABYLON.Tools.ToRadians(rotateZ),
       );
@@ -249,7 +249,7 @@ export default class ObjectCache {
           // Apply the transformation to the transform node
           const translation = BABYLON.Matrix.Translation(x, y, z);
           const rotation = BABYLON.Matrix.RotationYawPitchRoll(
-            BABYLON.Tools.ToRadians(rotateY + 180),
+            BABYLON.Tools.ToRadians(rotateY),
             BABYLON.Tools.ToRadians(rotateX),
             BABYLON.Tools.ToRadians(rotateZ),
           );

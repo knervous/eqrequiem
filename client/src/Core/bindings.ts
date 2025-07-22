@@ -1,16 +1,16 @@
-import { Dispatch } from "react";
-import { setGlobals } from "sage-core/globals";
-import { EQFileHandle } from "sage-core/model/file-handle";
+import { Dispatch } from 'react';
+import { USE_SAGE } from '@game/Constants/constants';
+import * as Comlink from 'comlink';
+import JSZip from 'jszip';
+import { setGlobals } from 'sage-core/globals';
+import { EQFileHandle } from 'sage-core/model/file-handle';
 import {
   getEQFile,
   getEQFileExists,
   getRootFiles,
   getRootEQFile,
   writeRootEQFile,
-} from "sage-core/util/fileHandler";
-import * as Comlink from "comlink";
-import { USE_SAGE } from "@game/Constants/constants";
-import JSZip from "jszip";
+} from 'sage-core/util/fileHandler';
 
 
 async function deleteFolderRecursively(handle) {
@@ -42,9 +42,9 @@ type CacheEntry = {
   lastAccess: number;
 };
 
-const baseUrl = "https://eqrequiem.blob.core.windows.net/requiem";
-const zippedPrefixes = ["eqrequiem/textures"];
-const REQUIEM_FILE_VERSION = '1.1.20';
+const baseUrl = 'https://eqrequiem.blob.core.windows.net/requiem';
+const zippedPrefixes = ['eqrequiem/textures'];
+const REQUIEM_FILE_VERSION = '1.1.22';
 
 function selectMinimalFiles(candidateArrays: number[][]): number[] {
   let remaining = candidateArrays.slice();
@@ -107,7 +107,7 @@ class FileSystemBindings {
   > | null = null;
 
   private updateProcessedResults = (data: { [key: string]: ArrayBuffer }) => {
-    if (!data) return;
+    if (!data) {return;}
     for (const [key, value] of Object.entries(data)) {
       this.processedResults.set(key, { value, lastAccess: Date.now() });
     }
@@ -162,7 +162,7 @@ class FileSystemBindings {
       const root = await this.rootFileSystemHandle.getDirectoryHandle('eqrequiem', { create: true });
       for (const folder of ['data', 'babylon', 'basis', 'vat', 'items', 'models', 'objects', 'zones']) {
         const handle = await root.getDirectoryHandle(folder, { create: false }).catch(() => {});
-        if (!handle) continue;
+        if (!handle) {continue;}
         await deleteFolderRecursively(handle).catch((e) => {
           console.error(`Error deleting folder ${folder}:`, e);
         });
@@ -173,20 +173,20 @@ class FileSystemBindings {
     /**
      * Globals
      */
-    setGlobals({ gameController, GlobalStore, root: "eqrequiem" });
-    this.models = await fetch(`models.json`, { mode: 'cors' })
+    setGlobals({ gameController, GlobalStore, root: 'eqrequiem' });
+    this.models = await fetch('models.json', { mode: 'cors' })
       .then((r) => {
-        if (!r.ok) throw new Error(`Failed to fetch models.json: ${r.status}`);
+        if (!r.ok) {throw new Error(`Failed to fetch models.json: ${r.status}`);}
         return r.json();
       })
       .catch((e) => {
-        console.error("Error fetching models.json:", e);
+        console.error('Error fetching models.json:', e);
         throw e;
       });
     if (USE_SAGE) {
-      console.log("Using Sage Worker");
-      const worker = new Worker(new URL("./worker.ts", import.meta.url), {
-        type: "module",
+      console.log('Using Sage Worker');
+      const worker = new Worker(new URL('./worker.ts', import.meta.url), {
+        type: 'module',
       });
       const wrappedWorker = Comlink.wrap(worker);
       this.wrappedWorker = wrappedWorker;
@@ -205,8 +205,8 @@ class FileSystemBindings {
     }));
 
     this.setConverting?.(handleNames);
-    console.log("--- Processing Handles ---", handleNames);
-    const canvas = document.createElement("canvas");
+    console.log('--- Processing Handles ---', handleNames);
+    const canvas = document.createElement('canvas');
     const offScreen = canvas.transferControlToOffscreen();
     try {
       const data = await this.wrappedWorker?.process(
@@ -218,13 +218,13 @@ class FileSystemBindings {
 
       return data;
     } catch (e) {
-      console.log("Error processing", e);
+      console.log('Error processing', e);
       throw e;
     }
   };
 
   flushQueue = async () => {
-    if (!this.candidates.length) return;
+    if (!this.candidates.length) {return;}
 
     const currentCandidates = [...this.candidates];
     this.candidates = [];
@@ -236,15 +236,15 @@ class FileSystemBindings {
       .filter(Boolean) as string[];
 
     if (!minimalFiles.length) {
-      console.log("No minimal files to load");
+      console.log('No minimal files to load');
       return;
     }
     if (
-      this.queue.includes(this.models.stringTable.indexOf("global_chr.s3d"))
+      this.queue.includes(this.models.stringTable.indexOf('global_chr.s3d'))
     ) {
-      console.log("Adding global3_chr to queue");
-      minimalFiles.push("global3_chr.s3d");
-      minimalFiles.push("global4_chr.s3d");
+      console.log('Adding global3_chr to queue');
+      minimalFiles.push('global3_chr.s3d');
+      minimalFiles.push('global4_chr.s3d');
     }
     const handles = await Promise.all(
       await getRootFiles((name: string) => minimalFiles.includes(name)),
@@ -254,12 +254,12 @@ class FileSystemBindings {
     }));
 
     this.setConverting?.(handleNames);
-    console.log("--- Processing Handles ---", handleNames);
-    const canvas = document.createElement("canvas");
+    console.log('--- Processing Handles ---', handleNames);
+    const canvas = document.createElement('canvas');
     const offScreen = canvas.transferControlToOffscreen();
     try {
       const data = await this.wrappedWorker?.process(
-        minimalFiles[0].replace(".s3d", "").replace(".eqg", ""),
+        minimalFiles[0].replace('.s3d', '').replace('.eqg', ''),
         Comlink.transfer(offScreen, [offScreen]),
         this.rootFileSystemHandle,
         ...handles,
@@ -268,7 +268,7 @@ class FileSystemBindings {
       this.checkPendingTasks();
       return data;
     } catch (e) {
-      console.log("Error processing", e);
+      console.log('Error processing', e);
       this.rejectPendingTasks(e);
       throw e;
     }
@@ -276,7 +276,7 @@ class FileSystemBindings {
 
   private checkPendingTasks = () => {
     for (const [path, task] of this.pendingTasks) {
-      const pathParts = path.split("/");
+      const pathParts = path.split('/');
       const fileName = pathParts[pathParts.length - 1];
       if (this.processedResults.has(fileName)) {
         const data = this.getProcessedResult(fileName);
@@ -305,7 +305,7 @@ class FileSystemBindings {
       return Promise.resolve(null);
     }
 
-    const pathParts = path.split("/");
+    const pathParts = path.split('/');
     const fileName = pathParts[pathParts.length - 1];
     if (this.processedResults.has(fileName)) {
       return Promise.resolve(this.getProcessedResult(fileName));
@@ -344,10 +344,10 @@ class FileSystemBindings {
     const writePromises: Promise<void>[] = [];
 
     for (const [relativePath, zipEntry] of Object.entries(zip.files)) {
-      if (zipEntry.dir) continue; // Skip directories
+      if (zipEntry.dir) {continue;} // Skip directories
 
-      const fileName = relativePath.split("/").pop()!;
-      const buffer = await zipEntry.async("arraybuffer");
+      const fileName = relativePath.split('/').pop()!;
+      const buffer = await zipEntry.async('arraybuffer');
 
       // Write to OPFS
       writePromises.push(
@@ -383,9 +383,9 @@ class FileSystemBindings {
   
     if (isZippedPrefix) {
       // Extract the subfolder (e.g., qeynos2 from eqrequiem/textures/qeynos2)
-      const pathParts = folderPath.split("/");
+      const pathParts = folderPath.split('/');
       const zipFolder = pathParts[pathParts.length - 1]; // e.g., qeynos2
-      const zipPath = `${baseUrl}/${pathParts.slice(0, -1).join("/")}/${zipFolder}.zip`;
+      const zipPath = `${baseUrl}/${pathParts.slice(0, -1).join('/')}/${zipFolder}.zip`;
       const zipKey = zipPath.toLowerCase();
   
       // Check if there's an ongoing unzip operation for this zip
@@ -407,7 +407,7 @@ class FileSystemBindings {
         // Create a new fetch and unzip promise
         const fetchPromise = (async () => {
           try {
-            const response = await fetch(zipPath, { mode: "cors" });
+            const response = await fetch(zipPath, { mode: 'cors' });
             if (response.status === 404) {
               console.warn(`Zip file not found: ${zipPath}`);
               return null; // Explicitly handle 404
@@ -453,19 +453,19 @@ class FileSystemBindings {
   
     // Non-zipped file fetch
     let normalizedPath = `${baseUrl}/${folderPath}/${fileName}`
-      .replace(/\/+/g, "/")
-      .replace(/^https:\/+/, "https://")
+      .replace(/\/+/g, '/')
+      .replace(/^https:\/+/, 'https://')
       .toLowerCase();
-    if (normalizedPath.endsWith("/")) {
+    if (normalizedPath.endsWith('/')) {
       normalizedPath = normalizedPath.slice(0, -1);
     }
-    if (normalizedPath.endsWith(".glb")) {
+    if (normalizedPath.endsWith('.glb')) {
       fileName = fileName.toLowerCase();
-      normalizedPath = normalizedPath.replace(".glb", ".glb.gz").toLowerCase();
+      normalizedPath = normalizedPath.replace('.glb', '.glb.gz').toLowerCase();
     }
-    if (normalizedPath.endsWith(".babylon")) {
+    if (normalizedPath.endsWith('.babylon')) {
       fileName = fileName.toLowerCase();
-      normalizedPath = normalizedPath.replace(".babylon", ".babylon.gz").toLowerCase();
+      normalizedPath = normalizedPath.replace('.babylon', '.babylon.gz').toLowerCase();
     }
   
     if (this.fetchPromises.has(normalizedPath)) {
@@ -474,7 +474,7 @@ class FileSystemBindings {
   
     const fetchPromise = (async () => {
       try {
-        const response = await fetch(normalizedPath, { mode: "cors" });
+        const response = await fetch(normalizedPath, { mode: 'cors' });
         if (response.status === 404) {
           console.warn(`File not found: ${normalizedPath}`);
           return null; // Explicitly handle 404
@@ -502,29 +502,29 @@ class FileSystemBindings {
     fileName: string,
   ): Promise<ArrayBuffer | null> => {
     try {
-      const path = folderPath.split("/");
+      const path = folderPath.split('/');
       let data = await this.getOrFetch(folderPath, fileName);
       if (!USE_SAGE) {
         return data;
       }
-      if (path[0] !== "eqrequiem") {
+      if (path[0] !== 'eqrequiem') {
         data = await this.getOrFetch(folderPath, fileName);
       } else {
         switch (path[1]) {
-          case "textures": {
+          case 'textures': {
             data = await this.getOrFetch(folderPath, fileName);
             break;
           }
-          case "sky": {
+          case 'sky': {
             data =
               this.getProcessedResult(fileName) ||
               (await getEQFile(path[1], fileName));
-            if (!data && (path[1] === "models" || path[1] === "sky")) {
+            if (!data && (path[1] === 'models' || path[1] === 'sky')) {
               const handles = [
                 {
-                  name: `sky.s3d`,
+                  name: 'sky.s3d',
                   arrayBuffer() {
-                    return getEQFile("root", `sky.s3d`);
+                    return getEQFile('root', 'sky.s3d');
                   },
                 },
               ];
@@ -534,12 +534,12 @@ class FileSystemBindings {
                 })),
               );
               const obj = new EQFileHandle(
-                "sky",
+                'sky',
                 handles,
                 this.rootFileSystemHandle,
                 {},
                 {
-                  embedWebP: true,
+                  embedWebP  : true,
                   skipSubload: true,
                 },
               );
@@ -549,19 +549,19 @@ class FileSystemBindings {
             }
             break;
           }
-          case "objects":
-          case "models":
+          case 'objects':
+          case 'models':
             data =
               this.getProcessedResult(fileName) ||
               (await getEQFile(path[1], fileName));
-            if (!data && (path[1] === "models" || path[1] === "objects")) {
+            if (!data && (path[1] === 'models' || path[1] === 'objects')) {
               const matches =
-                this.models[fileName.replace(".glb", "").toLowerCase()];
+                this.models[fileName.replace('.glb', '').toLowerCase()];
               if (matches.length) {
                 let didSet = false;
                 if (
                   matches.some((m) =>
-                    this.models.stringTable[m].includes("global"),
+                    this.models.stringTable[m].includes('global'),
                   )
                 ) {
                   didSet = true;
@@ -578,24 +578,24 @@ class FileSystemBindings {
               }
             }
             break;
-          case "zones": {
-            const zoneName = fileName.split(".")[0];
+          case 'zones': {
+            const zoneName = fileName.split('.')[0];
             data = await getEQFile(path[1], fileName);
             if (!data) {
               const handles = [];
-              if (await getEQFileExists("root", `${zoneName}.s3d`)) {
+              if (await getEQFileExists('root', `${zoneName}.s3d`)) {
                 handles.push({
                   name: `${zoneName}.s3d`,
                   arrayBuffer() {
-                    return getEQFile("root", `${zoneName}.s3d`);
+                    return getEQFile('root', `${zoneName}.s3d`);
                   },
                 });
               }
-              if (await getEQFileExists("root", `${zoneName}.eqg`)) {
+              if (await getEQFileExists('root', `${zoneName}.eqg`)) {
                 handles.push({
                   name: `${zoneName}.eqg`,
                   arrayBuffer() {
-                    return getEQFile("root", `${zoneName}.eqg`);
+                    return getEQFile('root', `${zoneName}.eqg`);
                   },
                 });
               }
@@ -610,7 +610,7 @@ class FileSystemBindings {
                 this.rootFileSystemHandle,
                 {},
                 {
-                  embedWebP: true,
+                  embedWebP  : true,
                   skipSubload: true,
                 },
               );
@@ -627,7 +627,7 @@ class FileSystemBindings {
 
       return data;
     } catch (e) {
-      console.log("Error getting bytes", e);
+      console.log('Error getting bytes', e);
       return null;
     }
   };

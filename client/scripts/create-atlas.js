@@ -11,38 +11,26 @@ const rootPath = process.argv[2] || process.cwd();
 console.log(`Using root path: ${rootPath}`);
 
 // (2) Output folder for “tex” (where .basis and .json will go)
-const outputDir = path.join(rootPath, "basis");
+const outputDir = path.join(rootPath, '../basis');
 await fs.ensureDir(outputDir);
 
 // your regexes
 const charFileRegex      = /^([a-z]{3})([a-z]{2})(\d{2})(\d{2})\.dds$/;
-const clkRegex           = /clk\d{4}\.dds/;        // “robe” files
-const helmLeatherRegex   = /helmleather\d{2}\.dds/;
-
-// PC‐model list & robes
-const pcModels = [
-  'bam','baf','erm','erf','elf','elm','gnf','gnm',
-  'trf','trm','hum','huf','daf','dam','dwf','dwm',
-  'haf','ikf','ikm','ham','hif','him','hof','hom',
-  'ogm','ogf','kef','kem',
-];
-function wearsRobe(modelName) {
-  return [
-    'daf','dam','erf','erm','gnf','gnm',
-    'huf','hum','ikf','ikm','hif','him'
-  ].includes(modelName);
-}
+const clkRegex           = /clk\d{4}\.dds/i;        // “robe” files
+const helmRegex   = /^(helm|chain).*\.dds/i;
 
 // Recursively collect **all** DDS files matching a regex
 async function collectExtraFiles(regex) {
   let out = [];
+  const set = new Set();
   async function walk(dir) {
     for (const ent of await fs.readdir(dir, { withFileTypes: true })) {
       const full = path.join(dir, ent.name);
       if (ent.isDirectory()) {
         await walk(full);
-      } else if (ent.isFile() && regex.test(ent.name)) {
+      } else if (ent.isFile() && regex.test(ent.name) && !set.has(ent.name)) {
         out.push(full);
+        set.add(ent.name);
       }
     }
   }
@@ -52,7 +40,7 @@ async function collectExtraFiles(regex) {
 
 //— startup: prebuild the two extras lists once —//
 const allClkFiles         = await collectExtraFiles(clkRegex);
-const allHelmLeatherFiles = await collectExtraFiles(helmLeatherRegex);
+const allHelmFiles = await collectExtraFiles(helmRegex);
 
 //— now collect your normal char‐files —//
 const models = {};
@@ -107,19 +95,69 @@ function filePathsForModel(modelName) {
     }
   }
 
-  // (b) if they wear robes, append all CLK files
-  if (wearsRobe(modelName)) {
-    arr.push(...allClkFiles);
-  }
+  // // (b) if they wear robes, append all CLK files
+  // if (wearsRobe(modelName)) {
+  //   arr.push(...allClkFiles);
+  // }
 
-  // (c) if they’re a PC model, append all helm-leather
-  if (pcModels.includes(modelName)) {
-    arr.push(...allHelmLeatherFiles);
-  }
+  // // (c) if they’re a PC model, append all helm-leather
+  // if (pcModels.includes(modelName)) {
+  //   arr.push(...allHelmFiles);
+  // }
 
   // (d) dedupe in case of overlap
   return Array.from(new Set(arr));
 }
+
+
+// Generic extra‐processor for “clk” and “helm”
+async function processExtra(label, fileList) {
+  if (fileList.length === 0) {
+    console.log(`No files for extra "${label}", skipping.`);
+    return;
+  }
+  console.log(`Processing ${fileList.length} images for extra "${label}"…`);
+
+  const pngPaths = [];
+  const pathNames = [];
+
+  // (1) DDS → PNG
+  for (const filePath of fileList) {
+    const img = await convertToSharp(await fs.readFile(filePath), path.basename(filePath));
+    const resized = img.resize({ width:128, height:128, fit:"fill" }).removeAlpha();
+    const base = path.basename(filePath, ".dds");
+    const png = path.join(outputDir, `${label}-${base}.png`);
+    await resized.png().toFile(png);
+    pngPaths.push(png);
+    pathNames.push(base);
+  }
+
+  // (2) basisu → .basis
+  try {
+    execSync(
+      `npx basisu ${pngPaths.join(" ")} ` +
+      `-output_file ${path.join(outputDir, `${label}.basis`)} ` +
+      `-tex_type 2darray`
+    );
+  } catch (err) {
+    console.warn(`basisu failed for extra "${label}": ${err.message}`);
+  }
+
+  // (3) cleanup PNGs
+  await Promise.all(pngPaths.map(p => fs.remove(p)));
+
+  // (4) write JSON list
+  await fs.writeJson(
+    path.join(outputDir, `${label}.json`),
+    pathNames,
+    { spaces: 2 }
+  );
+  console.log(`Wrote ${label}.json`);
+}
+
+// Process the extras first
+await processExtra("clk",  allClkFiles);
+await processExtra("helm", allHelmFiles);
 
 // … then your existing processModel & main loop untouched …
 async function processModel(modelName) {
@@ -187,7 +225,7 @@ async function processModel(modelName) {
 
 (async () => {
   try {
-    const limit = pLimit(2);
+    const limit = pLimit(8);
     await Promise.all(
       Object.keys(models).map(name => limit(() => processModel(name)))
     );

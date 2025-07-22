@@ -270,70 +270,6 @@ export default class Player {
     await this.playerEntity.instantiateNameplate(lines);
   }
 
-  public async swapToRobe() {
-    if (!this.playerEntity) {
-      console.warn('[Player] No player entity to swap to robe');
-      return;
-    }
-    if (!this.player) {
-      console.warn('[Player] No player data available for robe swap');
-      return;
-    }
-    if (this.model.length === 5) {
-      this.playerEntity.dispose();
-      await new Promise((resolve) => setTimeout(resolve, 100));
-      const container = this.getOrCreateNodeContainer(this.gameManager.scene!);
-      this.model = `${this.model.slice(0, 3)}`;
-      this.playerEntity = await EntityCache.getInstance(
-        this.gameManager,
-        this.player,
-      this.gameManager.scene!,
-      container,
-      );
-      if (!this.playerEntity) {
-        console.error('[Player] Failed to create player entity');
-        return;
-      }
-      await this.playerEntity.initialize();
-      await this.playerEntity.instantiateSecondaryMesh(this.headModelName, 0);
-      this.playerEntity.updateModelTextures();
-      return; // Already in robe mode
-    }
-    const robeWearingModels = [
-      'HUM',
-      'HUF',
-      'HIM',
-      'HIF',
-      'DAF',
-      'DAM',
-      'ERF',
-      'ERM',
-      'GNF',
-      'GNM',
-    ];
-    if (!robeWearingModels.includes(this.model)) {
-      console.warn(
-        `[Player] Model ${this.model} does not support robe swapping`,
-      );
-      return;
-    }
-    this.playerEntity.dispose();
-    const container = this.getOrCreateNodeContainer(this.gameManager.scene!);
-    this.model = `${this.model}01`;
-    this.playerEntity = await EntityCache.getInstance(
-      this.gameManager,
-      this.player,
-      this.gameManager.scene!,
-      container,
-    );
-    if (!this.playerEntity) {
-      console.error('[Player] Failed to create player entity');
-      return;
-    }
-    await this.playerEntity.initialize();
-    await this.playerEntity.instantiateSecondaryMesh(this.headModelName, 0);
-    this.playerEntity.updateModelTextures();
-  }
 
   /**
    * Retrieves or creates a shared parent node on the scene
@@ -381,7 +317,6 @@ export default class Player {
     }
     this.playerEntity = playerEntity;
     await playerEntity.initialize();
-    await playerEntity.instantiateSecondaryMesh(this.headModelName, 0);
     if (this.inGame) {
       this.playerMovement = new PlayerMovement(this, this.gameManager.scene!);
     }

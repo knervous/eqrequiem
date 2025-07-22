@@ -17,13 +17,15 @@ import DiscordIcon from './discord';
 import { DISCORD_CLIENT_ID, REDIRECT_URI, RESPONSE_TYPE, SCOPE } from './util';
 import { fsBindings } from '@/Core/bindings';
 
-
 const defaultWorldName = 'requiem';
 declare const window: Window;
 const doEnterSandbox =
   new URLSearchParams(window.location.search).get('sandbox') === 'true';
 
-const serverUrl = import.meta.env.VITE_LOCAL_DEV === 'true' ? '/api' : 'https://eqrequiem.ddns.net';
+const serverUrl =
+  import.meta.env.VITE_LOCAL_DEV === 'true'
+    ? '/api'
+    : 'https://eqrequiem.ddns.net';
 
 export const LoginWindowComponent: React.FC = () => {
   const navigate = useNavigate();
@@ -34,57 +36,53 @@ export const LoginWindowComponent: React.FC = () => {
   const [playerCount, setPlayerCount] = React.useState<number>(-1);
 
   const enterSandbox = useCallback(async () => {
-    const { qeynos2_spawns, player } = await import('@/Game/Constants/test-data');
+    const { qeynos2_spawns, player } = await import(
+      '@/Game/Constants/test-data'
+    );
     setMode('game');
     GameManager.instance.loadZoneId(2);
     GameManager.instance.instantiatePlayer(player as any);
-    qeynos2_spawns.forEach((spawn) => { 
+    qeynos2_spawns.forEach((spawn) => {
       GameManager.instance.ZoneManager?.EntityPool?.AddSpawn(spawn as Spawn);
     });
   }, [setMode]);
 
-  const servers = [
-    { name: 'EQ: Requiem', playersOnline: playerCount },
-  ];
+  const servers = [{ name: 'EQ: Requiem', playersOnline: playerCount }];
 
+  const connectToWorld = useCallback(async () => {
+    const worldName = defaultWorldName;
+    let storedDetails: { token: string } | null = null;
+    try {
+      const storedDetailsString = localStorage.getItem(worldName);
+      if (storedDetailsString) {
+        storedDetails = JSON.parse(storedDetailsString);
+      }
+    } catch (e) {
+      console.error('Error parsing stored world details:', e);
+    }
+    const local = import.meta.env.VITE_LOCAL_DEV === 'true';
+    if (!storedDetails && !local) {
+      const discordAuthUrl = `https://discord.com/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&response_type=${RESPONSE_TYPE}&redirect_uri=${REDIRECT_URI}&scope=${SCOPE}`;
+      window.location.href = discordAuthUrl;
+    }
 
-  const connectToWorld = useCallback(
-    async () => {
-      const worldName = defaultWorldName;
-      let storedDetails: ({ token: string} | null) = null;
-      try {
-        const storedDetailsString = localStorage.getItem(worldName);
-        if (storedDetailsString) {
-          storedDetails = JSON.parse(storedDetailsString);
+    if (
+      await WorldSocket.connect('eqrequiem.ddns.net', 443, () => {
+        console.log('Disconnected');
+        navigate('/');
+      })
+    ) {
+      if (local) {
+        token.current = 'local';
+      } else {
+        if (storedDetails === null) {
+          return;
         }
-      } catch (e) {
-        console.error('Error parsing stored world details:', e);
+        token.current = storedDetails.token;
       }
-      const local = import.meta.env.VITE_LOCAL_DEV === 'true';
-      if (!storedDetails && !local) {
-        const discordAuthUrl = `https://discord.com/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&response_type=${RESPONSE_TYPE}&redirect_uri=${REDIRECT_URI}&scope=${SCOPE}`;
-        window.location.href = discordAuthUrl;
-      }
-
-      if (
-        await WorldSocket.connect('eqrequiem.ddns.net', 443, () => {
-          console.log('Disconnected');
-          navigate('/');
-        })
-      ) {
-        if (local) {
-          token.current = 'local';
-        } else {
-          if (storedDetails === null) {
-            return;
-          }
-          token.current = storedDetails.token;
-        }
-        setMode('character-select');
-      }
-    },
-    [setMode, token, navigate],
-  );
+      setMode('character-select');
+    }
+  }, [setMode, token, navigate]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -96,23 +94,25 @@ export const LoginWindowComponent: React.FC = () => {
       method: 'GET',
       mode  : 'cors',
       signal,
-    }).then((response) => {
-      if (!response.ok) {
-        console.error('Failed to fetch player count');
-        return;
-      }
-      return response.json();
-    }).then((data) => {
-      if (data && data.count !== undefined) {
-        setPlayerCount(data.count);
-      } else {
-        console.error('Invalid player count data', data);
-      }
-    }).catch((error) => {
-      console.error('Error fetching player count:', error);
-    });
-  }, []);  
-
+    })
+      .then((response) => {
+        if (!response.ok) {
+          console.error('Failed to fetch player count');
+          return;
+        }
+        return response.json();
+      })
+      .then((data) => {
+        if (data && data.count !== undefined) {
+          setPlayerCount(data.count);
+        } else {
+          console.error('Invalid player count data', data);
+        }
+      })
+      .catch((error) => {
+        console.error('Error fetching player count:', error);
+      });
+  }, []);
 
   useEffect(() => {
     const kbCallback = (e: KeyboardEvent) => {
@@ -128,7 +128,7 @@ export const LoginWindowComponent: React.FC = () => {
     window.addEventListener('keydown', kbCallback);
     return () => {
       window.removeEventListener('keydown', kbCallback);
-    };   
+    };
   }, [navigate, connectToWorld, selectedServer, servers.length]);
 
   useEffect(() => {
@@ -306,7 +306,9 @@ export const LoginWindowComponent: React.FC = () => {
                 <Typography
                   sx={{ fontSize: '14px', color: '#fff', textAlign: 'center' }}
                 >
-                  {server.playersOnline === -1 ? 'Offline' : server.playersOnline}
+                  {server.playersOnline === -1
+                    ? 'Offline'
+                    : server.playersOnline}
                 </Typography>
               </ListItem>
             ))}
@@ -382,7 +384,6 @@ export const LoginWindowComponent: React.FC = () => {
           <Button
             variant="contained"
             onClick={async () => {
-
               // sky
               // console.log('Processing sky');
               // const skyFiles = ["sky.s3d"];
@@ -394,25 +395,34 @@ export const LoginWindowComponent: React.FC = () => {
               // await fsBindings.processFiles('load2', load2Files);
               // // First do global
               // console.log('Processing global');
-              // const globalCharFiles = ["global_chr.s3d", "global3_chr.s3d", "global4_chr.s3d"];
-              // await fsBindings.processFiles('global_chr', globalCharFiles);
+              const globalCharFiles = [
+                'global_chr.s3d',
+                'global3_chr.s3d',
+                'global4_chr.s3d',
+              ];
+              await fsBindings.processFiles('global_chr', globalCharFiles);
 
               // //Items
               // console.log('Processing items');
               // const itemFiles = ["gequip.s3d", "gequip2.s3d"];
               // await fsBindings.processFiles('gequip', itemFiles);
               for (const zone of Object.values(supportedZones)) {
+             
                 const name = zone.shortName;
-  
+
                 const associatedFiles: string[] = [];
                 // temp short circuit
-                if (!['tox', 'steamfont', 'innothule', 'misty'].includes(zone.shortName)) {
-                  continue;
+                if (
+                  !['beholder'].includes(
+                    zone.shortName,
+                  )
+                ) {
+                  //   continue;
                 }
                 const exists = await getEQFileExists('zones', `${name}.glb`);
                 if (exists) {
                   console.log('Exists, skipping', name);
-                //  continue;
+                  //  continue;
                 }
                 console.log('Process', name);
                 for await (const fileHandle of getFilesRecursively(
@@ -421,8 +431,8 @@ export const LoginWindowComponent: React.FC = () => {
                   new RegExp(`^${name}[_\\.].*`),
                   false,
                 )) {
-                  if ((!fileHandle.name.includes('qeynos2_chr'))) {
-                  //  continue;
+                  if (!fileHandle.name.includes('qeynos2_chr')) {
+                    //  continue;
                   }
                   associatedFiles.push(fileHandle.name);
                 }

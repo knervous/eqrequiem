@@ -64,10 +64,8 @@ const FS_GL = `
 BABYLON.Effect.ShadersStore['vatVertexShader'] = VS_GL;
 BABYLON.Effect.ShadersStore['vatFragmentShader'] = FS_GL;
 
-export function createVATShaderMaterial(scene, texArr, vatTexture): BJS.ShaderMaterial {
-  
-
-  const shaderMat = new BABYLON.ShaderMaterial(
+export function createVATShaderMaterial(scene: BJS.Scene): BJS.ShaderMaterial {
+  const shaderMat = scene.getMaterialByName('vatShader') as BJS.ShaderMaterial || new BABYLON.ShaderMaterial(
     'vatShader',
     scene,
     {
@@ -90,22 +88,24 @@ export function createVATShaderMaterial(scene, texArr, vatTexture): BJS.ShaderMa
     true,
   );
 
-  shaderMat.setTexture('uAtlasArray', texArr);
-  shaderMat.setTexture('bakedVertexAnimationTexture', vatTexture);
-
-  if (vatTexture) {
-    const sz = vatTexture.getSize();
-    shaderMat.setVector2(
-      'bakedVertexAnimationTextureSizeInverted',
-      new BABYLON.Vector2(1.0 / sz.width, 1.0 / sz.height),
-    );
-  }
-
   shaderMat.onBind = (mesh) => {
-    if (mesh.bakedVertexAnimationManager) {
-      shaderMat.setFloat(
+    const effect = shaderMat.getEffect()!;
+    const atlas = mesh.metadata?.atlasArrayTexture as BJS.BaseTexture;
+    const vat = mesh.metadata?.vatTexture as BJS.BaseTexture;
+    const tmgr = mesh.bakedVertexAnimationManager;
+    if (atlas) {
+      effect.setTexture('uAtlasArray', atlas);
+    }
+    if (vat) {
+      const sz = vat.getSize();
+      shaderMat.setVector2(
+        'bakedVertexAnimationTextureSizeInverted',
+        new BABYLON.Vector2(1.0 / sz.width, 1.0 / sz.height),
+      );
+      effect.setTexture('bakedVertexAnimationTexture', vat);
+      effect.setFloat(
         'bakedVertexAnimationTime',
-        mesh.bakedVertexAnimationManager.time,
+        tmgr ? tmgr.time : 0,
       );
     }
   };

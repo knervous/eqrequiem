@@ -8,8 +8,6 @@ import { FileSystem } from '@game/FileSystem/filesystem';
 import type GameManager from '@game/Manager/game-manager';
 import { Spawn } from '@game/Net/internal/api/capnp/common';
 import { PlayerProfile } from '@game/Net/internal/api/capnp/player';
-import Player from '@game/Player/player';
-import { InventorySlot } from '@game/Player/player-constants';
 import { loadBasisTexture } from './basis-texture';
 import { Entity } from './entity';
 import { createVATShaderMaterial } from './entity-material';
@@ -39,6 +37,11 @@ export type AnimationEntry = {
   name: string;
 };
 
+export type BasisAtlas = {
+  texture: BJS.RawTexture2DArray;
+  atlas: string[];
+};
+
 // Texture attributes are defined as x: texture index, y: rgba mask
 const TEXTURE_ATTRIBUTE_BUFFER = new Int32Array([0, 0]);
 const ANIMATION_BUFFER = new BABYLON.Vector4(0, 1, 0, 60);
@@ -48,7 +51,8 @@ export class EntityCache {
     {};
   private static resolvedContainers: Record<ModelKey, EntityContainer | null> =
     {};
-
+  private static commonBasisAtlas: Record<string, BasisAtlas> = {};
+  private static commonBasisAtlasLoaded = false;
   /**
    * Retrieves or creates a shared parent node on the scene
    * under which all entities will be bucketed.
@@ -66,15 +70,59 @@ export class EntityCache {
    * @param model       model key (lowercased)
    * @param scene       Babylon scene
    * @param parentNode  parent under which to attach; defaults to shared container
-   * @param reuseMaterial optional model key to reuse VAT material from
    */
   public static async getContainer(
     model: string,
     scene: BJS.Scene,
-    reuseMaterial: string | null = null,
   ): Promise<EntityContainer | null> {
     model = model.toLowerCase();
-    // console.log(`[EntityCache] Loading model ${model}`);
+    if (!EntityCache.commonBasisAtlasLoaded) {
+      const commonEntries = ['clk', 'helm'];
+      for (const entry of commonEntries) {
+        const bytes = await FileSystem.getFileBytes(
+          'eqrequiem/basis',
+          `${entry}.basis`,
+        );
+        if (!bytes) {
+          console.warn(
+            `[EntityCache] Common basis texture missing for ${entry}`,
+          );
+          continue;
+        }
+        const { data, layerCount, format } = await loadBasisTexture(
+          scene.getEngine(),
+          bytes,
+        );
+        const textureArray = new BABYLON.RawTexture2DArray(
+          null,
+          128,
+          128,
+          layerCount,
+          format,
+          scene,
+          false,
+          false,
+          BABYLON.Constants.TEXTURE_TRILINEAR_SAMPLINGMODE,
+        );
+        textureArray.update(data);
+        // Atlas
+        const textureAtlas =
+          (await FileSystem.getFileJSON<string[]>(
+            'eqrequiem/basis',
+            `${entry}.json`,
+          )) ?? [];
+        if (!textureAtlas.length) {
+          console.warn(`[EntityCache] VAT atlas missing for ${entry}`);
+          return null;
+        }
+
+        EntityCache.commonBasisAtlas[entry] = {
+          texture: textureArray,
+          atlas  : textureAtlas,
+        };
+      }
+      EntityCache.commonBasisAtlasLoaded = true;
+    }
 
     const bucket = EntityCache.getOrCreateNodeContainer(scene);
     const baseModel = model.slice(0, 3);
@@ -113,89 +161,77 @@ export class EntityCache {
         let shaderMaterial: BJS.ShaderMaterial | null = null;
         let textureAtlas: string[] = [];
 
-        if (reuseMaterial && reuseMaterial in EntityCache.containers) {
-          const reused = await EntityCache.containers[reuseMaterial];
-          manager = reused?.manager ?? null;
-          shaderMaterial = reused?.shaderMaterial ?? null;
-          textureAtlas = reused?.textureAtlas ?? [];
-        } else {
-          // Vertex animation data
-          const canUseFloat16 = scene.getEngine().getCaps().textureHalfFloat;
-          const vat16 = `${model}.bin.gz`;
-          const vat32 = `${model}_32.bin.gz`;
-          const vatBytes = await FileSystem.getFileBytes(
-            'eqrequiem/vat',
-            canUseFloat16 ? vat16 : vat32,
-          );
-          if (!vatBytes) {
-            console.warn(`[EntityCache] VAT data missing for ${model}`);
-            return null;
-          }
-          const vatData = canUseFloat16
-            ? new Uint16Array(vatBytes)
-            : new Float32Array(vatBytes);
-          manager = new BABYLON.BakedVertexAnimationManager(scene);
-          const baker = new BABYLON.VertexAnimationBaker(
-            scene,
-            container.skeletons[0],
-          );
-          manager.texture = baker.textureFromBakedVertexData(vatData);
-          manager.texture.name = `vatTexture16_${model}`;
-
-          // Basis textures
-          const basisBytes = await FileSystem.getFileBytes(
-            'eqrequiem/basis',
-            `${baseModel}.basis`,
-          );
-          if (!basisBytes) {
-            console.warn(`[EntityCache] Basis texture missing for ${model}`);
-            return null;
-          }
-          const { data, layerCount, format } = await loadBasisTexture(
-            scene.getEngine(),
-            basisBytes,
-          );
-          const rawArr = new BABYLON.RawTexture2DArray(
-            null,
-            128,
-            128,
-            layerCount,
-            format,
-            scene,
-            false,
-            false,
-            BABYLON.Constants.TEXTURE_TRILINEAR_SAMPLINGMODE,
-          );
-          rawArr.update(data);
-
-          // Shader material
-          shaderMaterial = createVATShaderMaterial(
-            scene,
-            rawArr,
-            manager.texture!,
-          );
-          shaderMaterial.name = `vatShader_${model}`;
-
-          // Atlas
-          textureAtlas =
-            (await FileSystem.getFileJSON<string[]>(
-              'eqrequiem/basis',
-              `${baseModel}.json`,
-            )) ?? [];
-          if (!textureAtlas.length) {
-            console.warn(`[EntityCache] VAT atlas missing for ${model}`);
-            return null;
-          }
-
-          // Animate
-          const frameUpdate = () => {
-            manager!.time += scene.getEngine().getDeltaTime() / 1000;
-          };
-          scene.registerBeforeRender(frameUpdate);
-          bucket.onDisposeObservable.add(() =>
-            scene.unregisterBeforeRender(frameUpdate),
-          );
+        // Vertex animation data
+        const canUseFloat16 = scene.getEngine().getCaps().textureHalfFloat;
+        const vat16 = `${model}.bin.gz`;
+        const vat32 = `${model}_32.bin.gz`;
+        const vatBytes = await FileSystem.getFileBytes(
+          'eqrequiem/vat',
+          canUseFloat16 ? vat16 : vat32,
+        );
+        if (!vatBytes) {
+          console.warn(`[EntityCache] VAT data missing for ${model}`);
+          return null;
         }
+        const vatData = canUseFloat16
+          ? new Uint16Array(vatBytes)
+          : new Float32Array(vatBytes);
+        manager = new BABYLON.BakedVertexAnimationManager(scene);
+        const baker = new BABYLON.VertexAnimationBaker(
+          scene,
+          container.skeletons[0],
+        );
+        manager.texture = baker.textureFromBakedVertexData(vatData);
+        manager.texture.name = `vatTexture16_${model}`;
+
+        // Basis textures
+        const basisBytes = await FileSystem.getFileBytes(
+          'eqrequiem/basis',
+          `${baseModel}.basis`,
+        );
+        if (!basisBytes) {
+          console.warn(`[EntityCache] Basis texture missing for ${model}`);
+          return null;
+        }
+        const { data, layerCount, format } = await loadBasisTexture(
+          scene.getEngine(),
+          basisBytes,
+        );
+        const textureArray = new BABYLON.RawTexture2DArray(
+          null,
+          128,
+          128,
+          layerCount,
+          format,
+          scene,
+          false,
+          false,
+          BABYLON.Constants.TEXTURE_TRILINEAR_SAMPLINGMODE,
+        );
+        textureArray.update(data);
+
+        // Shader material
+        shaderMaterial = createVATShaderMaterial(scene);
+
+        // Atlas
+        textureAtlas =
+          (await FileSystem.getFileJSON<string[]>(
+            'eqrequiem/basis',
+            `${baseModel}.json`,
+          )) ?? [];
+        if (!textureAtlas.length) {
+          console.warn(`[EntityCache] VAT atlas missing for ${model}`);
+          return null;
+        }
+
+        // Animate
+        const frameUpdate = () => {
+          manager!.time += scene.getEngine().getDeltaTime() / 1000;
+        };
+        scene.registerBeforeRender(frameUpdate);
+        bucket.onDisposeObservable.add(() =>
+          scene.unregisterBeforeRender(frameUpdate),
+        );
 
         // Gather animations
         let animations: BJS.AnimationRange[] = [];
@@ -227,9 +263,31 @@ export class EntityCache {
           .getChildMeshes(false)
           .filter((m) => m.getTotalVertices() > 0) as BJS.Mesh[];
         for (const mesh of meshes) {
+          mesh.metadata ??= {};
+
+          if (!mesh.metadata.name) {
+            mesh.metadata.name = mesh.material?.name?.toLowerCase() ?? '';
+          }
+
+          if (mesh.metadata.name?.toLowerCase()?.startsWith('clk')) {
+            mesh.metadata.isRobe = true;
+            mesh.metadata.atlasArrayTexture =
+              EntityCache.commonBasisAtlas['clk'].texture;
+            mesh.metadata.atlasArray =
+              EntityCache.commonBasisAtlas['clk'].atlas;
+          } else if (mesh.metadata.name?.toLowerCase()?.startsWith('helm')) {
+            mesh.metadata.isHelm = true;
+            mesh.metadata.atlasArrayTexture =
+              EntityCache.commonBasisAtlas['helm'].texture;
+            mesh.metadata.atlasArray =
+              EntityCache.commonBasisAtlas['helm'].atlas;
+          } else {
+            mesh.metadata.atlasArrayTexture = textureArray;
+          }
+          mesh.metadata.vatTexture = manager!.texture;
           mesh.addLODLevel(500, null);
           mesh.parent = bucket;
-          mesh.name = mesh.material?.name ?? '';
+          mesh.name = mesh.material?.name?.toLowerCase() ?? '';
           mesh.registerInstancedBuffer(
             'bakedVertexAnimationSettingsInstanced',
             4,
@@ -302,19 +360,6 @@ export class EntityCache {
     const race = spawn.race ?? 1;
     const entry = RACE_DATA[race] ?? RACE_DATA[Races.HUMAN];
     let model = entry[spawn.gender ?? 0] || entry[2];
-    let robed = false;
-    if (spawn instanceof Spawn) {
-      robed = (spawn.isNpc ? spawn.equipChest : spawn.equipment.chest) >= 10;
-    } else {
-      const chestItem =
-        Player.instance?.playerInventory.get(InventorySlot.Chest, -1) ??
-        Player.instance?.playerInventory.get(InventorySlot.Chest, 0) ??
-        null;
-      robed = (chestItem?.material ?? 0) >= 10;
-    }
-    if (robed) {
-      model += '01';
-    }
     model = model.toLowerCase();
     const container = await EntityCache.getContainer(model, scene);
     if (!container) {
@@ -337,6 +382,14 @@ export class EntityCache {
 
   public static disposeAll(scene: BJS.Scene): void {
     Entity.disposeStatics();
+    EntityCache.commonBasisAtlasLoaded = false;
+    for (const key in EntityCache.commonBasisAtlas) {
+      const atlas = EntityCache.commonBasisAtlas[key];
+      if (atlas.texture) {
+        atlas.texture.dispose();
+      }
+    }
+    EntityCache.commonBasisAtlas = {};
     Object.keys(EntityCache.resolvedContainers).forEach((m) => {
       const c = EntityCache.resolvedContainers[m];
       if (!c) {
