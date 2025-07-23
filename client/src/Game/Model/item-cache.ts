@@ -84,6 +84,13 @@ export class ItemCache {
           .getChildMeshes(false)
           .filter((m) => m.getTotalVertices() > 0) as BJS.Mesh[];
         for (const mesh of meshes) {
+          if (mesh.material) {
+            if (mesh.material instanceof BABYLON.PBRMaterial) {
+              (mesh.material as BJS.PBRMaterial).unlit = true;
+            } else if (mesh.material instanceof BABYLON.StandardMaterial) {
+              (mesh.material as BJS.StandardMaterial).disableLighting = true;
+            }
+          }
           mesh.addLODLevel(500, null);
           mesh.name = mesh.material?.name?.toLowerCase() ?? '';
           mesh.registerInstancedBuffer(

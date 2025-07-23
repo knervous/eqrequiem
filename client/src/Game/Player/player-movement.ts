@@ -62,7 +62,6 @@ export class PlayerMovement {
     this.scene.onKeyboardObservable.clear();
     this.scene = null as any;
     this.player = null as any;
-    this.physicsBody = null as any;
   }
 
   private isActionPressed(action: string): boolean {

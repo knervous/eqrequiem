@@ -120,17 +120,6 @@ export class PlayerInventory {
     return !!item && item.bagslots > 0;
   }
 
-  private getBagChildren(slot: InventorySlot): ItemInstance[] {
-    const children: ItemInstance[] = [];
-    for (const [key, item] of this.inventorySlots.entries()) {
-      const [itemSlot] = key.split(':').map(Number);
-      if (item && itemSlot === slot && item.bagSlot > 0) {
-        children.push(item);
-      }
-    }
-    return children;
-  }
-
   /**
    * Move an item from (fromSlot, fromBag) to (toSlot, toBag).
    * MoveItem on the wire now should include .fromBag and .toBag
