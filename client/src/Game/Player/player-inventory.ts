@@ -155,7 +155,10 @@ export class PlayerInventory {
 
     emitter.emit('updateInventorySlot', { slot: fromSlot, bag: fromBagSlot });
     emitter.emit('updateInventorySlot', { slot: toSlot, bag: toBagSlot });
-    this.player.playerEntity?.updateModelTextures();
+    if (fromSlot <= InventorySlot.Ammo || toSlot <= InventorySlot.Ammo) {
+      this.player.playerEntity?.updateModelTextures();
+
+    }
   }
 
   destroyCursorItem(): void {

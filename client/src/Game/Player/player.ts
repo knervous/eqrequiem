@@ -221,25 +221,10 @@ export default class Player {
   }
 
   public setRotation(yaw: number) {
-    if (!this.playerEntity?.physicsBody) {
-      return;
-    }
-    const physicsBody = this.playerEntity.physicsBody!;
-    const normalized = ((yaw % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
-    const q = BABYLON.Quaternion.RotationYawPitchRoll(normalized, 0, 0);
-
-    this.playerEntity.rotationQuaternion = q;
-    const plugin = this.gameManager
-      .scene!.getPhysicsEngine()!
-      .getPhysicsPlugin() as BJS.HavokPlugin;
-
-    plugin._hknp.HP_Body_SetOrientation(
-      physicsBody._pluginData.hpBodyId,
-      q.asArray(),
-    );
+    this.playerEntity?.setRotation(yaw);
     // Lock angular motion to prevent physics-induced rotation
-    physicsBody.setAngularVelocity(BABYLON.Vector3.Zero());
-    physicsBody.setAngularDamping(1.0); // High damping to resist rotation
+    this.playerEntity?.physicsBody?.setAngularVelocity(BABYLON.Vector3.Zero());
+    this.playerEntity?.physicsBody?.setAngularDamping(1.0); // High damping to resist rotation
   }
 
   public setPosition(x: number, y: number, z: number) {

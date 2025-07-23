@@ -21,6 +21,7 @@ import {
 } from '@game/Player/player-constants';
 import type { EntityContainer, EntityCache } from './entity-cache';
 import { createTargetRingMaterial } from './entity-select-ring';
+import ItemCache from './item-cache';
 import { Nameplate } from './nameplate';
 // import { DebugWireframe } from "./entity-debug";
 
@@ -195,8 +196,9 @@ export class Entity extends BABYLON.TransformNode {
     }
     physicsBody.setLinearVelocity(new BABYLON.Vector3(x, y, z));
   }
-
+  private lastYaw: number = 0;
   public setRotation(yaw: number) {
+    this.lastYaw = yaw;
     const physicsBody = this.physicsBody;
     if (!physicsBody) {
       return;
@@ -412,8 +414,7 @@ export class Entity extends BABYLON.TransformNode {
         this.animationBuffer;
       bodyInst.physicsBody = this.physicsBody;
       bodyInst.metadata = mesh.metadata || {};
-      const vec =
-        this.textureBuffers[name] || new BABYLON.Vector4(0, 1, 1, 1);
+      const vec = this.textureBuffers[name] || new BABYLON.Vector4(0, 1, 1, 1);
       this.textureBuffers[name] = vec;
       bodyInst.instancedBuffers.textureAttributes = vec;
       this.bodyInstances.push(bodyInst);
@@ -469,8 +470,152 @@ export class Entity extends BABYLON.TransformNode {
     }
     return variation;
   }
+  private primaryMeshes: BJS.InstancedMesh[] = [];
+  private secondaryMeshes: BJS.InstancedMesh[] = [];
 
-  public updateModelTextures() {
+  private async updatePrimary() {
+    let item = '';
+    for (const mesh of this.primaryMeshes) {
+      console.log('Disposing primary mesh', mesh.name);
+      mesh.dispose();
+    }
+    this.primaryMeshes = [];
+    if (this.isPlayer) {
+      item =
+        Player.instance?.playerInventory.get(InventorySlot.Primary, -1)
+          ?.idfile ??
+        Player.instance?.playerInventory.get(InventorySlot.Primary, 0)
+          ?.idfile ??
+        '';
+    } else {
+      const primary = (this.spawn as Spawn).equipment.primary;
+      if (primary) {
+        item = `IT${primary}`;
+      }
+    }
+    if (item.length === 0) {
+      return;
+    }
+    console.log('[Entity] Updating primary weapon model', item);
+    const itemContainer = await this.entityContainer?.getItem?.(item);
+    if (itemContainer) {
+      for (const mesh of itemContainer.meshes) {
+        const itemInst = mesh.createInstance(`i_primary_${item}`);
+        itemInst.rotation = this.rotation;
+        itemInst.setParent(this.nodeContainer);
+        itemInst.position = new BABYLON.Vector3(0, this.spawnScale * 0.5, 0); // this.spawnPosition;
+        itemInst.scaling.setAll(this.spawnScale);
+    
+        const totalCount = itemInst.getTotalVertices();
+        const weaponMI: number[] = [];
+        const weaponMW: number[] = [];
+        const { skeleton } = this.entityContainer;
+        const primaryBone = skeleton?.bones.find((b) => b.name === 'r_point');
+        if (skeleton && primaryBone) {
+          itemInst.bakedVertexAnimationManager =
+              this.entityContainer.manager!;
+          itemInst.instancedBuffers.bakedVertexAnimationSettingsInstanced =
+              this.animationBuffer;
+          itemInst.scaling.setAll(this.spawnScale);
+          for (let i = 0; i < totalCount; i++) {
+            weaponMI.push(primaryBone.getIndex(), 0, 0, 0);
+            weaponMW.push(1, 0, 0, 0);
+          }
+          itemInst.setVerticesData(
+            BABYLON.VertexBuffer.MatricesIndicesKind,
+            weaponMI,
+            false,
+          );
+          itemInst.setVerticesData(
+            BABYLON.VertexBuffer.MatricesWeightsKind,
+            weaponMW,
+            false,
+          );
+          this.primaryMeshes.push(itemInst);
+        } else {
+          itemInst.dispose();
+        }
+      }
+    } else {
+      console.warn(
+        `[Entity] No item container found for primary weapon ${item}`,
+      );
+    }
+    
+  }
+
+  private async updateSecondary() {
+    let item = '';
+    for (const mesh of this.secondaryMeshes) {
+      mesh.dispose();
+    }
+    this.secondaryMeshes = [];
+    let defaultPoint = 'shield_point';
+
+    if (this.isPlayer) {
+      const playerItem = Player.instance?.playerInventory.get(InventorySlot.Secondary, -1) ??
+        Player.instance?.playerInventory.get(InventorySlot.Secondary, 0);
+      if (playerItem && playerItem.itemtype !== 8) {
+        defaultPoint = 'l_point';
+      }
+      item = playerItem?.idfile ?? '';
+    } else {
+      const primary = (this.spawn as Spawn).equipment.secondary;
+      if (primary) {
+        item = `IT${primary}`;
+      }
+    }
+    if (item.length) {
+      console.log('[Entity] Updating secondary weapon model', item);
+      const itemContainer = await this.entityContainer?.getItem?.(item, defaultPoint === 'l_point');
+      if (itemContainer) {
+        for (const mesh of itemContainer.meshes) {
+          const itemInst = mesh.createInstance(`i_secondary_${item}`);
+
+          itemInst.setParent(this.nodeContainer);
+          itemInst.position = new BABYLON.Vector3(0, this.spawnScale * 0.5, 0); // this.spawnPosition;
+          itemInst.rotation = this.rotation;
+          itemInst.scaling.setAll(this.spawnScale);
+    
+          const totalCount = itemInst.getTotalVertices();
+          const weaponMI: number[] = [];
+          const weaponMW: number[] = [];
+          const { skeleton } = this.entityContainer;
+          const secondaryBone = skeleton?.bones.find((b) => b.name === defaultPoint);
+          if (skeleton && secondaryBone) {
+            itemInst.bakedVertexAnimationManager =
+              this.entityContainer.manager!;
+            itemInst.instancedBuffers.bakedVertexAnimationSettingsInstanced =
+              this.animationBuffer;
+            itemInst.scaling.setAll(this.spawnScale);
+            for (let i = 0; i < totalCount; i++) {
+              weaponMI.push(secondaryBone.getIndex(), 0, 0, 0);
+              weaponMW.push(1, 0, 0, 0);
+            }
+            itemInst.setVerticesData(
+              BABYLON.VertexBuffer.MatricesIndicesKind,
+              weaponMI,
+              false,
+            );
+            itemInst.setVerticesData(
+              BABYLON.VertexBuffer.MatricesWeightsKind,
+              weaponMW,
+              false,
+            );
+            this.secondaryMeshes.push(itemInst);
+          } else {
+            itemInst.dispose();
+          }
+        }
+      } else {
+        console.warn(
+          `[Entity] No item container found for secondary item ${item}`,
+        );
+      }
+    }
+  }
+
+  public async updateModelTextures() {
     for (const mesh of this.bodyInstances) {
       const name = mesh.metadata.name;
       const headModel = this.headModel();
@@ -612,6 +757,9 @@ export class Entity extends BABYLON.TransformNode {
       this.textureBuffers[name].w = b;
       // console.log('RGB', r, g, b);
     }
+    await this.updatePrimary();
+    await this.updateSecondary();
+    this.setRotation(this.lastYaw + 0.0001); // Reapply last yaw to ensure correct orientation after texture update
   }
 
   private setupPhysics() {

@@ -4,6 +4,7 @@ import BABYLON from '@bjs';
 import { animateVignette, gaussianBlurTeleport } from '@game/Effects/effects';
 import emitter from '@game/Events/events';
 import EntityCache from '@game/Model/entity-cache';
+import ItemCache from '@game/Model/item-cache';
 import { PlayerProfile } from '@game/Net/internal/api/capnp/player';
 import { NewZone, RequestClientZoneChange } from '@game/Net/internal/api/capnp/zone';
 import { OpCodes } from '@game/Net/opcodes';
@@ -359,6 +360,7 @@ export default class GameManager {
       this.camera = null;
     }
     EntityCache.disposeAll(this.scene!);
+    ItemCache.disposeAll();
   }
 
   public async loadCharacterSelect() {

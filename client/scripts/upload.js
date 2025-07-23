@@ -49,8 +49,8 @@ const allowedRootFolders = new Set(["uifiles", "eqrequiem"]);
 const allowedRootFiles = new Set(["eqstr_us.txt"]);
 let allowedExtensions = new Set([
   //".txt",
-  ".json",
-   ".basis",
+  // ".json",
+  //  ".basis",
   // ".glb", prefer .babylon
   // ".webp",
    // ".dds",
@@ -59,7 +59,7 @@ let allowedExtensions = new Set([
   // ".gif",
   // ".tga",
   // ".png",
-  // ".babylon",
+  ".babylon",
   // ".bin"
 ]);
 

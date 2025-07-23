@@ -395,19 +395,19 @@ export const LoginWindowComponent: React.FC = () => {
               // await fsBindings.processFiles('load2', load2Files);
               // // First do global
               console.log('Processing global');
-              const globalCharFiles = [
-                'global_chr.s3d',
-                'global3_chr.s3d',
-                'global4_chr.s3d',
-              ];
-              await fsBindings.processFiles('global_chr', globalCharFiles);
+              // const globalCharFiles = [
+              //   'global_chr.s3d',
+              //   'global3_chr.s3d',
+              //   'global4_chr.s3d',
+              // ];
+              // await fsBindings.processFiles('global_chr', globalCharFiles);
 
               // //Items
-              // console.log('Processing items');
-              // const itemFiles = ["gequip.s3d", "gequip2.s3d"];
-              // await fsBindings.processFiles('gequip', itemFiles);
+              console.log('Processing items');
+              const itemFiles = ['gequip.s3d', 'gequip2.s3d', 'gequip3.s3d', 'gequip4.s3d', 'gequip5.s3d', 'gequip6.s3d', 'gequip8.s3d'];
+              await fsBindings.processFiles('gequip', itemFiles);
               for (const zone of Object.values(supportedZones)) {
-             
+                continue;
                 const name = zone.shortName;
 
                 const associatedFiles: string[] = [];

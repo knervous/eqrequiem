@@ -11,6 +11,7 @@ import { PlayerProfile } from '@game/Net/internal/api/capnp/player';
 import { loadBasisTexture } from './basis-texture';
 import { Entity } from './entity';
 import { createVATShaderMaterial } from './entity-material';
+import ItemCache, { ItemContainer } from './item-cache';
 
 type ModelKey = string;
 
@@ -22,7 +23,9 @@ export type EntityContainer = {
   meshes: BJS.Mesh[];
   textureAtlas: string[];
   animations: AnimationEntry[];
-  secondaryMeshes: number;
+  skeleton?: BJS.Skeleton;
+  itemPool?: Record<string, Promise<ItemContainer | null>>;
+  getItem?: (model: string, flip?: boolean) => Promise<ItemContainer | null>;
   boundingBox?: {
     min: number[];
     max: number[];
@@ -326,21 +329,46 @@ export class EntityCache {
           mesh.material = shaderMaterial!;
           mesh.parent = bucket;
         }
-        // Clean up skeletons
-        container.skeletons.forEach((s) => s.bones.forEach((b) => b.dispose()));
-        container.skeletons.forEach((s) => s.dispose());
+        // // Clean up skeletons
+        // container.skeletons.forEach((s) => s.bones.forEach((b) => b.dispose()));
+        // container.skeletons.forEach((s) => s.dispose());
 
+        const itemPool: Record<string, Promise<ItemContainer | null>> = {};
+        const getItem = async (itemModel: string, flip: boolean = true): Promise<ItemContainer | null> => {
+          itemModel = itemModel.toLowerCase();
+          if (!itemPool[itemModel]) {
+            itemPool[itemModel] = new Promise<ItemContainer | null>((res) => {
+              ItemCache.getContainer(
+                itemModel,
+                model,
+                scene,
+                manager,
+                container.skeletons[0] || null,
+                flip,
+              ).then(res).catch((e) => {
+                console.warn(
+                  `[EntityCache] Error loading item model ${itemModel}:`,
+                  e,
+                );
+
+                res(null);
+              });
+            });
+          }
+          return itemPool[itemModel];
+        };
+        
         return {
           container,
           model,
+          getItem,
+          skeleton      : container.skeletons[0],
           manager       : manager!,
           shaderMaterial: shaderMaterial!,
           meshes,
           textureAtlas,
           animations,
-          secondaryMeshes:
-            infoNode?.metadata?.gltf?.extras?.secondaryMeshes ?? 0,
-          boundingBox: infoNode?.metadata?.gltf?.extras?.boundingBox ?? null,
+          boundingBox   : infoNode?.metadata?.gltf?.extras?.boundingBox ?? null,
         };
       })()
         .then((c) => {
