@@ -2,7 +2,7 @@
 
 import type * as BJS from '@babylonjs/core';
 import BABYLON from '@bjs';
-import { Races } from '@game/Constants/constants';
+import { isPlayerRace, Races } from '@game/Constants/constants';
 import RACE_DATA from '@game/Constants/race-data';
 import { FileSystem } from '@game/FileSystem/filesystem';
 import type GameManager from '@game/Manager/game-manager';
@@ -264,25 +264,37 @@ export class EntityCache {
           .filter((m) => m.getTotalVertices() > 0) as BJS.Mesh[];
         for (const mesh of meshes) {
           mesh.metadata ??= {};
+          const { model, piece, variation, texNum } = mesh.metadata.gltf.extras as any;
 
           if (!mesh.metadata.name) {
             mesh.metadata.name = mesh.material?.name?.toLowerCase() ?? '';
+            if (!mesh.metadata.name) {
+              mesh.metadata.name = `${model}${piece}${variation}${texNum}`.toLowerCase();
+              mesh.name = mesh.metadata.name;
+            }
           }
-
-          if (mesh.metadata.name?.toLowerCase()?.startsWith('clk')) {
-            mesh.metadata.isRobe = true;
-            mesh.metadata.atlasArrayTexture =
+          mesh.metadata.atlasArrayTexture = textureArray; 
+          mesh.metadata.atlasArray = textureAtlas;
+          if (isPlayerRace(model)) {
+            if (mesh.metadata.name?.toLowerCase()?.startsWith('clk')) {
+              mesh.metadata.isRobe = true;
+              mesh.metadata.atlasArrayTexture =
               EntityCache.commonBasisAtlas['clk'].texture;
-            mesh.metadata.atlasArray =
+              mesh.metadata.atlasArray =
               EntityCache.commonBasisAtlas['clk'].atlas;
-          } else if (mesh.metadata.name?.toLowerCase()?.startsWith('helm')) {
-            mesh.metadata.isHelm = true;
-            mesh.metadata.atlasArrayTexture =
+            } else if (
+              texNum !== '01' &&
+            piece === 'HE' &&
+            (mesh.metadata.name?.toLowerCase()?.startsWith('helm') ||
+              mesh.metadata.name?.toLowerCase()?.startsWith('chain'))
+            ) {
+              mesh.metadata.isHelm = true;
+              mesh.metadata.atlasArrayTexture =
               EntityCache.commonBasisAtlas['helm'].texture;
-            mesh.metadata.atlasArray =
+              mesh.metadata.atlasArray =
               EntityCache.commonBasisAtlas['helm'].atlas;
-          } else {
-            mesh.metadata.atlasArrayTexture = textureArray;
+            }
+          
           }
           mesh.metadata.vatTexture = manager!.texture;
           mesh.addLODLevel(500, null);
@@ -308,9 +320,9 @@ export class EntityCache {
           const mat = mesh.material;
           if (!mat) {
             console.warn(`[EntityCache] Mesh ${mesh.name} has no material`);
-            continue;
+            // continue;
           }
-          mat.dispose();
+          mat?.dispose();
           mesh.material = shaderMaterial!;
           mesh.parent = bucket;
         }

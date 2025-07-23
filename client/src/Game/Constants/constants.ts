@@ -6,6 +6,41 @@ export const USE_SAGE = import.meta.env.VITE_USE_SAGE === 'true';
 export const charFileRegex = /^([a-z]{3})([a-z]{2})(\d{2})(\d{2})$/;
 export const clkRegex = /^clk(\d{2})(\d{2})$/;
 
+
+export const pcModels = [
+  'bam',
+  'baf',
+  'erm',
+  'erf',
+  'elf',
+  'elm',
+  'gnf',
+  'gnm',
+  'trf',
+  'trm',
+  'hum',
+  'huf',
+  'daf',
+  'dam',
+  'dwf',
+  'dwm',
+  'haf',
+  'ikf',
+  'ikm',
+  'ham',
+  'hif',
+  'him',
+  'hof',
+  'hom',
+  'ogm',
+  'ogf',
+  'kef',
+  'kem',
+];
+export const isPlayerRace = (model: string): boolean =>
+  pcModels.includes(model.toLowerCase());
+
+
 export const MaterialPrefixes = {
   Face: 'he',
   Chest: 'ch',

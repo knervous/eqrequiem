@@ -91,12 +91,13 @@ export const CharacterCreate = ({ setView, charInfo }) => {
       gender,
       face,
       name,
-      tutorial : 0,
+      tutorial      : 0,
       ...character,
-      race     : +selectedRace,
-      charClass: selectedClass,
-      startZone: selectedCity,
-      deity    : selectedDeity,
+      race          : +selectedRace,
+      charClass     : selectedClass,
+      startZone     : selectedCity,
+      deity         : selectedDeity,
+      inventoryItems: [],
     };
     console.log('Send character', char);
     WorldSocket.registerOpCodeHandler(
@@ -155,10 +156,12 @@ export const CharacterCreate = ({ setView, charInfo }) => {
 
   useEffect(() => {
     const newCharacter = {
-      charClass: selectedClass,
-      race     : selectedRace,
-      equip    : [],
-      name     : '',
+      charClass     : selectedClass,
+      race          : selectedRace,
+      inventoryItems: [],
+      equip         : [],
+      equipment     : {},
+      name          : '',
       face,
       gender,
     };

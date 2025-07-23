@@ -96,10 +96,6 @@ func (c *Client) CanEquipItem(item *constants.ItemWithInstance) bool {
 		return false
 	}
 
-	if item.Instance.Charges > 0 && item.Item.Slots&int32(constants.SlotAmmo) == 0 {
-		return false
-	}
-
 	return item.IsEquippable(constants.RaceID(c.Race()), c.Class())
 }
 

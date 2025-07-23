@@ -144,6 +144,7 @@ export default class CharacterSelect {
       face          : player.face,
       scale         : 1.0,
       ...location,
+      y             : location.y + 5.5, // Adjust Y position slightly to avoid clipping
     } as unknown as PlayerProfile, true).then(async () => {
       onLoaded();
       if (!this.character || !this.character.playerEntity) {

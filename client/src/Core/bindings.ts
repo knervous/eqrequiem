@@ -44,7 +44,7 @@ type CacheEntry = {
 
 const baseUrl = 'https://eqrequiem.blob.core.windows.net/requiem';
 const zippedPrefixes = ['eqrequiem/textures'];
-const REQUIEM_FILE_VERSION = '1.1.22';
+const REQUIEM_FILE_VERSION = '1.1.24';
 
 function selectMinimalFiles(candidateArrays: number[][]): number[] {
   let remaining = candidateArrays.slice();
@@ -158,7 +158,7 @@ class FileSystemBindings {
     // this was an arraybuffer i want to decode and read it to string
     const stringFileVersion = new TextDecoder('utf-8').decode(requiemFileVersion);
     console.log('Str', stringFileVersion);
-    if (stringFileVersion !== REQUIEM_FILE_VERSION) {
+    if (stringFileVersion !== REQUIEM_FILE_VERSION && import.meta.env.VITE_USE_SAGE !== 'true') {
       const root = await this.rootFileSystemHandle.getDirectoryHandle('eqrequiem', { create: true });
       for (const folder of ['data', 'babylon', 'basis', 'vat', 'items', 'models', 'objects', 'zones']) {
         const handle = await root.getDirectoryHandle(folder, { create: false }).catch(() => {});

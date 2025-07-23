@@ -65,7 +65,7 @@ export default class EntityPool {
       // return;
     }
 
-    if (!spawn.name.includes('Sneed')) {
+    if (!spawn.name.includes('Guard_Gehnus')) {
       // return;
     }
     spawn.y += 5;

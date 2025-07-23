@@ -394,7 +394,7 @@ export const LoginWindowComponent: React.FC = () => {
               // const load2Files = ["load2.s3d","load2_obj.s3d"];
               // await fsBindings.processFiles('load2', load2Files);
               // // First do global
-              // console.log('Processing global');
+              console.log('Processing global');
               const globalCharFiles = [
                 'global_chr.s3d',
                 'global3_chr.s3d',
@@ -413,11 +413,11 @@ export const LoginWindowComponent: React.FC = () => {
                 const associatedFiles: string[] = [];
                 // temp short circuit
                 if (
-                  !['beholder'].includes(
+                  !['nro'].includes(
                     zone.shortName,
                   )
                 ) {
-                  //   continue;
+                //  continue;
                 }
                 const exists = await getEQFileExists('zones', `${name}.glb`);
                 if (exists) {
