@@ -45,21 +45,21 @@ let allowedFolders = new Set([
 const onlyTextures = process.argv[3] && process.argv[3] === 'textures';
 
 
-const allowedRootFolders = new Set(["uifiles", "eqrequiem"]);
+const allowedRootFolders = new Set(["uifiles", "eqrequiem", "SpellEffects"]);
 const allowedRootFiles = new Set(["eqstr_us.txt"]);
 let allowedExtensions = new Set([
   //".txt",
   // ".json",
   //  ".basis",
   // ".glb", prefer .babylon
-  // ".webp",
-   // ".dds",
+  ".webp",
+   ".dds",
   // ".wav", // only if it changes uncomment
   // ".mid",
-  // ".gif",
-  // ".tga",
-  // ".png",
-  ".babylon",
+  ".gif",
+  ".tga",
+  ".png",
+  // ".babylon",
   // ".bin"
 ]);
 

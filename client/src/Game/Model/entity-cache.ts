@@ -297,7 +297,6 @@ export class EntityCache {
               mesh.metadata.atlasArray =
               EntityCache.commonBasisAtlas['helm'].atlas;
             }
-          
           }
           mesh.metadata.vatTexture = manager!.texture;
           mesh.addLODLevel(500, null);
@@ -329,9 +328,6 @@ export class EntityCache {
           mesh.material = shaderMaterial!;
           mesh.parent = bucket;
         }
-        // // Clean up skeletons
-        // container.skeletons.forEach((s) => s.bones.forEach((b) => b.dispose()));
-        // container.skeletons.forEach((s) => s.dispose());
 
         const itemPool: Record<string, Promise<ItemContainer | null>> = {};
         const getItem = async (itemModel: string, flip: boolean = true): Promise<ItemContainer | null> => {

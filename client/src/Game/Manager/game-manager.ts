@@ -205,7 +205,7 @@ export default class GameManager {
     this.scene = null;
     this.canvas = canvas;
 
-    if (navigator.gpu) {
+    if (false && navigator.gpu) {
       this.engine = new BABYLON.WebGPUEngine(canvas, { deviceDescriptor: { requiredFeatures: ['timestamp-query'] } });
       
       await this.engine?.initAsync?.();

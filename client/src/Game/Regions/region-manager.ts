@@ -55,7 +55,6 @@ export class RegionManager {
     emitter.direction2 = new Vector3(0.05, 1, 0.05);
 
     ps.particleEmitterType = emitter;
-
     // 4) Tune color, size, speed, lifetime
     ps.addColorGradient(
       0.0,

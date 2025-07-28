@@ -11499,7 +11499,7 @@ export const qeynos2_spawns = [
       hands    : 0,
       legs     : 0,
       feet     : 0,
-      primary  : 10648,
+      primary  : 0,
       secondary: 0,
     },
     runspeed      : 0,

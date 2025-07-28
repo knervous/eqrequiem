@@ -1,16 +1,15 @@
-import React, { useEffect, useRef, useState } from "react";
-import { Box } from "@mui/material";
-
-import { UiWindowComponent } from "../../../common/ui-window";
-import { useUIContext } from "../../context";
-import { useImage, useStoneImage } from "../../../hooks/use-image";
-import Player from "@game/Player/player";
+import React, { useEffect, useRef, useState } from 'react';
+import Player from '@game/Player/player';
+import { Box } from '@mui/material';
+import { UiWindowComponent } from '../../../common/ui-window';
+import { useStoneImage } from '../../../hooks/use-image';
+import { useUIContext } from '../../context';
 
 // Atlas entries for the compass components
 export const CompassWindowComponent: React.FC = () => {
   const state = useUIContext((state) => state.ui.compassWindow);
-  const overlay = useStoneImage("A_CompassOverlay");
-  const strip = useStoneImage("A_CompassStrip", true);
+  const overlay = useStoneImage('A_CompassOverlay');
+  const strip = useStoneImage('A_CompassStrip', true);
   const [offset, setOffset] = useState(0);
   const prevRotationRef = useRef(0); // Track previous rotation
   const totalDegreesRef = useRef(0); // Accumulate total degrees for continuity
@@ -61,34 +60,34 @@ export const CompassWindowComponent: React.FC = () => {
     >
       <Box
         sx={{
-          position: "relative",
-          width: `${overlay.entry.width}px`,
-          height: `${overlay.entry.height}px`,
-          overflow: "hidden",
+          position: 'relative',
+          width   : `${overlay.entry.width}px`,
+          height  : `${overlay.entry.height}px`,
+          overflow: 'hidden',
         }}
       >
         {/* Compass Strip (underneath) */}
         <Box
           sx={{
-            position: "absolute",
-            zIndex: 0,
-            width: `${strip.entry.width * 2}px`,
-            height: `${strip.entry.height}px`,
-            backgroundImage: `url(${strip.image})`,
+            position          : 'absolute',
+            zIndex            : 0,
+            width             : `${strip.entry.width * 2}px`,
+            height            : `${strip.entry.height}px`,
+            backgroundImage   : `url(${strip.image})`,
             backgroundPosition: `${-offset + strip.entry.width / 2}px 0px`,
-            backgroundRepeat: "repeat-x",
+            backgroundRepeat  : 'repeat-x',
           }}
         />
         {/* Compass Overlay (on top) */}
         <Box
           sx={{
-            position: "absolute",
-            left: 0,
-            top: 0,
-            zIndex: 1,
-            width: `${overlay.entry.width}px`,
-            height: `${overlay.entry.height}px`,
-            backgroundImage: `url(${overlay.image})`,
+            position          : 'absolute',
+            left              : 0,
+            top               : 0,
+            zIndex            : 1,
+            width             : `${overlay.entry.width}px`,
+            height            : `${overlay.entry.height}px`,
+            backgroundImage   : `url(${overlay.image})`,
             backgroundPosition: `-${overlay.entry.left}px -${overlay.entry.top}px`,
           }}
         />

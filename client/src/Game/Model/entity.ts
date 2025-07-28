@@ -21,9 +21,7 @@ import {
 } from '@game/Player/player-constants';
 import type { EntityContainer, EntityCache } from './entity-cache';
 import { createTargetRingMaterial } from './entity-select-ring';
-import ItemCache from './item-cache';
 import { Nameplate } from './nameplate';
-// import { DebugWireframe } from "./entity-debug";
 
 const modelYOffset = {
   gnn: 0.5,
@@ -505,17 +503,15 @@ export class Entity extends BABYLON.TransformNode {
         itemInst.setParent(this.nodeContainer);
         itemInst.position = new BABYLON.Vector3(0, this.spawnScale * 0.5, 0); // this.spawnPosition;
         itemInst.scaling.setAll(this.spawnScale);
-    
         const totalCount = itemInst.getTotalVertices();
         const weaponMI: number[] = [];
         const weaponMW: number[] = [];
         const { skeleton } = this.entityContainer;
         const primaryBone = skeleton?.bones.find((b) => b.name === 'r_point');
         if (skeleton && primaryBone) {
-          itemInst.bakedVertexAnimationManager =
-              this.entityContainer.manager!;
+          itemInst.bakedVertexAnimationManager = this.entityContainer.manager!;
           itemInst.instancedBuffers.bakedVertexAnimationSettingsInstanced =
-              this.animationBuffer;
+            this.animationBuffer;
           itemInst.scaling.setAll(this.spawnScale);
           for (let i = 0; i < totalCount; i++) {
             weaponMI.push(primaryBone.getIndex(), 0, 0, 0);
@@ -541,8 +537,118 @@ export class Entity extends BABYLON.TransformNode {
         `[Entity] No item container found for primary weapon ${item}`,
       );
     }
-    
+    // Particle system to be implemented later. For now leave as boilerplate.
+    // Reference for future code https://playground.babylonjs.com/?BabylonToolkit#T3QKRV#32
+    if (false && this.primaryMeshes.length > 0) {
+      const { Vector3, GPUParticleSystem, Texture } = BABYLON;
+      const particleSystem = new GPUParticleSystem(
+        'vatParticle',
+        { capacity: 250 },
+        this.scene,
+      );
+
+      let textureBuffer =
+        this.entityContainer?.manager?.texture?.getInternalTexture()
+          ?._bufferView;
+      if (!textureBuffer) {
+        console.warn(
+          '[Entity] No texture buffer found for VAT particle system',
+        );
+        return;
+      }
+      const isHalfFloat = textureBuffer instanceof Uint16Array;
+      if (isHalfFloat) {
+        textureBuffer = textureBuffer as Uint16Array;
+      } else {
+        textureBuffer = textureBuffer as Float32Array;
+      }
+
+      const { skeleton } = this.entityContainer;
+      const numBones = skeleton?.bones.length ?? 0;
+      const floatsPerBone = 16;
+      const manager = this.entityContainer.manager!;
+      const position = new Vector3(0, 0, 0);
+      const boneQuaternion = new BABYLON.Quaternion();
+      const floatsPerFrame = (numBones + 1) * floatsPerBone;
+      const boneAnchors = skeleton?.bones
+        .filter((b) => ['r_point'].includes(b.name))
+        .map((b) => b.getIndex() * floatsPerBone) ?? [];
+
+      const startOffsetLocal = new BABYLON.Vector3(-2.5, 0.4, 0);
+      const qAlign = BABYLON.Quaternion.RotationAxis(
+        new BABYLON.Vector3(0, 0, 1), // Z‑axis
+        -Math.PI / 2, // –90 degrees
+      );
+      this.scene.onBeforeRenderObservable.add(() => {
+        const fromFrame = this.animationBuffer.x;
+        const toFrame = this.animationBuffer.y;
+        const total = toFrame - fromFrame + 1;
+        const t = manager.time * this.animationBuffer.w;
+        const anchorIdx = (t % boneAnchors.length) | 0;
+        const offsetBase = boneAnchors[anchorIdx];
+        const off =
+          (fromFrame + Math.floor(t % total)) * floatsPerFrame + offsetBase;
+
+        const mat = BABYLON.Matrix.FromArray(textureBuffer as any, off);
+        if (isHalfFloat) {
+          for (let i = 0; i < 16; i++) {
+            (mat.m as any)[i] = BABYLON.FromHalfFloat(textureBuffer[off + i]);
+          }
+        }
+        mat.decompose(undefined, boneQuaternion, position);
+        boneQuaternion.multiplyInPlace(qAlign);
+        const rotationMatrix = mat.getRotationMatrix();
+        const rotatedUp = BABYLON.Vector3.TransformNormal(startOffsetLocal, rotationMatrix);
+        position.addInPlace(rotatedUp);
+
+      });
+      particleSystem.blendMode = BABYLON.ParticleSystem.BLENDMODE_STANDARD;
+
+      particleSystem.particleTexture = new Texture(
+        'https://eqrequiem.blob.core.windows.net/requiem/spelleffects/firec.webp',
+        this.scene,
+      );
+      particleSystem.particleTexture.hasAlpha = true;
+      particleSystem.particleTexture.getAlphaFromRGB = false;
+      const particleMesh = new BABYLON.Mesh(
+        'particleMesh',
+        this.scene,
+      );
+      particleMesh.setParent(this.nodeContainer);
+      particleMesh.isPickable = false;
+      particleMesh.position = position;
+      particleMesh.rotationQuaternion = boneQuaternion;
+      particleSystem.emitter = particleMesh;
+
+      particleSystem.isAnimationSheetEnabled = true;
+      particleSystem.spriteCellChangeSpeed = 1; // Speed of animation
+      particleSystem.startSpriteCellID = 0;
+      particleSystem.endSpriteCellID = 15; // depends on your sheet layout
+      particleSystem.spriteCellWidth = 64; // pixel width of a single sprite frame
+      particleSystem.spriteCellHeight = 64; // pixel height of a single sprite frame
+      particleSystem.spriteCellLoop = true; // optionally loop
+
+      // maybe use this instead to spawn particles in a box
+      const boxEmitter = particleSystem.createCylinderEmitter(
+        0.2, 3, 1, 0.5, 
+      );
+      particleSystem.particleEmitterType = boxEmitter;
+      particleSystem.minSize = 0.25;
+      particleSystem.maxSize = 0.75;
+      particleSystem.minLifeTime = 0.2;
+      particleSystem.maxLifeTime = 1.5;
+      particleSystem.billboardMode = BABYLON.ParticleSystem.BILLBOARDMODE_ALL;
+      particleSystem.emitRate = 55;
+      particleSystem.maxAngularSpeed = Math.PI / 2;
+      particleSystem.minEmitPower = 0.01;
+      particleSystem.maxEmitPower = 0.1;
+      particleSystem.updateSpeed = 0.02;
+
+      particleSystem.start();
+    }
   }
+
+  private async createParticleEffects() {}
 
   private async updateSecondary() {
     let item = '';
@@ -553,7 +659,8 @@ export class Entity extends BABYLON.TransformNode {
     let defaultPoint = 'shield_point';
 
     if (this.isPlayer) {
-      const playerItem = Player.instance?.playerInventory.get(InventorySlot.Secondary, -1) ??
+      const playerItem =
+        Player.instance?.playerInventory.get(InventorySlot.Secondary, -1) ??
         Player.instance?.playerInventory.get(InventorySlot.Secondary, 0);
       if (playerItem && playerItem.itemtype !== 8) {
         defaultPoint = 'l_point';
@@ -567,7 +674,10 @@ export class Entity extends BABYLON.TransformNode {
     }
     if (item.length) {
       console.log('[Entity] Updating secondary weapon model', item);
-      const itemContainer = await this.entityContainer?.getItem?.(item, defaultPoint === 'l_point');
+      const itemContainer = await this.entityContainer?.getItem?.(
+        item,
+        defaultPoint === 'l_point',
+      );
       if (itemContainer) {
         for (const mesh of itemContainer.meshes) {
           const itemInst = mesh.createInstance(`i_secondary_${item}`);
@@ -576,12 +686,14 @@ export class Entity extends BABYLON.TransformNode {
           itemInst.position = new BABYLON.Vector3(0, this.spawnScale * 0.5, 0); // this.spawnPosition;
           itemInst.rotation = this.rotation;
           itemInst.scaling.setAll(this.spawnScale);
-    
+
           const totalCount = itemInst.getTotalVertices();
           const weaponMI: number[] = [];
           const weaponMW: number[] = [];
           const { skeleton } = this.entityContainer;
-          const secondaryBone = skeleton?.bones.find((b) => b.name === defaultPoint);
+          const secondaryBone = skeleton?.bones.find(
+            (b) => b.name === defaultPoint,
+          );
           if (skeleton && secondaryBone) {
             itemInst.bakedVertexAnimationManager =
               this.entityContainer.manager!;
