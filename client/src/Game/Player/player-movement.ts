@@ -306,7 +306,9 @@ export class PlayerMovement {
     const finalVelocity = velocity.add(velocityY);
 
     // Play animations
-    if (playWalk) {
+    if (this.jumpState === 'leavingGround') {
+      this.player.playJump();
+    } else if (playWalk) {
       if (didCrouch) {
         this.player.playDuckWalk();
       } else if (this.player.Running) {

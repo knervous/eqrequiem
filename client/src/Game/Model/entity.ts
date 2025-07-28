@@ -1040,7 +1040,6 @@ export class Entity extends BABYLON.TransformNode {
     }
   }
 
-  public currentAnimation: string | null = null;
 
   public setFace(variation: number): void {
     if (!this.isHumanoid) {
@@ -1050,6 +1049,21 @@ export class Entity extends BABYLON.TransformNode {
     this.updateModelTextures();
   }
 
+  public currentAnimation: string | null = null;
+  public animationTimeout: NodeJS.Timeout | boolean = false;
+  public queuedAnimation: string | null = null;
+
+  private computeOffset(
+    fromFrame: number,
+    toFrame: number,
+    time: number,
+    fps: number = 60,
+  ): number {
+    const totalFrames = toFrame - fromFrame + 1;
+    const t = time * fps / totalFrames;
+    const frame = Math.floor((t - Math.floor(t)) * totalFrames);
+    return totalFrames - frame;
+  }
   public playAnimation(name: string, playThrough: boolean = false): void {
     const match = this.entityContainer.animations.find((a) => a.name === name);
     if (!match) {
@@ -1071,8 +1085,25 @@ export class Entity extends BABYLON.TransformNode {
     if (this.currentAnimation === name && !playThrough) {
       return;
     }
+    if (this.animationTimeout) {
+      this.queuedAnimation = name;
+      return;
+    }
     this.currentAnimation = name;
-    this.animationBuffer.set(match.from, match.to, 0, 60);
+    const offset = this.computeOffset(
+      match.from,
+      match.to,
+      manager.time,
+      60,
+    );
+    this.animationBuffer.set(match.from, match.to, offset, 60);
+    if (playThrough) {
+      this.animationTimeout = setTimeout(() => {
+        this.animationTimeout = false;
+        this.queuedAnimation = null;
+        this.playAnimation(this.queuedAnimation ?? 'p02');
+      }, (match.to - match.from) * (1000 / 60)); // Convert frames to milliseconds
+    }
   }
   private getTextureIndex(
     originalName: string,

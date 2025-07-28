@@ -321,7 +321,7 @@ export default class Player {
     this.playerMovement?.toggleAutoRun();
   }
 
-  public playAnimation(animationName: string, playThrough: boolean = true) {
+  public playAnimation(animationName: string, playThrough: boolean = false) {
     this.playerEntity?.playAnimation(animationName, playThrough);
   }
 
@@ -337,15 +337,15 @@ export default class Player {
   }
 
   public playWalk() {
-    this.playAnimation(AnimationDefinitions.Walking, true);
+    this.playAnimation(AnimationDefinitions.Walking);
   }
 
   public playRun() {
-    this.playAnimation(AnimationDefinitions.Running, true);
+    this.playAnimation(AnimationDefinitions.Running);
   }
 
   public playDuckWalk() {
-    this.playAnimation(AnimationDefinitions.DuckWalking, false);
+    this.playAnimation(AnimationDefinitions.DuckWalking);
   }
 
   public playShuffle() {

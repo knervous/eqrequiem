@@ -212,7 +212,6 @@ export const ChatInputSlate: React.FC<ChatInputSlateProps> = ({
       editor={editor}
       initialValue={value}
       onChange={(v) => {
-        console.log('onChange', v);
         setValue(v);
       }}
     >
