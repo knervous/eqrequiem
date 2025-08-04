@@ -1,6 +1,6 @@
-import BABYLON from "@bjs";
-import type * as BJS from "@babylonjs/core";
-import Player from "@game/Player/player";
+import type * as BJS from '@babylonjs/core';
+import BABYLON from '@bjs';
+import Player from '@game/Player/player';
 
 const MAX_LIGHTS = 8;
 
@@ -23,41 +23,41 @@ type KDNode = {
 
 
 function buildKDTree(indices: number[], lights: BJS.PointLight[], depth = 0): KDNode | null {
-  if (!indices.length) return null;
+  if (!indices.length) {return null;}
   const axis = depth % 3 as 0|1|2;
-  indices.sort((a, b) => lights[a].position[["x","y","z"][axis]] 
-                        - lights[b].position[["x","y","z"][axis]]);
-  const mid = Math.floor(indices.length/2);
+  indices.sort((a, b) => lights[a].position[['x', 'y', 'z'][axis]] 
+                        - lights[b].position[['x', 'y', 'z'][axis]]);
+  const mid = Math.floor(indices.length / 2);
   const idx = indices[mid];
   return {
     idx,
     point: lights[idx].position.clone(),
     axis,
-    left: buildKDTree(indices.slice(0, mid), lights, depth+1),
-    right: buildKDTree(indices.slice(mid+1), lights, depth+1),
+    left : buildKDTree(indices.slice(0, mid), lights, depth + 1),
+    right: buildKDTree(indices.slice(mid + 1), lights, depth + 1),
   };
 }
 
 function kNearest(node: KDNode | null, target: BJS.Vector3, K: number, heap: { idx: number; distSq: number }[] = []): void {
-  if (!node) return;
+  if (!node) {return;}
   const d = BABYLON.Vector3.DistanceSquared(target, node.point);
   if (heap.length < K) {
     heap.push({ idx: node.idx, distSq: d });
-    if (heap.length === K) heap.sort((a,b) => b.distSq - a.distSq);
+    if (heap.length === K) {heap.sort((a, b) => b.distSq - a.distSq);}
   } else if (d < heap[0]?.distSq) {
     heap[0] = { idx: node.idx, distSq: d };
-    heap.sort((a,b) => b.distSq - a.distSq);
+    heap.sort((a, b) => b.distSq - a.distSq);
   }
 
   const axis = node.axis;
-  const diff = target[["x","y","z"][axis]] - node.point[["x","y","z"][axis]];
+  const diff = target[['x', 'y', 'z'][axis]] - node.point[['x', 'y', 'z'][axis]];
   const first = diff < 0 ? node.left : node.right;
-  const second= diff < 0 ? node.right: node.left;
+  const second = diff < 0 ? node.right : node.left;
 
   // traverse nearer side first
-  kNearest(first,  target, K, heap);
+  kNearest(first, target, K, heap);
   // but if hypersphere crosses splitting plane, check the other side
-  if (heap.length < K || diff*diff < heap[0]?.distSq) {
+  if (heap.length < K || diff * diff < heap[0]?.distSq) {
     kNearest(second, target, K, heap);
   }
 }
@@ -101,32 +101,30 @@ export class LightManager {
       const gl = (engine as any)._gl as WebGL2RenderingContext;
       const maxUBOVec4 = gl.getParameter(gl.MAX_VERTEX_UNIFORM_VECTORS);
       return Math.floor((maxUBOVec4 - 16) / 4); // e.g. 4 floats per light
-    } else {
+    } 
     // WebGPU path
-      const adapter = await navigator.gpu?.requestAdapter();
-      const limits  = adapter!.limits;
-      return limits.maxUniformBuffersPerShaderStage - 3; // reserve 3 for camera/etc.
-    }
+    const adapter = await navigator.gpu?.requestAdapter();
+    const limits = adapter!.limits;
+    return limits.maxUniformBuffersPerShaderStage - 3; // reserve 3 for camera/etc.
+    
   }
-
-
 
   async loadLights(container: BJS.Node, scene: BJS.Scene, zoneLights: LightData[], zoneName: string) {
     this.dispose();
     if (!container || !scene) {
-      console.warn("LightManager: Invalid container or scene provided.");
+      console.warn('LightManager: Invalid container or scene provided.');
       return;
     }
-    console.log("Max Lights:", await this.detectMaxLights(scene.getEngine() as BJS.Engine));
+    // console.log('Max Lights:', await this.detectMaxLights(scene.getEngine() as BJS.Engine));
     if (this.debug) {
       this.debugGlowLayer = new BABYLON.GlowLayer(`zoneGlow_${zoneName}`, scene, {
         mainTextureFixedSize: 512,
-        mainTextureSamples: 4,
+        mainTextureSamples  : 4,
       });
       this.debugMat = new BABYLON.StandardMaterial(`dbgMat_${zoneName}`, scene);
       this.debugMat.emissiveColor = new BABYLON.Color3(255, 2, 15); // full white
-      this.debugMat.disableLighting = true;                 // full emissive
-      this.debugMat.alpha =1;
+      this.debugMat.disableLighting = true; // full emissive
+      this.debugMat.alpha = 1;
     }
     // semi-transparent
 
@@ -162,7 +160,7 @@ export class LightManager {
           scene,
         );
         debugSphere.parent = container;
-        debugSphere.position = pos.clone();         // same as light.position
+        debugSphere.position = pos.clone(); // same as light.position
         debugSphere.setEnabled(false);
         debugSphere.material = this.debugMat!;
         this.debugGlowLayer!.addIncludedOnlyMesh(debugSphere);
@@ -172,7 +170,7 @@ export class LightManager {
     });
 
     // build KD-tree for efficient nearest light queries
-    const allIdx = this.zoneLights.map((_,i) => i);
+    const allIdx = this.zoneLights.map((_, i) => i);
     this.kdRoot = buildKDTree(allIdx, this.zoneLights);
   }
 
@@ -194,14 +192,14 @@ export class LightManager {
     const K = Math.min(MAX_LIGHTS - 3, this.zoneLights.length);
     const heap: {idx:number;distSq:number}[] = [];
     kNearest(this.kdRoot, playerPosition, K, heap);
-    const nearest = heap.map((h)=>h.idx);
+    const nearest = heap.map((h) => h.idx);
 
     this.prevSet.clear();
     this.nextSet.clear();
 
     // 2) Rebuild them from the arrays
-    for (const i of this.previousLights) this.prevSet.add(i);
-    for (const i of nearest)           this.nextSet.add(i);
+    for (const i of this.previousLights) {this.prevSet.add(i);}
+    for (const i of nearest) {this.nextSet.add(i);}
 
     // disable everything that was on but isn’t next
     for (const oldIdx of this.prevSet) {
@@ -227,6 +225,6 @@ export class LightManager {
     this.previousLights = nearest;
     this.lastPosition.copyFrom(playerPosition);
     const next = performance.now() - start;
-    //console.log('[Performance] LightManager.updateLights, %c', 'green', next);
+    // console.log('[Performance] LightManager.updateLights, %c', 'green', next);
   }
 }

@@ -7,7 +7,6 @@ import {
   EntityPositionUpdateBase,
   Spawn,
 } from '@game/Net/internal/api/capnp/common';
-import { Grid } from './zone-grid';
 
 export default class EntityPool {
   parent: BJS.Node;
@@ -15,26 +14,22 @@ export default class EntityPool {
   loadedPromiseResolve: () => void = () => {};
   loadedPromise: Promise<void> | null = null;
   entityCache: EntityCache | null = null;
-  private grid: Grid | null = null;
   private spawns: Record<number, Spawn> = {};
   private scene: BJS.Scene;
+
+  private get zone() {
+    return this.gameManager?.ZoneManager;
+  }
 
   constructor(private gameManager: GameManager, parent: BJS.Node, scene: BJS.Scene) {
     this.scene = scene;
     this.parent = parent;
   }
 
-  initialize() {
-    this.grid = new Grid(300.0, this.scene);
-  }
-
   dispose() {
     for (const entity of Object.values(this.entities)) {
       entity.dispose();
     }
-    this.entities = {};
-    this.grid?.dispose();
-    this.grid = null;
     this.entities = {};
     this.spawns = {};
     this.loadedPromise = null;
@@ -76,7 +71,7 @@ export default class EntityPool {
       console.error('Failed to acquire entity for spawn', spawn.spawnId);
       return;
     }
-    this.grid?.addEntity(entity);
+    this.zone?.grid?.addEntity(entity);
     this.entities[spawn.spawnId] = entity;
   }
   

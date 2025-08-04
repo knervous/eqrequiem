@@ -261,11 +261,11 @@ export default class Player {
    * under which all entities will be bucketed.
    */
   private getOrCreateNodeContainer(scene: BJS.Scene): BJS.Node {
-    const existing = scene.getNodeByName('playerNodeContainer');
+    const existing = scene.getNodeByName('PlayerNodeContainer');
     if (existing) {
       return existing as BJS.Node;
     }
-    return new BABYLON.TransformNode('playerNodeContainer', scene);
+    return new BABYLON.TransformNode('PlayerNodeContainer', scene);
   }
 
   public async Load(player: PlayerProfile, fromCharSelect: boolean = false) {

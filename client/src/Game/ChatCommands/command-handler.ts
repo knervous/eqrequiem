@@ -342,6 +342,11 @@ export class CommandHandler extends BaseCommandHandler {
     Player.instance?.playAnimation(AnimationDefinitions.Cheer, true);
   }
 
+  @command('rude')
+  commandRude() {
+    Player.instance?.playAnimation(AnimationDefinitions.Rude, true);
+  }
+
   @command('hail')
   commandHail() {
     this.commandSay([

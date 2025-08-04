@@ -59,7 +59,7 @@ export default class GameManager {
   public static get instance(): GameManager {
     if (!this._instance) {
       this._instance = new GameManager();
-      window.gm = this._instance;
+      (window as any).gm = this._instance;
     }
     return this._instance;
   }
@@ -69,6 +69,7 @@ export default class GameManager {
     this.keyUp = this.keyUp.bind(this);
     this.resize = this.resize.bind(this);
     this.renderLoop = this.renderLoop.bind(this);
+    EntityCache.gameManager = this;
   }
 
   public initializeSecondaryCamera() {
@@ -79,6 +80,7 @@ export default class GameManager {
     if (this.secondaryCamera) {
       this.secondaryCamera.dispose();
     }
+    console.log('Initializing secondary camera');
     this.secondaryCamera = new BABYLON.UniversalCamera(
       '__secondary_camera__',
       new BABYLON.Vector3(0, 0, 0),
@@ -193,7 +195,30 @@ export default class GameManager {
       return false;
     }
   }
+  private pickingList: BJS.AbstractMesh[] = [];
+  private pickListTimeout: ReturnType<typeof setTimeout> | null = null;
+  public addToPickingList(mesh: BJS.AbstractMesh) {
+    if (!this.pickingList.includes(mesh)) {
+      this.pickingList.push(mesh);
+    }
 
+    // Debounce this
+    if (this.pickListTimeout) {
+      clearTimeout(this.pickListTimeout);
+    }
+    this.pickListTimeout = setTimeout(() => {
+      this.gpuPicker?.setPickingList(this.pickingList);
+    }, 1000);
+  }
+  public clearPickingList() {
+    this.pickingList = [];
+    this.gpuPicker?.setPickingList(this.pickingList);
+  }
+
+  public getPickingList(): BJS.AbstractMesh[] {
+    return this.pickingList;
+  }
+  public gpuPicker: BJS.GPUPicker | null = null;
   async loadEngine(canvas) {
     if (this.engine) {
       return;
@@ -204,7 +229,7 @@ export default class GameManager {
     this.zoneManager?.dispose();
     this.scene = null;
     this.canvas = canvas;
-
+    this.gpuPicker = new BABYLON.GPUPicker();
     if (navigator.gpu) {
       this.engine = new BABYLON.WebGPUEngine(canvas, { deviceDescriptor: { requiredFeatures: ['timestamp-query'] } });
       
@@ -224,7 +249,6 @@ export default class GameManager {
     this.scene = new BABYLON.Scene(this.engine);
     this.scene.useRightHandedSystem = true;
     this.canvas!.oncontextmenu = (e) => e.preventDefault();
-    this.scene.onPointerObservable.add(this.onPointerEvent.bind(this));
 
     this.zoneManager = new ZoneManager(this);
     
@@ -239,31 +263,6 @@ export default class GameManager {
     }
 
     this.engine.runRenderLoop(this.renderLoop);
-  }
-
-  onPointerEvent(eventData: BJS.PointerInfo) {
-    // console.log("Pointer event:", eventData);
-    if (eventData.type === BABYLON.PointerEventTypes.POINTERDOWN && this.scene) {
-    // Only handle left-click (button 0)
-      if (eventData.event.button === 0) {
-      // Perform a picking operation at the pointer's position
-        const pickResult = this.scene.pick(this.scene.pointerX, this.scene.pointerY);
-      
-        if (pickResult?.hit && pickResult.pickedMesh) {
-          const mesh = pickResult.pickedMesh;
-          console.log(`Clicked mesh: ${mesh.name}`, mesh);
-
-          // Optional: Add custom logic based on the mesh
-          // Example: Check if the mesh has a specific metadata or tag
-          if (mesh.metadata?.type === 'interactive') {
-            console.log(`Interacting with ${mesh.name}`);
-          // Trigger custom interaction logic here
-          }
-        } else {
-          console.log('No mesh hit');
-        }
-      }
-    }
   }
 
   resize() {
@@ -335,8 +334,8 @@ export default class GameManager {
   }
 
   public setLoading(value: boolean) {
-    if (window.setSplash) {
-      window.setSplash(value);
+    if ((window as any).setSplash) {
+      (window as any).setSplash(value);
     }
   }
 
@@ -347,7 +346,7 @@ export default class GameManager {
     //     material.dispose(true, true);
     //   }
     // }
-
+    this.clearPickingList();
     if (this.zoneManager) {
       this.zoneManager.dispose();
     }

@@ -29,6 +29,8 @@ export class RegionManager {
   }
 
   private createTeleportEffect(region: ZoneMetadata['regions'][number], scene: BJS.Scene, index: number): BJS.GPUParticleSystem {
+    return; 
+    
     const { Vector3, GPUParticleSystem, Texture, Color4, BoxParticleEmitter } = BABYLON;
     // 1) Compute your AABB center & half‐size
     const min = new Vector3(region.minVertex[0], region.minVertex[1], region.minVertex[2]);

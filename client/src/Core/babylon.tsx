@@ -102,13 +102,12 @@ export const BabylonWrapper = ({ splash }) => {
       />
 
       <Box
+        ref={canvasRef}
+        component={'canvas'}
         height="100vh"
         id="renderCanvas"
         tabIndex={0}
         width="100vw"
-        component={"canvas"}
-        //sx={{ flexGrow: "1", position: "fixed" }}
-        ref={canvasRef}
       />
     </>
   );

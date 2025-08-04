@@ -1,6 +1,7 @@
 import type * as BJS from '@babylonjs/core';
 import BABYLON from '@bjs';
 import { Entity } from '@game/Model/entity';
+import EntityCache from '@game/Model/entity-cache';
 import type Player from './player';
 
 export class PlayerCamera {
@@ -183,23 +184,24 @@ export class PlayerCamera {
     this.player.playerMovement!.moveForward = false;
 
     if (!up && buttonIndex === 0 && scene && !this.isLocked) {
-      const pickRay = this.player.gameManager.scene!.createPickingRay(
-        x,
-        y,
-        BABYLON.Matrix.Identity(),
-        this.camera,
-        false,
-      );
-      const pickResult = this.player.gameManager.scene!.pickWithRay(
-        pickRay,
-        (mesh) => !!mesh.metadata?.entity,
-        true,
-      );
-      // For debugging
-      // this.visualizeRay(pickRay, pickResult);
-      if (pickResult?.hit && pickResult.pickedMesh?.metadata?.entity) {
-        this.player.Target = pickResult.pickedMesh.metadata.entity;
-      }
+      (async () => {
+        const { scene, gpuPicker } = this.player.gameManager;
+        if (!gpuPicker || !scene) {
+          console.warn('GPU Picker is busy or scene is not ready', gpuPicker);
+          return;
+        }
+        const pickInfo = await gpuPicker.pickAsync(x, y);
+        if (pickInfo?.thinInstanceIndex !== undefined) {
+          for (const entity of EntityCache.entityInstances) {
+            if (entity.meshInstance?.thinInstanceIndex === pickInfo.thinInstanceIndex
+              && entity.meshInstance?.mesh === pickInfo.mesh
+            ) {
+              this.player.Target = entity;
+              break;
+            }
+          }
+        }
+      })();
     }
     if (up && buttonIndex === 2) {
       document.exitPointerLock();

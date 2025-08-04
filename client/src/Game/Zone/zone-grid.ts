@@ -1,9 +1,9 @@
-import BABYLON from "@bjs";
-import type * as BJS from "@babylonjs/core";
-import { Entity } from "@game/Model/entity";
-import Player from "@game/Player/player";
+import type * as BJS from '@babylonjs/core';
+import BABYLON from '@bjs';
+import { Entity } from '@game/Model/entity';
+import Player from '@game/Player/player';
 
-type CellTriple = [number, number, number];
+export type CellTriple = [number, number, number];
 
 const BIAS_21 = 1 << 20; // 2^20 = 1_048_576
 const MASK_21 = (1n << 21n) - 1n; // 0x1F_FFFF (21 bits of 1)
@@ -58,7 +58,7 @@ export class Grid {
     return Player.instance?.getPlayerPosition() ?? new BABYLON.Vector3(0, 0, 0);
   }
 
-  private worldToCell(p: BJS.Vector3): CellTriple {
+  public worldToCell(p: BJS.Vector3): CellTriple {
     return [
       Math.floor(p.x / this.cellSize),
       Math.floor(p.y / this.cellSize),
@@ -66,7 +66,7 @@ export class Grid {
     ];
   }
 
-  private static keyFromTriple([x, y, z]: CellTriple): bigint {
+  public static keyFromTriple([x, y, z]: CellTriple): bigint {
     const xb = BigInt(x + BIAS_21);
     const yb = BigInt(y + BIAS_21);
     const zb = BigInt(z + BIAS_21);
@@ -213,7 +213,7 @@ export class Grid {
     const newPlayerCell = this.worldToCell(this.playerPosition);
     const cellsToCheck = new Set<bigint>();
     const addCells = (baseCell: CellTriple | null) => {
-      if (!baseCell) return;
+      if (!baseCell) {return;}
       for (const [dx, dy, dz] of Grid.neighborOffsets) {
         const neighbor: CellTriple = [
           baseCell[0] + dx,
@@ -247,7 +247,7 @@ export class Grid {
     }
 
     const result = new BABYLON.PhysicsRaycastResult();
-    plugin.raycast(this.playerPosition, entity.spawnPosition, result, { collideWith: 0x00000DAD1  });
+    plugin.raycast(this.playerPosition, entity.spawnPosition, result, { collideWith: 0x00000DAD1 });
 
     const hitBody = result.body;
     if (!hitBody || hitBody.motionType !== BABYLON.PhysicsMotionType.STATIC) {
@@ -270,12 +270,12 @@ export class Grid {
       entity.hide();
       return;
     }
-
+    entity.initialize();
     const playerPos = this.playerPosition;
     const entityPos = entity.spawnPosition;
     const distance = BABYLON.Vector3.Distance(playerPos, entityPos);
 
-    if (distance <= 200) {
+    if (distance <= 100) {
       entity.initialize();
     } else {
       if (this.isOccludedByPhysics(entity)) {
@@ -291,7 +291,7 @@ export class Grid {
     const size = this.cellSize;
     const box = BABYLON.MeshBuilder.CreateBox(
       `cell_${cell[0]}_${cell[1]}_${cell[2]}`,
-      { size: size, updatable: true },
+      { size, updatable: true },
       this.scene,
     );
     box.position = new BABYLON.Vector3(
@@ -309,7 +309,7 @@ export class Grid {
   }
 
   private updateCellVisualization(cell: CellTriple, key: bigint): void {
-    if (!this.debugEnabled) return;
+    if (!this.debugEnabled) {return;}
 
     if (!this.debugMeshes.has(key)) {
       const mesh = this.createCellMesh(cell, new BABYLON.Color3(0, 1, 0)); // Green for active cells
@@ -318,7 +318,7 @@ export class Grid {
   }
 
   private removeCellVisualization(key: bigint): void {
-    if (!this.debugEnabled) return;
+    if (!this.debugEnabled) {return;}
 
     const mesh = this.debugMeshes.get(key);
     if (mesh) {
@@ -328,7 +328,7 @@ export class Grid {
   }
 
   private updateDebugVisualization(): void {
-    if (!this.debugEnabled) return;
+    if (!this.debugEnabled) {return;}
 
     // Update player cell visualization
     const playerCell = this.worldToCell(this.playerPosition);
@@ -364,7 +364,7 @@ export class Grid {
   }
 
   private clearDebugVisualization(): void {
-    if (!this.debugEnabled) return;
+    if (!this.debugEnabled) {return;}
 
     for (const mesh of this.debugMeshes.values()) {
       mesh.dispose();
