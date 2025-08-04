@@ -179,6 +179,10 @@ export const supportedZones: Record<string | number, { shortName: string; longNa
     'shortName': 'oggok',
     'longName' : 'Oggok',
   },
+  '94': {
+    shortName: 'emeraldjungle',
+    longName : 'The Emerald Jungle',
+  },
   '50': {
     'shortName': 'rathemtn',
     'longName' : 'Mountains of Rathe',
