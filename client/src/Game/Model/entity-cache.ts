@@ -264,7 +264,7 @@ export class EntityCache {
         // Gather animations
         let animations: BJS.AnimationRange[] = [];
         const infoNode = (root as any).getChildTransformNodes()?.[0];
-
+        const boundingBox = infoNode?.metadata?.gltf?.extras?.boundingBox ?? null;
         const json = (await FileSystem.getFileJSON(
           'eqrequiem/vat',
           `${model}.json`,
@@ -521,7 +521,7 @@ export class EntityCache {
           skeleton      : container.skeletons[0],
           manager       : manager!,
           shaderMaterial: shaderMaterial!,
-          boundingBox   : infoNode?.metadata?.gltf?.extras?.boundingBox ?? null,
+          boundingBox,
         };
       })()
         .then((c) => {
