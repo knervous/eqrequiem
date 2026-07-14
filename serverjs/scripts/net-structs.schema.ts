@@ -1,0 +1,121 @@
+import type { NetStructSpec } from "shader-object";
+
+export const netStructs = [
+  {
+    name: "ZoneSessionNet",
+    layout: "net",
+    schemaId: 0x1001,
+    fields: [
+      { id: 1, name: "zoneId", type: "u32" },
+      { id: 2, name: "instanceId", type: "u32" },
+    ],
+  },
+  {
+    name: "MoveItemNet",
+    layout: "net",
+    schemaId: 0x1002,
+    fields: [
+      { id: 1, name: "fromSlot", type: "i32" },
+      { id: 2, name: "toSlot", type: "i32" },
+      { id: 3, name: "fromBag", type: "i32" },
+      { id: 4, name: "toBag", type: "i32" },
+    ],
+  },
+  {
+    name: "DeleteItemNet",
+    layout: "net",
+    schemaId: 0x1003,
+    fields: [
+      { id: 1, name: "slot", type: "i32" },
+      { id: 2, name: "bag", type: "i32" },
+    ],
+  },
+  {
+    name: "IntValueNet",
+    layout: "net",
+    schemaId: 0x1004,
+    fields: [{ id: 1, name: "value", type: "i32" }],
+  },
+  {
+    name: "WorldEntityStateNet",
+    layout: "net",
+    schemaId: 0x2001,
+    storage: "soa",
+    variants: [
+      {
+        name: "player",
+        tag: 1,
+        fields: ["position", "orientation", "velocity", "animation"],
+      },
+      {
+        name: "npc",
+        tag: 2,
+        fields: [
+          "position",
+          "orientation",
+          "velocity",
+          "animation",
+          "aggroTarget",
+        ],
+      },
+    ],
+    fields: [
+      { id: 1, name: "kind", type: "u8" },
+      { id: 2, name: "position", type: "f32", count: 3 },
+      { id: 3, name: "orientation", type: "f32", count: 4 },
+      { id: 4, name: "velocity", type: "f32", count: 3 },
+      { id: 5, name: "animation", type: "u32" },
+      { id: 6, name: "movementState", type: "u16" },
+      { id: 7, name: "appearance", type: "u16" },
+      { id: 8, name: "nameOffset", type: "u32" },
+      { id: 9, name: "nameLength", type: "u16" },
+      { id: 13, name: "archetypeId", type: "u32" },
+      { id: 14, name: "level", type: "u16" },
+      { id: 15, name: "race", type: "u16" },
+      { id: 16, name: "gender", type: "u8" },
+      { id: 17, name: "classId", type: "u8" },
+      { id: 18, name: "bodyType", type: "u16" },
+      { id: 19, name: "size", type: "f32" },
+      { id: 20, name: "face", type: "u8" },
+      { id: 21, name: "helm", type: "u8" },
+      { id: 22, name: "chest", type: "u16" },
+      { id: 23, name: "primary", type: "u32" },
+      { id: 24, name: "secondary", type: "u32" },
+      { id: 25, name: "modelKeyOffset", type: "u32" },
+      { id: 26, name: "modelKeyLength", type: "u16" },
+      { id: 27, name: "heading", type: "f32" },
+      {
+        id: 10,
+        name: "serverFlags",
+        type: "u32",
+        visibility: "private",
+      },
+      {
+        id: 11,
+        name: "combatTimer",
+        type: "u32",
+        visibility: "private",
+      },
+      {
+        id: 12,
+        name: "aggroTarget",
+        type: "u32",
+        visibility: "private",
+      },
+    ],
+  },
+  {
+    name: "RenderSnapshotNet",
+    layout: "net",
+    schemaId: 0x2002,
+    storage: "soa",
+    fields: [
+      { id: 1, name: "entityId", type: "u32" },
+      {
+        id: 2,
+        name: "state",
+        type: { struct: "WorldEntityStateNet", visibility: "public" },
+      },
+    ],
+  },
+] as const satisfies readonly NetStructSpec[];

@@ -8,21 +8,21 @@ import React, {
 import { UserConfig } from '@game/Config/config';
 import GameManager from '@game/Manager/game-manager';
 import { MusicPlayer } from '@game/Music/music-player';
-import { Int, String } from '@game/Net/internal/api/capnp/common';
+import { Int, String } from '@game/Net/messages';
 import {
   CharacterSelect,
   CharacterSelectEntry,
-} from '@game/Net/internal/api/capnp/player';
+} from '@game/Net/messages';
 import {
   EnterWorld,
   JWTLogin,
   JWTResponse,
-} from '@game/Net/internal/api/capnp/world';
+} from '@game/Net/messages';
 import {
   RequestClientZoneChange,
   ZoneChangeType,
   ZoneSession,
-} from '@game/Net/internal/api/capnp/zone';
+} from '@game/Net/messages';
 import { OpCodes } from '@game/Net/opcodes';
 import { Box, Stack } from '@mui/material';
 import { useDebouncedCallback } from 'use-debounce';
@@ -81,7 +81,7 @@ export const CharacterSelectUIComponent: React.FC = () => {
 
     WorldSocket.registerOpCodeHandler(OpCodes.ZoneSessionValid, Int, (data) => {
       console.log('Zone session valid:', data);
-      if (data) {
+      if (data.value === 1) {
         WorldSocket.sendMessage(
           OpCodes.RequestClientZoneChange,
           RequestClientZoneChange,

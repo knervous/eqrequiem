@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { CLASS_DATA_NAMES } from '@game/Constants/class-data';
 import emitter from '@game/Events/events';
-import { PlayerProfile } from '@game/Net/internal/api/capnp/player';
+import { PlayerProfile } from '@game/Net/messages';
 import Player from '@game/Player/player';
 import { Box, Grid, Stack, Typography } from '@mui/material';
 import { UiButtonComponent } from '@ui/common/ui-button';

@@ -1,0 +1,157 @@
+{
+  "name": "shader-object",
+  "version": "0.7.2",
+  "description": "Packed GPU struct schemas + Babylon include emitters with optional AssemblyScript kernels",
+  "license": "MIT",
+  "author": "knervous",
+  "type": "module",
+  "sideEffects": false,
+  "files": [
+    "dist",
+    "msdf",
+    "!**/.DS_Store",
+    "README.md",
+    "LICENSE"
+  ],
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "default": "./dist/index.js"
+    },
+    "./babylon": {
+      "source": "./src/babylon/index.ts",
+      "types": "./dist/babylon/index.d.ts",
+      "import": "./dist/babylon/index.js",
+      "require": "./dist/babylon/index.cjs",
+      "default": "./dist/babylon/index.js"
+    },
+    "./asc": {
+      "source": "./src/asc/index.ts",
+      "types": "./dist/asc/index.d.ts",
+      "import": "./dist/asc/index.js",
+      "require": "./dist/asc/index.cjs",
+      "default": "./dist/asc/index.js"
+    },
+    "./msdf": {
+      "source": "./src/msdf/index.ts",
+      "types": "./dist/msdf/index.d.ts",
+      "import": "./dist/msdf/index.js",
+      "require": "./dist/msdf/index.cjs",
+      "default": "./dist/msdf/index.js"
+    },
+    "./render": {
+      "source": "./src/render/index.ts",
+      "types": "./dist/render/index.d.ts",
+      "import": "./dist/render/index.js",
+      "require": "./dist/render/index.cjs",
+      "default": "./dist/render/index.js"
+    },
+    "./preprocess": {
+      "source": "./src/preprocess/index.ts",
+      "types": "./dist/preprocess/index.d.ts",
+      "import": "./dist/preprocess/index.js",
+      "require": "./dist/preprocess/index.cjs",
+      "default": "./dist/preprocess/index.js"
+    },
+    "./preprocess/runtime": {
+      "source": "./src/preprocess/runtime.ts",
+      "types": "./dist/preprocess/runtime.d.ts",
+      "import": "./dist/preprocess/runtime.js",
+      "require": "./dist/preprocess/runtime.cjs",
+      "default": "./dist/preprocess/runtime.js"
+    }
+  },
+  "bin": {
+    "shado": "./dist/cli.js",
+    "shado-pack-model": "./dist/cli.js",
+    "shado-preprocess-asc": "./dist/cli.js",
+    "shado-preprocess-gpu": "./dist/cli.js",
+    "shado-preprocess-wrappers": "./dist/cli.js"
+  },
+  "peerDependencies": {
+    "@babylonjs/core": "^9.5.0",
+    "@babylonjs/loaders": "^9.5.0",
+    "@babylonjs/serializers": "^9.5.0",
+    "assemblyscript": "^0.28.8",
+    "binaryen": "^124.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@babylonjs/loaders": {
+      "optional": true
+    },
+    "@babylonjs/serializers": {
+      "optional": true
+    },
+    "assemblyscript": {
+      "optional": true
+    },
+    "binaryen": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@babylonjs/core": "^9.5.0",
+    "@babylonjs/loaders": "^9.5.0",
+    "@jest/globals": "^30.2.0",
+    "@jridgewell/sourcemap-codec": "^1.5.0",
+    "@swc/core": "^1.13.5",
+    "@types/gl": "^6.0.5",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^22.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.44.0",
+    "@typescript-eslint/parser": "^8.44.0",
+    "@typescript/native-preview": "7.0.0-dev.20260430.1",
+    "assemblyscript": "^0.28.8",
+    "binaryen": "^124.0.0",
+    "cross-env": "^10.1.0",
+    "eslint": "^9.0.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.4",
+    "gl": "^8.1.6",
+    "jest": "^30.2.0",
+    "prettier": "^3.6.2",
+    "process": "^0.11.10",
+    "rimraf": "^6.0.0",
+    "terser": "^5.44.0",
+    "ts-jest": "^29.4.4",
+    "tsup": "^8.0.1",
+    "typescript": "^5.5.0"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "clean": "rimraf dist",
+    "typecheck": "tsgo -p tsconfig.build.json --noEmit",
+    "lint": "eslint src/**/*.ts",
+    "lint:fix": "eslint src/**/*.ts --fix",
+    "format": "prettier --write src/**/*.ts",
+    "format:check": "prettier --check src/**/*.ts",
+    "build": "tsup",
+    "postbuild": "chmod +x dist/cli.js",
+    "dev": "cross-env DEV=true tsup --watch",
+    "prepublishOnly": "npm run build",
+    "asbuild:debug": "asb --target debug",
+    "asbuild:release": "asb --target release",
+    "asbuild": "npm run asbuild:debug && npm run asbuild:release",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "pack:check": "npm pack --dry-run --ignore-scripts",
+    "test:dq": "node --experimental-vm-modules node_modules/jest/bin/jest.js dq-transform",
+    "test:barbarian": "node --experimental-vm-modules node_modules/jest/bin/jest.js barbarian-integration",
+    "test:dq-shader": "node --experimental-vm-modules node_modules/jest/bin/jest.js barbarian-dq-shader",
+    "test:dq-atlas": "node --experimental-vm-modules node_modules/jest/bin/jest.js dq-atlas-debug",
+    "start": "npx serve .",
+    "preprocess:sandbox:wrappers": "npm run build && node dist/cli.js wrappers build --config sandbox/shado.config.mjs",
+    "preprocess:sandbox:manifest": "node dist/cli.js manifest models --config sandbox/shado.config.mjs",
+    "preprocess:sandbox:models": "npm run build && node dist/cli.js pack models --config sandbox/shado.config.mjs"
+  },
+  "dependencies": {
+    "maxrects-packer": "^2.7.3"
+  }
+}

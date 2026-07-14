@@ -1,0 +1,71 @@
+{
+  "kind": "shado.wrapper.schema",
+  "version": 1,
+  "name": "NameplateData",
+  "headerFloatCount": 0,
+  "fields": [
+    {
+      "name": "glyphUv4",
+      "type": {
+        "arrayOf": "vec4"
+      }
+    },
+    {
+      "name": "glyphPlane4",
+      "type": {
+        "arrayOf": "vec4"
+      }
+    },
+    {
+      "name": "glyphAdvance",
+      "type": {
+        "arrayOf": "f32"
+      }
+    },
+    {
+      "name": "glyphGid",
+      "type": {
+        "arrayOf": "u32"
+      }
+    },
+    {
+      "name": "glyphOfs2",
+      "type": {
+        "arrayOf": "vec2"
+      }
+    },
+    {
+      "name": "glyphOwner",
+      "type": {
+        "arrayOf": "u32"
+      }
+    }
+  ],
+  "varArrays": {
+    "glyphUv4": {
+      "elemType": "vec4",
+      "floatStride": 4
+    },
+    "glyphPlane4": {
+      "elemType": "vec4",
+      "floatStride": 4
+    },
+    "glyphAdvance": {
+      "elemType": "f32",
+      "floatStride": 1
+    },
+    "glyphGid": {
+      "elemType": "u32",
+      "floatStride": 1
+    },
+    "glyphOfs2": {
+      "elemType": "vec2",
+      "floatStride": 2
+    },
+    "glyphOwner": {
+      "elemType": "u32",
+      "floatStride": 1
+    }
+  },
+  "structArrays": {}
+}

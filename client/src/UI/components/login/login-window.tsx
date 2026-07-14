@@ -1,8 +1,6 @@
 import React, { useCallback, useEffect } from 'react';
 import { USE_SAGE } from '@game/Constants/constants';
 import { supportedZones } from '@game/Constants/supportedZones';
-import GameManager from '@game/Manager/game-manager';
-import { Spawn } from '@game/Net/internal/api/capnp/common';
 import { Box, Button, List, ListItem, Stack, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -16,16 +14,31 @@ import { useUIContext } from '../context';
 import DiscordIcon from './discord';
 import { DISCORD_CLIENT_ID, REDIRECT_URI, RESPONSE_TYPE, SCOPE } from './util';
 import { fsBindings } from '@/Core/bindings';
+import { isLocalBackendEnabled } from '@/LocalBackend/config';
+import { refreshOfflineContent } from '@/LocalBackend/connection';
 
 const defaultWorldName = 'requiem';
 declare const window: Window;
-const doEnterSandbox =
-  new URLSearchParams(window.location.search).get('sandbox') === 'true';
+const initialQuery = new URLSearchParams(window.location.search);
+const doEnterOffline =
+  initialQuery.get('offline') === 'true' ||
+  initialQuery.get('sandbox') === 'true';
+const isLocalDev = import.meta.env.VITE_LOCAL_DEV === 'true';
 
-const serverUrl =
-  import.meta.env.VITE_LOCAL_DEV === 'true'
+const serverUrl = import.meta.env.VITE_API_BASE_URL
+  ? String(import.meta.env.VITE_API_BASE_URL)
+  : isLocalDev
     ? '/api'
     : 'https://eqrequiem.ddns.net';
+const worldHost = import.meta.env.VITE_WT_HOST
+  ? String(import.meta.env.VITE_WT_HOST)
+  : isLocalDev
+    ? 'localhost'
+    : 'eqrequiem.ddns.net';
+const useLocalBackend = isLocalBackendEnabled();
+const worldPort = import.meta.env.VITE_WT_PORT
+  ? Number(import.meta.env.VITE_WT_PORT)
+  : 443;
 
 export const LoginWindowComponent: React.FC = () => {
   const navigate = useNavigate();
@@ -34,18 +47,36 @@ export const LoginWindowComponent: React.FC = () => {
   const [imageTiles, setImageTiles] = React.useState<string[]>([]);
   const [selectedServer, setSelectedServer] = React.useState<number>(0);
   const [playerCount, setPlayerCount] = React.useState<number>(-1);
+  const [contentRefresh, setContentRefresh] = React.useState<{
+    busy: boolean;
+    message: string;
+  }>({ busy: false, message: '' });
 
-  const enterSandbox = useCallback(async () => {
-    const { qeynos2_spawns, player } = await import(
-      '@/Game/Constants/test-data'
-    );
-    setMode('game');
-    GameManager.instance.loadZoneId(2);
-    GameManager.instance.instantiatePlayer(player as any);
-    qeynos2_spawns.forEach((spawn) => {
-      GameManager.instance.ZoneManager?.EntityPool?.AddSpawn(spawn as Spawn);
+  const enterOffline = useCallback(async () => {
+    const connected = await WorldSocket.connect('local', 0, () => {
+      console.log('Offline backend disconnected');
+      navigate('/');
     });
-  }, [setMode]);
+    if (!connected) {return;}
+    token.current = 'local';
+    setMode('character-select');
+  }, [navigate, setMode, token]);
+
+  const hydrateLatest = useCallback(async () => {
+    setContentRefresh({ busy: true, message: 'Replacing offline content…' });
+    try {
+      const info = await refreshOfflineContent();
+      setContentRefresh({
+        busy   : false,
+        message: `Content ${info.contentVersion} ready; local characters preserved.`,
+      });
+    } catch (error) {
+      setContentRefresh({
+        busy   : false,
+        message: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }, []);
 
   const servers = [{ name: 'EQ: Requiem', playersOnline: playerCount }];
 
@@ -60,17 +91,21 @@ export const LoginWindowComponent: React.FC = () => {
     } catch (e) {
       console.error('Error parsing stored world details:', e);
     }
-    const local = import.meta.env.VITE_LOCAL_DEV === 'true';
+    const local = isLocalDev || useLocalBackend;
     if (!storedDetails && !local) {
       const discordAuthUrl = `https://discord.com/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&response_type=${RESPONSE_TYPE}&redirect_uri=${REDIRECT_URI}&scope=${SCOPE}`;
       window.location.href = discordAuthUrl;
     }
 
     if (
-      await WorldSocket.connect('eqrequiem.ddns.net', 443, () => {
-        console.log('Disconnected');
-        navigate('/');
-      })
+      await WorldSocket.connect(
+        useLocalBackend ? 'local' : worldHost,
+        worldPort,
+        () => {
+          console.log('Disconnected');
+          navigate('/');
+        },
+      )
     ) {
       if (local) {
         token.current = 'local';
@@ -111,6 +146,10 @@ export const LoginWindowComponent: React.FC = () => {
       })
       .catch((error) => {
         console.error('Error fetching player count:', error);
+        if (isLocalDev) {
+          // Local dev may not expose a playercount endpoint; keep world selectable.
+          setPlayerCount(0);
+        }
       });
   }, []);
 
@@ -142,12 +181,12 @@ export const LoginWindowComponent: React.FC = () => {
     ).then(setImageTiles);
     document.title = 'EQ: Requiem';
 
-    if (doEnterSandbox) {
+    if (doEnterOffline) {
       setTimeout(() => {
-        enterSandbox();
+        void enterOffline();
       }, 1);
     }
-  }, [enterSandbox]);
+  }, [enterOffline]);
 
   useEffect(() => {
     if (sessionStorage.getItem('worldLogin') === defaultWorldName) {
@@ -349,23 +388,36 @@ export const LoginWindowComponent: React.FC = () => {
                 sx={{ width: '13px !important', marginRight: '10px' }}
               />
             }
-            isDisabled={playerCount < 0}
-            text={playerCount < 0 ? 'World Offline' : 'Enter World'}
+            isDisabled={!isLocalDev && playerCount < 0}
+            text={
+              !isLocalDev && playerCount < 0 ? 'World Offline' : 'Enter World'
+            }
             textSx={{
               color: 'white !important',
             }}
             onClick={connectToWorld}
           />
         </Stack>
-        <UiButtonComponent
-          buttonName="A_EQLS_LargeBtn"
-          sx={{ float: 'right', marginRight: '60px', marginTop: '-10px' }}
-          text={'Offline Mode'}
-          textSx={{
-            color: 'white !important',
-          }}
-          onClick={enterSandbox}
-        />
+        <Stack alignItems="flex-end" direction="row" justifyContent="flex-end" spacing={1} sx={{ marginRight: '60px', marginTop: '-10px' }}>
+          <UiButtonComponent
+            buttonName="A_EQLS_LargeBtn"
+            isDisabled={contentRefresh.busy}
+            text={contentRefresh.busy ? 'Hydrating…' : 'Hydrate Latest'}
+            textSx={{ color: 'white !important' }}
+            onClick={hydrateLatest}
+          />
+          <UiButtonComponent
+            buttonName="A_EQLS_LargeBtn"
+            text={'Offline Mode'}
+            textSx={{ color: 'white !important' }}
+            onClick={enterOffline}
+          />
+        </Stack>
+        {contentRefresh.message ? (
+          <Typography sx={{ color: '#ddd', fontSize: '11px', marginTop: '4px', textAlign: 'right', marginRight: '60px' }}>
+            {contentRefresh.message}
+          </Typography>
+        ) : null}
       </Box>
       {USE_SAGE && (
         <Box
@@ -404,7 +456,15 @@ export const LoginWindowComponent: React.FC = () => {
 
               // //Items
               console.log('Processing items');
-              const itemFiles = ['gequip.s3d', 'gequip2.s3d', 'gequip3.s3d', 'gequip4.s3d', 'gequip5.s3d', 'gequip6.s3d', 'gequip8.s3d'];
+              const itemFiles = [
+                'gequip.s3d',
+                'gequip2.s3d',
+                'gequip3.s3d',
+                'gequip4.s3d',
+                'gequip5.s3d',
+                'gequip6.s3d',
+                'gequip8.s3d',
+              ];
               await fsBindings.processFiles('gequip', itemFiles);
               for (const zone of Object.values(supportedZones)) {
                 continue;
@@ -412,12 +472,8 @@ export const LoginWindowComponent: React.FC = () => {
 
                 const associatedFiles: string[] = [];
                 // temp short circuit
-                if (
-                  !['nro'].includes(
-                    zone.shortName,
-                  )
-                ) {
-                //  continue;
+                if (!['nro'].includes(zone.shortName)) {
+                  //  continue;
                 }
                 const exists = await getEQFileExists('zones', `${name}.glb`);
                 if (exists) {

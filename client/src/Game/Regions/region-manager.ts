@@ -1,9 +1,8 @@
 import type * as BJS from '@babylonjs/core';
 import BABYLON from '@bjs';
-import { capnpToPlainObject } from '@game/Constants/util';
 import { animateVignette, gaussianBlurTeleport } from '@game/Effects/effects';
 import type GameManager from '@game/Manager/game-manager';
-import { RequestClientZoneChange, ZoneChangeType, type ZonePoint } from '@game/Net/internal/api/capnp/zone';
+import { RequestClientZoneChange, ZoneChangeType, type ZonePoint } from '@game/Net/messages';
 import Player from '@game/Player/player';
 import type { ZoneMetadata } from '@game/Zone/zone-types';
 
@@ -23,13 +22,16 @@ export class RegionManager {
   private regions: ZoneMetadata['regions'] = [];
   private scene?: BJS.Scene;
   private teleportEffects: BJS.GPUParticleSystem[] = [];
+  private active = false;
+  private transitionPending = false;
+  private readonly beforeRender = (): void => this.update();
 
   constructor(private gameManager: GameManager) {
 
   }
 
-  private createTeleportEffect(region: ZoneMetadata['regions'][number], scene: BJS.Scene, index: number): BJS.GPUParticleSystem {
-    return; 
+  private createTeleportEffect(region: ZoneMetadata['regions'][number], scene: BJS.Scene, index: number): BJS.GPUParticleSystem | undefined {
+    return undefined;
     
     const { Vector3, GPUParticleSystem, Texture, Color4, BoxParticleEmitter } = BABYLON;
     // 1) Compute your AABB center & half‐size
@@ -90,6 +92,7 @@ export class RegionManager {
     metadata: ZoneMetadata,
     _zonePoints: ZonePoint[] = [],
   ): void {
+    this.dispose();
     const { regions } = metadata;
     if (!regions?.length) {
       console.warn('No regions to instantiate.');
@@ -97,7 +100,7 @@ export class RegionManager {
     }
     this.regions = regions;
     for (const z of _zonePoints) {
-      this.zonePoints[z.number] = capnpToPlainObject(z);
+      this.zonePoints[z.number] = z;
     }
       
 
@@ -110,25 +113,28 @@ export class RegionManager {
 
     this.aabbTree = this.buildTree(nodes);
     this.inside.clear();
+    this.active = true;
+    this.transitionPending = false;
     for (let i = 0; i < regions.length; i++) {
       const region = regions[i];
       if (region.center[0] === 0 && region.center[1] === 0 && region.center[2] === 0) {
         continue;
       }
       if (region.regionType === 4) {
-        this.teleportEffects.push(
-          this.createTeleportEffect(regions[i], scene, i),
-        );
+        const effect = this.createTeleportEffect(regions[i], scene, i);
+        if (effect) {
+          this.teleportEffects.push(effect);
+        }
       }
     }
     // Hook into player-movement loop
-    scene.registerBeforeRender(this.update.bind(this));
+    scene.registerBeforeRender(this.beforeRender);
 
     this.scene = scene;
   }
 
   private update(): void {
-
+    if (!this.active || this.transitionPending) { return; }
     const pos = Player.instance?.getPlayerPosition();
     if (!pos) { return; }
     const regions = this.regions;
@@ -137,6 +143,7 @@ export class RegionManager {
 
     // Entered
     nowInside.forEach((i) => {
+      if (!this.active || this.transitionPending) { return; }
       if (!this.inside.has(i)) {
         console.log(`[RegionManager] Entered region ${i}:`, regions[i]);
         const region = regions[i];
@@ -213,8 +220,8 @@ export class RegionManager {
               this.gameManager.player?.setPosition(requestZone.x, requestZone.y, requestZone.z);
               
             } else {
+              this.transitionPending = true;
               this.gameManager.requestZone(requestZone);
-
               this.dispose();
             }
          
@@ -233,7 +240,9 @@ export class RegionManager {
       }
     });
 
-    this.inside = nowInside;
+    if (this.active) {
+      this.inside = nowInside;
+    }
 
   }
   private buildTree(nodes: AABBNode[]): AABBNode | undefined {
@@ -287,15 +296,17 @@ export class RegionManager {
   }
 
   public dispose(): void {
+    this.active = false;
     this.aabbTree = undefined;
     this.regions = [];
     this.zonePoints = {};
     for (const ps of this.teleportEffects) {
-      ps.stop();
-      ps.dispose();
+      ps?.stop();
+      ps?.dispose();
     }
     this.teleportEffects = [];
-    this.scene?.unregisterBeforeRender(this.update.bind(this));
+    this.scene?.unregisterBeforeRender(this.beforeRender);
+    this.scene = undefined;
     this.inside.clear();
   }
 }

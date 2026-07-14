@@ -1,0 +1,24 @@
+{
+  "entries": {
+    "module": "assembly/index.ts"
+  },
+  "options": {
+    "bindings": "esm",
+    "exportRuntime": true
+  },
+  "targets": {
+    "debug": {
+      "debug": true,
+      "importMemory": true,
+      "exportTable": true,
+      "sourceMap": true
+    },
+    "release": {
+      "optimizeLevel": 3,
+      "shrinkLevel": 0,
+      "importMemory": true,
+      "exportTable": true,
+      "noAssert": true
+    }
+  }
+}

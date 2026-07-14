@@ -1,7 +1,5 @@
-import { capnpToPlainObject } from '@game/Constants/util';
 import emitter from '@game/Events/events';
-import { type MoveItem } from '@game/Net/internal/api/capnp/common';
-import { DeleteItem, ItemInstance } from '@game/Net/internal/api/capnp/item';
+import { DeleteItem, ItemInstance, type MoveItem } from '@game/Net/messages';
 import { OpCodes } from '@game/Net/opcodes';
 import { WorldSocket } from '@ui/net/instances';
 import type Player from './player';
@@ -133,10 +131,12 @@ export class PlayerInventory {
     const dstItem = this.inventorySlots.get(dstKey) || null;
 
     if (srcItem) {
-      srcItem.bagSlot = fromBagSlot;
+      srcItem.slot = toSlot;
+      srcItem.bagSlot = toBagSlot;
     }
     if (dstItem) {
-      dstItem.bagSlot = toBagSlot;
+      dstItem.slot = fromSlot;
+      dstItem.bagSlot = fromBagSlot;
     }
 
     this.inventorySlots.set(dstKey, srcItem);

@@ -1,0 +1,28 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "declaration": true,
+    "declarationMap": true,
+    "emitDeclarationOnly": false,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "strict": true,
+    "useDefineForClassFields": false,
+    "experimentalDecorators": true,
+    "allowJs": true,
+    "lib": ["ES2022", "DOM"],
+    "types": ["node", "@babylonjs/core"]
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.js",
+    "src/**/*.fx",
+    "src/**/*.wgsl",
+    "src/**/*.asc",
+    "src/**/*.wasm.gz"
+  ],
+  "exclude": ["assembly", "sandbox"]
+}

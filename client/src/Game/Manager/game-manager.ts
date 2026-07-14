@@ -1,19 +1,18 @@
-import type * as BJS from '@babylonjs/core';
-import HavokPhysics from '@babylonjs/havok';
-import BABYLON from '@bjs';
-import { animateVignette, gaussianBlurTeleport } from '@game/Effects/effects';
-import emitter from '@game/Events/events';
-import EntityCache from '@game/Model/entity-cache';
-import ItemCache from '@game/Model/item-cache';
-import { PlayerProfile } from '@game/Net/internal/api/capnp/player';
-import { NewZone, RequestClientZoneChange } from '@game/Net/internal/api/capnp/zone';
-import { OpCodes } from '@game/Net/opcodes';
-import { ZonePacketHandler } from '@game/Net/zone-packets';
-import { ZoneManager } from '@game/Zone/zone-manager';
-import { WorldSocket } from '@ui/net/instances';
-import { supportedZones } from '../Constants/supportedZones';
-import Player from '../Player/player';
-import CharacterSelect from '../Zone/character-select';
+import type * as BJS from "@babylonjs/core";
+import HavokPhysics from "@babylonjs/havok";
+import BABYLON from "@bjs";
+import { animateVignette, gaussianBlurTeleport } from "@game/Effects/effects";
+import EntityCache from "@game/Model/entity-cache";
+import ItemCache from "@game/Model/item-cache";
+import { PlayerProfile } from "@game/Net/messages";
+import { NewZone, RequestClientZoneChange } from "@game/Net/messages";
+import { OpCodes } from "@game/Net/opcodes";
+import { ZonePacketHandler } from "@game/Net/zone-packets";
+import { ZoneManager } from "@game/Zone/zone-manager";
+import { WorldSocket } from "@ui/net/instances";
+import { supportedZones } from "../Constants/supportedZones";
+import Player from "../Player/player";
+import CharacterSelect from "../Zone/character-select";
 
 declare const window: Window;
 
@@ -28,7 +27,6 @@ export default class GameManager {
   loadingRefCount: number = 1;
   scene: BJS.Scene | null = null;
 
-  private worldTickInterval: ReturnType<typeof setInterval> = -1 as unknown as ReturnType<typeof setInterval>;
   private lastPlayer: Partial<PlayerProfile> | null = null;
   public player: Player | null = null;
   public zonePacketHandler: ZonePacketHandler = new ZonePacketHandler(this);
@@ -53,7 +51,7 @@ export default class GameManager {
   private secondaryCamera: BJS.UniversalCamera | null = null;
   get SecondaryCamera(): BJS.UniversalCamera | null {
     return this.secondaryCamera;
-  } 
+  }
 
   private static _instance: GameManager | null = null;
   public static get instance(): GameManager {
@@ -74,15 +72,15 @@ export default class GameManager {
 
   public initializeSecondaryCamera() {
     if (!this.scene) {
-      console.error('Scene is not initialized');
+      console.error("Scene is not initialized");
       return;
     }
     if (this.secondaryCamera) {
       this.secondaryCamera.dispose();
     }
-    console.log('Initializing secondary camera');
+    console.log("Initializing secondary camera");
     this.secondaryCamera = new BABYLON.UniversalCamera(
-      '__secondary_camera__',
+      "__secondary_camera__",
       new BABYLON.Vector3(0, 0, 0),
       this.scene,
     );
@@ -105,10 +103,13 @@ export default class GameManager {
     x: number,
     y: number,
     width: number,
-    height: number) {
-    if (!this.scene || !this.secondaryCamera) {return;}
+    height: number,
+  ) {
+    if (!this.scene || !this.secondaryCamera) {
+      return;
+    }
     const dpi = window.devicePixelRatio || 1;
-    
+
     x *= dpi;
     y *= dpi;
     width *= dpi;
@@ -130,10 +131,11 @@ export default class GameManager {
       widthNorm,
       heightNorm,
     );
-
   }
   public setNewViewport(x: number, y: number, width: number, height: number) {
-    if (!this.scene || !this.camera) {return;}
+    if (!this.scene || !this.camera) {
+      return;
+    }
     const dpi = window.devicePixelRatio || 1;
     x *= dpi;
     y *= dpi;
@@ -167,9 +169,7 @@ export default class GameManager {
       RequestClientZoneChange,
       requestZone,
     );
-
   }
-
 
   async loadPhysicsEngine() {
     if (!this.scene) {
@@ -180,44 +180,77 @@ export default class GameManager {
       const havokPlugin = new BABYLON.HavokPlugin(true, HK);
       this.havokPlugin = havokPlugin;
       const worldGravity = new BABYLON.Vector3(0, -9.81 * 30, 0);
-      const didEnable = this.scene.enablePhysics(
-        worldGravity,
-        havokPlugin,
-      );
+      const didEnable = this.scene.enablePhysics(worldGravity, havokPlugin);
       if (didEnable) {
         this.scene._physicsEngine!.setGravity(worldGravity);
       } else {
-        console.error('Failed to enable physics engine');
+        console.error("Failed to enable physics engine");
       }
       return didEnable;
     } catch (error) {
-      console.error('Error initializing Havok physics:', error);
+      console.error("Error initializing Havok physics:", error);
       return false;
     }
   }
   private pickingList: BJS.AbstractMesh[] = [];
   private pickListTimeout: ReturnType<typeof setTimeout> | null = null;
   public addToPickingList(mesh: BJS.AbstractMesh) {
+    if (!mesh || mesh.isDisposed()) {
+      return;
+    }
     if (!this.pickingList.includes(mesh)) {
       this.pickingList.push(mesh);
     }
 
-    // Debounce this
+    // Publish new entity meshes on the next task. A one-second debounce made
+    // freshly zoned NPCs visibly present but untargetable.
     if (this.pickListTimeout) {
       clearTimeout(this.pickListTimeout);
     }
     this.pickListTimeout = setTimeout(() => {
-      this.gpuPicker?.setPickingList(this.pickingList);
-    }, 1000);
+      this.refreshPickingList();
+    }, 0);
   }
   public clearPickingList() {
     this.pickingList = [];
-    this.gpuPicker?.setPickingList(this.pickingList);
+    if (this.pickListTimeout) {
+      clearTimeout(this.pickListTimeout);
+      this.pickListTimeout = null;
+    }
+    this.gpuPicker?.setPickingList(null);
   }
 
   public getPickingList(): BJS.AbstractMesh[] {
     return this.pickingList;
   }
+
+  private refreshPickingList() {
+    const picker = this.gpuPicker;
+    if (!picker) {
+      return;
+    }
+
+    const scene = this.scene;
+    const pickable = this.pickingList.filter(
+      (mesh) => !mesh.isDisposed() && (!scene || mesh.getScene() === scene),
+    );
+    this.pickingList = pickable;
+
+    // Babylon takes ownership of the array and clears it on the next refresh.
+    picker.setPickingList(
+      pickable.map((mesh) => {
+        const material = (
+          mesh.metadata as
+            | { gpuPickingMaterial?: BJS.ShaderMaterial }
+            | null
+            | undefined
+        )?.gpuPickingMaterial;
+        return material ? { mesh, material } : mesh;
+      }),
+    );
+    this.pickListTimeout = null;
+  }
+
   public gpuPicker: BJS.GPUPicker | null = null;
   async loadEngine(canvas) {
     if (this.engine) {
@@ -231,19 +264,19 @@ export default class GameManager {
     this.canvas = canvas;
     this.gpuPicker = new BABYLON.GPUPicker();
     if (navigator.gpu) {
-      this.engine = new BABYLON.WebGPUEngine(canvas, { deviceDescriptor: { requiredFeatures: ['timestamp-query'] } });
-      
+      this.engine = new BABYLON.WebGPUEngine(canvas, {
+        deviceDescriptor: { requiredFeatures: ["timestamp-query"] },
+      });
+
       await this.engine?.initAsync?.();
       this.engineInitialized = true;
-
-      
     } else {
       this.engine = new BABYLON.Engine(canvas);
       this.engineInitialized = true;
     }
 
     if (!this.engine) {
-      console.error('[GameManager] Failed to create engine');
+      console.error("[GameManager] Failed to create engine");
       return;
     }
     this.scene = new BABYLON.Scene(this.engine);
@@ -251,14 +284,14 @@ export default class GameManager {
     this.canvas!.oncontextmenu = (e) => e.preventDefault();
 
     this.zoneManager = new ZoneManager(this);
-    
+
     this.engine.setHardwareScalingLevel(1 / window.devicePixelRatio);
     this.engine.disableManifestCheck = true;
     this.engine.enableOfflineSupport = false;
     this.loadingRefCount = 0;
 
     if (!(await this.loadPhysicsEngine())) {
-      console.error('[GameManager] Could not load physics engine');
+      console.error("[GameManager] Could not load physics engine");
       return;
     }
 
@@ -285,10 +318,10 @@ export default class GameManager {
   private inspector: any | null = null;
   private instantiatingInspector: boolean = false;
   public modifierKeys = {
-    ctrl : false,
+    ctrl: false,
     shift: false,
-    alt  : false,
-    meta : false,
+    alt: false,
+    meta: false,
   };
   async keyUp(e: BJS.IKeyboardEvent) {
     this.modifierKeys.ctrl = e.ctrlKey;
@@ -302,11 +335,11 @@ export default class GameManager {
     this.modifierKeys.alt = e.altKey;
     this.modifierKeys.meta = e.metaKey;
     switch (`${e?.key}`?.toLowerCase?.()) {
-      case 'i': {
+      case "i": {
         if (!this.scene || !(e.ctrlKey || e.metaKey)) {
           break;
         }
-        if (e?.target?.tagName === 'INPUT') {
+        if (e?.target?.tagName === "INPUT") {
           return;
         }
         if (this.instantiatingInspector) {
@@ -316,13 +349,13 @@ export default class GameManager {
           this.inspector.Hide();
         } else {
           this.instantiatingInspector = true;
-          await import('@babylonjs/inspector').then((i) => {
+          await import("@babylonjs/inspector").then((i) => {
             this.inspector = i.Inspector;
           });
           this.instantiatingInspector = false;
           this.inspector.Show(this.scene, {
-            embedMode   : true,
-            overlay     : true,
+            embedMode: true,
+            overlay: true,
             handleResize: true,
           });
         }
@@ -340,7 +373,8 @@ export default class GameManager {
   }
 
   public dispose() {
-    clearInterval(this.worldTickInterval);
+    this.player?.dispose();
+    this.player = null;
     // for (const material of this.scene?.materials || []) {
     //   if (material instanceof BABYLON.PBRMaterial) {
     //     material.dispose(true, true);
@@ -364,11 +398,12 @@ export default class GameManager {
 
   public async loadCharacterSelect() {
     this.player?.dispose();
+    this.player = null;
     if (this.characterSelect) {
       this.characterSelect.dispose();
     }
     this.camera = new BABYLON.UniversalCamera(
-      '__camera__',
+      "__camera__",
       new BABYLON.Vector3(0, 0, 0),
       this.scene!,
     );
@@ -377,18 +412,19 @@ export default class GameManager {
 
   public async loadZoneServer(zone: NewZone) {
     this.CurrentZone = zone;
-    this.loadingRefCount++;
+    this.loadingRefCount = 1;
     this.setLoading(true);
-    emitter.once('zoneSpawns', () => {
-      this.loadingRefCount--;
-      this.setLoading(false);
-    });
     await this.loadZoneId(zone.zoneIdNumber);
+  }
+
+  public completeZoneLoad(): void {
+    this.loadingRefCount = 0;
+    this.setLoading(false);
   }
 
   public async loadZoneId(zoneId: number): Promise<void> {
     const zoneName = supportedZones[zoneId?.toString()]?.shortName;
-    console.log('Loading zone: ', zoneId, zoneName);
+    console.log("Loading zone: ", zoneId, zoneName);
     if (zoneName) {
       await this.loadZone(zoneName);
     } else {
@@ -399,40 +435,25 @@ export default class GameManager {
   public async loadZone(zoneName: string): Promise<void> {
     this.dispose();
     this.camera = new BABYLON.UniversalCamera(
-      '__camera__',
+      "__camera__",
       new BABYLON.Vector3(0, 0, 0),
       this.scene!,
     );
-    animateVignette(
-      this.camera,
-              this.scene!,
-    );
-    gaussianBlurTeleport(
-      this.camera,
-              this.scene!,
-    );
-    this.loadingRefCount++;
-    emitter.once('playerLoaded', () => {
-      this.loadingRefCount--;
-    });
-
+    animateVignette(this.camera, this.scene!);
+    gaussianBlurTeleport(this.camera, this.scene!);
     await this.zoneManager?.loadZone(zoneName);
-    clearTimeout(this.worldTickInterval);
-    this.worldTickInterval = setInterval(() => {
-      this.zoneManager?.SkyManager?.worldTick?.();
-    }, 1000);
   }
 
   public async instantiatePlayer(
     player: Partial<PlayerProfile> | null = this.lastPlayer,
   ) {
-    console.log('Inst player', player);
+    console.log("Inst player", player);
     this.lastPlayer = player;
     if (this.player) {
       this.player.dispose();
       this.player = null;
     }
     this.player = new Player(this, this.Camera!, true);
-    this.player?.Load(player as PlayerProfile);
+    await this.player.Load(player as PlayerProfile);
   }
 }

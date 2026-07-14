@@ -41,9 +41,6 @@
       "@/*": [
         "src/*"
       ], // Map @game/* to src/Game/*
-      "@eqmessage": [
-        "src/Game/Net/internal/api/capnp/*"
-      ],
       "@opcodes": [
         "src/Game/Net/opcodes.ts"
       ],

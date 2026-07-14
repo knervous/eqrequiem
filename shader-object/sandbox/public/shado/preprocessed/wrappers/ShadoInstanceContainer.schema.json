@@ -1,0 +1,50 @@
+{
+  "kind": "shado.wrapper.schema",
+  "version": 1,
+  "name": "ShadoInstanceContainer",
+  "headerFloatCount": 4,
+  "fields": [
+    {
+      "name": "visibleCount",
+      "type": "u32",
+      "headerFloatOffset": 0,
+      "headerFloatSize": 1
+    },
+    {
+      "name": "instancesPtr",
+      "type": "u32",
+      "headerFloatOffset": 1,
+      "headerFloatSize": 1
+    },
+    {
+      "name": "instancesCount",
+      "type": "u32",
+      "headerFloatOffset": 2,
+      "headerFloatSize": 1
+    },
+    {
+      "name": "cameraFrustum",
+      "type": {
+        "arrayOf": "vec4"
+      }
+    },
+    {
+      "name": "instances",
+      "type": {
+        "arrayOf": {}
+      }
+    }
+  ],
+  "varArrays": {
+    "cameraFrustum": {
+      "elemType": "vec4",
+      "floatStride": 4
+    }
+  },
+  "structArrays": {
+    "instances": {
+      "schema": "TestClass",
+      "floatStride": 28
+    }
+  }
+}

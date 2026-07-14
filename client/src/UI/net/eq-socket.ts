@@ -1,14 +1,16 @@
-import { setStructFields } from '@game/Constants/util';
-import { OpCodes } from '@game/Net/opcodes';
-import * as $ from 'capnp-es';
+import { OpCodes } from "@game/Net/opcodes";
+import type { NetMessageCodec } from "@game/Net/messages";
+import { LocalBackendConnection } from "@/LocalBackend/connection";
+import { isLocalBackendEnabled } from "@/LocalBackend/config";
 
 interface WebTransportOptions {
   serverCertificateHashes?: Array<{
-    algorithm: 'sha-256';
-    value: ArrayBuffer;
+    algorithm: "sha-256";
+    value: BufferSource;
   }>;
+  requireUnreliable?: boolean;
   allowPooling?: boolean;
-  congestionControl?: 'default' | 'low-latency' | 'throughput';
+  congestionControl?: "default" | "low-latency" | "throughput";
 }
 
 interface WebTransport {
@@ -29,13 +31,32 @@ interface WebTransport {
   }>;
 }
 
-function base64ToArrayBuffer(base64: string): ArrayBuffer {
-  const binaryString = atob(base64);
+function base64ToBytes(base64: string): Uint8Array {
+  const normalized = base64.trim();
+  if (normalized.length !== 44) {
+    throw new Error(
+      `Invalid cert hash length ${normalized.length}; expected 44 base64 chars`,
+    );
+  }
+  const binaryString = atob(normalized);
   const bytes = new Uint8Array(binaryString.length);
   for (let i = 0; i < binaryString.length; i++) {
     bytes[i] = binaryString.charCodeAt(i);
   }
-  return bytes.buffer;
+  if (bytes.length !== 32) {
+    throw new Error(
+      `Invalid cert hash byte length ${bytes.length}; expected 32`,
+    );
+  }
+  return bytes;
+}
+
+function exactArrayBuffer(bytes: Uint8Array): ArrayBuffer {
+  // Ensure a tightly-sized buffer regardless of underlying view offset/length.
+  return bytes.buffer.slice(
+    bytes.byteOffset,
+    bytes.byteOffset + bytes.byteLength,
+  );
 }
 
 function concatArrayBuffer(a: ArrayBuffer, b: ArrayBuffer): Uint8Array {
@@ -52,8 +73,53 @@ function concatUint8(a: Uint8Array, b: Uint8Array): Uint8Array {
   return c;
 }
 
+function envValue(name: string): string | null {
+  const value = (import.meta.env as Record<string, unknown>)[name];
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
+function webTransportTarget(
+  fallbackHost: string,
+  fallbackPort: number | string,
+): { host: string; port: string; path: string } {
+  return {
+    host: envValue("VITE_WT_HOST") ?? fallbackHost,
+    port: envValue("VITE_WT_PORT") ?? String(fallbackPort),
+    path: envValue("VITE_WT_PATH") ?? "/game",
+  };
+}
+
+function hashLookupTarget(
+  transportHost: string,
+  transportPort: string,
+): { host: string; port: string } {
+  return {
+    host: envValue("VITE_WT_HASH_HOST") ?? transportHost,
+    port: envValue("VITE_WT_HASH_PORT") ?? transportPort,
+  };
+}
+
+function boolEnv(name: string, fallback: boolean): boolean {
+  const value = envValue(name);
+  if (value === null) {
+    return fallback;
+  }
+  if (value === "true" || value === "1" || value.toLowerCase() === "yes") {
+    return true;
+  }
+  if (value === "false" || value === "0" || value.toLowerCase() === "no") {
+    return false;
+  }
+  return fallback;
+}
 
 export class EqSocket {
+  private localBackend: LocalBackendConnection | null = null;
   private webtransport: WebTransport | null = null;
   private datagramWriter: WritableStreamDefaultWriter<Uint8Array> | null = null;
   private controlWriter: WritableStreamDefaultWriter<Uint8Array> | null = null;
@@ -76,9 +142,9 @@ export class EqSocket {
 
   constructor(config: { maxRetries?: number; allowReconnect?: boolean } = {}) {
     this.allowReconnect = config.allowReconnect ?? true;
-    this.maxRetries = config.maxRetries ?? 5;
+    this.maxRetries = config.maxRetries ?? 2;
     this.close = this.close.bind(this);
-    window.addEventListener('beforeunload', () => this.close(false));
+    window.addEventListener("beforeunload", () => this.close(false));
   }
 
   public setSessionId(id: number) {
@@ -90,34 +156,105 @@ export class EqSocket {
     port: number | string,
     onClose: () => void,
   ): Promise<boolean> {
-    const WT = (window as any).WebTransport as {
-      new (url: string, opts?: WebTransportOptions): WebTransport;
-    };
-    if (!WT) {
-      console.error('WebTransport not supported');
-      return false;
-    }
-
     this.url = url;
     this.port = port;
     this.onClose = onClose;
 
+    if (isLocalBackendEnabled() || url === "local") {
+      try {
+        this.localBackend?.close();
+        const localBackend = new LocalBackendConnection();
+        localBackend.onPacket((opcode, payload) =>
+          this.opCodeHandlers[opcode]?.(payload),
+        );
+        const info = await localBackend.connect();
+        this.localBackend = localBackend;
+        this.isConnected = true;
+        this.retryCount = 0;
+        this.clearReconnectTimer();
+        console.info("[local-backend] connected", info);
+        return true;
+      } catch (error) {
+        console.error("[local-backend] connection failed", error);
+        this.localBackend?.close();
+        this.localBackend = null;
+        return false;
+      }
+    }
+
+    const WT = (window as any).WebTransport as {
+      new (url: string, opts?: WebTransportOptions): WebTransport;
+    };
+    if (!WT) {
+      console.error("WebTransport not supported");
+      return false;
+    }
+
     // if already open, shut it down first
     if (this.webtransport) {
       const closedInfo = await this.webtransport.closed.catch(() => null);
-      if (!closedInfo) {this.close(false);}
+      if (!closedInfo) {
+        this.close(false);
+      }
     }
 
     try {
-      // const _sid = this.sessionId ?? 0;
-      if (import.meta.env.VITE_LOCAL_DEV === 'true') {
-        const hash = await fetch('/api/hash?port=7100&ip=127.0.0.1').then((r: Response) => r.text());
-        this.webtransport = new WebTransport('https://127.0.0.1/eq', {
-          serverCertificateHashes: [{ algorithm: 'sha-256', value: base64ToArrayBuffer(hash) }],
-        });
-        console.log('Got hash', hash);
+      const target = webTransportTarget(url, port);
+      const transportUrl = `https://${target.host}:${target.port}${target.path}`;
+      if (import.meta.env.VITE_LOCAL_DEV === "true") {
+        const useCertHash = boolEnv("VITE_WT_USE_CERT_HASH", true);
+        if (useCertHash) {
+          const hashTarget = hashLookupTarget(target.host, target.port);
+          const params = new URLSearchParams({
+            ip: hashTarget.host,
+            port: hashTarget.port,
+          });
+          console.log("[WT] Requesting cert hash", {
+            endpoint: `/api/hash?${params.toString()}`,
+            transportUrl,
+          });
+          const hash = await fetch(`/api/hash?${params.toString()}`)
+            .then((r: Response) => r.text())
+            .then((value) => value.trim());
+
+          if (!hash) {
+            throw new Error(
+              `Missing server certificate hash for ${hashTarget.host}:${hashTarget.port}.` +
+                " Set VITE_WT_HASH_HOST/VITE_WT_HASH_PORT or expose /hash on the target.",
+            );
+          }
+          const certHashBytes = base64ToBytes(hash);
+          const certHashBuffer = exactArrayBuffer(certHashBytes);
+
+          console.log("[WT] Received cert hash", {
+            hash: { algorithm: "sha-256", value: certHashBytes },
+          });
+          this.webtransport = new WebTransport(transportUrl, {
+            // Chromium accepts BufferSource; use exact ArrayBuffer for maximum compatibility.
+            serverCertificateHashes: [
+              { algorithm: "sha-256", value: certHashBuffer },
+            ],
+            // Avoid QUIC connection reuse so cert hash pinning applies to this specific target.
+            allowPooling: false,
+          });
+          console.log("[WT] Applying cert hash and opening transport", {
+            transportUrl,
+            hashLength: hash.length,
+          });
+        } else {
+          // Trusted local cert workflow (mkcert/keychain); do not rely on hash pinning.
+          console.log(
+            "[WT] Opening transport without cert hash (VITE_WT_USE_CERT_HASH=false)",
+            {
+              transportUrl,
+            },
+          );
+          this.webtransport = new WebTransport(transportUrl, {
+            allowPooling: false,
+          });
+        }
       } else {
-        this.webtransport = new WebTransport(`https://${url}:${port}/eq`);
+        this.webtransport = new WebTransport(transportUrl);
       }
 
       // wait for handshake
@@ -126,15 +263,20 @@ export class EqSocket {
       // ——— datagram writer & loop ———
       this.datagramWriter = this.webtransport.datagrams.writable.getWriter();
       this.startDatagramLoop();
-      console.log('Datagram writer started', this.datagramWriter);
+      console.log("Datagram writer started", this.datagramWriter);
 
       // Accept server-opened control stream(s)
-      const streamReader = this.webtransport.incomingBidirectionalStreams.getReader();
+      const streamReader =
+        this.webtransport.incomingBidirectionalStreams.getReader();
       (async () => {
         while (true) {
           const { value: stream, done } = await streamReader.read();
-          if (done) {break;}
-          if (!stream) {continue;}
+          if (done) {
+            break;
+          }
+          if (!stream) {
+            continue;
+          }
           // grab writer & start reader
           this.controlWriter = stream.writable.getWriter();
           this.startControlReadLoop(stream.readable);
@@ -143,6 +285,7 @@ export class EqSocket {
 
       this.isConnected = true;
       this.retryCount = 0;
+      this.clearReconnectTimer();
       // watch for close
       this.webtransport.closed
         .then(() => this.close())
@@ -150,44 +293,39 @@ export class EqSocket {
 
       return true;
     } catch (e) {
-      console.warn('Connect failed:', e);
+      console.warn("Connect failed:", e);
       this.scheduleReconnect();
       return false;
     }
   }
 
   /** Fire-and-forget datagram */
-  public async sendMessage<T extends $.Struct>(
+  public async sendMessage<T>(
     opCode: number,
-    StructType: Parameters<$.Message['initRoot']>[0] & { prototype: T } | null,
-    data: Partial<Record<keyof T, any>> | null,
+    codec: NetMessageCodec<T> | null,
+    data: Partial<T> | null,
   ): Promise<void> {
-    const msg = new $.Message();
-    if (!StructType || !data) {
-      const buf = new Uint8Array(2).buffer;
-      const op = new Uint16Array([opCode]).buffer;
-      await this.sendDatagram(new Uint8Array(concatArrayBuffer(op, buf)));
-      return;
-    }
-    const root = msg.initRoot(StructType);
-    setStructFields(root, data);
-    const buf = $.Message.toArrayBuffer(msg);
+    const buf = codec && data ? codec.encode(data) : new Uint8Array(0);
     const op = new Uint16Array([opCode]).buffer;
-    const packet = concatArrayBuffer(op, buf);
-    await this.sendDatagram(new Uint8Array(packet));
+    const packet = concatUint8(new Uint8Array(op), buf);
+    await this.sendDatagram(packet);
   }
 
   /** Reliable, ordered “stream” message */
-  public async sendStreamMessage<T extends $.Struct>(
+  public async sendStreamMessage<T>(
     opCode: number,
-    StructType: Parameters<$.Message['initRoot']>[0] & { prototype: T },
-    data: Partial<Record<keyof T, any>>,
+    codec: NetMessageCodec<T>,
+    data: Partial<T>,
   ): Promise<void> {
-    if (!this.controlWriter) {throw new Error('Control stream not open');}
-    const msg = new $.Message();
-    const root = msg.initRoot(StructType);
-    setStructFields(root, data);
-    const payload = new Uint8Array($.Message.toArrayBuffer(msg));
+    const payload = codec.encode(data);
+
+    if (this.localBackend) {
+      this.localBackend.send("control-stream", opCode, payload);
+      return;
+    }
+    if (!this.controlWriter) {
+      throw new Error("Control stream not open");
+    }
 
     // [length:uint32_LE][opcode:uint16_LE][payload]
     const header = new ArrayBuffer(4);
@@ -201,24 +339,36 @@ export class EqSocket {
     await this.controlWriter.write(frame);
   }
 
-  public registerOpCodeHandler<T extends $.Struct>(
+  public registerOpCodeHandler<T>(
     opCode: OpCodes,
-    StructType: Parameters<$.Message['initRoot']>[0] & { prototype: T },
-    handler: (msg: T) => void,
+    codec: NetMessageCodec<T>,
+    handler: (msg: T) => void | Promise<void>,
   ) {
     this.opCodeHandlers[opCode] = (buf: Uint8Array) => {
       try {
-        const reader = new $.Message(buf, false);
-        const root = reader.getRoot(StructType);
-        handler(root as T);
+        const result = handler(codec.decode(buf));
+        if (result instanceof Promise) {
+          void result.catch((error: unknown) => {
+            console.error(`Async handler error for opcode ${opCode}:`, error);
+          });
+        }
       } catch (e) {
         console.error(`Decode error for opcode ${opCode}:`, e);
       }
     };
   }
 
+  public registerRawOpCodeHandler(
+    opCode: OpCodes,
+    handler: (payload: Uint8Array) => void,
+  ): void {
+    this.opCodeHandlers[opCode] = handler;
+  }
+
   public close(scheduleReconnect: boolean = true) {
     this.isConnected = false;
+    this.localBackend?.close();
+    this.localBackend = null;
     this.datagramWriter?.releaseLock();
     this.controlWriter?.releaseLock();
     this.webtransport?.close();
@@ -229,6 +379,7 @@ export class EqSocket {
     if (scheduleReconnect && this.allowReconnect) {
       this.scheduleReconnect();
     } else {
+      this.clearReconnectTimer();
       this.onClose?.();
     }
   }
@@ -236,7 +387,21 @@ export class EqSocket {
   // ——— private helpers ———
 
   private async sendDatagram(buf: Uint8Array) {
-    if (!this.datagramWriter) {return;}
+    if (this.localBackend) {
+      if (buf.byteLength < 2) {
+        throw new Error("Local backend packet is missing its opcode");
+      }
+      const opcode = new DataView(
+        buf.buffer,
+        buf.byteOffset,
+        buf.byteLength,
+      ).getUint16(0, true);
+      this.localBackend.send("datagram", opcode, buf.slice(2));
+      return;
+    }
+    if (!this.datagramWriter) {
+      return;
+    }
     this.writeQueue = this.writeQueue.then(() =>
       this.datagramWriter!.write(buf),
     );
@@ -244,20 +409,26 @@ export class EqSocket {
   }
 
   private startDatagramLoop() {
-    if (!this.webtransport) {return;}
+    if (!this.webtransport) {
+      return;
+    }
     const rdr = this.webtransport.datagrams.readable.getReader();
     (async () => {
       try {
         while (true) {
           const { value, done } = await rdr.read();
-          if (done) {break;}
-          if (!value) {continue;}
+          if (done) {
+            break;
+          }
+          if (!value) {
+            continue;
+          }
           const opcode = new Uint16Array(value.buffer.slice(0, 2))[0];
           const payload = value.slice(2);
           this.opCodeHandlers[opcode]?.(payload);
         }
       } catch (e) {
-        console.error('Datagram loop error:', e);
+        console.error("Datagram loop error:", e);
       } finally {
         rdr.releaseLock();
       }
@@ -271,11 +442,15 @@ export class EqSocket {
       try {
         while (true) {
           const { value, done } = await rdr.read();
-          if (done) {break;}
-          buffer = concatUint8(buffer, value!); 
+          if (done) {
+            break;
+          }
+          buffer = concatUint8(buffer, value!);
           while (buffer.length >= 4) {
             const len = new DataView(buffer.buffer).getUint32(0, true);
-            if (buffer.length < 4 + len) {break;}
+            if (buffer.length < 4 + len) {
+              break;
+            }
             const msg = buffer.slice(4, 4 + len);
             const opcode = new Uint16Array(msg.buffer.slice(0, 2))[0];
             const payload = msg.slice(2);
@@ -284,7 +459,7 @@ export class EqSocket {
           }
         }
       } catch (e) {
-        console.error('Control stream loop error:', e);
+        console.error("Control stream loop error:", e);
       } finally {
         rdr.releaseLock();
       }
@@ -292,12 +467,16 @@ export class EqSocket {
   }
 
   private scheduleReconnect() {
+    if (this.reconnectTimer) {
+      return;
+    }
     if (
       this.retryCount >= this.maxRetries ||
       !this.url ||
       !this.port ||
       !this.onClose
     ) {
+      this.clearReconnectTimer();
       this.onClose?.();
       this.retryCount = 0;
       return;
@@ -305,12 +484,19 @@ export class EqSocket {
     const delay = Math.min(2 ** this.retryCount * 1000, 30_000);
     this.retryCount++;
     this.reconnectTimer = setTimeout(async () => {
-      const ok = await this.connect(
-        this.url!,
-        this.port!,
-        this.onClose!,
-      );
-      if (!ok) {this.scheduleReconnect();}
+      this.reconnectTimer = null;
+      const ok = await this.connect(this.url!, this.port!, this.onClose!);
+      // connect() owns retry scheduling on failure; avoid stacking extra timers here.
+      if (!ok) {
+      }
     }, delay);
+  }
+
+  private clearReconnectTimer() {
+    if (!this.reconnectTimer) {
+      return;
+    }
+    clearTimeout(this.reconnectTimer);
+    this.reconnectTimer = null;
   }
 }

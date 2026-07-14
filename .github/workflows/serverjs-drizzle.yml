@@ -1,0 +1,61 @@
+name: serverjs-drizzle
+
+on:
+  pull_request:
+    paths:
+      - 'serverjs/**'
+      - '.github/workflows/serverjs-drizzle.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'serverjs/**'
+      - '.github/workflows/serverjs-drizzle.yml'
+  workflow_dispatch:
+    inputs:
+      run_migrations:
+        description: 'Run DB migrations against configured URLs'
+        required: true
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
+
+jobs:
+  drizzle-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: 'serverjs/package-lock.json'
+      - run: npm ci
+        working-directory: serverjs
+      - run: npm run typecheck
+        working-directory: serverjs
+      - run: npm run test
+        working-directory: serverjs
+      - run: npm run db:drizzle:check
+        working-directory: serverjs
+
+  deploy-migrations:
+    if: github.event_name == 'workflow_dispatch' && inputs.run_migrations == 'true'
+    runs-on: ubuntu-latest
+    needs: drizzle-check
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: 'serverjs/package-lock.json'
+      - run: npm ci
+        working-directory: serverjs
+      - run: npm run db:migrate:deploy
+        working-directory: serverjs
+        env:
+          CONTENT_DATABASE_URL: ${{ secrets.CONTENT_DATABASE_URL }}
+          RUNTIME_DATABASE_URL: ${{ secrets.RUNTIME_DATABASE_URL }}

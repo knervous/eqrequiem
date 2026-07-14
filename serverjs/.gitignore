@@ -1,0 +1,8 @@
+dist
+node_modules
+.env
+artifacts
+data/*.sqlite
+!data/content-db.sqlite.gz
+data/*.sqlite-*
+data/*.importing

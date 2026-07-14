@@ -1,0 +1,29 @@
+{
+  "id": "tutorial-patrol",
+  "enabled": true,
+  "zoneIds": [2],
+  "handlers": [
+    {
+      "event": "npc_tick",
+      "everyTicks": 200,
+      "actions": [
+        {
+          "type": "cycle_npc_target",
+          "npcIndex": 0,
+          "points": [
+            { "x": 12, "y": 0, "z": 8 },
+            { "x": -8, "y": 0, "z": 4 },
+            { "x": 2, "y": 0, "z": -10 }
+          ]
+        }
+      ]
+    },
+    {
+      "event": "say",
+      "messageIncludes": "hail",
+      "actions": [
+        { "type": "log", "message": "Tutorial NPC received a hail" }
+      ]
+    }
+  ]
+}

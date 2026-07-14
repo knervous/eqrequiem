@@ -1,0 +1,31 @@
+{
+  "kind": "shado.wrapper.manifest",
+  "version": 1,
+  "name": "sandbox",
+  "schemas": [
+    {
+      "name": "ShadoInstanceContainer",
+      "headerFloatCount": 4,
+      "files": {
+        "schema": "ShadoInstanceContainer.schema.json",
+        "assemblyscript": "ShadoInstanceContainer.asc.ts",
+        "glsl": "ShadoInstanceContainer.glsl",
+        "glslGzip": "ShadoInstanceContainer.glsl.gz",
+        "wgsl": "ShadoInstanceContainer.wgsl",
+        "wgslGzip": "ShadoInstanceContainer.wgsl.gz"
+      }
+    },
+    {
+      "name": "NameplateData",
+      "headerFloatCount": 0,
+      "files": {
+        "schema": "NameplateData.schema.json",
+        "assemblyscript": "NameplateData.asc.ts",
+        "glsl": "NameplateData.glsl",
+        "glslGzip": "NameplateData.glsl.gz",
+        "wgsl": "NameplateData.wgsl",
+        "wgslGzip": "NameplateData.wgsl.gz"
+      }
+    }
+  ]
+}

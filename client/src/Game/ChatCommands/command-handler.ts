@@ -4,16 +4,53 @@ import RACE_DATA from '@game/Constants/race-data';
 import { supportedZones } from '@game/Constants/supportedZones';
 import emitter from '@game/Events/events';
 import GameManager from '@game/Manager/game-manager';
-import { ChannelMessage } from '@game/Net/internal/api/capnp/common';
+import { ChannelMessage } from '@game/Net/messages';
 import {
   RequestClientZoneChange,
   ZoneChangeType,
-} from '@game/Net/internal/api/capnp/zone';
+} from '@game/Net/messages';
 import { OpCodes } from '@game/Net/opcodes';
 import Player from '@game/Player/player';
 import { WorldSocket } from '@ui/net/instances';
 import { addChatLine, addChatLines } from './chat-message';
 import { BaseCommandHandler, command } from './command-base';
+
+export function requestZoneByShortName(rawZone?: string): void {
+  const zone = rawZone?.trim().toLowerCase();
+  if (!zone) {
+    addChatLine('Usage: /zone {shortname} or #zone {shortname}');
+    return;
+  }
+  const supportedZone = Object.values(supportedZones).find(
+    (value) => value.shortName.toLowerCase() === zone,
+  );
+  if (!supportedZone) {
+    addChatLine(`Zone '${zone}' not found. Type /listzones to see available zones.`);
+    return;
+  }
+  if (!WorldSocket.isConnected) {
+    void GameManager.instance.loadZone(supportedZone.shortName);
+    void GameManager.instance.instantiatePlayer({
+      race: 1,
+      charClass: 1,
+      name: 'Soandso',
+      x: 15,
+      y: 15,
+      z: 15,
+      face: 4,
+    });
+    return;
+  }
+  WorldSocket.sendMessage(
+    OpCodes.RequestClientZoneChange,
+    RequestClientZoneChange,
+    {
+      type: ZoneChangeType.FROM_ZONE,
+      zoneId: supportedZone.shortName,
+    },
+  );
+  addChatLine(`Zoning to ${supportedZone.longName}...`);
+}
 
 
 export class CommandHandler extends BaseCommandHandler {
@@ -119,44 +156,8 @@ export class CommandHandler extends BaseCommandHandler {
   }
 
   @command('zone')
-  async commandZone(args: string[]) {
-    const zone = args[0];
-    const supportedZone = Object.entries(supportedZones).find(
-      ([, value]) => value.shortName.toLowerCase() === zone.toLowerCase(),
-    );
-    if (!supportedZone) {
-      addChatLine(`Zone '${zone}' not found. Type /listzones to see available zones.`);
-      return;
-    } 
-    if (!WorldSocket.isConnected) {
-      GameManager.instance.loadZone(zone);
-      GameManager.instance.instantiatePlayer({
-        race     : 1,
-        charClass: 1,
-        name     : 'Soandso',
-        x        : 15,
-        y        : 15,
-        z        : 15,
-        face     : 4,
-      });
-      return;
-    }
-    if (zone) {
-
-      WorldSocket.sendMessage(
-        OpCodes.RequestClientZoneChange,
-        RequestClientZoneChange,
-        {
-          type  : ZoneChangeType.FROM_ZONE,
-          x     : 5,
-          y     : 5,
-          z     : 5,
-          zoneId: supportedZone[0],
-        },
-      );
-    } else {
-      addChatLine('No zone entered');
-    }
+  commandZone(args: string[]) {
+    requestZoneByShortName(args[0]);
   }
 
   // @command("ooc")

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { Entity } from '@game/Model/entity';
-import { PlayerProfile } from '@game/Net/internal/api/capnp/player';
+import { PlayerProfile } from '@game/Net/messages';
 import Player from '@game/Player/player';
 import type { InventorySlot, NullableItemInstance } from '@game/Player/player-constants';
 import type { PlayerInventory } from '@game/Player/player-inventory';

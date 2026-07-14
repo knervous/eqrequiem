@@ -1,7 +1,7 @@
 import React, { useCallback, useMemo, useRef } from 'react';
 import { useInventorySlot } from '@game/Events/event-hooks';
 import GameManager from '@game/Manager/game-manager';
-import { MoveItem } from '@game/Net/internal/api/capnp/common';
+import { MoveItem } from '@game/Net/messages';
 import { OpCodes } from '@game/Net/opcodes';
 import Player from '@game/Player/player';
 import { InventorySlot } from '@game/Player/player-constants';

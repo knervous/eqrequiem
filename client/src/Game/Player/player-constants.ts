@@ -1,4 +1,4 @@
-import { ItemInstance } from '@game/Net/internal/api/capnp/item';
+import { ItemInstance } from '@game/Net/messages';
 
 export type NullableItemInstance = ItemInstance | null;
 

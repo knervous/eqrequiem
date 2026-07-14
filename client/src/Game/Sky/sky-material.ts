@@ -1,7 +1,5 @@
-
 import BABYLON from "@bjs";
 import type * as BJS from "@babylonjs/core";
-
 
 // register a vertex shader called “skyVertex”
 BABYLON.Effect.ShadersStore["skyVertexShader"] = `
@@ -75,10 +73,18 @@ export const createSkyLayerMaterial = (
     {
       attributes: ["position", "uv"],
       uniforms: [
-        "worldViewProjection", "uUVOffset", "uDomeHeight", "uDomeMinY", "uScale",
-        "uLowColor", "uMidColor", "uHighColor",
+        "worldViewProjection",
+        "uUVOffset",
+        "uDomeHeight",
+        "uDomeMinY",
+        "uScale",
+        "uLowColor",
+        "uMidColor",
+        "uHighColor",
       ],
       samplers: ["textureSampler"],
+      // Sky is still authored in GLSL; make WebGPU's compatibility path explicit.
+      shaderLanguage: BABYLON.ShaderLanguage.GLSL,
     },
   );
   mat.backFaceCulling = false;

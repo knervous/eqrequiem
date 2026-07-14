@@ -40,6 +40,25 @@ export const pcModels = [
 export const isPlayerRace = (model: string): boolean =>
   pcModels.includes(model.toLowerCase());
 
+// Classic city residents use distinct model ids (QCM, FPM, HHM, etc.) but
+// share the playable-race face/skin texture convention. Treating them as
+// non-humanoid applies their chest material to every body piece.
+export const humanoidNpcRaces = new Set([
+  44, // Freeport guard
+  55, // Human beggar
+  67, // Highpass citizen
+  71, // Qeynos citizen
+  77, // Neriak citizen
+  78, // Erudite citizen
+  81, // Rivervale citizen
+  90, // Halas citizen
+  92, // Grobb citizen
+  93, // Oggok citizen
+  94, // Kaladim citizen
+  106, // Felwithe guard
+  112, // Gnome guard
+]);
+
 
 export const MaterialPrefixes = {
   Face: 'he',
@@ -109,43 +128,31 @@ export const Classes = {
 }
 
 
-// 0 = odus
-// 1 = qeynos
-// 2 = halas
-// 3 = rivervale
-// 4 = freeport
-// 5 = neriak
-// 6 = gukta/grobb
-// 7 = ogguk
-// 8 = kaladim
-// 9 = gfay
-// 10 = felwithe
-// 11 = akanon
-// 12 = cabalis
-// 13 = shar vahl
+// Canonical zone ids from content.character_origins. These are sent over the
+// wire, so they must not use the old client-facing city-choice indices.
 export const StartingZones = {
     SouthQeynos: [1, 'South Qeynos'],
-    NorthQeynos: [1, 'North Qeynos'],
-    SurefallGlade: [1, 'Surefall Glade'],
-    NorthFreeport: [4, 'North Freeport'],
-    WestFreeport: [4, 'West Freeport'],
-    EastFreeport: [4, 'East Freeport'],
-    GreaterFaydark: [9, 'Greater Faydark'],
-    Halas: [2, "Halas"],
-    Oggok: [7, "Oggok"],
-    Grobb: [6, "Grobb"],
-    NorthKaladim: [8, "North Kaladim"],
-    SouthKaladim: [8, "South Kaladim"],
-    Paineel: [0, 'Paineel'],
-    Erudin: [0, "Erudin"],
-    ErudinPalace: [0, "Erudin Palace"],
-    AkAnon: [11, 'Ak\'Anon'],
-    Rivervale: [3, 'Rivervale'],
-    NorthernFelwithe: [9, 'Northern Felwithe'],
-    SouthernFelwithe: [9, 'Southern Felwithe'],
-    QeynosAqueducts: [1, 'Qeynos Catacombs'],
-    NeriakCommons: [5, 'Neriak Commons'],
-    NeriakThirdGate: [5, 'Neriak Third Gate'],
+    NorthQeynos: [2, 'North Qeynos'],
+    SurefallGlade: [3, 'Surefall Glade'],
+    NorthFreeport: [8, 'North Freeport'],
+    WestFreeport: [9, 'West Freeport'],
+    EastFreeport: [10, 'East Freeport'],
+    GreaterFaydark: [54, 'Greater Faydark'],
+    Halas: [29, 'Halas'],
+    Oggok: [49, 'Oggok'],
+    Grobb: [52, 'Grobb'],
+    NorthKaladim: [67, 'North Kaladim'],
+    SouthKaladim: [60, 'South Kaladim'],
+    Paineel: [75, 'Paineel'],
+    Erudin: [24, 'Erudin'],
+    ErudinPalace: [23, 'Erudin Palace'],
+    AkAnon: [55, 'Ak\'Anon'],
+    Rivervale: [19, 'Rivervale'],
+    NorthernFelwithe: [61, 'Northern Felwithe'],
+    SouthernFelwithe: [62, 'Southern Felwithe'],
+    QeynosAqueducts: [45, 'Qeynos Catacombs'],
+    NeriakCommons: [41, 'Neriak Commons'],
+    NeriakThirdGate: [42, 'Neriak Third Gate'],
 }
 
 export const CharRaceStrings = {
@@ -276,5 +283,3 @@ export const baseClassStats =
 	[ /*Magician*/        true,  false,    true,   false,  true,   true,   false,  false, false, false, false,   true,  false, false, ],
 	[ /*Enchanter*/       true,  false,    true,   false,  true,   true,   false,  false, false, false, false,   true,  false, false, ],
 	];
-
-  

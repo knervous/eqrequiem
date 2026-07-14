@@ -1,8 +1,8 @@
 // src/game/Model/item-cache.ts
 
-import type * as BJS from '@babylonjs/core';
-import BABYLON from '@bjs';
-import { FileSystem } from '@game/FileSystem/filesystem';
+import type * as BJS from "@babylonjs/core";
+import BABYLON from "@bjs";
+import { FileSystem } from "@game/FileSystem/filesystem";
 
 type ModelKey = string;
 
@@ -19,16 +19,17 @@ export class ItemCache {
     {};
   private static resolvedContainers: Record<ModelKey, ItemContainer | null> =
     {};
+  private static generation = 0;
   /**
    * Retrieves or creates a shared parent node on the scene
    * under which all entities will be bucketed.
    */
   private static getOrCreateNodeContainer(scene: BJS.Scene): BJS.Node {
-    const existing = scene.getNodeByName('itemNodeContainer');
+    const existing = scene.getNodeByName("itemNodeContainer");
     if (existing) {
       return existing as BJS.Node;
     }
-    return new BABYLON.TransformNode('itemNodeContainer', scene);
+    return new BABYLON.TransformNode("itemNodeContainer", scene);
   }
 
   /**
@@ -46,14 +47,18 @@ export class ItemCache {
     flip: boolean = true,
   ): Promise<ItemContainer | null> {
     model = model.toLowerCase();
-    const modelKey = model + vatOwnerItemModel;
+    // Primary weapons, off-hand weapons, and shields can share an idfile but
+    // require different baked orientation. They must never share a source
+    // mesh whose vertices have already been transformed for the other hand.
+    const modelKey = `${model}:${vatOwnerItemModel}:${flip ? "flipped" : "raw"}`;
 
     const bucket = ItemCache.getOrCreateNodeContainer(scene);
     if (!ItemCache.containers[modelKey]) {
+      const generation = ItemCache.generation;
       ItemCache.containers[modelKey] = (async () => {
         // Load .babylon
         const bytes = await FileSystem.getFileBytes(
-          'eqrequiem/items',
+          "eqrequiem/items",
           `${model}.babylon.gz`,
         );
         if (!bytes) {
@@ -61,11 +66,11 @@ export class ItemCache {
           return null;
         }
         const file = new File([bytes], `${model}.babylon`, {
-          type: 'application/babylon',
+          type: "application/babylon",
         });
         const container = await BABYLON.LoadAssetContainerAsync(file, scene, {
-          name           : `${model}.babylon`,
-          pluginExtension: '.babylon',
+          name: `${model}.babylon`,
+          pluginExtension: ".babylon",
         }).catch((e) => {
           console.log(`[ItemCache] Error loading model ${model}:`, e);
           return null;
@@ -92,9 +97,9 @@ export class ItemCache {
             }
           }
           mesh.addLODLevel(500, null);
-          mesh.name = mesh.material?.name?.toLowerCase() ?? '';
+          mesh.name = mesh.material?.name?.toLowerCase() ?? "";
           mesh.registerInstancedBuffer(
-            'bakedVertexAnimationSettingsInstanced',
+            "bakedVertexAnimationSettingsInstanced",
             4,
           );
           if (flip) {
@@ -108,6 +113,10 @@ export class ItemCache {
           mesh.rotation.set(0, 0, 0);
           mesh.scaling.set(1, 1, 1);
           mesh.parent = bucket;
+          // Source meshes only own geometry/material state. Rendering is done
+          // exclusively by the per-entity instances created from them.
+          mesh.isVisible = false;
+          mesh.isPickable = false;
           mesh.bakedVertexAnimationManager = manager;
           if (skeleton) {
             mesh.skeleton = skeleton;
@@ -120,6 +129,10 @@ export class ItemCache {
         };
       })()
         .then((c) => {
+          if (generation !== ItemCache.generation) {
+            c?.container.dispose();
+            return null;
+          }
           if (c) {
             ItemCache.resolvedContainers[modelKey] = c;
             return c;
@@ -141,6 +154,7 @@ export class ItemCache {
   }
 
   public static disposeAll(): void {
+    ItemCache.generation++;
     Object.keys(ItemCache.resolvedContainers).forEach((m) => {
       const c = ItemCache.resolvedContainers[m];
       if (!c) {
@@ -148,10 +162,12 @@ export class ItemCache {
       }
       c.container.dispose();
       c.meshes.forEach((mesh) => mesh.dispose());
+      delete ItemCache.resolvedContainers[m];
     });
     Object.keys(ItemCache.containers).forEach((m) => {
       delete ItemCache.containers[m];
     });
+    ItemCache.resolvedContainers = {};
   }
 }
 

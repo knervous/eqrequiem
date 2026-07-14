@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import GameManager from '@game/Manager/game-manager';
-import { CharCreate, Int } from '@game/Net/internal/api/capnp/common';
+import { CharCreate, Int } from '@game/Net/messages';
 import { OpCodes } from '@game/Net/opcodes';
 import Player from '@game/Player/player';
 import {

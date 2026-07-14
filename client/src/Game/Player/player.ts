@@ -1,26 +1,24 @@
-import type * as BJS from '@babylonjs/core';
-import BABYLON from '@bjs';
-import { AnimationDefinitions } from '@game/Animation/animation-constants';
-import { capnpToPlainObject } from '@game/Constants/util';
-import emitter from '@game/Events/events';
-import type GameManager from '@game/Manager/game-manager';
-import { Entity } from '@game/Model/entity';
-import EntityCache from '@game/Model/entity-cache';
-import { MoveItem } from '@game/Net/internal/api/capnp/common';
-import { PlayerProfile } from '@game/Net/internal/api/capnp/player';
+import type * as BJS from "@babylonjs/core";
+import BABYLON from "@bjs";
+import { AnimationDefinitions } from "@game/Animation/animation-constants";
+import emitter from "@game/Events/events";
+import type GameManager from "@game/Manager/game-manager";
+import { Entity } from "@game/Model/entity";
+import EntityCache from "@game/Model/entity-cache";
+import { MoveItem, PlayerProfile } from "@game/Net/messages";
 import {
   ActionButtonData,
   ActionType,
-} from '@ui/components/game/action-button/constants';
-import RACE_DATA from '../Constants/race-data';
-import { PlayerAbility } from './player-ability';
-import { PlayerCamera } from './player-cam';
-import { PlayerCombat } from './player-combat';
-import { InventorySlot } from './player-constants';
-import { PlayerInventory } from './player-inventory';
-import { PlayerKeyboard } from './player-keyboard';
-import { PlayerMovement } from './player-movement';
-import { PlayerSocials } from './player-socials';
+} from "@ui/components/game/action-button/constants";
+import RACE_DATA from "../Constants/race-data";
+import { PlayerAbility } from "./player-ability";
+import { PlayerCamera } from "./player-cam";
+import { PlayerCombat } from "./player-combat";
+import { InventorySlot } from "./player-constants";
+import { PlayerInventory } from "./player-inventory";
+import { PlayerKeyboard } from "./player-keyboard";
+import { PlayerMovement } from "./player-movement";
+import { PlayerSocials } from "./player-socials";
 
 export default class Player {
   public gameManager: GameManager;
@@ -39,13 +37,16 @@ export default class Player {
   public player: PlayerProfile | null = null;
   public playerEntity: Entity | null = null;
   public isPlayerMoving: boolean = false;
-  public model: string = '';
-  public currentAnimation: string = '';
+  public model: string = "";
+  public currentAnimation: string = "";
   public currentPlayToEnd: boolean = false;
 
   private originalCollisionFilter = 0;
   private raycastTickCounter: number = 0;
   private readonly raycastCheckInterval: number = 10;
+  private loadGeneration = 0;
+  private disposed = false;
+  private readonly tickHandler = () => this.tick();
 
   /**
    * Running
@@ -56,7 +57,7 @@ export default class Player {
   }
   public set Running(value: boolean) {
     this.running = value;
-    emitter.emit('playerRunning', value);
+    emitter.emit("playerRunning", value);
   }
 
   /**
@@ -68,7 +69,7 @@ export default class Player {
   }
   public set Sitting(value: boolean) {
     this.sitting = value;
-    emitter.emit('playerSitting', value);
+    emitter.emit("playerSitting", value);
     if (this.playerEntity) {
     }
   }
@@ -85,7 +86,7 @@ export default class Player {
       this.target.setSelected(false);
     }
     this.target = target;
-    emitter.emit('target', target);
+    emitter.emit("target", target);
     if (this.target) {
       let color = new BABYLON.Color4(1, 1, 1, 1);
       const levelDifference = this.target.spawn.level - this.player!.level;
@@ -134,9 +135,14 @@ export default class Player {
     (window as any).player = this;
   }
 
-  public async dispose() {
+  public dispose(): void {
+    if (this.disposed) return;
+    this.disposed = true;
+    this.loadGeneration++;
+    this.gameManager.scene?.unregisterBeforeRender(this.tickHandler);
     if (this.playerEntity) {
       this.playerEntity.dispose();
+      this.playerEntity = null;
     }
     if (this.playerCamera) {
       this.playerCamera.dispose();
@@ -148,7 +154,8 @@ export default class Player {
       this.playerMovement.dispose();
       this.playerMovement = null;
     }
-    this.gameManager.scene?.unregisterBeforeRender(this.tick.bind(this));
+    this.target = null;
+    if (Player.instance === this) Player.instance = null;
   }
 
   public getPlayerRotation() {
@@ -174,7 +181,7 @@ export default class Player {
     if (this.playerEntity?.physicsBody) {
       this.playerEntity.physicsBody.setGravityFactor(on ? 1 : 0);
       console.log(
-        `[Player] Gravity set to ${on ? 'enabled' : 'disabled'} for player ${this.player?.name}`,
+        `[Player] Gravity set to ${on ? "enabled" : "disabled"} for player ${this.player?.name}`,
       );
     }
   }
@@ -211,7 +218,7 @@ export default class Player {
   }
 
   private get headModelName(): string {
-    return this.headVariation.toString().padStart(2, '0') ?? '00';
+    return this.headVariation.toString().padStart(2, "0") ?? "00";
   }
 
   public get physicsPlugin(): BJS.HavokPlugin {
@@ -249,38 +256,40 @@ export default class Player {
 
   public async UpdateNameplate(lines: string[]) {
     if (!this.playerEntity) {
-      console.warn('[Player] No player entity to update nameplate');
+      console.warn("[Player] No player entity to update nameplate");
       return;
     }
     await this.playerEntity.instantiateNameplate(lines);
   }
-
 
   /**
    * Retrieves or creates a shared parent node on the scene
    * under which all entities will be bucketed.
    */
   private getOrCreateNodeContainer(scene: BJS.Scene): BJS.Node {
-    const existing = scene.getNodeByName('PlayerNodeContainer');
+    const existing = scene.getNodeByName("PlayerNodeContainer");
     if (existing) {
       return existing as BJS.Node;
     }
-    return new BABYLON.TransformNode('PlayerNodeContainer', scene);
+    return new BABYLON.TransformNode("PlayerNodeContainer", scene);
   }
 
   public async Load(player: PlayerProfile, fromCharSelect: boolean = false) {
+    this.disposed = false;
+    const generation = ++this.loadGeneration;
+    this.gameManager.scene?.unregisterBeforeRender(this.tickHandler);
+    this.playerMovement?.dispose();
+    this.playerMovement = null;
     if (this.playerEntity) {
-      await this.playerEntity.dispose();
+      this.playerEntity.dispose();
       this.playerEntity = null;
     }
-    this.player = (player as any).testData
-      ? player
-      : (capnpToPlainObject(player) as PlayerProfile);
-    console.log('player', this.player, player);
-    this.currentAnimation = '';
+    this.player = player;
+    console.log("player", this.player, player);
+    this.currentAnimation = "";
     this.playerInventory.load();
     if (!this.player) {
-      console.warn('[Player] No player data available');
+      console.warn("[Player] No player data available");
       return;
     }
     const race = this.player?.race ?? 1;
@@ -295,9 +304,16 @@ export default class Player {
       player,
       this.gameManager.scene!,
       container,
+      (slot) =>
+        this.playerInventory.get(slot as InventorySlot, -1) ??
+        this.playerInventory.get(slot as InventorySlot, 0),
     );
+    if (this.disposed || generation !== this.loadGeneration) {
+      playerEntity?.dispose();
+      return;
+    }
     if (!playerEntity) {
-      console.error('[Player] Failed to create player entity');
+      console.error("[Player] Failed to create player entity");
       return;
     }
     this.playerEntity = playerEntity;
@@ -306,15 +322,15 @@ export default class Player {
       this.playerMovement = new PlayerMovement(this, this.gameManager.scene!);
     }
 
-    this.gameManager.scene?.registerBeforeRender(this.tick.bind(this));
+    this.gameManager.scene?.registerBeforeRender(this.tickHandler);
     if (this.playerCamera.isFirstPerson && !fromCharSelect) {
       this.playerEntity.toggleVisibility(false);
     }
 
     // Emit events
-    emitter.emit('playerName', this.player.name);
-    emitter.emit('setPlayer', this.player);
-    emitter.emit('playerLoaded');
+    emitter.emit("playerName", this.player.name);
+    emitter.emit("setPlayer", this.player);
+    emitter.emit("playerLoaded");
   }
 
   public toggleAutoRun() {
@@ -360,15 +376,15 @@ export default class Player {
 
   public doAction(actionData?: ActionButtonData) {
     if (!this.playerEntity) {
-      console.warn('[Player] No player entity to perform action');
+      console.warn("[Player] No player entity to perform action");
       return;
     }
     if (!actionData) {
-      console.warn('[Player] No action data provided');
+      console.warn("[Player] No action data provided");
       return;
     }
 
-    console.log('Action data', actionData);
+    console.log("Action data", actionData);
     switch (actionData.action as ActionType) {
       case ActionType.MELEE_ATTACK:
         this.autoAttack();
@@ -399,16 +415,16 @@ export default class Player {
     this.Running = !this.Running;
   }
   public autoAttack() {
-    console.log('Autoattack');
+    console.log("Autoattack");
   }
 
   public rangedAttack() {
-    console.log('Ranged attack on');
+    console.log("Ranged attack on");
   }
 
   public moveItem(item: MoveItem) {
     if (!this.playerInventory) {
-      console.warn('[Player] No player inventory to move item');
+      console.warn("[Player] No player inventory to move item");
       return;
     }
 

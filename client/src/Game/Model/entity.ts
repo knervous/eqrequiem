@@ -1,27 +1,24 @@
-import type { TextRenderer } from '@babylonjs/addons';
-import * as BJS from '@babylonjs/core';
-import BABYLON from '@bjs';
-import { AnimationDefinitions } from '@game/Animation/animation-constants';
+import * as BJS from "@babylonjs/core";
+import BABYLON from "@bjs";
+import { AnimationDefinitions } from "@game/Animation/animation-constants";
 import {
+  humanoidNpcRaces,
   charFileRegex,
   clkRegex,
   isPlayerRace,
   MaterialPrefixes,
-} from '@game/Constants/constants';
-import { RaceEntry } from '@game/Constants/race-data';
-import type GameManager from '@game/Manager/game-manager';
-import { Spawn } from '@game/Net/internal/api/capnp/common';
-import { PlayerProfile } from '@game/Net/internal/api/capnp/player';
-import Player from '@game/Player/player';
+} from "@game/Constants/constants";
+import { RaceEntry } from "@game/Constants/race-data";
+import type GameManager from "@game/Manager/game-manager";
+import { PlayerProfile, Spawn } from "@game/Net/messages";
 import {
   InventorySlot,
   InventorySlotTextures,
   NullableItemInstance,
-} from '@game/Player/player-constants';
-import type { EntityContainer, EntityCache } from './entity-cache';
-import { createTargetRingMaterial } from './entity-select-ring';
-import { EntityMeshMetadata } from './entity-types';
-import { Nameplate } from './nameplate';
+} from "@game/Player/player-constants";
+import EntityCache, { type EntityContainer } from "./entity-cache";
+import { createTargetRingMaterial } from "./entity-select-ring";
+import type { RequiemEntityActor } from "./shado-entity-pool";
 
 const modelYOffset = {
   gnn: 0.5,
@@ -30,19 +27,20 @@ const modelYOffset = {
 type InstanceContainer = {
   mesh: BJS.Mesh;
   thinInstanceIndex: number;
+  actor: RequiemEntityActor;
 };
 
 export class Entity extends BABYLON.TransformNode {
   public spawn: Spawn | PlayerProfile;
   public entityContainer: EntityContainer;
-  public entityCache: EntityCache;
+  public entityCache: typeof EntityCache;
   public spawnPosition: BJS.Vector3 = new BABYLON.Vector3(0, 0, 0);
   public spawnScale: number = 1.5;
   public hidden: boolean = true;
   public raceDataEntry: RaceEntry | null = null;
 
   public get cleanName(): string {
-    return this.spawn.name.replaceAll('_', ' ');
+    return this.spawn.name.replaceAll("_", " ");
   }
 
   private static targetRing: BJS.Mesh;
@@ -50,7 +48,6 @@ export class Entity extends BABYLON.TransformNode {
   private static targetTexture: BJS.ProceduralTexture | null = null;
 
   public static disposeStatics() {
-
     if (Entity.targetRing) {
       Entity.targetRing.dispose(false, true);
       Entity.targetRing = null as unknown as BJS.Mesh;
@@ -63,15 +60,14 @@ export class Entity extends BABYLON.TransformNode {
   }
 
   public static instantiateStatics(scene: BJS.Scene) {
-
     if (!Entity.targetRing) {
       const targetRing = BABYLON.MeshBuilder.CreateTorus(
-        'selectionRing',
+        "selectionRing",
         {
-          diameter    : 5, // outer diameter = 2 × your desired radius (5 × 2)
-          thickness   : 4, // tube thickness — make this as big as you like to “fill” the hole
+          diameter: 5, // outer diameter = 2 × your desired radius (5 × 2)
+          thickness: 4, // tube thickness — make this as big as you like to “fill” the hole
           tessellation: 64, // smoothness
-          updatable   : true, // if you ever want to tweak it at runtime
+          updatable: true, // if you ever want to tweak it at runtime
         },
         scene,
       );
@@ -99,11 +95,19 @@ export class Entity extends BABYLON.TransformNode {
   private scene: BJS.Scene;
   private animationBuffer: BJS.Vector4 = new BABYLON.Vector4(0, 1, 0, 60);
   public meshInstance: InstanceContainer | null = null;
-  public nameplate: TextRenderer | null = null;
-  private nameplateNode: BJS.TransformNode | null = null;
+  public nameplateLines: string[] = [];
   private capsuleShape: BJS.PhysicsShapeCapsule | null = null;
   private pickInst: BJS.InstancedMesh | null = null;
   private isPlayer = false;
+  private disposed = false;
+  private appearanceGeneration = 0;
+  private visibilityOverride: boolean | null = null;
+  private readonly itemResolver?: (slot: number) => NullableItemInstance;
+  public readonly ready: Promise<void>;
+
+  public get lifecycleDisposed(): boolean {
+    return this.disposed;
+  }
 
   public get isPlayerRace() {
     return isPlayerRace(this.entityContainer.model);
@@ -121,9 +125,10 @@ export class Entity extends BABYLON.TransformNode {
     spawn: Spawn | PlayerProfile,
     scene: BJS.Scene,
     entityContainer: EntityContainer,
-    entityCache: EntityCache,
+    entityCache: typeof EntityCache,
     parent: BJS.Node,
     raceEntry: RaceEntry,
+    itemResolver?: (slot: number) => NullableItemInstance,
   ) {
     super(`entity_${spawn.name}`, scene);
     this.isPlayer = !!((spawn as PlayerProfile)?.inventoryItems ?? false);
@@ -134,8 +139,9 @@ export class Entity extends BABYLON.TransformNode {
     this.setParent(parent);
     this.entityContainer = entityContainer;
     this.entityCache = entityCache;
+    this.itemResolver = itemResolver;
     const height = 6;
-    let spawnScale = spawn instanceof Spawn ? spawn.size : 6;
+    let spawnScale = typeof spawn.size === "number" ? spawn.size : 6;
     if (spawnScale === -1) {
       spawnScale = 6;
     }
@@ -146,21 +152,33 @@ export class Entity extends BABYLON.TransformNode {
     this.spawnPosition = new BABYLON.Vector3(spawn.x, spawn.y, spawn.z);
     this.playAnimation(AnimationDefinitions.Idle1);
     Entity.instantiateStatics(scene);
-    this.setup();
+    this.ready = this.setup();
     // this.debugWireframe?.createWireframe();
-
   }
 
   private async setup() {
     this.setupPhysics();
+    // Spawn headings from EQ content use the canonical 0..512 turn scale.
+    this.setRotation((Number(this.spawn.heading ?? 0) * Math.PI) / 256);
     // Create body instances and assign physics body
     this.instantiateMeshes();
-    await this.instantiateNameplate([this.spawn.name.replaceAll('_', ' ')]);
+    await this.instantiateNameplate([this.spawn.name.replaceAll("_", " ")]);
+    if (this.disposed) return;
     await this.updateModelTextures();
+    if (this.disposed) return;
     this.checkBelowAndReposition();
   }
 
   public get isHumanoid(): boolean {
+    return (
+      (this.spawn.race >= 1 && this.spawn.race <= 12) ||
+      humanoidNpcRaces.has(this.spawn.race)
+    );
+  }
+
+  /** Playable races select facial variants by the profile face field. Classic
+   * city NPC models are humanoid for armor, but encode heads as materials. */
+  private get usesPlayerFaceTextures(): boolean {
     return this.spawn.race >= 1 && this.spawn.race <= 12;
   }
 
@@ -206,6 +224,11 @@ export class Entity extends BABYLON.TransformNode {
   }
 
   public setPosition(x: number, y: number, z: number) {
+    this.spawnPosition.set(x, y, z);
+    if (Entity.currentlySelected === this && Entity.targetRing) {
+      Entity.targetRing.position.x = x;
+      Entity.targetRing.position.z = z;
+    }
     const physicsBody = this.physicsBody;
     if (!physicsBody) {
       return;
@@ -243,6 +266,12 @@ export class Entity extends BABYLON.TransformNode {
   }
 
   public setSelected(selected: boolean, color?: BJS.Color4): void {
+    if (this.meshInstance) {
+      this.entityContainer.shadoPool.setSelected(
+        this.meshInstance.actor,
+        selected,
+      );
+    }
     const targetRing = Entity.targetRing!;
     if (selected) {
       // deselect any previous entity
@@ -251,27 +280,26 @@ export class Entity extends BABYLON.TransformNode {
       }
       Entity.currentlySelected = this;
 
-      // move & show
-      targetRing.setParent(this!);
+      // Shado actors keep their world transform in the shared actor buffer; the
+      // Babylon TransformNode intentionally remains at the origin. Keep the one
+      // shared ring in world space so it follows the same source of truth.
+      targetRing.setParent(null);
       const result = new BABYLON.PhysicsRaycastResult();
-      const rayOrigin = this!.position;
-      const downEnd = rayOrigin.add(new BABYLON.Vector3(0, -1000, 0)); // 10 units down
+      const rayOrigin = this.spawnPosition.add(
+        new BABYLON.Vector3(0, 5 * this.spawnScale, 0),
+      );
+      const downEnd = rayOrigin.add(new BABYLON.Vector3(0, -1000, 0));
       this.physicsPlugin.raycast(rayOrigin, downEnd, result);
-      let offset = -3 * this.spawnScale; // Default offset for the ring
-      if (result.hasHit) {
-        const hitPoint = result.hitPoint;
-        offset = hitPoint.y - rayOrigin.y; // Calculate offset based on hit point
-
-        // Then half the width
-        offset -= 1.75 * this.spawnScale; // Adjust for the ring's height
-      }
+      const groundY = result.hasHit ? result.hitPoint.y : this.spawnPosition.y;
 
       if (color) {
-        color.a = 0.5;
-        Entity.targetTexture?.setColor4('color', color);
+        Entity.targetTexture?.setColor4(
+          "color",
+          new BABYLON.Color4(color.r, color.g, color.b, 0.5),
+        );
       }
       targetRing.scaling.setAll(this.spawnScale);
-      targetRing.position.set(0, offset + 0.1, 0);
+      targetRing.position.set(this.spawnPosition.x, groundY + 0.1, this.spawnPosition.z);
       targetRing.setEnabled(true);
     } else {
       // only hide if *this* entity is the one that owns it
@@ -283,14 +311,28 @@ export class Entity extends BABYLON.TransformNode {
   }
 
   public dispose() {
-    // TODO remove index from meshes
-
+    if (this.disposed) return;
+    this.disposed = true;
+    this.appearanceGeneration++;
+    EntityCache.unregister(this);
+    if (this.meshInstance) {
+      this.entityContainer.removeThinInstance(
+        this.meshInstance.thinInstanceIndex,
+      );
+    }
     this.meshInstance = null;
 
-    // Dispose nameplate and its node
-    Nameplate.removeNameplate(this.nameplate!);
-    this.nameplate?.dispose();
-    this.nameplateNode?.dispose();
+    this.nameplateLines = [];
+
+    for (const mesh of [...this.primaryMeshes, ...this.secondaryMeshes]) {
+      if (!mesh.isDisposed()) mesh.dispose();
+    }
+    this.primaryMeshes = [];
+    this.secondaryMeshes = [];
+    if (this.animationTimeout && typeof this.animationTimeout !== "boolean") {
+      clearTimeout(this.animationTimeout);
+    }
+    this.animationTimeout = false;
 
     // Dispose physics body and shape
     if (this.physicsBody) {
@@ -307,39 +349,64 @@ export class Entity extends BABYLON.TransformNode {
       this.pickInst = null;
     }
 
-    // Clear references
-    this.nameplate = null;
-    this.nameplateNode = null;
-
     super.dispose();
   }
 
   public toggleVisibility(visible: boolean): void {
-    this?.setEnabled(visible);
+    if (this.disposed) return;
+    this.visibilityOverride = visible ? null : false;
+    this.hidden = !visible;
+    if (this.meshInstance) {
+      this.entityContainer.shadoPool.setVisible(
+        this.meshInstance.actor,
+        visible,
+      );
+    }
+    for (const mesh of [...this.primaryMeshes, ...this.secondaryMeshes]) {
+      mesh.setEnabled(visible);
+    }
   }
 
   public async hide(): Promise<void> {
+    if (this.disposed) return;
+    this.visibilityOverride = false;
     this.hidden = true;
-    if (this.nameplate) {
-      (this.nameplate as any).hidden = true;
+    if (this.meshInstance) {
+      this.entityContainer.shadoPool.setVisible(this.meshInstance.actor, false);
+    }
+    for (const mesh of [...this.primaryMeshes, ...this.secondaryMeshes]) {
+      mesh.setEnabled(false);
     }
   }
 
   public async initialize() {
+    if (this.disposed) return;
+    this.visibilityOverride = null;
     this.hidden = false;
-    if (this.nameplate) {
-      (this.nameplate as any).hidden = false;
+    if (this.meshInstance) {
+      this.entityContainer.shadoPool.setVisible(this.meshInstance.actor, true);
     }
+    for (const mesh of [...this.primaryMeshes, ...this.secondaryMeshes]) {
+      mesh.setEnabled(true);
+    }
+  }
+
+  public applyReducedVisibility(): void {
+    if (this.disposed || !this.meshInstance) return;
+    if (this.visibilityOverride === false) {
+      this.entityContainer.shadoPool.setVisible(this.meshInstance.actor, false);
+    }
+    const visible = Boolean(this.meshInstance.actor.visibleFlag);
+    this.hidden = !visible;
+    for (const mesh of this.primaryMeshes) mesh.setEnabled(visible);
+    for (const mesh of this.secondaryMeshes) mesh.setEnabled(visible);
   }
 
   private updateMaterialBuffers() {
     if (this.meshInstance) {
-      const { mesh, thinInstanceIndex } = this.meshInstance;
-      mesh.thinInstanceSetAttributeAt(
-        'bakedVertexAnimationSettingsInstanced',
-        thinInstanceIndex,
-        this.animationBuffer.asArray() as any,
-        true,
+      this.entityContainer.shadoPool.setAnimation(
+        this.meshInstance.actor,
+        this.animationBuffer,
       );
     }
   }
@@ -359,11 +426,23 @@ export class Entity extends BABYLON.TransformNode {
         ),
       );
     const { mesh, addThinInstance } = this.entityContainer;
-    const thinInstanceIndex = addThinInstance(worldMat);
+    const entityId = Number((this.spawn as Spawn).spawnId ?? 0);
+    const thinInstanceIndex = addThinInstance(worldMat, entityId);
     this.meshInstance = {
       mesh: mesh as BJS.Mesh,
       thinInstanceIndex,
+      actor: this.entityContainer.shadoPool.shado.children[thinInstanceIndex],
     };
+    this.entityContainer.shadoPool.setTransform(
+      this.meshInstance.actor,
+      this.spawnPosition,
+      this.rotationQuaternion ?? BABYLON.Quaternion.Identity(),
+      this.spawnScale,
+    );
+    this.entityContainer.shadoPool.setAnimation(
+      this.meshInstance.actor,
+      this.animationBuffer,
+    );
   }
 
   private isNpc(): boolean {
@@ -374,66 +453,56 @@ export class Entity extends BABYLON.TransformNode {
     return !this.isPlayer && !this.isNpc();
   }
   private headModel(): string {
-    let variation = '';
+    let variation = "";
     if (this.isNpc()) {
-      variation = (this.spawn as any as Spawn).helm.toString().padStart(2, '0');
+      variation = (this.spawn as any as Spawn).helm.toString().padStart(2, "0");
     } else if (this.isPc()) {
       variation =
         (this.spawn as any as Spawn)?.equipment?.head
           ?.toString()
-          ?.padStart(2, '0') ?? '00';
+          ?.padStart(2, "0") ?? "00";
     } else if (this.isPlayer) {
-      const headItem =
-        Player.instance?.playerInventory.get(InventorySlot.Head, -1) ??
-        Player.instance?.playerInventory.get(InventorySlot.Head, 0) ??
-        null;
+      const headItem = this.equippedItem(InventorySlot.Head);
       if (headItem) {
-        variation = headItem.material.toString().padStart(2, '0');
+        variation = headItem.material.toString().padStart(2, "0");
       } else {
-        variation = '00'; // Default to 00 if no head item found
+        variation = "00"; // Default to 00 if no head item found
       }
     }
     return variation;
   }
 
   private robeModel(): string {
-    let variation = '';
-    if ('equipChest' in this.spawn && this.spawn.equipChest >= 10) {
-      variation = this.spawn.equipChest.toString().padStart(2, '0');
-    } else if ((this.spawn as any as Spawn)?.equipment?.chest >= 10) {
-      variation = (this.spawn as any as Spawn).equipment.chest
-        .toString()
-        .padStart(2, '0');
+    let variation = "";
+    const spawnChest = (this.spawn as Spawn).equipment?.chest;
+    if ("equipChest" in this.spawn && this.spawn.equipChest >= 10) {
+      variation = this.spawn.equipChest.toString().padStart(2, "0");
+    } else if (spawnChest !== undefined && spawnChest >= 10) {
+      variation = spawnChest.toString().padStart(2, "0");
     } else if (this.isPlayer) {
-      const playerChestItem =
-        Player.instance?.playerInventory.get(InventorySlot.Chest, -1) ??
-        Player.instance?.playerInventory.get(InventorySlot.Chest, 0) ??
-        null;
+      const playerChestItem = this.equippedItem(InventorySlot.Chest);
       if (playerChestItem?.material && playerChestItem.material >= 10) {
-        variation = playerChestItem.material.toString().padStart(2, '0');
+        variation = playerChestItem.material.toString().padStart(2, "0");
       }
     }
     return variation;
   }
   private primaryMeshes: BJS.InstancedMesh[] = [];
   private secondaryMeshes: BJS.InstancedMesh[] = [];
+  private appearanceUpdate = Promise.resolve();
 
   private async updatePrimary() {
-    let item = '';
+    const generation = this.appearanceGeneration;
+    let item = "";
     for (const mesh of this.primaryMeshes) {
-      console.log('Disposing primary mesh', mesh.name);
+      console.log("Disposing primary mesh", mesh.name);
       mesh.dispose();
     }
     this.primaryMeshes = [];
     if (this.isPlayer) {
-      item =
-        Player.instance?.playerInventory.get(InventorySlot.Primary, -1)
-          ?.idfile ??
-        Player.instance?.playerInventory.get(InventorySlot.Primary, 0)
-          ?.idfile ??
-        '';
+      item = this.equippedItem(InventorySlot.Primary)?.idfile ?? "";
     } else {
-      const primary = (this.spawn as Spawn).equipment.primary;
+      const primary = (this.spawn as Spawn).equipment?.primary ?? 0;
       if (primary) {
         item = `IT${primary}`;
       }
@@ -441,8 +510,9 @@ export class Entity extends BABYLON.TransformNode {
     if (item.length === 0) {
       return;
     }
-    console.log('[Entity] Updating primary weapon model', item);
+    console.log("[Entity] Updating primary weapon model", item);
     const itemContainer = await this.entityContainer?.getItem?.(item);
+    if (this.disposed || generation !== this.appearanceGeneration) return;
     if (itemContainer) {
       for (const mesh of itemContainer.meshes) {
         const itemInst = mesh.createInstance(`i_primary_${item}`);
@@ -453,15 +523,16 @@ export class Entity extends BABYLON.TransformNode {
         const totalCount = itemInst.getTotalVertices();
         const weaponMI: number[] = [];
         const weaponMW: number[] = [];
-        const { skeleton } = this.entityContainer;
-        const primaryBone = skeleton?.bones.find((b) => b.name === 'r_point');
-        if (skeleton && primaryBone) {
+        const primaryBoneIndex =
+          this.entityContainer.attachmentBoneIndices.r_point;
+        if (primaryBoneIndex !== undefined) {
           itemInst.bakedVertexAnimationManager = this.entityContainer.manager!;
           itemInst.instancedBuffers.bakedVertexAnimationSettingsInstanced =
             this.animationBuffer;
           itemInst.scaling.setAll(this.spawnScale);
+          itemInst.setEnabled(!this.hidden && this.isEnabled());
           for (let i = 0; i < totalCount; i++) {
-            weaponMI.push(primaryBone.getIndex(), 0, 0, 0);
+            weaponMI.push(primaryBoneIndex, 0, 0, 0);
             weaponMW.push(1, 0, 0, 0);
           }
           itemInst.setVerticesData(
@@ -489,7 +560,7 @@ export class Entity extends BABYLON.TransformNode {
     if (false && this.primaryMeshes.length > 0) {
       const { Vector3, GPUParticleSystem, Texture } = BABYLON;
       const particleSystem = new GPUParticleSystem(
-        'vatParticle',
+        "vatParticle",
         { capacity: 250 },
         this.scene,
       );
@@ -499,7 +570,7 @@ export class Entity extends BABYLON.TransformNode {
           ?._bufferView;
       if (!textureBuffer) {
         console.warn(
-          '[Entity] No texture buffer found for VAT particle system',
+          "[Entity] No texture buffer found for VAT particle system",
         );
         return;
       }
@@ -519,7 +590,7 @@ export class Entity extends BABYLON.TransformNode {
       const floatsPerFrame = (numBones + 1) * floatsPerBone;
       const boneAnchors =
         skeleton?.bones
-          .filter((b) => ['r_point'].includes(b.name))
+          .filter((b) => ["r_point"].includes(b.name))
           .map((b) => b.getIndex() * floatsPerBone) ?? [];
 
       const startOffsetLocal = new BABYLON.Vector3(-2.5, 0.4, 0);
@@ -555,12 +626,12 @@ export class Entity extends BABYLON.TransformNode {
       particleSystem.blendMode = BABYLON.ParticleSystem.BLENDMODE_STANDARD;
 
       particleSystem.particleTexture = new Texture(
-        'https://eqrequiem.blob.core.windows.net/requiem/spelleffects/firec.webp',
+        "https://eqrequiem.blob.core.windows.net/requiem/spelleffects/firec.webp",
         this.scene,
       );
       particleSystem.particleTexture!.hasAlpha = true;
       particleSystem.particleTexture!.getAlphaFromRGB = false;
-      const particleMesh = new BABYLON.Mesh('particleMesh', this.scene);
+      const particleMesh = new BABYLON.Mesh("particleMesh", this.scene);
       particleMesh.setParent(this);
       particleMesh.isPickable = false;
       particleMesh.position = position;
@@ -596,33 +667,33 @@ export class Entity extends BABYLON.TransformNode {
   private async createParticleEffects() {}
 
   private async updateSecondary() {
-    let item = '';
+    const generation = this.appearanceGeneration;
+    let item = "";
     for (const mesh of this.secondaryMeshes) {
       mesh.dispose();
     }
     this.secondaryMeshes = [];
-    let defaultPoint = 'shield_point';
+    let defaultPoint = "shield_point";
 
     if (this.isPlayer) {
-      const playerItem =
-        Player.instance?.playerInventory.get(InventorySlot.Secondary, -1) ??
-        Player.instance?.playerInventory.get(InventorySlot.Secondary, 0);
+      const playerItem = this.equippedItem(InventorySlot.Secondary);
       if (playerItem && playerItem.itemtype !== 8) {
-        defaultPoint = 'l_point';
+        defaultPoint = "l_point";
       }
-      item = playerItem?.idfile ?? '';
+      item = playerItem?.idfile ?? "";
     } else {
-      const primary = (this.spawn as Spawn).equipment.secondary;
-      if (primary) {
-        item = `IT${primary}`;
+      const secondary = (this.spawn as Spawn).equipment?.secondary ?? 0;
+      if (secondary) {
+        item = `IT${secondary}`;
       }
     }
     if (item.length) {
-      console.log('[Entity] Updating secondary weapon model', item);
+      console.log("[Entity] Updating secondary weapon model", item);
       const itemContainer = await this.entityContainer?.getItem?.(
         item,
-        defaultPoint === 'l_point',
+        defaultPoint === "l_point",
       );
+      if (this.disposed || generation !== this.appearanceGeneration) return;
       if (itemContainer) {
         for (const mesh of itemContainer.meshes) {
           const itemInst = mesh.createInstance(`i_secondary_${item}`);
@@ -635,18 +706,17 @@ export class Entity extends BABYLON.TransformNode {
           const totalCount = itemInst.getTotalVertices();
           const weaponMI: number[] = [];
           const weaponMW: number[] = [];
-          const { skeleton } = this.entityContainer;
-          const secondaryBone = skeleton?.bones.find(
-            (b) => b.name === defaultPoint,
-          );
-          if (skeleton && secondaryBone) {
+          const secondaryBoneIndex =
+            this.entityContainer.attachmentBoneIndices[defaultPoint];
+          if (secondaryBoneIndex !== undefined) {
             itemInst.bakedVertexAnimationManager =
               this.entityContainer.manager!;
             itemInst.instancedBuffers.bakedVertexAnimationSettingsInstanced =
               this.animationBuffer;
             itemInst.scaling.setAll(this.spawnScale);
+            itemInst.setEnabled(!this.hidden && this.isEnabled());
             for (let i = 0; i < totalCount; i++) {
-              weaponMI.push(secondaryBone.getIndex(), 0, 0, 0);
+              weaponMI.push(secondaryBoneIndex, 0, 0, 0);
               weaponMW.push(1, 0, 0, 0);
             }
             itemInst.setVerticesData(
@@ -672,25 +742,23 @@ export class Entity extends BABYLON.TransformNode {
     }
   }
 
-  public async updateModelTextures() {
-    if (!this.meshInstance) {
-      console.warn('[Entity] No mesh instance found for texture update');
-      return;
-    }
-    const { textureAttributeArray } = this.meshInstance.mesh
-      .metadata as EntityMeshMetadata;
-    if (!textureAttributeArray) {
-      console.warn(
-        '[Entity] No texture attribute array found for texture update',
-      );
-      return;
-    }
-    const textureBuffer = textureAttributeArray._texture!
-      ._bufferView as Float32Array;
+  public updateModelTextures(): Promise<void> {
+    this.appearanceUpdate = this.appearanceUpdate
+      .catch((error) => {
+        console.warn("[Entity] Previous appearance update failed", error);
+      })
+      .then(() => this.updateModelTexturesNow());
+    return this.appearanceUpdate;
+  }
 
+  private async updateModelTexturesNow() {
+    if (this.disposed || !this.meshInstance) {
+      console.warn("[Entity] No mesh instance found for texture update");
+      return;
+    }
     const { thinInstanceIndex } = this.meshInstance;
     const headModel = this.headModel();
-    const hasRobe = this.robeModel() !== '';
+    const hasRobe = this.robeModel() !== "";
     for (const [
       submeshIndex,
       range,
@@ -721,7 +789,7 @@ export class Entity extends BABYLON.TransformNode {
             MaterialPrefixes.Legs,
             MaterialPrefixes.Wrists,
           ].includes(piece) ||
-          (MaterialPrefixes.Feet === piece && texNum === '01')
+          (MaterialPrefixes.Feet === piece && texNum === "01")
         ) {
           idx = -1;
           idxSet = true;
@@ -742,11 +810,8 @@ export class Entity extends BABYLON.TransformNode {
       let associatedItem: NullableItemInstance = null;
 
       const matchingInventorySlot = InventorySlotTextures[piece as string];
-      if (this.isPlayer) {
-        associatedItem =
-          Player.instance?.playerInventory.get(matchingInventorySlot, -1) ??
-          Player.instance?.playerInventory.get(matchingInventorySlot, 0) ??
-          null;
+      if (this.isPlayer && matchingInventorySlot !== undefined) {
+        associatedItem = this.equippedItem(matchingInventorySlot);
       }
       if (
         matchingInventorySlot &&
@@ -757,18 +822,12 @@ export class Entity extends BABYLON.TransformNode {
         if (this.isPlayer) {
           // TODO handle partial texture mapping with face/helmet later
           if (associatedItem) {
-            const color = associatedItem.color;
-            r = ((color >> 16) & 0xff) / 255;
-            g = ((color >> 8) & 0xff) / 255;
-            b = (color & 0xff) / 255;
-            if (r === 0) {
-              r = 1;
-            }
-            if (g === 0) {
-              g = 1;
-            }
-            if (b === 0) {
-              b = 1;
+            const color = associatedItem.color >>> 0;
+            const rgb = color & 0xffffff;
+            if (rgb !== 0) {
+              r = ((rgb >>> 16) & 0xff) / 255;
+              g = ((rgb >>> 8) & 0xff) / 255;
+              b = (rgb & 0xff) / 255;
             }
             idx = this.getTextureIndex(
               name,
@@ -785,7 +844,11 @@ export class Entity extends BABYLON.TransformNode {
       }
 
       // Drive texture from equipment for PC humanoids
-      if (!idxSet && piece === MaterialPrefixes.Face && this.isHumanoid) {
+      if (
+        !idxSet &&
+        piece === MaterialPrefixes.Face &&
+        this.usesPlayerFaceTextures
+      ) {
         idx = this.getTextureIndex(name, this.spawn.face, atlasArray);
         r = 1;
         g = 1;
@@ -794,17 +857,11 @@ export class Entity extends BABYLON.TransformNode {
       }
       if (isRobe) {
         if (this.isPlayer) {
-          associatedItem =
-            Player.instance?.playerInventory.get(InventorySlot.Chest, -1) ??
-            Player.instance?.playerInventory.get(InventorySlot.Chest, 0) ??
-            null;
+          associatedItem = this.equippedItem(InventorySlot.Chest);
         }
       } else if (isHelm) {
         if (this.isPlayer) {
-          associatedItem =
-            Player.instance?.playerInventory.get(InventorySlot.Head, -1) ??
-            Player.instance?.playerInventory.get(InventorySlot.Head, 0) ??
-            null;
+          associatedItem = this.equippedItem(InventorySlot.Head);
         }
       }
 
@@ -818,7 +875,7 @@ export class Entity extends BABYLON.TransformNode {
               ? 0
               : spawn.isNpc
                 ? spawn.equipChest
-                : spawn.equipment.chest;
+                : (spawn.equipment?.chest ?? spawn.equipChest ?? 0);
         } else {
           material = associatedItem?.material ?? defaultMaterial;
         }
@@ -831,22 +888,29 @@ export class Entity extends BABYLON.TransformNode {
       const x = submeshIndex;
       const y = thinInstanceIndex;
 
-      // compute the 1D RGBA‐float offset
-      const pixelIndex = y * this.entityContainer.submeshRanges.size + x;
-      const baseOffset = pixelIndex * 4;
-
-      textureBuffer[baseOffset + 0] = idx; // x
-      textureBuffer[baseOffset + 1] = r; // y
-      textureBuffer[baseOffset + 2] = g; // z
-      textureBuffer[baseOffset + 3] = b; //
+      this.entityContainer.shadoPool.setAppearance(
+        y,
+        x,
+        this.entityContainer.submeshRanges.size,
+        idx,
+        r,
+        g,
+        b,
+      );
     }
-
-    // await this.updatePrimary();
-    // await this.updateSecondary();
-    const tex = textureAttributeArray;
-    tex.update(textureBuffer);
     this.updateMaterialBuffers();
     this.setRotation(this.lastYaw + 0.0001); // Reapply last yaw to ensure correct orientation after texture update
+    await Promise.all([this.updatePrimary(), this.updateSecondary()]);
+  }
+
+  private equippedItem(slot: InventorySlot): NullableItemInstance {
+    if (this.itemResolver) return this.itemResolver(slot);
+    const items = (this.spawn as PlayerProfile).inventoryItems ?? [];
+    return (
+      items.find((item) => item.slot === slot && item.bagSlot === -1) ??
+      items.find((item) => item.slot === slot && item.bagSlot === 0) ??
+      null
+    );
   }
 
   private setupPhysics() {
@@ -867,7 +931,6 @@ export class Entity extends BABYLON.TransformNode {
       );
       const extents = max.subtract(min).scale(0.5);
       capsuleHeight = extents.y * 2 * this.spawnScale;
-
     } else {
       console.warn(
         `[Entity] No bounding box found for ${this.entityContainer.model}, using default capsule height`,
@@ -923,44 +986,13 @@ export class Entity extends BABYLON.TransformNode {
 
     this.physicsBody.shape = this.capsuleShape;
     this.physicsBody.setMassProperties({
-      mass   : 5,
+      mass: 5,
       inertia: new BABYLON.Vector3(0, 0, 0),
     });
   }
-  private nameplateLock: boolean = false;
   public async instantiateNameplate(textLines: string[]): Promise<void> {
-    while (this.nameplateLock) {
-      await new Promise((resolve) => setTimeout(resolve, 100));
-    }
-    this.nameplateLock = true;
-    Nameplate.removeNameplate(this.nameplate!);
-    this.nameplateNode?.dispose();
-    this.nameplate = await Nameplate.createNameplate(this.scene);
-    if (!this.nameplate) {
-      console.warn(
-        `[Entity] Failed to create nameplate for ${textLines.join(', ')}`,
-      );
-      return;
-    }
-    for (const line of textLines) {
-      this.nameplate.addParagraph(line);
-    }
-    this.nameplate.color = BABYLON.Color4.FromHexString('#00ffff');
-    this.nameplateNode = new BABYLON.TransformNode(
-      `nameplate_${this.spawn.name}`,
-      this.scene,
-    );
-
-    this.nameplateNode.setParent(this);
-
-    // console.log('Nameplate', )
-    this.nameplateNode.position = new BABYLON.Vector3(
-      0,
-      4 + textLines.length * 1.5 * this.spawnScale,
-      0,
-    );
-    this.nameplate.parent = this.nameplateNode;
-    this.nameplateLock = false;
+    if (this.disposed) return;
+    this.nameplateLines = [...textLines];
   }
   private lastPosition: BJS.Vector3 = new BABYLON.Vector3(0, 0, 0);
   private lastRotationQuaternion: BJS.Quaternion = new BABYLON.Quaternion(
@@ -969,28 +1001,26 @@ export class Entity extends BABYLON.TransformNode {
     0,
     1,
   );
-  public syncMatrix(): BJS.Mesh[] {
-    if (
-      this.hidden ||
-      !this.spawnPosition ||
-      !this.rotationQuaternion ||
-      !this.meshInstance
-    ) {
-      return [];
+  public syncMatrix(): void {
+    if (!this.spawnPosition || !this.rotationQuaternion || !this.meshInstance) {
+      return;
     }
     if (
       this.lastPosition.equals(this.spawnPosition) &&
-      this.rotationQuaternion === this.lastRotationQuaternion
+      this.lastRotationQuaternion.equals(this.rotationQuaternion)
     ) {
-      return [];
+      return;
     }
     this.lastPosition.copyFrom(this.spawnPosition);
     this.lastRotationQuaternion.copyFrom(this.rotationQuaternion!);
-    const wm = this.getWorldMatrix();
-    const { mesh, thinInstanceIndex } = this.meshInstance;
-    mesh.thinInstanceSetMatrixAt(thinInstanceIndex, wm, /* noFlush=*/ false);
-
-    return [mesh];
+    this.entityContainer.shadoPool.setTransform(
+      this.meshInstance.actor,
+      this.spawnPosition,
+      this.rotationQuaternion,
+      this.spawnScale,
+    );
+    // The render transform is now read directly from the Shado arena by the
+    // entity shader. No Babylon matrix-buffer copy is required here.
   }
 
   public checkBelowAndReposition() {
@@ -1031,7 +1061,7 @@ export class Entity extends BABYLON.TransformNode {
         }
       } else if (this.isPlayer) {
         console.log(
-          '[Entity] Repositioned to Safe Point due to no ground below',
+          "[Entity] Repositioned to Safe Point due to no ground below",
         );
         this.setPosition(5, 5, 5);
       }
@@ -1039,7 +1069,7 @@ export class Entity extends BABYLON.TransformNode {
   }
 
   public setFace(variation: number): void {
-    if (!this.isHumanoid) {
+    if (!this.usesPlayerFaceTextures) {
       return;
     }
     this.spawn.face = variation;
@@ -1089,6 +1119,10 @@ export class Entity extends BABYLON.TransformNode {
     this.currentAnimation = name;
     const offset = this.computeOffset(match.from, match.to, manager.time, 60);
     this.animationBuffer.set(match.from, match.to, offset, 60);
+    for (const mesh of [...this.primaryMeshes, ...this.secondaryMeshes]) {
+      mesh.instancedBuffers.bakedVertexAnimationSettingsInstanced =
+        this.animationBuffer;
+    }
     this.updateMaterialBuffers();
 
     if (playThrough) {
@@ -1096,7 +1130,7 @@ export class Entity extends BABYLON.TransformNode {
         () => {
           this.animationTimeout = false;
           this.queuedAnimation = null;
-          this.playAnimation(this.queuedAnimation ?? 'p02');
+          this.playAnimation(this.queuedAnimation ?? "p02");
         },
         (match.to - match.from) * (1000 / 60),
       ); // Convert frames to milliseconds
@@ -1107,20 +1141,16 @@ export class Entity extends BABYLON.TransformNode {
     variation: number = 0,
     textureAtlas: string[],
   ): number {
-    let retValue = this.getTextureIndexImpl(
+    const requested = this.getTextureIndexImpl(
       originalName,
       variation,
       textureAtlas,
     );
-    const maxVariation = 10;
-    while (retValue < 0 && variation < maxVariation) {
-      retValue = this.getTextureIndexImpl(
-        originalName,
-        variation++,
-        textureAtlas,
-      );
-    }
-    return retValue;
+    if (requested >= 0 || variation === 0) return requested;
+    // Missing armor variants fall back to that model piece's base material.
+    // Walking upward through unrelated material ids caused guards to sample a
+    // valid but incorrect atlas layer, which presented as texture bleeding.
+    return this.getTextureIndexImpl(originalName, 0, textureAtlas);
   }
   private getTextureIndexImpl(
     originalName: string,
@@ -1139,15 +1169,15 @@ export class Entity extends BABYLON.TransformNode {
     if (!match) {
       const clkMatch = originalName.match(clkRegex);
       if (clkMatch) {
-        model = 'clk';
+        model = "clk";
         texIdx = clkMatch[2];
         return (
           textureAtlas.indexOf(
-            `${model}${(variation - 6).toString().padStart(2, '0')}${texIdx}`,
+            `${model}${(variation - 6).toString().padStart(2, "0")}${texIdx}`,
           ) ?? -1
         );
       }
-      if (originalName.startsWith('helm')) {
+      if (originalName.startsWith("helm")) {
         return textureAtlas.indexOf(originalName) ?? -1;
       }
       return -1;
@@ -1156,7 +1186,7 @@ export class Entity extends BABYLON.TransformNode {
     texIdx = match[4];
     const piece = match[2];
 
-    if (piece === MaterialPrefixes.Face && this.isHumanoid) {
+    if (piece === MaterialPrefixes.Face && this.usesPlayerFaceTextures) {
       // For humanoids, use the face texture variation
       variation = this.spawn.face;
       const pieceNumber = texIdx[1];
@@ -1172,16 +1202,15 @@ export class Entity extends BABYLON.TransformNode {
         ) ?? -1
       );
     }
-    let retValue =
-      textureAtlas.indexOf(
-        `${model}${piece}${variation.toString().padStart(2, '0')}${texIdx}`,
-      ) ?? -1;
-    while (retValue < 0 && +texIdx > 0) {
-      retValue =
-        textureAtlas.indexOf(
-          `${model}${piece}${(variation++).toString().padStart(2, '0')}${(texIdx--).toString().padStart(2, '0')}`,
-        ) ?? -1;
+    const material = variation.toString().padStart(2, "0");
+    let textureNumber = Number(texIdx);
+    while (textureNumber >= 0) {
+      const retValue = textureAtlas.indexOf(
+        `${model}${piece}${material}${textureNumber.toString().padStart(2, "0")}`,
+      );
+      if (retValue >= 0) return retValue;
+      textureNumber--;
     }
-    return retValue;
+    return -1;
   }
 }

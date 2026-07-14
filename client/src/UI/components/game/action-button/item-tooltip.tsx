@@ -2,7 +2,7 @@ import {
   getClassStringListFromClassBitmask,
   getRaceStringListFromRaceBitmask,
 } from '@game/Constants/util';
-import { ItemInstance } from '@game/Net/internal/api/capnp/item';
+import { ItemInstance } from '@game/Net/messages';
 import { getSlotNamesFromBitmask } from '@game/Player/player-constants';
 import { Box, Stack, Tooltip, Typography } from '@mui/material';
 import Fade from '@mui/material/Fade';
@@ -17,6 +17,8 @@ const itemTypeMap = {
   5: 'Archery',
   7: 'Throwing',
 };
+
+const signed = (value: number): string => `${value > 0 ? '+' : ''}${value}`;
 
 export const ItemTooltip: React.FC<{
   item: ItemInstance;
@@ -130,10 +132,10 @@ export const ItemTooltip: React.FC<{
             <Stack direction="row" spacing={1}>
               {['astr', 'asta', 'adex', 'aagi', 'aint', 'awis', 'acha'].map(
                 (stat) => {
-                  if (item[stat] > 0) {
+                  if (Number(item[stat] ?? 0) !== 0) {
                     return (
                       <Typography key={stat} sx={{ fontSize: '11px' }}>
-                        {stat.slice(1).toUpperCase()} +{item[stat]}
+                        {stat.slice(1).toUpperCase()} {signed(Number(item[stat]))}
                       </Typography>
                     );
                   }
@@ -142,10 +144,10 @@ export const ItemTooltip: React.FC<{
             </Stack>
             <Stack direction="row" spacing={1}>
               {['hp', 'mana', 'dr', 'mr', 'cr', 'fr', 'pr'].map((stat) => {
-                if (item[stat] > 0) {
+                if (Number(item[stat] ?? 0) !== 0) {
                   return (
                     <Typography key={stat} sx={{ fontSize: '11px' }}>
-                      {stat.toUpperCase()} +{item[stat]}
+                      {stat.toUpperCase()} {signed(Number(item[stat]))}
                     </Typography>
                   );
                 }
@@ -157,7 +159,7 @@ export const ItemTooltip: React.FC<{
               </Typography>
             ) : null}
             <Typography sx={{ fontSize: '11px' }}>
-              WT: {(item.weight / 10).toFixed(1)}
+              WT: {(Number(item.weight ?? 0) / 10).toFixed(1)}
             </Typography>
 
             <Typography sx={{ fontSize: '11px' }}>

@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "rootDir": "."
+  },
+  "include": [
+    "scripts/apply-canonical-schema.ts",
+    "scripts/hydrate-sqlite-from-mysql.ts",
+    "scripts/promote-imported-data.ts",
+    "scripts/verify-sqlite-hydration.ts",
+    "scripts/build-offline-seed.ts"
+  ]
+}

@@ -1,9 +1,9 @@
 // src/game/Model/object-cache.ts
-import type * as BJS from '@babylonjs/core';
-import BABYLON from '@bjs';
-import { FileSystem } from '@game/FileSystem/filesystem';
-import { Transform } from '@game/Zone/zone-types';
-import { swapMaterialTexture } from './bjs-utils';
+import type * as BJS from "@babylonjs/core";
+import BABYLON from "@bjs";
+import { FileSystem } from "@game/FileSystem/filesystem";
+import { Transform } from "@game/Zone/zone-types";
+import { swapMaterialTexture } from "./bjs-utils";
 
 type ModelKey = string;
 
@@ -18,8 +18,7 @@ type ContainerData = {
 export default class ObjectCache {
   public dataContainers: Record<ModelKey, Promise<ContainerData>> = {};
   private objectContainer: BJS.TransformNode | null = null;
-  private intervals: NodeJS.Timeout[] = [];
-  private intervalNames: string[] = [];
+  private animatedMaterialNames: string[] = [];
   private managerCallbacks: (() => void)[] = [];
   constructor(zoneContainer: BJS.TransformNode | null = null) {
     if (zoneContainer) {
@@ -33,7 +32,7 @@ export default class ObjectCache {
   ): Promise<ContainerData | null> {
     if (!this.dataContainers[model]) {
       const bytes = await FileSystem.getFileBytes(
-        'eqrequiem/objects',
+        "eqrequiem/objects",
         `${model}.babylon`,
       );
       if (!bytes) {
@@ -41,7 +40,7 @@ export default class ObjectCache {
         return null;
       }
       const file = new File([bytes!], `${model}.babylon`, {
-        type: 'application/babylon',
+        type: "application/babylon",
       });
       const result = await BABYLON.LoadAssetContainerAsync(file, scene);
       if (!result) {
@@ -65,7 +64,7 @@ export default class ObjectCache {
         .some((m) => m.morphTargetManager);
       if (hasMorphTargets) {
         console.log(
-          '[ObjectCache] Model has morph targets:',
+          "[ObjectCache] Model has morph targets:",
           animationGroups,
           model,
         );
@@ -73,7 +72,7 @@ export default class ObjectCache {
         morphTargetManager = result.rootNodes[0]
           .getChildMeshes()
           .find((m) => m.morphTargetManager)?.morphTargetManager!;
-        console.log('Setting morph target manager', morphTargetManager);
+        console.log("Setting morph target manager", morphTargetManager);
       }
 
       if (hasAnimations && !hasMorphTargets && skeletons.length) {
@@ -92,7 +91,7 @@ export default class ObjectCache {
         const vat16 = `${model}.bin.gz`;
         const vat32 = `${model}_32.bin.gz`;
         const vatBytes = await FileSystem.getFileBytes(
-          'eqrequiem/vat',
+          "eqrequiem/vat",
           canUseFloat16 ? vat16 : vat32,
         );
         if (!vatBytes) {
@@ -125,7 +124,7 @@ export default class ObjectCache {
       // result.rootNodes[0].dispose();
 
       this.dataContainers[model] = Promise.resolve({
-        container    : result,
+        container: result,
         morphTargetManager,
         hasAnimations,
         animationRanges,
@@ -145,8 +144,13 @@ export default class ObjectCache {
     if (!dataContainer) {
       return [];
     }
-    const { container, hasAnimations, animationRanges, manager, morphTargetManager } =
-      dataContainer;
+    const {
+      container,
+      hasAnimations,
+      animationRanges,
+      manager,
+      morphTargetManager,
+    } = dataContainer;
 
     const root = container.rootNodes[0] as BJS.TransformNode;
     const transforms = instanceTranslations;
@@ -180,7 +184,6 @@ export default class ObjectCache {
       const scaling = BABYLON.Matrix.Scaling(scale, scale, scale);
       const transform = scaling.multiply(rotation).multiply(translation);
       transform.copyToArray(matrixData, i * 16);
-      
 
       if (animParameters && animationRanges.length) {
         const [firstAnimationRange] = animationRanges;
@@ -207,34 +210,39 @@ export default class ObjectCache {
         return [];
       }
       if (morphTargetManager) {
-        console.log('Setting morph target manager', morphTargetManager, 'MESH', objectMesh);
+        console.log(
+          "Setting morph target manager",
+          morphTargetManager,
+          "MESH",
+          objectMesh,
+        );
         objectMesh.morphTargetManager = morphTargetManager;
       }
       objectMesh.skeleton = container.skeletons[0] || null;
       objectMesh.setParent(this.objectContainer);
       objectMesh.isPickable = false;
-      objectMesh.thinInstanceSetBuffer('matrix', matrixData, 16, false);
+      objectMesh.thinInstanceSetBuffer("matrix", matrixData, 16, false);
       objectMesh.alwaysSelectAsActiveMesh = true;
       objectMesh.thinInstanceRefreshBoundingInfo(true, false, false);
       if (manager) {
         objectMesh.bakedVertexAnimationManager = manager;
         objectMesh.thinInstanceSetBuffer(
-          'bakedVertexAnimationSettingsInstanced',
+          "bakedVertexAnimationSettingsInstanced",
           animParameters,
           4,
         );
       }
 
-      if (!objectMesh.name?.endsWith('-passthrough')) {
-      // Create a physics shape for the mesh (shared across instances)
+      if (!objectMesh.name?.endsWith("-passthrough")) {
+        // Create a physics shape for the mesh (shared across instances)
         const physicsShape = new BABYLON.PhysicsShapeMesh(
-        objectMesh as BJS.Mesh,
-        scene!,
+          objectMesh as BJS.Mesh,
+          scene!,
         );
         // Create a new transform node for the physics body to hold its position
         const physicsTransformNode = new BABYLON.TransformNode(
           `${objectMesh.name}_physics_${model}`,
-        scene!,
+          scene!,
         );
         physicsTransformNode.setParent(this.objectContainer);
         // Create individual physics bodies for each instance
@@ -262,7 +270,7 @@ export default class ObjectCache {
             physicsTransformNode,
             BABYLON.PhysicsMotionType.STATIC,
             false,
-          scene!,
+            scene!,
           );
           physicsBody.shape = physicsShape; // Reuse the same shape for efficiency
           physicsBody.setMassProperties({ mass: 0 }); // Static body
@@ -275,15 +283,19 @@ export default class ObjectCache {
         const materialExtras = mesh.getMaterial()?.metadata?.gltf?.extras;
         if (
           materialExtras?.frames?.length &&
-        materialExtras?.animationDelay &&
-        !this.intervalNames.includes(mesh.getMaterial()!.name)
+          materialExtras?.animationDelay &&
+          !this.animatedMaterialNames.includes(mesh.getMaterial()!.name)
         ) {
           const textures = mesh.getMaterial()?.getActiveTextures();
           textures?.forEach((tex) => scene.removeTexture(tex));
           const { frames, animationDelay } = materialExtras;
           let currentFrameIndex = 0;
-          const intervalId = setInterval(() => {
+          let elapsedMs = 0;
+          const callback = () => {
             try {
+              elapsedMs += scene.getEngine().getDeltaTime();
+              if (elapsedMs < animationDelay * 2) return;
+              elapsedMs %= animationDelay * 2;
               currentFrameIndex = (currentFrameIndex + 1) % frames.length;
               const selectedFrame = frames[currentFrameIndex] as string;
               swapMaterialTexture(mesh.getMaterial()!, selectedFrame, true);
@@ -293,25 +305,26 @@ export default class ObjectCache {
                 mesh,
                 error,
               );
-              clearInterval(intervalId);
+              scene.unregisterBeforeRender(callback);
             }
-          }, animationDelay * 2);
+          };
 
-          this.intervals.push(intervalId);
-          this.intervalNames.push(mesh.getMaterial()!.name);
+          scene.registerBeforeRender(callback);
+          this.managerCallbacks.push(callback);
+          this.animatedMaterialNames.push(mesh.getMaterial()!.name);
         }
       }
     } else {
       for (const mesh of meshes) {
         mesh.setParent(this.objectContainer); // put it under an enabled node
-        mesh.setEnabled(true);   
+        mesh.setEnabled(true);
         mesh.isPickable = false;
-        mesh.thinInstanceSetBuffer('matrix', matrixData, 16, false);
+        mesh.thinInstanceSetBuffer("matrix", matrixData, 16, false);
         mesh.alwaysSelectAsActiveMesh = false;
         mesh.thinInstanceRefreshBoundingInfo(true, false, false);
       }
     }
-    
+
     root.dispose();
     // Store physics bodies for this model in the cache
     dataContainer.physicsBodies =
@@ -343,8 +356,8 @@ export default class ObjectCache {
       }
     }
 
-    this.intervals.forEach((interval) => clearInterval(interval));
-
     Object.keys(this.dataContainers).forEach((model) => this.dispose(model));
+    this.managerCallbacks = [];
+    this.animatedMaterialNames = [];
   }
 }

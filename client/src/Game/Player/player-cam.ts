@@ -1,8 +1,8 @@
-import type * as BJS from '@babylonjs/core';
-import BABYLON from '@bjs';
-import { Entity } from '@game/Model/entity';
-import EntityCache from '@game/Model/entity-cache';
-import type Player from './player';
+import type * as BJS from "@babylonjs/core";
+import BABYLON from "@bjs";
+import { Entity } from "@game/Model/entity";
+import EntityCache from "@game/Model/entity-cache";
+import type Player from "./player";
 
 export class PlayerCamera {
   private player: Player;
@@ -32,10 +32,10 @@ export class PlayerCamera {
     this.camera = camera;
     this.cameraLight =
       (player.gameManager.scene?.getLightByName(
-        'playerLight',
+        "playerLight",
       ) as BJS.PointLight) ||
       new BABYLON.PointLight(
-        'playerLight',
+        "playerLight",
         new BABYLON.Vector3(0, 5, 0),
         this.player.gameManager.scene!,
       );
@@ -51,26 +51,43 @@ export class PlayerCamera {
     this.cameraLight.specular = new BABYLON.Color3(0, 0, 0);
     this.cameraLight.range = 100.0;
     this.bindInputEvents();
-
   }
 
   private bindInputEvents() {
     const canvas = this.player.gameManager
       .scene!.getEngine()
       .getRenderingCanvas();
-    if (!canvas) {return;}
+    if (!canvas) {
+      return;
+    }
 
     this.canvas = canvas;
 
     // Store event listeners for later removal
     this.eventListeners.push(
-      { element: canvas, type: 'mousedown', listener: this.handleMouseDown as EventListenerOrEventListenerObject },
-      { element: canvas, type: 'mouseup', listener: this.handleMouseUp as EventListenerOrEventListenerObject },
-      { element: canvas, type: 'mousemove', listener: this.handleMouseMove as EventListenerOrEventListenerObject },
-      { element: canvas, type: 'wheel', listener: this.handleWheel as EventListenerOrEventListenerObject },
       {
-        element : document,
-        type    : 'pointerlockchange',
+        element: canvas,
+        type: "mousedown",
+        listener: this.handleMouseDown as EventListenerOrEventListenerObject,
+      },
+      {
+        element: canvas,
+        type: "mouseup",
+        listener: this.handleMouseUp as EventListenerOrEventListenerObject,
+      },
+      {
+        element: canvas,
+        type: "mousemove",
+        listener: this.handleMouseMove as EventListenerOrEventListenerObject,
+      },
+      {
+        element: canvas,
+        type: "wheel",
+        listener: this.handleWheel as EventListenerOrEventListenerObject,
+      },
+      {
+        element: document,
+        type: "pointerlockchange",
         listener: this.onChangePointerLock,
       },
     );
@@ -163,7 +180,9 @@ export class PlayerCamera {
     x: number = 0,
     y: number = 0,
   ) {
-    if (!this.canvas) {return;}
+    if (!this.canvas) {
+      return;
+    }
     const charSelect = !!this.player.gameManager.CharacterSelect?.character;
     if (charSelect) {
       return;
@@ -176,7 +195,9 @@ export class PlayerCamera {
     if (buttonIndex === 2) {
       this.rightButtonDown = !up;
     }
-    if (!this.player.playerMovement) {return;}
+    if (!this.player.playerMovement) {
+      return;
+    }
     if (this.leftButtonDown && this.rightButtonDown) {
       this.player.playerMovement!.moveForward = true;
       return;
@@ -186,20 +207,92 @@ export class PlayerCamera {
     if (!up && buttonIndex === 0 && scene && !this.isLocked) {
       (async () => {
         const { scene, gpuPicker } = this.player.gameManager;
-        if (!gpuPicker || !scene) {
-          console.warn('GPU Picker is busy or scene is not ready', gpuPicker);
+        if (!scene) {
           return;
         }
-        const pickInfo = await gpuPicker.pickAsync(x, y);
-        if (pickInfo?.thinInstanceIndex !== undefined) {
+        const selectFromPick = (
+          pickInfo:
+            | {
+                thinInstanceIndex?: number;
+                mesh?: BJS.AbstractMesh | null;
+                pickedMesh?: BJS.AbstractMesh | null;
+              }
+            | null
+            | undefined,
+        ): boolean => {
+          if (pickInfo?.thinInstanceIndex === undefined) return false;
+          const pickedMesh = pickInfo.mesh ?? pickInfo.pickedMesh;
           for (const entity of EntityCache.entityInstances) {
-            if (entity.meshInstance?.thinInstanceIndex === pickInfo.thinInstanceIndex
-              && entity.meshInstance?.mesh === pickInfo.mesh
+            if (
+              entity.meshInstance?.thinInstanceIndex ===
+                pickInfo.thinInstanceIndex &&
+              entity.meshInstance?.mesh === pickedMesh &&
+              !entity.isDisposed()
             ) {
               this.player.Target = entity;
-              break;
+              return true;
             }
           }
+          return false;
+        };
+        const selectFromShado = (): boolean => {
+          const ray = scene.createPickingRay(
+            x,
+            y,
+            BABYLON.Matrix.Identity(),
+            scene.activeCamera ?? this.camera,
+          );
+          let selected: Entity | null = null;
+          let selectedDistance = Number.POSITIVE_INFINITY;
+          for (const entity of EntityCache.entityInstances) {
+            const actor = entity.meshInstance?.actor;
+            if (
+              !actor ||
+              !actor.visibleFlag ||
+              entity.hidden ||
+              entity.isDisposed()
+            )
+              continue;
+            const centerX = actor.translation[0];
+            const centerY = actor.translation[1] + actor.translation[3] * 3;
+            const centerZ = actor.translation[2];
+            const dx = centerX - ray.origin.x;
+            const dy = centerY - ray.origin.y;
+            const dz = centerZ - ray.origin.z;
+            const projected =
+              dx * ray.direction.x +
+              dy * ray.direction.y +
+              dz * ray.direction.z;
+            if (projected < 0 || projected >= selectedDistance) continue;
+            const perpendicularSq =
+              dx * dx + dy * dy + dz * dz - projected * projected;
+            const radius = Math.max(1.25, actor.translation[3] * 3);
+            if (perpendicularSq <= radius * radius) {
+              selected = entity;
+              selectedDistance = projected;
+            }
+          }
+          if (!selected) return false;
+          this.player.Target = selected;
+          return true;
+        };
+        try {
+          if (selectFromShado()) return;
+          const gpuResult = gpuPicker ? await gpuPicker.pickAsync(x, y) : null;
+          if (
+            scene !== this.player.gameManager.scene ||
+            selectFromPick(gpuResult)
+          )
+            return;
+          // CPU picking is also the deterministic fallback while GPUPicker is
+          // rebuilding its material/index map during a zone transition.
+          selectFromPick(
+            scene.pick(x, y, (mesh) =>
+              this.player.gameManager.getPickingList().includes(mesh),
+            ),
+          );
+        } catch (error) {
+          console.warn("Entity picking failed", error);
         }
       })();
     }
@@ -217,7 +310,9 @@ export class PlayerCamera {
   }
 
   public attachPlayerLight(mesh: BJS.AbstractMesh) {
-    if (!this.cameraLight) {return;}
+    if (!this.cameraLight) {
+      return;
+    }
     this.cameraLight.parent = mesh;
     const forward = mesh.getDirection(BABYLON.Axis.X).normalize();
     const heightOff = new BABYLON.Vector3(0, 2, 1);
@@ -226,7 +321,9 @@ export class PlayerCamera {
   }
 
   public adjustCameraDistance(delta: number) {
-    if (!this.player.playerEntity) {return;}
+    if (!this.player.playerEntity) {
+      return;
+    }
     const deltaCoefficient = 1.2;
     this.preferredCameraDistance = Math.max(
       this.minCameraDistance,
@@ -245,7 +342,9 @@ export class PlayerCamera {
   }
 
   public inputMouseMotion(x: number, y: number) {
-    if (!this.player.playerEntity || !this.isLocked) {return;}
+    if (!this.player.playerEntity || !this.isLocked) {
+      return;
+    }
     const charSelect = !!this.player.gameManager.CharacterSelect?.character;
     if (charSelect) {
       return;
@@ -313,7 +412,9 @@ export class PlayerCamera {
 
   public updateCameraPosition() {
     const entity = this.player.playerEntity;
-    if (!entity) {return;}
+    if (!entity) {
+      return;
+    }
     const playerPos = entity.spawnPosition.clone();
 
     // Physics check - keep within bounds of collidable world

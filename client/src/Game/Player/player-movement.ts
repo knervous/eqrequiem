@@ -2,7 +2,7 @@ import type * as BJS from '@babylonjs/core';
 import BABYLON from '@bjs';
 import { AnimationDefinitions } from '@game/Animation/animation-constants';
 import emitter from '@game/Events/events';
-import { ClientPositionUpdate } from '@game/Net/internal/api/capnp/common';
+import { ClientPositionUpdate } from '@game/Net/messages';
 import { OpCodes } from '@game/Net/opcodes';
 import { WorldSocket } from '@ui/net/instances';
 import type Player from './player';

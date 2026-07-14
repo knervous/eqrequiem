@@ -1,19 +1,19 @@
-import type * as BJS from '@babylonjs/core';
-import BABYLON from '@bjs';
-import { supportedZones } from '@game/Constants/supportedZones';
-import emitter, { ChatMessage } from '@game/Events/events';
-import { FileSystem } from '@game/FileSystem/filesystem';
-import { LightManager } from '@game/Lights/light-manager';
-import type GameManager from '@game/Manager/game-manager';
-import { swapMaterialTexture } from '@game/Model/bjs-utils';
-import EntityCache from '@game/Model/entity-cache';
-import { Spawns } from '@game/Net/internal/api/capnp/common';
-import { RegionManager } from '@game/Regions/region-manager';
-import DayNightSkyManager from '@game/Sky/sky-manager';
-import EntityPool from './entity-pool';
-import { Grid } from './zone-grid';
-import { ZoneMetadata } from './zone-types';
-import ObjectCache from '@/Game/Model/object-cache';
+import type * as BJS from "@babylonjs/core";
+import BABYLON from "@bjs";
+import { supportedZones } from "@game/Constants/supportedZones";
+import emitter, { ChatMessage } from "@game/Events/events";
+import { FileSystem } from "@game/FileSystem/filesystem";
+import { LightManager } from "@game/Lights/light-manager";
+import type GameManager from "@game/Manager/game-manager";
+import { swapMaterialTexture } from "@game/Model/bjs-utils";
+import EntityCache from "@game/Model/entity-cache";
+import { Spawns } from "@game/Net/messages";
+import { RegionManager } from "@game/Regions/region-manager";
+import DayNightSkyManager from "@game/Sky/sky-manager";
+import EntityPool from "./entity-pool";
+import { Grid } from "./zone-grid";
+import { ZoneMetadata } from "./zone-types";
+import ObjectCache from "@/Game/Model/object-cache";
 
 export class ZoneManager {
   get RegionManager(): RegionManager {
@@ -48,7 +48,7 @@ export class ZoneManager {
   private zoneObjects: ObjectCache | null = null;
 
   private disableWorldEnv: boolean = false;
-  public zoneName = 'qeynos2';
+  public zoneName = "";
   public get CurrentZone() {
     return this.parent.CurrentZone;
   }
@@ -58,7 +58,15 @@ export class ZoneManager {
   }
   private parent: GameManager;
 
-  private intervals: NodeJS.Timeout[] = [];
+  private animatedTextures: Array<{
+    mesh: BJS.AbstractMesh;
+    frames: string[];
+    delayMs: number;
+    elapsedMs: number;
+    frame: number;
+  }> = [];
+  private worldTickElapsedMs = 0;
+  private loadGeneration = 0;
 
   constructor(parent: GameManager) {
     this.parent = parent;
@@ -67,17 +75,17 @@ export class ZoneManager {
     this.lightManager = new LightManager();
     this.skyManager = new DayNightSkyManager(this);
     this.zoneContainer =
-      this.parent.scene?.getTransformNodeByName('ZoneContainer') ??
-      new BABYLON.TransformNode('ZoneContainer', this.parent.scene);
+      this.parent.scene?.getTransformNodeByName("ZoneContainer") ??
+      new BABYLON.TransformNode("ZoneContainer", this.parent.scene);
     this.objectContainer =
-      this.parent.scene?.getTransformNodeByName('ZoneObjectContainer') ??
-      new BABYLON.TransformNode('ZoneObjectContainer', this.parent.scene);
+      this.parent.scene?.getTransformNodeByName("ZoneObjectContainer") ??
+      new BABYLON.TransformNode("ZoneObjectContainer", this.parent.scene);
     this.lightContainer =
-      this.parent.scene?.getTransformNodeByName('LightContainer') ??
-      new BABYLON.TransformNode('LightContainer', this.parent.scene);
+      this.parent.scene?.getTransformNodeByName("LightContainer") ??
+      new BABYLON.TransformNode("LightContainer", this.parent.scene);
     this.entityContainerNode =
-      this.parent.scene?.getTransformNodeByName('EntityContainer') ??
-      new BABYLON.TransformNode('EntityContainer', this.parent.scene);
+      this.parent.scene?.getTransformNodeByName("EntityContainer") ??
+      new BABYLON.TransformNode("EntityContainer", this.parent.scene);
     this.entityPool = new EntityPool(
       this.GameManager,
       this.entityContainerNode,
@@ -86,6 +94,7 @@ export class ZoneManager {
   }
 
   dispose(destroy = false) {
+    this.loadGeneration++;
     // Clean up resources if needed.
     if (this.zoneContainer) {
       this.zoneContainer.getChildren().forEach((child) => {
@@ -107,9 +116,8 @@ export class ZoneManager {
       this.grid.dispose();
       this.grid = null;
     }
-    this.intervals.forEach((i) => {
-      clearInterval(i);
-    });
+    this.animatedTextures = [];
+    this.worldTickElapsedMs = 0;
     this.zoneObjects?.disposeAll();
     this.regionManager.dispose();
     this.lightManager.dispose();
@@ -127,18 +135,19 @@ export class ZoneManager {
   }
 
   public async loadZone(zoneName: string): Promise<void> {
-    console.log('[ZoneManager] Loading zone:', zoneName);
+    console.log("[ZoneManager] Loading zone:", zoneName);
     this.dispose();
+    const generation = this.loadGeneration;
     const longName = Object.values(supportedZones).find(
       (z) => z.shortName.toLowerCase() === zoneName.toLowerCase(),
     )?.longName;
     const msg: ChatMessage = {
       message: `You have entered ${longName}`,
       chanNum: 0,
-      type   : 0,
+      type: 0,
     };
     setTimeout(() => {
-      emitter.emit('chatMessage', msg);
+      emitter.emit("chatMessage", msg);
     }, 500);
     this.zoneName = zoneName;
 
@@ -146,12 +155,13 @@ export class ZoneManager {
       this.zoneObjects.disposeAll();
     }
     this.zoneObjects = new ObjectCache(this.objectContainer);
-    await this.instantiateZone();
+    await this.instantiateZone(generation);
+    if (generation !== this.loadGeneration) return;
     EntityCache.initialize(this.GameManager.scene!);
   }
 
   public async loadSpawns(spawns: Spawns) {
-    console.log('Got spawns', spawns);
+    console.log("Got spawns", spawns);
     if (!this.zoneContainer) {
     }
   }
@@ -186,36 +196,37 @@ export class ZoneManager {
     }
   }
 
-  public async instantiateZone() {
-    console.log('Inst zone');
+  public async instantiateZone(generation = this.loadGeneration) {
+    console.log("Inst zone");
     if (!this.zoneContainer) {
       return;
     }
     // this.parent.scene!.performancePriority =
     //   BABYLON.ScenePerformancePriority.Aggressive;
     if (!this.parent.scene) {
-      console.error('[ZoneManager] No scene available to instantiate zone.');
+      console.error("[ZoneManager] No scene available to instantiate zone.");
       return;
     }
 
     // Zone Grid
-    this.grid = new Grid(150.0, this.parent.scene);
+    this.grid = new Grid(300.0, this.parent.scene);
 
     this.tickObservable = this.parent.scene.onBeforeRenderObservable.add(
       this.tick.bind(this),
     );
     this.parent.setLoading(true);
     const bytes = await FileSystem.getFileBytes(
-      'eqrequiem/zones',
+      "eqrequiem/zones",
       `${this.zoneName}.babylon`,
     );
+    if (generation !== this.loadGeneration) return;
     if (!bytes) {
       console.log(`[ZoneManager] Failed to load zone file: ${this.zoneName}`);
       this.parent.setLoading(false);
       return;
     }
     const file = new File([bytes], `${this.zoneName}.babylon`, {
-      type: 'application/babylon',
+      type: "application/babylon",
     });
     const result = await BABYLON.LoadAssetContainerAsync(
       file,
@@ -225,6 +236,10 @@ export class ZoneManager {
       this.parent.setLoading(false);
       return null;
     });
+    if (generation !== this.loadGeneration) {
+      result?.dispose();
+      return;
+    }
     if (!result) {
       console.error(
         `[ZoneManager] Failed to import zone mesh: ${this.zoneName}`,
@@ -245,22 +260,13 @@ export class ZoneManager {
       if (materialExtras?.frames?.length && materialExtras?.animationDelay) {
         canMerged = false;
         const { frames, animationDelay } = materialExtras;
-        let currentFrameIndex = 0;
-        const intervalId = setInterval(() => {
-          try {
-            currentFrameIndex = (currentFrameIndex + 1) % frames.length;
-            const selectedFrame = frames[currentFrameIndex] as string;
-            swapMaterialTexture(mesh.material!, selectedFrame, true);
-          } catch (error) {
-            console.error(
-              `[ZoneManager] Failed to swap texture for mesh ${mesh.name}:`,
-              error,
-            );
-            clearInterval(intervalId);
-          }
-        }, animationDelay * 2);
-
-        this.intervals.push(intervalId);
+        this.animatedTextures.push({
+          mesh,
+          frames,
+          delayMs: animationDelay * 2,
+          elapsedMs: 0,
+          frame: 0,
+        });
       } else {
         mesh.material?.freeze();
       }
@@ -273,7 +279,7 @@ export class ZoneManager {
           staticMeshes.push(mesh as BJS.Mesh);
         }
         // Disable the cloud mdf always
-        if (mesh.name === 'CLOUD_MDF') {
+        if (mesh.name === "CLOUD_MDF") {
           mesh.setEnabled(false);
         }
       } else {
@@ -298,7 +304,7 @@ export class ZoneManager {
       true,
     );
     if (!zoneMesh || !passThroughMesh) {
-      console.error('[ZoneManager] Failed to merge zone meshes');
+      console.error("[ZoneManager] Failed to merge zone meshes");
       this.parent.setLoading(false);
       return;
     }
@@ -319,20 +325,21 @@ export class ZoneManager {
     zoneMesh.physicsBody.setMassProperties({ mass: 0 }); // Static
     zoneMesh.setParent(this.zoneContainer);
     passThroughMesh.setParent(this.zoneContainer);
-    this.skyManager.createSky('sky1', this.disableWorldEnv);
+    this.skyManager.createSky("sky1", this.disableWorldEnv);
     this.parent.setLoading(false);
 
     const metadataByte = await FileSystem.getFileBytes(
-      'eqrequiem/zones',
+      "eqrequiem/zones",
       `${this.zoneName}.json`,
     );
+    if (generation !== this.loadGeneration) return;
     if (metadataByte) {
       try {
-        const str = new TextDecoder('utf-8').decode(metadataByte);
+        const str = new TextDecoder("utf-8").decode(metadataByte);
         const metadata = JSON.parse(str) as ZoneMetadata;
-        console.log('Got metadata', metadata);
-        console.log('Version: ', metadata.version);
-        console.log('Current zone', this.CurrentZone);
+        console.log("Got metadata", metadata);
+        console.log("Version: ", metadata.version);
+        console.log("Current zone", this.CurrentZone);
         this.lightManager.loadLights(
           this.lightContainer!,
           this.parent.scene!,
@@ -347,13 +354,15 @@ export class ZoneManager {
           );
         }
         this.instantiateObjects(metadata).then(() => {
+          if (generation !== this.loadGeneration) return;
           this.dedupeMaterialsByName();
           this.cleanupUnusedMaterials();
         });
         setTimeout(() => {
+          if (generation !== this.loadGeneration) return;
           this.GameManager.scene?.textures.forEach((t) => {
             if (
-              t.name === '' &&
+              t.name === "" &&
               !(t instanceof BABYLON.RawTexture) &&
               !(t instanceof BABYLON.RawTexture2DArray)
             ) {
@@ -365,7 +374,7 @@ export class ZoneManager {
 
         // this.bakeZoneVertexColors(metadata.lights);
       } catch (e) {
-        console.log('Error parsing zone metadata', e);
+        console.log("Error parsing zone metadata", e);
       }
     }
   }
@@ -427,6 +436,23 @@ export class ZoneManager {
       return;
     }
     const delta = this.parent.scene?.getEngine().getDeltaTime() ?? 0;
+    this.worldTickElapsedMs += delta;
+    if (this.worldTickElapsedMs >= 1000) {
+      this.worldTickElapsedMs %= 1000;
+      this.skyManager.worldTick?.();
+    }
+    for (const animation of this.animatedTextures) {
+      if (animation.mesh.isDisposed()) continue;
+      animation.elapsedMs += delta;
+      if (animation.elapsedMs < animation.delayMs) continue;
+      animation.elapsedMs %= animation.delayMs;
+      animation.frame = (animation.frame + 1) % animation.frames.length;
+      swapMaterialTexture(
+        animation.mesh.material!,
+        animation.frames[animation.frame],
+        true,
+      );
+    }
     this.skyManager.tick(delta);
     this.entityPool?.process();
     this.lightManager.updateLights(delta);

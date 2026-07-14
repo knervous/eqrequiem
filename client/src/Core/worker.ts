@@ -1,8 +1,8 @@
-import * as Comlink from "comlink";
-import { EQFileHandle } from "sage-core/model/file-handle";
-import { setGlobals } from "sage-core/globals";
+import * as Comlink from 'comlink';
+import { setGlobals } from 'sage-core/globals';
+import { EQFileHandle } from 'sage-core/model/file-handle';
 
-if (typeof window === "undefined") {
+if (typeof window === 'undefined') {
   self.window = self;
 }
 
@@ -18,14 +18,14 @@ const process = async (
   setGlobals({
     gameController: self.gameController,
     canvas,
-    GlobalStore: {
+    GlobalStore   : {
       actions: {
-        setLoading: () => {},
-        setLoadingText: () => {},
+        setLoading     : () => {},
+        setLoadingText : () => {},
         setLoadingTitle: () => {},
       },
     },
-    root: "eqrequiem",
+    root: 'eqrequiem',
   });
   const fileHandles = await Promise.all(
     handles.map((handle) => handle.getFile()),
@@ -39,9 +39,9 @@ const process = async (
       forceReload: true,
     },
     {
-      skipSubload: true,
-      embedWebP: true,
-      deferWrite: true,
+      skipSubload  : true,
+      embedWebP    : true,
+      deferWrite   : true,
       requiemExport: true,
     },
   );
@@ -49,7 +49,7 @@ const process = async (
     await obj.initialize();
     data = await obj.process();
   } catch (e) {
-    console.log("Error processing EQFileHandle", e);
+    console.log('Error processing EQFileHandle', e);
   }
   return data ? Object.entries(data).reduce((acc, [key, value]: [string, ArrayBuffer]) => {
     return {

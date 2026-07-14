@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.build.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "paths": {
+      "binaryen": ["./src/vendor/binaryen/binaryen-shim.ts"],
+    }
+  },
+  "exclude": ["dist", "node_modules", "assembly", "sandbox"]
+}

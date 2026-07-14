@@ -1,9 +1,10 @@
 
-import { CommandMessage } from '@game/Net/internal/api/capnp/common';
+import { CommandMessage } from '@game/Net/messages';
 import { OpCodes } from '@game/Net/opcodes';
 import { WorldSocket } from '@ui/net/instances';
 import { addChatLine, addChatLines } from './chat-message';
 import { BaseCommandHandler, command } from './command-base';
+import { requestZoneByShortName } from './command-handler';
 
 export class GMCommandHandler extends BaseCommandHandler {
   @command('help')
@@ -13,7 +14,9 @@ export class GMCommandHandler extends BaseCommandHandler {
            #level {level} - Sets your level
            #searchitem {name} - Searches for items by name
            #summonitem {itemId} - Summons an item by its ID [Alias: #si]
+           #purgeitems - Removes all offline inventory items
            #gearup - Equips a full set of gear
+           #zone {shortname} - Zones by short name
 
            ----- Keyboard Hotkeys -----
            Space: Jump
@@ -25,6 +28,11 @@ export class GMCommandHandler extends BaseCommandHandler {
            ------ GM Commands -----
            #help - Lists GM commands
        `);
+  }
+
+  @command('zone')
+  commandZone(args: string[]) {
+    requestZoneByShortName(args[0]);
   }
   @command('level')
   commandLevel(args: string[]) {

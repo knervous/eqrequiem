@@ -1,18 +1,27 @@
 // src/game/Model/entity-cache.ts
 
-import type * as BJS from '@babylonjs/core';
-import BABYLON from '@bjs';
-import { isPlayerRace, MaterialPrefixes, Races } from '@game/Constants/constants';
-import RACE_DATA from '@game/Constants/race-data';
-import { FileSystem } from '@game/FileSystem/filesystem';
-import type GameManager from '@game/Manager/game-manager';
-import { Spawn } from '@game/Net/internal/api/capnp/common';
-import { PlayerProfile } from '@game/Net/internal/api/capnp/player';
-import { loadBasisTexture } from './basis-texture';
-import { Entity } from './entity';
-import { createVATShaderMaterial } from './entity-material';
-import { EntityMeshMetadata } from './entity-types';
-import ItemCache, { ItemContainer } from './item-cache';
+import type * as BJS from "@babylonjs/core";
+import BABYLON from "@bjs";
+import {
+  isPlayerRace,
+  MaterialPrefixes,
+  Races,
+} from "@game/Constants/constants";
+import RACE_DATA from "@game/Constants/race-data";
+import { FileSystem } from "@game/FileSystem/filesystem";
+import type GameManager from "@game/Manager/game-manager";
+import { PlayerProfile, Spawn } from "@game/Net/messages";
+import type { NullableItemInstance } from "@game/Player/player-constants";
+import { ShadoDynamicEntityNameplateLayer } from "shader-object/render";
+import { loadBasisTexture } from "./basis-texture";
+import { Entity } from "./entity";
+import {
+  createVATPickingMaterial,
+  createVATShaderMaterial,
+} from "./entity-material";
+import { EntityMeshMetadata } from "./entity-types";
+import ItemCache, { ItemContainer } from "./item-cache";
+import { ShadoEntityPool } from "./shado-entity-pool";
 
 type ModelKey = string;
 type SubmeshRange = {
@@ -34,6 +43,7 @@ export type EntityContainer = {
   model: ModelKey;
   manager?: BJS.BakedVertexAnimationManager;
   shaderMaterial?: BJS.ShaderMaterial;
+  pickingMaterial?: BJS.ShaderMaterial;
   mesh: BJS.Mesh;
   animations: AnimationEntry[];
   skeleton?: BJS.Skeleton;
@@ -43,7 +53,9 @@ export type EntityContainer = {
     value: boolean;
   };
   getItem?: (model: string, flip?: boolean) => Promise<ItemContainer | null>;
-  addThinInstance: (matrix: BJS.Matrix) => number;
+  attachmentBoneIndices: Readonly<Record<string, number>>;
+  shadoPool: ShadoEntityPool;
+  addThinInstance: (matrix: BJS.Matrix, entityId: number) => number;
   removeThinInstance: (index: number) => void;
   boundingBox?: {
     min: number[];
@@ -65,12 +77,16 @@ export type BasisAtlas = {
 };
 
 export class EntityCache {
+  private static readonly initialEntityCullDistance = 250;
   private static containers: Record<ModelKey, Promise<EntityContainer | null>> =
     {};
   private static resolvedContainers: Record<ModelKey, EntityContainer | null> =
     {};
   private static commonBasisAtlas: Record<string, BasisAtlas> = {};
   private static commonBasisAtlasLoaded = false;
+  private static commonBasisAtlasPromise: Promise<void> | null = null;
+  private static generation = 0;
+  private static activePools = new Set<ShadoEntityPool>();
 
   public static gameManager: GameManager;
   /**
@@ -78,11 +94,11 @@ export class EntityCache {
    * under which all entities will be bucketed.
    */
   private static getOrCreateNodeContainer(scene: BJS.Scene): BJS.Node {
-    const existing = scene.getNodeByName('EntityNodeContainer');
+    const existing = scene.getNodeByName("EntityNodeContainer");
     if (existing) {
       return existing as BJS.Node;
     }
-    return new BABYLON.TransformNode('EntityNodeContainer', scene);
+    return new BABYLON.TransformNode("EntityNodeContainer", scene);
   }
 
   /**
@@ -96,61 +112,44 @@ export class EntityCache {
     scene: BJS.Scene,
   ): Promise<EntityContainer | null> {
     model = model.toLowerCase();
+    const requestGeneration = EntityCache.generation;
     if (!EntityCache.commonBasisAtlasLoaded) {
-      const commonEntries = ['clk', 'helm'];
-      for (const entry of commonEntries) {
-        const bytes = await FileSystem.getFileBytes(
-          'eqrequiem/basis',
-          `${entry}.basis`,
-        );
-        if (!bytes) {
-          console.warn(
-            `[EntityCache] Common basis texture missing for ${entry}`,
-          );
-          continue;
-        }
-        const { data, layerCount, format } = await loadBasisTexture(
-          scene.getEngine(),
-          bytes,
-        );
-        const textureArray = new BABYLON.RawTexture2DArray(
-          null,
-          128,
-          128,
-          layerCount,
-          format,
+      if (!EntityCache.commonBasisAtlasPromise) {
+        const promise = EntityCache.loadCommonBasisAtlas(
           scene,
-          false,
-          false,
-          BABYLON.Constants.TEXTURE_TRILINEAR_SAMPLINGMODE,
+          requestGeneration,
         );
-        textureArray.update(data);
-        // Atlas
-        const textureAtlas =
-          (await FileSystem.getFileJSON<string[]>(
-            'eqrequiem/basis',
-            `${entry}.json`,
-          )) ?? [];
-        if (!textureAtlas.length) {
-          console.warn(`[EntityCache] VAT atlas missing for ${entry}`);
-          return null;
-        }
-
-        EntityCache.commonBasisAtlas[entry] = {
-          texture: textureArray,
-          atlas  : textureAtlas,
-        };
+        EntityCache.commonBasisAtlasPromise = promise;
+        void promise.then(
+          () => {
+            if (EntityCache.commonBasisAtlasPromise === promise) {
+              EntityCache.commonBasisAtlasPromise = null;
+            }
+          },
+          () => {
+            if (EntityCache.commonBasisAtlasPromise === promise) {
+              EntityCache.commonBasisAtlasPromise = null;
+            }
+          },
+        );
       }
-      EntityCache.commonBasisAtlasLoaded = true;
+      await EntityCache.commonBasisAtlasPromise;
+    }
+    if (
+      requestGeneration !== EntityCache.generation ||
+      !EntityCache.commonBasisAtlasLoaded
+    ) {
+      return null;
     }
 
     const bucket = EntityCache.getOrCreateNodeContainer(scene);
     const baseModel = model.slice(0, 3);
     if (!EntityCache.containers[model]) {
+      const generation = EntityCache.generation;
       EntityCache.containers[model] = (async () => {
         // Load .babylon
         const bytes = await FileSystem.getFileBytes(
-          'eqrequiem/babylon',
+          "eqrequiem/babylon",
           `${model}.babylon.gz`,
         );
         if (!bytes) {
@@ -158,11 +157,11 @@ export class EntityCache {
           return null;
         }
         const file = new File([bytes], `${model}.babylon`, {
-          type: 'application/babylon',
+          type: "application/babylon",
         });
         const container = await BABYLON.LoadAssetContainerAsync(file, scene, {
-          name           : `${model}.babylon`,
-          pluginExtension: '.babylon',
+          name: `${model}.babylon`,
+          pluginExtension: ".babylon",
         }).catch((e) => {
           console.log(`[EntityCache] Error loading model ${model}:`, e);
           return null;
@@ -179,14 +178,16 @@ export class EntityCache {
         // VAT setup
         let manager: BJS.BakedVertexAnimationManager | null = null;
         let shaderMaterial: BJS.ShaderMaterial | null = null;
+        let pickingMaterial: BJS.ShaderMaterial | null = null;
         let textureAtlas: string[] = [];
+        const shadoPool = await ShadoEntityPool.create(scene.getEngine());
 
         // Vertex animation data
         const canUseFloat16 = scene.getEngine().getCaps().textureHalfFloat;
         const vat16 = `${model}.bin.gz`;
         const vat32 = `${model}_32.bin.gz`;
         const vatBytes = await FileSystem.getFileBytes(
-          'eqrequiem/vat',
+          "eqrequiem/vat",
           canUseFloat16 ? vat16 : vat32,
         );
         if (!vatBytes) {
@@ -213,7 +214,7 @@ export class EntityCache {
         });
         // Basis textures
         const basisBytes = await FileSystem.getFileBytes(
-          'eqrequiem/basis',
+          "eqrequiem/basis",
           `${baseModel}.basis`,
         );
         if (!basisBytes) {
@@ -238,12 +239,13 @@ export class EntityCache {
         textureArray.update(data);
 
         // Shader material
-        shaderMaterial = createVATShaderMaterial(scene);
+        shaderMaterial = createVATShaderMaterial(scene, shadoPool, model);
+        pickingMaterial = createVATPickingMaterial(scene, shadoPool, model);
 
         // Atlas
         textureAtlas =
           (await FileSystem.getFileJSON<string[]>(
-            'eqrequiem/basis',
+            "eqrequiem/basis",
             `${baseModel}.json`,
           )) ?? [];
         if (!textureAtlas.length) {
@@ -264,9 +266,10 @@ export class EntityCache {
         // Gather animations
         let animations: BJS.AnimationRange[] = [];
         const infoNode = (root as any).getChildTransformNodes()?.[0];
-        const boundingBox = infoNode?.metadata?.gltf?.extras?.boundingBox ?? null;
+        const boundingBox =
+          infoNode?.metadata?.gltf?.extras?.boundingBox ?? null;
         const json = (await FileSystem.getFileJSON(
-          'eqrequiem/vat',
+          "eqrequiem/vat",
           `${model}.json`,
         )) as any;
         if (json) {
@@ -278,7 +281,7 @@ export class EntityCache {
           animations = ranges.map((r) => {
             const entry = {
               from: r.from + offset,
-              to  : Math.max(0, r.to + offset),
+              to: Math.max(0, r.to + offset),
               name: r.name,
             };
             offset += r.to;
@@ -298,38 +301,37 @@ export class EntityCache {
           mesh.computeWorldMatrix(true);
           mesh.bakeTransformIntoVertices(mesh.getWorldMatrix());
           mesh.flipFaces(true);
-          const { model, variation, texNum } = mesh.metadata.gltf
-            .extras as any;
-          let piece = mesh.metadata.gltf.extras.piece?.toLowerCase() ?? '';
+          const { model, variation, texNum } = mesh.metadata.gltf.extras as any;
+          let piece = mesh.metadata.gltf.extras.piece?.toLowerCase() ?? "";
           let atlasIndex = 0;
-          let name = mesh.material?.name?.toLowerCase() ?? '';
+          let name = mesh.material?.name?.toLowerCase() ?? "";
           if (!name) {
             name = `${model}${piece}${variation}${texNum}`.toLowerCase();
           }
           const range = {
             name,
             textureAttributesBuffer: new Float32Array(4),
-            isRobe                 : false,
-            isHelm                 : false,
-            atlasArray             : textureAtlas,
-            metadata               : { model, piece: piece.toLowerCase(), variation, texNum },
+            isRobe: false,
+            isHelm: false,
+            atlasArray: textureAtlas,
+            metadata: { model, piece: piece.toLowerCase(), variation, texNum },
           } as SubmeshRange;
 
           if (isPlayerRace(model)) {
-            if (name?.toLowerCase()?.startsWith('clk')) {
+            if (name?.toLowerCase()?.startsWith("clk")) {
               atlasIndex = 1;
               range.isRobe = true;
-              range.atlasArray = EntityCache.commonBasisAtlas['clk'].atlas;
-              piece = 'ch';
+              range.atlasArray = EntityCache.commonBasisAtlas["clk"].atlas;
+              piece = "ch";
             } else if (
-              texNum !== '01' &&
+              texNum !== "01" &&
               piece === MaterialPrefixes.Helm &&
-              (name?.toLowerCase()?.startsWith('helm') ||
-                name?.toLowerCase()?.startsWith('chain'))
+              (name?.toLowerCase()?.startsWith("helm") ||
+                name?.toLowerCase()?.startsWith("chain"))
             ) {
               atlasIndex = 2;
               range.isHelm = true;
-              range.atlasArray = EntityCache.commonBasisAtlas['helm'].atlas;
+              range.atlasArray = EntityCache.commonBasisAtlas["helm"].atlas;
             }
           }
 
@@ -341,7 +343,7 @@ export class EntityCache {
             data[j * 2] = atlasIndex;
             data[j * 2 + 1] = i;
           }
-          mesh.setVerticesData('submeshData', data, false, 2);
+          mesh.setVerticesData("submeshData", data, false, 2);
           i++;
         }
         const textureAttributesDirtyRef = {
@@ -349,7 +351,7 @@ export class EntityCache {
         };
         const allSubmeshDataBuffers: Float32Array[] = [];
         meshes.forEach((m) => {
-          const d = m.getVerticesData('submeshData')!; 
+          const d = m.getVerticesData("submeshData")!;
           allSubmeshDataBuffers.push(d as any);
         });
         const mergedMesh = BABYLON.Mesh.MergeMeshes(
@@ -379,66 +381,61 @@ export class EntityCache {
 
         // _now_ re-attach
         mergedMesh.setVerticesData(
-          'submeshData',
+          "submeshData",
           mergedSubmeshData,
           /* updatable*/ false,
           /* stride*/ 2,
         );
 
         const submeshCount = meshes.length;
-
-        const addThinInstance = (matrix: BJS.Matrix): number => {
-          const instanceIdx = mergedMesh.thinInstanceAdd(matrix, true);
-          const originalBuffer = (mergedMesh.metadata?.textureAttributeArray
-            ?._texture?._bufferView ?? new Float32Array()) as Float32Array;
-          const newWidth = submeshCount * mergedMesh.thinInstanceCount;
-          const data = new Float32Array(4 * newWidth);
-          data.set(originalBuffer, 0);
-          mergedMesh.thinInstanceSetAttributeAt(
-            'thinInstanceIndex',
-            instanceIdx,
-            [instanceIdx, 0],
-            true,
-          );
-          if (mergedMesh.metadata.textureAttributeArray) {
-            mergedMesh.metadata.textureAttributeArray.dispose();
+        const freeThinInstances: number[] = [];
+        const addThinInstance = (
+          matrix: BJS.Matrix,
+          entityId: number,
+        ): number => {
+          const shadoSlot = shadoPool.acquire(entityId, submeshCount);
+          shadoPool.commit();
+          const reusableIndex = freeThinInstances.pop();
+          if (reusableIndex !== undefined) {
+            if (reusableIndex !== shadoSlot.index) {
+              throw new Error(
+                "Shado and Babylon instance pools lost index alignment",
+              );
+            }
+            mergedMesh.thinInstanceSetMatrixAt(reusableIndex, matrix, true);
+            return shadoSlot.index;
           }
-
-          // 4) create a fresh RawTexture at the correct size
-          const fresh = new BABYLON.RawTexture(
-            data,
-            newWidth,
-            1,
-            BABYLON.Constants.TEXTUREFORMAT_RGBA,
-            scene,
-            false,
-            false,
-            BABYLON.Constants.TEXTURE_NEAREST_NEAREST_MIPNEAREST,
-            BABYLON.Constants.TEXTURETYPE_FLOAT,
-          );
-
-          mergedMesh.metadata.textureAttributeArray = fresh;
-
-          return instanceIdx;
+          const instanceIdx = mergedMesh.thinInstanceAdd(matrix, true);
+          if (instanceIdx !== shadoSlot.index) {
+            throw new Error(
+              "Shado and Babylon instance pools lost index alignment",
+            );
+          }
+          return shadoSlot.index;
         };
         const removeThinInstance = (index: number): void => {
-          // TODO remove logic for thin instances
-          // const originalBuffer = textureAttributeArray._texture?._bufferView as Float32Array;
-          // originalBuffer.
-          // mesh.thinInstanceBufferUpdated('matrix');
-          // mesh.thinInstanceSetAttributeAt('thinInstanceIndex', index, [0], true);
-          // // figure out how to remove from underlying matrix buffer
-          // const data = new Float32Array(4 * mesh.thinInstanceCount); // RGBA for each submesh
-          // data.set(textureAttributeArrayData, 0);
-          // mesh.metadata.textureAttributeArray!.update(data);
+          if (freeThinInstances.includes(index)) return;
+          mergedMesh.thinInstanceSetMatrixAt(
+            index,
+            BABYLON.Matrix.Zero(),
+            true,
+          );
+          shadoPool.release(index);
+          freeThinInstances.push(index);
         };
         mergedMesh.metadata = {
           textureAttributesDirtyRef,
+          shadoPool,
           submeshCount,
-          atlasArrayTexture     : textureArray,
-          cloakAtlasArrayTexture: EntityCache.commonBasisAtlas['clk'].texture,
-          helmAtlasArrayTexture : EntityCache.commonBasisAtlas['helm'].texture,
-          vatTexture            : manager!.texture,
+          atlasArrayTexture: textureArray,
+          cloakAtlasArrayTexture: EntityCache.commonBasisAtlas["clk"].texture,
+          helmAtlasArrayTexture: EntityCache.commonBasisAtlas["helm"].texture,
+          vatTexture: manager!.texture,
+          vatTextureSizeInverted: new BABYLON.Vector2(
+            1 / manager!.texture.getSize().width,
+            1 / manager!.texture.getSize().height,
+          ),
+          gpuPickingMaterial: pickingMaterial,
         } as EntityMeshMetadata;
 
         mergedMesh.skeleton = container.skeletons[0] || null;
@@ -446,17 +443,11 @@ export class EntityCache {
         mergedMesh.name = model;
         mergedMesh.bakedVertexAnimationManager = manager!;
         mergedMesh.parent = null;
-      
+
         mergedMesh.position.set(0, 0, 0);
         mergedMesh.rotation.set(0, 0, 0);
         mergedMesh.scaling.set(1, 1, 1);
-        mergedMesh.thinInstanceRegisterAttribute('matrix', 16);
-        mergedMesh.thinInstanceRegisterAttribute('thinInstanceIndex', 2);
-        mergedMesh.thinInstanceRegisterAttribute(
-          'bakedVertexAnimationSettingsInstanced',
-          4,
-        );
-
+        mergedMesh.thinInstanceRegisterAttribute("matrix", 16);
         const mat = mergedMesh.material;
         if (!mat) {
           console.warn(`[EntityCache] Mesh ${mergedMesh.name} has no material`);
@@ -466,12 +457,12 @@ export class EntityCache {
         mergedMesh.material = shaderMaterial!;
         mergedMesh.parent = bucket;
 
-        setTimeout(() => {
-          container.skeletons.forEach((skeleton) => {
-            skeleton.dispose();
-            scene.removeSkeleton(skeleton);
-          });
-        }, 2000);
+        const attachmentBoneIndices = Object.fromEntries(
+          (container.skeletons[0]?.bones ?? []).map((bone) => [
+            bone.name,
+            bone.getIndex(),
+          ]),
+        );
 
         const itemPool: Record<string, Promise<ItemContainer | null>> = {};
         const getItem = async (
@@ -479,14 +470,15 @@ export class EntityCache {
           flip: boolean = true,
         ): Promise<ItemContainer | null> => {
           itemModel = itemModel.toLowerCase();
-          if (!itemPool[itemModel]) {
-            itemPool[itemModel] = new Promise<ItemContainer | null>((res) => {
+          const itemKey = `${itemModel}:${flip ? "flipped" : "raw"}`;
+          if (!itemPool[itemKey]) {
+            itemPool[itemKey] = new Promise<ItemContainer | null>((res) => {
               ItemCache.getContainer(
                 itemModel,
                 model,
                 scene,
                 manager,
-                container.skeletons[0] || null,
+                container.skeletons[0] ?? null,
                 flip,
               )
                 .then(res)
@@ -500,33 +492,40 @@ export class EntityCache {
                 });
             });
           }
-          return itemPool[itemModel];
+          return itemPool[itemKey];
         };
 
         container.rootNodes[0].dispose();
 
         EntityCache.gameManager.addToPickingList(mergedMesh as BJS.Mesh);
 
-
         return {
           container,
           model,
           textureAttributesDirtyRef,
           getItem,
+          shadoPool,
           addThinInstance,
           removeThinInstance,
           submeshRanges,
+          attachmentBoneIndices,
           animations,
-          mesh          : mergedMesh,
-          skeleton      : container.skeletons[0],
-          manager       : manager!,
+          mesh: mergedMesh,
+          skeleton: container.skeletons[0],
+          manager: manager!,
           shaderMaterial: shaderMaterial!,
+          pickingMaterial: pickingMaterial!,
           boundingBox,
         };
       })()
         .then((c) => {
+          if (generation !== EntityCache.generation) {
+            EntityCache.disposeContainer(c);
+            return null;
+          }
           if (c) {
             EntityCache.resolvedContainers[model] = c;
+            EntityCache.activePools.add(c.shadoPool);
             return c;
           }
           delete EntityCache.containers[model];
@@ -541,30 +540,71 @@ export class EntityCache {
     return EntityCache.containers[model];
   }
 
-  public static entityInstances: Entity[] = [];
+  public static entityInstances = new Set<Entity>();
   private static renderObserver: BJS.Observer<BJS.Camera> | null = null;
+  private static cullObserver: BJS.Observer<BJS.Scene> | null = null;
+  private static observerScene: BJS.Scene | null = null;
+  private static nameplateLayer: ShadoDynamicEntityNameplateLayer | null = null;
 
   public static initialize(scene: BJS.Scene): void {
-    EntityCache.renderObserver = scene.onAfterRenderCameraObservable.add((camera) => {
-      const now = performance.now();
-      const meshes = new Set<BJS.Mesh>();
+    if (EntityCache.renderObserver) {
+      EntityCache.observerScene?.onAfterRenderCameraObservable.remove(
+        EntityCache.renderObserver,
+      );
+    }
+    if (EntityCache.cullObserver) {
+      EntityCache.observerScene?.onBeforeRenderObservable.remove(
+        EntityCache.cullObserver,
+      );
+    }
+    EntityCache.observerScene = scene;
+    EntityCache.nameplateLayer?.dispose();
+    EntityCache.nameplateLayer = new ShadoDynamicEntityNameplateLayer(scene, {
+      color: "#00ffff",
+      depthTest: true,
+      // Alpha-blended nameplates render after opaque geometry in group 0 and
+      // retain that group's depth buffer. Later groups clear depth by default.
+      renderingGroupId: 0,
+      worldScale: 1 / 32,
+    });
+    EntityCache.cullObserver = scene.onBeforeRenderObservable.add(() => {
+      const camera = scene.activeCamera;
+      if (!camera) return;
+      for (const pool of EntityCache.activePools) {
+        pool.cull(camera, 5, EntityCache.initialEntityCullDistance);
+      }
       for (const entity of EntityCache.entityInstances) {
-        if (entity.hidden) {
+        entity.applyReducedVisibility();
+      }
+    });
+    EntityCache.renderObserver = scene.onAfterRenderCameraObservable.add(() => {
+      const now = performance.now();
+      for (const entity of EntityCache.entityInstances) {
+        if (entity.lifecycleDisposed || entity.isDisposed()) {
+          EntityCache.entityInstances.delete(entity);
           continue;
         }
-        if (entity.nameplate) {
-          entity.nameplate.render(
-            camera.getViewMatrix(),
-            camera.getProjectionMatrix(),
-          );
-        }
-        for (const mesh of entity.syncMatrix()) {
-          meshes.add(mesh);
+        try {
+          entity.syncMatrix();
+        } catch (error) {
+          console.warn("[EntityCache] Entity matrix sync skipped", error);
         }
       }
-      for (const mesh of meshes) {
-        mesh?.thinInstanceBufferUpdated('matrix');
-      }
+      EntityCache.nameplateLayer?.sync(
+        [...EntityCache.entityInstances].map((entity) => ({
+          id: `${entity.spawn.name}:${(entity.spawn as Spawn).spawnId ?? "player"}`,
+          text: entity.nameplateLines.join("\n"),
+          x: entity.spawnPosition.x,
+          y: entity.spawnPosition.z,
+          z:
+            entity.spawnPosition.y +
+            (4 + entity.nameplateLines.length * 1.5) * entity.spawnScale,
+          visible:
+            !entity.hidden &&
+            !entity.lifecycleDisposed &&
+            Boolean(entity.meshInstance?.actor.visibleFlag),
+        })),
+      );
       const delta = performance.now() - now;
       (window as any).perf = delta;
       // console.log('Delta for entity sync:', delta, 'ms');
@@ -579,6 +619,7 @@ export class EntityCache {
     spawn: Spawn | PlayerProfile,
     scene: BJS.Scene,
     parentNode?: BJS.Node,
+    itemResolver?: (slot: number) => NullableItemInstance,
   ): Promise<Entity | null> {
     const race = spawn.race ?? 1;
     const entry = RACE_DATA[race] ?? RACE_DATA[Races.HUMAN];
@@ -596,9 +637,22 @@ export class EntityCache {
       this,
       parentNode!,
       entry,
+      itemResolver,
     );
-    EntityCache.entityInstances.push(entity);
+    try {
+      await entity.ready;
+    } catch (error) {
+      // setup() acquires a Shado/thin-instance slot before loading optional
+      // appearance assets. Never leave a visible, unregistered partial entity.
+      entity.dispose();
+      throw error;
+    }
+    EntityCache.entityInstances.add(entity);
     return entity;
+  }
+
+  public static unregister(entity: Entity): void {
+    EntityCache.entityInstances.delete(entity);
   }
 
   public static dispose(model: ModelKey): void {
@@ -606,12 +660,25 @@ export class EntityCache {
   }
 
   public static disposeAll(scene: BJS.Scene): void {
+    EntityCache.generation++;
+    for (const entity of [...EntityCache.entityInstances]) entity.dispose();
+    EntityCache.entityInstances.clear();
     Entity.disposeStatics();
     if (EntityCache.renderObserver) {
-      scene.onAfterCameraRenderObservable.remove(EntityCache.renderObserver);
+      EntityCache.observerScene?.onAfterRenderCameraObservable.remove(
+        EntityCache.renderObserver,
+      );
       EntityCache.renderObserver = null;
     }
+    if (EntityCache.cullObserver) {
+      EntityCache.observerScene?.onBeforeRenderObservable.remove(
+        EntityCache.cullObserver,
+      );
+      EntityCache.cullObserver = null;
+    }
+    EntityCache.observerScene = null;
     EntityCache.commonBasisAtlasLoaded = false;
+    EntityCache.commonBasisAtlasPromise = null;
     for (const key in EntityCache.commonBasisAtlas) {
       const atlas = EntityCache.commonBasisAtlas[key];
       if (atlas.texture) {
@@ -619,24 +686,89 @@ export class EntityCache {
       }
     }
     EntityCache.commonBasisAtlas = {};
+    EntityCache.nameplateLayer?.dispose();
+    EntityCache.nameplateLayer = null;
     Object.keys(EntityCache.resolvedContainers).forEach((m) => {
       const c = EntityCache.resolvedContainers[m];
       if (!c) {
         return;
       }
-      c.container.dispose();
-      c.manager?.dispose();
-      c.shaderMaterial?.dispose(true, true);
-      c.mesh.dispose();
+      EntityCache.disposeContainer(c);
+      delete EntityCache.resolvedContainers[m];
     });
     Object.keys(EntityCache.containers).forEach((m) => {
       delete EntityCache.containers[m];
     });
     Entity.instantiateStatics(scene);
+    EntityCache.resolvedContainers = {};
+    EntityCache.activePools.clear();
+  }
+
+  private static disposeContainer(c: EntityContainer | null): void {
+    if (!c) return;
+    EntityCache.activePools.delete(c.shadoPool);
+    c.manager?.dispose();
+    c.shadoPool.dispose();
+    c.shaderMaterial?.dispose(true, true);
+    c.pickingMaterial?.dispose(true, true);
+    if (!c.mesh.isDisposed()) c.mesh.dispose();
+    c.container.dispose();
+  }
+
+  private static async loadCommonBasisAtlas(
+    scene: BJS.Scene,
+    generation: number,
+  ): Promise<void> {
+    const loaded: Record<string, BasisAtlas> = {};
+    let published = false;
+    try {
+      for (const entry of ["clk", "helm"]) {
+        const bytes = await FileSystem.getFileBytes(
+          "eqrequiem/basis",
+          `${entry}.basis`,
+        );
+        if (!bytes) {
+          throw new Error(`Common basis texture missing for ${entry}`);
+        }
+        const { data, layerCount, format } = await loadBasisTexture(
+          scene.getEngine(),
+          bytes,
+        );
+        const texture = new BABYLON.RawTexture2DArray(
+          null,
+          128,
+          128,
+          layerCount,
+          format,
+          scene,
+          false,
+          false,
+          BABYLON.Constants.TEXTURE_TRILINEAR_SAMPLINGMODE,
+        );
+        texture.update(data);
+        const atlas =
+          (await FileSystem.getFileJSON<string[]>(
+            "eqrequiem/basis",
+            `${entry}.json`,
+          )) ?? [];
+        if (!atlas.length) {
+          texture.dispose();
+          throw new Error(`Common basis atlas missing for ${entry}`);
+        }
+        loaded[entry] = { texture, atlas };
+      }
+      if (generation !== EntityCache.generation) return;
+      EntityCache.commonBasisAtlas = loaded;
+      EntityCache.commonBasisAtlasLoaded = true;
+      published = true;
+    } finally {
+      if (!published) {
+        for (const entry of Object.values(loaded)) entry.texture.dispose();
+      }
+    }
   }
 }
 
 export default EntityCache;
-
 
 (window as any).ec = EntityCache;

@@ -5,6 +5,11 @@
   "description": "EQ Requiem",
   "main": "eslint.config.js",
   "scripts": {
+    "db:promote": "npm --prefix serverjs run db:promote",
+    "net:generate": "npm --prefix serverjs run net:generate",
+    "net:check": "npm --prefix serverjs run net:check",
+    "wasm:build": "npm --prefix serverjs run wasm:build",
+    "libra:dev": "npm --prefix serverjs run libra:dev",
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix"
@@ -30,7 +35,6 @@
     "@types/react-dom": "^19.0.4",
     "@typescript-eslint/eslint-plugin": "^8.36.0",
     "@typescript-eslint/parser": "^8.36.0",
-    "capnp-es": "^0.0.9",
     "eslint": "^9.23.0",
     "eslint-plugin-import": "^2.32.0",
     "eslint-plugin-react": "^7.37.5",
