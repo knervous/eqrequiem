@@ -111,7 +111,7 @@
     "serve-static": "^1.16.2",
     "sharp": "^0.34.1",
     "sharp-bmp": "^0.1.5",
-    "typescript": "~5.7.2",
+    "typescript": "^7.0.2",
     "typescript-eslint": "^8.24.1",
     "vercel": "^41.4.1",
     "vite": "npm:rolldown-vite@latest",
