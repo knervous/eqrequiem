@@ -324,7 +324,11 @@ await fs.writeJson(
 );
 
 const atlasPng = path.join(buildRoot, `${materialName}.png`);
-const sourceTexture = root.listTextures()[0]?.getImage();
+// Select by semantic role (baseColorTexture), not array position: texture
+// export order isn't guaranteed to put baseColor first, and a Blender
+// re-export can reorder textures so listTextures()[0] silently picks up the
+// normal map or another channel instead.
+const sourceTexture = material.getBaseColorTexture()?.getImage();
 if (sourceTexture) {
   await sharp(sourceTexture)
     .resize({ width: 512, height: 512, fit: "fill" })
