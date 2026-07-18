@@ -1,5 +1,6 @@
 import { FontAsset } from '@babylonjs/addons/msdfText/fontAsset';
 import { ShadoInstanceContainer, TestClass, VERSION } from 'shader-object';
+import { BABYLON as SHADO_BABYLON } from 'shader-object/babylon';
 import { createMsdfNameplateLayer, NameplateData } from 'shader-object/msdf';
 import {
   deserializeShadoModel,
@@ -81,6 +82,38 @@ type LoadedPool = {
   nameplateLayer: BABYLON.Mesh;
 };
 
+/**
+ * The Babylon Playground supplies BABYLON as a global, while npm dependencies
+ * receive Babylon's ESM namespace. Generated shaders must be visible in both
+ * stores or the global engine treats their names as external .fx file paths.
+ */
+function syncBabylonShaderStores(): void {
+  const globalEffect = BABYLON.Effect as unknown as Record<string, Record<string, string>>;
+  const shadoEffect = SHADO_BABYLON.Effect as unknown as Record<string, Record<string, string>>;
+  for (const key of ['ShadersStore', 'IncludesShadersStore']) {
+    if (globalEffect[key] && shadoEffect[key]) {
+      Object.assign(globalEffect[key], shadoEffect[key]);
+    }
+  }
+
+  const globalStore = (
+    BABYLON as unknown as { ShaderStore?: Record<string, Record<string, string>> }
+  ).ShaderStore;
+  const shadoStore = (
+    SHADO_BABYLON as unknown as { ShaderStore?: Record<string, Record<string, string>> }
+  ).ShaderStore;
+  for (const key of [
+    'ShadersStore',
+    'IncludesShadersStore',
+    'ShadersStoreWGSL',
+    'IncludesShadersStoreWGSL',
+  ]) {
+    if (globalStore?.[key] && shadoStore?.[key]) {
+      Object.assign(globalStore[key], shadoStore[key]);
+    }
+  }
+}
+
 class Playground {
   public static CreateScene(engine: BABYLON.Engine, canvas: HTMLCanvasElement): BABYLON.Scene {
     const scene = new BABYLON.Scene(engine);
@@ -135,6 +168,7 @@ class Playground {
       extra: TestClass,
     });
     await NameplateData.initialize(engine, { wasm: false });
+    syncBabylonShaderStores();
 
     const [barbarian, arachnid] = await Promise.all([
       Playground.LoadPool(scene, engine, fontAsset, 'barbarian'),
@@ -214,6 +248,10 @@ class Playground {
     const nameplates = new NameplateData(engine, fontAsset);
     const container = new ShadoInstanceContainer<TestClass>(engine);
     container.nameplates = nameplates;
+    // Register this container's instance-specific shader names, then mirror
+    // them into the Playground's global Babylon store before material compile.
+    container.getShaderNames();
+    syncBabylonShaderStores();
     await container.attachMeshes(scene, meshes, skeleton, {
       merge: modelName === 'barbarian',
       replaceMaterial: true,
@@ -239,6 +277,7 @@ class Playground {
       thickness: 0.02,
       depthTest: true,
     });
+    syncBabylonShaderStores();
     return { container, nameplates, nameplateLayer };
   }
 

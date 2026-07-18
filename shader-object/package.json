@@ -1,6 +1,6 @@
 {
   "name": "shader-object",
-  "version": "8.0.0",
+  "version": "1.0.3",
   "description": "Packed GPU struct schemas + Babylon include emitters with optional AssemblyScript kernels",
   "license": "MIT",
   "author": "knervous",
