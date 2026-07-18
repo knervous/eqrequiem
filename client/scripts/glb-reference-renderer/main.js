@@ -165,6 +165,11 @@ async function run() {
     entries.push({ containers, root, meshes, bounds, spec, poses, edgeBaselines })
   }
 
+  // TEMP diagnostic hook — revert before committing.
+  window.__REFERENCE_SCENE__ = scene
+  window.__REFERENCE_ENTRIES__ = entries
+  window.BABYLON = BABYLON
+
   const maxHeight = Math.max(...entries.map(({ bounds }) => bounds.max.y - bounds.min.y))
   const gap = maxHeight * 0.16
   const horizontalAxis = frontAxis.endsWith('x') ? 'z' : 'x'

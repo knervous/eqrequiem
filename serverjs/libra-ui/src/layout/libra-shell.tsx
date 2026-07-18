@@ -1,4 +1,4 @@
-import { Boxes, Database, FileCheck2, LayoutDashboard, Map, PencilRuler, UsersRound } from 'lucide-react'
+import { Boxes, Cuboid, Database, FileCheck2, LayoutDashboard, Map, PencilRuler, UsersRound } from 'lucide-react'
 import { Link, NavLink, Outlet } from 'react-router-dom'
 
 import { Badge } from '@/components/ui/badge'
@@ -8,6 +8,7 @@ const navItems = [
   { to: '/', label: 'Overview', icon: LayoutDashboard },
   { to: '/zones', label: 'Zones', icon: Map },
   { to: '/npcs', label: 'NPCs & Spawns', icon: UsersRound },
+  { to: '/models', label: 'Model Viewer', icon: Cuboid },
   { to: '/editor', label: 'Content Editor', icon: PencilRuler },
   { to: '/validation', label: 'Validation', icon: FileCheck2 },
   { to: '/releases', label: 'Releases', icon: Database },

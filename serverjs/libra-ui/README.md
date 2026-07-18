@@ -39,3 +39,21 @@ Copy `.env.example` to `.env` and set values as needed.
 By default, dev mode proxies `/libra/*` to `http://127.0.0.1:8082`. Shard and quest
 controls require the full backend; content tables, zones, NPCs, validation, and CRUD
 operate in standalone SQLite mode.
+
+## Model viewer
+
+Open `/models` to validate the installed Requiem character bundle through the
+shared Shado/VAT rendering path. The development server serves the checked-in
+`client/public/eqrequiem` assets. Set `VITE_REQUIEM_ASSET_BASE` only when the
+runtime bundle is hosted elsewhere.
+
+The current `hum` and `huf` entries are painted PBR manual candidates. Libra
+uses their baked Shado mesh, VAT animation data, and painted runtime atlas; the
+full-resolution PBR GLBs and normal/ORM maps remain under each source model's
+`eqref` directory for material inspection.
+
+Run the model contract tests from the repository root with:
+
+```bash
+npm run libra:model:test
+```

@@ -4,11 +4,18 @@ import react from '@vitejs/plugin-react'
 
 // https://vite.dev/config/
 export default defineConfig({
+  publicDir: path.resolve(new URL('.', import.meta.url).pathname, '../../client/public'),
   plugins: [react()],
   resolve: {
+    dedupe: ['@babylonjs/core', 'shader-object'],
     alias: {
       '@': path.resolve(new URL('.', import.meta.url).pathname, './src'),
+      '@game': path.resolve(new URL('.', import.meta.url).pathname, '../../client/src/Game'),
+      '@requiem': path.resolve(new URL('.', import.meta.url).pathname, '../../client/src'),
     },
+  },
+  optimizeDeps: {
+    exclude: ['shader-object'],
   },
   server: {
     proxy: {

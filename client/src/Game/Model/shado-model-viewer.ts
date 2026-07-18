@@ -27,6 +27,7 @@ export type ShadoModelViewer = {
   setBodyVisible: (visible: boolean) => void;
   setWireframe: (enabled: boolean) => void;
   setBackFaceCulling: (enabled: boolean) => void;
+  setSkeletonViewer: (enabled: boolean, displayMode?: "lines" | "spheres") => void;
   resetCamera: () => void;
   dispose: () => void;
 };
@@ -264,10 +265,32 @@ export async function createShadoModelViewer(
   window.addEventListener("resize", resize);
   options.onStatus?.("Live Shado/VAT render");
 
+  let skeletonViewer: BJS.SkeletonViewer | null = null;
+
   return {
     animations,
     mesh: mergedMesh,
     playAnimation,
+    setSkeletonViewer: (enabled, displayMode = "lines") => {
+      // The Shado/VAT runtime drives visible vertex positions entirely in the
+      // vertex shader from the baked animation texture; the mesh's Babylon
+      // skeleton is never touched after import, so this always shows bind
+      // (rest) pose, not whatever clip is currently playing. That's still
+      // the right tool for checking joint-to-mesh fit, which is a bind-pose
+      // property — it just can't show mid-animation deformation.
+      skeletonViewer?.dispose();
+      skeletonViewer = null;
+      if (!enabled) return;
+      const skeleton = mergedMesh.skeleton;
+      if (!skeleton) return;
+      skeletonViewer = new BABYLON.SkeletonViewer(skeleton, mergedMesh, scene, false, 3, {
+        displayMode: displayMode === "spheres"
+          ? BABYLON.SkeletonViewer.DISPLAY_SPHERE_AND_SPURS
+          : BABYLON.SkeletonViewer.DISPLAY_LINES,
+      });
+      skeletonViewer.isEnabled = true;
+      skeletonViewer.color = new BABYLON.Color3(1, 0.1, 0.1);
+    },
     setTint: ([r, g, b]) => {
       shadoPool.setAppearance(index, 0, 1, 0, r, g, b);
       shadoPool.commit();
@@ -286,6 +309,7 @@ export async function createShadoModelViewer(
     dispose: () => {
       window.removeEventListener("resize", resize);
       engine.stopRenderLoop();
+      skeletonViewer?.dispose();
       shadoPool.dispose();
       scene.dispose();
       engine.dispose();

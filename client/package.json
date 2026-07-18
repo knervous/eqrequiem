@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "net:generate": "npm --prefix ../serverjs run net:generate",
-    "net:check": "npm --prefix ../serverjs run net:check",
+    "net:check": "node scripts/check-net-structs-sync.mjs",
     "prebuild": "npm run net:check",
     "sage:dev": "cross-env VITE_USE_SAGE=true VITE_LOCAL_DEV=true vite",
     "v": "vercel dev",
