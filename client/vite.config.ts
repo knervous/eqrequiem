@@ -183,9 +183,6 @@ export default defineConfig({
     exclude: isLocalDev
       ? ["@babylonjs/havok", "@sqlite.org/sqlite-wasm", "sage-core"]
       : ["@babylonjs/havok", "@sqlite.org/sqlite-wasm"],
-    esbuildOptions: {
-      target: "chrome90",
-    },
   },
   build: {
     target: "chrome90",

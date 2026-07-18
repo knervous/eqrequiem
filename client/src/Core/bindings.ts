@@ -2,6 +2,7 @@ import { Dispatch } from 'react';
 import { USE_SAGE } from '@game/Constants/constants';
 import * as Comlink from 'comlink';
 import JSZip from 'jszip';
+import Pako from 'pako';
 import { setGlobals } from 'sage-core/globals';
 import { EQFileHandle } from 'sage-core/model/file-handle';
 import {
@@ -44,7 +45,21 @@ type CacheEntry = {
 
 const baseUrl = 'https://eqrequiem.blob.core.windows.net/requiem';
 const zippedPrefixes = ['eqrequiem/textures'];
-const REQUIEM_FILE_VERSION = '1.1.24';
+const bundledAssetPaths = new Set([
+  'eqrequiem/babylon/hum.babylon.gz',
+  'eqrequiem/basis/hum.basis',
+  'eqrequiem/basis/hum.json',
+  'eqrequiem/vat/hum.bin.gz',
+  'eqrequiem/vat/hum_32.bin.gz',
+  'eqrequiem/vat/hum.json',
+  'eqrequiem/babylon/huf.babylon.gz',
+  'eqrequiem/basis/huf.basis',
+  'eqrequiem/basis/huf.json',
+  'eqrequiem/vat/huf.bin.gz',
+  'eqrequiem/vat/huf_32.bin.gz',
+  'eqrequiem/vat/huf.json',
+]);
+const REQUIEM_FILE_VERSION = '1.1.29';
 
 function selectMinimalFiles(candidateArrays: number[][]): number[] {
   let remaining = candidateArrays.slice();
@@ -452,7 +467,11 @@ class FileSystemBindings {
     }
   
     // Non-zipped file fetch
-    let normalizedPath = `${baseUrl}/${folderPath}/${fileName}`
+    const assetPath = `${folderPath}/${fileName}`.toLowerCase();
+    const assetBaseUrl = bundledAssetPaths.has(assetPath)
+      ? import.meta.env.BASE_URL
+      : `${baseUrl}/`;
+    let normalizedPath = `${assetBaseUrl}${assetPath}`
       .replace(/\/+/g, '/')
       .replace(/^https:\/+/, 'https://')
       .toLowerCase();
@@ -482,7 +501,18 @@ class FileSystemBindings {
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-        const buffer = new Uint8Array(await response.arrayBuffer());
+        let buffer = new Uint8Array(await response.arrayBuffer());
+        if (
+          bundledAssetPaths.has(assetPath) &&
+          assetPath.endsWith('.gz') &&
+          buffer[0] === 0x1f &&
+          buffer[1] === 0x8b
+        ) {
+          // Azure marks legacy .gz blobs with Content-Encoding, so browsers
+          // transparently decompress them. Vite/static hosts do not, so make
+          // bundled replacement assets obey the same FileSystem contract.
+          buffer = Pako.ungzip(buffer);
+        }
         await writeRootEQFile(folderPath, fileName, buffer);
         return buffer.buffer;
       } catch (e) {

@@ -56,3 +56,46 @@ export function encodeGpuFloatUpload(
 
   return out;
 }
+
+/**
+ * Encode one float subrange [startF, endF) of the arena into a persistent
+ * GPU-ready mirror: copy the raw floats, then re-run integer-field encoding
+ * for exactly the header/struct records that intersect the range. This keeps
+ * upload preparation proportional to changed bytes rather than arena size.
+ */
+export function encodeGpuFloatUploadRange(
+  schema: StructSchema,
+  owner: any,
+  payload: Float32Array,
+  mirror: Float32Array,
+  startF: number,
+  endF: number
+): void {
+  const clampedStart = Math.max(0, startF | 0);
+  const clampedEnd = Math.min(payload.length, endF | 0);
+  if (clampedEnd <= clampedStart) return;
+  mirror.set(payload.subarray(clampedStart, clampedEnd), clampedStart);
+
+  const dataView = owner.arena.dataView();
+  const headerBase = owner._headerSeg.offF | 0;
+  const headerCount = (schema.headerFloatCount ?? 0) | 0;
+  if (headerBase < clampedEnd && headerBase + headerCount > clampedStart) {
+    encodeIntegerFields(mirror, dataView, headerBase, schema.fields);
+  }
+
+  for (const [field, meta] of Object.entries(schema.structArrays ?? {})) {
+    const seg = owner._structSeg[field] as Segment | undefined;
+    const count = (owner._structArrayCount?.[field] as number) | 0;
+    if (!seg || count <= 0) continue;
+
+    const childSchema = meta.schema;
+    const stride = (childSchema.headerFloatCount ?? 0) | 0;
+    if (stride <= 0) continue;
+    const base = seg.offF | 0;
+    const first = Math.max(0, Math.floor((clampedStart - base) / stride));
+    const last = Math.min(count - 1, Math.floor((clampedEnd - 1 - base) / stride));
+    for (let i = first; i <= last; i++) {
+      encodeIntegerFields(mirror, dataView, base + i * stride, childSchema.fields);
+    }
+  }
+}

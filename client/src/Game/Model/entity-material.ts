@@ -1,7 +1,7 @@
+import * as BABYLON from "@babylonjs/core";
 import type * as BJS from "@babylonjs/core";
-import BABYLON from "@bjs";
 import { RequiemEntityContainer } from "./shado-entity-pool";
-import { EntityMeshMetadata } from "./entity-types";
+import type { EntityMeshMetadata } from "./entity-types";
 import type { ShadoEntityPool } from "./shado-entity-pool";
 
 const VS_GL = `

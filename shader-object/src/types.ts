@@ -32,9 +32,24 @@ export type InitializeConfig = {
   extra?: any;
 };
 
+export interface GPUUploadStats {
+  /** Discrete GPU upload calls issued by the last commit. */
+  uploadCalls: number;
+  /** Bytes handed to the GPU by the last commit. */
+  uploadedBytes: number;
+  /** Bytes re-encoded (integer conversion) by the last commit. */
+  encodedBytes: number;
+}
+
+export const EMPTY_UPLOAD_STATS: GPUUploadStats = Object.freeze({
+  uploadCalls: 0,
+  uploadedBytes: 0,
+  encodedBytes: 0,
+});
+
 export interface GPUBacking {
   kind: BackendKind;
-  commit(): void;
+  commit(): GPUUploadStats;
   bind(effect: any, includeName: string): void;
   bindMaterial?(material: any, includeName: string): void;
   dispose(): void;

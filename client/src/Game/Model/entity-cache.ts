@@ -69,6 +69,7 @@ export type AnimationEntry = {
   from: number;
   to: number;
   name: string;
+  fps?: number;
 };
 
 export type BasisAtlas = {
@@ -221,14 +222,14 @@ export class EntityCache {
           console.warn(`[EntityCache] Basis texture missing for ${model}`);
           return null;
         }
-        const { data, layerCount, format } = await loadBasisTexture(
+        const { data, layerCount, format, width, height } = await loadBasisTexture(
           scene.getEngine(),
           basisBytes,
         );
         const textureArray = new BABYLON.RawTexture2DArray(
           null,
-          128,
-          128,
+          width,
+          height,
           layerCount,
           format,
           scene,
@@ -264,7 +265,7 @@ export class EntityCache {
         );
 
         // Gather animations
-        let animations: BJS.AnimationRange[] = [];
+        let animations: AnimationEntry[] = [];
         const infoNode = (root as any).getChildTransformNodes()?.[0];
         const boundingBox =
           infoNode?.metadata?.gltf?.extras?.boundingBox ?? null;
@@ -273,7 +274,10 @@ export class EntityCache {
           `${model}.json`,
         )) as any;
         if (json) {
-          animations = json.animations as BJS.AnimationRange[];
+          animations = (json.animations as AnimationEntry[]).map((animation) => ({
+            ...animation,
+            fps: animation.fps ?? json.fps ?? 60,
+          }));
         } else {
           const ranges =
             infoNode?.metadata?.gltf?.extras?.animationRanges ?? [];
@@ -300,7 +304,12 @@ export class EntityCache {
           mesh.metadata ??= {};
           mesh.computeWorldMatrix(true);
           mesh.bakeTransformIntoVertices(mesh.getWorldMatrix());
-          mesh.flipFaces(true);
+          // The legacy S3D -> Babylon exports use the opposite winding and
+          // still need this compatibility flip. Modern GLB-derived bundles
+          // declare that their loader-normalized winding must be preserved.
+          if (!mesh.metadata.gltf?.extras?.preserveRuntimeWinding) {
+            mesh.flipFaces(true);
+          }
           const { model, variation, texNum } = mesh.metadata.gltf.extras as any;
           let piece = mesh.metadata.gltf.extras.piece?.toLowerCase() ?? "";
           let atlasIndex = 0;
@@ -463,6 +472,16 @@ export class EntityCache {
             bone.getIndex(),
           ]),
         );
+        if (model === "hum" || model === "huf") {
+          attachmentBoneIndices.r_point ??=
+            attachmentBoneIndices["socket_hand.R"];
+          attachmentBoneIndices.l_point ??=
+            attachmentBoneIndices["socket_hand.L"];
+          attachmentBoneIndices.shield_point ??=
+            attachmentBoneIndices["socket_hand.L"];
+          attachmentBoneIndices.head_point ??=
+            attachmentBoneIndices.socket_head;
+        }
 
         const itemPool: Record<string, Promise<ItemContainer | null>> = {};
         const getItem = async (
@@ -730,14 +749,14 @@ export class EntityCache {
         if (!bytes) {
           throw new Error(`Common basis texture missing for ${entry}`);
         }
-        const { data, layerCount, format } = await loadBasisTexture(
+        const { data, layerCount, format, width, height } = await loadBasisTexture(
           scene.getEngine(),
           bytes,
         );
         const texture = new BABYLON.RawTexture2DArray(
           null,
-          128,
-          128,
+          width,
+          height,
           layerCount,
           format,
           scene,

@@ -16,6 +16,8 @@ type BasisTextureResult = {
     useGPUCompression: boolean;
     data: Uint8Array;
     format: number; // BABYLON.Constants.TEXTUREFORMAT_RGBA or glInternalFormat
+    width: number;
+    height: number;
 };
 
 export async function loadBasisTexture(
@@ -130,6 +132,8 @@ export async function loadBasisTexture(
     useGPUCompression,
     data,
     format: useGPUCompression ? glInternalFormat : BABYLON.Constants.TEXTUREFORMAT_RGBA,
+    width: images[0].levels[0].width,
+    height: images[0].levels[0].height,
   };
 }
 

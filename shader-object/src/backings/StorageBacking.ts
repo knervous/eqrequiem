@@ -1,6 +1,6 @@
 import { BABYLON } from '../babylon';
-import type { BackendKind, GPUBacking, Segment } from '../types';
-import { encodeGpuFloatUpload } from './encodeGpuFloatUpload';
+import { EMPTY_UPLOAD_STATS, type BackendKind, type GPUBacking, type GPUUploadStats, type Segment } from '../types';
+import { encodeGpuFloatUploadRange } from './encodeGpuFloatUpload';
 
 export class StorageBacking implements GPUBacking {
   public kind: BackendKind = 'storage';
@@ -9,8 +9,13 @@ export class StorageBacking implements GPUBacking {
 
   private paramsBuf?: any;
   private paramsCapBytes = 0;
+  private paramsDirty = true;
 
   private paramsScratch = new Int32Array(64);
+
+  /** Persistent GPU-encoded mirror of the arena; uploaded by subrange. */
+  private mirror?: Float32Array;
+  private lastStats: GPUUploadStats = EMPTY_UPLOAD_STATS;
 
   constructor(
     private engine: any,
@@ -18,18 +23,63 @@ export class StorageBacking implements GPUBacking {
     private owner: any
   ) {}
 
-  commit() {
-    const payload = encodeGpuFloatUpload(this.schema, this.owner, this.owner.prepareUnifiedForUpload());
-    if (!payload) return;
-    const needBytes = Math.max(16, payload.byteLength);
-    const RW = BABYLON.Constants.BUFFER_CREATIONFLAG_READWRITE;
+  /** Overridable for tests; production returns a Babylon storage buffer. */
+  protected makeBuffer(byteLength: number): any {
+    return new BABYLON.StorageBuffer(
+      this.engine,
+      byteLength,
+      BABYLON.Constants.BUFFER_CREATIONFLAG_READWRITE
+    );
+  }
 
+  commit(): GPUUploadStats {
+    const arena = this.owner.arena ?? this.owner._arena;
+    const payload: Float32Array = this.owner.prepareUnifiedForUpload();
+    if (!payload) return (this.lastStats = EMPTY_UPLOAD_STATS);
+    const needBytes = Math.max(16, payload.byteLength);
+
+    let structuralUpload = false;
     if (!this.buf || this.bufCapBytes < needBytes) {
       this.buf?.dispose?.();
-      this.buf = new BABYLON.StorageBuffer(this.engine, needBytes, RW);
+      this.buf = this.makeBuffer(needBytes);
       this.bufCapBytes = needBytes;
+      structuralUpload = true;
     }
-    this.buf.update(payload);
+    if (!this.mirror || this.mirror.length !== payload.length) {
+      this.mirror = new Float32Array(payload.length);
+      structuralUpload = true;
+    }
+
+    if (!structuralUpload && !arena?.isDirty?.()) {
+      return (this.lastStats = EMPTY_UPLOAD_STATS);
+    }
+
+    const ranges = structuralUpload
+      ? [{ start: 0, end: payload.byteLength }]
+      : (arena?.consumeDirtyRanges?.() ?? [{ start: 0, end: payload.byteLength }]);
+    if (structuralUpload) arena?.markClean?.();
+
+    let uploadCalls = 0;
+    let uploadedBytes = 0;
+    let encodedBytes = 0;
+    for (const range of ranges) {
+      // Keep offsets/lengths four-byte aligned float ranges.
+      const startF = range.start >>> 2;
+      const endF = Math.min(payload.length, (range.end + 3) >>> 2);
+      if (endF <= startF) continue;
+      encodeGpuFloatUploadRange(this.schema, this.owner, payload, this.mirror, startF, endF);
+      const bytes = (endF - startF) * 4;
+      this.buf.update(this.mirror.subarray(startF, endF), startF * 4);
+      uploadCalls++;
+      uploadedBytes += bytes;
+      encodedBytes += bytes;
+    }
+    if (uploadCalls > 0) this.paramsDirty = true;
+    return (this.lastStats = { uploadCalls, uploadedBytes, encodedBytes });
+  }
+
+  public getLastUploadStats(): GPUUploadStats {
+    return this.lastStats;
   }
 
   private buildParams(): Int32Array {
@@ -81,15 +131,15 @@ export class StorageBacking implements GPUBacking {
 
     const params = this.buildParams();
     const needBytes = Math.max(16, params.byteLength);
-    const RW = BABYLON.Constants.BUFFER_CREATIONFLAG_READWRITE;
     if (!this.paramsBuf || this.paramsCapBytes < needBytes) {
       this.paramsBuf?.dispose?.();
-      this.paramsBuf = new BABYLON.StorageBuffer(this.engine, needBytes, RW);
+      this.paramsBuf = this.makeBuffer(needBytes);
       this.paramsCapBytes = needBytes;
+      this.paramsDirty = true;
     }
-    if ((this as any).owner._arena?.isDirty()) {
+    if (this.paramsDirty) {
       this.paramsBuf.update(params);
-      (this as any).owner._arena?.markClean();
+      this.paramsDirty = false;
     }
     if (typeof target.setStorageBuffer === 'function') {
       target.setStorageBuffer(`${lname}Params`, this.paramsBuf);
@@ -105,5 +155,6 @@ export class StorageBacking implements GPUBacking {
     this.paramsBuf?.dispose?.();
     this.paramsBuf = undefined;
     this.paramsCapBytes = 0;
+    this.mirror = undefined;
   }
 }

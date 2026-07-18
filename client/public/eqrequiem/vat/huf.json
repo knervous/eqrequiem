@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "fps": 30,
+  "animations": [
+    {
+      "name": "Idle",
+      "from": 0,
+      "to": 120,
+      "fps": 30
+    },
+    {
+      "name": "Run",
+      "from": 121,
+      "to": 145,
+      "fps": 30
+    },
+    {
+      "name": "Walk",
+      "from": 146,
+      "to": 179,
+      "fps": 30
+    }
+  ]
+}

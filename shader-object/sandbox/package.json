@@ -5,9 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsgo -b && vite build",
+    "build": "tsc -b && vite build",
     "start": "vite",
-    "lint": "eslint .",
+    "lint": "oxlint src --tsconfig tsconfig.app.json --react-plugin --import-plugin --deny-warnings --report-unused-disable-directives",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -30,19 +30,13 @@
     "usehooks-ts": "^3.1.1"
   },
   "devDependencies": {
-    "@eslint/js": "^10.0.1",
     "@types/gl": "^6.0.5",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
-    "@typescript/native-preview": "7.0.0-dev.20260430.1",
-    "@vitejs/plugin-react-swc": "^4.3.0",
-    "eslint": "^10.2.1",
-    "eslint-plugin-react-hooks": "^7.1.1",
-    "eslint-plugin-react-refresh": "^0.5.2",
+    "@vitejs/plugin-react-swc": "^4.3.1",
     "gl": "^8.1.6",
-    "globals": "^17.5.0",
-    "typescript": "^6.0.3",
-    "typescript-eslint": "^8.59.1",
-    "vite": "^8.0.10"
+    "oxlint": "^1.74.0",
+    "typescript": "^7.0.2",
+    "vite": "^8.1.4"
   }
 }

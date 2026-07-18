@@ -59,6 +59,8 @@ export class ShadoDynamicEntityRenderer {
   private readonly originalRender: Mesh['render'];
   private pickingHandle?: ShadoPickingHandle;
   private loggedFirstDraw = false;
+  /** Instances submitted by this variant's last draw, for instrumentation. */
+  public lastSubmittedInstances = 0;
 
   public constructor(
     scene: Scene,
@@ -86,6 +88,7 @@ export class ShadoDynamicEntityRenderer {
     const uniforms = [
       'worldViewProjection',
       'uShadoEntityMeshIndex',
+      'uShadoDrawOffset',
       'uUseShadoEntityMeshTexture',
       ...shaderIo.uniforms,
     ];
@@ -125,7 +128,9 @@ export class ShadoDynamicEntityRenderer {
 
     this.originalRender = this.mesh.render.bind(this.mesh);
     this.mesh.render = (subMesh: any, enableAlphaMode: boolean): any => {
-      this.container.commit();
+      // Frame-owned synchronization: the first variant renderer in a frame
+      // performs the (dirty-guarded) upload; the rest are no-ops.
+      this.container.syncGpu((this.engine as any).frameId ?? 0);
       this.container.bindMaterial(this.material);
       this.material.setTexture('uShadoEntityAtlas', this.atlas.texture);
       this.material.setTexture('uShadoEntityMeshTexture', meshTexture);
@@ -144,7 +149,9 @@ export class ShadoDynamicEntityRenderer {
         return this.mesh;
       }
 
-      const drawCount = this.container.drawCount | 0;
+      // Only this variant's contiguous draw-ID range is submitted, so total
+      // instances across variants equal visible entities.
+      const { offset: drawOffset, count: drawCount } = this.container.getMeshDrawRange(meshIndex);
       if (drawCount <= 0) return this.mesh;
 
       const effect = subMesh.effect ?? this.material.getEffect();
@@ -173,6 +180,7 @@ export class ShadoDynamicEntityRenderer {
       );
       if (billboard) effect.setMatrix('view', this.scene.getViewMatrix());
       effect.setFloat('uShadoEntityMeshIndex', meshIndex);
+      effect.setFloat('uShadoDrawOffset', drawOffset);
       effect.setFloat('uUseShadoEntityMeshTexture', options.meshTexture ? 1 : 0);
       this.mesh._bind(subMesh, effect, BABYLON.Material.TriangleFillMode);
 
@@ -180,6 +188,7 @@ export class ShadoDynamicEntityRenderer {
       effect.setTexture('uShadoEntityAtlas', this.atlas.texture);
       effect.setTexture('uShadoEntityMeshTexture', meshTexture);
       (this.mesh as any)._draw(subMesh, BABYLON.Material.TriangleFillMode, drawCount);
+      this.lastSubmittedInstances = drawCount;
       this.material.unbind();
 
       if (options.log && !this.loggedFirstDraw) {

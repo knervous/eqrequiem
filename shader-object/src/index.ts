@@ -1,6 +1,7 @@
 export * from './types';
 export * from './decorators';
 export * from './arena/FloatArena';
+export * from './arena/DirtyPageTracker';
 export * from './arena/ByteArena';
 export * from './schema/ShadoSchemaBuilder';
 export * from './schema/ShadoStructSchema';

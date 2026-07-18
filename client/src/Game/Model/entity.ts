@@ -24,6 +24,43 @@ const modelYOffset = {
   gnn: 0.5,
 };
 
+const humanAnimationAliases: Readonly<Record<string, string>> = {
+  pos: "Idle",
+  p01: "Idle",
+  o01: "Idle_Look",
+  l01: "Walk",
+  l02: "Run",
+  l03: "Jump_Start",
+  l04: "Jump_Start",
+  l05: "Jump_Loop",
+  l06: "Crouch_Walk",
+  l09: "Swim",
+  p02: "Sit_Idle",
+  p03: "Turn_Right",
+  p04: "Strafe_Right",
+  p05: "Pickup",
+  p06: "Swim",
+  c01: "Kick",
+  c02: "Punch_Right",
+  c03: "Block",
+  c04: "Punch_Left",
+  c05: "Punch_Right",
+  c06: "Punch_Left",
+  c07: "Block",
+  c08: "Punch_Right",
+  c11: "Kick",
+  d01: "Hit_Front",
+  d02: "Knockdown",
+  d05: "Death",
+  s01: "Cheer",
+  s03: "Wave",
+  s06: "Yes",
+  s07: "No",
+  s20: "Kneel",
+  s22: "Point",
+  s28: "Bow",
+};
+
 type InstanceContainer = {
   mesh: BJS.Mesh;
   thinInstanceIndex: number;
@@ -140,15 +177,18 @@ export class Entity extends BABYLON.TransformNode {
     this.entityContainer = entityContainer;
     this.entityCache = entityCache;
     this.itemResolver = itemResolver;
-    const height = 6;
-    let spawnScale = typeof spawn.size === "number" ? spawn.size : 6;
+    const height = raceEntry.height ?? 6;
+    let spawnScale = typeof spawn.size === "number" ? spawn.size : height;
     if (spawnScale === -1) {
-      spawnScale = 6;
+      spawnScale = height;
     }
     const finalScale = spawnScale / height;
 
     this.spawnScale = finalScale; // Use spawn scale if available, otherwise default to 1.5
-    this.scaling.setAll(this.spawnScale);
+    // Body rendering, attachments, and physics each consume spawnScale
+    // explicitly. Scaling this shared parent as well would apply it twice to
+    // attached weapons and to physics implementations that honor node scale.
+    this.scaling.setAll(1);
     this.spawnPosition = new BABYLON.Vector3(spawn.x, spawn.y, spawn.z);
     this.playAnimation(AnimationDefinitions.Idle1);
     Entity.instantiateStatics(scene);
@@ -1092,7 +1132,13 @@ export class Entity extends BABYLON.TransformNode {
     return totalFrames - frame;
   }
   public playAnimation(name: string, playThrough: boolean = false): void {
-    const match = this.entityContainer.animations.find((a) => a.name === name);
+    const resolvedName =
+      this.entityContainer.model === "hum" || this.entityContainer.model === "huf"
+        ? (humanAnimationAliases[name] ?? name)
+        : name;
+    const match = this.entityContainer.animations.find(
+      (animation) => animation.name === resolvedName,
+    );
     if (!match) {
       // console.warn(
       //   `[Entity] Animation ${name} not found in ${this.entityContainer.model}`,
@@ -1109,16 +1155,17 @@ export class Entity extends BABYLON.TransformNode {
       );
       return;
     }
-    if (this.currentAnimation === name && !playThrough) {
+    if (this.currentAnimation === resolvedName && !playThrough) {
       return;
     }
     if (this.animationTimeout) {
       this.queuedAnimation = name;
       return;
     }
-    this.currentAnimation = name;
-    const offset = this.computeOffset(match.from, match.to, manager.time, 60);
-    this.animationBuffer.set(match.from, match.to, offset, 60);
+    this.currentAnimation = resolvedName;
+    const fps = match.fps ?? 60;
+    const offset = this.computeOffset(match.from, match.to, manager.time, fps);
+    this.animationBuffer.set(match.from, match.to, offset, fps);
     for (const mesh of [...this.primaryMeshes, ...this.secondaryMeshes]) {
       mesh.instancedBuffers.bakedVertexAnimationSettingsInstanced =
         this.animationBuffer;
@@ -1128,11 +1175,12 @@ export class Entity extends BABYLON.TransformNode {
     if (playThrough) {
       this.animationTimeout = setTimeout(
         () => {
+          const queuedAnimation = this.queuedAnimation;
           this.animationTimeout = false;
           this.queuedAnimation = null;
-          this.playAnimation(this.queuedAnimation ?? "p02");
+          this.playAnimation(queuedAnimation ?? AnimationDefinitions.Idle1);
         },
-        (match.to - match.from) * (1000 / 60),
+        (match.to - match.from) * (1000 / fps),
       ); // Convert frames to milliseconds
     }
   }

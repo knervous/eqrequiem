@@ -5,7 +5,7 @@ import {
 import { ItemInstance } from '@game/Net/messages';
 import { getSlotNamesFromBitmask } from '@game/Player/player-constants';
 import { Box, Stack, Tooltip, Typography } from '@mui/material';
-import Fade from '@mui/material/Fade';
+import { Fade } from '@mui/material';
 import { UiImageComponent } from '@ui/common/ui-image';
 import './item-tooltip.css';
 

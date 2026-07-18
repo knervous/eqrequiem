@@ -75,7 +75,15 @@ import path from "path";
 
     for (let f = Math.floor(ag.from); f <= Math.floor(ag.to); f++) {
       ag.goToFrame(f);
-      scene.render();
+      // scene.render() advances NullEngine's own animatable clock by a fixed
+      // per-call delta and overwrites the pose goToFrame just set (confirmed:
+      // goToFrame alone matches the source curve; render() afterward stomps
+      // it back toward bind pose). prepare() is also required: it copies each
+      // bone's rotation/position from its linked TransformNode (the actual
+      // animation target) into the Bone object; computeAbsoluteMatrices alone
+      // reads stale/rest values for any bone that hasn't been synced this way.
+      skeleton.prepare(true);
+      mesh.computeWorldMatrix(true);
       skeleton.computeAbsoluteMatrices(true);
       const matrices = skeleton.getTransformMatrices(mesh);
       const base = frameIdx * floatsPerFrame;

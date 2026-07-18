@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useReducer, useRef } from 'reac
 import { useEvent } from '@game/Events/event-hooks';
 import emitter from '@game/Events/events';
 import { SxProps } from '@mui/material';
-import Box from '@mui/material/Box';
+import { Box } from '@mui/material';
 import { UiState, initialUiState } from '../state/initial-state';
 import { uiReducer } from '../state/reducer';
 import { StringTable } from '../util/string-table';

@@ -72,13 +72,35 @@ let initializedEngine: BJS.AbstractEngine | undefined;
 let initialization: Promise<void> | undefined;
 let reducerArtifact: Promise<ArrayBuffer> | undefined;
 
+function decodeInlineArtifact(url: string): ArrayBuffer | undefined {
+  if (!url.startsWith("data:")) return undefined;
+  const comma = url.indexOf(",");
+  if (comma < 0) throw new Error("Malformed inline Requiem reducer URL");
+  const metadata = url.slice(0, comma);
+  const payload = url.slice(comma + 1);
+  if (!metadata.endsWith(";base64")) {
+    return new TextEncoder().encode(decodeURIComponent(payload)).buffer;
+  }
+  const binary = atob(payload);
+  const bytes = new Uint8Array(binary.length);
+  for (let index = 0; index < binary.length; index++) {
+    bytes[index] = binary.charCodeAt(index);
+  }
+  return bytes.buffer;
+}
+
 async function loadRequiemEntityReducer(): Promise<ArrayBuffer> {
   assertRequiemReducerAbi();
-  reducerArtifact ??= fetch(
-    import.meta.env.DEV
-      ? requiemEntityReducerDebugUrl
-      : requiemEntityReducerReleaseUrl,
-  ).then(async (response) => {
+  const url = import.meta.env.DEV
+    ? requiemEntityReducerDebugUrl
+    : requiemEntityReducerReleaseUrl;
+  reducerArtifact ??= Promise.resolve(decodeInlineArtifact(url)).then(async (inline) => {
+    if (inline) return inline;
+    const response = await fetch(url).catch((error: unknown) => {
+      throw new Error(
+        `Unable to fetch the Requiem reducer at ${url}: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    });
     if (!response.ok) {
       throw new Error(
         `Unable to load precompiled Requiem reducer: ${response.status} ${response.statusText}`,

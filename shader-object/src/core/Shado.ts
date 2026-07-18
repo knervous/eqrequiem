@@ -11,7 +11,9 @@ import type {
   InitializeConfig,
   BackendKind,
   WasmInitializeMode,
+  GPUUploadStats,
 } from '../types';
+import { EMPTY_UPLOAD_STATS } from '../types';
 import { BindingAlloc } from '../utils/binding-alloc';
 import { registerIncludesOnEngine } from '../includes/register';
 import { ShadoSchemaBuilder } from '../schema/ShadoSchemaBuilder';
@@ -150,6 +152,7 @@ export abstract class Shado {
   private _instanceId: number;
 
   protected _arena = new FloatArena();
+  private _lastSyncedFrame = -1;
   protected _headerSeg: Segment = { offF: 0, lenF: 0, capF: 0 };
   private _liveVecs: Record<string, Float32Array> = {};
 
@@ -697,7 +700,11 @@ export abstract class Shado {
     };
   }
   public emitHeaderDirty(byteOffset?: number, byteLength?: number) {
-    this._arena.markDirty?.();
+    if (byteOffset !== undefined && byteLength !== undefined) {
+      this._arena.markDirtyBytes?.(byteOffset, byteLength);
+    } else {
+      this._arena.markDirty?.();
+    }
     const a = this._dirtyHandlers;
     if (!a) return;
     const ev: DirtyEvent = { kind: 'header', byteOffset, byteLength };
@@ -1340,9 +1347,26 @@ export abstract class Shado {
     this.bind(effect);
   }
 
-  public commit() {
-    if (this._isDisposed) return;
-    this._backing.commit();
+  public commit(): GPUUploadStats {
+    if (this._isDisposed) return EMPTY_UPLOAD_STATS;
+    return this._backing.commit();
+  }
+
+  /**
+   * Frame-owned GPU synchronization. Renderers call this with the current
+   * frame id instead of commit(); the first caller in a frame performs the
+   * (dirty-guarded) upload and later callers are no-ops, so adding mesh
+   * variants or extra render passes never multiplies uploads.
+   */
+  public syncGpu(frameId: number): GPUUploadStats {
+    if (this._isDisposed) return EMPTY_UPLOAD_STATS;
+    if (this._lastSyncedFrame === frameId) return EMPTY_UPLOAD_STATS;
+    this._lastSyncedFrame = frameId;
+    return this._backing.commit();
+  }
+
+  public getLastUploadStats(): GPUUploadStats {
+    return (this._backing as any)?.getLastUploadStats?.() ?? EMPTY_UPLOAD_STATS;
   }
 
   public bind(effect: any) {

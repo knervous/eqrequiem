@@ -1,7 +1,7 @@
-import type { BackendKind, GPUBacking, Segment } from '../types';
+import { EMPTY_UPLOAD_STATS, type BackendKind, type GPUBacking, type GPUUploadStats, type Segment } from '../types';
 import { BABYLON } from '../babylon';
 import type { Shado } from '../core/Shado';
-import { encodeGpuFloatUpload } from './encodeGpuFloatUpload';
+import { encodeGpuFloatUploadRange } from './encodeGpuFloatUpload';
 
 export class DataTexBacking implements GPUBacking {
   public kind: BackendKind = 'datatex';
@@ -13,6 +13,7 @@ export class DataTexBacking implements GPUBacking {
 
   private staging?: Float32Array;
   private lastUsedFloats = 0;
+  private lastStats: GPUUploadStats = EMPTY_UPLOAD_STATS;
 
   constructor(
     private engine: any,
@@ -28,14 +29,14 @@ export class DataTexBacking implements GPUBacking {
     this.capTexels = this.texW * this.texH;
     this.capFloats = this.capTexels * 4;
 
-    const initData =
-      this.staging && this.staging.length === this.capFloats
-        ? this.staging
-        : new Float32Array(this.capFloats);
+    const nextStaging = new Float32Array(this.capFloats);
+    if (this.staging) {
+      nextStaging.set(this.staging.subarray(0, Math.min(this.staging.length, this.capFloats)));
+    }
 
     this.bufTex?.dispose?.();
     this.bufTex = new BABYLON.RawTexture(
-      initData,
+      nextStaging,
       this.texW,
       this.texH,
       BABYLON.Engine.TEXTUREFORMAT_RGBA,
@@ -46,30 +47,52 @@ export class DataTexBacking implements GPUBacking {
       BABYLON.Engine.TEXTURETYPE_FLOAT
     );
     this.bufTex.wrapU = this.bufTex.wrapV = BABYLON.Texture.CLAMP_ADDRESSMODE;
-    this.staging = initData;
+    this.staging = nextStaging;
     this.lastUsedFloats = Math.min(this.lastUsedFloats, this.capFloats);
+    (this.owner.arena as any)?.markDirty?.();
   }
 
-  commit() {
+  commit(): GPUUploadStats {
     const arena = this.owner.arena;
-    if (!arena?.isDirty?.()) return;
-    const payload: Float32Array = encodeGpuFloatUpload(
-      this.schema,
-      this.owner,
-      this.owner.prepareUnifiedForUpload()
-    );
+    if (!arena?.isDirty?.()) return (this.lastStats = EMPTY_UPLOAD_STATS);
+    const payload: Float32Array = this.owner.prepareUnifiedForUpload();
     this.reserveFloats(payload.length);
 
     if (!this.staging || this.staging.length !== this.capFloats) {
       this.staging = new Float32Array(this.capFloats);
+      (arena as any).markDirty?.();
     }
-    this.staging.set(payload, 0);
+
+    // The staging buffer doubles as the persistent GPU-encoded mirror: only
+    // dirty subranges are re-copied and integer-encoded, then the texture is
+    // updated in one call. Partial raw-texture upload is not portable through
+    // Babylon's high-level API, so the storage backing remains the preferred
+    // path for sparse updates on WebGPU.
+    const ranges =
+      (arena as any).consumeDirtyRanges?.() ?? [{ start: 0, end: payload.byteLength }];
+    let encodedBytes = 0;
+    for (const range of ranges) {
+      const startF = range.start >>> 2;
+      const endF = Math.min(payload.length, (range.end + 3) >>> 2);
+      if (endF <= startF) continue;
+      encodeGpuFloatUploadRange(this.schema, this.owner, payload, this.staging, startF, endF);
+      encodedBytes += (endF - startF) * 4;
+    }
     if (payload.length < this.lastUsedFloats) {
       this.staging.fill(0, payload.length, this.lastUsedFloats);
     }
     this.lastUsedFloats = payload.length;
+    if (!encodedBytes) return (this.lastStats = EMPTY_UPLOAD_STATS);
     this.bufTex!.update(this.staging);
-    arena.markClean?.();
+    return (this.lastStats = {
+      uploadCalls: 1,
+      uploadedBytes: this.staging.byteLength,
+      encodedBytes,
+    });
+  }
+
+  public getLastUploadStats(): GPUUploadStats {
+    return this.lastStats;
   }
 
   bind(effect: any, includeName: string) {

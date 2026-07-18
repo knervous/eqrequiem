@@ -386,7 +386,9 @@ export default defineConfig({
     'preprocess/runtime': 'src/preprocess/runtime.ts',
     cli: 'src/cli.ts',
   },
-  dts: true,
+  // rollup-plugin-dts cannot run against typescript 7 (tsgo); NO_DTS=1 skips
+  // declaration output so the JS bundles can still build.
+  dts: process.env.NO_DTS === '1' ? false : true,
   format: devBuild ? ['esm'] : ['esm', 'cjs'],
   sourcemap: devBuild ? 'inline' : true,
   clean: devBuild ? false : true,

@@ -1,8 +1,10 @@
+import { DirtyPageTracker, type DirtyRange } from './DirtyPageTracker';
+
 export class FloatArena {
   private ab: ArrayBuffer;
   private f32: Float32Array;
   private dv: DataView;
-  private dirty = true;
+  private tracker = new DirtyPageTracker();
   private listeners: Array<() => void> = [];
   private canResize = false;
 
@@ -45,7 +47,7 @@ export class FloatArena {
         (this.ab as any).resize(newF * 4);
         this.f32 = new Float32Array(this.ab);
         this.dv = new DataView(this.ab, this.f32.byteOffset, this.f32.byteLength);
-        this.dirty = true;
+        this.tracker.markAll();
         this.rebroadcast();
         return;
       } catch {
@@ -59,7 +61,7 @@ export class FloatArena {
     this.ab = nextAB;
     this.f32 = nextF32;
     this.dv = new DataView(this.ab, this.f32.byteOffset, this.f32.byteLength);
-    this.dirty = true;
+    this.tracker.markAll();
     this.rebroadcast();
   }
 
@@ -70,7 +72,7 @@ export class FloatArena {
     } else {
       for (let i = 0; i < lenF; i++) this.f32[offF + i] = (src as any)[i];
     }
-    this.dirty = true;
+    this.tracker.markBytes(offF * 4, lenF * 4);
   }
 
   view(offF: number, lenF: number): Float32Array {
@@ -84,20 +86,32 @@ export class FloatArena {
     return this.f32;
   }
   isDirty() {
-    return this.dirty;
+    return this.tracker.isDirty();
   }
   markClean() {
-    this.dirty = false;
+    this.tracker.consumeRanges(this.f32.byteLength);
   }
   public markDirty() {
-    this.dirty = true;
+    // Callers without precise knowledge of the touched bytes keep the
+    // conservative whole-arena behavior.
+    this.tracker.markAll();
+  }
+  public markDirtyFloats(offF: number, lenF: number) {
+    this.tracker.markBytes(offF * 4, lenF * 4);
+  }
+  public markDirtyBytes(byteOffset: number, byteLength: number) {
+    this.tracker.markBytes(byteOffset, byteLength);
+  }
+  /** Coalesced dirty byte ranges since the last consume; resets tracking. */
+  public consumeDirtyRanges(): readonly DirtyRange[] {
+    return this.tracker.consumeRanges(this.f32.byteLength);
   }
   adopt(next: Float32Array) {
     this.ab = next.buffer as any;
     this.f32 = next;
     this.dv = new DataView(this.ab, this.f32.byteOffset, this.f32.byteLength);
     this.canResize = this.isResizableAB(this.ab);
-    this.dirty = true;
+    this.tracker.markAll();
     this.rebroadcast();
   }
 }

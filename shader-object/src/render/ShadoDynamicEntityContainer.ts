@@ -68,6 +68,12 @@ export class ShadoDynamicEntityContainer extends Shado {
   private readonly records: EntityRecord[] = [];
   private readonly indexById = new Map<string, number>();
   private readonly movingIndices = new Set<number>();
+  // Draw IDs are partitioned into contiguous per-mesh-variant ranges so each
+  // renderer submits only its own instances instead of rejecting the rest in
+  // the vertex stage (visible entities x mesh variants amplification).
+  private readonly meshBuckets = new Map<number, number[]>();
+  private readonly meshRanges = new Map<number, { offset: number; count: number }>();
+  private drawListSorted = false;
   private atlas?: ShadoTextureAtlas;
   private geometryMode: ShadoDynamicEntityGeometryMode = 'box';
   private billboard = false;
@@ -265,11 +271,31 @@ export class ShadoDynamicEntityContainer extends Shado {
     const entity = this.getEntity(index);
     if (!entity) return false;
     const nextMeshIndex = Number.isFinite(meshIndex) ? meshIndex : 0;
+    const previousMeshIndex = Math.round(
+      entity.motion[SHADO_ENTITY2D_MESH_INDEX_MOTION_COMPONENT]
+    );
     if (Math.abs(entity.motion[SHADO_ENTITY2D_MESH_INDEX_MOTION_COMPONENT] - nextMeshIndex) <= 0.00001) {
       return false;
     }
     entity.motion[SHADO_ENTITY2D_MESH_INDEX_MOTION_COMPONENT] = nextMeshIndex;
-    this.markArenaDirty();
+    this.markEntityRecordsDirty([index]);
+
+    // O(1) bucket membership move (swap-remove + append); the concatenated
+    // GPU list is then rebuilt from buckets without scanning entities.
+    const previousBucket = this.meshBuckets.get(previousMeshIndex);
+    if (previousBucket) {
+      const slot = previousBucket.indexOf(index);
+      if (slot >= 0) {
+        previousBucket[slot] = previousBucket[previousBucket.length - 1];
+        previousBucket.pop();
+        if (!previousBucket.length) this.meshBuckets.delete(previousMeshIndex);
+        const target = Math.round(nextMeshIndex);
+        let bucket = this.meshBuckets.get(target);
+        if (!bucket) this.meshBuckets.set(target, (bucket = []));
+        bucket.push(index);
+        this.rebuildDrawIdsFromBuckets();
+      }
+    }
     return true;
   }
 
@@ -298,7 +324,7 @@ export class ShadoDynamicEntityContainer extends Shado {
     new Uint8Array(reducer.memory.buffer, this.deltaScratchPtr, deltaBytes.byteLength).set(deltaBytes);
     const applied = reducer.exports.applyDelta(this.deltaScratchPtr, deltaBytes.byteLength);
     this.getWasmArenaBasePtr();
-    if (applied > 0) this.markArenaDirty();
+    if (applied > 0) this.markEntityRecordsDirty(reducer.changedIndices());
     return applied;
   }
 
@@ -307,7 +333,7 @@ export class ShadoDynamicEntityContainer extends Shado {
     if (reducer) {
       reducer.clearChanged();
       const moved = reducer.exports.stepTransitions(0, Math.max(0, deltaSeconds) * 1000);
-      if (moved) this.markArenaDirty();
+      if (moved) this.markEntityRecordsDirty(reducer.changedIndices());
       return moved;
     }
 
@@ -315,6 +341,7 @@ export class ShadoDynamicEntityContainer extends Shado {
     if (!dt || !this.movingIndices.size) return 0;
 
     let moved = 0;
+    const movedIndices: number[] = [];
     for (const i of this.movingIndices) {
       const entity = this.getEntity(i);
       if (!entity || entity.motion[0] <= 0) {
@@ -344,9 +371,10 @@ export class ShadoDynamicEntityContainer extends Shado {
         this.movingIndices.delete(i);
       }
       moved++;
+      movedIndices.push(i);
     }
 
-    if (moved) this.arena.markDirty?.();
+    if (moved) this.markEntityRecordsDirty(movedIndices);
     return moved;
   }
 
@@ -423,25 +451,63 @@ export class ShadoDynamicEntityContainer extends Shado {
   }
 
   public syncDrawList(options: { sort?: boolean } = {}): void {
-    const drawIds: number[] = [];
+    this.drawListSorted = options.sort ?? this.drawListSorted;
+    this.meshBuckets.clear();
     for (let i = 0; i < this.records.length; i++) {
       const entity = this.getEntity(i);
       if (!entity) continue;
       if (((entity.renderState[1] | 0) & SHADO_ENTITY_VISIBLE) === 0) continue;
-      drawIds.push(i);
+      const meshIndex = Math.round(entity.motion[SHADO_ENTITY2D_MESH_INDEX_MOTION_COMPONENT]);
+      let bucket = this.meshBuckets.get(meshIndex);
+      if (!bucket) this.meshBuckets.set(meshIndex, (bucket = []));
+      bucket.push(i);
     }
+    this.rebuildDrawIdsFromBuckets();
+  }
 
-    if (options.sort) {
-      drawIds.sort((a, b) => {
-        const ea = this.getEntity(a);
-        const eb = this.getEntity(b);
-        return (ea?.renderState[3] ?? 0) - (eb?.renderState[3] ?? 0);
-      });
+  /**
+   * Concatenate per-mesh buckets into the GPU draw-ID array and record each
+   * variant's contiguous { offset, count } range. Costs O(visible), never
+   * O(total entities), and is the only path that touches the GPU list.
+   */
+  private rebuildDrawIdsFromBuckets(): void {
+    const drawIds: number[] = [];
+    this.meshRanges.clear();
+    const meshIndices = [...this.meshBuckets.keys()].sort((a, b) => a - b);
+    for (const meshIndex of meshIndices) {
+      const bucket = this.meshBuckets.get(meshIndex)!;
+      if (this.drawListSorted) {
+        bucket.sort((a, b) => {
+          const ea = this.getEntity(a);
+          const eb = this.getEntity(b);
+          return (ea?.renderState[3] ?? 0) - (eb?.renderState[3] ?? 0);
+        });
+      }
+      this.meshRanges.set(meshIndex, { offset: drawIds.length, count: bucket.length });
+      for (const index of bucket) drawIds.push(index);
     }
-
     this.setVarArray('drawIds', drawIds);
     this.drawCount = drawIds.length;
     this.entityCount = this.records.length;
+  }
+
+  /** The contiguous draw-ID range for one mesh variant. */
+  public getMeshDrawRange(meshIndex: number): { offset: number; count: number } {
+    return this.meshRanges.get(meshIndex) ?? { offset: 0, count: 0 };
+  }
+
+  /** Mark exactly the changed entity records dirty for partial GPU upload. */
+  private markEntityRecordsDirty(indices: Iterable<number>): void {
+    const seg = (this as any)._structSeg?.entities;
+    const strideF = (this.getStructArrayStrideBytes('entities') / 4) | 0;
+    const arena = this.arena as any;
+    if (!seg || !strideF || !arena?.markDirtyFloats) {
+      this.markArenaDirty();
+      return;
+    }
+    for (const index of indices) {
+      arena.markDirtyFloats((seg.offF | 0) + index * strideF, strideF);
+    }
   }
 
   private writeEntity(entity: ShadoEntity2D, input: ShadoDynamicEntityInput): void {
@@ -513,7 +579,7 @@ export class ShadoDynamicEntityContainer extends Shado {
     const encoded = this.encodeSharedReducerDelta(reducer, records);
     const applied = reducer.exports.applyDelta(encoded.ptr, encoded.byteLength);
     this.getWasmArenaBasePtr();
-    if (applied > 0) this.markArenaDirty();
+    if (applied > 0) this.markEntityRecordsDirty(records.map(record => record.index));
     return applied;
   }
 
@@ -632,6 +698,7 @@ attribute vec3 position;
 attribute vec2 uv;
 uniform mat4 worldViewProjection;
 uniform float uShadoEntityMeshIndex;
+uniform float uShadoDrawOffset;
 ${viewUniform}#define SHADO_DYNAMIC_ENTITY_${geometryMode.toUpperCase()} 1
 ${isBillboard ? '#define SHADO_DYNAMIC_ENTITY_BILLBOARD 1\n' : ''}
 #include<${actor}>
@@ -643,17 +710,11 @@ varying float vLayer;
 varying float vSpriteSlabSurface;
 
 void main(void) {
-  int drawIndex = gl_InstanceID;
+  // Draw IDs are partitioned into contiguous per-mesh ranges; this renderer
+  // only submits its own range, so no per-instance mesh rejection is needed.
+  int drawIndex = int(uShadoDrawOffset + 0.5) + gl_InstanceID;
   int entityIndex = int(${container}_drawIds_get(drawIndex) + 0.5);
   ${actor}Header entity = ${container}_entities_get(entityIndex);
-  if (abs(entity.motion.w - uShadoEntityMeshIndex) > 0.5) {
-    gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
-    vUV = vec2(0.0);
-    vColor = vec4(0.0);
-    vLayer = 0.0;
-    vSpriteSlabSurface = -1.0;
-    return;
-  }
 
   vec4 positionSize = entity.positionSize;
   vec4 render = entity.render;

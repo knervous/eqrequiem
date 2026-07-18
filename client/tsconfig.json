@@ -30,25 +30,24 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    "baseUrl": ".",
     "paths": {
       "@game/*": [
-        "src/Game/*"
+        "./src/Game/*"
       ], // Map @game/* to src/Game/*
       "@ui/*": [
-        "src/UI/*"
+        "./src/UI/*"
       ], // Map @game/* to src/Game/*
       "@/*": [
-        "src/*"
+        "./src/*"
       ], // Map @game/* to src/Game/*
       "@opcodes": [
-        "src/Game/Net/opcodes.ts"
+        "./src/Game/Net/opcodes.ts"
       ],
       "sage-core/*": [
-        "../../eqsage/sage/lib/*"
+        "./../../eqsage/sage/lib/*"
       ], // Map sage core*
       "@bjs": [
-        "src/bjs/index.ts"
+        "./src/bjs/index.ts"
       ],
     }
   },
