@@ -21,6 +21,15 @@ const hashProviderUrl =
   process.env.VITE_HASH_PROVIDER_URL || "http://localhost:8082/hash";
 const serverjsSourceRoot = path.resolve(__dirname, "../serverjs/src");
 const clientBrowserDependencies = new Map([
+  ["shader-object", path.resolve(__dirname, "../shader-object/src/index.ts")],
+  [
+    "shader-object/render",
+    path.resolve(__dirname, "../shader-object/src/render/index.ts"),
+  ],
+  [
+    "@babylonjs/core",
+    path.resolve(__dirname, "node_modules/@babylonjs/core/index.js"),
+  ],
   [
     "@sqlite.org/sqlite-wasm",
     path.resolve(__dirname, "node_modules/@sqlite.org/sqlite-wasm/dist/index.mjs"),
@@ -41,6 +50,10 @@ const clientBrowserDependencies = new Map([
   [
     "drizzle-orm/sqlite-core",
     path.resolve(__dirname, "node_modules/drizzle-orm/sqlite-core/index.js"),
+  ],
+  [
+    "maxrects-packer",
+    path.resolve(__dirname, "node_modules/maxrects-packer/dist/maxrects-packer.mjs"),
   ],
 ]);
 
@@ -64,18 +77,22 @@ function serverjsTypeScriptSource(
   return null;
 }
 
+function serverjsSourcePlugin() {
+  return {
+    name: "serverjs-typescript-source",
+    enforce: "pre" as const,
+    resolveId(source: string, importer?: string) {
+      const clientDependency = clientBrowserDependencies.get(source);
+      if (clientDependency) return clientDependency;
+      return serverjsTypeScriptSource(source, importer);
+    },
+  };
+}
+
 export default defineConfig({
   base: "./",
   plugins: [
-    {
-      name: "serverjs-typescript-source",
-      enforce: "pre",
-      resolveId(source, importer) {
-        const clientDependency = clientBrowserDependencies.get(source);
-        if (clientDependency) return clientDependency;
-        return serverjsTypeScriptSource(source, importer);
-      },
-    },
+    serverjsSourcePlugin(),
     react({
       tsDecorators: true,
       swcOptions: {
@@ -218,6 +235,10 @@ export default defineConfig({
   },
   worker: {
     format: "es",
+    // Worker bundles have their own plugin pipeline. Vercel installs only the
+    // client package, so repeat the ServerJS-source resolver there instead of
+    // falling back to a nonexistent serverjs/node_modules directory.
+    plugins: () => [serverjsSourcePlugin()],
   },
   server: {
     https: {

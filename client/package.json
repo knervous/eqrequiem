@@ -53,6 +53,7 @@
     "gl-matrix": "^3.4.3",
     "jsonwebtoken": "^9.0.2",
     "jszip": "^3.10.1",
+    "maxrects-packer": "^2.7.3",
     "mitt": "^3.0.1",
     "pako": "^2.1.0",
     "react": "^19.0.0",
