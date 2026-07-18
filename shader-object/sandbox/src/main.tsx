@@ -1,5 +1,5 @@
 import { createRoot } from 'react-dom/client'
-import { ensureBABYLON } from 'shado'
+import { ensureBABYLON } from 'shader-object'
 import './index.css'
 import App from './App.tsx'
 

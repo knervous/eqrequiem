@@ -2,15 +2,15 @@ import * as fantasyNameGenerator from 'fantasy-name-generator';
 import {
   ShadoInstanceContainer,
   TestClass,
-} from 'shado';
-import { createMsdfNameplateLayer, NameplateData } from 'shado/msdf';
+} from 'shader-object';
+import { createMsdfNameplateLayer, NameplateData } from 'shader-object/msdf';
 import {
   deserializeShadoModel,
   getBabylonSceneDataUrl,
   type ShadoDeserializedModel,
   type ShadoModelManifestDocument,
   type ShadoModelManifestEntry,
-} from 'shado/preprocess/runtime';
+} from 'shader-object/preprocess/runtime';
 import { FontAsset } from '@babylonjs/addons/msdfText/fontAsset';
 import * as BABYLON from '@babylonjs/core';
 import { ShowInspector } from '@babylonjs/inspector';
@@ -267,16 +267,17 @@ export class Playground {
               })
             : undefined;
           nameplateLayer?.setEnabled(nameplatesEnabled);
-          barbarianPool = { container, nameplates, nameplateLayer };
+          const loadedPool = { container, nameplates, nameplateLayer };
+          barbarianPool = loadedPool;
           (window as any).instanceContainer = container;
           (window as any).instancePool = container;
           console.debug('[Playground] Barbarian ready for instances');
-          return barbarianPool;
+          return loadedPool;
         } finally {
           barbarianLoading = false;
         }
       })();
-      return barbarianLoadPromise;
+      return barbarianLoadPromise!;
     };
 
     const ensureArrLoaded = async (): Promise<LoadedActorPool> => {
@@ -352,16 +353,17 @@ export class Playground {
               })
             : undefined;
           nameplateLayer?.setEnabled(nameplatesEnabled);
-          arrPool = { container, nameplates, nameplateLayer };
+          const loadedPool = { container, nameplates, nameplateLayer };
+          arrPool = loadedPool;
           (window as any).instanceContainer2 = container;
           (window as any).instancePool2 = container;
           console.debug('[Playground] Arr ready for instances');
-          return arrPool;
+          return loadedPool;
         } finally {
           arrLoading = false;
         }
       })();
-      return arrLoadPromise;
+      return arrLoadPromise!;
     };
 
     const makeControls = (

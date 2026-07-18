@@ -1,73 +1,125 @@
-# shado
+# Shader Object (Shado)
 
-Low-level struct, arena, WASM, and Babylon.js GPU buffer bridge.
+Shader Object is a packed-data and rendering toolkit for Babylon.js. Define a
+GPU struct once, then use the same layout for TypeScript objects, packed arenas,
+AssemblyScript reducers, Babylon shader inputs, and instanced rendering.
 
-`shado` is not a game engine. It defines structured data once and maps it across
-TypeScript overlay logic, AssemblyScript reducers, Babylon shaders/buffers, and
-render plugins.
+It is intentionally a library rather than a game engine. The higher-level
+rendering helpers are optional and the core schema/arena APIs can be used on
+their own.
 
 ## Install
 
 ```bash
-npm i shado @babylonjs/core
+npm install shader-object @babylonjs/core
 ```
 
-Runtime AssemblyScript compilation is optional. Install compiler peers only if
-you use `wasm: "runtime"` or `shado/asc`:
+Install the optional peers required by the features you use:
 
 ```bash
-npm i -D assemblyscript binaryen
+npm install @babylonjs/loaders @babylonjs/serializers
+npm install --save-dev assemblyscript binaryen
 ```
 
-## Basic Usage
+Babylon loaders are needed for model preprocessing and scene-loader examples.
+AssemblyScript and Binaryen are only needed for runtime compilation or the
+`shader-object/asc` APIs; precompiled reducers do not require them at runtime.
+
+## Define a packed struct
 
 ```ts
-import { Shado, gpuStruct, field } from "shado";
+import { Shado, field, gpuStruct } from 'shader-object';
 
-@gpuStruct({ name: "ActorPool", useWasm: false })
+@gpuStruct({ name: 'ActorPool', useWasm: false })
 class ActorPool extends Shado {
-  @field("mat4") transform!: Float32Array;
-  @field("vec4") color!: Float32Array;
-  @field({ arrayOf: "vec3" }) velocities!: Float32Array;
+  @field('mat4') transform!: Float32Array;
+  @field('vec4') color!: Float32Array;
+  @field({ arrayOf: 'vec3' }) velocities!: Float32Array;
 }
 
-await ActorPool.initialize(engine, { wasm: false, backend: "datatex" });
+await ActorPool.initialize(engine, { backend: 'datatex', wasm: false });
 
 const pool = new ActorPool(engine);
-pool.color = new Float32Array([1, 0, 0, 1]);
-pool.setVarArray("velocities", [0, 1, 0, 1, 0, 0]);
+pool.color = new Float32Array([1, 0.4, 0.1, 1]);
+pool.setVarArray('velocities', [0, 1, 0, 1, 0, 0]);
 ```
+
+`backend: 'datatex'` works on WebGL and WebGPU. Storage-backed layouts are also
+available when the target renderer supports them.
 
 ## Precompiled WASM
 
 ```ts
 await ActorPool.initialize(engine, {
-  wasm: { mode: "precompiled", module: await WebAssembly.compile(bytes) },
+  backend: 'datatex',
+  wasm: {
+    mode: 'precompiled',
+    module: await fetch('/actor-pool.wasm').then(response => response.arrayBuffer()),
+  },
 });
 ```
 
-## AssemblyScript CLI
+## Model preprocessing
+
+The CLI can package a Babylon-readable model, bake dual-quaternion VAT data,
+emit schema wrappers, and build a manifest for runtime loading.
 
 ```bash
-shado asc build --config ./shado.config.mjs
+npx shado pack models --config ./shado.config.mjs
+npx shado wrappers build --config ./shado.config.mjs
+npx shado manifest models --config ./shado.config.mjs
 ```
+
+At runtime, compressed artifacts can be fetched directly from a CDN or GitHub:
 
 ```ts
-// shado.config.mjs
-export default {
-  asc: {
-    inputPaths: ["assembly/index.ts"],
-    outFile: "dist/shado.wasm",
-    textFile: "dist/shado.wat",
-    simd: true,
+import { deserializeShadoModel } from 'shader-object/preprocess/runtime';
+
+const model = await deserializeShadoModel(
+  {
+    manifestUrl: 'https://example.com/shado/models.json',
+    modelName: 'actor',
   },
-};
+  { animation: true, vat: 'auto' }
+);
 ```
 
-## Package Entrypoints
+## Package entry points
 
-- `shado`: core schema, arena, backings, decorators, Babylon material helpers.
-- `shado/babylon`: Babylon peer resolution helpers and type re-exports.
-- `shado/asc`: optional runtime/precompile AssemblyScript helpers.
-- `shado/msdf`: MSDF shader registration and nameplate data helpers.
+- `shader-object` — schemas, arenas, backings, decorators, Babylon helpers, and
+  actor instancing.
+- `shader-object/babylon` — Babylon peer exports and resolution helpers.
+- `shader-object/asc` — optional AssemblyScript compilation helpers.
+- `shader-object/msdf` — MSDF shader registration and nameplate helpers.
+- `shader-object/render` — lean dynamic-entity containers, renderers, atlases,
+  reducers, and picking.
+- `shader-object/preprocess` — Node-side model and shader preprocessing.
+- `shader-object/preprocess/runtime` — browser-safe artifact loading and
+  decompression.
 
+## Examples and development
+
+- [`sandbox/`](./sandbox/) is the full React/Vite validation app. It covers
+  WebGL/WebGPU, DQ/VAT actor rendering, preprocessed assets, WASM reducers,
+  picking, MSDF nameplates, and lean dynamic entities.
+- [`playground/`](./playground/) contains a paste-ready Babylon.js Playground
+  example that imports the npm package and downloads its model/VAT artifacts
+  from raw GitHub URLs.
+
+```bash
+npm install
+npm run typecheck
+npm test
+npm run build
+
+cd sandbox
+npm install
+npm run build
+npm run dev
+```
+
+See [RELEASE_NOTES.md](./RELEASE_NOTES.md) for the 1.0 release and upgrade notes.
+
+## License
+
+MIT

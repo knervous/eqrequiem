@@ -1,9 +1,16 @@
 {
   "name": "shader-object",
-  "version": "0.7.2",
+  "version": "8.0.0",
   "description": "Packed GPU struct schemas + Babylon include emitters with optional AssemblyScript kernels",
   "license": "MIT",
   "author": "knervous",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/knervous/eqrequiem.git",
+    "directory": "shader-object"
+  },
+  "homepage": "https://github.com/knervous/eqrequiem/tree/main/shader-object#readme",
+  "bugs": "https://github.com/knervous/eqrequiem/issues",
   "type": "module",
   "sideEffects": false,
   "files": [
@@ -11,6 +18,7 @@
     "msdf",
     "!**/.DS_Store",
     "README.md",
+    "RELEASE_NOTES.md",
     "LICENSE"
   ],
   "main": "./dist/index.cjs",
@@ -96,19 +104,17 @@
     }
   },
   "devDependencies": {
-    "@babylonjs/core": "^9.5.0",
-    "@babylonjs/loaders": "^9.5.0",
+    "@babylonjs/core": "9.16.1",
+    "@babylonjs/loaders": "9.16.1",
     "@jest/globals": "^30.2.0",
     "@jridgewell/sourcemap-codec": "^1.5.0",
     "@swc/core": "^1.13.5",
     "@swc/jest": "^0.2.39",
-    "@types/gl": "^6.0.5",
     "@types/jest": "^30.0.0",
     "@types/node": "^22.0.0",
     "assemblyscript": "^0.28.8",
     "binaryen": "^124.0.0",
     "cross-env": "^10.1.0",
-    "gl": "^8.1.6",
     "jest": "^30.2.0",
     "oxlint": "^1.74.0",
     "prettier": "^3.6.2",
@@ -116,7 +122,7 @@
     "rimraf": "^6.0.0",
     "terser": "^5.44.0",
     "tsup": "^8.0.1",
-    "typescript": "^7.0.2"
+    "typescript": "^5.7.3"
   },
   "engines": {
     "node": ">=18"

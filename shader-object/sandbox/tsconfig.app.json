@@ -2,8 +2,9 @@
   "extends": "../tsconfig.build.json",
   "compilerOptions": {
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
-    "types": ["vite/client", "@babylonjs/core"],
+    "types": ["vite/client", "@babylonjs/core", "node"],
     "customConditions": ["source"],
+    "preserveSymlinks": true,
 
     /* Bundler mode */
     "moduleResolution": "bundler",

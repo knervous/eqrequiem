@@ -3,8 +3,8 @@ import * as BABYLON from '@babylonjs/core';
 import * as GUI from '@babylonjs/gui';
 import '@babylonjs/loaders';
 import { FontAsset } from '@babylonjs/addons/msdfText/fontAsset';
-import { NameplateData, registerMSDFTextShaders } from 'shado/msdf';
-import { ShadoInstanceContainer, TestClass } from 'shado';
+import { NameplateData, registerMSDFTextShaders } from 'shader-object/msdf';
+import { ShadoInstanceContainer, TestClass } from 'shader-object';
 
 type AnimationRange = { from: number; to: number; name?: string };
 

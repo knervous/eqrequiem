@@ -10,10 +10,11 @@ export default defineConfig({
   plugins: [react({ tsDecorators: true })],
   resolve: {
     conditions: ['source'],
+    preserveSymlinks: true,
     dedupe: ['@babylonjs/core', 'react', 'react-dom'],
   },
   optimizeDeps: {
-    exclude: ['shado'],
+    exclude: ['shader-object'],
   },
   server: {
     fs: {

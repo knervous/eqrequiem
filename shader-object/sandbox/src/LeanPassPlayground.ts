@@ -7,7 +7,7 @@ import {
   createSolidColorAtlas,
   type ShadoDynamicEntityDestinationInput,
   type ShadoDynamicEntityInput,
-} from 'shado/render';
+} from 'shader-object/render';
 
 type EntityKind = 'work-item' | 'work-center' | 'resource' | 'queue';
 
