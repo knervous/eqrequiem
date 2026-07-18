@@ -541,11 +541,16 @@ uniform highp sampler2DArray uAtlasArray;
 vec4 sampleAtlas(vec2 uv, vec4 rect, float page) {
   vec2 tiled = fract(uv);                 // handle uvs like 3.2 or -0.3
   vec2 uvA = tiled * (rect.zw - rect.xy) + rect.xy;
-  return texture(uAtlasArray, vec3(uvA, page));
+  // Use an explicit LOD so the generated WGSL uses textureSampleLevel. Tint's
+  // uniformity analysis permits that operation even if its optimizer later
+  // moves this lookup beneath the per-instance atlas-rect selection.
+  return textureLod(uAtlasArray, vec3(uvA, page), 0.0);
 }
 void main() {
-  bool hasAtlasRect = vRect.z > vRect.x && vRect.w > vRect.y;
-  vec4 c = hasAtlasRect ? sampleAtlas(vUV, vRect, float(vPage)) : vec4(1.0);
+  // Select white for actors without an atlas allocation.
+  float hasAtlasRect = step(0.00000001, min(vRect.z - vRect.x, vRect.w - vRect.y));
+  vec4 atlasColor = sampleAtlas(vUV, vRect, float(vPage));
+  vec4 c = mix(vec4(1.0), atlasColor, hasAtlasRect);
   // if (c.a <= 0.001) discard;
   gl_FragColor = c * vColor;
 }

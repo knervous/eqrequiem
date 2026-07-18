@@ -188,6 +188,11 @@ export async function fetchShadoBytes(
   }
   const bytes = await response.arrayBuffer();
   if (!url.endsWith('.gz')) return bytes;
+  // Browsers transparently decode responses carrying Content-Encoding: gzip.
+  // Static servers commonly add that header for .gz artifacts, while object
+  // stores may return the same file as opaque gzip bytes. Support both forms.
+  const header = new Uint8Array(bytes, 0, Math.min(bytes.byteLength, 2));
+  if (header[0] !== 0x1f || header[1] !== 0x8b) return bytes;
   return gunzipBrowser(bytes, url);
 }
 
