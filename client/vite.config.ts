@@ -20,6 +20,29 @@ const hashLookupTimeoutMs = Number(
 const hashProviderUrl =
   process.env.VITE_HASH_PROVIDER_URL || "http://localhost:8082/hash";
 const serverjsSourceRoot = path.resolve(__dirname, "../serverjs/src");
+const clientBrowserDependencies = new Map([
+  [
+    "@sqlite.org/sqlite-wasm",
+    path.resolve(__dirname, "node_modules/@sqlite.org/sqlite-wasm/dist/index.mjs"),
+  ],
+  [
+    "@sqlite.org/sqlite-wasm/sqlite3.wasm",
+    path.resolve(__dirname, "node_modules/@sqlite.org/sqlite-wasm/dist/sqlite3.wasm"),
+  ],
+  ["drizzle-orm", path.resolve(__dirname, "node_modules/drizzle-orm/index.js")],
+  [
+    "drizzle-orm/mysql-core",
+    path.resolve(__dirname, "node_modules/drizzle-orm/mysql-core/index.js"),
+  ],
+  [
+    "drizzle-orm/pg-core",
+    path.resolve(__dirname, "node_modules/drizzle-orm/pg-core/index.js"),
+  ],
+  [
+    "drizzle-orm/sqlite-core",
+    path.resolve(__dirname, "node_modules/drizzle-orm/sqlite-core/index.js"),
+  ],
+]);
 
 function serverjsTypeScriptSource(
   source: string,
@@ -48,6 +71,8 @@ export default defineConfig({
       name: "serverjs-typescript-source",
       enforce: "pre",
       resolveId(source, importer) {
+        const clientDependency = clientBrowserDependencies.get(source);
+        if (clientDependency) return clientDependency;
         return serverjsTypeScriptSource(source, importer);
       },
     },
