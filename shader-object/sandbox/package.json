@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "prebuild": "npm --prefix .. run build:vat-bake-worker",
     "build": "tsc -b && vite build",
     "start": "vite",
     "lint": "oxlint src --tsconfig tsconfig.app.json --react-plugin --import-plugin --deny-warnings --report-unused-disable-directives",
@@ -26,7 +27,7 @@
     "fantasy-name-generator": "^2.0.0",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
-    "shader-object": "file:..",
+    "@knervous/shado": "file:..",
     "usehooks-ts": "^3.1.1"
   },
   "devDependencies": {

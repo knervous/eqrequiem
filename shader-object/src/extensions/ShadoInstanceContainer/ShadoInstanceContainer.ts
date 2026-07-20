@@ -15,11 +15,17 @@ import type {
   Observer,
   Skeleton,
 } from '../../babylon';
-import { type DQBuildOpts, type SerializedDQVAT, VATBuilder } from '../VATBuilder/VATBuilder';
+import {
+  type DQBuildOpts,
+  type PackedDQVAT,
+  type SerializedDQVAT,
+  VATBuilder,
+} from '../VATBuilder/VATBuilder';
 import { InitializeConfig } from '../../types';
 import { collectSourcesFromMeshes, makeResolverForMesh } from './utils';
 import { buildArrayAtlasFromSources } from '../AtlasBuilder/AtlasBuilder';
 import {
+  compactShadoVertexMetadata,
   mergeWithPreservedAtlasAttributes,
   normalizeSkinningIndexAttributesForWebGPU,
   stampSubmeshAtlasAttributes,
@@ -36,7 +42,11 @@ export type ShadoInstanceContainerOptions = {
   merge?: boolean;
   vatOptions?: DQBuildOpts;
   prebakedVat?: SerializedDQVAT;
+  /** Binary VAT returned by a Shado headless bake worker. */
+  packedVat?: PackedDQVAT;
   picking?: boolean | ShadoInstanceAsyncPickingOptions<any>;
+  /** Additional textures consumed by container-specific shader extensions. */
+  materialTextures?: Record<string, Texture>;
 };
 
 export type InstanceNameSource = readonly string[] | ((index: number) => string);
@@ -45,17 +55,62 @@ type ChildFieldRegistration<T extends ShadoActor> = {
   child: T;
 };
 
+function installSolidColorTextures(scene: Scene, meshes: Mesh[]): Texture[] {
+  const materials = new Set<any>();
+  for (const mesh of meshes) {
+    const material: any = mesh.material;
+    if (!material) continue;
+    if (Array.isArray(material.subMaterials)) {
+      for (const subMaterial of material.subMaterials) if (subMaterial) materials.add(subMaterial);
+    } else {
+      materials.add(material);
+    }
+  }
+
+  const generated: Texture[] = [];
+  for (const material of materials) {
+    // glTF permits a baseColorFactor without a texture. The showcase material
+    // samples an atlas, so synthesize a one-pixel source instead of silently
+    // rendering factor-only PBR materials black.
+    if (material.albedoTexture || material.diffuseTexture) continue;
+    const color = material.albedoColor ?? material.diffuseColor ?? BABYLON.Color3.White();
+    const alpha = Number.isFinite(material.alpha) ? material.alpha : 1;
+    const channel = (value: number) => Math.max(0, Math.min(255, Math.round(value * 255)));
+    const texture = new BABYLON.RawTexture(
+      new Uint8Array([channel(color.r), channel(color.g), channel(color.b), channel(alpha)]),
+      1,
+      1,
+      BABYLON.Engine.TEXTUREFORMAT_RGBA,
+      scene,
+      false,
+      false,
+      BABYLON.Texture.NEAREST_NEAREST,
+      BABYLON.Engine.TEXTURETYPE_UNSIGNED_BYTE
+    );
+    texture.name = `shado-solid-${material.uniqueId ?? generated.length}`;
+    texture.gammaSpace = true;
+    if ('albedoColor' in material) material.albedoTexture = texture;
+    else material.diffuseTexture = texture;
+    generated.push(texture);
+  }
+  return generated;
+}
+
 @gpuStruct({ name: 'ShadoInstanceContainer', useWasm: true })
 export class ShadoInstanceContainer<T extends ShadoActor> extends Shado {
-  @field('u32') visibleCount!: number;
-  @field('u32') instancesPtr!: number;
-  @field('u32') instancesCount!: number;
-  @field({ arrayOf: 'vec4' }) cameraFrustum!: Float32Array;
+  // `declare` is significant here: emitting native class fields after super()
+  // replaces Shado's packed-arena accessors with undefined data properties in
+  // production bundles. Thin actor objects skip constructors, but this owning
+  // container does not.
+  @field('u32') declare visibleCount: number;
+  @field('u32') declare instancesPtr: number;
+  @field('u32') declare instancesCount: number;
+  @field({ arrayOf: 'vec4' }) declare cameraFrustum: Float32Array;
   // We fill in the instances array struct dynamically
 
   private static _instanceName: string = ShadoActor.getSchema().name;
 
-  instances!: T[];
+  declare instances: T[];
   private _clipRanges: Map<string, number> = new Map();
   private _clipIndexByName: Map<string, number> = new Map();
   private _clipDurations: number[] = [];
@@ -65,6 +120,7 @@ export class ShadoInstanceContainer<T extends ShadoActor> extends Shado {
       material: ShadoMaterial<any>;
       oldMaterial?: Material | null;
       vatObserver?: Observer<Scene>;
+      generatedTextures?: Texture[];
     }
   >();
 
@@ -92,7 +148,12 @@ export class ShadoInstanceContainer<T extends ShadoActor> extends Shado {
       config.additionalFields = [
         { name: 'instances', type: { arrayOf: { structOf: childCtor } } },
       ];
-      this._instanceName = childCtor.getSchema?.().name ?? childCtor.name;
+      // generateGLSLPair is implemented on the base class and reads the base
+      // static. Assigning through `this` creates a shadow property on a
+      // subclass, leaving shaders stuck on ShadoActor and making Babylon fetch
+      // the missing include as a URL. Keep the selected actor schema global to
+      // this generated container family.
+      ShadoInstanceContainer._instanceName = childCtor.getSchema?.().name ?? childCtor.name;
     }
     return super.initialize(engine, config);
   }
@@ -102,6 +163,9 @@ export class ShadoInstanceContainer<T extends ShadoActor> extends Shado {
   }
 
   public override dispose() {
+    for (const binding of this._bindings.values()) {
+      for (const texture of binding.generatedTextures ?? []) texture.dispose();
+    }
     super.dispose();
   }
 
@@ -115,15 +179,19 @@ export class ShadoInstanceContainer<T extends ShadoActor> extends Shado {
   public setInstanceClip(i: number, clipNameOrId: string | number, speed = 1, phase = 0) {
     const ch = this._children[i];
     if (!ch) return;
-    const any: any = ch;
     const clipId =
       typeof clipNameOrId === 'number'
         ? clipNameOrId | 0
         : (this._clipIndexByName.get(clipNameOrId.toLowerCase()) ?? 0);
-    any.__anim = any.__anim ?? { clipId, timeSec: 0, speed: 1, phase: 0 };
-    any.__anim.clipId = clipId;
-    any.__anim.speed = speed;
-    any.__anim.phase = phase;
+    const clip = this.vat?.clips[clipId];
+    if (!clip) return;
+    ch.animationBuffer.set([
+      clip.from,
+      clip.to,
+      Math.max(0, Math.min(1, phase)) * Math.max(1, clip.frames - 1),
+      (clip.fps || 60) * speed,
+    ]);
+    ch.emitHeaderDirty();
   }
 
   public async attachMeshes(
@@ -133,17 +201,34 @@ export class ShadoInstanceContainer<T extends ShadoActor> extends Shado {
     opts: ShadoInstanceContainerOptions = {}
   ): Promise<ShadoMaterial<any>> {
     const useVat = opts.vat !== 'none';
+    const generatedColorTextures = installSolidColorTextures(scene, meshes);
     const { sources, byId: byId } = collectSourcesFromMeshes(meshes);
-    const atlas = await buildArrayAtlasFromSources(scene, sources, {
-      pageSize: 2048,
-      padding: 2,
-      bleed: 2,
-      allowRotation: false,
-      mipmaps: true,
-      //debug: { export: true, name: 'atlas' },
-    });
+    let atlas;
+    try {
+      atlas = await buildArrayAtlasFromSources(scene, sources, {
+        pageSize: 2048,
+        padding: 2,
+        bleed: 2,
+        allowRotation: false,
+        mipmaps: true,
+        //debug: { export: true, name: 'atlas' },
+      });
+    } catch (error) {
+      for (const texture of generatedColorTextures) texture.dispose();
+      throw error;
+    }
 
     meshes = meshes.filter(m => m.getTotalVertices() > 0);
+    // MergeMeshes writes source vertices in world space. Preserve the skinned
+    // source basis so an in-process VAT bake can express its palette in the
+    // resulting merged mesh's coordinate system too.
+    const paletteSource = meshes.find(m => !!m.skeleton) ?? meshes[0];
+    const mergePaletteBasis = opts.merge && useVat && paletteSource
+      ? paletteSource.computeWorldMatrix(true).clone()
+      : undefined;
+    const vatOptions = mergePaletteBasis && !opts.vatOptions?.paletteBasis
+      ? { ...opts.vatOptions, paletteBasis: mergePaletteBasis }
+      : opts.vatOptions;
     const texToId = new Map<Texture, string>();
     for (const [id, rec] of byId /* however you kept it */) {
       texToId.set(rec.tex, id);
@@ -152,10 +237,12 @@ export class ShadoInstanceContainer<T extends ShadoActor> extends Shado {
 
     let mesh: Mesh | undefined | null;
     if (opts.merge) {
-      for (const m of meshes) {
-        m.computeWorldMatrix(true);
-        m.bakeTransformIntoVertices(m.getWorldMatrix());
-      }
+      // Mesh.MergeMeshes already extracts every source with its world matrix
+      // and applies that transform while combining VertexData. Pre-baking the
+      // same matrix here transformed non-identity GLBs twice (BrainStem's
+      // COLLADA axis-conversion root is a 90-degree rotation), while the VAT
+      // palette was sampled from the once-transformed rig. Identity-root EQ
+      // assets hid this bug.
       for (const m of meshes) {
         const resolveId = makeResolverForMesh(m, idForTexture);
         stampSubmeshAtlasAttributes(m, atlas, resolveId);
@@ -177,6 +264,7 @@ export class ShadoInstanceContainer<T extends ShadoActor> extends Shado {
     }
 
     if (!mesh) throw new Error('attachMeshes: failed to merge meshes');
+    compactShadoVertexMetadata(mesh);
     if (scene.getEngine().isWebGPU) {
       normalizeSkinningIndexAttributesForWebGPU(mesh);
     }
@@ -186,31 +274,47 @@ export class ShadoInstanceContainer<T extends ShadoActor> extends Shado {
     }
 
     this.vat = useVat
-      ? opts.prebakedVat
-        ? VATBuilder.fromSerialized(scene as any, opts.prebakedVat)
-        : VATBuilder.buildFromScene(
-            scene as any,
-            mesh as any,
-            mesh.skeleton as any,
-            opts.vatOptions ?? {
-              useHalfDQ: true,
-            }
-          )
+      ? opts.packedVat
+        ? VATBuilder.fromPacked(scene as any, opts.packedVat)
+        : opts.prebakedVat
+          ? VATBuilder.fromSerialized(scene as any, opts.prebakedVat)
+        : vatOptions?.execution === 'worker'
+          ? await VATBuilder.buildFromSceneAsync(
+              scene as any,
+              mesh as any,
+              mesh.skeleton as any,
+              vatOptions
+            )
+          : VATBuilder.buildFromScene(
+              scene as any,
+              mesh as any,
+              mesh.skeleton as any,
+              vatOptions ?? { useHalfDQ: true }
+            )
       : undefined;
     this._useVatMaterial = useVat;
+    this._clipRanges.clear();
+    this._clipIndexByName.clear();
+    this._clipDurations.length = 0;
+    for (const [index, clip] of (this.vat?.clips ?? []).entries()) {
+      this._clipIndexByName.set(clip.name.toLowerCase(), index);
+      this._clipRanges.set(clip.name.toLowerCase(), clip.from);
+      this._clipDurations.push(clip.frames / Math.max(1, clip.fps));
+    }
     // 2) Build SOMaterial (this also installs controlled draw + hides default draw)
     const som = new ShadoMaterial(scene, mesh, atlas, this as unknown as Shado, {
       defines: opts.defines,
       logOnCompile: opts.logOnCompile,
       picking: opts.picking,
       useVat,
+      textures: opts.materialTextures,
     });
     if (this.vat) som.vatDQ = this.vat;
 
     mesh.material = som;
     mesh.alwaysSelectAsActiveMesh = true;
 
-    this._bindings.set(mesh, { material: som });
+    this._bindings.set(mesh, { material: som, generatedTextures: generatedColorTextures });
     return som;
   }
 
@@ -223,6 +327,7 @@ export class ShadoInstanceContainer<T extends ShadoActor> extends Shado {
       mesh.isVisible = true;
     }
     if (rec.vatObserver) mesh.getScene().onBeforeRenderObservable.remove(rec.vatObserver);
+    for (const texture of rec.generatedTextures ?? []) texture.dispose();
     this._bindings.delete(mesh);
   }
 
@@ -563,7 +668,7 @@ precision highp int;
 
 attribute vec3 position;
 attribute vec2 uv;
-attribute float aPage;
+attribute vec4 aMeta;
 attribute vec4  aRect;
 
 uniform mat4 worldViewProjection;
@@ -579,7 +684,7 @@ flat varying vec4  vRect;
 
 void main(void) {
   vUV = uv;
-  vPage = int(aPage);
+  vPage = int(aMeta.x);
   vRect = aRect;
 
   int drawIdx = gl_InstanceID;
@@ -612,7 +717,7 @@ attribute vec2 uv;
 
 attribute vec4 matricesIndices;
 attribute vec4 matricesWeights;
-attribute float aPage;
+attribute vec4 aMeta;
 attribute vec4  aRect;
 
 #ifdef BONES8
@@ -712,7 +817,7 @@ void accumDQAligned(inout vec4 rSum, inout vec4 dSum, vec4 addR, vec4 addD, floa
 
 void main(void) {
   vUV = uv;
-  vPage = int(aPage);
+  vPage = int(aMeta.x);
   vRect = aRect;
   // Instance indirection (draw order compaction)
   int drawIdx   = gl_InstanceID;
@@ -765,7 +870,6 @@ void main(void) {
     bw1 /= wsum;
   #endif
 
-  // Accumulate DQ and (optional) uniform scale
   vec4 r0 = vec4(0.0), d0 = vec4(0.0); float s0 = 0.0;
   vec4 r1 = vec4(0.0), d1 = vec4(0.0); float s1 = 0.0;
 
@@ -825,12 +929,13 @@ void main(void) {
     return { vs: 'moduleSource', fs: 'moduleSource' };
   }
 
-  public shuffleInstances(animationRanges: any[]) {
-    const reroll = true;
+  public shuffleInstances(animationRanges: any[], rerollNames = false) {
     for (let i = 0; i < this._children.length; i++) {
       const ch = this._children[i];
-      ch.initialize();
-      if (reroll) {
+      // Motion changes must not reset transforms, appearance, nameplate lift,
+      // or the name index. initialize() is only valid for newly allocated
+      // actors; calling it here erased the visible nameplate configuration.
+      if (rerollNames) {
         ch.nameIndex = this._nameplates
           ? Math.floor(this._nameplates.nameCount() * Math.random())
           : -1;
@@ -838,6 +943,6 @@ void main(void) {
       ch.playRandomAnimation(animationRanges);
       ch.emitHeaderDirty();
     }
-    if (reroll) this._nameplates?.rebuildStreams(this._children);
+    if (rerollNames) this._nameplates?.rebuildStreams(this._children);
   }
 }

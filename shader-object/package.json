@@ -1,5 +1,5 @@
 {
-  "name": "shader-object",
+  "name": "@knervous/shado",
   "version": "1.0.3",
   "description": "Packed GPU struct schemas + Babylon include emitters with optional AssemblyScript kernels",
   "license": "MIT",
@@ -135,6 +135,10 @@
     "format": "prettier --write src/**/*.ts",
     "format:check": "prettier --check src/**/*.ts",
     "build": "tsup",
+    "build:vat-kernel": "node scripts/build-vat-kernel.mjs",
+    "build:vat-bake-worker": "npm run build:vat-kernel && node scripts/build-vat-bake-worker.mjs",
+    "build:showcase-culling": "npm run build && node scripts/build-showcase-culling-wasm.mjs",
+    "benchmark:vat-kernel": "npm run build:vat-kernel && node scripts/benchmark-vat-kernel.mjs",
     "postbuild": "chmod +x dist/cli.js",
     "dev": "cross-env DEV=true tsup --watch",
     "prepublishOnly": "npm run build",
@@ -153,6 +157,7 @@
     "preprocess:sandbox:models": "npm run build && node dist/cli.js pack models --config sandbox/shado.config.mjs"
   },
   "dependencies": {
+    "fantasy-name-generator": "^2.0.0",
     "maxrects-packer": "^2.7.3"
   }
 }

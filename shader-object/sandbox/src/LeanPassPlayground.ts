@@ -7,7 +7,7 @@ import {
   createSolidColorAtlas,
   type ShadoDynamicEntityDestinationInput,
   type ShadoDynamicEntityInput,
-} from 'shader-object/render';
+} from '@knervous/shado/render';
 
 type EntityKind = 'work-item' | 'work-center' | 'resource' | 'queue';
 

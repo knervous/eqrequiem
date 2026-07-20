@@ -1,6 +1,6 @@
 
 import fantasyNameGenerator from 'fantasy-name-generator'
-import { InstancePool, NameplateData } from 'shader-object@0.6.1'
+import { InstancePool, NameplateData } from '@knervous/shado'
 import { buildUi } from './ui-overlay'
 import './glsl'  
 import './wgsl'  
@@ -225,6 +225,5 @@ export class Playground {
         return scene;
     }
 }
-
 
 

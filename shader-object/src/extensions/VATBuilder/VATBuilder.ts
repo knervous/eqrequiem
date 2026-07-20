@@ -1,6 +1,7 @@
 // VATObject_DQ.ts
 import type { Effect, Scene, Mesh, Skeleton, Texture, AnimationGroup, Matrix } from '../../babylon';
 import { BABYLON } from '../../babylon';
+import { packVatMatrices } from './VATWorker';
 
 export type DQClipInfo = {
   name: string;
@@ -14,6 +15,8 @@ export type DQBuildOpts = {
   useHalfDQ?: boolean;
   forceHalfDQ?: boolean;
   scaleEpsilon?: number;
+  /** Skip the expensive scale pre-pass when the source rig is known rigid. */
+  detectScale?: boolean;
   debugValidate?: boolean;
   /**
    * Manually specify animation ranges for .babylon files without embedded metadata.
@@ -22,6 +25,19 @@ export type DQBuildOpts = {
    */
   manualAnimationRanges?: Array<{ from: number; to: number; name?: string; fps?: number }>;
   defaultFPS?: number;
+  /** Exact animation groups owned by the imported asset container. */
+  animationGroups?: AnimationGroup[];
+  /** Offload matrix decomposition and DQ packing to an AssemblyScript worker. */
+  execution?: 'sync' | 'worker';
+  /** Number of sampled frames between browser task yields. Defaults to 2. */
+  yieldEveryFrames?: number;
+  /** Skip RawTexture creation when the result will be transferred from a headless worker. */
+  createTexture?: boolean;
+  /**
+   * Transform that was baked into vertices while merging source meshes.
+   * Skinning palettes are conjugated into that same space before DQ packing.
+   */
+  paletteBasis?: Matrix;
 };
 
 export type SerializedDQVAT = {
@@ -43,6 +59,21 @@ export type SerializedDQVAT = {
     byteLength: number;
     value: string;
   };
+};
+
+/** Transfer-friendly VAT payload used by headless bake workers. */
+export type PackedDQVAT = {
+  componentType: 'float32' | 'float16';
+  widthTexels: number;
+  heightTexels: number;
+  framesTotal: number;
+  bones: number;
+  dqWidthBones: number;
+  dqTilesX: number;
+  dqStrideTexels: number;
+  dqHasScale: boolean;
+  clips: DQClipInfo[];
+  pixels: Float32Array | Uint16Array;
 };
 
 type ScaleDetection = {
@@ -112,7 +143,8 @@ export class VATBuilder {
       scene,
       skeleton,
       opts.manualAnimationRanges,
-      opts.defaultFPS
+      opts.defaultFPS,
+      opts.animationGroups
     );
 
     if (groups.length === 0) {
@@ -132,8 +164,10 @@ export class VATBuilder {
     dq.framesTotal = framesTotal | 0;
 
     // 3) Decide whether any clip/bone uses (non-unit) scale
-    const scaleEps = opts.scaleEpsilon ?? 1e-5;
-    const scaleInfo = detectAnimatedScale(scene, mesh, skeleton, groups, scaleEps);
+    const scaleEps = opts.scaleEpsilon ?? 1e-4;
+    const scaleInfo = opts.detectScale === false
+      ? { hasScale: false, hasAnisotropic: false }
+      : detectAnimatedScale(scene, mesh, skeleton, groups, scaleEps);
     const hasScale = scaleInfo.hasScale && !scaleInfo.hasAnisotropic;
     if (scaleInfo.hasAnisotropic) {
       BABYLON.Logger.Warn(
@@ -193,22 +227,15 @@ export class VATBuilder {
           // Fallback: Use scene.beginAnimation for .babylon files
           // This approach works when animations aren't in AnimationGroups
           scene.beginAnimation(skeleton, targetFrame, targetFrame, false, 1.0);
-          scene.render();
         } else {
           // Use the animation group's built-in frame advance
           animationGroup.goToFrame(targetFrame);
-          // CRITICAL: Force scene to evaluate animations by calling render
-          // This updates all animated properties on bones
-          scene.render();
         }
-
-        // Force immediate update of all bones
-        for (const bone of skeleton.bones) {
-          bone.computeWorldMatrix(true); // force immediate update
-        }
-
-        skeleton.prepare();
-        skeleton.computeAbsoluteMatrices(true);
+        // Preserve the evaluation order used by the original, validated DQ
+        // baker. In particular, this synchronizes animations targeting linked
+        // glTF TransformNodes before the Bone matrices are sampled.
+        scene.render();
+        const skinPalette = captureSkeletonPalette(mesh, skeleton, opts.paletteBasis);
 
         // Write one "frame-row": split across tilesX rows
         const row0 = (frameRowBase + f) * tilesX;
@@ -220,16 +247,7 @@ export class VATBuilder {
           const yRow = row0 + tile;
           const yTex = yRow;
 
-          // Get the bone's current world-space matrix (finalMatrix), then multiply by inverse bind
-          // to get the skinning transform.
-          // For Babylon.js: skinMatrix should transform from bind pose to current pose
-          const bone = skeleton.bones[b];
-          const finalMatrix = bone.getFinalMatrix();
-          const inverseBindMatrix = bone.getAbsoluteInverseBindMatrix();
-
-          // The correct formula for skinning is: skinMatrix = inverseBindMatrix × finalMatrix
-          // This transforms: bindPose -> world -> currentPose
-          const M = finalMatrix.multiply(inverseBindMatrix);
+          const M = BABYLON.Matrix.FromArray(skinPalette, b * 16);
 
           const S = new BABYLON.Vector3();
           const R = new BABYLON.Quaternion();
@@ -348,6 +366,167 @@ export class VATBuilder {
     return dq;
   }
 
+  /**
+   * Worker-capable VAT path. Babylon still evaluates poses on the main thread,
+   * but matrix decomposition, quaternion normalization, DQ construction, atlas
+   * layout and float16 conversion run in the AssemblyScript worker kernel.
+   */
+  public static async buildFromSceneAsync(
+    scene: Scene,
+    mesh: Mesh,
+    skeleton: Skeleton,
+    opts: DQBuildOpts = {}
+  ): Promise<VATBuilder> {
+    const engine = scene.getEngine();
+    const groups = collectBoneDrivingGroups(
+      scene,
+      skeleton,
+      opts.manualAnimationRanges,
+      opts.defaultFPS,
+      opts.animationGroups
+    );
+    if (!groups.length) throw new Error('No animation groups or scene animations found for this skeleton.');
+    const { clips, framesTotal } = computeClipFrameTable(groups, opts.defaultFPS ?? 60);
+    const scaleInfo = opts.detectScale === false
+      ? { hasScale: false, hasAnisotropic: false }
+      : detectAnimatedScale(scene, mesh, skeleton, groups, opts.scaleEpsilon ?? 1e-4);
+    const hasScale = scaleInfo.hasScale && !scaleInfo.hasAnisotropic;
+    const bones = skeleton.bones.length | 0;
+    const strideTexels = hasScale ? 3 : 2;
+    const maxTex = engine.getCaps().maxTextureSize | 0;
+    const dqWidthBones = Math.max(1, Math.min(bones, Math.floor(maxTex / strideTexels)));
+    const tilesX = Math.ceil(bones / dqWidthBones);
+    const atlasWidthTexels = dqWidthBones * strideTexels;
+    const atlasHeight = framesTotal * tilesX;
+    if (atlasHeight > maxTex) {
+      throw new Error(`VAT atlas height ${atlasHeight} exceeds GPU limit ${maxTex}. Reduce animation clips.`);
+    }
+    const useHalf = !!opts.useHalfDQ && (!!engine.getCaps().textureHalfFloat || !!opts.forceHalfDQ);
+    const matrices = new Float32Array(framesTotal * bones * 16);
+    const useSceneBeginAnimation = !!(groups[0] as any).__fromSceneBeginAnimation;
+    const yieldEvery = Math.max(1, opts.yieldEveryFrames ?? 2);
+    let frameRowBase = 0;
+    let sampled = 0;
+    for (const animationGroup of groups) {
+      const from = Math.floor(animationGroup.from ?? 0);
+      const to = Math.floor(animationGroup.to ?? from);
+      const frames = Math.max(0, to - from + 1) | 0;
+      if (!frames) continue;
+      skeleton.returnToRest();
+      if (!useSceneBeginAnimation) {
+        animationGroup.reset();
+        animationGroup.play(false);
+        animationGroup.pause();
+      }
+      for (let frame = 0; frame < frames; frame++) {
+        const target = from + frame;
+        if (useSceneBeginAnimation) scene.beginAnimation(skeleton, target, target, false, 1);
+        else animationGroup.goToFrame(target);
+        scene.render();
+        const skinPalette = captureSkeletonPalette(mesh, skeleton, opts.paletteBasis);
+        matrices.set(
+          skinPalette.subarray(0, bones * 16),
+          (frameRowBase + frame) * bones * 16,
+        );
+        sampled++;
+        if (sampled % yieldEvery === 0) {
+          await new Promise<void>(resolve => setTimeout(resolve, 0));
+        }
+      }
+      animationGroup.stop();
+      frameRowBase += frames;
+    }
+
+    const pixels = await packVatMatrices({
+      matrices,
+      frames: framesTotal,
+      bones,
+      dqWidthBones,
+      tilesX,
+      strideTexels,
+      useHalf,
+      worker: opts.execution === 'worker',
+    });
+    const texture = opts.createTexture === false ? undefined : new BABYLON.RawTexture(
+      pixels,
+      atlasWidthTexels,
+      atlasHeight,
+      BABYLON.Engine.TEXTUREFORMAT_RGBA,
+      engine,
+      false,
+      false,
+      BABYLON.Texture.NEAREST_NEAREST,
+      useHalf ? BABYLON.Engine.TEXTURETYPE_HALF_FLOAT : BABYLON.Engine.TEXTURETYPE_FLOAT
+    );
+    if (texture) {
+      texture.wrapU = BABYLON.Texture.CLAMP_ADDRESSMODE;
+      texture.wrapV = BABYLON.Texture.CLAMP_ADDRESSMODE;
+    }
+    const dq = new VATBuilder();
+    dq.framesTotal = framesTotal;
+    dq.bones = bones;
+    dq._clips = clips;
+    dq._dqTex = texture;
+    dq._dqWidthBones = dqWidthBones;
+    dq._dqTilesX = tilesX;
+    dq._dqStrideTexels = strideTexels;
+    dq._dqHasScale = hasScale;
+    dq._dqWidthTexels = atlasWidthTexels;
+    dq._dqHeightTexels = atlasHeight;
+    dq._dqComponentType = useHalf ? 'float16' : 'float32';
+    dq._dqPixels = pixels;
+    return dq;
+  }
+
+  public toPacked(): PackedDQVAT {
+    if (!this._dqPixels) throw new Error('VATBuilder.toPacked() called before DQ pixels were built');
+    return {
+      componentType: this._dqComponentType,
+      widthTexels: this._dqWidthTexels,
+      heightTexels: this._dqHeightTexels,
+      framesTotal: this.framesTotal,
+      bones: this.bones,
+      dqWidthBones: this._dqWidthBones,
+      dqTilesX: this._dqTilesX,
+      dqStrideTexels: this._dqStrideTexels,
+      dqHasScale: this._dqHasScale,
+      clips: this.clips,
+      pixels: this._dqPixels,
+    };
+  }
+
+  public static fromPacked(scene: Scene, packed: PackedDQVAT): VATBuilder {
+    const texture = new BABYLON.RawTexture(
+      packed.pixels,
+      packed.widthTexels,
+      packed.heightTexels,
+      BABYLON.Engine.TEXTUREFORMAT_RGBA,
+      scene.getEngine(),
+      false,
+      false,
+      BABYLON.Texture.NEAREST_NEAREST,
+      packed.componentType === 'float16'
+        ? BABYLON.Engine.TEXTURETYPE_HALF_FLOAT
+        : BABYLON.Engine.TEXTURETYPE_FLOAT
+    );
+    texture.wrapU = BABYLON.Texture.CLAMP_ADDRESSMODE;
+    texture.wrapV = BABYLON.Texture.CLAMP_ADDRESSMODE;
+    const dq = new VATBuilder();
+    dq.framesTotal = packed.framesTotal;
+    dq.bones = packed.bones;
+    dq._clips = packed.clips.slice();
+    dq._dqTex = texture;
+    dq._dqWidthBones = packed.dqWidthBones;
+    dq._dqTilesX = packed.dqTilesX;
+    dq._dqStrideTexels = packed.dqStrideTexels;
+    dq._dqHasScale = packed.dqHasScale;
+    dq._dqWidthTexels = packed.widthTexels;
+    dq._dqHeightTexels = packed.heightTexels;
+    dq._dqComponentType = packed.componentType;
+    dq._dqPixels = packed.pixels;
+    return dq;
+  }
+
   public toSerialized(): SerializedDQVAT {
     if (!this._dqPixels) {
       throw new Error('VATBuilder.toSerialized() called before DQ pixels were built');
@@ -456,6 +635,47 @@ export class VATBuilder {
   }
 }
 
+export function captureSkeletonPalette(
+  mesh: Mesh,
+  skeleton: Skeleton,
+  paletteBasis?: Matrix
+): Float32Array {
+  // Babylon resolves linked transform nodes, bind matrices and declared matrix
+  // indices into the exact palette its stock skinning path consumes. The DQ
+  // atlas changes only its representation; it must not change that palette.
+  skeleton.prepare(true);
+  mesh.computeWorldMatrix(true);
+  skeleton.computeAbsoluteMatrices(true);
+  const palette = skeleton.getTransformMatrices(mesh) as Float32Array;
+  return paletteBasis
+    ? conjugateSkeletonPalette(palette, skeleton.bones.length, paletteBasis)
+    : palette;
+}
+
+/**
+ * Re-express a skinning palette after vertices have been transformed by
+ * `basis`. Babylon composes transforms in row-vector order: if v' = v * B,
+ * then (v * B) * M' = (v * M) * B, so M' = inverse(B) * M * B.
+ */
+export function conjugateSkeletonPalette(
+  palette: Float32Array,
+  boneCount: number,
+  basis: Matrix
+): Float32Array {
+  const result = new Float32Array(palette);
+  const inverseBasis = basis.clone();
+  inverseBasis.invert();
+  const first = new BABYLON.Matrix();
+  const transformed = new BABYLON.Matrix();
+  for (let bone = 0; bone < boneCount; bone++) {
+    const skin = BABYLON.Matrix.FromArray(palette, bone * 16);
+    inverseBasis.multiplyToRef(skin, first);
+    first.multiplyToRef(basis, transformed);
+    transformed.copyToArray(result, bone * 16);
+  }
+  return result;
+}
+
 function bytesToBase64(bytes: Uint8Array): string {
   const maybeBuffer = (globalThis as any).Buffer;
   if (maybeBuffer?.from) return maybeBuffer.from(bytes).toString('base64');
@@ -483,8 +703,10 @@ function collectBoneDrivingGroups(
   scene: Scene,
   skeleton: Skeleton,
   manualRanges?: Array<{ from: number; to: number; name?: string; fps?: number }>,
-  defaultFPS?: number
+  defaultFPS?: number,
+  ownedGroups?: AnimationGroup[]
 ): AnimationGroup[] {
+  if (ownedGroups?.length) return ownedGroups;
   // If manual ranges provided, use them directly
   if (manualRanges && manualRanges.length > 0) {
     // eslint-disable-next-line no-console
@@ -499,6 +721,17 @@ function collectBoneDrivingGroups(
     });
   }
 
+  // glTF animations target TransformNodes. Bone names repeat across characters,
+  // so matching by name alone causes animation groups from every previously
+  // loaded humanoid to be baked into the next skeleton. Prefer the transform
+  // node identity Babylon attached to each bone; retain the name fallback only
+  // for importers that do not expose that link.
+  const skeletonTransformNodes = new Set(
+    skeleton.bones
+      .map(bone => (bone as any).getTransformNode?.())
+      .filter((node): node is object => !!node)
+  );
+
   // First, try to get AnimationGroups (glTF, modern format)
   const groups = scene.animationGroups.filter(g =>
     g.targetedAnimations?.some(ta => {
@@ -511,6 +744,7 @@ function collectBoneDrivingGroups(
       }
 
       if (t.getClassName?.() === 'TransformNode') {
+        if (skeletonTransformNodes.size > 0) return skeletonTransformNodes.has(t);
         // For glTF: TransformNodes represent bones, check if skeleton has a bone with matching name
         const boneName = t.name;
         const hasBone = skeleton.bones.some(b => b.name === boneName);
@@ -679,12 +913,10 @@ function detectAnimatedScale(
       ag.goToFrame(from + f);
       scene.render();
       skeleton.computeAbsoluteMatrices(true);
+      const palette = captureSkeletonPalette(mesh, skeleton);
 
       for (let b = 0; b < skeleton.bones.length; b++) {
-        const bone = skeleton.bones[b];
-        const finalMatrix = bone.getFinalMatrix();
-        const inverseBindMatrix = bone.getAbsoluteInverseBindMatrix();
-        const M = finalMatrix.multiply(inverseBindMatrix);
+        const M = BABYLON.Matrix.FromArray(palette, b * 16);
 
         const S = new BABYLON.Vector3();
         const R = new BABYLON.Quaternion();
@@ -696,7 +928,7 @@ function detectAnimatedScale(
         if (Math.abs(sx - 1) > eps || Math.abs(sy - 1) > eps || Math.abs(sz - 1) > eps) {
           hasScale = true;
           const axisDiff = Math.max(Math.abs(sx - sy), Math.abs(sx - sz), Math.abs(sy - sz));
-          if (axisDiff > eps) {
+          if (axisDiff > eps * Math.max(1, sx, sy, sz)) {
             hasAnisotropic = true;
             ag.stop();
             return { hasScale, hasAnisotropic };

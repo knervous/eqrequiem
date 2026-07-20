@@ -4,7 +4,7 @@ import { resolveCtor } from '../utils/type-helpers';
 export function emitASUnmanagedFromSchema(parentSchema: any): string {
   const lines: string[] = [];
 
-  function emitClass(name: string, fields: any[]) {
+  function emitClass(name: string, fields: any[], headerFloatCount: number) {
     const structFields = [] as string[];
     lines.push(`@unmanaged\nclass ${name}Header {`);
     let totalSize = 0;
@@ -73,14 +73,17 @@ export function emitASUnmanagedFromSchema(parentSchema: any): string {
       }
     }
     // pad to headerFloatCount * 4
-    const needF =
-      parentSchema.name === name
-        ? parentSchema.headerFloatCount
-        : (parentSchema.structArrays[name]?.schema?.headerFloatCount ?? 0);
+    const needF = headerFloatCount;
 
     const haveF = totalSize >> 2;
     const padF = Math.max(0, needF - haveF);
     for (let i = 0; i < padF; i++) lines.push(`  __pad${i}: f32;`);
+    // The JS arena uses the schema's vec4-aligned headerFloatCount as its AoS
+    // stride. The unmanaged class includes that tail padding too, so SIZEOF
+    // must include it. Returning the unpadded field sum made WASM walk 184-byte
+    // EqShowcaseActor records while JS allocated 192-byte records; visibility
+    // writes then landed in transforms/animations and appeared as NaNs.
+    totalSize = needF * 4;
 
     lines.push(`}`);
 
@@ -108,10 +111,10 @@ function instanceRef_${field}(h: ${name}Header, i: i32): ${field}Header {
 
   for (const [_arrName, meta] of Object.entries(parentSchema.structArrays)) {
     const child = (meta as any).schema;
-    emitClass(child.name, child.fields);
+    emitClass(child.name, child.fields, child.headerFloatCount);
   }
 
-  emitClass(parentSchema.name, parentSchema.fields);
+  emitClass(parentSchema.name, parentSchema.fields, parentSchema.headerFloatCount);
 
   return lines.join('\n');
 }

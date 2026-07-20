@@ -3,17 +3,9 @@ import * as BABYLON from '@babylonjs/core';
 import * as GUI from '@babylonjs/gui';
 import '@babylonjs/loaders';
 import { FontAsset } from '@babylonjs/addons/msdfText/fontAsset';
-import { NameplateData, registerMSDFTextShaders } from 'shader-object/msdf';
-import { ShadoInstanceContainer, TestClass } from 'shader-object';
-
-type AnimationRange = { from: number; to: number; name?: string };
-
-const animationRanges: AnimationRange[] = [
-  { from: 0, to: 33, name: 'Animation_0' },
-  { from: 33, to: 61, name: 'Animation_1' },
-  { from: 63, to: 91, name: 'Animation_2' },
-  { from: 93, to: 130, name: 'Animation_3' },
-];
+import { NameplateData, registerMSDFTextShaders } from '@knervous/shado/msdf';
+import { ShadoInstanceContainer, TestClass } from '@knervous/shado';
+import { fetchShadoBytes } from '@knervous/shado/preprocess/runtime';
 
 function randomFantasyName(): string {
   const name = fantasyNameGenerator.nameByRace('demon');
@@ -55,14 +47,17 @@ export class MsdfReferencePlayground {
       scene
     );
 
-    const importResult = await BABYLON.ImportMeshAsync(
-      'https://raw.githubusercontent.com/RaggarDK/Baby/baby/arr.babylon',
-      scene,
-      undefined
-    );
-    const mesh = importResult.meshes.find(
-      m => m instanceof BABYLON.Mesh && m.getTotalVertices() > 0
-    ) as BABYLON.Mesh | undefined;
+    const skeletonBytes = await fetchShadoBytes('/shado/eq-demo/models/ske.glb.gz');
+    const skeletonUrl = URL.createObjectURL(new Blob([skeletonBytes], { type: 'model/gltf-binary' }));
+    const importResult = await BABYLON.LoadAssetContainerAsync(skeletonUrl, scene, {
+      pluginExtension: '.glb',
+    });
+    URL.revokeObjectURL(skeletonUrl);
+    importResult.addAllToScene();
+    const sourceMeshes = importResult.meshes.filter(
+      m => m instanceof BABYLON.Mesh && m.getTotalVertices() > 0 && m.skeleton
+    ) as BABYLON.Mesh[];
+    const mesh = sourceMeshes[0];
     if (!mesh) throw new Error('MSDF reference scene could not find a renderable mesh.');
 
     const skeleton = mesh.skeleton ?? importResult.skeletons[0];
@@ -90,14 +85,11 @@ export class MsdfReferencePlayground {
     instancePool.addNamesToPool(fantasyNames);
     (window as any).ipool = instancePool;
 
-    await instancePool.attachMeshes(scene, [mesh], skeleton as any, {
+    await instancePool.attachMeshes(scene, sourceMeshes, skeleton as any, {
+      merge: true,
       replaceMaterial: true,
       disposeOriginalMaterial: false,
-      vatOptions: {
-        useHalfDQ: true,
-        defaultFPS: 30,
-        manualAnimationRanges: animationRanges,
-      },
+      vatOptions: { useHalfDQ: true },
       logOnCompile: true,
       picking: {
         radius: 1.25,
@@ -322,7 +314,7 @@ function buildUi(scene: BABYLON.Scene, actorPool: ShadoInstanceContainer<TestCla
   panel.addControl(mkBtn('Add 100', () => actorPool.addInstances(100, randomFantasyName)));
   panel.addControl(mkBtn('Add 1000', () => actorPool.addInstances(1000, randomFantasyName)));
   panel.addControl(mkBtn('Remove Random', () => actorPool.removeRandomInstance()));
-  panel.addControl(mkBtn('Shuffle All', () => actorPool.shuffleInstances(animationRanges)));
+  panel.addControl(mkBtn('Shuffle All', () => actorPool.shuffleInstances(actorPool.vat?.clips ?? [])));
   panel.addControl(mkBtn('Back to shado scene', () => { window.location.pathname = '/'; }));
 
   const radiusTitle = new GUI.TextBlock('radiusTitle', 'Cull Radius: 100');

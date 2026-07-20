@@ -1,5 +1,6 @@
 export * from './types';
 export * from './decorators';
+export * from './publish';
 export * from './arena/FloatArena';
 export * from './arena/DirtyPageTracker';
 export * from './arena/ByteArena';
@@ -28,5 +29,8 @@ export * from './materials/ShadoMaterial';
 
 export * from './babylon';
 export * from './render';
+export * from './showcase/EqShowcase';
+export * from './showcase/EqShowcaseUi';
+export * from './showcase/ShadoShowcaseEnvironment';
 
-export const VERSION = '1.0.0';
+export const VERSION = '1.0.3';

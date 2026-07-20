@@ -33,6 +33,10 @@ export class FloatArena {
     this.listeners.push(cb);
   }
 
+  clearReallocListeners() {
+    this.listeners.length = 0;
+  }
+
   private rebroadcast() {
     for (const fn of this.listeners) fn();
   }

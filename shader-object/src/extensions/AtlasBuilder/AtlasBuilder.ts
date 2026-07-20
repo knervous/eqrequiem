@@ -35,7 +35,6 @@ function extrude(
   ctx.drawImage(ctx.canvas, x + w - 1, y + h - 1, 1, 1, x + w, y + h, b, b);
 }
 async function readTextureToImageData(scene: Scene, tex: Texture): Promise<ImageData> {
-  const engine: any = scene.getEngine();
   const it = (tex as any).getInternalTexture?.() ?? (tex as any)._texture;
   if (!it) throw new Error('Texture has no InternalTexture');
 
@@ -50,22 +49,35 @@ async function readTextureToImageData(scene: Scene, tex: Texture): Promise<Image
   const w = it.width,
     h = it.height;
 
-  // Fast path: uncompressed, UNSIGNED_BYTE -> direct read gives RGBA8
-  const canDirectRead =
-    !!engine._readTexturePixels &&
-    it.type === BABYLON.Engine.TEXTURETYPE_UNSIGNED_BYTE &&
-    it.format === BABYLON.Engine.TEXTUREFORMAT_RGBA &&
-    !it.is3D &&
-    !it.isCube &&
-    !it.isCompressed;
-
-  if (canDirectRead) {
-    const data = (await tex.readPixels()) as Uint8Array;
-    return new ImageData(
-      data instanceof Uint8ClampedArray ? data : new Uint8ClampedArray(data),
-      w,
-      h
-    );
+  // Fast path: uncompressed UNSIGNED_BYTE. Legacy Babylon assets commonly
+  // decode JPEGs as RGB while glTF textures are usually RGBA; read both and
+  // normalize to the atlas' RGBA8 contract.
+  if (!it.is3D && !it.isCube) {
+    const source = (await tex.readPixels()) as ArrayBufferView | null;
+    if (!source) throw new Error('readTextureToImageData: texture returned no pixels');
+    const values = source as unknown as ArrayLike<number>;
+    const channels = values.length / Math.max(1, w * h);
+    if (channels === 4 || channels === 3 || channels === 1) {
+      const rgba = new Uint8ClampedArray(w * h * 4);
+      const isByte = source instanceof Uint8Array || source instanceof Uint8ClampedArray;
+      const isFloat = source instanceof Float32Array || source instanceof Float64Array;
+      const channel = (index: number) => {
+        const value = Number(values[index] ?? 0);
+        if (isByte) return value;
+        if (isFloat) return Math.round(Math.max(0, Math.min(1, value)) * 255);
+        // Half/unsigned-short texture readback.
+        return Math.round(Math.max(0, Math.min(65535, value)) / 257);
+      };
+      for (let pixel = 0; pixel < w * h; pixel++) {
+        const sourceOffset = pixel * channels;
+        const targetOffset = pixel * 4;
+        rgba[targetOffset] = channel(sourceOffset);
+        rgba[targetOffset + 1] = channels >= 3 ? channel(sourceOffset + 1) : channel(sourceOffset);
+        rgba[targetOffset + 2] = channels >= 3 ? channel(sourceOffset + 2) : channel(sourceOffset);
+        rgba[targetOffset + 3] = channels === 4 ? channel(sourceOffset + 3) : 255;
+      }
+      return new ImageData(rgba, w, h);
+    }
   }
 
   throw new Error('readTextureToImageData: Unsupported texture type for readPixels');

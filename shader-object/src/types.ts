@@ -97,6 +97,7 @@ export type ShadoStatics = {
   shaderIO(engine: any): { uniforms: string[]; samplers: string[] };
   wasmCompiled?: boolean;
   compiledWasmModule?: WebAssembly.Module;
+  compiledWasmBytes?: Uint8Array;
   ascExtension?: ASCExtension;
 };
 

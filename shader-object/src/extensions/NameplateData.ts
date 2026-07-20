@@ -177,6 +177,11 @@ class FontGlyphLUT {
     return this.advanceByCode.get(cp) ?? this.fallbackAdvanceEM;
   }
 
+  planeBoundsEM(gid: number): readonly [number, number] {
+    const offset = gid * 4;
+    return [this.plane4[offset] ?? 0, this.plane4[offset + 2] ?? 0];
+  }
+
   kerningEM(a: number, b: number): number {
     return this.kerningPx(a, b) / this.emPx;
   }
@@ -220,8 +225,19 @@ class NameplateStreams {
         prevCP = cp;
       }
 
-      const nameWidthEM = penX_EM;
-      const shift = -0.5 * nameWidthEM;
+      // Center the visible glyph planes, not the typographic advance width.
+      // Advance includes trailing side-bearing, which pushed every label to
+      // the right and read visually as extra padding on the left.
+      let visibleMin = Infinity;
+      let visibleMax = -Infinity;
+      for (let i = 0; i < localGids.length; i++) {
+        const [xmin, xmax] = this.font.planeBoundsEM(localGids[i]);
+        visibleMin = Math.min(visibleMin, localOfsX[i] + xmin);
+        visibleMax = Math.max(visibleMax, localOfsX[i] + xmax);
+      }
+      const shift = Number.isFinite(visibleMin) && Number.isFinite(visibleMax)
+        ? -0.5 * (visibleMin + visibleMax)
+        : -0.5 * penX_EM;
 
       const base = gidList.length;
       const count = localGids.length;

@@ -27,6 +27,8 @@ export interface ShadoMaterialOptions<TActor extends ShadoActor = ShadoActor> {
   logOnCompile?: boolean;
   picking?: boolean | ShadoInstanceAsyncPickingOptions<TActor>;
   useVat?: boolean;
+  /** Additional application-owned textures exposed to generated shaders. */
+  textures?: Record<string, Texture>;
 }
 
 export class ShadoMaterial<T extends Shado> extends BABYLON.ShaderMaterial {
@@ -68,7 +70,10 @@ export class ShadoMaterial<T extends Shado> extends BABYLON.ShaderMaterial {
 
     // ── Detect bone influencers and set attributes/defines ───────────────────
     const influencers = useVat ? (mesh.numBoneInfluencers ?? (mesh.skeleton ? 4 : 0)) : 0;
-    const attributes = ['position', 'uv', 'aPage', 'aRect'];
+    const attributes = ['position', 'uv', 'aMeta', 'aRect'];
+    for (const kind of mesh.getVerticesDataKinds()) {
+      if (kind.startsWith('a') && !attributes.includes(kind)) attributes.push(kind);
+    }
 
     const defines = new Set<string>(opts?.defines ?? []);
     if (influencers > 0) defines.add('USE_BONES');
@@ -92,7 +97,12 @@ export class ShadoMaterial<T extends Shado> extends BABYLON.ShaderMaterial {
       uniforms.push('uDQHasScale');
     }
 
-    const samplers = [...shaderIo.samplers, ...(useVat ? ['uDQAtlas'] : []), 'uAtlasArray'];
+    const samplers = [
+      ...shaderIo.samplers,
+      ...(useVat ? ['uDQAtlas'] : []),
+      'uAtlasArray',
+      ...Object.keys(opts?.textures ?? {}),
+    ];
 
     const { vertex, fragment } = shado.getShaderNames();
 
@@ -247,6 +257,11 @@ export class ShadoMaterial<T extends Shado> extends BABYLON.ShaderMaterial {
         drawWrapper,
         (mesh as any)._internalMeshDataInfo?._effectiveSideOrientation
       );
+      // Keep the effect/program pair explicit: the custom instanced path does
+      // not call Material.bindForSubMesh(), and multiple Shado pools alternate
+      // effects every frame.
+      if (!engine.isWebGPU) (engine as any)._currentEffect = null;
+      engine.enableEffect(drawWrapper);
 
       const worldMatrix = mesh.getWorldMatrix();
       const transformMatrix = scene.getTransformMatrix();
@@ -261,6 +276,18 @@ export class ShadoMaterial<T extends Shado> extends BABYLON.ShaderMaterial {
 
       shado.bind(effect);
       effect.setTexture('uAtlasArray', atlas.texture);
+      // This renderer submits its own instanced draw and therefore bypasses
+      // ShaderMaterial.bindForSubMesh(). Bind application samplers explicitly
+      // just like the atlas/VAT samplers. Delaying this until the effect is
+      // active also lets WebGL assign each sampler type a distinct unit.
+      for (const [sampler, texture] of Object.entries(opts?.textures ?? {})) {
+        // WebGL caches sampler-unit state on the uniform wrapper. If a texture
+        // was prepared while another program was active, force the first
+        // assignment for this program instead of trusting that stale cache.
+        const uniform = !engine.isWebGPU ? effect.getUniform(sampler) as any : undefined;
+        if (uniform) uniform._currentState = undefined;
+        effect.setTexture(sampler, texture);
+      }
       if (useVat) {
         this._vat?.bind(effect);
         effect.setFloat('bakedVertexAnimationTime', this._timeSec);

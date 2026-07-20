@@ -1,1 +1,1 @@
-export { createMsdfNameplateLayer, createMSDFNameplateLayer } from 'shader-object/msdf';
+export { createMsdfNameplateLayer, createMSDFNameplateLayer } from '@knervous/shado/msdf';

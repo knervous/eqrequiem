@@ -35,6 +35,12 @@ import { PendingField, readClassMeta, readFields } from '../decorators';
 import type { AbstractEngine } from '@babylonjs/core';
 import { BABYLON } from '../babylon';
 import type { ShadoStructSchema } from '../schema/ShadoStructSchema';
+import {
+  createShadoPublishedFacade,
+  getShadoPublishedProperties,
+  type ShadoPublishedFacade,
+  type ShadoPublishedProperty,
+} from '../publish';
 
 export type ASCExtension = {
   /** Extra AssemblyScript source to concat into the module (strings, not files). */
@@ -103,6 +109,7 @@ export abstract class Shado {
   private _fsBody = '';
 
   private _built = false;
+  private _publishedFacade?: ShadoPublishedFacade;
   private _schemas: SchemaSpec[] = [];
 
   private _isDisposed = false;
@@ -166,6 +173,15 @@ export abstract class Shado {
 
   private _dirtyHandlers?: DirtyHandler[];
 
+  /** Friendly, validated public controls declared with `@shadoPublish`. */
+  public get published(): ShadoPublishedFacade {
+    return this._publishedFacade ??= createShadoPublishedFacade(this);
+  }
+
+  public getPublishedProperties(): readonly ShadoPublishedProperty[] {
+    return getShadoPublishedProperties(this);
+  }
+
   private _structVersion = 0;
   private _lastSyncedStructVersion = -1;
   private _lastSyncedBuffer: ArrayBuffer | null = null;
@@ -181,6 +197,8 @@ export abstract class Shado {
 
   public static wasmCompiled?: boolean;
   public static compiledWasmModule?: WebAssembly.Module;
+  /** Original module bytes retained so build tooling can vendor a precompiled kernel. */
+  public static compiledWasmBytes?: Uint8Array;
 
   private __wasmBasePtr = 0;
   private __wasmArenaFloats = 0;
@@ -483,6 +501,9 @@ export abstract class Shado {
         wasmConfig.module instanceof WebAssembly.Module
           ? wasmConfig.module
           : await WebAssembly.compile(wasmConfig.module as BufferSource);
+      if (!(wasmConfig.module instanceof WebAssembly.Module)) {
+        ctor.compiledWasmBytes = new Uint8Array(wasmConfig.module as ArrayBufferLike).slice();
+      }
       ctor.wasmCompiled = true;
       return;
     }
@@ -578,6 +599,7 @@ export abstract class Shado {
       );
     }
 
+    ctor.compiledWasmBytes = new Uint8Array(wasmBytes as ArrayBuffer).slice();
     ctor.compiledWasmModule = await WebAssembly.compile(wasmBytes as ArrayBuffer).catch(e => {
       const errText = (stderrStr || stdoutStr || '').trim();
       throw new Error(
@@ -1452,6 +1474,7 @@ export abstract class Shado {
     // 4) Invalidate views so future writes no-op instead of crashing
     try {
       // Replace arena storage with a tiny inert view
+      this._arena.clearReallocListeners();
       (this as any)._arena.adopt(new Float32Array(1));
     } catch (e) {
       console.warn('Error during Shado.dispose()', e);
