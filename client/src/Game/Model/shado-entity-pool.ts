@@ -12,7 +12,7 @@ import {
   ShadoInstanceContainer,
   field,
   gpuStruct,
-} from "shader-object";
+} from "@knervous/shado";
 import requiemEntityReducerDebugUrl from "../../../../common/wasm/requiem-entity-reducer.debug.wasm?url";
 import requiemEntityReducerReleaseUrl from "../../../../common/wasm/requiem-entity-reducer.release.wasm?url";
 
@@ -162,7 +162,7 @@ async function initializeShado(engine: AbstractEngine): Promise<void> {
     },
   }).then((ok) => {
     if (!ok) throw new Error("Unable to initialize the Shado entity arena");
-    // shader-object may resolve a different Babylon peer in linked-repo dev.
+    // @knervous/shado may resolve a different Babylon peer in linked-repo dev.
     // Publish the generated chunks into the client's concrete shader store.
     registerClientShaderIncludes();
   });

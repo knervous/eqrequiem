@@ -29,6 +29,9 @@ and animation coverage. Exits non-zero when the candidate is not rig-compatible.
 
 const round = (value) => Math.round(value * 1e6) / 1e6
 const rounded = (values) => Array.from(values ?? [], round)
+const transformsEqual = (first, second, epsilon = 1e-5) =>
+  first.length === second.length && first.every((value, index) =>
+    Math.abs(value - second[index]) <= epsilon)
 
 function summarizeDocument(file, document) {
   const root = document.getRoot()
@@ -149,7 +152,7 @@ function compare(reference, target, maxVertices) {
       parentMismatches.push({ name, expected: referenceJoint.parent, actual: targetJoint.parent })
     }
     for (const property of ['translation', 'rotation', 'scale']) {
-      if (JSON.stringify(targetJoint[property]) !== JSON.stringify(referenceJoint[property])) {
+      if (!transformsEqual(targetJoint[property], referenceJoint[property])) {
         transformMismatches.push({ name, property, expected: referenceJoint[property], actual: targetJoint[property] })
       }
     }
@@ -170,16 +173,11 @@ function compare(reference, target, maxVertices) {
       .includes(target.skins[0]?.inverseBindMatrixCount),
     referenceAnimationsPresent: missingAnimations.length === 0,
   }
-  const criticalChecks = Object.fromEntries(
-    Object.entries(checks).filter(([name]) => name !== 'jointRestTransformsMatch'),
-  )
   return {
-    compatible: Object.values(criticalChecks).every(Boolean),
+    compatible: Object.values(checks).every(Boolean),
     maxVertices,
     checks,
-    warnings: transformMismatches.length
-      ? ['Non-deforming attachment-node rest transforms changed during Blender round-trip.']
-      : [],
+    warnings: [],
     missingJoints,
     extraJoints,
     parentMismatches,

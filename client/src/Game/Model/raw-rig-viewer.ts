@@ -13,8 +13,8 @@ declare const __REPO_ROOT__: string;
 // bakes animation into a texture and never touches the Babylon skeleton
 // after import. Use this to check joint-to-mesh fit, at rest or animated.
 const RAW_RIG_SOURCES: Record<string, string> = {
-  hum: "assets/src/models/human_male/eqref/human_male_locomotion_v11_pbr.glb",
-  huf: "assets/src/models/human_female/eqref/human_female_locomotion_v12_pbr.glb",
+  hum: "assets/src/models/human_male/runtime/human_male.glb",
+  huf: "assets/src/models/human_female/runtime/human_female.glb",
   hmc: "assets/src/models/comfyui_humans/male/male_comfy_pbr.glb",
   hfc: "assets/src/models/comfyui_humans/female/female_comfy_pbr.glb",
 };
@@ -101,18 +101,120 @@ export async function createRawRigViewer(
   camera.upperRadiusLimit = fitHeight * 6;
   resetCamera();
 
-  let skeletonViewer: BJS.SkeletonViewer | null = null;
+  // Babylon's glTF loader wraps every import in a synthetic "__root__" node
+  // carrying a (1,1,-1) scale (its right-handed -> left-handed conversion).
+  // Composed through this rig's rotation-heavy spine/clavicle parent chain,
+  // that mirror makes BABYLON.SkeletonViewer / bone.getAbsolutePosition()
+  // report joint positions on the wrong side entirely (verified: manual FK
+  // from each bone's own local translation+rotation, which IS loaded
+  // correctly, exactly reproduces the source Blender rig's true joint
+  // positions, while getAbsolutePosition() does not). Actual GPU skinning is
+  // unaffected — it's computed through a different, correct matrix path,
+  // which is why animation has always rendered correctly. So the overlay
+  // below does its own forward-kinematics pass from bone-local data instead
+  // of trusting Babylon's world-matrix composition for this rig.
+  const skeleton = mesh.skeleton;
+  const boneNames = skeleton.bones.map((bone) => bone.name);
+  const fkCache = new Map<string, { pos: BJS.Vector3; rot: BJS.Quaternion }>();
+  const computeBoneLocalPosition = (boneName: string): { pos: BJS.Vector3; rot: BJS.Quaternion } => {
+    const cached = fkCache.get(boneName);
+    if (cached) return cached;
+    const bone = skeleton.bones[boneNames.indexOf(boneName)];
+    const linked = bone.getTransformNode();
+    const t = linked?.position ?? BABYLON.Vector3.Zero();
+    const q = linked?.rotationQuaternion ?? BABYLON.Quaternion.Identity();
+    const parentBone = bone.getParent();
+    if (!parentBone) {
+      const result = { pos: t.clone(), rot: q.clone() };
+      fkCache.set(boneName, result);
+      return result;
+    }
+    const parentResult = computeBoneLocalPosition(parentBone.name);
+    const rotated = t.clone();
+    rotated.rotateByQuaternionToRef(parentResult.rot, rotated);
+    const result = {
+      pos: parentResult.pos.add(rotated),
+      rot: parentResult.rot.multiply(q),
+    };
+    fkCache.set(boneName, result);
+    return result;
+  };
+
+  let skeletonLines: BJS.LinesMesh | null = null;
+  let skeletonJointTemplate: BJS.Mesh | null = null;
+  let skeletonJoints: BJS.Mesh[] = [];
+  let skeletonOverlayEnabled = false;
+  const disposeSkeletonOverlay = () => {
+    skeletonLines?.dispose();
+    skeletonLines = null;
+    for (const joint of skeletonJoints) joint.dispose();
+    skeletonJoints = [];
+    skeletonJointTemplate?.dispose();
+    skeletonJointTemplate = null;
+  };
+  const updateSkeletonOverlay = (displayMode: "lines" | "spheres") => {
+    if (!skeletonOverlayEnabled) return;
+    fkCache.clear();
+    const lines: BJS.Vector3[][] = [];
+    for (const bone of skeleton.bones) {
+      const parentBone = bone.getParent();
+      if (!parentBone) continue;
+      const headPos = computeBoneLocalPosition(parentBone.name).pos;
+      const tailPos = computeBoneLocalPosition(bone.name).pos;
+      lines.push([headPos, tailPos]);
+    }
+    skeletonLines = BABYLON.MeshBuilder.CreateLineSystem(
+      "raw-rig-skeleton-lines",
+      { lines, instance: skeletonLines },
+      scene,
+    );
+    skeletonLines.color = new BABYLON.Color3(1, 0.1, 0.1);
+    skeletonLines.parent = mesh;
+    skeletonLines.renderingGroupId = 1;
+
+    if (displayMode === "spheres") {
+      if (!skeletonJointTemplate) {
+        skeletonJointTemplate = BABYLON.MeshBuilder.CreateSphere(
+          "raw-rig-joint-template",
+          { diameter: 1 },
+          scene,
+        );
+        skeletonJointTemplate.setEnabled(false);
+        const jointMaterial = new BABYLON.StandardMaterial("raw-rig-joint-material", scene);
+        jointMaterial.emissiveColor = new BABYLON.Color3(1, 0.1, 0.1);
+        jointMaterial.disableLighting = true;
+        skeletonJointTemplate.material = jointMaterial;
+      }
+      while (skeletonJoints.length < skeleton.bones.length) {
+        const clone = skeletonJointTemplate.createInstance(`raw-rig-joint-${skeletonJoints.length}`) as unknown as BJS.Mesh;
+        clone.parent = mesh;
+        // Rendered in group 1 (same as the bone lines) so a joint that's
+        // correctly positioned *inside* the mesh volume, as real joints are,
+        // isn't hidden/occluded by the surrounding flesh — always visible on
+        // top for unambiguous fit checks.
+        clone.renderingGroupId = 1;
+        clone.scaling.setAll(0.045);
+        skeletonJoints.push(clone);
+      }
+      skeleton.bones.forEach((bone, index) => {
+        const jointMesh = skeletonJoints[index];
+        jointMesh.setEnabled(true);
+        jointMesh.position.copyFrom(computeBoneLocalPosition(bone.name).pos);
+      });
+    } else {
+      for (const joint of skeletonJoints) joint.setEnabled(false);
+    }
+  };
+
+  let overlayUpdateObserver: BJS.Nullable<BJS.Observer<BJS.Scene>> = null;
   const setSkeletonViewer = (enabled: boolean, displayMode: "lines" | "spheres" = "lines") => {
-    skeletonViewer?.dispose();
-    skeletonViewer = null;
+    overlayUpdateObserver?.remove();
+    overlayUpdateObserver = null;
+    disposeSkeletonOverlay();
+    skeletonOverlayEnabled = enabled;
     if (!enabled || !mesh.skeleton) return;
-    skeletonViewer = new BABYLON.SkeletonViewer(mesh.skeleton, mesh, scene, false, 3, {
-      displayMode: displayMode === "spheres"
-        ? BABYLON.SkeletonViewer.DISPLAY_SPHERE_AND_SPURS
-        : BABYLON.SkeletonViewer.DISPLAY_LINES,
-    });
-    skeletonViewer.isEnabled = true;
-    skeletonViewer.color = new BABYLON.Color3(1, 0.1, 0.1);
+    updateSkeletonOverlay(displayMode);
+    overlayUpdateObserver = scene.onBeforeRenderObservable.add(() => updateSkeletonOverlay(displayMode));
   };
 
   let activeGroup: BJS.AnimationGroup | null = null;
@@ -160,7 +262,8 @@ export async function createRawRigViewer(
     dispose: () => {
       window.removeEventListener("resize", resize);
       engine.stopRenderLoop();
-      skeletonViewer?.dispose();
+      overlayUpdateObserver?.remove();
+      disposeSkeletonOverlay();
       scene.dispose();
       engine.dispose();
     },

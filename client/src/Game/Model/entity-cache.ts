@@ -12,7 +12,7 @@ import { FileSystem } from "@game/FileSystem/filesystem";
 import type GameManager from "@game/Manager/game-manager";
 import { PlayerProfile, Spawn } from "@game/Net/messages";
 import type { NullableItemInstance } from "@game/Player/player-constants";
-import { ShadoDynamicEntityNameplateLayer } from "shader-object/render";
+import { ShadoDynamicEntityNameplateLayer } from "@knervous/shado/render";
 import { loadBasisTexture } from "./basis-texture";
 import { Entity } from "./entity";
 import {

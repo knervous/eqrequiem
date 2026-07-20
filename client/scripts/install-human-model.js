@@ -19,7 +19,7 @@ const sourcePath = path.resolve(
   process.argv[2] ??
     path.join(
       repoRoot,
-      "assets/src/models/human_male/eqref/human_male_locomotion_v10_pbr.glb",
+      "assets/src/models/human_male/runtime/human_male.glb",
     ),
 );
 const model = (process.argv[3] ?? (sourcePath.includes("human_female") ? "huf" : "hum")).toLowerCase();

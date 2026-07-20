@@ -21,9 +21,9 @@ const hashProviderUrl =
   process.env.VITE_HASH_PROVIDER_URL || "http://localhost:8082/hash";
 const serverjsSourceRoot = path.resolve(__dirname, "../serverjs/src");
 const clientBrowserDependencies = new Map([
-  ["shader-object", path.resolve(__dirname, "../shader-object/src/index.ts")],
+  ["@knervous/shado", path.resolve(__dirname, "../shader-object/src/index.ts")],
   [
-    "shader-object/render",
+    "@knervous/shado/render",
     path.resolve(__dirname, "../shader-object/src/render/index.ts"),
   ],
   [

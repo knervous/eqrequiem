@@ -1,5 +1,5 @@
 import * as BABYLON from '@babylonjs/core'
-import '@babylonjs/loaders/glTF/index.js'
+import '@babylonjs/loaders/glTF/glTFFileLoader.js'
 
 const state = { status: 'loading', models: [] }
 window.__REFERENCE_RENDER_STATE__ = state
