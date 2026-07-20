@@ -2,6 +2,8 @@ import * as fantasyNames from 'fantasy-name-generator';
 
 import { BABYLON as MODULE_BABYLON, bridgeBabylonShaderStores } from '../babylon';
 import { NameplateData } from '../extensions/NameplateData';
+import type { ShadoInstanceContainer } from '../extensions/ShadoInstanceContainer/ShadoInstanceContainer';
+import type { ShadoPublishedProperty } from '../publish';
 import { fetchShadoBytes } from '../preprocess/runtime';
 import { bakeVatWithHeadlessWorker } from '../extensions/VATBuilder/VATHeadlessBake';
 import { EqShowcaseActor, EqShowcaseContainer } from './EqShowcaseActors';
@@ -22,11 +24,12 @@ import { SHOWCASE_CULLING_WASM_BASE64 } from './showcase-culling-wasm.generated'
 
 export * from './EqShowcaseActors';
 export * from './EqShowcaseCatalog';
+export * from './EqShowcaseShader';
 export * from './EqShowcaseTypes';
 
 type LoadedPool = {
   model: EqShowcaseModel;
-  container: EqShowcaseContainer;
+  container: ShadoInstanceContainer<any>;
   nameplates?: NameplateData;
   nameplateLayer?: any;
   sources: any[];
@@ -296,8 +299,8 @@ function bindHeadMeshesToSkeleton(B: any, meshes: any[], targetSkeleton: any): v
 }
 
 function setRandomAnimation(
-  container: EqShowcaseContainer,
-  actor: EqShowcaseActor,
+  container: ShadoInstanceContainer<any>,
+  actor: any,
   model: EqShowcaseModel,
 ): void {
   const frameLimit = container.vat?.framesTotal ?? 0;
@@ -413,6 +416,8 @@ export function createEqShowcase(
   options: EqShowcaseOptions = {}
 ): EqShowcaseController {
   const B = options.babylon ?? MODULE_BABYLON;
+  const ActorClass = options.actorClass ?? EqShowcaseActor;
+  const ContainerClass = options.containerClass ?? EqShowcaseContainer;
   const models: EqShowcaseModel[] = [
     ...(options.models ?? [...EQ_SHOWCASE_MODELS, ...BABYLON_SHOWCASE_MODELS]),
   ];
@@ -425,7 +430,7 @@ export function createEqShowcase(
   const failed = new Set<string>();
   const selectionListeners = new Set<(selection: EqShowcaseSelection | undefined) => void>();
   const pickCandidates = new WeakMap<PointerEvent, number>();
-  let selectedRef: { pool: LoadedPool; actor: EqShowcaseActor } | undefined;
+  let selectedRef: { pool: LoadedPool; actor: any } | undefined;
   const selectionRing = B.MeshBuilder.CreateTorus(
     'shado-selected-instance',
     { diameter: 3.8, thickness: 0.16, tessellation: 64 },
@@ -468,7 +473,7 @@ export function createEqShowcase(
     if (index < 0) return undefined;
     const catalog = pool.model.catalog ?? (pool.model.custom ? 'custom' : 'shado');
     const published = catalog === 'shado' && pool.model.kind === 'pc'
-      ? actor.getPublishedProperties().map(descriptor => ({
+      ? actor.getPublishedProperties().map((descriptor: ShadoPublishedProperty) => ({
           ...descriptor,
           value: actor.published.$get(descriptor.name),
         }))
@@ -511,7 +516,7 @@ export function createEqShowcase(
   };
   const selectActor = (
     pool: LoadedPool,
-    actor: EqShowcaseActor,
+    actor: any,
     result?: { distance: number },
     event?: PointerEvent,
   ) => {
@@ -552,12 +557,12 @@ export function createEqShowcase(
       // module instances. Bridge before initialization so every shader created
       // below is registered directly into the host engine's live stores.
       bridgeBabylonShaderStores(B);
-      await EqShowcaseContainer.initialize(scene.getEngine(), {
+      await ContainerClass.initialize(scene.getEngine(), {
         backend: 'datatex',
         wasm: cullingMode === 'wasm-simd'
           ? { mode: 'precompiled', module: cullingModule.buffer }
           : false,
-        extra: EqShowcaseActor,
+        extra: ActorClass,
         logShaderCode: false,
         logAscCode: false,
       });
@@ -642,7 +647,7 @@ export function createEqShowcase(
       const ownedGroups = showcaseGroups.length ? showcaseGroups : source.animationGroups.slice(0, 8);
       const packedVat = await packedVatPromise;
 
-      const container = new EqShowcaseContainer(scene.getEngine());
+      const container = new ContainerClass(scene.getEngine());
       let nameplates: NameplateData | undefined;
       let nameplateLayer: any;
       if (options.fontAsset) {
@@ -712,7 +717,7 @@ export function createEqShowcase(
       publish({ current: `Inspecting ${model.label}`, lastError: undefined });
       await ensureInitialized();
       let source: any;
-      let container: EqShowcaseContainer | undefined;
+      let container: ShadoInstanceContainer<any> | undefined;
       try {
         source = await importGlbBytes(B, scene, bytes);
         source.addAllToScene();
@@ -769,7 +774,7 @@ export function createEqShowcase(
             })
           : undefined;
 
-        container = new EqShowcaseContainer(scene.getEngine());
+        container = new ContainerClass(scene.getEngine());
         let nameplates: NameplateData | undefined;
         let nameplateLayer: any;
         if (options.fontAsset) {
@@ -838,7 +843,7 @@ export function createEqShowcase(
       publish({ current: `Loading Babylon asset · ${model.label}`, lastError: undefined });
       await ensureInitialized();
       let source: any;
-      let container: EqShowcaseContainer | undefined;
+      let container: ShadoInstanceContainer<any> | undefined;
       try {
         const slash = model.sourceUrl!.lastIndexOf('/') + 1;
         source = await B.SceneLoader.LoadAssetContainerAsync(
@@ -879,7 +884,7 @@ export function createEqShowcase(
         stampEquipmentParts(meshes);
 
         publish({ current: `VAT-baking Babylon asset · ${model.label}` });
-        container = new EqShowcaseContainer(scene.getEngine());
+        container = new ContainerClass(scene.getEngine());
         let nameplates: NameplateData | undefined;
         let nameplateLayer: any;
         if (options.fontAsset) {

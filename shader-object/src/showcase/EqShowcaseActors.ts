@@ -3,6 +3,7 @@ import { ShadoActor } from '../extensions/ShadoActor';
 import { ShadoInstanceContainer } from '../extensions/ShadoInstanceContainer/ShadoInstanceContainer';
 import { shadoPublish } from '../publish';
 import { SHOWCASE_WEAPONS } from './EqShowcaseCatalog';
+import { EQ_SHOWCASE_GLSL } from './EqShowcaseShader';
 
 @gpuStruct({ name: 'EqShowcaseActor' })
 export class EqShowcaseActor extends ShadoActor {
@@ -49,65 +50,7 @@ export class EqShowcaseActor extends ShadoActor {
 }
 
 export class EqShowcaseContainer extends ShadoInstanceContainer<EqShowcaseActor> {
-  public override generateGLSLPair(): { vs: string; fs: string } {
-    const pair = super.generateGLSLPair();
-    const chooseAppearance = `
-  vec4 partTint = inst.color;
-  #ifdef EQ_ARMOR_VARIANTS
-    int packedEq01 = int(floor(aMeta.z + 0.5));
-    int packedEq23 = int(floor(aMeta.w + 0.5));
-    vec4 eqLayers = vec4(
-      float((packedEq01 & 255) - 1),
-      float(((packedEq01 >> 8) & 255) - 1),
-      float((packedEq23 & 255) - 1),
-      float(((packedEq23 >> 8) & 255) - 1)
-    );
-    int armorSet = clamp(int(floor(inst.armorClass + 0.5)), 0, 3);
-    vEqLayer = armorSet == 0 ? eqLayers.x
-      : armorSet == 1 ? eqLayers.y
-      : armorSet == 2 ? eqLayers.z
-      : eqLayers.w;
-  #endif`;
-    pair.vs = pair.vs
-      .replace(
-        'varying vec4 vColor;',
-        `varying vec4 vColor;
-#ifdef EQ_ARMOR_VARIANTS
-flat varying float vEqLayer;
-#endif`
-      )
-      .replace('vColor = C;', `${chooseAppearance}\n  vColor = partTint;`)
-      .replace('vColor = inst.color;', `${chooseAppearance}\n  vColor = partTint;`)
-      .replace(
-        'gl_Position = worldViewProjection * vec4(p, 1.0);',
-        `gl_Position = worldViewProjection * vec4(p, 1.0);
-  if (aMeta.y > 0.5 && abs(aMeta.y - inst.weaponClass) > 0.25) {
-    gl_Position = vec4(0.0, 0.0, 2.0, 1.0);
-  }`
-      );
-    pair.fs = pair.fs
-      .replace(
-        'uniform highp sampler2DArray uAtlasArray;',
-        `uniform highp sampler2DArray uAtlasArray;
-#ifdef EQ_ARMOR_VARIANTS
-uniform highp sampler2DArray uEqArmorAtlas;
-#endif`
-      )
-      .replace(
-        'varying vec4 vColor;',
-        `varying vec4 vColor;
-#ifdef EQ_ARMOR_VARIANTS
-flat varying float vEqLayer;
-#endif`
-      )
-      .replace('gl_FragColor = c * vColor;', `
-  vec4 surface = c * vColor;
-  #ifdef EQ_ARMOR_VARIANTS
-    if (vEqLayer >= 0.0) {
-      surface = textureLod(uEqArmorAtlas, vec3(fract(vUV), vEqLayer), 0.0) * vColor;
-    }
-  #endif
-  gl_FragColor = surface;`);
-    return pair;
+  protected override getGLSLHooks() {
+    return EQ_SHOWCASE_GLSL;
   }
 }

@@ -49,6 +49,24 @@ export type ShadoInstanceContainerOptions = {
   materialTextures?: Record<string, Texture>;
 };
 
+/**
+ * Named insertion points for extending the generated GLSL instance shader.
+ * Each hook is emitted as a complete statement/declaration block; subclasses
+ * never need to search and replace Shado's generated shader source.
+ */
+export type ShadoInstanceGLSLHooks = Readonly<{
+  /** Varyings and helper declarations shared with the vertex stage. */
+  vertexDeclarations?: string;
+  /** Uniforms, varyings, and helpers shared with the fragment stage. */
+  fragmentDeclarations?: string;
+  /** Runs after `inst` and mutable `shadoColor` are available. */
+  vertexInstance?: string;
+  /** Runs after the standard instance position has been written. */
+  vertexAfterPosition?: string;
+  /** Runs after `surface = atlasColor * shadoColor` in the fragment stage. */
+  fragmentSurface?: string;
+}>;
+
 export type InstanceNameSource = readonly string[] | ((index: number) => string);
 
 type ChildFieldRegistration<T extends ShadoActor> = {
@@ -145,9 +163,7 @@ export class ShadoInstanceContainer<T extends ShadoActor> extends Shado {
   public static override async initialize(engine: any, config: InitializeConfig = {}) {
     const childCtor = ((config.extra as any) ?? ShadoActor) as any;
     if (!config.additionalFields?.some(f => f.name === 'instances')) {
-      config.additionalFields = [
-        { name: 'instances', type: { arrayOf: { structOf: childCtor } } },
-      ];
+      config.additionalFields = [{ name: 'instances', type: { arrayOf: { structOf: childCtor } } }];
       // generateGLSLPair is implemented on the base class and reads the base
       // static. Assigning through `this` creates a shadow property on a
       // subclass, leaving shaders stuck on ShadoActor and making Babylon fetch
@@ -160,6 +176,11 @@ export class ShadoInstanceContainer<T extends ShadoActor> extends Shado {
 
   constructor(engine: any) {
     super(engine);
+  }
+
+  /** Override to add application-specific material behavior at stable hooks. */
+  protected getGLSLHooks(): ShadoInstanceGLSLHooks {
+    return {};
   }
 
   public override dispose() {
@@ -223,12 +244,14 @@ export class ShadoInstanceContainer<T extends ShadoActor> extends Shado {
     // source basis so an in-process VAT bake can express its palette in the
     // resulting merged mesh's coordinate system too.
     const paletteSource = meshes.find(m => !!m.skeleton) ?? meshes[0];
-    const mergePaletteBasis = opts.merge && useVat && paletteSource
-      ? paletteSource.computeWorldMatrix(true).clone()
-      : undefined;
-    const vatOptions = mergePaletteBasis && !opts.vatOptions?.paletteBasis
-      ? { ...opts.vatOptions, paletteBasis: mergePaletteBasis }
-      : opts.vatOptions;
+    const mergePaletteBasis =
+      opts.merge && useVat && paletteSource
+        ? paletteSource.computeWorldMatrix(true).clone()
+        : undefined;
+    const vatOptions =
+      mergePaletteBasis && !opts.vatOptions?.paletteBasis
+        ? { ...opts.vatOptions, paletteBasis: mergePaletteBasis }
+        : opts.vatOptions;
     const texToId = new Map<Texture, string>();
     for (const [id, rec] of byId /* however you kept it */) {
       texToId.set(rec.tex, id);
@@ -278,19 +301,19 @@ export class ShadoInstanceContainer<T extends ShadoActor> extends Shado {
         ? VATBuilder.fromPacked(scene as any, opts.packedVat)
         : opts.prebakedVat
           ? VATBuilder.fromSerialized(scene as any, opts.prebakedVat)
-        : vatOptions?.execution === 'worker'
-          ? await VATBuilder.buildFromSceneAsync(
-              scene as any,
-              mesh as any,
-              mesh.skeleton as any,
-              vatOptions
-            )
-          : VATBuilder.buildFromScene(
-              scene as any,
-              mesh as any,
-              mesh.skeleton as any,
-              vatOptions ?? { useHalfDQ: true }
-            )
+          : vatOptions?.execution === 'worker'
+            ? await VATBuilder.buildFromSceneAsync(
+                scene as any,
+                mesh as any,
+                mesh.skeleton as any,
+                vatOptions
+              )
+            : VATBuilder.buildFromScene(
+                scene as any,
+                mesh as any,
+                mesh.skeleton as any,
+                vatOptions ?? { useHalfDQ: true }
+              )
       : undefined;
     this._useVatMaterial = useVat;
     this._clipRanges.clear();
@@ -614,8 +637,7 @@ export function frustumMarkAoS(
    * into the vacated slot, matching the arena's swap-removal semantics.
    */
   public removeInstance(instance: number | T): T | undefined {
-    const index =
-      typeof instance === 'number' ? instance | 0 : this._children.indexOf(instance);
+    const index = typeof instance === 'number' ? instance | 0 : this._children.indexOf(instance);
     if (index < 0 || index >= this._children.length) return undefined;
 
     const lastIndex = this._children.length - 1;
@@ -631,6 +653,7 @@ export function frustumMarkAoS(
   public override generateGLSLPair(): { vs: string; fs: string } {
     // Get the instance-specific include name
     const includeName = (this as any)._includeName ?? 'ShadoInstanceContainer';
+    const hooks = this.getGLSLHooks();
 
     const fs = `
 precision highp float;
@@ -642,6 +665,8 @@ flat varying int   vPage;
 flat varying vec4  vRect;
 
 uniform highp sampler2DArray uAtlasArray;
+
+${hooks.fragmentDeclarations ?? ''}
 
 vec4 sampleAtlas(vec2 uv, vec4 rect, float page) {
   vec2 tiled = fract(uv);                 // handle uvs like 3.2 or -0.3
@@ -657,7 +682,9 @@ void main() {
   vec4 atlasColor = sampleAtlas(vUV, vRect, float(vPage));
   vec4 c = mix(vec4(1.0), atlasColor, hasAtlasRect);
   // if (c.a <= 0.001) discard;
-  gl_FragColor = c * vColor;
+  vec4 surface = c * vColor;
+  ${hooks.fragmentSurface ?? ''}
+  gl_FragColor = surface;
 }
 `;
 
@@ -682,6 +709,8 @@ varying vec4 vColor;
 flat varying int   vPage;
 flat varying vec4  vRect;
 
+${hooks.vertexDeclarations ?? ''}
+
 void main(void) {
   vUV = uv;
   vPage = int(aMeta.x);
@@ -694,11 +723,14 @@ void main(void) {
 
   ${ShadoInstanceContainer._instanceName}Header inst = ShadoInstanceContainer_instances_get(srcIdx);
   vec4 T = inst.translation;
+  vec4 shadoColor = inst.color;
+  ${hooks.vertexInstance ?? ''}
   vec3 qv = inst.rotation.xyz;
   vec3 scaled = position * T.w;
   vec3 p = scaled + 2.0 * cross(qv, cross(qv, scaled) + inst.rotation.w * scaled) + T.xyz;
   gl_Position = worldViewProjection * vec4(p, 1.0);
-  vColor = inst.color;
+  ${hooks.vertexAfterPosition ?? ''}
+  vColor = shadoColor;
 }
 `;
       return { vs, fs };
@@ -743,6 +775,8 @@ varying vec2 vUV;
 varying vec4 vColor;
 flat varying int   vPage;
 flat varying vec4  vRect;
+
+${hooks.vertexDeclarations ?? ''}
 
 
 // ---------------------------------------------------------------------------
@@ -828,7 +862,9 @@ void main(void) {
   ${ShadoInstanceContainer._instanceName}Header inst = ShadoInstanceContainer_instances_get(srcIdx);
   vec4 T = inst.translation; // xyz + instance scale in w
   vec4 C = inst.color;
+  vec4 shadoColor = C;
   vec4 anim = inst.animationBuffer;
+  ${hooks.vertexInstance ?? ''}
 
   // Resolve absolute frame row in the atlas (wrap within [startF, endF])
   float startF = anim.x, endF = max(anim.y, startF);
@@ -915,7 +951,8 @@ void main(void) {
   vec3 scaled = skinned * T.w;
   vec3 p = scaled + 2.0 * cross(qv, cross(qv, scaled) + inst.rotation.w * scaled) + T.xyz;
   gl_Position = worldViewProjection * vec4(p, 1.0);
-  vColor = C;
+  ${hooks.vertexAfterPosition ?? ''}
+  vColor = shadoColor;
 }
 
 

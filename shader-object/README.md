@@ -65,18 +65,20 @@ class Character extends ShadoActor {
     description: 'One material family across the whole actor.',
     values: ['armorless', 'leather', 'chain', 'plate'],
   })
-  @field('f32') armorClass!: number;
+  @field('f32')
+  armorClass!: number;
 
   @shadoPublish({
     name: 'mainHand',
     socket: 'r_point',
     values: ['none', 'sword', 'staff'],
   })
-  @field('f32') weaponClass!: number;
+  @field('f32')
+  weaponClass!: number;
 }
 
-actor.published.armor = 'chain';       // armorClass becomes 2
-actor.published.mainHand = 'sword';    // weaponClass becomes 1
+actor.published.armor = 'chain'; // armorClass becomes 2
+actor.published.mainHand = 'sword'; // weaponClass becomes 1
 console.table(actor.published.$describe());
 ```
 
@@ -140,7 +142,7 @@ selection automatic.
 const packedVat = await bakeVatWithHeadlessWorker(
   '/shado/vat-bake-worker.js',
   await (await fetch('/models/human.glb')).arrayBuffer(),
-  { useHalf: true, detectScale: false },
+  { useHalf: true, detectScale: false }
 );
 ```
 
@@ -161,7 +163,44 @@ await actors.attachMeshes(scene, meshes, skeleton, {
 });
 ```
 
-Use `detectScale: true` (the default) for unknown content. The rigid-rig fast
+Use `detectScale: true` (the default) for unknown content. Disable it only when
+the source rig is known to contain rigid bone transforms.
+
+## Custom actor materials
+
+`ShadoInstanceContainer` owns the generated instancing and DQ/VAT shader.
+Applications can add material behavior at typed, stable insertion points by
+overriding `getGLSLHooks()`; generated source remains an implementation detail.
+
+```ts
+import {
+  ShadoActor,
+  ShadoInstanceContainer,
+  field,
+  gpuStruct,
+  type ShadoInstanceGLSLHooks,
+} from '@knervous/shado';
+
+@gpuStruct({ name: 'ExampleActor' })
+class ExampleActor extends ShadoActor {
+  @field('f32') heat!: number;
+}
+
+const HEAT_MATERIAL: ShadoInstanceGLSLHooks = {
+  vertexInstance: `shadoColor.rgb *= mix(vec3(1.0), vec3(1.2, 0.5, 0.2), inst.heat);`,
+};
+
+class ExampleActors extends ShadoInstanceContainer<ExampleActor> {
+  protected override getGLSLHooks() {
+    return HEAT_MATERIAL;
+  }
+}
+```
+
+Hooks are available for vertex/fragment declarations, per-instance vertex
+setup, post-position logic, and final surface composition. Keeping each shader
+strategy in its own module makes it composable and avoids source
+search-and-replace.
 
 ## Package entry points
 

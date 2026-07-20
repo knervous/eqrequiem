@@ -9,14 +9,25 @@ controller creation; MSDF nameplate integration; UI binding; public controller
 commands; and lifecycle cleanup. `playground-ui.ts` contains the small host UI
 adapter so the scene code stays focused on Babylon and Shado concepts.
 
+The five Playground modules each have one job:
+
+1. `index.ts` — standard Babylon scene, camera, lights, and entrypoint.
+2. `showcase-actor.ts` — packed `@gpuStruct` actor fields, friendly
+   `@shadoPublish` controls, initialization, and the container class.
+3. `showcase-shader.ts` — a typed `ShadoInstanceGLSLHooks` strategy. It extends
+   the generated VAT material at stable insertion points; there is no shader
+   source search-and-replace.
+4. `showcase-app.ts` — assets, worker, font/nameplates, actor/container class
+   injection, controller API, and lifecycle.
+5. `playground-ui.ts` — the small adapter around the reusable overlay.
+
 The Shado showcase vendors the original compressed source GLBs under
 `sandbox/public/shado/eq-demo/models`. It includes male and female models for
 the 13 complete playable race pairs available in the decoded archive (Human
 through Iksar), plus Wolf, Gnoll, Goblin, and Skeleton NPCs. Each `.glb.gz` is
 downloaded, decompressed, imported, and dual-quaternion VAT-baked on demand.
-The POC bakes eight representative Requiem animation codes per skeleton (pose,
-idle variants, walk, run, cheer, wave, and attack) rather than all 72 legacy
-emotes, keeping the interactive startup bounded.
+The POC selects a broad but bounded animation library per skeleton while
+keeping unsafe ambient actions out of the initial random playback set.
 Up to three models bake concurrently in independent NullEngine workers, so the
 visible Babylon scene never shares its animation evaluator with a VAT job.
 
@@ -35,13 +46,12 @@ every frame. `buildFromScene()` remains the synchronous preprocessing path;
 `buildFromSceneAsync()` and `DQBuildOpts.execution = "worker"` expose the new
 runtime capability with a main-thread WASM fallback.
 
-For the online Playground, enable npm imports and paste
-`babylon-playground.ts` plus `playground-ui.ts`. It requires
-`@knervous/shado@1.0.4` or newer, uses the Playground's global `BABYLON` namespace,
-while Shado mirrors its generated shader stores into that host
-namespace. Publish the package and push the vendored model directory before
-testing the raw GitHub URLs. Pin `main` in `RAW_MODELS` to a commit SHA for the
-public forum announcement.
+For the online Playground, enable npm imports, make `index.ts` the entrypoint,
+and add the other four modules above. It requires `@knervous/shado@1.0.4` or
+newer and uses the Playground's global `BABYLON` namespace while Shado shares
+its generated shader stores with that host runtime. Publish the package and
+push the vendored model directory before testing the raw GitHub URLs. Pin
+`main` in `RAW_ROOT` to a commit SHA for the public forum announcement.
 
 The overlay reports bake progress, failures, instances, visible actors, and
 FPS. It can load PC/NPC rosters independently, add/remove actors, shuffle their

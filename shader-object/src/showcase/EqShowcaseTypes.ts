@@ -1,6 +1,13 @@
 import type { NameplateData } from '../extensions/NameplateData';
+import type { ShadoActor } from '../extensions/ShadoActor';
+import type { ShadoInstanceContainer } from '../extensions/ShadoInstanceContainer/ShadoInstanceContainer';
 import type { ShadoPublishedProperty, ShadoPublishedScalar } from '../publish';
-import type { EqShowcaseContainer } from './EqShowcaseActors';
+
+export type ShadoVatActorClass = typeof ShadoActor;
+export type ShadoVatContainerClass = {
+  new(engine: any): ShadoInstanceContainer<any>;
+  initialize(engine: any, config?: any): Promise<any>;
+};
 
 export type EqShowcaseKind = 'pc' | 'npc';
 export type EqShowcaseCatalog = 'shado' | 'babylon' | 'custom';
@@ -45,10 +52,14 @@ export type EqShowcaseOptions = {
   armorRoot?: string;
   autoLoad?: boolean;
   models?: readonly EqShowcaseModel[];
+  /** Decorated actor schema used for every generated instance. */
+  actorClass?: ShadoVatActorClass;
+  /** Container class that selects the generated shader extension strategy. */
+  containerClass?: ShadoVatContainerClass;
   fontAsset?: any;
   createNameplateLayer?: (
     scene: any,
-    actors: EqShowcaseContainer,
+    actors: ShadoInstanceContainer<any>,
     names: NameplateData,
     fontAsset: any
   ) => any;

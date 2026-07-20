@@ -1,6 +1,6 @@
 {
   "name": "@knervous/shado",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Packed GPU struct schemas + Babylon include emitters with optional AssemblyScript kernels",
   "license": "MIT",
   "author": "knervous",
@@ -134,6 +134,7 @@
   "scripts": {
     "clean": "rimraf dist",
     "typecheck": "tsc -p tsconfig.build.json --noEmit",
+    "typecheck:playground": "tsc -p playground/tsconfig.json",
     "lint": "oxlint src --tsconfig tsconfig.json --deny-warnings --report-unused-disable-directives",
     "lint:fix": "oxlint src --tsconfig tsconfig.json --fix",
     "format": "prettier --write src/**/*.ts",
