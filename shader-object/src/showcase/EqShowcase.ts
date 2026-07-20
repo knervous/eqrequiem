@@ -1,6 +1,6 @@
 import * as fantasyNames from 'fantasy-name-generator';
 
-import { BABYLON as MODULE_BABYLON } from '../babylon';
+import { BABYLON as MODULE_BABYLON, bridgeBabylonShaderStores } from '../babylon';
 import { NameplateData } from '../extensions/NameplateData';
 import { fetchShadoBytes } from '../preprocess/runtime';
 import { bakeVatWithHeadlessWorker } from '../extensions/VATBuilder/VATHeadlessBake';
@@ -74,20 +74,6 @@ function decodeBase64Bytes(value: string): Uint8Array<ArrayBuffer> {
   const bytes = new Uint8Array(new ArrayBuffer(binary.length));
   for (let index = 0; index < binary.length; index++) bytes[index] = binary.charCodeAt(index);
   return bytes;
-}
-
-function syncShaderStores(hostBabylon: any): void {
-  if (hostBabylon === MODULE_BABYLON) return;
-  const hostEffect = hostBabylon.Effect as Record<string, Record<string, string>>;
-  const moduleEffect = MODULE_BABYLON.Effect as unknown as Record<string, Record<string, string>>;
-  for (const key of ['ShadersStore', 'IncludesShadersStore']) {
-    if (hostEffect?.[key] && moduleEffect?.[key]) Object.assign(hostEffect[key], moduleEffect[key]);
-  }
-  const hostStore = hostBabylon.ShaderStore as Record<string, Record<string, string>>;
-  const moduleStore = (MODULE_BABYLON as any).ShaderStore as Record<string, Record<string, string>>;
-  for (const key of ['ShadersStore', 'IncludesShadersStore', 'ShadersStoreWGSL', 'IncludesShadersStoreWGSL']) {
-    if (hostStore?.[key] && moduleStore?.[key]) Object.assign(hostStore[key], moduleStore[key]);
-  }
 }
 
 function nameFor(model: EqShowcaseModel, instanceNumber = 1): string {
@@ -539,7 +525,6 @@ export function createEqShowcase(
     notifySelection();
   };
   const pickingFor = (getPool: () => LoadedPool | undefined) => ({
-    radius: 1.35,
     camera,
     onPick: (result: any, event: PointerEvent) => {
       const pool = getPool();
@@ -563,6 +548,10 @@ export function createEqShowcase(
 
   const ensureInitialized = async () => {
     init ??= (async () => {
+      // The Babylon Playground global and its npm resolver load distinct core
+      // module instances. Bridge before initialization so every shader created
+      // below is registered directly into the host engine's live stores.
+      bridgeBabylonShaderStores(B);
       await EqShowcaseContainer.initialize(scene.getEngine(), {
         backend: 'datatex',
         wasm: cullingMode === 'wasm-simd'
@@ -575,7 +564,7 @@ export function createEqShowcase(
       if (options.fontAsset) {
         await NameplateData.initialize(scene.getEngine(), { wasm: false, logShaderCode: false, logAscCode: false });
       }
-      syncShaderStores(B);
+      bridgeBabylonShaderStores(B);
     })();
     return init;
   };
@@ -1230,3 +1219,6 @@ export function createEqShowcase(
   }
   return controller;
 }
+
+/** Product-neutral public name used by the Babylon developer showcase. */
+export const createShadoVatShowcase = createEqShowcase;

@@ -427,3 +427,6 @@ export function createEqShowcaseUi(
     },
   };
 }
+
+/** Product-neutral public name used by the Babylon developer showcase. */
+export const createShadoVatShowcaseUi = createEqShowcaseUi;

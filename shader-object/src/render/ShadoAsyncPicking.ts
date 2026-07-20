@@ -56,6 +56,10 @@ export interface ShadoDynamicEntityPickResult {
 
 export interface ShadoInstanceAsyncPickingOptions<T extends ShadoActor = ShadoActor>
   extends ShadoAsyncPickingBaseOptions<ShadoInstancePickResult<T>> {
+  /**
+   * Optional local-space sphere radius centered on the actor pivot.
+   * When omitted, picking follows the source mesh's complete bounding sphere.
+   */
   radius?: number;
   predicate?: (instance: T, index: number) => boolean;
 }
@@ -103,7 +107,7 @@ export function pickShadoInstanceWithRay<T extends ShadoActor>(
   ray: Ray,
   options: ShadoInstanceAsyncPickingOptions<T> = {}
 ): ShadoInstancePickResult<T> | null {
-  const radius = Math.max(0.0001, options.radius ?? 1);
+  const bounds = instancePickBounds(mesh, options.radius);
   let best: ShadoInstancePickResult<T> | null = null;
 
   const children = container.children as readonly T[];
@@ -123,12 +127,20 @@ export function pickShadoInstanceWithRay<T extends ShadoActor>(
     const translation = anyInstance.translation as Float32Array | undefined;
     if (!translation) continue;
     const scale = Number.isFinite(translation[3]) ? Math.max(0.0001, translation[3]) : 1;
+    const rotation = anyInstance.rotation as Float32Array | undefined;
+    const center = transformInstancePickCenter(
+      bounds.center,
+      translation,
+      rotation,
+      scale,
+      bounds.worldMatrix
+    );
     const distance = intersectRaySphere(
       ray,
-      translation[0] ?? 0,
-      translation[1] ?? 0,
-      translation[2] ?? 0,
-      radius * scale
+      center.x,
+      center.y,
+      center.z,
+      bounds.radius * scale * bounds.worldScale
     );
     if (distance === null || distance < 0 || distance > ray.length) continue;
     if (best && distance >= best.distance) continue;
@@ -137,6 +149,83 @@ export function pickShadoInstanceWithRay<T extends ShadoActor>(
   }
 
   return best;
+}
+
+type InstancePickBounds = {
+  center: { x: number; y: number; z: number };
+  radius: number;
+  worldMatrix: readonly number[];
+  worldScale: number;
+};
+
+function instancePickBounds(mesh: Mesh, radiusOverride: number | undefined): InstancePickBounds {
+  mesh.computeWorldMatrix(true);
+  const worldMatrix = mesh.getWorldMatrix().asArray();
+  const explicitRadius = Number.isFinite(radiusOverride) ? Math.max(0.0001, radiusOverride!) : null;
+  let center = { x: 0, y: 0, z: 0 };
+  let radius = explicitRadius ?? 1;
+
+  // An explicit radius preserves the original pivot-centered picking contract.
+  // Automatic picking follows the actual merged source geometry, which is
+  // essential for GLBs whose native units and root pivots differ dramatically.
+  if (explicitRadius === null) {
+    const sphere = mesh.getBoundingInfo()?.boundingSphere;
+    if (sphere && Number.isFinite(sphere.radius) && sphere.radius > 0.0001) {
+      center = {
+        x: sphere.center.x,
+        y: sphere.center.y,
+        z: sphere.center.z,
+      };
+      radius = sphere.radius;
+    }
+  }
+
+  return {
+    center,
+    radius,
+    worldMatrix,
+    worldScale: maximumMatrixScale(worldMatrix),
+  };
+}
+
+function transformInstancePickCenter(
+  center: { x: number; y: number; z: number },
+  translation: Float32Array,
+  rotation: Float32Array | undefined,
+  scale: number,
+  world: readonly number[]
+): { x: number; y: number; z: number } {
+  const x = center.x * scale;
+  const y = center.y * scale;
+  const z = center.z * scale;
+  const qx = rotation?.[0] ?? 0;
+  const qy = rotation?.[1] ?? 0;
+  const qz = rotation?.[2] ?? 0;
+  const qw = rotation?.[3] ?? 1;
+
+  // Rotate the local bounding-sphere center with the same quaternion math used
+  // by the instance shader, then apply actor translation and the mesh world matrix.
+  const tx = 2 * (qy * z - qz * y);
+  const ty = 2 * (qz * x - qx * z);
+  const tz = 2 * (qx * y - qy * x);
+  const localX = x + qw * tx + qy * tz - qz * ty + (translation[0] ?? 0);
+  const localY = y + qw * ty + qz * tx - qx * tz + (translation[1] ?? 0);
+  const localZ = z + qw * tz + qx * ty - qy * tx + (translation[2] ?? 0);
+
+  return {
+    x: localX * world[0] + localY * world[4] + localZ * world[8] + world[12],
+    y: localX * world[1] + localY * world[5] + localZ * world[9] + world[13],
+    z: localX * world[2] + localY * world[6] + localZ * world[10] + world[14],
+  };
+}
+
+function maximumMatrixScale(matrix: readonly number[]): number {
+  return Math.max(
+    0.0001,
+    Math.hypot(matrix[0], matrix[1], matrix[2]),
+    Math.hypot(matrix[4], matrix[5], matrix[6]),
+    Math.hypot(matrix[8], matrix[9], matrix[10])
+  );
 }
 
 export async function pickShadoDynamicEntityAtPointer(

@@ -1,9 +1,13 @@
 # Babylon.js Playground: Shado VAT showcase
 
-The Vite sandbox and online Babylon Playground now call the same exported
-`createEqShowcase` runtime and `createEqShowcaseUi` overlay from `@knervous/shado`.
-The two small files in this directory are the TypeScript Playground entry point
-and an optional UI re-export for a multi-file Playground.
+The Vite sandbox and online Babylon Playground call the same exported
+`createShadoVatShowcase` runtime and `createShadoVatShowcaseUi` overlay from
+`@knervous/shado`. The Playground is intentionally a readable integration
+example rather than a blank demo launcher: it shows normal Babylon camera,
+lighting, environment and font setup; Shado asset/worker configuration;
+controller creation; MSDF nameplate integration; UI binding; public controller
+commands; and lifecycle cleanup. `playground-ui.ts` contains the small host UI
+adapter so the scene code stays focused on Babylon and Shado concepts.
 
 The Shado showcase vendors the original compressed source GLBs under
 `sandbox/public/shado/eq-demo/models`. It includes male and female models for
@@ -13,8 +17,8 @@ downloaded, decompressed, imported, and dual-quaternion VAT-baked on demand.
 The POC bakes eight representative Requiem animation codes per skeleton (pose,
 idle variants, walk, run, cheer, wave, and attack) rather than all 72 legacy
 emotes, keeping the interactive startup bounded.
-Models load sequentially so Babylon's animation evaluator is never shared by
-two simultaneous VAT jobs.
+Up to three models bake concurrently in independent NullEngine workers, so the
+visible Babylon scene never shares its animation evaluator with a VAT job.
 
 The compact model picker also exposes Babylon's canonical Playground samples
 on demand, using the formats and URLs in which Babylon publishes them:
@@ -32,7 +36,8 @@ every frame. `buildFromScene()` remains the synchronous preprocessing path;
 runtime capability with a main-thread WASM fallback.
 
 For the online Playground, enable npm imports and paste
-`babylon-playground.ts`. It uses the Playground's global `BABYLON` namespace,
+`babylon-playground.ts` plus `playground-ui.ts`. It requires
+`@knervous/shado@1.0.4` or newer, uses the Playground's global `BABYLON` namespace,
 while Shado mirrors its generated shader stores into that host
 namespace. Publish the package and push the vendored model directory before
 testing the raw GitHub URLs. Pin `main` in `RAW_MODELS` to a commit SHA for the

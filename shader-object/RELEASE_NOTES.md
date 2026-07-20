@@ -1,7 +1,18 @@
 # Release notes
 
-## Unreleased
+## 1.0.4 — 2026-07-20
 
+- Reworked the online Babylon Playground into a commented developer
+  integration example with explicit scene, asset, worker, nameplate, controller,
+  UI, public-command, and disposal setup. Added product-neutral
+  `createShadoVatShowcase*` API aliases and kept the local sandbox on that same
+  public path.
+- Bridged the npm and global Babylon shader stores before showcase
+  initialization. Dynamically generated actor and MSDF shaders now compile in
+  Babylon Playground instead of producing repeated `src/Shaders/*.fx` 404s.
+- Made instance picking follow the transformed bounds of the displayed mesh
+  instead of a fixed sphere at the actor root. Canonical Babylon assets such as
+  Dude and HVGirl remain targetable after large native-unit normalization.
 - Fixed WebGPU validation when rendering armor-enabled VAT pools. Shado now
   activates Babylon's `DrawWrapper` instead of a raw effect and compacts atlas
   page, weapon variant, and four armor layers into one vertex metadata stream,

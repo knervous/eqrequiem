@@ -112,3 +112,11 @@ export type EqShowcaseController = {
   subscribeSelection(listener: (selection: EqShowcaseSelection | undefined) => void): () => void;
   dispose(): void;
 };
+
+// Public, product-neutral aliases for examples and applications. The Eq names
+// remain available for compatibility with the asset-specific implementation.
+export type ShadoVatShowcaseModel = EqShowcaseModel;
+export type ShadoVatShowcaseStats = EqShowcaseStats;
+export type ShadoVatShowcaseSelection = EqShowcaseSelection;
+export type ShadoVatShowcaseController = EqShowcaseController;
+export type ShadoVatShowcaseOptions = EqShowcaseOptions;

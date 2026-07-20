@@ -2,10 +2,10 @@ import { FontAsset } from '@babylonjs/addons/msdfText/fontAsset';
 import * as BABYLON from '@babylonjs/core';
 import '@babylonjs/loaders/glTF';
 import {
-  createEqShowcase,
-  createEqShowcaseUi,
+  createShadoVatShowcase,
+  createShadoVatShowcaseUi,
   createShadoShowcaseEnvironment,
-  type EqShowcaseStats,
+  type ShadoVatShowcaseStats,
 } from '@knervous/shado';
 import { createMsdfNameplateLayer } from '@knervous/shado/msdf';
 
@@ -40,8 +40,8 @@ export class Playground {
       'https://assets.babylonjs.com/fonts/roboto-regular.png',
       scene
     );
-    let ui: ReturnType<typeof createEqShowcaseUi> | undefined;
-    const controller = createEqShowcase(scene, camera, {
+    let ui: ReturnType<typeof createShadoVatShowcaseUi> | undefined;
+    const controller = createShadoVatShowcase(scene, camera, {
       babylon: BABYLON,
       assetRoot: '/shado/eq-demo/models/',
       weaponRoot: '/shado/eq-demo/weapons/',
@@ -50,14 +50,14 @@ export class Playground {
       fontAsset,
       createNameplateLayer: (s, actors, names, font) =>
         createMsdfNameplateLayer(s, actors, names, font, { thickness: 0.02, depthTest: true }),
-      onStats: (stats: EqShowcaseStats) => ui?.update(stats),
+      onStats: (stats: ShadoVatShowcaseStats) => ui?.update(stats),
     });
     // Deliberately expose the live scene/controller in the local sandbox. It
     // keeps animation/VAT diagnostics inspectable without affecting the shared
     // online Playground module or the production library API.
     (globalThis as any).__shadoScene = scene;
     (globalThis as any).__shadoShowcase = controller;
-    ui = createEqShowcaseUi(canvas, controller);
+    ui = createShadoVatShowcaseUi(canvas, controller);
     scene.onDisposeObservable.add(() => ui?.dispose());
     return scene;
   }

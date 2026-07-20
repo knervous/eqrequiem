@@ -1,6 +1,6 @@
 {
   "name": "@knervous/shado",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Packed GPU struct schemas + Babylon include emitters with optional AssemblyScript kernels",
   "license": "MIT",
   "author": "knervous",
