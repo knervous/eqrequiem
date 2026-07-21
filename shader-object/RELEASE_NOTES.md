@@ -6,7 +6,9 @@
   `ShadoInstanceGLSLHooks`. Armor, weapon filtering, and custom actor material
   behavior now compose through dedicated shader strategies. The five-module
   Playground demonstrates decorated packed actor classes, published controls,
-  container specialization, shader extension, application wiring, and UI.
+  container specialization, shader extension, application wiring, and UI. Its
+  schema registrations use the decorators' callable form so Babylon
+  Playground can parse them without experimental decorator support.
 - Reworked the online Babylon Playground into a commented developer
   integration example with explicit scene, asset, worker, nameplate, controller,
   UI, public-command, and disposal setup. Added product-neutral

@@ -12,8 +12,10 @@ adapter so the scene code stays focused on Babylon and Shado concepts.
 The five Playground modules each have one job:
 
 1. `index.ts` — standard Babylon scene, camera, lights, and entrypoint.
-2. `showcase-actor.ts` — packed `@gpuStruct` actor fields, friendly
-   `@shadoPublish` controls, initialization, and the container class.
+2. `showcase-actor.ts` — packed actor fields, friendly published controls,
+   initialization, and the container class. It invokes `field`, `shadoPublish`,
+   and `gpuStruct` as registration functions because Babylon Playground's
+   TypeScript transpiler does not enable decorator syntax.
 3. `showcase-shader.ts` — a typed `ShadoInstanceGLSLHooks` strategy. It extends
    the generated VAT material at stable insertion points; there is no shader
    source search-and-replace.

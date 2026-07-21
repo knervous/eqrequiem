@@ -9,54 +9,17 @@ import {
 import { PLAYGROUND_ACTOR_SHADER } from './showcase-shader';
 
 /**
- * An actor is a packed schema, not a Babylon mesh class.
- *
- * `@field` values are stored in Shado's contiguous CPU/WASM/GPU arena.
- * `@shadoPublish` adds a friendly, validated facade for tools and game code:
- * `actor.published.armor = 'plate'` writes the numeric `armorClass` field.
+ * An actor is a packed schema, not a Babylon mesh class. These declarations
+ * remain ordinary TypeScript properties; the registrations below connect them
+ * to Shado's contiguous CPU/WASM/GPU arena.
  */
-@gpuStruct({ name: 'PlaygroundShowcaseActor' })
 export class PlaygroundShowcaseActor extends ShadoActor {
-  @field('vec4') skinTint!: Float32Array;
-  @field('vec4') chestTint!: Float32Array;
-  @field('vec4') legTint!: Float32Array;
-  @field('vec4') trimTint!: Float32Array;
-
-  @shadoPublish({
-    name: 'armor',
-    label: 'Armor',
-    group: 'Appearance',
-    description: 'Selects one complete texture-array material family.',
-    values: ['armorless', 'leather', 'chain', 'plate'],
-  })
-  @field('f32')
+  skinTint!: Float32Array;
+  chestTint!: Float32Array;
+  legTint!: Float32Array;
+  trimTint!: Float32Array;
   armorClass!: number;
-
-  @shadoPublish({
-    name: 'mainHand',
-    label: 'Main hand',
-    group: 'Equipment',
-    socket: 'r_point',
-    description: 'Selects geometry attached to the right-hand socket.',
-    values: [
-      { value: 'none', label: 'Unarmed' },
-      ...SHOWCASE_WEAPONS.map((value, index) => ({
-        value,
-        label: `Weapon ${index + 1}`,
-      })),
-    ],
-  })
-  @field('f32')
   weaponClass!: number;
-
-  @shadoPublish({
-    name: 'lightingTone',
-    label: 'Lighting tone',
-    group: 'Appearance',
-    description: 'A sample custom field consumed by the Playground shader hook.',
-    values: ['natural', 'warm', 'cool'],
-  })
-  @field('f32')
   lightingTone!: number;
 
   public override initialize(): void {
@@ -70,6 +33,50 @@ export class PlaygroundShowcaseActor extends ShadoActor {
     this.lightingTone = 0;
   }
 }
+
+// Babylon Playground transpiles TypeScript without decorator syntax enabled.
+// Shado decorators are also callable registration functions, so this is the
+// portable equivalent of `@field`, `@shadoPublish`, and `@gpuStruct`.
+field('vec4')(PlaygroundShowcaseActor.prototype, 'skinTint');
+field('vec4')(PlaygroundShowcaseActor.prototype, 'chestTint');
+field('vec4')(PlaygroundShowcaseActor.prototype, 'legTint');
+field('vec4')(PlaygroundShowcaseActor.prototype, 'trimTint');
+
+field('f32')(PlaygroundShowcaseActor.prototype, 'armorClass');
+shadoPublish({
+  name: 'armor',
+  label: 'Armor',
+  group: 'Appearance',
+  description: 'Selects one complete texture-array material family.',
+  values: ['armorless', 'leather', 'chain', 'plate'],
+})(PlaygroundShowcaseActor.prototype, 'armorClass');
+
+field('f32')(PlaygroundShowcaseActor.prototype, 'weaponClass');
+shadoPublish({
+  name: 'mainHand',
+  label: 'Main hand',
+  group: 'Equipment',
+  socket: 'r_point',
+  description: 'Selects geometry attached to the right-hand socket.',
+  values: [
+    { value: 'none', label: 'Unarmed' },
+    ...SHOWCASE_WEAPONS.map((value, index) => ({
+      value,
+      label: `Weapon ${index + 1}`,
+    })),
+  ],
+})(PlaygroundShowcaseActor.prototype, 'weaponClass');
+
+field('f32')(PlaygroundShowcaseActor.prototype, 'lightingTone');
+shadoPublish({
+  name: 'lightingTone',
+  label: 'Lighting tone',
+  group: 'Appearance',
+  description: 'A sample custom field consumed by the Playground shader hook.',
+  values: ['natural', 'warm', 'cool'],
+})(PlaygroundShowcaseActor.prototype, 'lightingTone');
+
+gpuStruct({ name: 'PlaygroundShowcaseActor' })(PlaygroundShowcaseActor);
 
 /**
  * Containers own actor allocation, VAT playback, culling, and one instanced

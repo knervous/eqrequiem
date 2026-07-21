@@ -33,4 +33,4 @@ export * from './showcase/EqShowcase';
 export * from './showcase/EqShowcaseUi';
 export * from './showcase/ShadoShowcaseEnvironment';
 
-export const VERSION = '1.0.4';
+export const VERSION = '1.0.5';
