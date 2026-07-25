@@ -181,7 +181,7 @@ function applySchemaNames(source: string, options: Required<MSDFTextShaderOption
       0
     ).r > 0.5
   );`
-        : 'let ownerVisible = select(0, 1, ShadoInstanceContainer_fetch(ownerBase + ShadoActor_visibleFlag_OFF) > 0.5);'
+        : 'let ownerVisible = select(0, 1, ShadoInstanceContainer_fetchI32(ownerBase + ShadoActor_visibleFlag_OFF) != 0);'
     )
     .replaceAll(
       '/*SHADO_MSDF_BILLBOARD_FLAG_GLSL*/',

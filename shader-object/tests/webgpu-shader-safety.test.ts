@@ -215,6 +215,25 @@ describe('WebGPU shader safety', () => {
     expect(processed.fragmentCode).toContain('textureSample');
   });
 
+  it('preprocesses MSDF storage shaders with typed inline actor visibility', async () => {
+    const pair = makeMSDFTextShaders({
+      actorStructName: 'TestClass',
+      useVisibilityTexture: false,
+    });
+
+    expect(pair.vertexWGSL).toContain(
+      'ShadoInstanceContainer_fetchI32(ownerBase + TestClass_visibleFlag_OFF) != 0'
+    );
+    const processed = await preprocessWGSL(engine, {
+      vs: pair.vertexWGSL,
+      fs: pair.fragmentWGSL,
+    });
+    expect(processed.vertexCode).toContain(
+      'ShadoInstanceContainer_fetchI32(ownerBase + TestClass_visibleFlag_OFF) != 0'
+    );
+    expect(processed.vertexCode).not.toMatch(/#include|\battribute\b|\bvarying\b/);
+  });
+
   it('preprocesses native WGSL equipment texture-array hooks', async () => {
     const initialized = await EqShowcaseContainer.initialize(engine, {
       extra: EqShowcaseActor,

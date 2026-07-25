@@ -33,6 +33,7 @@ const shadoPublicRoot = path.resolve(
   "../shader-object/sandbox/public/shado",
 );
 const clientRequire = createRequire(path.resolve(__dirname, "package.json"));
+const clientDependencyImporter = path.resolve(__dirname, "src/main.tsx");
 const generatedCatalogObjects = path.resolve(
   __dirname,
   "../assets/generated/eq-catalog/objects",
@@ -82,6 +83,10 @@ const clientBrowserDependencies = new Map([
   [
     "@babylonjs/core",
     path.resolve(__dirname, "src/bjs/core-runtime.ts"),
+  ],
+  [
+    "@babylonjs/lite",
+    path.resolve(__dirname, "node_modules/@babylonjs/lite/lib/index.js"),
   ],
   [
     "@sqlite.org/sqlite-wasm",
@@ -164,7 +169,7 @@ function subappSourcePlugin() {
   return {
     name: "requiem-subapp-source",
     enforce: "pre" as const,
-    resolveId(source: string, importer?: string) {
+    async resolveId(source: string, importer?: string) {
       const importerPath = importer?.replaceAll("\\", "/").split("?", 1)[0];
       const isLibra = importerPath?.startsWith(libraUiRoot.replaceAll("\\", "/"));
       const isSandbox = importerPath?.startsWith(
@@ -206,13 +211,10 @@ function subappSourcePlugin() {
         !source.startsWith("\0") &&
         !path.isAbsolute(source);
       if (!isBareImport) return null;
-      try {
-        // CI installs only client/package.json. Resolve subapp dependencies
-        // from that package rather than relying on sibling node_modules.
-        return clientRequire.resolve(source);
-      } catch {
-        return null;
-      }
+      // CI installs only client/package.json. Resolve from a client-owned
+      // importer while retaining Vite's import conditions, dependency
+      // optimization, and CommonJS interop.
+      return this.resolve(source, clientDependencyImporter, { skipSelf: true });
     },
   };
 }

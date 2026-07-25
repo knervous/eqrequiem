@@ -17,6 +17,15 @@ const requiredText = new Map([
   ],
   ['apps/libra/index.html', ['/src/subapps/libra-main.tsx']],
   ['apps/sandbox/index.html', ['/src/subapps/sandbox-main.tsx']],
+  [
+    'vite.config.ts',
+    [
+      'const clientDependencyImporter',
+      'return this.resolve(source, clientDependencyImporter, { skipSelf: true })',
+      '"@babylonjs/lite"',
+      '"node_modules/@babylonjs/lite/lib/index.js"',
+    ],
+  ],
 ]);
 
 for (const [file, expected] of requiredText) {

@@ -11,6 +11,12 @@ describe('MSDF nameplate visibility shaders', () => {
     expect(shaders.vertexGLSL).toContain('DynamicActor_visibleFlag_OFF');
     expect(shaders.vertexGLSL).not.toContain('uShadoVisibilityFlags');
     expect(shaders.vertexGLSL).not.toContain('uShadoVisibleIndexTexWidth');
+    expect(shaders.vertexWGSL).toContain(
+      'DynamicContainer_fetchI32(ownerBase + DynamicActor_visibleFlag_OFF) != 0'
+    );
+    expect(shaders.vertexWGSL).not.toContain(
+      'DynamicContainer_fetch(ownerBase + DynamicActor_visibleFlag_OFF)'
+    );
   });
 
   it('keeps sidecar visibility bindings for pooled actors', () => {
