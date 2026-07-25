@@ -28,6 +28,7 @@ const repoRoot = path.resolve(__dirname, "..");
 const serverjsSourceRoot = path.resolve(__dirname, "../serverjs/src");
 const libraUiRoot = path.resolve(__dirname, "../serverjs/libra-ui/src");
 const sandboxRoot = path.resolve(__dirname, "../shader-object/sandbox/src");
+const shaderObjectSourceRoot = path.resolve(__dirname, "../shader-object/src");
 const shadoPublicRoot = path.resolve(
   __dirname,
   "../shader-object/sandbox/public/shado",
@@ -115,6 +116,21 @@ const clientBrowserDependencies = new Map([
   ],
 ]);
 
+function isBareModuleImport(source: string): boolean {
+  return (
+    !source.startsWith(".") &&
+    !source.startsWith("/") &&
+    !source.startsWith("\0") &&
+    !path.isAbsolute(source)
+  );
+}
+
+function isSourceWithin(importer: string | undefined, root: string): boolean {
+  const importerPath = importer?.replaceAll("\\", "/").split("?", 1)[0];
+  const rootPath = root.replaceAll("\\", "/");
+  return importerPath === rootPath || importerPath?.startsWith(`${rootPath}/`) === true;
+}
+
 function serverjsTypeScriptSource(
   source: string,
   importer?: string,
@@ -139,10 +155,21 @@ function serverjsSourcePlugin() {
   return {
     name: "serverjs-typescript-source",
     enforce: "pre" as const,
-    resolveId(source: string, importer?: string) {
+    async resolveId(source: string, importer?: string) {
       const clientDependency = clientBrowserDependencies.get(source);
       if (clientDependency) return clientDependency;
-      return serverjsTypeScriptSource(source, importer);
+      const serverSource = serverjsTypeScriptSource(source, importer);
+      if (serverSource) return serverSource;
+      if (
+        !isBareModuleImport(source) ||
+        !isSourceWithin(importer, shaderObjectSourceRoot)
+      ) {
+        return null;
+      }
+      // The production host installs client/package.json only. Shado's linked
+      // TypeScript source therefore needs package imports resolved from the
+      // client graph, while Vite still owns ESM conditions and CJS interop.
+      return this.resolve(source, clientDependencyImporter, { skipSelf: true });
     },
   };
 }
@@ -205,12 +232,7 @@ function subappSourcePlugin() {
       const shadoSource = clientBrowserDependencies.get(source);
       if (shadoSource) return shadoSource;
 
-      const isBareImport =
-        !source.startsWith(".") &&
-        !source.startsWith("/") &&
-        !source.startsWith("\0") &&
-        !path.isAbsolute(source);
-      if (!isBareImport) return null;
+      if (!isBareModuleImport(source)) return null;
       // CI installs only client/package.json. Resolve from a client-owned
       // importer while retaining Vite's import conditions, dependency
       // optimization, and CommonJS interop.

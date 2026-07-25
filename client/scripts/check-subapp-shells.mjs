@@ -22,6 +22,8 @@ const requiredText = new Map([
     [
       'const clientDependencyImporter',
       'return this.resolve(source, clientDependencyImporter, { skipSelf: true })',
+      'const shaderObjectSourceRoot',
+      'isSourceWithin(importer, shaderObjectSourceRoot)',
       '"@babylonjs/lite"',
       '"node_modules/@babylonjs/lite/lib/index.js"',
     ],
