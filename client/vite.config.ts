@@ -1,10 +1,15 @@
 import fs from "node:fs";
 import * as http from "node:http";
+import { createRequire } from "node:module";
 import path from "node:path";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
+import autoprefixer from "autoprefixer";
 import * as https from "https";
 import fetch from "node-fetch";
+import tailwindcss from "tailwindcss";
+import libraTailwindConfig from "../serverjs/libra-ui/tailwind.config";
+import { babylonLiteVat2dPlugin } from "../shader-object/sandbox/vite/babylon-lite-vat-2d";
 
 const httpsAgent = new https.Agent({
   rejectUnauthorized: false,
@@ -19,16 +24,64 @@ const hashLookupTimeoutMs = Number(
 );
 const hashProviderUrl =
   process.env.VITE_HASH_PROVIDER_URL || "http://localhost:8082/hash";
+const repoRoot = path.resolve(__dirname, "..");
 const serverjsSourceRoot = path.resolve(__dirname, "../serverjs/src");
+const libraUiRoot = path.resolve(__dirname, "../serverjs/libra-ui/src");
+const sandboxRoot = path.resolve(__dirname, "../shader-object/sandbox/src");
+const shadoPublicRoot = path.resolve(
+  __dirname,
+  "../shader-object/sandbox/public/shado",
+);
+const clientRequire = createRequire(path.resolve(__dirname, "package.json"));
+const generatedCatalogObjects = path.resolve(
+  __dirname,
+  "../assets/generated/eq-catalog/objects",
+);
 const clientBrowserDependencies = new Map([
   ["@knervous/shado", path.resolve(__dirname, "../shader-object/src/index.ts")],
+  [
+    "@knervous/shado/world",
+    path.resolve(__dirname, "../shader-object/src/world/index.ts"),
+  ],
   [
     "@knervous/shado/render",
     path.resolve(__dirname, "../shader-object/src/render/index.ts"),
   ],
   [
+    "@knervous/shado/renderer",
+    path.resolve(__dirname, "../shader-object/src/renderer/index.ts"),
+  ],
+  [
+    "@knervous/shado/babylon",
+    path.resolve(__dirname, "../shader-object/src/babylon/index.ts"),
+  ],
+  [
+    "@knervous/shado/core",
+    path.resolve(__dirname, "../shader-object/src/core/index.ts"),
+  ],
+  [
+    "@knervous/shado/lite",
+    path.resolve(__dirname, "../shader-object/src/lite/index.ts"),
+  ],
+  [
+    "@knervous/shado/showcase",
+    path.resolve(__dirname, "../shader-object/src/showcase/index.ts"),
+  ],
+  [
+    "@knervous/shado/msdf",
+    path.resolve(__dirname, "../shader-object/src/msdf/index.ts"),
+  ],
+  [
+    "@knervous/shado/preprocess",
+    path.resolve(__dirname, "../shader-object/src/preprocess/index.ts"),
+  ],
+  [
+    "@knervous/shado/preprocess/runtime",
+    path.resolve(__dirname, "../shader-object/src/preprocess/runtime.ts"),
+  ],
+  [
     "@babylonjs/core",
-    path.resolve(__dirname, "node_modules/@babylonjs/core/index.js"),
+    path.resolve(__dirname, "src/bjs/core-runtime.ts"),
   ],
   [
     "@sqlite.org/sqlite-wasm",
@@ -89,10 +142,104 @@ function serverjsSourcePlugin() {
   };
 }
 
+function resolveSourceModule(root: string, relativePath: string): string | null {
+  const absolute = path.resolve(root, relativePath);
+  for (const candidate of [
+    absolute,
+    `${absolute}.ts`,
+    `${absolute}.tsx`,
+    `${absolute}.js`,
+    `${absolute}.jsx`,
+    path.join(absolute, "index.ts"),
+    path.join(absolute, "index.tsx"),
+  ]) {
+    if (fs.existsSync(candidate) && fs.statSync(candidate).isFile()) {
+      return candidate;
+    }
+  }
+  return null;
+}
+
+function subappSourcePlugin() {
+  return {
+    name: "requiem-subapp-source",
+    enforce: "pre" as const,
+    resolveId(source: string, importer?: string) {
+      const importerPath = importer?.replaceAll("\\", "/").split("?", 1)[0];
+      const isLibra = importerPath?.startsWith(libraUiRoot.replaceAll("\\", "/"));
+      const isSandbox = importerPath?.startsWith(
+        sandboxRoot.replaceAll("\\", "/"),
+      );
+      if (!isLibra && !isSandbox) return null;
+
+      if (isLibra && source.startsWith("@libra/")) {
+        return resolveSourceModule(libraUiRoot, source.slice(7));
+      }
+      if (source === "@bjs") {
+        return path.resolve(__dirname, "src/bjs/index.ts");
+      }
+      if (source.startsWith("@game/")) {
+        return resolveSourceModule(
+          path.resolve(__dirname, "src/Game"),
+          source.slice(6),
+        );
+      }
+      if (source.startsWith("@requiem/")) {
+        return resolveSourceModule(
+          path.resolve(__dirname, "src"),
+          source.slice(9),
+        );
+      }
+
+      if (isLibra && source === "@babylonjs/core") {
+        return path.resolve(__dirname, "src/bjs/core-runtime.ts");
+      }
+      if (isSandbox && source === "@babylonjs/core") {
+        return clientRequire.resolve(source);
+      }
+      const shadoSource = clientBrowserDependencies.get(source);
+      if (shadoSource) return shadoSource;
+
+      const isBareImport =
+        !source.startsWith(".") &&
+        !source.startsWith("/") &&
+        !source.startsWith("\0") &&
+        !path.isAbsolute(source);
+      if (!isBareImport) return null;
+      try {
+        // CI installs only client/package.json. Resolve subapp dependencies
+        // from that package rather than relying on sibling node_modules.
+        return clientRequire.resolve(source);
+      } catch {
+        return null;
+      }
+    },
+  };
+}
+
+function subappStaticAssetsPlugin() {
+  return {
+    name: "requiem-subapp-static-assets",
+    async writeBundle(outputOptions: { dir?: string }) {
+      const outputRoot = path.resolve(
+        __dirname,
+        outputOptions.dir ?? "dist",
+      );
+      await fs.promises.cp(shadoPublicRoot, path.join(outputRoot, "shado"), {
+        recursive: true,
+        force: true,
+      });
+    },
+  };
+}
+
 export default defineConfig({
   base: "./",
   plugins: [
+    subappSourcePlugin(),
     serverjsSourcePlugin(),
+    babylonLiteVat2dPlugin,
+    subappStaticAssetsPlugin(),
     react({
       tsDecorators: true,
       swcOptions: {
@@ -112,6 +259,17 @@ export default defineConfig({
     {
       configureServer: ({ middlewares }) => {
         middlewares.use(async (req, res, next) => {
+          if (req.method === "GET" && req.url) {
+            const requestUrl = new URL(req.url, "https://localhost");
+            const subappEntry = requestUrl.pathname.startsWith("/apps/libra/")
+              ? "/apps/libra/index.html"
+              : requestUrl.pathname.startsWith("/apps/sandbox/")
+                ? "/apps/sandbox/index.html"
+                : null;
+            if (subappEntry && !path.extname(requestUrl.pathname)) {
+              req.url = `${subappEntry}${requestUrl.search}`;
+            }
+          }
           if (req.url?.startsWith("/api/hash")) {
             const params = new URLSearchParams(req.url.split("?")[1]);
             const port = params.get("port");
@@ -174,6 +332,80 @@ export default defineConfig({
             res.end(JSON.stringify(playerCount));
             return;
           }
+          if (req.url?.startsWith("/shado/")) {
+            const relativePath = decodeURIComponent(
+              req.url.split(/[?#]/, 1)[0].slice("/shado/".length),
+            ).replace(/^\/+/, "");
+            const filePath = path.resolve(shadoPublicRoot, relativePath);
+            if (
+              !filePath.startsWith(`${shadoPublicRoot}${path.sep}`) ||
+              !relativePath
+            ) {
+              next();
+              return;
+            }
+            try {
+              const bytes = await fs.promises.readFile(filePath);
+              res.statusCode = 200;
+              res.setHeader(
+                "Content-Type",
+                filePath.endsWith(".js")
+                  ? "text/javascript"
+                  : filePath.endsWith(".json")
+                    ? "application/json"
+                    : filePath.endsWith(".glb")
+                      ? "model/gltf-binary"
+                      : filePath.endsWith(".gz")
+                        ? "application/gzip"
+                        : "application/octet-stream",
+              );
+              res.setHeader("Content-Length", bytes.byteLength);
+              res.end(bytes);
+              return;
+            } catch {
+              next();
+              return;
+            }
+          }
+          if (req.url?.startsWith("/eqrequiem/objects/")) {
+            const requestPath = decodeURIComponent(
+              req.url.split(/[?#]/, 1)[0].slice("/eqrequiem/objects/".length),
+            ).replace(/^\/+|\/+$/g, "");
+            const parts = requestPath.split("/");
+            const nestedAsset =
+              parts.length === 2 ? parts[1].toLowerCase() : undefined;
+            const model = (parts.length === 2 ? parts[0] : requestPath)
+              .replace(/\.glb(?:\.gz)?$/i, "");
+            if (
+              !/^[a-z0-9_-]+$/i.test(model) ||
+              (nestedAsset &&
+                nestedAsset !== "final.glb" &&
+                nestedAsset !== "shape.glb")
+            ) {
+              next();
+              return;
+            }
+            const candidates =
+              nestedAsset === "shape.glb"
+                ? ["shape.glb"]
+                : ["final.glb", "shape.glb"];
+            for (const candidate of candidates) {
+              try {
+                const bytes = await fs.promises.readFile(
+                  path.join(generatedCatalogObjects, model, candidate),
+                );
+                res.statusCode = 200;
+                res.setHeader("Content-Type", "model/gltf-binary");
+                res.setHeader("Content-Length", bytes.byteLength);
+                res.end(bytes);
+                return;
+              } catch (error) {
+                if ((error as NodeJS.ErrnoException).code !== "ENOENT") break;
+              }
+            }
+            next();
+            return;
+          }
           res.setHeader("Cross-Origin-Embedder-Policy", "require-corp");
           res.setHeader("Cross-Origin-Opener-Policy", "same-origin");
           next();
@@ -181,6 +413,23 @@ export default defineConfig({
       },
     },
   ],
+  css: {
+    postcss: {
+      plugins: [
+        tailwindcss({
+          ...libraTailwindConfig,
+          content: [
+            path.resolve(__dirname, "../serverjs/libra-ui/index.html"),
+            path.resolve(__dirname, "../serverjs/libra-ui/src/**/*.{ts,tsx}"),
+          ],
+        }),
+        autoprefixer(),
+      ],
+    },
+  },
+  define: {
+    __REPO_ROOT__: JSON.stringify(repoRoot),
+  },
   resolve: {
     dedupe: [
       "@babylonjs/addons",
@@ -208,26 +457,54 @@ export default defineConfig({
         "./node_modules/use-context-selector",
       ),
       "tga-js": path.resolve(__dirname, "./node_modules/tga-js"),
-      ...(isLocalDev
-        ? {
-            "sage-core": path.resolve(__dirname, "../../eqsage/sage/lib"),
-          }
-        : {}),
       "@game": path.resolve(__dirname, "src/Game"),
       "@eqmessage": path.resolve(__dirname, "src/Game/Net/messages.ts"),
       "@@opcode": path.resolve(__dirname, "src/Game/Net/opcodes.ts"),
       "@ui": path.resolve(__dirname, "src/UI"),
+      "@libra": path.resolve(__dirname, "../serverjs/libra-ui/src"),
+      "@requiem-subapp/libra": path.resolve(
+        __dirname,
+        "../serverjs/libra-ui/src/requiem-entry.ts",
+      ),
+      "@requiem-subapp/sandbox": path.resolve(
+        __dirname,
+        "../shader-object/sandbox/src/requiem-entry.ts",
+      ),
       "@": path.resolve(__dirname, "src"),
       "@bjs": path.resolve(__dirname, "src/bjs/index.ts"),
     },
   },
   optimizeDeps: {
-    exclude: isLocalDev
-      ? ["@babylonjs/havok", "@sqlite.org/sqlite-wasm", "sage-core"]
-      : ["@babylonjs/havok", "@sqlite.org/sqlite-wasm"],
+    include: ["@babylonjs/core"],
+    exclude: ["@babylonjs/havok", "@sqlite.org/sqlite-wasm"],
   },
   build: {
     target: "chrome90",
+    rolldownOptions: {
+      input: {
+        requiem: path.resolve(__dirname, "index.html"),
+        libra: path.resolve(__dirname, "apps/libra/index.html"),
+        sandbox: path.resolve(__dirname, "apps/sandbox/index.html"),
+      },
+      output: {
+        codeSplitting: {
+          groups: [
+            {
+              name: "babylon-full",
+              test: /node_modules[\\/]@babylonjs[\\/]core[\\/]/,
+              priority: 20,
+              includeDependenciesRecursively: false,
+            },
+            {
+              name: "babylon-loaders",
+              test: /node_modules[\\/]@babylonjs[\\/]loaders[\\/]/,
+              priority: 15,
+              includeDependenciesRecursively: false,
+            },
+          ],
+        },
+      },
+    },
     commonjsOptions: {
       requireReturnsDefault: "preferred",
       transformMixedEsModules: true,
@@ -246,5 +523,12 @@ export default defineConfig({
       cert: fs.readFileSync("localhost.crt"),
     },
     port: 3500,
+    proxy: {
+      "^/libra(?:/|$)": {
+        target:
+          process.env.VITE_LIBRA_PROXY_TARGET ?? "http://127.0.0.1:8082",
+        changeOrigin: true,
+      },
+    },
   },
 });

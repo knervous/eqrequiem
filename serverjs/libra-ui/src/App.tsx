@@ -1,17 +1,17 @@
 import { lazy, Suspense } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 
-import { LibraShell } from '@/layout/libra-shell'
-import { DashboardPage } from '@/pages/dashboard-page'
-import { ReleasesPage } from '@/pages/releases-page'
-import { TableBrowserPage } from '@/pages/table-browser-page'
-import { ValidationPage } from '@/pages/validation-page'
-import { ShardsPage } from '@/pages/shards-page'
-import { ZonesPage } from '@/pages/zones-page'
-import { NpcsPage } from '@/pages/npcs-page'
+import { LibraShell } from '@libra/layout/libra-shell'
+import { DashboardPage } from '@libra/pages/dashboard-page'
+import { ReleasesPage } from '@libra/pages/releases-page'
+import { TableBrowserPage } from '@libra/pages/table-browser-page'
+import { ValidationPage } from '@libra/pages/validation-page'
+import { ShardsPage } from '@libra/pages/shards-page'
+import { ZonesPage } from '@libra/pages/zones-page'
+import { NpcsPage } from '@libra/pages/npcs-page'
 
 const ModelViewerPage = lazy(async () => {
-  const module = await import('@/pages/model-viewer-page')
+  const module = await import('@libra/pages/model-viewer-page')
   return { default: module.ModelViewerPage }
 })
 

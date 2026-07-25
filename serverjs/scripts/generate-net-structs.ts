@@ -1,7 +1,7 @@
 import { writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 
-import { emitNetStructModule } from "shader-object";
+import { emitNetStructModule } from "@knervous/shado";
 import { netStructs } from "./net-structs.schema.js";
 
 const output = resolve(

@@ -11,6 +11,7 @@ import { Spawns } from "@game/Net/messages";
 import { RegionManager } from "@game/Regions/region-manager";
 import DayNightSkyManager from "@game/Sky/sky-manager";
 import EntityPool from "./entity-pool";
+import { ShadoWorldObjectLayer } from "./shado-world-object-layer";
 import { Grid } from "./zone-grid";
 import { ZoneMetadata } from "./zone-types";
 import ObjectCache from "@/Game/Model/object-cache";
@@ -46,6 +47,7 @@ export class ZoneManager {
   }
   private entityPool: EntityPool | null = null;
   private zoneObjects: ObjectCache | null = null;
+  private shadoWorldObjects: ShadoWorldObjectLayer | null = null;
 
   private disableWorldEnv: boolean = false;
   public zoneName = "";
@@ -119,6 +121,8 @@ export class ZoneManager {
     this.animatedTextures = [];
     this.worldTickElapsedMs = 0;
     this.zoneObjects?.disposeAll();
+    this.shadoWorldObjects?.dispose();
+    this.shadoWorldObjects = null;
     this.regionManager.dispose();
     this.lightManager.dispose();
     this.skyManager.dispose();
@@ -225,12 +229,10 @@ export class ZoneManager {
       this.parent.setLoading(false);
       return;
     }
-    const file = new File([bytes], `${this.zoneName}.babylon`, {
-      type: "application/babylon",
-    });
-    const result = await BABYLON.LoadAssetContainerAsync(
-      file,
+    const result = await BABYLON.loadBabylonAssetContainer(
+      bytes,
       this.parent.scene!,
+      { name: `${this.zoneName}.babylon` },
     ).catch((error) => {
       console.error(`[ZoneManager] Error importing zone mesh: ${error}`);
       this.parent.setLoading(false);
@@ -249,10 +251,22 @@ export class ZoneManager {
     }
     // result.addAllToScene();
     this.zoneContainer!.scaling.x = -1;
+    const renderableMeshes = result.meshes.filter(
+      (mesh): mesh is BJS.Mesh =>
+        mesh instanceof BABYLON.Mesh && mesh.getTotalVertices() > 0,
+    );
+    if (!renderableMeshes.length) {
+      console.error(
+        `[ZoneManager] Zone ${this.zoneName} contains no renderable meshes`,
+      );
+      result.dispose();
+      this.parent.setLoading(false);
+      return;
+    }
     const staticMeshes: BJS.Mesh[] = [];
     const passthroughMeshes: BJS.Mesh[] = [];
 
-    result.meshes.forEach((mesh) => {
+    renderableMeshes.forEach((mesh) => {
       mesh.isPickable = true;
       mesh.collisionMask = 0x0000dad1;
       let canMerged = true;
@@ -287,14 +301,19 @@ export class ZoneManager {
       }
     });
 
-    const passThroughMesh = BABYLON.Mesh.MergeMeshes(
-      passthroughMeshes.filter((m) => m.getTotalVertices() > 0),
-      true,
-      true,
-      undefined,
-      false,
-      true,
+    const mergeablePassthroughMeshes = passthroughMeshes.filter(
+      (mesh) => mesh.getTotalVertices() > 0,
     );
+    const passThroughMesh = mergeablePassthroughMeshes.length
+      ? BABYLON.Mesh.MergeMeshes(
+          mergeablePassthroughMeshes,
+          true,
+          true,
+          undefined,
+          false,
+          true,
+        )
+      : null;
     const zoneMesh = BABYLON.Mesh.MergeMeshes(
       staticMeshes.filter((m) => m.getTotalVertices() > 0),
       true,
@@ -303,7 +322,7 @@ export class ZoneManager {
       false,
       true,
     );
-    if (!zoneMesh || !passThroughMesh) {
+    if (!zoneMesh) {
       console.error("[ZoneManager] Failed to merge zone meshes");
       this.parent.setLoading(false);
       return;
@@ -324,7 +343,7 @@ export class ZoneManager {
     zoneMesh.physicsBody.shape.material.restitution = 0;
     zoneMesh.physicsBody.setMassProperties({ mass: 0 }); // Static
     zoneMesh.setParent(this.zoneContainer);
-    passThroughMesh.setParent(this.zoneContainer);
+    passThroughMesh?.setParent(this.zoneContainer);
     this.skyManager.createSky("sky1", this.disableWorldEnv);
     this.parent.setLoading(false);
 
@@ -346,14 +365,7 @@ export class ZoneManager {
           metadata.lights,
           this.zoneName,
         );
-        if (this.CurrentZone?.zonePoints) {
-          this.regionManager.instantiateRegions(
-            this.GameManager.scene!,
-            metadata,
-            this.GameManager.CurrentZone?.zonePoints,
-          );
-        }
-        this.instantiateObjects(metadata).then(() => {
+        this.instantiatePromotedObjects(metadata, generation).then(() => {
           if (generation !== this.loadGeneration) return;
           this.dedupeMaterialsByName();
           this.cleanupUnusedMaterials();
@@ -431,6 +443,50 @@ export class ZoneManager {
     }
   }
 
+  private async instantiatePromotedObjects(
+    metadata: ZoneMetadata,
+    generation: number,
+  ): Promise<void> {
+    if (!this.zoneObjects || !this.parent.scene) return;
+    try {
+      this.shadoWorldObjects = await ShadoWorldObjectLayer.load(
+        this.zoneName,
+        this.zoneObjects,
+        this.parent.scene,
+      );
+    } catch (error) {
+      console.warn(
+        `[ZoneManager] Promoted world bootstrap failed for ${this.zoneName}; ` +
+          "using legacy metadata",
+        error,
+      );
+      this.shadoWorldObjects = null;
+    }
+    if (generation !== this.loadGeneration) return;
+    if (this.shadoWorldObjects) {
+      if (this.CurrentZone?.zonePoints) {
+        this.regionManager.instantiateShadoRegions(
+          this.parent.scene,
+          this.shadoWorldObjects.world,
+          this.CurrentZone.zonePoints,
+        );
+      }
+    } else {
+      if (this.CurrentZone?.zonePoints) {
+        this.regionManager.instantiateRegions(
+          this.parent.scene,
+          metadata,
+          this.CurrentZone.zonePoints,
+        );
+      }
+      await this.instantiateObjects(metadata);
+      console.info(
+        `[ZoneManager] No promoted world package for ${this.zoneName}; ` +
+          "using legacy object metadata",
+      );
+    }
+  }
+
   public tick() {
     if (!this.zoneContainer) {
       return;
@@ -454,6 +510,7 @@ export class ZoneManager {
       );
     }
     this.skyManager.tick(delta);
+    this.shadoWorldObjects?.tick(delta);
     this.entityPool?.process();
     this.lightManager.updateLights(delta);
   }

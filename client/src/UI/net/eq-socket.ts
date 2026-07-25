@@ -53,17 +53,7 @@ function base64ToBytes(base64: string): Uint8Array {
 
 function exactArrayBuffer(bytes: Uint8Array): ArrayBuffer {
   // Ensure a tightly-sized buffer regardless of underlying view offset/length.
-  return bytes.buffer.slice(
-    bytes.byteOffset,
-    bytes.byteOffset + bytes.byteLength,
-  );
-}
-
-function concatArrayBuffer(a: ArrayBuffer, b: ArrayBuffer): Uint8Array {
-  const c = new Uint8Array(a.byteLength + b.byteLength);
-  c.set(new Uint8Array(a), 0);
-  c.set(new Uint8Array(b), a.byteLength);
-  return c;
+  return Uint8Array.from(bytes).buffer;
 }
 
 function concatUint8(a: Uint8Array, b: Uint8Array): Uint8Array {
@@ -120,6 +110,8 @@ function boolEnv(name: string, fallback: boolean): boolean {
 
 export class EqSocket {
   private localBackend: LocalBackendConnection | null = null;
+  private connectingLocalBackend: LocalBackendConnection | null = null;
+  private localConnectPromise: Promise<boolean> | null = null;
   private webtransport: WebTransport | null = null;
   private datagramWriter: WritableStreamDefaultWriter<Uint8Array> | null = null;
   private controlWriter: WritableStreamDefaultWriter<Uint8Array> | null = null;
@@ -160,26 +152,19 @@ export class EqSocket {
     this.port = port;
     this.onClose = onClose;
 
-    if (isLocalBackendEnabled() || url === "local") {
-      try {
-        this.localBackend?.close();
-        const localBackend = new LocalBackendConnection();
-        localBackend.onPacket((opcode, payload) =>
-          this.opCodeHandlers[opcode]?.(payload),
-        );
-        const info = await localBackend.connect();
-        this.localBackend = localBackend;
-        this.isConnected = true;
-        this.retryCount = 0;
-        this.clearReconnectTimer();
-        console.info("[local-backend] connected", info);
-        return true;
-      } catch (error) {
-        console.error("[local-backend] connection failed", error);
-        this.localBackend?.close();
-        this.localBackend = null;
-        return false;
-      }
+    if (url === "local" || isLocalBackendEnabled()) {
+      if (this.isConnected && this.localBackend) return true;
+      if (this.localConnectPromise) return this.localConnectPromise;
+
+      const pending = this.connectLocalBackend();
+      this.localConnectPromise = pending;
+      const clearPending = () => {
+        if (this.localConnectPromise === pending) {
+          this.localConnectPromise = null;
+        }
+      };
+      void pending.then(clearPending, clearPending);
+      return pending;
     }
 
     const WT = (window as any).WebTransport as {
@@ -367,7 +352,9 @@ export class EqSocket {
 
   public close(scheduleReconnect: boolean = true) {
     this.isConnected = false;
-    this.localBackend?.close();
+    void this.connectingLocalBackend?.close();
+    this.connectingLocalBackend = null;
+    void this.localBackend?.close();
     this.localBackend = null;
     this.datagramWriter?.releaseLock();
     this.controlWriter?.releaseLock();
@@ -385,6 +372,42 @@ export class EqSocket {
   }
 
   // ——— private helpers ———
+
+  private async connectLocalBackend(): Promise<boolean> {
+    const previousBackend = this.localBackend;
+    this.localBackend = null;
+    await previousBackend?.close();
+
+    const localBackend = new LocalBackendConnection();
+    this.connectingLocalBackend = localBackend;
+    localBackend.onPacket((opcode, payload) =>
+      this.opCodeHandlers[opcode]?.(payload),
+    );
+    try {
+      const info = await localBackend.connect();
+      if (this.connectingLocalBackend !== localBackend) {
+        await localBackend.close();
+        return false;
+      }
+      this.connectingLocalBackend = null;
+      this.localBackend = localBackend;
+      this.isConnected = true;
+      this.retryCount = 0;
+      this.clearReconnectTimer();
+      console.info("[local-backend] connected", info);
+      return true;
+    } catch (error) {
+      console.error("[local-backend] connection failed", error);
+      await localBackend.close();
+      if (this.connectingLocalBackend === localBackend) {
+        this.connectingLocalBackend = null;
+      }
+      if (this.localBackend === localBackend) {
+        this.localBackend = null;
+      }
+      return false;
+    }
+  }
 
   private async sendDatagram(buf: Uint8Array) {
     if (this.localBackend) {

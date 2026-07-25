@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "model": "hem",
+  "material": "hemch0000",
+  "styleProfile": {
+    "id": "requiem-grounded-animated-fantasy-v2",
+    "path": "assets/pipeline/humanoid-grounded-fantasy-style.json"
+  },
+  "source": {
+    "width": 2048,
+    "height": 2048,
+    "bytes": 4335589,
+    "sha256": "5bb3a81ac6a340523b454245703f8c60e87bc1636299eeba088679621771df8b"
+  },
+  "runtime": {
+    "width": 2048,
+    "height": 2048,
+    "rgbaBytes": 16777216,
+    "basisBytes": 4194404,
+    "basisEncoding": "uastc",
+    "basisUastcLevel": 3,
+    "atlasSha256": "63d6842c76d4403148eb255ce526e5ba941c7a82c1e55556289dbde168635d34",
+    "basisSha256": "29ea49038111e673b22c265da3a53cd0f6484beb4337948d03c9ba3a8739948f"
+  }
+}

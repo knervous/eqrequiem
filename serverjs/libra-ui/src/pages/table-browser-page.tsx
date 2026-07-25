@@ -2,14 +2,14 @@ import { useEffect, useMemo, useState } from 'react'
 import { RefreshCw } from 'lucide-react'
 import { useSearchParams } from 'react-router-dom'
 
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Textarea } from '@/components/ui/textarea'
+import { Badge } from '@libra/components/ui/badge'
+import { Button } from '@libra/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@libra/components/ui/card'
+import { Input } from '@libra/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@libra/components/ui/select'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@libra/components/ui/table'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@libra/components/ui/tabs'
+import { Textarea } from '@libra/components/ui/textarea'
 import {
   createContentRow,
   deleteContentRow,
@@ -17,9 +17,9 @@ import {
   listContentRows,
   listContentTables,
   updateContentRow,
-} from '@/libra/api'
-import { GENERIC_SECTION_ID, LIBRA_SECTIONS } from '@/libra/sections'
-import type { LibraColumnMeta, LibraRow, LibraTableMeta } from '@/libra/types'
+} from '@libra/libra/api'
+import { GENERIC_SECTION_ID, LIBRA_SECTIONS } from '@libra/libra/sections'
+import type { LibraColumnMeta, LibraRow, LibraTableMeta } from '@libra/libra/types'
 
 export function TableBrowserPage() {
   const [searchParams, setSearchParams] = useSearchParams()

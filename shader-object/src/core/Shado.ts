@@ -15,7 +15,6 @@ import type {
 } from '../types';
 import { EMPTY_UPLOAD_STATS } from '../types';
 import { BindingAlloc } from '../utils/binding-alloc';
-import { registerIncludesOnEngine } from '../includes/register';
 import { ShadoSchemaBuilder } from '../schema/ShadoSchemaBuilder';
 import { genericASModuleSource } from '../asc/generic';
 import { buildOpsForParent } from '../asc/ops';
@@ -32,9 +31,12 @@ import { installThinAccessors } from '../utils/thin-accessors';
 import { StorageBacking } from '../backings/StorageBacking';
 import { DataTexBacking } from '../backings/DataTexBacking';
 import { PendingField, readClassMeta, readFields } from '../decorators';
-import type { AbstractEngine } from '@babylonjs/core';
-import { BABYLON } from '../babylon';
 import type { ShadoStructSchema } from '../schema/ShadoStructSchema';
+import {
+  ensureShadoRendererAdapter,
+  getShadoRendererAdapter,
+  peekShadoRendererAdapter,
+} from '../renderer/ShadoRendererAdapter';
 import {
   createShadoPublishedFacade,
   getShadoPublishedProperties,
@@ -169,7 +171,8 @@ export abstract class Shado {
   protected _structArrayCount: Record<string, number> = {};
   protected _structArraySlots: Record<string, Shado[]> = {};
   protected _structArrayUnsubs: Record<string, Array<() => void>> = {};
-  protected _structArrayIndex: Record<string, Map<Shado, number>> = {};
+  private _dirtyFlagValue = 1;
+  private _structDirtyFlags: Record<string, Uint8Array> = {};
 
   private _dirtyHandlers?: DirtyHandler[];
 
@@ -209,7 +212,7 @@ export abstract class Shado {
     return ctor;
   }
 
-  protected constructor(engine: AbstractEngine, childInstance: boolean = false) {
+  protected constructor(engine: any, childInstance: boolean = false) {
     // Build instance-level schema
     const ctor = this as any as ShadoBaseCtor;
     const schema = ctor.getSchema([]);
@@ -223,15 +226,15 @@ export abstract class Shado {
     this._useWasm = schemaUsesWasm(schema, meta) && wasmMode !== 'off';
 
     this._engine = engine;
-    for (const scene of engine.scenes) {
-      const obs = scene.onDisposeObservable.addOnce(() => this.dispose());
+    for (const scene of engine.scenes ?? []) {
+      const obs = scene.onDisposeObservable?.addOnce?.(() => this.dispose());
       this._sceneObs.push({ scene, obs });
     }
-    this._engineNewSceneObs = engine.onNewSceneAddedObservable.add(scene => {
-      const obs = scene.onDisposeObservable.addOnce(() => this.dispose());
+    this._engineNewSceneObs = engine.onNewSceneAddedObservable?.add?.((scene: any) => {
+      const obs = scene.onDisposeObservable?.addOnce?.(() => this.dispose());
       this._sceneObs.push({ scene, obs });
     });
-    this._engineObs = engine.onDisposeObservable.addOnce(() => this.dispose());
+    this._engineObs = engine.onDisposeObservable?.addOnce?.(() => this.dispose());
 
     // Initialize headerRaw and _view
     this.headerRaw = new ArrayBuffer(schema.headerFloatCount * 4);
@@ -347,7 +350,11 @@ export abstract class Shado {
       this.initWasmArena();
     }
 
-    const isWebGPU = (engine as any)?._isWebGPU ?? engine?.getClassName?.() === 'WebGPUEngine';
+    const isWebGPU =
+      peekShadoRendererAdapter(engine)?.isWebGPU ??
+      engine?.isWebGPU ??
+      engine?._isWebGPU ??
+      engine?.getClassName?.() === 'WebGPUEngine';
     const wantsStorageBacking = (this.constructor as any).backingPreference === 'storage';
     if (wantsStorageBacking && !isWebGPU) {
       throw new Error(
@@ -427,6 +434,7 @@ export abstract class Shado {
     }
   ): Promise<boolean> {
     try {
+      const renderer = await ensureShadoRendererAdapter(engine);
       this.schema = this.getSchema(additionalFields ?? []);
       const meta = readClassMeta(this);
       const wantsWasm = schemaUsesWasm(this.schema, meta);
@@ -435,7 +443,7 @@ export abstract class Shado {
       if (wantsWasm && wasmMode.mode !== 'off') {
         await (this as any).initWasm(debugWasm, wasmMode);
       }
-      this.registerIncludes();
+      renderer.registerSchema?.(this.schema);
       if (logShaderCode) {
         this.debugShaderCode(engine);
       }
@@ -445,9 +453,14 @@ export abstract class Shado {
       this.backingPreference = backend ?? 'datatex';
       return true;
     } catch (e) {
-      // eslint-disable-next-line no-console
       console.error(`[${this.name}.initialize] Error:`, e);
-      BABYLON.Logger?.Warn?.(e instanceof Error ? e.message : String(e));
+      const message = e instanceof Error ? e.message : String(e);
+      try {
+        getShadoRendererAdapter(engine).warn?.(message);
+      } catch {
+        // The adapter itself may have failed to load; the primary error above
+        // already carries the actionable initialization failure.
+      }
       return false;
     }
   }
@@ -722,6 +735,7 @@ export abstract class Shado {
     };
   }
   public emitHeaderDirty(byteOffset?: number, byteLength?: number) {
+    this._dirtyFlagValue = 1;
     if (byteOffset !== undefined && byteLength !== undefined) {
       this._arena.markDirtyBytes?.(byteOffset, byteLength);
     } else {
@@ -731,6 +745,64 @@ export abstract class Shado {
     if (!a) return;
     const ev: DirtyEvent = { kind: 'header', byteOffset, byteLength };
     for (let i = 0; i < a.length; i++) a[i](ev);
+  }
+
+  /** One-byte mutation marker present on every Shado object. */
+  public get dirtyFlag(): number {
+    const host = (this as any)._host as Shado | undefined;
+    const field = (this as any)._sidecarField as string | undefined;
+    const index = (this as any)._sidecarIndex as number | undefined;
+    if (host && field !== undefined && index !== undefined) {
+      return host.getStructDirtyFlags(field)[index] ?? 0;
+    }
+    return this._dirtyFlagValue;
+  }
+
+  public set dirtyFlag(value: number) {
+    const host = (this as any)._host as Shado | undefined;
+    const field = (this as any)._sidecarField as string | undefined;
+    const index = (this as any)._sidecarIndex as number | undefined;
+    if (host && field !== undefined && index !== undefined) {
+      host.setStructDirtyFlag(field, index, value !== 0);
+      return;
+    }
+    this._dirtyFlagValue = value ? 1 : 0;
+  }
+
+  public markDirty(): void {
+    this.dirtyFlag = 1;
+    this.emitHeaderDirty();
+  }
+
+  public clearDirty(): void {
+    this.dirtyFlag = 0;
+  }
+
+  public getStructDirtyFlags(field: string): Uint8Array {
+    const count = this.getStructArrayCount(field);
+    return this._ensureStructDirtyCapacity(field, count).subarray(0, count);
+  }
+
+  public setStructDirtyFlag(field: string, index: number, dirty = true): void {
+    const count = this.getStructArrayCount(field);
+    if (index < 0 || index >= count) return;
+    this._ensureStructDirtyCapacity(field, count)[index] = dirty ? 1 : 0;
+  }
+
+  public clearStructDirtyFlags(field: string): void {
+    this.getStructDirtyFlags(field).fill(0);
+  }
+
+  private _ensureStructDirtyCapacity(field: string, count: number): Uint8Array {
+    let flags = this._structDirtyFlags[field];
+    if (!flags || flags.length < count) {
+      let capacity = Math.max(4, flags?.length ?? 0);
+      while (capacity < count) capacity *= 2;
+      const next = new Uint8Array(capacity);
+      if (flags) next.set(flags);
+      flags = this._structDirtyFlags[field] = next;
+    }
+    return flags;
   }
 
   generateWGSL(): string {
@@ -878,7 +950,7 @@ export abstract class Shado {
     uniforms: string[];
     samplers: string[];
   } {
-    const isWebGPU = engine?._isWebGPU ?? engine?.getClassName?.() === 'WebGPUEngine';
+    const isWebGPU = getShadoRendererAdapter(engine).isWebGPU;
     const wantsStorageBacking = (this as any).backingPreference === 'storage';
     return (this as any).getSchema().materialIOFor(isWebGPU && wantsStorageBacking ? engine : null);
   }
@@ -933,9 +1005,7 @@ export abstract class Shado {
   }
 
   public static debugAscCode(this: ShadoBaseCtor): void {
-    // eslint-disable-next-line no-console
     console.log('--- AssemblyScript code ---');
-    // eslint-disable-next-line no-console
     console.debug(emitASUnmanagedFromSchema((this as any).getSchema()));
   }
 
@@ -943,8 +1013,11 @@ export abstract class Shado {
    * Static method kept for backward compatibility.
    * New code should use instance.registerIncludes() instead.
    */
-  public static registerIncludes(this: ShadoBaseCtor) {
-    registerIncludesOnEngine((this as any).getSchema());
+  public static registerIncludes(this: ShadoBaseCtor, engine?: any) {
+    if (!engine) {
+      throw new Error('Shado.registerIncludes(engine) now requires an initialized renderer engine.');
+    }
+    getShadoRendererAdapter(engine).registerSchema?.((this as any).getSchema());
   }
 
   /**
@@ -963,33 +1036,45 @@ export abstract class Shado {
     throw new Error('GLSL generation must be implemented in subclass');
   }
 
-  public getShaderNames(rewrite: boolean = true): { vertex: string; fragment: string } {
-    const effect = BABYLON.Effect as any;
-    const shaderStore = BABYLON.ShaderStore as any;
-    const isWebGPU = this._engine._isWebGPU ?? this._engine.getClassName?.() === 'WebGPUEngine';
+  public getShaderNames(_rewrite: boolean = true): { vertex: string; fragment: string } {
+    const renderer = getShadoRendererAdapter(this._engine);
+    const isWebGPU = renderer.isWebGPU;
     const preferWGSL = isWebGPU && (this.constructor as any).backingPreference === 'storage';
-    // Use instance-specific include name instead of schema name
-    const idBase = this._includeName + this._instanceId;
-
     if (preferWGSL) {
-      const vKey = `${idBase}VertexShader`;
-      const fKey = `${idBase}FragmentShader`;
-      if (rewrite || !shaderStore.ShadersStoreWGSL[vKey] || !shaderStore.ShadersStoreWGSL[fKey]) {
-        const { vs, fs } = this.generateWGSLPair();
-        shaderStore.ShadersStoreWGSL[vKey] = vs;
-        shaderStore.ShadersStoreWGSL[fKey] = fs;
-      }
+      const pair = this.generateWGSLPair();
+      const idBase = this.sharedShaderName(pair, 'wgsl');
+      renderer.registerShader?.(idBase, 'wgsl', pair);
       return { vertex: idBase, fragment: idBase };
     } else {
-      const vKey = `${idBase}VertexShader`;
-      const fKey = `${idBase}FragmentShader`;
-      if (rewrite || !effect.ShadersStore[vKey] || !effect.ShadersStore[fKey]) {
-        const { vs, fs } = this.generateGLSLPair();
-        effect.ShadersStore[vKey] = vs;
-        effect.ShadersStore[fKey] = fs;
-      }
+      const pair = this.generateGLSLPair();
+      const idBase = this.sharedShaderName(pair, 'glsl');
+      renderer.registerShader?.(idBase, 'glsl', pair);
       return { vertex: idBase, fragment: idBase };
     }
+  }
+
+  protected sharedShaderName(
+    pair: { vs: string; fs: string },
+    variant: string
+  ): string {
+    const schema = this.getSchema();
+    const schemaSignature = [
+      schema.name,
+      schema.headerFloatCount,
+      ...schema.fields.map(field => [
+        field.name,
+        field.headerFloatOffset,
+        field.headerFloatSize,
+        typeof field.type === 'string' ? field.type : JSON.stringify(field.type),
+      ].join(':')),
+    ].join('|');
+    const source = `${variant}\0${schemaSignature}\0${pair.vs}\0${pair.fs}`;
+    let hash = 2166136261;
+    for (let i = 0; i < source.length; i++) {
+      hash ^= source.charCodeAt(i);
+      hash = Math.imul(hash, 16777619);
+    }
+    return `${this._includeName}_${variant}_${(hash >>> 0).toString(36)}_${source.length}`;
   }
 
   public setVarArray(field: string, data: Float32Array | number[]) {
@@ -1009,6 +1094,76 @@ export abstract class Shado {
     }
     this._arena.write(seg.offF, src, src.length);
     seg.lenF = src.length;
+  }
+
+  /** Reserve logical elements for a var-array without changing its current length. */
+  public reserveVarArray(field: string, count: number): void {
+    if (this._isDisposed) return;
+    const schema = this.getSchema();
+    const meta = schema.varArrays[field];
+    if (!meta) throw new Error(`'${field}' is not a variable array field on ${schema?.name}`);
+    const strideF = meta.floatStride | 0;
+    const needF = Math.max(0, count | 0) * strideF;
+    const seg = this._varSeg[field] || (this._varSeg[field] = { offF: 0, lenF: 0, capF: 0 });
+    if (needF <= seg.capF) return;
+    this._repack({
+      growVar: {
+        field,
+        newCapF: Math.max(needF, Math.max(64, seg.capF * 2)),
+      },
+    });
+  }
+
+  /**
+   * Resize a var-array in place. Newly exposed elements are zeroed without
+   * copying the existing prefix through a temporary array.
+   */
+  public resizeVarArray(field: string, count: number): void {
+    if (this._isDisposed) return;
+    const schema = this.getSchema();
+    const meta = schema.varArrays[field];
+    if (!meta) throw new Error(`'${field}' is not a variable array field on ${schema?.name}`);
+    const strideF = meta.floatStride | 0;
+    const nextLenF = Math.max(0, count | 0) * strideF;
+    const seg = this._varSeg[field] || (this._varSeg[field] = { offF: 0, lenF: 0, capF: 0 });
+    const previousLenF = seg.lenF | 0;
+    this.reserveVarArray(field, count);
+    if (nextLenF > previousLenF) {
+      this._arena.write(
+        seg.offF + previousLenF,
+        new Float32Array(nextLenF - previousLenF),
+        nextLenF - previousLenF
+      );
+    } else if (nextLenF < previousLenF) {
+      this._arena.write(
+        seg.offF + nextLenF,
+        new Float32Array(previousLenF - nextLenF),
+        previousLenF - nextLenF
+      );
+    }
+    seg.lenF = nextLenF;
+  }
+
+  /** Write complete logical elements into an existing var-array subrange. */
+  public writeVarArrayRange(field: string, start: number, data: ArrayLike<number>): void {
+    if (this._isDisposed) return;
+    const schema = this.getSchema();
+    const meta = schema.varArrays[field];
+    if (!meta) throw new Error(`'${field}' is not a variable array field on ${schema?.name}`);
+    const strideF = meta.floatStride | 0;
+    const startElement = Math.max(0, start | 0);
+    const sourceLength = Math.max(0, (data as any)?.length ?? 0);
+    if (sourceLength % strideF !== 0) {
+      throw new RangeError(
+        `writeVarArrayRange('${field}') expected a multiple of ${strideF} floats, got ${sourceLength}`
+      );
+    }
+    const elementCount = sourceLength / strideF;
+    const requiredCount = startElement + elementCount;
+    const currentCount = this.getVarArrayCount(field);
+    if (requiredCount > currentCount) this.resizeVarArray(field, requiredCount);
+    const seg = this._varSeg[field];
+    this._arena.write(seg.offF + startElement * strideF, data, sourceLength);
   }
 
   private _opsBoundOnce: any;
@@ -1070,10 +1225,9 @@ export abstract class Shado {
     child._engine = this._engine;
     child._host = this;
     child._baseF = this._structSeg[field].offF + index * strideF;
-
-    child.emitHeaderDirty = (byteOffset?: number, byteLength?: number) =>
-      this.emitHeaderDirty(byteOffset, byteLength);
-    child.dispose = () => {};
+    child._sidecarField = field;
+    child._sidecarIndex = index;
+    child._sidecarStrideF = strideF;
 
     return child as T;
   }
@@ -1090,6 +1244,7 @@ export abstract class Shado {
         const child: any = slots[i];
         if (!child || child._host !== this) continue;
         child._baseF = seg.offF + i * strideF;
+        child._sidecarIndex = i;
         for (const key of Object.keys(child)) {
           if (key.startsWith('__live_')) delete child[key];
         }
@@ -1140,7 +1295,8 @@ export abstract class Shado {
     }
     this._lastSyncedBuffer = buf;
     this._lastSyncedStructVersion = this._structVersion;
-    this.emitHeaderDirty(); // one notification is enough
+    // The generated pointer/count scalar setters above already mark their
+    // exact header words dirty. Do not expand those writes to the full arena.
   }
 
   /** Create, attach, and return a child struct instance in the given var-array. */
@@ -1169,11 +1325,11 @@ export abstract class Shado {
 
     seg.lenF = needF;
     this._structArrayCount[field] = count + 1;
+    this._ensureStructDirtyCapacity(field, count + 1)[count] = 1;
 
     const child = this._makeThinChild<T>(field, meta.ctor, count);
 
     (this._structArraySlots[field] ||= [])[count] = child as any;
-    (this._structArrayIndex[field] ||= new Map()).set(child as any, count);
 
     this._structVersion++;
     this.syncStructArrayHeaderFields();
@@ -1202,6 +1358,7 @@ export abstract class Shado {
         },
       });
     }
+    this._ensureStructDirtyCapacity(field, nextCount);
   }
 
   public getStructArrayCount(field: string): number {
@@ -1228,16 +1385,16 @@ export abstract class Shado {
     const seg = (this._structSeg[field] ||= { offF: 0, lenF: 0, capF: 0 });
     seg.lenF = nextCount * strideF;
     this._structArrayCount[field] = nextCount;
+    const dirtyFlags = this._ensureStructDirtyCapacity(field, nextCount);
+    dirtyFlags.fill(1, 0, nextCount);
 
     const slots = (this._structArraySlots[field] ||= []);
     slots.length = nextCount;
-    const index = (this._structArrayIndex[field] ||= new Map());
-    index.clear();
     for (let i = 0; i < slots.length; i++) {
       const child = slots[i];
       if (!child) continue;
       (child as any)._baseF = seg.offF + i * strideF;
-      index.set(child, i);
+      (child as any)._sidecarIndex = i;
     }
 
     this._arena.markDirty?.();
@@ -1275,16 +1432,16 @@ export abstract class Shado {
     this._arena.write(seg.offF + to * strideF, src, strideF);
 
     const slots = (this._structArraySlots[field] ||= []);
-    const index = (this._structArrayIndex[field] ||= new Map());
     const child = slots[from];
     slots[to] = child;
     if (child) {
       (child as any)._baseF = seg.offF + to * strideF;
+      (child as any)._sidecarIndex = to;
       for (const key of Object.keys(child as any)) {
         if (key.startsWith('__live_')) delete (child as any)[key];
       }
-      index.set(child, to);
     }
+    this._ensureStructDirtyCapacity(field, count)[to] = 1;
 
     this._structVersion++;
     this.syncStructArrayHeaderFields();
@@ -1314,11 +1471,10 @@ export abstract class Shado {
     const strideF = meta.schema.headerFloatCount | 0;
     const seg = this._structSeg[field];
     const slots = (this._structArraySlots[field] ||= []);
-    const indexMap = (this._structArrayIndex[field] ||= new Map());
     const removed = slots[removeIndex];
-    if (removed) indexMap.delete(removed);
 
     if (mode === 'stable') {
+      const dirtyFlags = this._ensureStructDirtyCapacity(field, count);
       const arena = this._arena.take();
       for (let i = removeIndex + 1; i < count; i++) {
         const src = arena.slice(seg.offF + i * strideF, seg.offF + (i + 1) * strideF);
@@ -1327,11 +1483,12 @@ export abstract class Shado {
         slots[i - 1] = child;
         if (child) {
           (child as any)._baseF = seg.offF + (i - 1) * strideF;
+          (child as any)._sidecarIndex = i - 1;
           for (const key of Object.keys(child as any)) {
             if (key.startsWith('__live_')) delete (child as any)[key];
           }
-          indexMap.set(child, i - 1);
         }
+        dirtyFlags[i - 1] = 1;
       }
     } else {
       const last = count - 1;
@@ -1343,20 +1500,21 @@ export abstract class Shado {
         slots[removeIndex] = moved;
         if (moved) {
           (moved as any)._baseF = seg.offF + removeIndex * strideF;
+          (moved as any)._sidecarIndex = removeIndex;
           for (const key of Object.keys(moved as any)) {
             if (key.startsWith('__live_')) delete (moved as any)[key];
           }
-          indexMap.set(moved, removeIndex);
         }
+        this._ensureStructDirtyCapacity(field, count)[removeIndex] = 1;
       }
     }
 
     slots.length = count - 1;
     seg.lenF = (count - 1) * strideF;
     this._structArrayCount[field] = count - 1;
+    this._ensureStructDirtyCapacity(field, count)[count - 1] = 0;
 
     this._arena.write(seg.offF + (count - 1) * strideF, new Float32Array(strideF), strideF);
-    this._arena.markDirty?.();
     this._structVersion++;
     this.syncStructArrayHeaderFields();
 
@@ -1384,7 +1542,10 @@ export abstract class Shado {
     if (this._isDisposed) return EMPTY_UPLOAD_STATS;
     if (this._lastSyncedFrame === frameId) return EMPTY_UPLOAD_STATS;
     this._lastSyncedFrame = frameId;
-    return this._backing.commit();
+    // Dispatch through commit() so containers can synchronize sidecar streams
+    // (compact visibility, dirty planes, and future hot buffers) in the same
+    // frame-owned operation as the main arena.
+    return this.commit();
   }
 
   public getLastUploadStats(): GPUUploadStats {
@@ -1446,7 +1607,6 @@ export abstract class Shado {
     }
     this._structArrayUnsubs = {};
     this._structArraySlots = {};
-    this._structArrayIndex = {};
     this._structArrayCount = {};
     this._dirtyHandlers = [];
     // 3) Free wasmModule allocations (arena base + any owned pointers)

@@ -43,9 +43,6 @@
       "@opcodes": [
         "./src/Game/Net/opcodes.ts"
       ],
-      "sage-core/*": [
-        "./../../eqsage/sage/lib/*"
-      ], // Map sage core*
       "@bjs": [
         "./src/bjs/index.ts"
       ],
@@ -54,7 +51,6 @@
   "include": [
     "src",
     "../game/typings",
-    "../../eqsage/sage/lib",
   ],
   "typeAcquisition": {
     "enable": true,

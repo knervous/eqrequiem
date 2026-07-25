@@ -90,7 +90,7 @@ export type ShadoStatics = {
   schema?: ShadoStructSchema;
   backingPreference?: BackendKind;
   getSchema(additionalFields: PendingField[]): ShadoStructSchema;
-  registerIncludes(): void;
+  registerIncludes(engine?: any): void;
   buildSchema(): ShadoStructSchema;
   debugShaderCode(engine: any): void;
   debugAscCode(): void;

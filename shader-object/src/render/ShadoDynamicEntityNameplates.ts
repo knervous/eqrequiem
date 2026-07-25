@@ -138,9 +138,10 @@ const ensureDynamicNameplateShado = (engine: AbstractEngine): Promise<void> => {
   let pending = initByEngine.get(engine);
   if (!pending) {
     pending = (async () => {
-      await ShadoDynamicNameplateActor.initialize(engine, { wasm: false });
-      await ShadoDynamicNameplateContainer.initialize(engine, { wasm: false });
-      await NameplateData.initialize(engine, { wasm: false });
+      const backend = engine.isWebGPU ? 'storage' : 'datatex';
+      await ShadoDynamicNameplateActor.initialize(engine, { backend, wasm: false });
+      await ShadoDynamicNameplateContainer.initialize(engine, { backend, wasm: false });
+      await NameplateData.initialize(engine, { backend, wasm: false });
     })();
     initByEngine.set(engine, pending);
   }
@@ -354,6 +355,7 @@ export class ShadoDynamicEntityNameplateLayer {
         depthTest: this.options.depthTest ?? true,
         thickness: this.options.thickness,
         debug: this.options.debug,
+        visibilitySource: 'actor',
       }
     );
     mesh.setEnabled(this.enabled && records.size > 0);

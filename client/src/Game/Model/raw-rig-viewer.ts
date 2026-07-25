@@ -1,4 +1,4 @@
-import * as BABYLON from "@babylonjs/core";
+import BABYLON from "@bjs";
 import type * as BJS from "@babylonjs/core";
 import "@babylonjs/loaders/glTF/index.js";
 
@@ -15,8 +15,9 @@ declare const __REPO_ROOT__: string;
 const RAW_RIG_SOURCES: Record<string, string> = {
   hum: "assets/src/models/human_male/runtime/human_male.glb",
   huf: "assets/src/models/human_female/runtime/human_female.glb",
-  hmc: "assets/src/models/comfyui_humans/male/male_comfy_pbr.glb",
-  hfc: "assets/src/models/comfyui_humans/female/female_comfy_pbr.glb",
+  hem: "assets/src/models/half_elf_male/runtime/half_elf_male.glb",
+  hmc: "assets/src/models/comfyui_humans/male/male_comfy_pbr_v5.glb",
+  hfc: "assets/src/models/comfyui_humans/female/female_comfy_pbr_v6.glb",
 };
 
 export function getRawRigModelKeys(): string[] {
@@ -101,43 +102,45 @@ export async function createRawRigViewer(
   camera.upperRadiusLimit = fitHeight * 6;
   resetCamera();
 
-  // Babylon's glTF loader wraps every import in a synthetic "__root__" node
-  // carrying a (1,1,-1) scale (its right-handed -> left-handed conversion).
-  // Composed through this rig's rotation-heavy spine/clavicle parent chain,
-  // that mirror makes BABYLON.SkeletonViewer / bone.getAbsolutePosition()
-  // report joint positions on the wrong side entirely (verified: manual FK
-  // from each bone's own local translation+rotation, which IS loaded
-  // correctly, exactly reproduces the source Blender rig's true joint
-  // positions, while getAbsolutePosition() does not). Actual GPU skinning is
-  // unaffected — it's computed through a different, correct matrix path,
-  // which is why animation has always rendered correctly. So the overlay
-  // below does its own forward-kinematics pass from bone-local data instead
-  // of trusting Babylon's world-matrix composition for this rig.
+  // Do not reconstruct joint positions from linked-node TRS values here.
+  // Babylon's glTF conversion includes a reflected import root, and omitting
+  // that reflection can appear correct in a symmetric rest pose while putting
+  // joints on the opposite side of an animated body. Instead, transform each
+  // bind-pose joint by the exact matrix palette used for GPU skinning. This
+  // keeps the diagnostic overlay in the same coordinate path as the mesh it
+  // is intended to diagnose.
   const skeleton = mesh.skeleton;
-  const boneNames = skeleton.bones.map((bone) => bone.name);
-  const fkCache = new Map<string, { pos: BJS.Vector3; rot: BJS.Quaternion }>();
-  const computeBoneLocalPosition = (boneName: string): { pos: BJS.Vector3; rot: BJS.Quaternion } => {
-    const cached = fkCache.get(boneName);
-    if (cached) return cached;
-    const bone = skeleton.bones[boneNames.indexOf(boneName)];
-    const linked = bone.getTransformNode();
-    const t = linked?.position ?? BABYLON.Vector3.Zero();
-    const q = linked?.rotationQuaternion ?? BABYLON.Quaternion.Identity();
-    const parentBone = bone.getParent();
-    if (!parentBone) {
-      const result = { pos: t.clone(), rot: q.clone() };
-      fkCache.set(boneName, result);
-      return result;
+  // Rendering group IDs do not clear depth automatically for later groups.
+  // Clear the body's depth before group 1 so joints inside the mesh remain
+  // visible; otherwise the viewer shows only the portions that protrude and
+  // creates a badly biased fit diagnostic.
+  scene.setRenderingAutoClearDepthStencil(1, true, true, true);
+  scene.onBeforeRenderingGroupObservable.add((info) => {
+    if (info.renderingGroupId === 1) {
+      engine.clear(null, false, true, false);
     }
-    const parentResult = computeBoneLocalPosition(parentBone.name);
-    const rotated = t.clone();
-    rotated.rotateByQuaternionToRef(parentResult.rot, rotated);
-    const result = {
-      pos: parentResult.pos.add(rotated),
-      rot: parentResult.rot.multiply(q),
-    };
-    fkCache.set(boneName, result);
-    return result;
+  });
+  skeleton.prepare(true);
+  const bindJointPositions = skeleton.bones.map((bone) =>
+    bone.getAbsoluteInverseBindMatrix().clone().invert().getTranslation(),
+  );
+  const posedJointPositions = skeleton.bones.map(() => BABYLON.Vector3.Zero());
+  const anatomicalBones = skeleton.bones.filter(
+    (bone) => bone.name !== "root" && !bone.name.startsWith("socket_"),
+  );
+  const skinMatrix = BABYLON.Matrix.Identity();
+  const updatePosedJointPositions = () => {
+    skeleton.prepare(true);
+    const palette = skeleton.getTransformMatrices(mesh);
+    skeleton.bones.forEach((bone, index) => {
+      const paletteIndex = bone.getIndex() >= 0 ? bone.getIndex() : index;
+      BABYLON.Matrix.FromArrayToRef(palette, paletteIndex * 16, skinMatrix);
+      BABYLON.Vector3.TransformCoordinatesToRef(
+        bindJointPositions[index],
+        skinMatrix,
+        posedJointPositions[index],
+      );
+    });
   };
 
   let skeletonLines: BJS.LinesMesh | null = null;
@@ -149,27 +152,36 @@ export async function createRawRigViewer(
     skeletonLines = null;
     for (const joint of skeletonJoints) joint.dispose();
     skeletonJoints = [];
-    skeletonJointTemplate?.dispose();
     skeletonJointTemplate = null;
   };
   const updateSkeletonOverlay = (displayMode: "lines" | "spheres") => {
     if (!skeletonOverlayEnabled) return;
-    fkCache.clear();
+    updatePosedJointPositions();
     const lines: BJS.Vector3[][] = [];
-    for (const bone of skeleton.bones) {
+    anatomicalBones.forEach((bone) => {
       const parentBone = bone.getParent();
-      if (!parentBone) continue;
-      const headPos = computeBoneLocalPosition(parentBone.name).pos;
-      const tailPos = computeBoneLocalPosition(bone.name).pos;
-      lines.push([headPos, tailPos]);
-    }
+      if (!parentBone || !anatomicalBones.includes(parentBone)) return;
+      const index = skeleton.bones.indexOf(bone);
+      const parentIndex = skeleton.bones.indexOf(parentBone);
+      lines.push([posedJointPositions[parentIndex], posedJointPositions[index]]);
+    });
     skeletonLines = BABYLON.MeshBuilder.CreateLineSystem(
       "raw-rig-skeleton-lines",
-      { lines, instance: skeletonLines },
+      // The overlay is rewritten every rendered animation frame. Babylon can
+      // only update an existing line system when its vertex buffer was made
+      // dynamic at creation; without this flag the debug view can retain
+      // stale endpoints and draw convincing-looking spikes outside the body.
+      { lines, instance: skeletonLines ?? undefined, updatable: true },
       scene,
     );
     skeletonLines.color = new BABYLON.Color3(1, 0.1, 0.1);
+    if (skeletonLines.material) {
+      skeletonLines.material.depthFunction = BABYLON.Constants.ALWAYS;
+    }
     skeletonLines.parent = mesh;
+    // The line system changes every frame; do not let a stale bounding box
+    // cull an otherwise valid overlay after a deterministic animation seek.
+    skeletonLines.alwaysSelectAsActiveMesh = true;
     skeletonLines.renderingGroupId = 1;
 
     if (displayMode === "spheres") {
@@ -179,13 +191,17 @@ export async function createRawRigViewer(
           { diameter: 1 },
           scene,
         );
-        skeletonJointTemplate.setEnabled(false);
+        skeletonJointTemplate.renderingGroupId = 1;
+        skeletonJointTemplate.alwaysSelectAsActiveMesh = true;
+        skeletonJointTemplate.scaling.setAll(0.045);
         const jointMaterial = new BABYLON.StandardMaterial("raw-rig-joint-material", scene);
         jointMaterial.emissiveColor = new BABYLON.Color3(1, 0.1, 0.1);
         jointMaterial.disableLighting = true;
+        jointMaterial.depthFunction = BABYLON.Constants.ALWAYS;
         skeletonJointTemplate.material = jointMaterial;
+        skeletonJoints.push(skeletonJointTemplate);
       }
-      while (skeletonJoints.length < skeleton.bones.length) {
+      while (skeletonJoints.length < anatomicalBones.length) {
         const clone = skeletonJointTemplate.createInstance(`raw-rig-joint-${skeletonJoints.length}`) as unknown as BJS.Mesh;
         clone.parent = mesh;
         // Rendered in group 1 (same as the bone lines) so a joint that's
@@ -193,13 +209,14 @@ export async function createRawRigViewer(
         // isn't hidden/occluded by the surrounding flesh — always visible on
         // top for unambiguous fit checks.
         clone.renderingGroupId = 1;
+        clone.alwaysSelectAsActiveMesh = true;
         clone.scaling.setAll(0.045);
         skeletonJoints.push(clone);
       }
-      skeleton.bones.forEach((bone, index) => {
+      anatomicalBones.forEach((bone, index) => {
         const jointMesh = skeletonJoints[index];
         jointMesh.setEnabled(true);
-        jointMesh.position.copyFrom(computeBoneLocalPosition(bone.name).pos);
+        jointMesh.position.copyFrom(posedJointPositions[skeleton.bones.indexOf(bone)]);
       });
     } else {
       for (const joint of skeletonJoints) joint.setEnabled(false);

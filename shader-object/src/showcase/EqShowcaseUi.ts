@@ -10,6 +10,16 @@ export type EqShowcaseUiHandle = {
   dispose(): void;
 };
 
+export type EqShowcaseUiDiagnostics = {
+  renderBackend: 'WebGPU' | 'WebGL2';
+  storageBackend: 'StorageBuffer' | 'DataTexture';
+  sample(): {
+    fps: number;
+    frameMs: number;
+    gpuMs?: number;
+  };
+};
+
 const CONTROL_CSS = [
   'width:100%', 'box-sizing:border-box', 'padding:7px 9px',
   'border:1px solid rgba(145,170,199,.3)', 'border-radius:7px',
@@ -25,7 +35,8 @@ const BUTTON_CSS = [
 /** Shared DOM overlay used unchanged by the Vite sandbox and Babylon Playground. */
 export function createEqShowcaseUi(
   canvas: HTMLCanvasElement,
-  controller: EqShowcaseController
+  controller: EqShowcaseController,
+  diagnostics?: EqShowcaseUiDiagnostics
 ): EqShowcaseUiHandle {
   const parent = canvas.parentElement ?? document.body;
   if (getComputedStyle(parent).position === 'static') parent.style.position = 'relative';
@@ -70,8 +81,8 @@ export function createEqShowcaseUi(
 
       <label style="display:grid;grid-template-columns:auto minmax(80px,1fr) 58px;align-items:center;gap:7px;margin-top:9px;color:#bdc9d8;font:600 10px system-ui">
         <span data-role="culling-label">WASM culling</span>
-        <input data-role="culling-range" type="range" min="0" max="600" step="10" value="180" style="width:100%;accent-color:#d6ad5c">
-        <input data-role="culling-number" type="number" min="0" max="2000" step="10" value="180" aria-label="Culling distance in meters" style="${CONTROL_CSS};padding:4px 5px;text-align:right">
+        <input data-role="culling-range" type="range" min="0" max="1200" step="25" value="600" style="width:100%;accent-color:#d6ad5c">
+        <input data-role="culling-number" type="number" min="0" max="4000" step="25" value="600" aria-label="Culling distance in meters" style="${CONTROL_CSS};padding:4px 5px;text-align:right">
       </label>
 
       <div data-role="glb-drop" role="button" tabindex="0" aria-label="Drop or choose animated GLB files"
@@ -178,8 +189,8 @@ export function createEqShowcaseUi(
   const cullingRange = root.querySelector<HTMLInputElement>('[data-role=culling-range]')!;
   const cullingNumber = root.querySelector<HTMLInputElement>('[data-role=culling-number]')!;
   const setCulling = (value: number) => {
-    const next = Math.max(0, Math.min(2000, Number.isFinite(value) ? value : 180));
-    cullingRange.value = String(Math.min(600, next));
+    const next = Math.max(0, Math.min(4000, Number.isFinite(value) ? value : 600));
+    cullingRange.value = String(Math.min(1200, next));
     cullingNumber.value = String(next);
     controller.setCullingRange(next);
   };
@@ -387,7 +398,7 @@ export function createEqShowcaseUi(
       pill.style.color = active ? '#fff0c9' : '#cbd4df';
     }
     if (document.activeElement !== cullingRange && document.activeElement !== cullingNumber) {
-      cullingRange.value = String(Math.min(600, stats.cullingRange));
+      cullingRange.value = String(Math.min(1200, stats.cullingRange));
       cullingNumber.value = String(stats.cullingRange);
     }
     error.style.display = stats.lastError ? 'block' : 'none';
@@ -399,14 +410,44 @@ export function createEqShowcaseUi(
   let last = performance.now();
   let frames = 0;
   const fps = document.createElement('div');
-  fps.style.cssText = 'position:absolute;left:16px;top:16px;z-index:30;padding:8px 11px;border-radius:8px;background:rgba(11,19,32,.82);color:#d6e5f6;font:12px ui-monospace,monospace';
+  fps.dataset.role = 'showcase-diagnostics';
+  fps.style.cssText = [
+    'position:absolute', 'left:16px', 'top:58px', 'z-index:30', 'min-width:220px',
+    'padding:10px 12px', 'border:1px solid rgba(125,211,252,.3)', 'border-radius:10px',
+    'background:rgba(7,15,25,.88)', 'box-shadow:0 12px 30px rgba(0,0,0,.28)',
+    'backdrop-filter:blur(10px)', 'color:#d6e5f6', 'font:11px/1.45 ui-monospace,monospace',
+    'font-variant-numeric:tabular-nums', 'pointer-events:none',
+  ].join(';');
   parent.appendChild(fps);
   const tick = (now: number) => {
     frames++;
     if (now - last >= 500) {
-      fps.textContent = controller.stats.current
-        ? 'VAT baking'
-        : `${Math.round(frames * 1000 / (now - last))} FPS · ${controller.stats.visible} visible`;
+      const stats = controller.stats;
+      const measuredFps = frames * 1000 / (now - last);
+      const timing = diagnostics?.sample();
+      const rawFps = timing?.fps ?? measuredFps;
+      const frameMs = timing?.frameMs ?? 1000 / Math.max(1, measuredFps);
+      const gpuMs =
+        timing?.gpuMs !== undefined && timing.gpuMs > 0 ? `${timing.gpuMs.toFixed(2)} ms` : 'n/a';
+      const culling = stats.cullingMode === 'wasm-simd' ? 'WASM SIMD' : 'CPU';
+      const backing = diagnostics
+        ? `${diagnostics.renderBackend} · ${diagnostics.storageBackend}`
+        : culling;
+      fps.innerHTML = `
+        <div style="display:flex;align-items:baseline;justify-content:space-between;gap:14px">
+          <strong style="color:#7dd3fc;font:700 10px system-ui;letter-spacing:.12em">SHADO DIAGNOSTICS</strong>
+          <strong style="color:#f8fafc;font-size:15px">RAW ${rawFps.toFixed(0)} FPS</strong>
+        </div>
+        <div style="margin:5px 0 6px;color:#94a3b8">VAT · SoA · ${backing}</div>
+        <div style="display:grid;grid-template-columns:1fr auto;gap:2px 14px">
+          <span>Visible</span><b>${stats.visible} / ${stats.instances}</b>
+          <span>Cull</span><b style="color:#fde68a">${culling} · ${stats.cullingRange}m</b>
+          <span>Reducer</span><b>${stats.reducerMs.toFixed(3)} ms <span style="color:#64748b">(${stats.reducerAverageMs.toFixed(3)} avg)</span></b>
+          ${stats.vatActorsPerModel ? `<span>VAT/model limit</span><b style="color:#86efac">${stats.vatActorsPerModel.toLocaleString()}</b>` : ''}
+          <span>GPU frame</span><b>${gpuMs}</b>
+          <span>Frame</span><b>${frameMs.toFixed(2)} ms</b>
+        </div>
+        ${stats.current ? '<div style="margin-top:6px;color:#fbbf24">VAT baking</div>' : ''}`;
       frames = 0;
       last = now;
     }

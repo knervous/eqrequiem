@@ -1,44 +1,27 @@
 import React, { useCallback, useEffect } from 'react';
-import { USE_SAGE } from '@game/Constants/constants';
-import { supportedZones } from '@game/Constants/supportedZones';
-import { Box, Button, List, ListItem, Stack, Typography } from '@mui/material';
+import { Box, List, ListItem, Stack, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import {
-  getEQFileExists,
-  getFilesRecursively,
-} from 'sage-core/util/fileHandler';
 import { UiButtonComponent } from '../../common/ui-button';
 import { WorldSocket } from '../../net/instances';
 import { ImageCache } from '../../util/image-cache';
 import { useUIContext } from '../context';
-import DiscordIcon from './discord';
-import { DISCORD_CLIENT_ID, REDIRECT_URI, RESPONSE_TYPE, SCOPE } from './util';
-import { fsBindings } from '@/Core/bindings';
-import { isLocalBackendEnabled } from '@/LocalBackend/config';
 import { refreshOfflineContent } from '@/LocalBackend/connection';
 
 const defaultWorldName = 'requiem';
+const libraUrl = '/apps/libra/';
+const sandboxUrl = '/apps/sandbox/';
 declare const window: Window;
 const initialQuery = new URLSearchParams(window.location.search);
-const doEnterOffline =
-  initialQuery.get('offline') === 'true' ||
-  initialQuery.get('sandbox') === 'true';
-const isLocalDev = import.meta.env.VITE_LOCAL_DEV === 'true';
+const showDevHydrate = initialQuery.get('dev') === 'true';
 
-const serverUrl = import.meta.env.VITE_API_BASE_URL
-  ? String(import.meta.env.VITE_API_BASE_URL)
-  : isLocalDev
-    ? '/api'
-    : 'https://eqrequiem.ddns.net';
-const worldHost = import.meta.env.VITE_WT_HOST
-  ? String(import.meta.env.VITE_WT_HOST)
-  : isLocalDev
-    ? 'localhost'
-    : 'eqrequiem.ddns.net';
-const useLocalBackend = isLocalBackendEnabled();
-const worldPort = import.meta.env.VITE_WT_PORT
-  ? Number(import.meta.env.VITE_WT_PORT)
-  : 443;
+const servers = [
+  { name: 'Local SQLite', status: 'Ready', disabled: false },
+  {
+    name    : 'World Shard 1 - In development (offline)',
+    status  : 'Offline',
+    disabled: true,
+  },
+] as const;
 
 export const LoginWindowComponent: React.FC = () => {
   const navigate = useNavigate();
@@ -46,24 +29,35 @@ export const LoginWindowComponent: React.FC = () => {
   const token = useUIContext((state) => state.token);
   const [imageTiles, setImageTiles] = React.useState<string[]>([]);
   const [selectedServer, setSelectedServer] = React.useState<number>(0);
-  const [playerCount, setPlayerCount] = React.useState<number>(-1);
+  const [connecting, setConnecting] = React.useState(false);
+  const connectingRef = React.useRef(false);
   const [contentRefresh, setContentRefresh] = React.useState<{
     busy: boolean;
     message: string;
   }>({ busy: false, message: '' });
 
-  const enterOffline = useCallback(async () => {
-    const connected = await WorldSocket.connect('local', 0, () => {
-      console.log('Offline backend disconnected');
-      navigate('/');
-    });
-    if (!connected) {return;}
-    token.current = 'local';
-    setMode('character-select');
-  }, [navigate, setMode, token]);
+  const connectToWorld = useCallback(async () => {
+    if (servers[selectedServer]?.disabled || connectingRef.current) {
+      return;
+    }
+    connectingRef.current = true;
+    setConnecting(true);
+    try {
+      const connected = await WorldSocket.connect('local', 0, () => {
+        console.log('Local SQLite backend disconnected');
+        navigate('/');
+      });
+      if (!connected) {return;}
+      token.current = 'local';
+      setMode('character-select');
+    } finally {
+      connectingRef.current = false;
+      setConnecting(false);
+    }
+  }, [navigate, selectedServer, setMode, token]);
 
   const hydrateLatest = useCallback(async () => {
-    setContentRefresh({ busy: true, message: 'Replacing offline content…' });
+    setContentRefresh({ busy: true, message: 'Replacing local content…' });
     try {
       const info = await refreshOfflineContent();
       setContentRefresh({
@@ -76,81 +70,6 @@ export const LoginWindowComponent: React.FC = () => {
         message: error instanceof Error ? error.message : String(error),
       });
     }
-  }, []);
-
-  const servers = [{ name: 'EQ: Requiem', playersOnline: playerCount }];
-
-  const connectToWorld = useCallback(async () => {
-    const worldName = defaultWorldName;
-    let storedDetails: { token: string } | null = null;
-    try {
-      const storedDetailsString = localStorage.getItem(worldName);
-      if (storedDetailsString) {
-        storedDetails = JSON.parse(storedDetailsString);
-      }
-    } catch (e) {
-      console.error('Error parsing stored world details:', e);
-    }
-    const local = isLocalDev || useLocalBackend;
-    if (!storedDetails && !local) {
-      const discordAuthUrl = `https://discord.com/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&response_type=${RESPONSE_TYPE}&redirect_uri=${REDIRECT_URI}&scope=${SCOPE}`;
-      window.location.href = discordAuthUrl;
-    }
-
-    if (
-      await WorldSocket.connect(
-        useLocalBackend ? 'local' : worldHost,
-        worldPort,
-        () => {
-          console.log('Disconnected');
-          navigate('/');
-        },
-      )
-    ) {
-      if (local) {
-        token.current = 'local';
-      } else {
-        if (storedDetails === null) {
-          return;
-        }
-        token.current = storedDetails.token;
-      }
-      setMode('character-select');
-    }
-  }, [setMode, token, navigate]);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    const signal = controller.signal;
-    setTimeout(() => {
-      controller.abort();
-    }, 2000);
-    fetch(`${serverUrl}/playercount`, {
-      method: 'GET',
-      mode  : 'cors',
-      signal,
-    })
-      .then((response) => {
-        if (!response.ok) {
-          console.error('Failed to fetch player count');
-          return;
-        }
-        return response.json();
-      })
-      .then((data) => {
-        if (data && data.count !== undefined) {
-          setPlayerCount(data.count);
-        } else {
-          console.error('Invalid player count data', data);
-        }
-      })
-      .catch((error) => {
-        console.error('Error fetching player count:', error);
-        if (isLocalDev) {
-          // Local dev may not expose a playercount endpoint; keep world selectable.
-          setPlayerCount(0);
-        }
-      });
   }, []);
 
   useEffect(() => {
@@ -168,7 +87,7 @@ export const LoginWindowComponent: React.FC = () => {
     return () => {
       window.removeEventListener('keydown', kbCallback);
     };
-  }, [navigate, connectToWorld, selectedServer, servers.length]);
+  }, [navigate, connectToWorld, selectedServer]);
 
   useEffect(() => {
     Promise.all(
@@ -180,13 +99,7 @@ export const LoginWindowComponent: React.FC = () => {
       }),
     ).then(setImageTiles);
     document.title = 'EQ: Requiem';
-
-    if (doEnterOffline) {
-      setTimeout(() => {
-        void enterOffline();
-      }, 1);
-    }
-  }, [enterOffline]);
+  }, []);
 
   useEffect(() => {
     if (sessionStorage.getItem('worldLogin') === defaultWorldName) {
@@ -282,7 +195,7 @@ export const LoginWindowComponent: React.FC = () => {
         <Box
           sx={{
             width     : 'calc(100% - 75px)',
-            height    : '270px',
+            height    : '252px',
             marginTop : '35px',
             marginLeft: '20px',
             background                  :
@@ -314,7 +227,7 @@ export const LoginWindowComponent: React.FC = () => {
             <Typography
               sx={{ fontSize: '14px', color: '#ddd', fontWeight: 'bold' }}
             >
-              Players Online
+              Status
             </Typography>
           </Box>
 
@@ -327,7 +240,8 @@ export const LoginWindowComponent: React.FC = () => {
                   display            : 'grid',
                   gridTemplateColumns: '2fr 1fr',
                   padding            : '8px',
-                  cursor             : 'pointer',
+                  cursor             : server.disabled ? 'not-allowed' : 'pointer',
+                  opacity            : server.disabled ? 0.55 : 1,
                   backgroundColor:
                     selectedServer === index
                       ? 'rgba(255, 215, 0, 0.2)'
@@ -345,9 +259,7 @@ export const LoginWindowComponent: React.FC = () => {
                 <Typography
                   sx={{ fontSize: '14px', color: '#fff', textAlign: 'center' }}
                 >
-                  {server.playersOnline === -1
-                    ? 'Offline'
-                    : server.playersOnline}
+                  {server.status}
                 </Typography>
               </ListItem>
             ))}
@@ -359,7 +271,7 @@ export const LoginWindowComponent: React.FC = () => {
           direction="row"
           spacing={3}
           sx={{
-            margin        : '15px auto',
+            margin        : '13px auto',
             width         : '80%',
             alignContent  : 'center',
             alignItems    : 'center',
@@ -383,127 +295,61 @@ export const LoginWindowComponent: React.FC = () => {
 
           <UiButtonComponent
             buttonName="A_EQLS_LargeBtn"
-            icon={
-              <DiscordIcon
-                sx={{ width: '13px !important', marginRight: '10px' }}
-              />
-            }
-            isDisabled={!isLocalDev && playerCount < 0}
-            text={
-              !isLocalDev && playerCount < 0 ? 'World Offline' : 'Enter World'
-            }
+            isDisabled={(servers[selectedServer]?.disabled ?? true) || connecting}
+            text={connecting ? 'Connecting…' : 'Play'}
             textSx={{
               color: 'white !important',
             }}
             onClick={connectToWorld}
           />
         </Stack>
-        <Stack alignItems="flex-end" direction="row" justifyContent="flex-end" spacing={1} sx={{ marginRight: '60px', marginTop: '-10px' }}>
+
+        <Stack
+          direction="row"
+          spacing={3}
+          sx={{
+            margin        : '-3px auto 12px',
+            width         : '80%',
+            alignContent  : 'center',
+            alignItems    : 'center',
+            justifyContent: 'space-around',
+          }}
+        >
           <UiButtonComponent
             buttonName="A_EQLS_LargeBtn"
-            isDisabled={contentRefresh.busy}
-            text={contentRefresh.busy ? 'Hydrating…' : 'Hydrate Latest'}
-            textSx={{ color: 'white !important' }}
-            onClick={hydrateLatest}
+            text="Libra"
+            textSx={{
+              color: 'white !important',
+            }}
+            onClick={() => window.location.assign(libraUrl)}
           />
+
           <UiButtonComponent
             buttonName="A_EQLS_LargeBtn"
-            text={'Offline Mode'}
-            textSx={{ color: 'white !important' }}
-            onClick={enterOffline}
+            text="Sandbox"
+            textSx={{
+              color: 'white !important',
+            }}
+            onClick={() => window.location.assign(sandboxUrl)}
           />
         </Stack>
-        {contentRefresh.message ? (
+        {showDevHydrate ? (
+          <Stack alignItems="flex-end" direction="row" justifyContent="flex-end" spacing={1} sx={{ marginRight: '60px', marginTop: '-10px' }}>
+            <UiButtonComponent
+              buttonName="A_EQLS_LargeBtn"
+              isDisabled={contentRefresh.busy}
+              text={contentRefresh.busy ? 'Hydrating…' : 'Hydrate Latest'}
+              textSx={{ color: 'white !important' }}
+              onClick={hydrateLatest}
+            />
+          </Stack>
+        ) : null}
+        {showDevHydrate && contentRefresh.message ? (
           <Typography sx={{ color: '#ddd', fontSize: '11px', marginTop: '4px', textAlign: 'right', marginRight: '60px' }}>
             {contentRefresh.message}
           </Typography>
         ) : null}
       </Box>
-      {USE_SAGE && (
-        <Box
-          sx={{
-            color          : 'white',
-            position       : 'fixed',
-            bottom         : 0,
-            left           : 0,
-            padding        : '10px',
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            zIndex         : 100,
-          }}
-        >
-          Dev Commands
-          <br />
-          <Button
-            variant="contained"
-            onClick={async () => {
-              // sky
-              // console.log('Processing sky');
-              // const skyFiles = ["sky.s3d"];
-              // await fsBindings.processFiles('sky', skyFiles);
-
-              // //load2
-              // console.log('Processing load2');
-              // const load2Files = ["load2.s3d","load2_obj.s3d"];
-              // await fsBindings.processFiles('load2', load2Files);
-              // // First do global
-              console.log('Processing global');
-              // const globalCharFiles = [
-              //   'global_chr.s3d',
-              //   'global3_chr.s3d',
-              //   'global4_chr.s3d',
-              // ];
-              // await fsBindings.processFiles('global_chr', globalCharFiles);
-
-              // //Items
-              console.log('Processing items');
-              const itemFiles = [
-                'gequip.s3d',
-                'gequip2.s3d',
-                'gequip3.s3d',
-                'gequip4.s3d',
-                'gequip5.s3d',
-                'gequip6.s3d',
-                'gequip8.s3d',
-              ];
-              await fsBindings.processFiles('gequip', itemFiles);
-              for (const zone of Object.values(supportedZones)) {
-                continue;
-                const name = zone.shortName;
-
-                const associatedFiles: string[] = [];
-                // temp short circuit
-                if (!['nro'].includes(zone.shortName)) {
-                  //  continue;
-                }
-                const exists = await getEQFileExists('zones', `${name}.glb`);
-                if (exists) {
-                  console.log('Exists, skipping', name);
-                  //  continue;
-                }
-                console.log('Process', name);
-                for await (const fileHandle of getFilesRecursively(
-                  fsBindings.rootFileSystemHandle,
-                  '',
-                  new RegExp(`^${name}[_\\.].*`),
-                  false,
-                )) {
-                  if (!fileHandle.name.includes('qeynos2_chr')) {
-                    //  continue;
-                  }
-                  associatedFiles.push(fileHandle.name);
-                }
-                console.log(`Found ${name}`, associatedFiles);
-                if (associatedFiles.length > 0) {
-                  await fsBindings.processFiles(name, associatedFiles);
-                }
-              }
-              console.log('Done');
-            }}
-          >
-            Process s3d
-          </Button>
-        </Box>
-      )}
     </Box>
   );
 };

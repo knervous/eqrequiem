@@ -2,9 +2,11 @@
 import { isScalar, floatStrideOf } from './type-helpers';
 
 export function installThinAccessors(Ctor: any) {
-  if (Ctor.__thinInstalled) return;
+  if (Object.prototype.hasOwnProperty.call(Ctor, '__thinInstalled')) return;
   const schema = Ctor.getSchema();
   const proto = Ctor.prototype;
+  const baseEmitHeaderDirty = proto.emitHeaderDirty;
+  const baseDispose = proto.dispose;
 
   // parent arena & dataview (host if present, else self)
   Object.defineProperty(proto, '_hostOrSelf', {
@@ -24,7 +26,24 @@ export function installThinAccessors(Ctor: any) {
   });
 
   proto._markDirty = function (offF: number, lenF: number) {
-    this._hostOrSelf.emitHeaderDirty((this._baseF + offF) * 4, lenF * 4);
+    this.emitHeaderDirty(offF * 4, lenF * 4);
+  };
+
+  // Thin children share these methods instead of allocating two closures per
+  // record. Standalone instances continue to use Shado's original methods.
+  proto.emitHeaderDirty = function (byteOffset?: number, byteLength?: number) {
+    const host = this._host;
+    if (!host) return baseEmitHeaderDirty.call(this, byteOffset, byteLength);
+    host.setStructDirtyFlag(this._sidecarField, this._sidecarIndex, true);
+    if (byteOffset !== undefined && byteLength !== undefined) {
+      host.emitHeaderDirty(this._baseF * 4 + byteOffset, byteLength);
+    } else {
+      host.emitHeaderDirty(this._baseF * 4, this._sidecarStrideF * 4);
+    }
+  };
+  proto.dispose = function (...args: any[]) {
+    if (this._host) return;
+    return baseDispose.apply(this, args);
   };
 
   for (const f of schema.fields) {
@@ -86,5 +105,8 @@ export function installThinAccessors(Ctor: any) {
     }
   }
 
-  Ctor.__thinInstalled = true;
+  Object.defineProperty(Ctor, '__thinInstalled', {
+    value: true,
+    configurable: true,
+  });
 }

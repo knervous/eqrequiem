@@ -1,11 +1,10 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { styled } from "@mui/material/styles";
 import { Box, Button, Card, CardContent, Stack, TextField } from "@mui/material";
 
 import styles from "./home.module.css";
 import { useNavigate } from "react-router-dom";
 import { DISCORD_CLIENT_ID, REDIRECT_URI } from "../UI/components/login/util";
-import { USE_SAGE } from "@game/Constants/constants";
 import DiscordIcon from "@ui/components/login/discord";
 
 const REQUIEM_DISCORD_URL = "https://discord.gg/ptJxyejwXt";
@@ -33,7 +32,6 @@ const StyledBox = styled(Box)({
 export const CssTextField = TextField;
 
 const bgMax = 1; //6;
-const prefix = "electronAPI" in window ? "./" : "/";
 const sessionBg = `center no-repeat url('requiem/bg${Math.ceil(
   Math.random() * bgMax,
 )}.png')`;

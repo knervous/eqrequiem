@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import fs from "fs-extra";
+import { createHash } from "node:crypto";
 import os from "node:os";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
@@ -15,14 +16,18 @@ import "@babylonjs/loaders/glTF/index.js";
 
 const clientRoot = path.resolve(import.meta.dirname, "..");
 const repoRoot = path.resolve(clientRoot, "..");
+const allowRejected = process.argv.includes("--allow-rejected");
+const positionalArguments = process.argv.slice(2).filter(
+  (argument) => argument !== "--allow-rejected",
+);
 const sourcePath = path.resolve(
-  process.argv[2] ??
+  positionalArguments[0] ??
     path.join(
       repoRoot,
       "assets/src/models/human_male/runtime/human_male.glb",
     ),
 );
-const model = (process.argv[3] ?? (sourcePath.includes("human_female") ? "huf" : "hum")).toLowerCase();
+const model = (positionalArguments[1] ?? (sourcePath.includes("human_female") ? "huf" : "hum")).toLowerCase();
 const publicRoot = path.join(clientRoot, "public", "eqrequiem");
 const buildRoot = path.join(clientRoot, ".runtime-model-build");
 const runtimeGlbPath = path.join(buildRoot, "models", `${model}.glb`);
@@ -30,9 +35,57 @@ const materialName = `${model}ch0000`;
 const fps = 30;
 const runtimeTargetHeight = 6;
 const runtimeYawCorrection = -Math.PI / 2;
+const humanoidStylePath = path.join(
+  repoRoot,
+  "assets",
+  "pipeline",
+  "humanoid-grounded-fantasy-style.json",
+);
+const humanoidStyle = await fs.readJson(humanoidStylePath);
+const highQualityHumanoidModels = new Set(["hum", "huf", "hem"]);
+const atlasSide = highQualityHumanoidModels.has(model)
+  ? humanoidStyle.runtime.atlasSize
+  : 512;
+const basisEncoding = highQualityHumanoidModels.has(model)
+  ? humanoidStyle.runtime.basisEncoding
+  : "etc1s";
+const basisUastcLevel = humanoidStyle.runtime.basisUastcLevel ?? 2;
+const sha256 = (bytes) => createHash("sha256").update(bytes).digest("hex");
 
 if (!(await fs.pathExists(sourcePath))) {
   throw new Error(`Human model not found: ${sourcePath}`);
+}
+
+// HUM/HUF are release candidates, not generic conversion inputs. Refuse to
+// overwrite the installed runtime unless every independent source-side gate
+// passes. The explicit override exists only for Libra diagnostic builds.
+if (highQualityHumanoidModels.has(model) && !allowRejected) {
+  const sourceRoot = path.dirname(sourcePath);
+  const requiredReports = [
+    ["motion-audit.json", (report) => report.passed === true],
+    ["rig-audit.json", (report) => report.comparison?.compatible === true],
+    ["fit-audit.json", (report) => report.passed === true],
+    ["deformation-audit.json", (report) =>
+      report.render?.animationAudit?.failedClipCount === 0],
+    ["texture-audit.json", (report) => report.automatedPassed === true],
+    ["art-review.json", (report) => report.passed === true],
+  ];
+  const rejected = [];
+  for (const [file, passes] of requiredReports) {
+    const reportPath = path.join(sourceRoot, file);
+    if (!(await fs.pathExists(reportPath))) {
+      rejected.push(`${file}: missing`);
+      continue;
+    }
+    const report = await fs.readJson(reportPath);
+    if (!passes(report)) rejected.push(`${file}: failed`);
+  }
+  if (rejected.length) {
+    throw new Error(
+      `Refusing to install rejected ${model} candidate (${rejected.join(", ")}). ` +
+      "Use --allow-rejected only for an explicitly labeled diagnostic build.",
+    );
+  }
 }
 
 await fs.remove(buildRoot);
@@ -329,9 +382,23 @@ const atlasPng = path.join(buildRoot, `${materialName}.png`);
 // re-export can reorder textures so listTextures()[0] silently picks up the
 // normal map or another channel instead.
 const sourceTexture = material.getBaseColorTexture()?.getImage();
+let sourceTextureMetadata = null;
 if (sourceTexture) {
+  sourceTextureMetadata = await sharp(sourceTexture).metadata();
+  if (
+    highQualityHumanoidModels.has(model) &&
+    (
+      (sourceTextureMetadata.width ?? 0) < atlasSide ||
+      (sourceTextureMetadata.height ?? 0) < atlasSide
+    )
+  ) {
+    throw new Error(
+      `${model} base-color source is ${sourceTextureMetadata.width}x${sourceTextureMetadata.height}; ` +
+      `the grounded-fantasy runtime requires at least ${atlasSide}x${atlasSide} and will not upscale it.`,
+    );
+  }
   await sharp(sourceTexture)
-    .resize({ width: 512, height: 512, fit: "fill" })
+    .resize({ width: atlasSide, height: atlasSide, fit: "fill" })
     .removeAlpha()
     .png()
     .toFile(atlasPng);
@@ -341,8 +408,8 @@ if (sourceTexture) {
   );
   await sharp({
     create: {
-      width: 512,
-      height: 512,
+      width: atlasSide,
+      height: atlasSide,
       channels: 3,
       background: { r: fallback[0], g: fallback[1], b: fallback[2] },
     },
@@ -350,16 +417,45 @@ if (sourceTexture) {
 }
 
 const basisPath = path.join(publicRoot, "basis", `${model}.basis`);
+const cachedBasisBins = (await fs.pathExists(path.join(os.tmpdir(), "eqrequiem-npx-cache", "_npx")))
+  ? (await fs.readdir(path.join(os.tmpdir(), "eqrequiem-npx-cache", "_npx")))
+    .map((entry) => path.join(
+      os.tmpdir(),
+      "eqrequiem-npx-cache",
+      "_npx",
+      entry,
+      "node_modules",
+      ".bin",
+      "basisu",
+    ))
+  : [];
+const basisBin = [
+  process.env.BASISU_BIN,
+  path.join(clientRoot, "node_modules", ".bin", "basisu"),
+  ...cachedBasisBins,
+].find((candidate) => candidate && fs.existsSync(candidate));
+// npm can restore the cached basisu JavaScript shim without its executable
+// bit after sleep/restart or a cache refresh. The shim itself selects and
+// chmods the native platform binary, but it must be executable first.
+if (basisBin) {
+  fs.chmodSync(fs.realpathSync(basisBin), 0o755);
+}
+const basisEncoderArguments = [
+  atlasPng,
+  "-output_file",
+  basisPath,
+  "-tex_type",
+  "2darray",
+  ...(basisEncoding === "uastc"
+    ? ["-uastc", "-uastc_level", String(basisUastcLevel)]
+    : ["-q", "255", "-comp_level", "3"]),
+];
 execFileSync(
-  "npx",
-  [
+  basisBin ?? "npx",
+  basisBin ? basisEncoderArguments : [
     "--yes",
     "basisu",
-    atlasPng,
-    "-output_file",
-    basisPath,
-    "-tex_type",
-    "2darray",
+    ...basisEncoderArguments,
   ],
   {
     cwd: clientRoot,
@@ -380,6 +476,39 @@ await fs.writeJson(
 await fs.writeFile(
   path.join(publicRoot, "basis", `${model}.rgba`),
   await sharp(atlasPng).ensureAlpha().raw().toBuffer(),
+);
+const atlasBytes = await fs.readFile(atlasPng);
+const basisBytes = await fs.readFile(basisPath);
+await fs.writeJson(
+  path.join(publicRoot, "basis", `${model}.meta.json`),
+  {
+    schemaVersion: 1,
+    model,
+    material: materialName,
+    styleProfile: {
+      id: humanoidStyle.id,
+      path: path.relative(repoRoot, humanoidStylePath),
+    },
+    source: sourceTextureMetadata
+      ? {
+        width: sourceTextureMetadata.width,
+        height: sourceTextureMetadata.height,
+        bytes: sourceTexture.byteLength,
+        sha256: sha256(sourceTexture),
+      }
+      : null,
+    runtime: {
+      width: atlasSide,
+      height: atlasSide,
+      rgbaBytes: atlasSide * atlasSide * 4,
+      basisBytes: basisBytes.byteLength,
+      basisEncoding,
+      basisUastcLevel: basisEncoding === "uastc" ? basisUastcLevel : null,
+      atlasSha256: sha256(atlasBytes),
+      basisSha256: sha256(basisBytes),
+    },
+  },
+  { spaces: 2 },
 );
 
 engine.dispose();

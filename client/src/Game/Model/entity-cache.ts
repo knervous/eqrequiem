@@ -13,6 +13,10 @@ import type GameManager from "@game/Manager/game-manager";
 import { PlayerProfile, Spawn } from "@game/Net/messages";
 import type { NullableItemInstance } from "@game/Player/player-constants";
 import { ShadoDynamicEntityNameplateLayer } from "@knervous/shado/render";
+import {
+  getAssetContainerMeshes,
+  getOrCreateAssetContainerRoot,
+} from "./asset-container";
 import { loadBasisTexture } from "./basis-texture";
 import { Entity } from "./entity";
 import {
@@ -20,7 +24,9 @@ import {
   createVATShaderMaterial,
 } from "./entity-material";
 import { EntityMeshMetadata } from "./entity-types";
+import { createHeldItemBindTransform } from "./held-item-attachment";
 import ItemCache, { ItemContainer } from "./item-cache";
+import { RequiemEntityVisibility } from "./requiem-entity-visibility";
 import { ShadoEntityPool } from "./shado-entity-pool";
 
 type ModelKey = string;
@@ -52,8 +58,14 @@ export type EntityContainer = {
   textureAttributesDirtyRef: {
     value: boolean;
   };
-  getItem?: (model: string, flip?: boolean) => Promise<ItemContainer | null>;
+  getItem?: (
+    model: string,
+    flip?: boolean,
+    attachmentBoneIndex?: number,
+    attachmentKey?: string,
+  ) => Promise<ItemContainer | null>;
   attachmentBoneIndices: Readonly<Record<string, number>>;
+  attachmentGeometryTransforms: Readonly<Record<string, BJS.Matrix>>;
   shadoPool: ShadoEntityPool;
   addThinInstance: (matrix: BJS.Matrix, entityId: number) => number;
   removeThinInstance: (index: number) => void;
@@ -88,6 +100,8 @@ export class EntityCache {
   private static commonBasisAtlasPromise: Promise<void> | null = null;
   private static generation = 0;
   private static activePools = new Set<ShadoEntityPool>();
+  private static entityVisibility: RequiemEntityVisibility | null = null;
+  private static entityVisibilityGeneration = 0;
 
   public static gameManager: GameManager;
   /**
@@ -157,13 +171,13 @@ export class EntityCache {
           console.log(`[EntityCache] Failed to load model ${model}`);
           return null;
         }
-        const file = new File([bytes], `${model}.babylon`, {
-          type: "application/babylon",
-        });
-        const container = await BABYLON.LoadAssetContainerAsync(file, scene, {
-          name: `${model}.babylon`,
-          pluginExtension: ".babylon",
-        }).catch((e) => {
+        const container = await BABYLON.loadBabylonAssetContainer(
+          bytes,
+          scene,
+          {
+            name: `${model}.babylon`,
+          },
+        ).catch((e) => {
           console.log(`[EntityCache] Error loading model ${model}:`, e);
           return null;
         });
@@ -172,9 +186,12 @@ export class EntityCache {
         }
 
         // Attach to bucket
-        const root = container.rootNodes[0];
-        root.name = `container_${model}`;
-        (root as BJS.Mesh).setParent(bucket);
+        const root = getOrCreateAssetContainerRoot(
+          container,
+          scene,
+          `container_${model}`,
+        );
+        root.setParent(bucket);
 
         // VAT setup
         let manager: BJS.BakedVertexAnimationManager | null = null;
@@ -222,10 +239,8 @@ export class EntityCache {
           console.warn(`[EntityCache] Basis texture missing for ${model}`);
           return null;
         }
-        const { data, layerCount, format, width, height } = await loadBasisTexture(
-          scene.getEngine(),
-          basisBytes,
-        );
+        const { data, layerCount, format, width, height } =
+          await loadBasisTexture(scene.getEngine(), basisBytes);
         const textureArray = new BABYLON.RawTexture2DArray(
           null,
           width,
@@ -274,10 +289,12 @@ export class EntityCache {
           `${model}.json`,
         )) as any;
         if (json) {
-          animations = (json.animations as AnimationEntry[]).map((animation) => ({
-            ...animation,
-            fps: animation.fps ?? json.fps ?? 60,
-          }));
+          animations = (json.animations as AnimationEntry[]).map(
+            (animation) => ({
+              ...animation,
+              fps: animation.fps ?? json.fps ?? 60,
+            }),
+          );
         } else {
           const ranges =
             infoNode?.metadata?.gltf?.extras?.animationRanges ?? [];
@@ -294,9 +311,14 @@ export class EntityCache {
         }
 
         // Process meshes
-        const meshes = container.rootNodes[0]
-          .getChildMeshes(false)
-          .filter((m) => m.getTotalVertices() > 0) as BJS.Mesh[];
+        const meshes = getAssetContainerMeshes(container);
+        if (!meshes.length) {
+          console.warn(
+            `[EntityCache] Model ${model} contains no renderable meshes`,
+          );
+          container.dispose();
+          return null;
+        }
 
         const submeshRanges: Map<number, SubmeshRange> = new Map();
         let i = 0;
@@ -403,7 +425,6 @@ export class EntityCache {
           entityId: number,
         ): number => {
           const shadoSlot = shadoPool.acquire(entityId, submeshCount);
-          shadoPool.commit();
           const reusableIndex = freeThinInstances.pop();
           if (reusableIndex !== undefined) {
             if (reusableIndex !== shadoSlot.index) {
@@ -472,24 +493,59 @@ export class EntityCache {
             bone.getIndex(),
           ]),
         );
+        const attachmentGeometryTransforms: Record<string, BJS.Matrix> = {};
         if (model === "hum" || model === "huf") {
-          attachmentBoneIndices.r_point ??=
-            attachmentBoneIndices["socket_hand.R"];
-          attachmentBoneIndices.l_point ??=
-            attachmentBoneIndices["socket_hand.L"];
-          attachmentBoneIndices.shield_point ??=
-            attachmentBoneIndices["socket_hand.L"];
-          attachmentBoneIndices.head_point ??=
-            attachmentBoneIndices.socket_head;
+          const skeleton = container.skeletons[0];
+          const runtimeScale = Number(
+            infoNode?.metadata?.gltf?.extras?.runtimeScale ??
+              meshes.find(
+                (mesh) =>
+                  mesh.metadata?.gltf?.extras?.runtimeScale !== undefined,
+              )?.metadata?.gltf?.extras?.runtimeScale,
+          );
+          const aliases = {
+            r_point: "socket_hand.R",
+            l_point: "socket_hand.L",
+            shield_point: "socket_hand.L",
+            head_point: "socket_head",
+          } as const;
+          if (skeleton && Number.isFinite(runtimeScale) && runtimeScale > 0) {
+            skeleton.returnToRest();
+            skeleton.computeAbsoluteMatrices(true);
+            for (const [alias, socketName] of Object.entries(aliases)) {
+              const socket = skeleton.bones.find(
+                (bone) => bone.name === socketName,
+              );
+              if (!socket) continue;
+              attachmentBoneIndices[alias] = socket.getIndex();
+              // VAT matrices are inverseBind * animatedAbsolute, followed by
+              // the GLB-to-runtime alignment. Item geometry must therefore
+              // begin at the socket's absolute bind transform. Compensate for
+              // runtimeScale because EQ item geometry is already authored in
+              // six-unit game space while the body source is authored in
+              // meters and scaled by the VAT alignment.
+              attachmentGeometryTransforms[alias] = createHeldItemBindTransform(
+                socket.getAbsoluteTransform(),
+                runtimeScale,
+              );
+            }
+          }
         }
 
         const itemPool: Record<string, Promise<ItemContainer | null>> = {};
         const getItem = async (
           itemModel: string,
           flip: boolean = true,
+          attachmentBoneIndex?: number,
+          attachmentKey?: string,
         ): Promise<ItemContainer | null> => {
           itemModel = itemModel.toLowerCase();
-          const itemKey = `${itemModel}:${flip ? "flipped" : "raw"}`;
+          const attachmentCacheKey =
+            attachmentKey ??
+            (attachmentBoneIndex === undefined
+              ? "unbound"
+              : `bone-${attachmentBoneIndex}`);
+          const itemKey = `${itemModel}:${flip ? "flipped" : "raw"}:${attachmentCacheKey}`;
           if (!itemPool[itemKey]) {
             itemPool[itemKey] = new Promise<ItemContainer | null>((res) => {
               ItemCache.getContainer(
@@ -499,6 +555,9 @@ export class EntityCache {
                 manager,
                 container.skeletons[0] ?? null,
                 flip,
+                attachmentBoneIndex,
+                attachmentCacheKey,
+                attachmentGeometryTransforms[attachmentCacheKey],
               )
                 .then(res)
                 .catch((e) => {
@@ -514,7 +573,7 @@ export class EntityCache {
           return itemPool[itemKey];
         };
 
-        container.rootNodes[0].dispose();
+        root.dispose();
 
         EntityCache.gameManager.addToPickingList(mergedMesh as BJS.Mesh);
 
@@ -528,6 +587,7 @@ export class EntityCache {
           removeThinInstance,
           submeshRanges,
           attachmentBoneIndices,
+          attachmentGeometryTransforms,
           animations,
           mesh: mergedMesh,
           skeleton: container.skeletons[0],
@@ -545,6 +605,7 @@ export class EntityCache {
           if (c) {
             EntityCache.resolvedContainers[model] = c;
             EntityCache.activePools.add(c.shadoPool);
+            EntityCache.entityVisibility?.attachPool(c.shadoPool);
             return c;
           }
           delete EntityCache.containers[model];
@@ -566,6 +627,9 @@ export class EntityCache {
   private static nameplateLayer: ShadoDynamicEntityNameplateLayer | null = null;
 
   public static initialize(scene: BJS.Scene): void {
+    const visibilityGeneration = ++EntityCache.entityVisibilityGeneration;
+    EntityCache.entityVisibility?.dispose();
+    EntityCache.entityVisibility = null;
     if (EntityCache.renderObserver) {
       EntityCache.observerScene?.onAfterRenderCameraObservable.remove(
         EntityCache.renderObserver,
@@ -586,11 +650,47 @@ export class EntityCache {
       renderingGroupId: 0,
       worldScale: 1 / 32,
     });
+    void RequiemEntityVisibility.create()
+      .then((visibility) => {
+        if (visibilityGeneration !== EntityCache.entityVisibilityGeneration) {
+          visibility.dispose();
+          return;
+        }
+        EntityCache.entityVisibility = visibility;
+        for (const pool of EntityCache.activePools) visibility.attachPool(pool);
+        (globalThis as any).__requiemEntityVisibility = visibility;
+        console.info("[EntityCache] Entity visibility=shared-worker");
+      })
+      .catch((error) => {
+        console.warn(
+          "[EntityCache] Shared entity visibility unavailable; using synchronous reducer",
+          error,
+        );
+      });
     EntityCache.cullObserver = scene.onBeforeRenderObservable.add(() => {
       const camera = scene.activeCamera;
       if (!camera) return;
-      for (const pool of EntityCache.activePools) {
-        pool.cull(camera, 5, EntityCache.initialEntityCullDistance);
+      let workerHasResult = false;
+      if (EntityCache.entityVisibility) {
+        try {
+          workerHasResult = EntityCache.entityVisibility.update(
+            camera,
+            EntityCache.initialEntityCullDistance,
+          );
+        } catch (error) {
+          console.warn(
+            "[EntityCache] Shared entity visibility failed; reverting to synchronous reducer",
+            error,
+          );
+          EntityCache.entityVisibility.dispose();
+          EntityCache.entityVisibility = null;
+          delete (globalThis as any).__requiemEntityVisibility;
+        }
+      }
+      if (!workerHasResult) {
+        for (const pool of EntityCache.activePools) {
+          pool.cull(camera, 5, EntityCache.initialEntityCullDistance);
+        }
       }
       for (const entity of EntityCache.entityInstances) {
         entity.applyReducedVisibility();
@@ -680,6 +780,10 @@ export class EntityCache {
 
   public static disposeAll(scene: BJS.Scene): void {
     EntityCache.generation++;
+    EntityCache.entityVisibilityGeneration++;
+    EntityCache.entityVisibility?.dispose();
+    EntityCache.entityVisibility = null;
+    delete (globalThis as any).__requiemEntityVisibility;
     for (const entity of [...EntityCache.entityInstances]) entity.dispose();
     EntityCache.entityInstances.clear();
     Entity.disposeStatics();
@@ -749,10 +853,8 @@ export class EntityCache {
         if (!bytes) {
           throw new Error(`Common basis texture missing for ${entry}`);
         }
-        const { data, layerCount, format, width, height } = await loadBasisTexture(
-          scene.getEngine(),
-          bytes,
-        );
+        const { data, layerCount, format, width, height } =
+          await loadBasisTexture(scene.getEngine(), bytes);
         const texture = new BABYLON.RawTexture2DArray(
           null,
           width,

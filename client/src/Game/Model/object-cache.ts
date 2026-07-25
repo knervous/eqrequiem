@@ -3,6 +3,11 @@ import type * as BJS from "@babylonjs/core";
 import BABYLON from "@bjs";
 import { FileSystem } from "@game/FileSystem/filesystem";
 import { Transform } from "@game/Zone/zone-types";
+import { fetchShadoBytes } from "@knervous/shado/preprocess/runtime";
+import {
+  getAssetContainerMeshes,
+  getOrCreateAssetContainerRoot,
+} from "./asset-container";
 import { swapMaterialTexture } from "./bjs-utils";
 
 type ModelKey = string;
@@ -20,6 +25,7 @@ export default class ObjectCache {
   private objectContainer: BJS.TransformNode | null = null;
   private animatedMaterialNames: string[] = [];
   private managerCallbacks: (() => void)[] = [];
+  private promotedMeshes = new Map<ModelKey, BJS.Mesh[]>();
   constructor(zoneContainer: BJS.TransformNode | null = null) {
     if (zoneContainer) {
       this.objectContainer = zoneContainer;
@@ -29,39 +35,78 @@ export default class ObjectCache {
   async getContainer(
     model: string,
     scene: BJS.Scene,
+    promotedSource?: string,
   ): Promise<ContainerData | null> {
     if (!this.dataContainers[model]) {
-      const bytes = await FileSystem.getFileBytes(
-        "eqrequiem/objects",
-        `${model}.babylon`,
-      );
+      let fileName = promotedSource ? "final.glb" : `${model}.babylon`;
+      let bytes: ArrayBuffer | undefined;
+      if (promotedSource) {
+        try {
+          bytes = await fetchShadoBytes(promotedSource);
+        } catch {
+          fileName = `${model}.glb`;
+        }
+      }
+      bytes ??= await FileSystem.getFileBytes("eqrequiem/objects", fileName);
+      if (!bytes && promotedSource) {
+        fileName = `${model}.babylon`;
+        bytes = await FileSystem.getFileBytes("eqrequiem/objects", fileName);
+      }
       if (!bytes) {
         console.warn(`[ObjectCache] Failed to load model ${model}`);
         return null;
       }
-      const file = new File([bytes!], `${model}.babylon`, {
-        type: "application/babylon",
-      });
-      const result = await BABYLON.LoadAssetContainerAsync(file, scene);
+      let result: BJS.AssetContainer;
+      try {
+        result = fileName.endsWith(".glb")
+          ? await BABYLON.LoadAssetContainerAsync(
+              new File([bytes], fileName, { type: "model/gltf-binary" }),
+              scene,
+            )
+          : await BABYLON.loadBabylonAssetContainer(bytes, scene, {
+              name: fileName,
+            });
+      } catch (error) {
+        if (!promotedSource || fileName.endsWith(".babylon")) throw error;
+        const legacyFileName = `${model}.babylon`;
+        const legacyBytes = await FileSystem.getFileBytes(
+          "eqrequiem/objects",
+          legacyFileName,
+        );
+        if (!legacyBytes) throw error;
+        result = await BABYLON.loadBabylonAssetContainer(
+          legacyBytes,
+          scene,
+          { name: legacyFileName },
+        );
+      }
       if (!result) {
         console.error(`Failed to load model ${model}`);
         return null;
       }
       result.addAllToScene();
 
-      result.rootNodes[0].name = `container_${model}`;
+      const root = getOrCreateAssetContainerRoot(
+        result,
+        scene,
+        `container_${model}`,
+      );
+      const modelMeshes = getAssetContainerMeshes(result);
+      if (!modelMeshes.length) {
+        console.warn(`[ObjectCache] Model ${model} contains no renderable meshes`);
+        result.dispose();
+        return null;
+      }
       const { animationGroups, skeletons } = result;
       const hasAnimations = animationGroups.length > 0;
 
       const animationRanges: BJS.AnimationRange[] = [];
-      result.rootNodes[0].setEnabled(false);
+      root.setEnabled(false);
 
       let manager: BJS.BakedVertexAnimationManager | null = null;
       let morphTargetManager: BJS.MorphTargetManager | undefined = undefined;
 
-      const hasMorphTargets = result.rootNodes[0]
-        .getChildMeshes()
-        .some((m) => m.morphTargetManager);
+      const hasMorphTargets = modelMeshes.some((m) => m.morphTargetManager);
       if (hasMorphTargets) {
         console.log(
           "[ObjectCache] Model has morph targets:",
@@ -69,9 +114,9 @@ export default class ObjectCache {
           model,
         );
         animationGroups[0]?.play?.(true);
-        morphTargetManager = result.rootNodes[0]
-          .getChildMeshes()
-          .find((m) => m.morphTargetManager)?.morphTargetManager!;
+        morphTargetManager = modelMeshes.find(
+          (m) => m.morphTargetManager,
+        )?.morphTargetManager ?? undefined;
         console.log("Setting morph target manager", morphTargetManager);
       }
 
@@ -152,7 +197,11 @@ export default class ObjectCache {
       morphTargetManager,
     } = dataContainer;
 
-    const root = container.rootNodes[0] as BJS.TransformNode;
+    const root = getOrCreateAssetContainerRoot(
+      container,
+      scene,
+      `container_${model}`,
+    );
     const transforms = instanceTranslations;
     const count = transforms.length;
     const matrixData = new Float32Array(16 * count);
@@ -161,9 +210,7 @@ export default class ObjectCache {
     // Store physics bodies for this model
     const physicsBodies: BJS.PhysicsBody[] = [];
 
-    const meshes = root
-      .getChildMeshes()
-      .filter((m) => m instanceof BABYLON.Mesh) as BJS.Mesh[];
+    const meshes = getAssetContainerMeshes(container);
 
     const params = new BABYLON.Vector4();
 
@@ -332,6 +379,67 @@ export default class ObjectCache {
 
     return meshes;
   }
+
+  /**
+   * Upload final Babylon-space matrices produced by a Shado world package.
+   * Unlike the legacy Transform path, these matrices must not receive any
+   * coordinate-system or yaw correction in the client.
+   */
+  async setPromotedThinInstances(
+    model: string,
+    source: string,
+    scene: BJS.Scene,
+    matrixData: Float32Array,
+  ): Promise<BJS.Mesh[]> {
+    let renderMeshes = this.promotedMeshes.get(model);
+    if (!renderMeshes) {
+      const dataContainer = await this.getContainer(model, scene, source);
+      if (!dataContainer) return [];
+
+      const { container, manager, morphTargetManager } = dataContainer;
+      const root = getOrCreateAssetContainerRoot(
+        container,
+        scene,
+        `container_${model}`,
+      );
+      const sourceMeshes = getAssetContainerMeshes(container);
+
+      if (morphTargetManager) {
+        renderMeshes = sourceMeshes;
+      } else {
+        const merged = BABYLON.Mesh.MergeMeshes(
+          sourceMeshes,
+          true,
+          true,
+          undefined,
+          false,
+          true,
+        ) as BJS.Mesh | null;
+        if (!merged) {
+          console.warn(`[ObjectCache] No meshes found for promoted model ${model}`);
+          return [];
+        }
+        merged.skeleton = container.skeletons[0] || null;
+        if (manager) merged.bakedVertexAnimationManager = manager;
+        renderMeshes = [merged];
+      }
+
+      for (const mesh of renderMeshes) {
+        mesh.setParent(this.objectContainer);
+        mesh.setEnabled(true);
+        mesh.isPickable = false;
+        mesh.alwaysSelectAsActiveMesh = true;
+      }
+      this.promotedMeshes.set(model, renderMeshes);
+      root.dispose();
+    }
+
+    for (const mesh of renderMeshes) {
+      mesh.thinInstanceSetBuffer("matrix", matrixData, 16, false);
+      mesh.thinInstanceRefreshBoundingInfo(true, false, false);
+    }
+    return renderMeshes;
+  }
   dispose(model: ModelKey): void {
     if (model in this.dataContainers) {
       this.dataContainers[model].then((container) => {
@@ -356,8 +464,14 @@ export default class ObjectCache {
       }
     }
 
+    for (const meshes of this.promotedMeshes.values()) {
+      for (const mesh of meshes) {
+        if (!mesh.isDisposed()) mesh.dispose();
+      }
+    }
     Object.keys(this.dataContainers).forEach((model) => this.dispose(model));
     this.managerCallbacks = [];
     this.animatedMaterialNames = [];
+    this.promotedMeshes.clear();
   }
 }

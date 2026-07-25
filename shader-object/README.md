@@ -1,6 +1,6 @@
 # Shado
 
-Shado is a packed-data and rendering toolkit for Babylon.js. Define a
+Shado is a packed-data and rendering toolkit for Babylon Lite and Babylon.js. Define a
 GPU struct once, then use the same layout for TypeScript objects, packed arenas,
 AssemblyScript reducers, Babylon shader inputs, and instanced rendering.
 
@@ -11,12 +11,14 @@ their own.
 ## Install
 
 ```bash
-npm install @knervous/shado @babylonjs/core
+npm install @knervous/shado @babylonjs/lite
 ```
 
-Install the optional peers required by the features you use:
+Babylon Lite is the preferred WebGPU renderer. Install full Babylon.js for
+WebGL fallback or features that are not yet available in Lite:
 
 ```bash
+npm install @babylonjs/core
 npm install @babylonjs/loaders @babylonjs/serializers
 npm install --save-dev assemblyscript binaryen
 ```
@@ -37,15 +39,47 @@ class ActorPool extends Shado {
   @field({ arrayOf: 'vec3' }) velocities!: Float32Array;
 }
 
-await ActorPool.initialize(engine, { backend: 'datatex', wasm: false });
+await ActorPool.initialize(engine, {
+  backend: engine.isWebGPU ? 'storage' : 'datatex',
+  wasm: false,
+});
 
 const pool = new ActorPool(engine);
 pool.color = new Float32Array([1, 0.4, 0.1, 1]);
 pool.setVarArray('velocities', [0, 1, 0, 1, 0, 0]);
 ```
 
-`backend: 'datatex'` works on WebGL and WebGPU. Storage-backed layouts are also
-available when the target renderer supports them.
+Use `storage` with native WGSL on WebGPU. Keep `datatex` as the WebGL fallback
+or for a deliberately GLSL-authored compatibility material.
+
+## Babylon Lite
+
+The native Lite path uses only public storage, shader-material, scene callback,
+and thin-instance APIs. It does not replace mesh functions or call private draw
+methods.
+
+```ts
+import {
+  ShadoActor,
+  ShadoLiteInstanceContainer,
+  createShadoLiteMaterial,
+} from '@knervous/shado/lite';
+
+await ShadoLiteInstanceContainer.initialize(engine, {
+  extra: ShadoActor,
+  backend: 'storage',
+  wasm: false,
+});
+
+const actors = new ShadoLiteInstanceContainer<ShadoActor>(engine);
+actors.addInstances(1_000);
+createShadoLiteMaterial(engine, scene, mesh, actors);
+```
+
+Assign the material before adding `mesh` to a Lite scene. Use
+`@knervous/shado/renderer` to select Lite or full Babylon.js before importing
+renderer-specific features. See [BABYLON_RENDERER_STRATEGY.md](./BABYLON_RENDERER_STRATEGY.md)
+for the application loading contract.
 
 ## Published controls
 
@@ -90,7 +124,7 @@ state. Advanced adapters can provide `fromInternal` and `toInternal`.
 
 ```ts
 await ActorPool.initialize(engine, {
-  backend: 'datatex',
+  backend: engine.isWebGPU ? 'storage' : 'datatex',
   wasm: {
     mode: 'precompiled',
     module: await fetch('/actor-pool.wasm').then(response => response.arrayBuffer()),
@@ -207,6 +241,9 @@ search-and-replace.
 - `@knervous/shado` — schemas, arenas, backings, decorators, Babylon helpers, and
   actor instancing.
 - `@knervous/shado/babylon` — Babylon peer exports and resolution helpers.
+- `@knervous/shado/core` — renderer-neutral schemas, arenas, and packed runtime.
+- `@knervous/shado/lite` — native Babylon Lite storage and instanced rendering.
+- `@knervous/shado/renderer` — typed renderer and feature gates.
 - `@knervous/shado/asc` — optional AssemblyScript compilation helpers.
 - `@knervous/shado/msdf` — MSDF shader registration and nameplate helpers.
 - `@knervous/shado/render` — lean dynamic-entity containers, renderers, atlases,

@@ -48,7 +48,9 @@ export class MsdfReferencePlayground {
     );
 
     const skeletonBytes = await fetchShadoBytes('/shado/eq-demo/models/ske.glb.gz');
-    const skeletonUrl = URL.createObjectURL(new Blob([skeletonBytes], { type: 'model/gltf-binary' }));
+    const skeletonUrl = URL.createObjectURL(
+      new Blob([skeletonBytes], { type: 'model/gltf-binary' })
+    );
     const importResult = await BABYLON.LoadAssetContainerAsync(skeletonUrl, scene, {
       pluginExtension: '.glb',
     });
@@ -65,12 +67,15 @@ export class MsdfReferencePlayground {
 
     const logShaderCode = false;
     const logAssemblyScriptCode = false;
+    const backend = scene.getEngine().isWebGPU ? 'storage' : 'datatex';
     await NameplateData.initialize(scene.getEngine() as BABYLON.Engine, {
+      backend,
       logShaderCode,
       logAscCode: logAssemblyScriptCode,
       wasm: false,
     });
     await ShadoInstanceContainer.initialize(scene.getEngine() as BABYLON.Engine, {
+      backend,
       logShaderCode,
       logAscCode: logAssemblyScriptCode,
       extra: TestClass,
@@ -78,9 +83,7 @@ export class MsdfReferencePlayground {
     });
 
     const nameplates = new NameplateData(scene.getEngine() as BABYLON.Engine, fontAsset);
-    const instancePool = new ShadoInstanceContainer<TestClass>(
-      scene.getEngine() as BABYLON.Engine
-    );
+    const instancePool = new ShadoInstanceContainer<TestClass>(scene.getEngine() as BABYLON.Engine);
     instancePool.nameplates = nameplates;
     instancePool.addNamesToPool(fantasyNames);
     (window as any).ipool = instancePool;
@@ -163,8 +166,7 @@ function createOriginalStyleMsdfLayer(
   fontAsset: FontAsset
 ) {
   const engine = scene.getEngine();
-  const isWebGPU =
-    (engine as any)._isWebGPU || (engine as any).getClassName?.() === 'WebGPUEngine';
+  const isWebGPU = (engine as any)._isWebGPU || (engine as any).getClassName?.() === 'WebGPUEngine';
 
   registerMSDFTextShaders(BABYLON, {
     shaderName: 'msdfText',
@@ -176,12 +178,7 @@ function createOriginalStyleMsdfLayer(
   const glyphMesh = new BABYLON.Mesh('glyphQuad', scene);
   const corners = new Float32Array([0, 0, 1, 0, 0, 1, 1, 1]);
   const indices = new Uint16Array([0, 1, 2, 2, 1, 3]);
-  const positions = new Float32Array([
-    0, 0, 0,
-    1, 0, 0,
-    0, 1, 0,
-    1, 1, 0,
-  ]);
+  const positions = new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0]);
   glyphMesh.setVerticesData(BABYLON.VertexBuffer.PositionKind, positions, false, 3);
   glyphMesh.setVerticesData('corner', corners, true, 2);
   glyphMesh.setIndices(indices);
@@ -235,7 +232,10 @@ function createOriginalStyleMsdfLayer(
     instancePool.commitAndBind(eff);
     nameplates.commitAndBind(eff);
 
-    eff.setMatrix('worldViewProjection', glyphMesh.getWorldMatrix().multiply(scene.getTransformMatrix()));
+    eff.setMatrix(
+      'worldViewProjection',
+      glyphMesh.getWorldMatrix().multiply(scene.getTransformMatrix())
+    );
     eff.setMatrix('view', scene.getViewMatrix());
     eff.setFloat('uThickness', 0.0);
     eff.setFloat('uAlphaCutoff', 0.001);
@@ -257,12 +257,14 @@ function createOriginalStyleMsdfLayer(
       const drawDepthTest = engine.getDepthBuffer();
       const drawDepthWrite = engine.getDepthWrite();
       try {
-        scene.getEngine().drawElementsType(
-          BABYLON.Material.TriangleFillMode,
-          sub.indexStart,
-          sub.indexCount,
-          nGlyphs
-        );
+        scene
+          .getEngine()
+          .drawElementsType(
+            BABYLON.Material.TriangleFillMode,
+            sub.indexStart,
+            sub.indexCount,
+            nGlyphs
+          );
       } finally {
         engine.setAlphaMode(previousAlphaMode, true);
         engine.setDepthBuffer(previousDepthBuffer);
@@ -314,8 +316,17 @@ function buildUi(scene: BABYLON.Scene, actorPool: ShadoInstanceContainer<TestCla
   panel.addControl(mkBtn('Add 100', () => actorPool.addInstances(100, randomFantasyName)));
   panel.addControl(mkBtn('Add 1000', () => actorPool.addInstances(1000, randomFantasyName)));
   panel.addControl(mkBtn('Remove Random', () => actorPool.removeRandomInstance()));
-  panel.addControl(mkBtn('Shuffle All', () => actorPool.shuffleInstances(actorPool.vat?.clips ?? [])));
-  panel.addControl(mkBtn('Back to shado scene', () => { window.location.pathname = '/'; }));
+  panel.addControl(
+    mkBtn('Shuffle All', () => actorPool.shuffleInstances(actorPool.vat?.clips ?? []))
+  );
+  panel.addControl(
+    mkBtn('Back to shado scene', () => {
+      const basePath =
+        (window as Window & { __SHADO_SANDBOX_BASE_PATH__?: string })
+          .__SHADO_SANDBOX_BASE_PATH__ ?? '';
+      window.location.pathname = `${basePath.replace(/\/+$/, '')}/`;
+    })
+  );
 
   const radiusTitle = new GUI.TextBlock('radiusTitle', 'Cull Radius: 100');
   radiusTitle.color = 'white';

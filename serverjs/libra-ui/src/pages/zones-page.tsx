@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { searchZones } from '@/libra/api'
-import type { LibraRow } from '@/libra/types'
+import { Button } from '@libra/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@libra/components/ui/card'
+import { Input } from '@libra/components/ui/input'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@libra/components/ui/table'
+import { searchZones } from '@libra/libra/api'
+import type { LibraRow } from '@libra/libra/types'
 
 export function ZonesPage() {
   const [zones, setZones] = useState<LibraRow[]>([])

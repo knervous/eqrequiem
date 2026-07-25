@@ -1,0 +1,32 @@
+import type GameManager from "@game/Manager/game-manager";
+import { BulkDeleteItem, BulkItemPacket, ChannelMessage, DeleteItem, DeleteSpawn, EntityAnimation, EntityPositionUpdate, ItemInstance, LevelUpdate, MoveItem, NewZone, PlayerProfile } from "./messages";
+import { OpCodes } from "./opcodes";
+export declare function opCodeHandler(opCode: OpCodes, type: any): MethodDecorator;
+export declare class ZonePacketHandler {
+    private gameManager;
+    private opCodeHandlers;
+    private zoneReady;
+    private zoneEpoch;
+    private playerLoaded;
+    private spawnsLoaded;
+    private zoneAssetsReady;
+    private worldStateQueue;
+    constructor(gameManager: GameManager);
+    private updateRenderSnapshot;
+    newZone(newZone: NewZone): Promise<void>;
+    loadPlayerProfile(playerProfile: PlayerProfile): Promise<void>;
+    private loadBatchWorldState;
+    private loadWorldStateSpawn;
+    private queueWorldState;
+    removeZoneSpawn(spawn: DeleteSpawn): void;
+    private completeZoneLoadIfReady;
+    updateSpawnAnimation(animation: EntityAnimation): void;
+    updateSpawnPosition(spawnUpdate: EntityPositionUpdate): void;
+    processChannelMessage(channelMessage: ChannelMessage): void;
+    processMoveItem(item: MoveItem): void;
+    processItemPacket(item: ItemInstance): void;
+    processBulkDeleteItems(bulkDelete: BulkDeleteItem): void;
+    processDeleteItem(deleteItem: DeleteItem): void;
+    processBulkItemPacket(bulkItem: BulkItemPacket): void;
+    processLevelUpdate(levelUpdate: LevelUpdate): void;
+}

@@ -1,0 +1,6252 @@
+{
+  "kind": "shado.world.authoring",
+  "version": 1,
+  "world": "cauldron",
+  "coordinateSystem": "babylon-y-up",
+  "revision": 1,
+  "regions": [
+    {
+      "id": "legacy-region-0",
+      "name": "Legacy region 0",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.01,
+        0.01,
+        0.01
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "positionMirroredAtPreprocess": true
+      }
+    },
+    {
+      "id": "legacy-region-1",
+      "name": "Legacy region 1",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        -322.765625,
+        -238.015625,
+        -907.765625
+      ],
+      "size": [
+        2478.34375,
+        460.90625,
+        2400.53125
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "positionMirroredAtPreprocess": true
+      }
+    },
+    {
+      "id": "legacy-region-2",
+      "name": "Legacy region 2",
+      "kind": "zone-line",
+      "enabled": true,
+      "center": [
+        -1188.828125,
+        -310.28125,
+        -1013.390625
+      ],
+      "size": [
+        5.40625,
+        48.1875,
+        25.09375
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 4,
+        "zoneLineInfo": {
+          "type": 0,
+          "index": 2
+        },
+        "sourceCoordinateSystem": "requiem-y-up",
+        "positionMirroredAtPreprocess": true
+      }
+    },
+    {
+      "id": "legacy-region-3",
+      "name": "Legacy region 3",
+      "kind": "zone-line",
+      "enabled": true,
+      "center": [
+        -2041.265625,
+        100,
+        -626.59375
+      ],
+      "size": [
+        9.21875,
+        20,
+        20
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 4,
+        "zoneLineInfo": {
+          "type": 0,
+          "index": 3
+        },
+        "sourceCoordinateSystem": "requiem-y-up",
+        "positionMirroredAtPreprocess": true
+      }
+    },
+    {
+      "id": "legacy-region-4",
+      "name": "Legacy region 4",
+      "kind": "zone-line",
+      "enabled": true,
+      "center": [
+        2870.3125,
+        537.796875,
+        259.953125
+      ],
+      "size": [
+        9.3125,
+        147.65625,
+        62.90625
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 4,
+        "zoneLineInfo": {
+          "type": 0,
+          "index": 1
+        },
+        "sourceCoordinateSystem": "requiem-y-up",
+        "positionMirroredAtPreprocess": true
+      }
+    }
+  ],
+  "objects": {
+    "prototypes": [
+      {
+        "id": "btent1",
+        "source": "/eqrequiem/objects/btent1/final.glb",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "btent1",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb"
+        }
+      },
+      {
+        "id": "campfire",
+        "source": "/eqrequiem/objects/campfire/final.glb",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "campfire",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb"
+        }
+      },
+      {
+        "id": "campfire2",
+        "source": "/eqrequiem/objects/campfire2/final.glb",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "campfire2",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb"
+        }
+      },
+      {
+        "id": "caulcol1",
+        "source": "/eqrequiem/objects/caulcol1/final.glb",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "caulcol1",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb"
+        }
+      },
+      {
+        "id": "caulcol2",
+        "source": "/eqrequiem/objects/caulcol2/final.glb",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "caulcol2",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb"
+        }
+      },
+      {
+        "id": "caulcol3",
+        "source": "/eqrequiem/objects/caulcol3/final.glb",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "caulcol3",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb"
+        }
+      },
+      {
+        "id": "caulrock1",
+        "source": "/eqrequiem/objects/caulrock1/final.glb",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "caulrock1",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb"
+        }
+      },
+      {
+        "id": "caulrock2",
+        "source": "/eqrequiem/objects/caulrock2/final.glb",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "caulrock2",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb"
+        }
+      },
+      {
+        "id": "caulrock3",
+        "source": "/eqrequiem/objects/caulrock3/final.glb",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "caulrock3",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb"
+        }
+      },
+      {
+        "id": "caulrock4",
+        "source": "/eqrequiem/objects/caulrock4/final.glb",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "caulrock4",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb"
+        }
+      },
+      {
+        "id": "caulroof",
+        "source": "/eqrequiem/objects/caulroof/final.glb",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "caulroof",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb"
+        }
+      },
+      {
+        "id": "cratea",
+        "source": "/eqrequiem/objects/cratea/final.glb",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "cratea",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb"
+        }
+      },
+      {
+        "id": "dedpine",
+        "source": "/eqrequiem/objects/dedpine/final.glb",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "dedpine",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb"
+        }
+      },
+      {
+        "id": "dedpine1",
+        "source": "/eqrequiem/objects/dedpine1/final.glb",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "dedpine1",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb"
+        }
+      },
+      {
+        "id": "dwmonu",
+        "source": "/eqrequiem/objects/dwmonu/final.glb",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "dwmonu",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb"
+        }
+      },
+      {
+        "id": "hgflag1a",
+        "source": "/eqrequiem/objects/hgflag1a/final.glb",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "hgflag1a",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb"
+        }
+      },
+      {
+        "id": "orcflag3",
+        "source": "/eqrequiem/objects/orcflag3/final.glb",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "orcflag3",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb"
+        }
+      },
+      {
+        "id": "orctent",
+        "source": "/eqrequiem/objects/orctent/final.glb",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "orctent",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb"
+        }
+      },
+      {
+        "id": "tree10",
+        "source": "/eqrequiem/objects/tree10/final.glb",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "tree10",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb"
+        }
+      }
+    ],
+    "stamps": [
+      {
+        "id": "btent1-0",
+        "prototype": "btent1",
+        "enabled": true,
+        "position": [
+          395.0337219238281,
+          70.96089935302734,
+          92.95093536376953
+        ],
+        "rotationDegrees": [
+          0,
+          -165.9375,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "campfire-0",
+        "prototype": "campfire",
+        "enabled": true,
+        "position": [
+          -1325.0587158203125,
+          115.4455795288086,
+          195.1519317626953
+        ],
+        "rotationDegrees": [
+          0,
+          33.046875,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "campfire-1",
+        "prototype": "campfire",
+        "enabled": true,
+        "position": [
+          440.6438903808594,
+          72.03157806396484,
+          104.37567901611328
+        ],
+        "rotationDegrees": [
+          0,
+          -75.234375,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 1,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "campfire2-0",
+        "prototype": "campfire2",
+        "enabled": true,
+        "position": [
+          -728.078369140625,
+          150.7126922607422,
+          -2135.587158203125
+        ],
+        "rotationDegrees": [
+          0,
+          4.21875,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulcol1-0",
+        "prototype": "caulcol1",
+        "enabled": true,
+        "position": [
+          -1088.56640625,
+          -335.9643859863281,
+          -1056.799560546875
+        ],
+        "rotationDegrees": [
+          0,
+          80.15625,
+          0
+        ],
+        "scale": [
+          1.25,
+          1.25,
+          1.25
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulcol1-1",
+        "prototype": "caulcol1",
+        "enabled": true,
+        "position": [
+          -1093.1231689453125,
+          -336.0893249511719,
+          -1020.4260864257812
+        ],
+        "rotationDegrees": [
+          0,
+          -81.5625,
+          0
+        ],
+        "scale": [
+          1.25,
+          1.25,
+          1.25
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 1,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulcol1-2",
+        "prototype": "caulcol1",
+        "enabled": true,
+        "position": [
+          -1012.322265625,
+          -349.4263000488281,
+          -1006.7373657226562
+        ],
+        "rotationDegrees": [
+          0,
+          -99.140625,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 2,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulcol1-3",
+        "prototype": "caulcol1",
+        "enabled": true,
+        "position": [
+          -1024.3978271484375,
+          -341.7242736816406,
+          -1079.295166015625
+        ],
+        "rotationDegrees": [
+          0,
+          -99.84375,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 3,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulcol1-4",
+        "prototype": "caulcol1",
+        "enabled": true,
+        "position": [
+          1323.968017578125,
+          168.96173095703125,
+          -115.97509765625
+        ],
+        "rotationDegrees": [
+          0,
+          -93.515625,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 4,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulcol2-0",
+        "prototype": "caulcol2",
+        "enabled": true,
+        "position": [
+          -975.9277954101562,
+          -350.0811462402344,
+          -1003.1314086914062
+        ],
+        "rotationDegrees": [
+          0,
+          66.09375,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulcol2-1",
+        "prototype": "caulcol2",
+        "enabled": true,
+        "position": [
+          -993.1836547851562,
+          -351.734130859375,
+          -1071.72802734375
+        ],
+        "rotationDegrees": [
+          0,
+          -180,
+          336.09375
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 1,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulcol2-2",
+        "prototype": "caulcol2",
+        "enabled": true,
+        "position": [
+          1307.331787109375,
+          163.86607360839844,
+          -165.00001525878906
+        ],
+        "rotationDegrees": [
+          0,
+          59.765625,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 2,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulcol3-0",
+        "prototype": "caulcol3",
+        "enabled": true,
+        "position": [
+          -980.3255004882812,
+          -349.3560791015625,
+          -971.3524780273438
+        ],
+        "rotationDegrees": [
+          0,
+          -123.75,
+          87.890625
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulcol3-1",
+        "prototype": "caulcol3",
+        "enabled": true,
+        "position": [
+          -964.5130615234375,
+          -349.2481994628906,
+          -1067.9381103515625
+        ],
+        "rotationDegrees": [
+          0,
+          -71.015625,
+          94.921875
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 1,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulcol3-2",
+        "prototype": "caulcol3",
+        "enabled": true,
+        "position": [
+          1278.9954833984375,
+          155.23715209960938,
+          -158.9615478515625
+        ],
+        "rotationDegrees": [
+          0,
+          -6.328125,
+          251.71875
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 2,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock1-0",
+        "prototype": "caulrock1",
+        "enabled": true,
+        "position": [
+          -452,
+          -6.864413261413574,
+          -625
+        ],
+        "rotationDegrees": [
+          0,
+          139.921875,
+          0
+        ],
+        "scale": [
+          1.1899999380111694,
+          1.1899999380111694,
+          1.1899999380111694
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock1-1",
+        "prototype": "caulrock1",
+        "enabled": true,
+        "position": [
+          -179,
+          116.975341796875,
+          -917
+        ],
+        "rotationDegrees": [
+          0,
+          9.140625,
+          0
+        ],
+        "scale": [
+          1.0099999904632568,
+          1.0099999904632568,
+          1.0099999904632568
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 1,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock1-2",
+        "prototype": "caulrock1",
+        "enabled": true,
+        "position": [
+          -1102,
+          58.50720977783203,
+          -2104
+        ],
+        "rotationDegrees": [
+          0,
+          -8.4375,
+          0
+        ],
+        "scale": [
+          0.8999999761581421,
+          0.8999999761581421,
+          0.8999999761581421
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 2,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock1-3",
+        "prototype": "caulrock1",
+        "enabled": true,
+        "position": [
+          -1286,
+          152.40379333496094,
+          -2175
+        ],
+        "rotationDegrees": [
+          0,
+          40.78125,
+          0
+        ],
+        "scale": [
+          1.1100000143051147,
+          1.1100000143051147,
+          1.1100000143051147
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 3,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock1-4",
+        "prototype": "caulrock1",
+        "enabled": true,
+        "position": [
+          -976,
+          16.961097717285156,
+          -2088
+        ],
+        "rotationDegrees": [
+          0,
+          -119.53125,
+          331.875
+        ],
+        "scale": [
+          0.8399999737739563,
+          0.8399999737739563,
+          0.8399999737739563
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 4,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock1-5",
+        "prototype": "caulrock1",
+        "enabled": true,
+        "position": [
+          -936,
+          -32767.998046875,
+          -2507
+        ],
+        "rotationDegrees": [
+          0,
+          -88.59375,
+          0
+        ],
+        "scale": [
+          0.7799999713897705,
+          0.7799999713897705,
+          0.7799999713897705
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 5,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock1-6",
+        "prototype": "caulrock1",
+        "enabled": true,
+        "position": [
+          -240,
+          315.34033203125,
+          -2408
+        ],
+        "rotationDegrees": [
+          0,
+          -28.125,
+          0
+        ],
+        "scale": [
+          1.2100000381469727,
+          1.2100000381469727,
+          1.2100000381469727
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 6,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock1-7",
+        "prototype": "caulrock1",
+        "enabled": true,
+        "position": [
+          -153,
+          -32767.998046875,
+          -2436
+        ],
+        "rotationDegrees": [
+          0,
+          -143.4375,
+          0
+        ],
+        "scale": [
+          1.1899999380111694,
+          1.1899999380111694,
+          1.1899999380111694
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 7,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock1-8",
+        "prototype": "caulrock1",
+        "enabled": true,
+        "position": [
+          555,
+          33.30673599243164,
+          -2096
+        ],
+        "rotationDegrees": [
+          0,
+          45,
+          0
+        ],
+        "scale": [
+          0.8999999761581421,
+          0.8999999761581421,
+          0.8999999761581421
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 8,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock1-9",
+        "prototype": "caulrock1",
+        "enabled": true,
+        "position": [
+          520,
+          130.30783081054688,
+          -2217
+        ],
+        "rotationDegrees": [
+          0,
+          -18.28125,
+          0
+        ],
+        "scale": [
+          1.3200000524520874,
+          1.3200000524520874,
+          1.3200000524520874
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 9,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock1-10",
+        "prototype": "caulrock1",
+        "enabled": true,
+        "position": [
+          1172,
+          189.65086364746094,
+          -1903
+        ],
+        "rotationDegrees": [
+          0,
+          -52.734375,
+          0
+        ],
+        "scale": [
+          0.8700000047683716,
+          0.8700000047683716,
+          0.8700000047683716
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 10,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock1-11",
+        "prototype": "caulrock1",
+        "enabled": true,
+        "position": [
+          1397,
+          -32767.998046875,
+          -1700
+        ],
+        "rotationDegrees": [
+          0,
+          153.984375,
+          0
+        ],
+        "scale": [
+          1.2400000095367432,
+          1.2400000095367432,
+          1.2400000095367432
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 11,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock1-12",
+        "prototype": "caulrock1",
+        "enabled": true,
+        "position": [
+          1068,
+          113.40325927734375,
+          -1629
+        ],
+        "rotationDegrees": [
+          0,
+          -18.984375,
+          0
+        ],
+        "scale": [
+          1.2400000095367432,
+          1.2400000095367432,
+          1.2400000095367432
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 12,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock1-13",
+        "prototype": "caulrock1",
+        "enabled": true,
+        "position": [
+          857,
+          17.278987884521484,
+          -1888
+        ],
+        "rotationDegrees": [
+          0,
+          -163.125,
+          0
+        ],
+        "scale": [
+          1.0299999713897705,
+          1.0299999713897705,
+          1.0299999713897705
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 13,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock1-14",
+        "prototype": "caulrock1",
+        "enabled": true,
+        "position": [
+          1130,
+          128.95599365234375,
+          -1819
+        ],
+        "rotationDegrees": [
+          0,
+          -177.1875,
+          0
+        ],
+        "scale": [
+          0.8999999761581421,
+          0.8999999761581421,
+          0.8999999761581421
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 14,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock1-15",
+        "prototype": "caulrock1",
+        "enabled": true,
+        "position": [
+          861,
+          104.72438049316406,
+          -1638
+        ],
+        "rotationDegrees": [
+          0,
+          -108.984375,
+          0
+        ],
+        "scale": [
+          0.9800000190734863,
+          0.9800000190734863,
+          0.9800000190734863
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 15,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock1-16",
+        "prototype": "caulrock1",
+        "enabled": true,
+        "position": [
+          1301.25,
+          399.9979553222656,
+          -977
+        ],
+        "rotationDegrees": [
+          0,
+          153.28125,
+          58.359375
+        ],
+        "scale": [
+          1.1200000047683716,
+          1.1200000047683716,
+          1.1200000047683716
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 16,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock1-17",
+        "prototype": "caulrock1",
+        "enabled": true,
+        "position": [
+          1248,
+          141.2322998046875,
+          -880
+        ],
+        "rotationDegrees": [
+          0,
+          -53.4375,
+          0
+        ],
+        "scale": [
+          0.9900000095367432,
+          0.9900000095367432,
+          0.9900000095367432
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 17,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock1-18",
+        "prototype": "caulrock1",
+        "enabled": true,
+        "position": [
+          999,
+          158.28163146972656,
+          -548
+        ],
+        "rotationDegrees": [
+          0,
+          106.171875,
+          0
+        ],
+        "scale": [
+          0.6799998879432678,
+          0.6799998879432678,
+          0.6799998879432678
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 18,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock1-19",
+        "prototype": "caulrock1",
+        "enabled": true,
+        "position": [
+          989,
+          81.42613220214844,
+          -656
+        ],
+        "rotationDegrees": [
+          0,
+          -45,
+          0
+        ],
+        "scale": [
+          1.1899999380111694,
+          1.1899999380111694,
+          1.1899999380111694
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 19,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock1-20",
+        "prototype": "caulrock1",
+        "enabled": true,
+        "position": [
+          1083,
+          164.97494506835938,
+          42
+        ],
+        "rotationDegrees": [
+          0,
+          144.84375,
+          0
+        ],
+        "scale": [
+          0.6600000262260437,
+          0.6600000262260437,
+          0.6600000262260437
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 20,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock1-21",
+        "prototype": "caulrock1",
+        "enabled": true,
+        "position": [
+          1011,
+          73.72435760498047,
+          41
+        ],
+        "rotationDegrees": [
+          0,
+          87.890625,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 21,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock1-22",
+        "prototype": "caulrock1",
+        "enabled": true,
+        "position": [
+          711,
+          52.156673431396484,
+          48
+        ],
+        "rotationDegrees": [
+          0,
+          -21.796875,
+          0
+        ],
+        "scale": [
+          1.159999966621399,
+          1.159999966621399,
+          1.159999966621399
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 22,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock1-23",
+        "prototype": "caulrock1",
+        "enabled": true,
+        "position": [
+          624,
+          6.078948020935059,
+          163
+        ],
+        "rotationDegrees": [
+          0,
+          -30.9375,
+          0
+        ],
+        "scale": [
+          0.7799999713897705,
+          0.7799999713897705,
+          0.7799999713897705
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 23,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock1-24",
+        "prototype": "caulrock1",
+        "enabled": true,
+        "position": [
+          217,
+          111.60270690917969,
+          523
+        ],
+        "rotationDegrees": [
+          0,
+          12.65625,
+          0
+        ],
+        "scale": [
+          1.0399999618530273,
+          1.0399999618530273,
+          1.0399999618530273
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 24,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock1-25",
+        "prototype": "caulrock1",
+        "enabled": true,
+        "position": [
+          414,
+          20.682531356811523,
+          288
+        ],
+        "rotationDegrees": [
+          0,
+          142.734375,
+          0
+        ],
+        "scale": [
+          0.8500000238418579,
+          0.8500000238418579,
+          0.8500000238418579
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 25,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock1-26",
+        "prototype": "caulrock1",
+        "enabled": true,
+        "position": [
+          -25,
+          10.296964645385742,
+          402
+        ],
+        "rotationDegrees": [
+          0,
+          -38.671875,
+          0
+        ],
+        "scale": [
+          0.8299999833106995,
+          0.8299999833106995,
+          0.8299999833106995
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 26,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock1-27",
+        "prototype": "caulrock1",
+        "enabled": true,
+        "position": [
+          -215,
+          -83.24092102050781,
+          183
+        ],
+        "rotationDegrees": [
+          0,
+          49.21875,
+          0
+        ],
+        "scale": [
+          1.2000000476837158,
+          1.2000000476837158,
+          1.2000000476837158
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 27,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock1-28",
+        "prototype": "caulrock1",
+        "enabled": true,
+        "position": [
+          -422,
+          116.67181396484375,
+          543
+        ],
+        "rotationDegrees": [
+          0,
+          117.421875,
+          0
+        ],
+        "scale": [
+          1.2400000095367432,
+          1.2400000095367432,
+          1.2400000095367432
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 28,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock1-29",
+        "prototype": "caulrock1",
+        "enabled": true,
+        "position": [
+          -697,
+          137.06246948242188,
+          617
+        ],
+        "rotationDegrees": [
+          0,
+          85.078125,
+          333.984375
+        ],
+        "scale": [
+          1.1799999475479126,
+          1.1799999475479126,
+          1.1799999475479126
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 29,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock1-30",
+        "prototype": "caulrock1",
+        "enabled": true,
+        "position": [
+          -1241,
+          95.29784393310547,
+          233
+        ],
+        "rotationDegrees": [
+          0,
+          -69.609375,
+          0
+        ],
+        "scale": [
+          1.0299999713897705,
+          1.0299999713897705,
+          1.0299999713897705
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 30,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock1-31",
+        "prototype": "caulrock1",
+        "enabled": true,
+        "position": [
+          -1740,
+          169.0008087158203,
+          -224
+        ],
+        "rotationDegrees": [
+          0,
+          -50.625,
+          0
+        ],
+        "scale": [
+          0.9599999785423279,
+          0.9599999785423279,
+          0.9599999785423279
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 31,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock1-32",
+        "prototype": "caulrock1",
+        "enabled": true,
+        "position": [
+          -1662,
+          150.13133239746094,
+          -330
+        ],
+        "rotationDegrees": [
+          0,
+          -118.125,
+          341.71875
+        ],
+        "scale": [
+          0.800000011920929,
+          0.800000011920929,
+          0.800000011920929
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 32,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock1-33",
+        "prototype": "caulrock1",
+        "enabled": true,
+        "position": [
+          -1595,
+          -10.700881958007812,
+          -803
+        ],
+        "rotationDegrees": [
+          0,
+          142.734375,
+          0
+        ],
+        "scale": [
+          1.2100000381469727,
+          1.2100000381469727,
+          1.2100000381469727
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 33,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock1-34",
+        "prototype": "caulrock1",
+        "enabled": true,
+        "position": [
+          -1520,
+          -91.3864974975586,
+          -818
+        ],
+        "rotationDegrees": [
+          0,
+          129.375,
+          345.9375
+        ],
+        "scale": [
+          0.8700000047683716,
+          0.8700000047683716,
+          0.8700000047683716
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 34,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock1-35",
+        "prototype": "caulrock1",
+        "enabled": true,
+        "position": [
+          -1379,
+          -36.510807037353516,
+          -1673
+        ],
+        "rotationDegrees": [
+          0,
+          -86.484375,
+          0
+        ],
+        "scale": [
+          0.8899999856948853,
+          0.8899999856948853,
+          0.8899999856948853
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 35,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock1-36",
+        "prototype": "caulrock1",
+        "enabled": true,
+        "position": [
+          -1379,
+          -25.694786071777344,
+          -1187
+        ],
+        "rotationDegrees": [
+          0,
+          52.03125,
+          0
+        ],
+        "scale": [
+          0.9100000262260437,
+          0.9100000262260437,
+          0.9100000262260437
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 36,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock1-37",
+        "prototype": "caulrock1",
+        "enabled": true,
+        "position": [
+          -1397,
+          -43.72532272338867,
+          -1609
+        ],
+        "rotationDegrees": [
+          0,
+          -59.0625,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 37,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock1-38",
+        "prototype": "caulrock1",
+        "enabled": true,
+        "position": [
+          -1655,
+          79.65394592285156,
+          -1439
+        ],
+        "rotationDegrees": [
+          0,
+          -46.40625,
+          0
+        ],
+        "scale": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 38,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock1-39",
+        "prototype": "caulrock1",
+        "enabled": true,
+        "position": [
+          -1753,
+          190.11935424804688,
+          -1685
+        ],
+        "rotationDegrees": [
+          0,
+          144.140625,
+          0
+        ],
+        "scale": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 39,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock1-40",
+        "prototype": "caulrock1",
+        "enabled": true,
+        "position": [
+          -1603,
+          241.5379638671875,
+          -1751
+        ],
+        "rotationDegrees": [
+          0,
+          -20.390625,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 40,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock1-41",
+        "prototype": "caulrock1",
+        "enabled": true,
+        "position": [
+          -1545,
+          163.2818145751953,
+          -1708
+        ],
+        "rotationDegrees": [
+          0,
+          -11.25,
+          0
+        ],
+        "scale": [
+          0.800000011920929,
+          0.800000011920929,
+          0.800000011920929
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 41,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock1-42",
+        "prototype": "caulrock1",
+        "enabled": true,
+        "position": [
+          -10.255698204040527,
+          -346.9546813964844,
+          -263.24993896484375
+        ],
+        "rotationDegrees": [
+          0,
+          85.78125,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 42,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock1-43",
+        "prototype": "caulrock1",
+        "enabled": true,
+        "position": [
+          1537.087646484375,
+          197.9980010986328,
+          297.34222412109375
+        ],
+        "rotationDegrees": [
+          0,
+          -69.609375,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 43,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock1-44",
+        "prototype": "caulrock1",
+        "enabled": true,
+        "position": [
+          1681.8740234375,
+          214.01332092285156,
+          235.32489013671875
+        ],
+        "rotationDegrees": [
+          0,
+          135,
+          7.734375
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 44,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock1-45",
+        "prototype": "caulrock1",
+        "enabled": true,
+        "position": [
+          2066.70556640625,
+          302.1850280761719,
+          524.2972412109375
+        ],
+        "rotationDegrees": [
+          0,
+          108.28125,
+          329.0625
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 45,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock1-46",
+        "prototype": "caulrock1",
+        "enabled": true,
+        "position": [
+          2245.6796875,
+          323.10137939453125,
+          413.0930480957031
+        ],
+        "rotationDegrees": [
+          0,
+          9.84375,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 46,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock1-47",
+        "prototype": "caulrock1",
+        "enabled": true,
+        "position": [
+          2293.383056640625,
+          345.09381103515625,
+          192.8177490234375
+        ],
+        "rotationDegrees": [
+          0,
+          -142.03125,
+          2.109375
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 47,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock1-48",
+        "prototype": "caulrock1",
+        "enabled": true,
+        "position": [
+          2351.478759765625,
+          364.7189636230469,
+          -141.4803009033203
+        ],
+        "rotationDegrees": [
+          0,
+          63.984375,
+          5.625
+        ],
+        "scale": [
+          1.25,
+          1.25,
+          1.25
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 48,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock1-49",
+        "prototype": "caulrock1",
+        "enabled": true,
+        "position": [
+          2587.958984375,
+          409.0443115234375,
+          -13.355391502380371
+        ],
+        "rotationDegrees": [
+          0,
+          -56.25,
+          10.546875
+        ],
+        "scale": [
+          1.25,
+          1.25,
+          1.25
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 49,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock2-0",
+        "prototype": "caulrock2",
+        "enabled": true,
+        "position": [
+          -147,
+          128.66012573242188,
+          -853
+        ],
+        "rotationDegrees": [
+          0,
+          -180,
+          338.203125
+        ],
+        "scale": [
+          0.5299999713897705,
+          0.5299999713897705,
+          0.5299999713897705
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock2-1",
+        "prototype": "caulrock2",
+        "enabled": true,
+        "position": [
+          86,
+          -43.70853805541992,
+          -828
+        ],
+        "rotationDegrees": [
+          0,
+          152.578125,
+          0
+        ],
+        "scale": [
+          0.9700000286102295,
+          0.9700000286102295,
+          0.9700000286102295
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 1,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock2-2",
+        "prototype": "caulrock2",
+        "enabled": true,
+        "position": [
+          -1411,
+          116.53369140625,
+          -2109
+        ],
+        "rotationDegrees": [
+          0,
+          -64.6875,
+          0
+        ],
+        "scale": [
+          0.7799999713897705,
+          0.7799999713897705,
+          0.7799999713897705
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 2,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock2-3",
+        "prototype": "caulrock2",
+        "enabled": true,
+        "position": [
+          -1332,
+          50.47682189941406,
+          -2068
+        ],
+        "rotationDegrees": [
+          0,
+          68.90625,
+          0
+        ],
+        "scale": [
+          1.4299999475479126,
+          1.4299999475479126,
+          1.4299999475479126
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 3,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock2-4",
+        "prototype": "caulrock2",
+        "enabled": true,
+        "position": [
+          -537,
+          -4.113792419433594,
+          -1949
+        ],
+        "rotationDegrees": [
+          0,
+          -84.375,
+          0
+        ],
+        "scale": [
+          1.1100000143051147,
+          1.1100000143051147,
+          1.1100000143051147
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 4,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock2-5",
+        "prototype": "caulrock2",
+        "enabled": true,
+        "position": [
+          -626,
+          183.38809204101562,
+          -2392
+        ],
+        "rotationDegrees": [
+          0,
+          -130.078125,
+          0
+        ],
+        "scale": [
+          1.25,
+          1.25,
+          1.25
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 5,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock2-6",
+        "prototype": "caulrock2",
+        "enabled": true,
+        "position": [
+          -171,
+          109.35507202148438,
+          -2214
+        ],
+        "rotationDegrees": [
+          0,
+          -100.546875,
+          0
+        ],
+        "scale": [
+          1.3600000143051147,
+          1.3600000143051147,
+          1.3600000143051147
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 6,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock2-7",
+        "prototype": "caulrock2",
+        "enabled": true,
+        "position": [
+          229,
+          118.96467590332031,
+          -2293
+        ],
+        "rotationDegrees": [
+          0,
+          90.703125,
+          0
+        ],
+        "scale": [
+          1.090000033378601,
+          1.090000033378601,
+          1.090000033378601
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 7,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock2-8",
+        "prototype": "caulrock2",
+        "enabled": true,
+        "position": [
+          470,
+          4.716739654541016,
+          -1986
+        ],
+        "rotationDegrees": [
+          0,
+          -42.890625,
+          0
+        ],
+        "scale": [
+          1.3300000429153442,
+          1.3300000429153442,
+          1.3300000429153442
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 8,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock2-9",
+        "prototype": "caulrock2",
+        "enabled": true,
+        "position": [
+          864,
+          128.6762237548828,
+          -2114
+        ],
+        "rotationDegrees": [
+          0,
+          -172.96875,
+          0
+        ],
+        "scale": [
+          1.1699999570846558,
+          1.1699999570846558,
+          1.1699999570846558
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 9,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock2-10",
+        "prototype": "caulrock2",
+        "enabled": true,
+        "position": [
+          1076,
+          144.22698974609375,
+          -1999
+        ],
+        "rotationDegrees": [
+          0,
+          -23.203125,
+          0
+        ],
+        "scale": [
+          1.2400000095367432,
+          1.2400000095367432,
+          1.2400000095367432
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 10,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock2-11",
+        "prototype": "caulrock2",
+        "enabled": true,
+        "position": [
+          981,
+          49.892799377441406,
+          -1608
+        ],
+        "rotationDegrees": [
+          0,
+          -111.09375,
+          343.125
+        ],
+        "scale": [
+          1.100000023841858,
+          1.100000023841858,
+          1.100000023841858
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 11,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock2-12",
+        "prototype": "caulrock2",
+        "enabled": true,
+        "position": [
+          770,
+          125.278564453125,
+          -2149
+        ],
+        "rotationDegrees": [
+          0,
+          -134.296875,
+          0
+        ],
+        "scale": [
+          0.7200000286102295,
+          0.7200000286102295,
+          0.7200000286102295
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 12,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock2-13",
+        "prototype": "caulrock2",
+        "enabled": true,
+        "position": [
+          1102,
+          131.78565979003906,
+          -1438
+        ],
+        "rotationDegrees": [
+          0,
+          -51.328125,
+          0
+        ],
+        "scale": [
+          1.0700000524520874,
+          1.0700000524520874,
+          1.0700000524520874
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 13,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock2-14",
+        "prototype": "caulrock2",
+        "enabled": true,
+        "position": [
+          1232,
+          131.48956298828125,
+          -1660
+        ],
+        "rotationDegrees": [
+          0,
+          -71.015625,
+          0
+        ],
+        "scale": [
+          0.8899999856948853,
+          0.8899999856948853,
+          0.8899999856948853
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 14,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock2-15",
+        "prototype": "caulrock2",
+        "enabled": true,
+        "position": [
+          1097,
+          165.8048553466797,
+          -1066
+        ],
+        "rotationDegrees": [
+          0,
+          -99.84375,
+          0
+        ],
+        "scale": [
+          1.1299999952316284,
+          1.1299999952316284,
+          1.1299999952316284
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 15,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock2-16",
+        "prototype": "caulrock2",
+        "enabled": true,
+        "position": [
+          922,
+          27.512664794921875,
+          -1114
+        ],
+        "rotationDegrees": [
+          0,
+          -84.375,
+          0
+        ],
+        "scale": [
+          1.25,
+          1.25,
+          1.25
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 16,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock2-17",
+        "prototype": "caulrock2",
+        "enabled": true,
+        "position": [
+          761,
+          54.373741149902344,
+          -462
+        ],
+        "rotationDegrees": [
+          0,
+          -42.890625,
+          0
+        ],
+        "scale": [
+          0.9599999785423279,
+          0.9599999785423279,
+          0.9599999785423279
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 17,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock2-18",
+        "prototype": "caulrock2",
+        "enabled": true,
+        "position": [
+          938,
+          85.11042785644531,
+          -462
+        ],
+        "rotationDegrees": [
+          0,
+          -115.3125,
+          0
+        ],
+        "scale": [
+          1.2100000381469727,
+          1.2100000381469727,
+          1.2100000381469727
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 18,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock2-19",
+        "prototype": "caulrock2",
+        "enabled": true,
+        "position": [
+          1067,
+          184.66416931152344,
+          -68
+        ],
+        "rotationDegrees": [
+          0,
+          -30.234375,
+          0
+        ],
+        "scale": [
+          1.1700000762939453,
+          1.1700000762939453,
+          1.1700000762939453
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 19,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock2-20",
+        "prototype": "caulrock2",
+        "enabled": true,
+        "position": [
+          1171,
+          198.81912231445312,
+          40
+        ],
+        "rotationDegrees": [
+          0,
+          -123.75,
+          0
+        ],
+        "scale": [
+          0.9700000286102295,
+          0.9700000286102295,
+          0.9700000286102295
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 20,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock2-21",
+        "prototype": "caulrock2",
+        "enabled": true,
+        "position": [
+          639,
+          134.4544677734375,
+          329
+        ],
+        "rotationDegrees": [
+          0,
+          69.609375,
+          0
+        ],
+        "scale": [
+          0.9399999976158142,
+          0.9399999976158142,
+          0.9399999976158142
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 21,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock2-22",
+        "prototype": "caulrock2",
+        "enabled": true,
+        "position": [
+          812,
+          59.349205017089844,
+          74
+        ],
+        "rotationDegrees": [
+          0,
+          79.453125,
+          351.5625
+        ],
+        "scale": [
+          0.6999999284744263,
+          0.6999999284744263,
+          0.6999999284744263
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 22,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock2-23",
+        "prototype": "caulrock2",
+        "enabled": true,
+        "position": [
+          379,
+          14.546021461486816,
+          312
+        ],
+        "rotationDegrees": [
+          0,
+          66.09375,
+          0
+        ],
+        "scale": [
+          0.8299999833106995,
+          0.8299999833106995,
+          0.8299999833106995
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 23,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock2-24",
+        "prototype": "caulrock2",
+        "enabled": true,
+        "position": [
+          278,
+          95.701171875,
+          201
+        ],
+        "rotationDegrees": [
+          0,
+          109.6875,
+          0
+        ],
+        "scale": [
+          0.800000011920929,
+          0.800000011920929,
+          0.800000011920929
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 24,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock2-25",
+        "prototype": "caulrock2",
+        "enabled": true,
+        "position": [
+          -320,
+          57.518218994140625,
+          418
+        ],
+        "rotationDegrees": [
+          0,
+          35.15625,
+          349.453125
+        ],
+        "scale": [
+          1.149999976158142,
+          1.149999976158142,
+          1.149999976158142
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 25,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock2-26",
+        "prototype": "caulrock2",
+        "enabled": true,
+        "position": [
+          -81,
+          160.76744079589844,
+          517
+        ],
+        "rotationDegrees": [
+          0,
+          125.859375,
+          0
+        ],
+        "scale": [
+          1.2799999713897705,
+          1.2799999713897705,
+          1.2799999713897705
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 26,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock2-27",
+        "prototype": "caulrock2",
+        "enabled": true,
+        "position": [
+          -528,
+          153.47268676757812,
+          569
+        ],
+        "rotationDegrees": [
+          0,
+          -30.9375,
+          0
+        ],
+        "scale": [
+          0.9100000858306885,
+          0.9100000858306885,
+          0.9100000858306885
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 27,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock2-28",
+        "prototype": "caulrock2",
+        "enabled": true,
+        "position": [
+          -582,
+          62.057029724121094,
+          573
+        ],
+        "rotationDegrees": [
+          0,
+          -146.953125,
+          0
+        ],
+        "scale": [
+          1.0600000619888306,
+          1.0600000619888306,
+          1.0600000619888306
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 28,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock2-29",
+        "prototype": "caulrock2",
+        "enabled": true,
+        "position": [
+          -1595,
+          144.0225067138672,
+          385
+        ],
+        "rotationDegrees": [
+          0,
+          -33.75,
+          23.203125
+        ],
+        "scale": [
+          0.8999999761581421,
+          0.8999999761581421,
+          0.8999999761581421
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 29,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock2-30",
+        "prototype": "caulrock2",
+        "enabled": true,
+        "position": [
+          -1658,
+          83.7344970703125,
+          122
+        ],
+        "rotationDegrees": [
+          0,
+          -96.328125,
+          0
+        ],
+        "scale": [
+          1.1799999475479126,
+          1.1799999475479126,
+          1.1799999475479126
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 30,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock2-31",
+        "prototype": "caulrock2",
+        "enabled": true,
+        "position": [
+          -1457,
+          116.59698486328125,
+          12
+        ],
+        "rotationDegrees": [
+          0,
+          113.203125,
+          0
+        ],
+        "scale": [
+          0.37999990582466125,
+          0.37999990582466125,
+          0.37999990582466125
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 31,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock2-32",
+        "prototype": "caulrock2",
+        "enabled": true,
+        "position": [
+          -1834,
+          171.89602661132812,
+          -433
+        ],
+        "rotationDegrees": [
+          0,
+          170.859375,
+          338.203125
+        ],
+        "scale": [
+          1.2100000381469727,
+          1.2100000381469727,
+          1.2100000381469727
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 32,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock2-33",
+        "prototype": "caulrock2",
+        "enabled": true,
+        "position": [
+          -1674,
+          70.739990234375,
+          -895
+        ],
+        "rotationDegrees": [
+          0,
+          81.5625,
+          0
+        ],
+        "scale": [
+          0.6999999284744263,
+          0.6999999284744263,
+          0.6999999284744263
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 33,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock2-34",
+        "prototype": "caulrock2",
+        "enabled": true,
+        "position": [
+          -1347,
+          -72.1910400390625,
+          -1060
+        ],
+        "rotationDegrees": [
+          0,
+          -108.28125,
+          0
+        ],
+        "scale": [
+          1.25,
+          1.25,
+          1.25
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 34,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock2-35",
+        "prototype": "caulrock2",
+        "enabled": true,
+        "position": [
+          -1419,
+          -28.571027755737305,
+          -1318
+        ],
+        "rotationDegrees": [
+          0,
+          2.109375,
+          0
+        ],
+        "scale": [
+          0.6600000262260437,
+          0.6600000262260437,
+          0.6600000262260437
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 35,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock2-36",
+        "prototype": "caulrock2",
+        "enabled": true,
+        "position": [
+          -1433,
+          23.975845336914062,
+          -1475
+        ],
+        "rotationDegrees": [
+          0,
+          49.21875,
+          28.828125
+        ],
+        "scale": [
+          1.2000000476837158,
+          1.2000000476837158,
+          1.2000000476837158
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 36,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock3-0",
+        "prototype": "caulrock3",
+        "enabled": true,
+        "position": [
+          -98,
+          -20.653488159179688,
+          -590.25
+        ],
+        "rotationDegrees": [
+          0,
+          0,
+          359.296875
+        ],
+        "scale": [
+          0.5799999833106995,
+          0.5799999833106995,
+          0.5799999833106995
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock3-1",
+        "prototype": "caulrock3",
+        "enabled": true,
+        "position": [
+          -301,
+          -5.538303375244141,
+          -1174
+        ],
+        "rotationDegrees": [
+          0,
+          2.109375,
+          351.5625
+        ],
+        "scale": [
+          0.8899999856948853,
+          0.8899999856948853,
+          0.8899999856948853
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 1,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock3-2",
+        "prototype": "caulrock3",
+        "enabled": true,
+        "position": [
+          -191,
+          -11.909832000732422,
+          -559
+        ],
+        "rotationDegrees": [
+          0,
+          114.609375,
+          0
+        ],
+        "scale": [
+          0.6899998784065247,
+          0.6899998784065247,
+          0.6899998784065247
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 2,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock3-3",
+        "prototype": "caulrock3",
+        "enabled": true,
+        "position": [
+          -1507,
+          145.93865966796875,
+          -1752
+        ],
+        "rotationDegrees": [
+          0,
+          5.625,
+          45.703125
+        ],
+        "scale": [
+          1.059999942779541,
+          1.059999942779541,
+          1.059999942779541
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 3,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock3-4",
+        "prototype": "caulrock3",
+        "enabled": true,
+        "position": [
+          -1546,
+          127.65771484375,
+          -2046
+        ],
+        "rotationDegrees": [
+          0,
+          50.625,
+          0
+        ],
+        "scale": [
+          0.7900000214576721,
+          0.7900000214576721,
+          0.7900000214576721
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 4,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock3-5",
+        "prototype": "caulrock3",
+        "enabled": true,
+        "position": [
+          -1470,
+          -32767.998046875,
+          -2428
+        ],
+        "rotationDegrees": [
+          0,
+          170.15625,
+          0
+        ],
+        "scale": [
+          0.7599999904632568,
+          0.7599999904632568,
+          0.7599999904632568
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 5,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock3-6",
+        "prototype": "caulrock3",
+        "enabled": true,
+        "position": [
+          -744,
+          184.02532958984375,
+          -2255
+        ],
+        "rotationDegrees": [
+          0,
+          97.03125,
+          0
+        ],
+        "scale": [
+          0.49000000953674316,
+          0.49000000953674316,
+          0.49000000953674316
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 6,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock3-7",
+        "prototype": "caulrock3",
+        "enabled": true,
+        "position": [
+          -1072,
+          182.04989624023438,
+          -2225
+        ],
+        "rotationDegrees": [
+          0,
+          174.375,
+          0
+        ],
+        "scale": [
+          0.6399999856948853,
+          0.6399999856948853,
+          0.6399999856948853
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 7,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock3-8",
+        "prototype": "caulrock3",
+        "enabled": true,
+        "position": [
+          -709,
+          158.79678344726562,
+          -2178
+        ],
+        "rotationDegrees": [
+          0,
+          100.546875,
+          0
+        ],
+        "scale": [
+          0.9900000095367432,
+          0.9900000095367432,
+          0.9900000095367432
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 8,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock3-9",
+        "prototype": "caulrock3",
+        "enabled": true,
+        "position": [
+          -43,
+          135.95892333984375,
+          -2245
+        ],
+        "rotationDegrees": [
+          0,
+          21.09375,
+          0
+        ],
+        "scale": [
+          0.9200000166893005,
+          0.9200000166893005,
+          0.9200000166893005
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 9,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock3-10",
+        "prototype": "caulrock3",
+        "enabled": true,
+        "position": [
+          43,
+          164.98411560058594,
+          -2204
+        ],
+        "rotationDegrees": [
+          0,
+          -30.9375,
+          0
+        ],
+        "scale": [
+          1.149999976158142,
+          1.149999976158142,
+          1.149999976158142
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 10,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock3-11",
+        "prototype": "caulrock3",
+        "enabled": true,
+        "position": [
+          -99,
+          -335.5780029296875,
+          -1956
+        ],
+        "rotationDegrees": [
+          0,
+          -170.859375,
+          0
+        ],
+        "scale": [
+          1.2000000476837158,
+          1.2000000476837158,
+          1.2000000476837158
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 11,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock3-12",
+        "prototype": "caulrock3",
+        "enabled": true,
+        "position": [
+          345,
+          -79.20246124267578,
+          -1927
+        ],
+        "rotationDegrees": [
+          0,
+          -103.359375,
+          0
+        ],
+        "scale": [
+          1.1799999475479126,
+          1.1799999475479126,
+          1.1799999475479126
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 12,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock3-13",
+        "prototype": "caulrock3",
+        "enabled": true,
+        "position": [
+          129,
+          87.57525634765625,
+          -2082
+        ],
+        "rotationDegrees": [
+          0,
+          -131.484375,
+          0
+        ],
+        "scale": [
+          0.7900000214576721,
+          0.7900000214576721,
+          0.7900000214576721
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 13,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock3-14",
+        "prototype": "caulrock3",
+        "enabled": true,
+        "position": [
+          528,
+          184.34078979492188,
+          -2256
+        ],
+        "rotationDegrees": [
+          0,
+          120.234375,
+          338.90625
+        ],
+        "scale": [
+          1.2400000095367432,
+          1.2400000095367432,
+          1.2400000095367432
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 14,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock3-15",
+        "prototype": "caulrock3",
+        "enabled": true,
+        "position": [
+          1384,
+          -32767.998046875,
+          -2068
+        ],
+        "rotationDegrees": [
+          0,
+          -75.234375,
+          0
+        ],
+        "scale": [
+          1.2100000381469727,
+          1.2100000381469727,
+          1.2100000381469727
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 15,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock3-16",
+        "prototype": "caulrock3",
+        "enabled": true,
+        "position": [
+          1124,
+          111.57258605957031,
+          -2083
+        ],
+        "rotationDegrees": [
+          0,
+          34.453125,
+          0
+        ],
+        "scale": [
+          1.1699999570846558,
+          1.1699999570846558,
+          1.1699999570846558
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 16,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock3-17",
+        "prototype": "caulrock3",
+        "enabled": true,
+        "position": [
+          1273,
+          309.26922607421875,
+          -2154
+        ],
+        "rotationDegrees": [
+          0,
+          -68.203125,
+          0
+        ],
+        "scale": [
+          0.8700000047683716,
+          0.8700000047683716,
+          0.8700000047683716
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 17,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock3-18",
+        "prototype": "caulrock3",
+        "enabled": true,
+        "position": [
+          798,
+          19.461788177490234,
+          -1847
+        ],
+        "rotationDegrees": [
+          0,
+          -33.75,
+          0
+        ],
+        "scale": [
+          1.159999966621399,
+          1.159999966621399,
+          1.159999966621399
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 18,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock3-19",
+        "prototype": "caulrock3",
+        "enabled": true,
+        "position": [
+          934,
+          152.28672790527344,
+          -2050
+        ],
+        "rotationDegrees": [
+          0,
+          60.46875,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 19,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock3-20",
+        "prototype": "caulrock3",
+        "enabled": true,
+        "position": [
+          831,
+          128.16226196289062,
+          -2075
+        ],
+        "rotationDegrees": [
+          0,
+          -87.890625,
+          343.125
+        ],
+        "scale": [
+          0.8700000047683716,
+          0.8700000047683716,
+          0.8700000047683716
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 20,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock3-21",
+        "prototype": "caulrock3",
+        "enabled": true,
+        "position": [
+          821,
+          -6.411640167236328,
+          -1506
+        ],
+        "rotationDegrees": [
+          0,
+          -74.53125,
+          0
+        ],
+        "scale": [
+          0.9300000071525574,
+          0.9300000071525574,
+          0.9300000071525574
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 21,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock3-22",
+        "prototype": "caulrock3",
+        "enabled": true,
+        "position": [
+          1142,
+          190.33106994628906,
+          -1151
+        ],
+        "rotationDegrees": [
+          0,
+          111.09375,
+          0
+        ],
+        "scale": [
+          1.2100000381469727,
+          1.2100000381469727,
+          1.2100000381469727
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 22,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock3-23",
+        "prototype": "caulrock3",
+        "enabled": true,
+        "position": [
+          814,
+          31.936649322509766,
+          -1893
+        ],
+        "rotationDegrees": [
+          0,
+          -94.21875,
+          0
+        ],
+        "scale": [
+          0.9700000286102295,
+          0.9700000286102295,
+          0.9700000286102295
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 23,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock3-24",
+        "prototype": "caulrock3",
+        "enabled": true,
+        "position": [
+          1040,
+          130.30984497070312,
+          -1354
+        ],
+        "rotationDegrees": [
+          0,
+          19.6875,
+          0
+        ],
+        "scale": [
+          0.8500000238418579,
+          0.8500000238418579,
+          0.8500000238418579
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 24,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock3-25",
+        "prototype": "caulrock3",
+        "enabled": true,
+        "position": [
+          883,
+          -7.4307050704956055,
+          -1143
+        ],
+        "rotationDegrees": [
+          0,
+          12.65625,
+          0
+        ],
+        "scale": [
+          0.8799999952316284,
+          0.8799999952316284,
+          0.8799999952316284
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 25,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock3-26",
+        "prototype": "caulrock3",
+        "enabled": true,
+        "position": [
+          1120,
+          149.0659637451172,
+          -874
+        ],
+        "rotationDegrees": [
+          0,
+          -49.21875,
+          0
+        ],
+        "scale": [
+          1.0700000524520874,
+          1.0700000524520874,
+          1.0700000524520874
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 26,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock3-27",
+        "prototype": "caulrock3",
+        "enabled": true,
+        "position": [
+          910,
+          92.04620361328125,
+          -634
+        ],
+        "rotationDegrees": [
+          0,
+          -149.765625,
+          0
+        ],
+        "scale": [
+          0.9399999976158142,
+          0.9399999976158142,
+          0.9399999976158142
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 27,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock3-28",
+        "prototype": "caulrock3",
+        "enabled": true,
+        "position": [
+          734,
+          28.82663917541504,
+          -564
+        ],
+        "rotationDegrees": [
+          0,
+          -113.203125,
+          0
+        ],
+        "scale": [
+          1.2200000286102295,
+          1.2200000286102295,
+          1.2200000286102295
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 28,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock3-29",
+        "prototype": "caulrock3",
+        "enabled": true,
+        "position": [
+          926,
+          170.3851776123047,
+          -547
+        ],
+        "rotationDegrees": [
+          0,
+          47.8125,
+          0
+        ],
+        "scale": [
+          1.100000023841858,
+          1.100000023841858,
+          1.100000023841858
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 29,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock3-30",
+        "prototype": "caulrock3",
+        "enabled": true,
+        "position": [
+          1237,
+          134.69573974609375,
+          -116
+        ],
+        "rotationDegrees": [
+          0,
+          144.84375,
+          0
+        ],
+        "scale": [
+          1.2400000095367432,
+          1.2400000095367432,
+          1.2400000095367432
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 30,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock3-31",
+        "prototype": "caulrock3",
+        "enabled": true,
+        "position": [
+          1016,
+          115.37554168701172,
+          299
+        ],
+        "rotationDegrees": [
+          0,
+          -90,
+          0
+        ],
+        "scale": [
+          1.0299999713897705,
+          1.0299999713897705,
+          1.0299999713897705
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 31,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock3-32",
+        "prototype": "caulrock3",
+        "enabled": true,
+        "position": [
+          1348,
+          -32767.998046875,
+          0
+        ],
+        "rotationDegrees": [
+          0,
+          148.359375,
+          0
+        ],
+        "scale": [
+          1.1399999856948853,
+          1.1399999856948853,
+          1.1399999856948853
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 32,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock3-33",
+        "prototype": "caulrock3",
+        "enabled": true,
+        "position": [
+          753,
+          68.98011779785156,
+          222
+        ],
+        "rotationDegrees": [
+          0,
+          16.171875,
+          0
+        ],
+        "scale": [
+          0.8999999761581421,
+          0.8999999761581421,
+          0.8999999761581421
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 33,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock3-34",
+        "prototype": "caulrock3",
+        "enabled": true,
+        "position": [
+          898,
+          53.48806381225586,
+          292
+        ],
+        "rotationDegrees": [
+          0,
+          0,
+          333.28125
+        ],
+        "scale": [
+          1.2400000095367432,
+          1.2400000095367432,
+          1.2400000095367432
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 34,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock3-35",
+        "prototype": "caulrock3",
+        "enabled": true,
+        "position": [
+          646,
+          66.94489288330078,
+          275
+        ],
+        "rotationDegrees": [
+          0,
+          34.453125,
+          341.015625
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 35,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock3-36",
+        "prototype": "caulrock3",
+        "enabled": true,
+        "position": [
+          346,
+          30.964380264282227,
+          282
+        ],
+        "rotationDegrees": [
+          0,
+          20.390625,
+          0
+        ],
+        "scale": [
+          1.1100000143051147,
+          1.1100000143051147,
+          1.1100000143051147
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 36,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock3-37",
+        "prototype": "caulrock3",
+        "enabled": true,
+        "position": [
+          325,
+          90.33856201171875,
+          223
+        ],
+        "rotationDegrees": [
+          0,
+          -107.578125,
+          0
+        ],
+        "scale": [
+          1.100000023841858,
+          1.100000023841858,
+          1.100000023841858
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 37,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock3-38",
+        "prototype": "caulrock3",
+        "enabled": true,
+        "position": [
+          430,
+          49.41990280151367,
+          254
+        ],
+        "rotationDegrees": [
+          0,
+          50.625,
+          0
+        ],
+        "scale": [
+          1.1699999570846558,
+          1.1699999570846558,
+          1.1699999570846558
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 38,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock3-39",
+        "prototype": "caulrock3",
+        "enabled": true,
+        "position": [
+          -195,
+          158.4121856689453,
+          462
+        ],
+        "rotationDegrees": [
+          0,
+          151.171875,
+          0
+        ],
+        "scale": [
+          1.0800000429153442,
+          1.0800000429153442,
+          1.0800000429153442
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 39,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock3-40",
+        "prototype": "caulrock3",
+        "enabled": true,
+        "position": [
+          -286,
+          76.6705322265625,
+          416
+        ],
+        "rotationDegrees": [
+          0,
+          -25.3125,
+          0
+        ],
+        "scale": [
+          1.1799999475479126,
+          1.1799999475479126,
+          1.1799999475479126
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 40,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock3-41",
+        "prototype": "caulrock3",
+        "enabled": true,
+        "position": [
+          -76,
+          57.764278411865234,
+          318
+        ],
+        "rotationDegrees": [
+          0,
+          -108.28125,
+          0
+        ],
+        "scale": [
+          1.159999966621399,
+          1.159999966621399,
+          1.159999966621399
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 41,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock3-42",
+        "prototype": "caulrock3",
+        "enabled": true,
+        "position": [
+          -562,
+          38.098941802978516,
+          376
+        ],
+        "rotationDegrees": [
+          0,
+          -40.078125,
+          0
+        ],
+        "scale": [
+          0.949999988079071,
+          0.949999988079071,
+          0.949999988079071
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 42,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock3-43",
+        "prototype": "caulrock3",
+        "enabled": true,
+        "position": [
+          -659,
+          97.6746826171875,
+          568
+        ],
+        "rotationDegrees": [
+          0,
+          -172.265625,
+          353.671875
+        ],
+        "scale": [
+          0.8100000023841858,
+          0.8100000023841858,
+          0.8100000023841858
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 43,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock3-44",
+        "prototype": "caulrock3",
+        "enabled": true,
+        "position": [
+          -612,
+          88.16123962402344,
+          557
+        ],
+        "rotationDegrees": [
+          0,
+          71.71875,
+          0
+        ],
+        "scale": [
+          0.7499998807907104,
+          0.7499998807907104,
+          0.7499998807907104
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 44,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock3-45",
+        "prototype": "caulrock3",
+        "enabled": true,
+        "position": [
+          -1488,
+          103.75064086914062,
+          131
+        ],
+        "rotationDegrees": [
+          0,
+          -66.796875,
+          0
+        ],
+        "scale": [
+          1.25,
+          1.25,
+          1.25
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 45,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock3-46",
+        "prototype": "caulrock3",
+        "enabled": true,
+        "position": [
+          -1568,
+          145.03485107421875,
+          69
+        ],
+        "rotationDegrees": [
+          0,
+          42.1875,
+          0
+        ],
+        "scale": [
+          0.9900000095367432,
+          0.9900000095367432,
+          0.9900000095367432
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 46,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock3-47",
+        "prototype": "caulrock3",
+        "enabled": true,
+        "position": [
+          -1689,
+          140.58970642089844,
+          173
+        ],
+        "rotationDegrees": [
+          0,
+          81.5625,
+          0
+        ],
+        "scale": [
+          0.7599999904632568,
+          0.7599999904632568,
+          0.7599999904632568
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 47,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock3-48",
+        "prototype": "caulrock3",
+        "enabled": true,
+        "position": [
+          -1494,
+          56.780517578125,
+          -232
+        ],
+        "rotationDegrees": [
+          0,
+          141.328125,
+          0
+        ],
+        "scale": [
+          0.6100000143051147,
+          0.6100000143051147,
+          0.6100000143051147
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 48,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock3-49",
+        "prototype": "caulrock3",
+        "enabled": true,
+        "position": [
+          -1839,
+          330.4814147949219,
+          -634
+        ],
+        "rotationDegrees": [
+          0,
+          151.875,
+          318.515625
+        ],
+        "scale": [
+          0.9300000071525574,
+          0.9300000071525574,
+          0.9300000071525574
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 49,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock3-50",
+        "prototype": "caulrock3",
+        "enabled": true,
+        "position": [
+          -2025,
+          -32767.998046875,
+          -575
+        ],
+        "rotationDegrees": [
+          0,
+          29.53125,
+          0
+        ],
+        "scale": [
+          1.0800000429153442,
+          1.0800000429153442,
+          1.0800000429153442
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 50,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock3-51",
+        "prototype": "caulrock3",
+        "enabled": true,
+        "position": [
+          -1424,
+          -115.52533721923828,
+          -758
+        ],
+        "rotationDegrees": [
+          0,
+          -92.8125,
+          0
+        ],
+        "scale": [
+          0.9100000262260437,
+          0.9100000262260437,
+          0.9100000262260437
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 51,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock3-52",
+        "prototype": "caulrock3",
+        "enabled": true,
+        "position": [
+          -1955,
+          -32767.998046875,
+          -856
+        ],
+        "rotationDegrees": [
+          0,
+          -11.953125,
+          0
+        ],
+        "scale": [
+          1.1200000047683716,
+          1.1200000047683716,
+          1.1200000047683716
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 52,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock3-53",
+        "prototype": "caulrock3",
+        "enabled": true,
+        "position": [
+          -1593,
+          27.304622650146484,
+          -561
+        ],
+        "rotationDegrees": [
+          0,
+          -109.6875,
+          0
+        ],
+        "scale": [
+          1.1299999952316284,
+          1.1299999952316284,
+          1.1299999952316284
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 53,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock3-54",
+        "prototype": "caulrock3",
+        "enabled": true,
+        "position": [
+          -1453,
+          29.575647354125977,
+          -1361
+        ],
+        "rotationDegrees": [
+          0,
+          6.328125,
+          0
+        ],
+        "scale": [
+          1.0199999809265137,
+          1.0199999809265137,
+          1.0199999809265137
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 54,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock3-55",
+        "prototype": "caulrock3",
+        "enabled": true,
+        "position": [
+          -1504,
+          22.106555938720703,
+          -1044
+        ],
+        "rotationDegrees": [
+          0,
+          -6.328125,
+          42.1875
+        ],
+        "scale": [
+          0.7699999809265137,
+          0.7699999809265137,
+          0.7699999809265137
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 55,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock3-56",
+        "prototype": "caulrock3",
+        "enabled": true,
+        "position": [
+          -1537,
+          124.73164367675781,
+          -1170
+        ],
+        "rotationDegrees": [
+          0,
+          -135,
+          0
+        ],
+        "scale": [
+          0.9200000166893005,
+          0.9200000166893005,
+          0.9200000166893005
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 56,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock3-57",
+        "prototype": "caulrock3",
+        "enabled": true,
+        "position": [
+          1487.974365234375,
+          178.9104766845703,
+          -188.86865234375
+        ],
+        "rotationDegrees": [
+          0,
+          159.609375,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 57,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock3-58",
+        "prototype": "caulrock3",
+        "enabled": true,
+        "position": [
+          1984.6883544921875,
+          276.74285888671875,
+          356.2963562011719
+        ],
+        "rotationDegrees": [
+          0,
+          -18.28125,
+          348.75
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 58,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock3-59",
+        "prototype": "caulrock3",
+        "enabled": true,
+        "position": [
+          2208.71728515625,
+          322.48651123046875,
+          223.48707580566406
+        ],
+        "rotationDegrees": [
+          0,
+          158.90625,
+          338.90625
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 59,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock3-60",
+        "prototype": "caulrock3",
+        "enabled": true,
+        "position": [
+          2354.72607421875,
+          347.22442626953125,
+          150.02105712890625
+        ],
+        "rotationDegrees": [
+          0,
+          -154.6875,
+          2.8125
+        ],
+        "scale": [
+          2.25,
+          2.25,
+          2.25
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 60,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock3-61",
+        "prototype": "caulrock3",
+        "enabled": true,
+        "position": [
+          2486.877685546875,
+          384.4986572265625,
+          -175.54945373535156
+        ],
+        "rotationDegrees": [
+          0,
+          103.359375,
+          9.140625
+        ],
+        "scale": [
+          1.75,
+          1.75,
+          1.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 61,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock4-0",
+        "prototype": "caulrock4",
+        "enabled": true,
+        "position": [
+          790.0570068359375,
+          163.9864044189453,
+          -2026.3529052734375
+        ],
+        "rotationDegrees": [
+          0,
+          -160.3125,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulrock4-1",
+        "prototype": "caulrock4",
+        "enabled": true,
+        "position": [
+          1851.8182373046875,
+          251.09176635742188,
+          164.02203369140625
+        ],
+        "rotationDegrees": [
+          0,
+          85.078125,
+          292.5
+        ],
+        "scale": [
+          3.5,
+          3.5,
+          3.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 1,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulroof-0",
+        "prototype": "caulroof",
+        "enabled": true,
+        "position": [
+          -982.5252685546875,
+          -349.2481994628906,
+          -1057.548828125
+        ],
+        "rotationDegrees": [
+          0,
+          -125.15625,
+          353.671875
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "caulroof-1",
+        "prototype": "caulroof",
+        "enabled": true,
+        "position": [
+          -1063.439697265625,
+          -273.9670715332031,
+          -1038.62255859375
+        ],
+        "rotationDegrees": [
+          0,
+          0.703125,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 1,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "cratea-0",
+        "prototype": "cratea",
+        "enabled": true,
+        "position": [
+          401.9925842285156,
+          73.740478515625,
+          80.28495788574219
+        ],
+        "rotationDegrees": [
+          0,
+          -90,
+          343.828125
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "cratea-1",
+        "prototype": "cratea",
+        "enabled": true,
+        "position": [
+          389.70904541015625,
+          71.90522003173828,
+          105.24325561523438
+        ],
+        "rotationDegrees": [
+          0,
+          61.171875,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 1,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "cratea-2",
+        "prototype": "cratea",
+        "enabled": true,
+        "position": [
+          389.70904541015625,
+          74.76596069335938,
+          105.24320220947266
+        ],
+        "rotationDegrees": [
+          0,
+          22.5,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 2,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "dedpine-0",
+        "prototype": "dedpine",
+        "enabled": true,
+        "position": [
+          2630.28955078125,
+          434.3418273925781,
+          207.01190185546875
+        ],
+        "rotationDegrees": [
+          0,
+          42.1875,
+          0
+        ],
+        "scale": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "dedpine-1",
+        "prototype": "dedpine",
+        "enabled": true,
+        "position": [
+          2564.2001953125,
+          422.3726501464844,
+          106.49162292480469
+        ],
+        "rotationDegrees": [
+          0,
+          -47.109375,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 1,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "dedpine-2",
+        "prototype": "dedpine",
+        "enabled": true,
+        "position": [
+          2533.737548828125,
+          398.0689697265625,
+          -91.11212921142578
+        ],
+        "rotationDegrees": [
+          0,
+          163.828125,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 2,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "dedpine-3",
+        "prototype": "dedpine",
+        "enabled": true,
+        "position": [
+          2343.553955078125,
+          353.6019287109375,
+          -49.77528381347656
+        ],
+        "rotationDegrees": [
+          0,
+          -53.4375,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 3,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "dedpine-4",
+        "prototype": "dedpine",
+        "enabled": true,
+        "position": [
+          2316.029052734375,
+          343.6591491699219,
+          140.57615661621094
+        ],
+        "rotationDegrees": [
+          0,
+          14.0625,
+          0
+        ],
+        "scale": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 4,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "dedpine-5",
+        "prototype": "dedpine",
+        "enabled": true,
+        "position": [
+          1947.44482421875,
+          277.9119873046875,
+          219.96246337890625
+        ],
+        "rotationDegrees": [
+          0,
+          22.5,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 5,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "dedpine-6",
+        "prototype": "dedpine",
+        "enabled": true,
+        "position": [
+          1584.4305419921875,
+          197.99801635742188,
+          -2.6042895317077637
+        ],
+        "rotationDegrees": [
+          0,
+          125.859375,
+          0
+        ],
+        "scale": [
+          1.0499999523162842,
+          1.0499999523162842,
+          1.0499999523162842
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 6,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "dedpine-7",
+        "prototype": "dedpine",
+        "enabled": true,
+        "position": [
+          1372.4217529296875,
+          169.44688415527344,
+          -188.42486572265625
+        ],
+        "rotationDegrees": [
+          0,
+          24.609375,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 7,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "dedpine-8",
+        "prototype": "dedpine",
+        "enabled": true,
+        "position": [
+          1078,
+          197.3462371826172,
+          -251
+        ],
+        "rotationDegrees": [
+          0,
+          -90,
+          0
+        ],
+        "scale": [
+          0.7300000190734863,
+          0.7300000190734863,
+          0.7300000190734863
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 8,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "dedpine-9",
+        "prototype": "dedpine",
+        "enabled": true,
+        "position": [
+          1142,
+          232.9286346435547,
+          -328
+        ],
+        "rotationDegrees": [
+          0,
+          -120.234375,
+          0
+        ],
+        "scale": [
+          1.53000009059906,
+          1.53000009059906,
+          1.53000009059906
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 9,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "dedpine-10",
+        "prototype": "dedpine",
+        "enabled": true,
+        "position": [
+          1021,
+          199.4050750732422,
+          -116
+        ],
+        "rotationDegrees": [
+          0,
+          -147.65625,
+          0
+        ],
+        "scale": [
+          1.5099999904632568,
+          1.5099999904632568,
+          1.5099999904632568
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 10,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "dedpine-11",
+        "prototype": "dedpine",
+        "enabled": true,
+        "position": [
+          1215,
+          202.9048614501953,
+          -312
+        ],
+        "rotationDegrees": [
+          0,
+          71.015625,
+          0
+        ],
+        "scale": [
+          0.6000000238418579,
+          0.6000000238418579,
+          0.6000000238418579
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 11,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "dedpine-12",
+        "prototype": "dedpine",
+        "enabled": true,
+        "position": [
+          965,
+          170.5519561767578,
+          -211
+        ],
+        "rotationDegrees": [
+          0,
+          -137.8125,
+          0
+        ],
+        "scale": [
+          0.7799999713897705,
+          0.7799999713897705,
+          0.7799999713897705
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 12,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "dedpine-13",
+        "prototype": "dedpine",
+        "enabled": true,
+        "position": [
+          1168,
+          231.6455535888672,
+          -393
+        ],
+        "rotationDegrees": [
+          0,
+          -99.140625,
+          0
+        ],
+        "scale": [
+          0.8799999952316284,
+          0.8799999952316284,
+          0.8799999952316284
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 13,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "dedpine-14",
+        "prototype": "dedpine",
+        "enabled": true,
+        "position": [
+          1164,
+          215.2834930419922,
+          -245
+        ],
+        "rotationDegrees": [
+          0,
+          90,
+          0
+        ],
+        "scale": [
+          1.0299999713897705,
+          1.0299999713897705,
+          1.0299999713897705
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 14,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "dedpine-15",
+        "prototype": "dedpine",
+        "enabled": true,
+        "position": [
+          -137,
+          99.04039001464844,
+          -1010
+        ],
+        "rotationDegrees": [
+          0,
+          -180,
+          0
+        ],
+        "scale": [
+          0.7400000095367432,
+          0.7400000095367432,
+          0.7400000095367432
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 15,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "dedpine-16",
+        "prototype": "dedpine",
+        "enabled": true,
+        "position": [
+          -457,
+          53.35018539428711,
+          -806
+        ],
+        "rotationDegrees": [
+          0,
+          122.34375,
+          0
+        ],
+        "scale": [
+          0.800000011920929,
+          0.800000011920929,
+          0.800000011920929
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 16,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "dedpine-17",
+        "prototype": "dedpine",
+        "enabled": true,
+        "position": [
+          -50,
+          61.83124542236328,
+          -875
+        ],
+        "rotationDegrees": [
+          0,
+          165.234375,
+          0
+        ],
+        "scale": [
+          1.4100000858306885,
+          1.4100000858306885,
+          1.4100000858306885
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 17,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "dedpine-18",
+        "prototype": "dedpine",
+        "enabled": true,
+        "position": [
+          -75,
+          39.963016510009766,
+          -1023
+        ],
+        "rotationDegrees": [
+          0,
+          149.765625,
+          0
+        ],
+        "scale": [
+          1.090000033378601,
+          1.090000033378601,
+          1.090000033378601
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 18,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "dedpine1-0",
+        "prototype": "dedpine1",
+        "enabled": true,
+        "position": [
+          1169.293701171875,
+          134.87315368652344,
+          -140.1801300048828
+        ],
+        "rotationDegrees": [
+          0,
+          -2.8125,
+          0
+        ],
+        "scale": [
+          0.800000011920929,
+          0.800000011920929,
+          0.800000011920929
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "dedpine1-1",
+        "prototype": "dedpine1",
+        "enabled": true,
+        "position": [
+          1126,
+          162.14517211914062,
+          -157
+        ],
+        "rotationDegrees": [
+          0,
+          -47.109375,
+          0
+        ],
+        "scale": [
+          1.0199999809265137,
+          1.0199999809265137,
+          1.0199999809265137
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 1,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "dedpine1-2",
+        "prototype": "dedpine1",
+        "enabled": true,
+        "position": [
+          1205,
+          157.9288787841797,
+          88
+        ],
+        "rotationDegrees": [
+          0,
+          -49.921875,
+          0
+        ],
+        "scale": [
+          0.8199999928474426,
+          0.8199999928474426,
+          0.8199999928474426
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 2,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "dedpine1-3",
+        "prototype": "dedpine1",
+        "enabled": true,
+        "position": [
+          998,
+          177.7455291748047,
+          -256
+        ],
+        "rotationDegrees": [
+          0,
+          33.75,
+          0
+        ],
+        "scale": [
+          1.440000057220459,
+          1.440000057220459,
+          1.440000057220459
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 3,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "dedpine1-4",
+        "prototype": "dedpine1",
+        "enabled": true,
+        "position": [
+          1046,
+          173.181396484375,
+          -414
+        ],
+        "rotationDegrees": [
+          0,
+          -7.734375,
+          0
+        ],
+        "scale": [
+          0.949999988079071,
+          0.949999988079071,
+          0.949999988079071
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 4,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "dedpine1-5",
+        "prototype": "dedpine1",
+        "enabled": true,
+        "position": [
+          826,
+          99.2310791015625,
+          -177
+        ],
+        "rotationDegrees": [
+          0,
+          111.796875,
+          0
+        ],
+        "scale": [
+          0.8100000023841858,
+          0.8100000023841858,
+          0.8100000023841858
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 5,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "dedpine1-6",
+        "prototype": "dedpine1",
+        "enabled": true,
+        "position": [
+          -337,
+          98.0067138671875,
+          -977
+        ],
+        "rotationDegrees": [
+          0,
+          8.4375,
+          0
+        ],
+        "scale": [
+          1.340000033378601,
+          1.340000033378601,
+          1.340000033378601
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 6,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "dedpine1-7",
+        "prototype": "dedpine1",
+        "enabled": true,
+        "position": [
+          -196,
+          116.22920989990234,
+          -1005
+        ],
+        "rotationDegrees": [
+          0,
+          -47.8125,
+          0
+        ],
+        "scale": [
+          1.0299999713897705,
+          1.0299999713897705,
+          1.0299999713897705
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 7,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "dedpine1-8",
+        "prototype": "dedpine1",
+        "enabled": true,
+        "position": [
+          -352,
+          117.34567260742188,
+          -792
+        ],
+        "rotationDegrees": [
+          0,
+          153.28125,
+          0
+        ],
+        "scale": [
+          1.2000000476837158,
+          1.2000000476837158,
+          1.2000000476837158
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 8,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "dwmonu-0",
+        "prototype": "dwmonu",
+        "enabled": true,
+        "position": [
+          -392.9545593261719,
+          94.7696533203125,
+          -957.2565307617188
+        ],
+        "rotationDegrees": [
+          0,
+          -154.6875,
+          0
+        ],
+        "scale": [
+          2.25,
+          2.25,
+          2.25
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "hgflag1a-0",
+        "prototype": "hgflag1a",
+        "enabled": true,
+        "position": [
+          -1325.089599609375,
+          116.18585205078125,
+          221.1168975830078
+        ],
+        "rotationDegrees": [
+          0,
+          78.046875,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "orcflag3-0",
+        "prototype": "orcflag3",
+        "enabled": true,
+        "position": [
+          -753.103515625,
+          155.7314453125,
+          -2175.216064453125
+        ],
+        "rotationDegrees": [
+          0,
+          -131.484375,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "orctent-0",
+        "prototype": "orctent",
+        "enabled": true,
+        "position": [
+          -1298.1300048828125,
+          114.98201751708984,
+          218.3076171875
+        ],
+        "rotationDegrees": [
+          0,
+          40.078125,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "orctent-1",
+        "prototype": "orctent",
+        "enabled": true,
+        "position": [
+          -767.6901245117188,
+          150.48216247558594,
+          -2138.4013671875
+        ],
+        "rotationDegrees": [
+          0,
+          -172.265625,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 1,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "tree10-0",
+        "prototype": "tree10",
+        "enabled": true,
+        "position": [
+          2575.407470703125,
+          425.4289855957031,
+          179.42787170410156
+        ],
+        "rotationDegrees": [
+          0,
+          -32.34375,
+          0
+        ],
+        "scale": [
+          0.5999999046325684,
+          0.5999999046325684,
+          0.5999999046325684
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "tree10-1",
+        "prototype": "tree10",
+        "enabled": true,
+        "position": [
+          2686.7763671875,
+          443.13970947265625,
+          242.46546936035156
+        ],
+        "rotationDegrees": [
+          0,
+          -161.71875,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 1,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "tree10-2",
+        "prototype": "tree10",
+        "enabled": true,
+        "position": [
+          2698.949951171875,
+          447.7169189453125,
+          292.2347717285156
+        ],
+        "rotationDegrees": [
+          0,
+          -116.71875,
+          0
+        ],
+        "scale": [
+          0.8999999761581421,
+          0.8999999761581421,
+          0.8999999761581421
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 2,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "tree10-3",
+        "prototype": "tree10",
+        "enabled": true,
+        "position": [
+          2744.521240234375,
+          459.5987548828125,
+          313.9990234375
+        ],
+        "rotationDegrees": [
+          0,
+          -117.421875,
+          0
+        ],
+        "scale": [
+          1.25,
+          1.25,
+          1.25
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 3,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "tree10-4",
+        "prototype": "tree10",
+        "enabled": true,
+        "position": [
+          2794.647216796875,
+          469.3518371582031,
+          302.173583984375
+        ],
+        "rotationDegrees": [
+          0,
+          -162.421875,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 4,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "tree10-5",
+        "prototype": "tree10",
+        "enabled": true,
+        "position": [
+          2821.019775390625,
+          469.3518371582031,
+          339.15966796875
+        ],
+        "rotationDegrees": [
+          0,
+          -12.65625,
+          0
+        ],
+        "scale": [
+          0.6499999761581421,
+          0.6499999761581421,
+          0.6499999761581421
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 5,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "tree10-6",
+        "prototype": "tree10",
+        "enabled": true,
+        "position": [
+          2659.436279296875,
+          439.7138671875,
+          235.95269775390625
+        ],
+        "rotationDegrees": [
+          0,
+          58.359375,
+          0
+        ],
+        "scale": [
+          0.44999998807907104,
+          0.44999998807907104,
+          0.44999998807907104
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 6,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      }
+    ]
+  }
+}

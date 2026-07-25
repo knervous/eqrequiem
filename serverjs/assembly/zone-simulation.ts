@@ -1,4 +1,4 @@
-// Owned by eqrequiem. shader-object is only the compiler/codegen frontend.
+// Owned by eqrequiem. @knervous/shado is only the compiler/codegen frontend.
 // TypeScript binds these pointers to one Shado net arena before invoking reducers.
 const MAX_ENTITIES: i32 = 16384;
 // 104 public RenderSnapshotNet bytes + 36 private reducer bytes per entity,

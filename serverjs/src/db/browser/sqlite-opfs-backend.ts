@@ -13,6 +13,7 @@ export class BrowserSqliteOpfsBackend implements DatabaseBackend {
 
   private constructor(
     private readonly database: Database,
+    private readonly pool: { pauseVfs(): unknown },
     readonly storage: "opfs" | "memory",
     readonly sqliteVersion: string,
   ) {}
@@ -64,16 +65,18 @@ export class BrowserSqliteOpfsBackend implements DatabaseBackend {
     if (seed) {
       needsSeedImport = seed.force === true || !pool.getFileNames().includes(seed.filename);
       if (!needsSeedImport) {
+        let seedDatabase: InstanceType<typeof pool.OpfsSAHPoolDb> | undefined;
         try {
-          const seedDatabase = new pool.OpfsSAHPoolDb(seed.filename);
+          seedDatabase = new pool.OpfsSAHPoolDb(seed.filename);
           const rows = seedDatabase.exec(
             "SELECT value FROM content_artifact_meta WHERE key = 'version' LIMIT 1",
             { rowMode: "object", returnValue: "resultRows" },
           ) as Array<{ value: string }>;
           needsSeedImport = rows[0]?.value !== seed.version;
-          seedDatabase.close();
         } catch {
           needsSeedImport = true;
+        } finally {
+          seedDatabase?.close();
         }
       }
     }
@@ -120,6 +123,7 @@ export class BrowserSqliteOpfsBackend implements DatabaseBackend {
     database.exec("PRAGMA foreign_keys = ON");
     return new BrowserSqliteOpfsBackend(
       database,
+      pool,
       "opfs",
       sqlite.version.libVersion,
     );
@@ -161,6 +165,7 @@ export class BrowserSqliteOpfsBackend implements DatabaseBackend {
 
   close(): Promise<void> {
     this.database.close();
+    this.pool.pauseVfs();
     return Promise.resolve();
   }
 }

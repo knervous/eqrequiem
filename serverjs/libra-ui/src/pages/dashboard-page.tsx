@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { getLibraHealth, listContentTables } from '@/libra/api'
-import { LIBRA_SECTIONS } from '@/libra/sections'
-import type { LibraTableMeta } from '@/libra/types'
+import { Button } from '@libra/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@libra/components/ui/card'
+import { getLibraHealth, listContentTables } from '@libra/libra/api'
+import { LIBRA_SECTIONS } from '@libra/libra/sections'
+import type { LibraTableMeta } from '@libra/libra/types'
 
 export function DashboardPage() {
   const [tables, setTables] = useState<LibraTableMeta[]>([])

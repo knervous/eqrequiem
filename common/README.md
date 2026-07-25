@@ -7,6 +7,7 @@ AssemblyScript or Binaryen at runtime.
 Run `npm run wasm:build` from the repository root after changing a kernel or
 its packed ABI. Debug and release artifacts are checked in under `common/wasm`.
 
-`requiem-entity-reducer` is shared by every client model pool. Its ABI matches
-`RequiemEntityActor`, and client startup validates the relevant offsets before
+`requiem-entity-reducer` is shared by every client model pool. Its durable AoS
+ABI matches `RequiemEntityActor`; compact draw indices and visibility bytes use
+the Shado SoA sidecars. Client startup validates the durable offsets before
 instantiating the precompiled artifact.

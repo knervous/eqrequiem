@@ -54,7 +54,11 @@ export class DirtyPageTracker {
    * A markAll() (or dirty coverage above fullUploadFraction) returns one full
    * range so callers keep a simple full-upload fallback.
    */
-  consumeRanges(totalBytes: number, fullUploadFraction = 0.5): readonly DirtyRange[] {
+  consumeRanges(
+    totalBytes: number,
+    fullUploadFraction = 0.5,
+    maxUploadRanges = 64
+  ): readonly DirtyRange[] {
     if (!this.anyDirty || totalBytes <= 0) {
       this.reset();
       return [];
@@ -84,6 +88,23 @@ export class DirtyPageTracker {
     }
     this.reset();
     if (dirtyPages / totalPages > fullUploadFraction) {
+      return [{ start: 0, end: totalBytes }];
+    }
+    if (ranges.length > maxUploadRanges) {
+      // queue.writeBuffer has a meaningful fixed cost. Once sparse tracking
+      // would produce dozens of calls, absorb short clean gaps to buy fewer
+      // submissions; if fragmentation remains high, one full write is safer.
+      const merged: DirtyRange[] = [];
+      const maxGapBytes = pageBytes * 4;
+      for (const range of ranges) {
+        const previous = merged[merged.length - 1];
+        if (previous && range.start - previous.end <= maxGapBytes) {
+          previous.end = range.end;
+        } else {
+          merged.push({ ...range });
+        }
+      }
+      if (merged.length <= maxUploadRanges) return merged;
       return [{ start: 0, end: totalBytes }];
     }
     return ranges;

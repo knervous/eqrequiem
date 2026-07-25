@@ -1,13 +1,23 @@
-import React, { Component } from "react";
+import { Component, lazy, Suspense, type ErrorInfo, type ReactNode } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Home } from "./components/home";
-import GameContainer from "@/Core/container";
 import './App.css';
 
-class ErrorBoundary extends Component {
-  state = { error: null, errorInfo: null };
+const GameContainer = lazy(() => import("@/Core/container"));
 
-  componentDidCatch(error, errorInfo) {
+type ErrorBoundaryProps = {
+  children: ReactNode;
+};
+
+type ErrorBoundaryState = {
+  error: Error | null;
+  errorInfo: ErrorInfo | null;
+};
+
+class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  state: ErrorBoundaryState = { error: null, errorInfo: null };
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     this.setState({ error, errorInfo });
     if (!import.meta.env.VITE_LOCAL_DEV) {
       console.error('Error caught:', error, errorInfo);
@@ -39,7 +49,14 @@ export function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Home />} />
-          <Route path="/play" element={<GameContainer />} />
+          <Route
+            path="/play"
+            element={
+              <Suspense fallback={null}>
+                <GameContainer />
+              </Suspense>
+            }
+          />
         </Routes>
       </Router>
     </ErrorBoundary>

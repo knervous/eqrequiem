@@ -17,15 +17,28 @@ const SESSION_ID = 1;
 let adapterPromise: Promise<GameBackendPacketAdapter> | null = null;
 
 self.addEventListener("message", (message: MessageEvent<LocalBackendMessage>) => {
-  if (message.data.type === "initialize") {
-    adapterPromise ??= initialize(message.data.refreshContent);
+  const request = message.data;
+  if (request.type === "initialize") {
+    adapterPromise ??= initialize(request.refreshContent);
     void adapterPromise.catch(reportError);
     return;
   }
-  if (message.data.type !== "packet" || !adapterPromise) return;
+  if (request.type === "close") {
+    const close = adapterPromise
+      ? adapterPromise.then((adapter) => adapter.close(SESSION_ID))
+      : Promise.resolve();
+    void close
+      .catch(reportError)
+      .finally(() => {
+        post({ type: "closed" });
+        self.close();
+      });
+    return;
+  }
+  if (request.type !== "packet" || !adapterPromise) return;
   void adapterPromise
     .then(async (adapter) => {
-      const packets = await adapter.receive(SESSION_ID, message.data);
+      const packets = await adapter.receive(SESSION_ID, request);
       for (const packet of packets) post({ type: "packet", ...packet });
     })
     .catch(reportError);

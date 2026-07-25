@@ -86,7 +86,7 @@ export class ShadoDynamicEntityContainer extends Shado {
     engine: any,
     config: InitializeConfig = {}
   ): Promise<boolean> {
-    const { additionalFields: configuredAdditionalFields = [], wasm, ...rest } = config;
+    const { additionalFields: configuredAdditionalFields = [], wasm, backend, ...rest } = config;
     const additionalFields: PendingField[] = [
       ...configuredAdditionalFields,
       { name: 'entities', type: { arrayOf: { structOf: ShadoEntity2D } } },
@@ -100,7 +100,13 @@ export class ShadoDynamicEntityContainer extends Shado {
         : wasm;
     delete (this as any).__cachedSchema;
     return super.initialize(engine, {
-      backend: 'datatex',
+      backend:
+        backend ??
+        ((engine as any).isWebGPU ||
+        (engine as any)._isWebGPU ||
+        engine?.getClassName?.() === 'WebGPUEngine'
+          ? 'storage'
+          : 'datatex'),
       ...rest,
       wasm: resolvedWasm,
       additionalFields,
@@ -132,20 +138,43 @@ export class ShadoDynamicEntityContainer extends Shado {
       geometry?: ShadoDynamicEntityGeometryMode;
       billboard?: boolean;
     } = {},
-    rewrite: boolean = true
+    _rewrite: boolean = true
   ): { vertex: string; fragment: string } {
     const geometry = options.geometry ?? this.geometryMode;
     const billboard = options.billboard ?? this.billboard;
-    const idBase = `${(this as any)._includeName ?? 'ShadoDynamicEntityContainer'}${
-      (this as any)._instanceId ?? 0
-    }_${geometry}_${billboard ? 'billboard' : 'flat'}`;
+    const effect = BABYLON.Effect as any;
+    const shaderStore = BABYLON.ShaderStore as any;
+    const useStorageWGSL =
+      ((this._engine as any).isWebGPU ||
+        (this._engine as any)._isWebGPU ||
+        this._engine?.getClassName?.() === 'WebGPUEngine') &&
+      (this.constructor as any).backingPreference === 'storage';
+    if (useStorageWGSL) {
+      const pair = this.generateWGSLPairForRenderMode(geometry, billboard);
+      const idBase = this.sharedShaderName(
+        pair,
+        `wgsl_${geometry}_${billboard ? 'billboard' : 'flat'}`
+      );
+      const vKey = `${idBase}VertexShader`;
+      const fKey = `${idBase}FragmentShader`;
+      if (!shaderStore.ShadersStoreWGSL[vKey] || !shaderStore.ShadersStoreWGSL[fKey]) {
+        const { vs, fs } = pair;
+        shaderStore.ShadersStoreWGSL[vKey] = vs;
+        shaderStore.ShadersStoreWGSL[fKey] = fs;
+      }
+      return { vertex: idBase, fragment: idBase };
+    }
+
+    const pair = this.generateGLSLPairForRenderMode(geometry, billboard);
+    const idBase = this.sharedShaderName(
+      pair,
+      `glsl_${geometry}_${billboard ? 'billboard' : 'flat'}`
+    );
     const vKey = `${idBase}VertexShader`;
     const fKey = `${idBase}FragmentShader`;
-    const effect = BABYLON.Effect as any;
-    if (rewrite || !effect.ShadersStore[vKey] || !effect.ShadersStore[fKey]) {
-      const { vs, fs } = this.generateGLSLPairForRenderMode(geometry, billboard);
-      effect.ShadersStore[vKey] = vs;
-      effect.ShadersStore[fKey] = fs;
+    if (!effect.ShadersStore[vKey] || !effect.ShadersStore[fKey]) {
+      effect.ShadersStore[vKey] = pair.vs;
+      effect.ShadersStore[fKey] = pair.fs;
     }
     return { vertex: idBase, fragment: idBase };
   }
@@ -271,10 +300,10 @@ export class ShadoDynamicEntityContainer extends Shado {
     const entity = this.getEntity(index);
     if (!entity) return false;
     const nextMeshIndex = Number.isFinite(meshIndex) ? meshIndex : 0;
-    const previousMeshIndex = Math.round(
-      entity.motion[SHADO_ENTITY2D_MESH_INDEX_MOTION_COMPONENT]
-    );
-    if (Math.abs(entity.motion[SHADO_ENTITY2D_MESH_INDEX_MOTION_COMPONENT] - nextMeshIndex) <= 0.00001) {
+    const previousMeshIndex = Math.round(entity.motion[SHADO_ENTITY2D_MESH_INDEX_MOTION_COMPONENT]);
+    if (
+      Math.abs(entity.motion[SHADO_ENTITY2D_MESH_INDEX_MOTION_COMPONENT] - nextMeshIndex) <= 0.00001
+    ) {
       return false;
     }
     entity.motion[SHADO_ENTITY2D_MESH_INDEX_MOTION_COMPONENT] = nextMeshIndex;
@@ -321,7 +350,9 @@ export class ShadoDynamicEntityContainer extends Shado {
       this.deltaScratchPtr = reducer.alloc(deltaBytes.byteLength);
       this.deltaScratchByteCapacity = deltaBytes.byteLength;
     }
-    new Uint8Array(reducer.memory.buffer, this.deltaScratchPtr, deltaBytes.byteLength).set(deltaBytes);
+    new Uint8Array(reducer.memory.buffer, this.deltaScratchPtr, deltaBytes.byteLength).set(
+      deltaBytes
+    );
     const applied = reducer.exports.applyDelta(this.deltaScratchPtr, deltaBytes.byteLength);
     this.getWasmArenaBasePtr();
     if (applied > 0) this.markEntityRecordsDirty(reducer.changedIndices());
@@ -640,14 +671,14 @@ export class ShadoDynamicEntityContainer extends Shado {
   vSpriteSlabSurface = 1.0;
 `
       : isPlane
-      ? `
+        ? `
   vUV = vec2(
     mix(entity.uvRect.x, entity.uvRect.z, uv.x),
     mix(entity.uvRect.y, entity.uvRect.w, 1.0 - uv.y)
   );
   vSpriteSlabSurface = 1.0;
 `
-      : `
+        : `
   vUV = vec2(
     mix(entity.uvRect.x, entity.uvRect.z, 1.0 - uv.y),
     mix(entity.uvRect.y, entity.uvRect.w, 1.0 - uv.x)
@@ -757,5 +788,161 @@ void main(void) {
 
   public override generateGLSLPair(): { vs: string; fs: string } {
     return this.generateGLSLPairForRenderMode(this.geometryMode, this.billboard);
+  }
+
+  private generateWGSLPairForRenderMode(
+    geometryMode: ShadoDynamicEntityGeometryMode,
+    billboard: boolean
+  ): { vs: string; fs: string } {
+    const schema = this.getSchema();
+    const actor = schema.structArrays.entities.schema.name;
+    const container = schema.name;
+    const isPlane = geometryMode === 'plane';
+    const isMesh = geometryMode === 'mesh';
+    const isSpriteSlab = geometryMode === 'spriteSlab';
+    const isBillboard = isPlane && billboard;
+    const viewUniform = isBillboard ? 'uniform view: mat4x4f;\n' : '';
+    const uvBlock = isMesh
+      ? `
+  vertexOutputs.vUV = vertexInputs.uv;
+  vertexOutputs.vSpriteSlabSurface = 1.0;
+`
+      : isPlane
+        ? `
+  vertexOutputs.vUV = vec2f(
+    mix(entity.uvRect.x, entity.uvRect.z, vertexInputs.uv.x),
+    mix(entity.uvRect.y, entity.uvRect.w, 1.0 - vertexInputs.uv.y)
+  );
+  vertexOutputs.vSpriteSlabSurface = 1.0;
+`
+        : `
+  vertexOutputs.vUV = vec2f(
+    mix(entity.uvRect.x, entity.uvRect.z, 1.0 - vertexInputs.uv.y),
+    mix(entity.uvRect.y, entity.uvRect.w, 1.0 - vertexInputs.uv.x)
+  );
+  vertexOutputs.vSpriteSlabSurface = ${
+    isSpriteSlab
+      ? 'select(select(0.0, -1.0, vertexInputs.position.y < -0.49), 1.0, vertexInputs.position.y > 0.49)'
+      : '1.0'
+  };
+`;
+    const worldPositionBlock = isBillboard
+      ? `
+  let center = vec3f(positionSize.x, render.x + positionSize.w * 0.5, positionSize.y);
+  let cameraRight = vec3f(uniforms.view[0].x, uniforms.view[1].x, uniforms.view[2].x);
+  let cameraUp = vec3f(uniforms.view[0].y, uniforms.view[1].y, uniforms.view[2].y);
+  let worldPosition = center
+    + cameraRight * (vertexInputs.position.x * positionSize.z)
+    + cameraUp * (vertexInputs.position.y * positionSize.w);
+`
+      : isPlane
+        ? `
+  let c = cos(render.z);
+  let s = sin(render.z);
+  let localPlane = vec2f(
+    vertexInputs.position.x * positionSize.z,
+    vertexInputs.position.y * positionSize.w
+  );
+  let rotatedXZ = vec2f(
+    localPlane.x * c - localPlane.y * s,
+    localPlane.x * s + localPlane.y * c
+  );
+  let worldPosition = vec3f(
+    positionSize.x + rotatedXZ.x,
+    render.x + 0.01,
+    positionSize.y + rotatedXZ.y
+  );
+`
+        : `
+  var local = vertexInputs.position;
+  local.x *= positionSize.z;
+  local.y *= render.y;
+  local.z *= positionSize.w;
+  let c = cos(render.z);
+  let s = sin(render.z);
+  let rotatedXZ = vec2f(local.x * c - local.z * s, local.x * s + local.z * c);
+  let worldPosition = vec3f(
+    positionSize.x + rotatedXZ.x,
+    render.x + local.y + render.y * 0.5,
+    positionSize.y + rotatedXZ.y
+  );
+`;
+
+    const vs = `
+attribute position: vec3f;
+attribute uv: vec2f;
+uniform worldViewProjection: mat4x4f;
+uniform uShadoEntityMeshIndex: f32;
+uniform uShadoDrawOffset: f32;
+${viewUniform}
+#include<${actor}>
+#include<${container}Storage>
+varying vUV: vec2f;
+varying vColor: vec4f;
+varying vLayer: f32;
+varying vSpriteSlabSurface: f32;
+
+@vertex
+fn main(input: VertexInputs) -> FragmentInputs {
+  let drawIndex = i32(uniforms.uShadoDrawOffset + 0.5) + i32(vertexInputs.instanceIndex);
+  let entityIndex = i32(${container}_drawIds_get(drawIndex) + 0.5);
+  let entity = ${container}_entities_get(entityIndex);
+  let positionSize = entity.positionSize;
+  let render = entity.render;
+${worldPositionBlock}
+${uvBlock}
+  vertexOutputs.vColor = vec4f(entity.color.rgb, entity.color.a * render.w);
+  vertexOutputs.vLayer = entity.renderState.x;
+  vertexOutputs.position = uniforms.worldViewProjection * vec4f(worldPosition, 1.0);
+}
+`;
+
+    const fs = `
+varying vUV: vec2f;
+varying vColor: vec4f;
+varying vLayer: f32;
+varying vSpriteSlabSurface: f32;
+uniform uUseShadoEntityMeshTexture: f32;
+var uShadoEntityAtlasSampler: sampler;
+var uShadoEntityAtlas: texture_2d_array<f32>;
+var uShadoEntityMeshTextureSampler: sampler;
+var uShadoEntityMeshTexture: texture_2d<f32>;
+
+@fragment
+fn main(input: FragmentInputs) -> FragmentOutputs {
+  let atlasTexel = textureSampleLevel(
+    uShadoEntityAtlas,
+    uShadoEntityAtlasSampler,
+    fragmentInputs.vUV,
+    i32(floor(fragmentInputs.vLayer + 0.5)),
+    0.0
+  );
+  let meshTexel = textureSampleLevel(
+    uShadoEntityMeshTexture,
+    uShadoEntityMeshTextureSampler,
+    fragmentInputs.vUV,
+    0.0
+  );
+  let texel = select(atlasTexel, meshTexel, uniforms.uUseShadoEntityMeshTexture > 0.5);
+  let slabSide = vec4f(0.70, 0.74, 0.76, fragmentInputs.vColor.a);
+  var outColor = select(
+    texel * fragmentInputs.vColor,
+    slabSide,
+    fragmentInputs.vSpriteSlabSurface < 0.5
+  );
+  if (fragmentInputs.vSpriteSlabSurface < -0.5) {
+    outColor = vec4f(0.0);
+  }
+  if (outColor.a <= 0.001) {
+    discard;
+  }
+  fragmentOutputs.color = outColor;
+}
+`;
+    return { vs, fs };
+  }
+
+  public override generateWGSLPair(): { vs: string; fs: string } {
+    return this.generateWGSLPairForRenderMode(this.geometryMode, this.billboard);
   }
 }

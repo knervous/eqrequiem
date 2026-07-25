@@ -1,0 +1,5515 @@
+{
+  "kind": "shado.world.authoring",
+  "version": 1,
+  "world": "erudnext",
+  "coordinateSystem": "babylon-y-up",
+  "revision": 1,
+  "regions": [
+    {
+      "id": "legacy-region-0",
+      "name": "Legacy region 0",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        95.953125,
+        -23.984375,
+        -1317.46875
+      ],
+      "size": [
+        2606.96875,
+        47.96875,
+        2762.875
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "positionMirroredAtPreprocess": true
+      }
+    },
+    {
+      "id": "legacy-region-1",
+      "name": "Legacy region 1",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        -735.703125,
+        47.96875,
+        -183.921875
+      ],
+      "size": [
+        31.96875,
+        2,
+        31.96875
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "positionMirroredAtPreprocess": true
+      }
+    },
+    {
+      "id": "legacy-region-2",
+      "name": "Legacy region 2",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        -687.71875,
+        54.96875,
+        -183.9375
+      ],
+      "size": [
+        16,
+        2,
+        12
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "positionMirroredAtPreprocess": true
+      }
+    },
+    {
+      "id": "legacy-region-3",
+      "name": "Legacy region 3",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.01,
+        0.01,
+        0.01
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "positionMirroredAtPreprocess": true
+      }
+    },
+    {
+      "id": "legacy-region-4",
+      "name": "Legacy region 4",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        -547.78125,
+        -47.96875,
+        -1112.5625
+      ],
+      "size": [
+        103.9375,
+        0.01,
+        625.75
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "positionMirroredAtPreprocess": true
+      }
+    },
+    {
+      "id": "legacy-region-5",
+      "name": "Legacy region 5",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        -655.734375,
+        -47.96875,
+        -1274.5
+      ],
+      "size": [
+        63.96875,
+        0.01,
+        949.625
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "positionMirroredAtPreprocess": true
+      }
+    },
+    {
+      "id": "legacy-region-6",
+      "name": "Legacy region 6",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        -323.859375,
+        26.5,
+        -8
+      ],
+      "size": [
+        79.96875,
+        5,
+        135.9375
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "positionMirroredAtPreprocess": true
+      }
+    },
+    {
+      "id": "legacy-region-7",
+      "name": "Legacy region 7",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        -351.859375,
+        -47.96875,
+        -1092.5625
+      ],
+      "size": [
+        287.90625,
+        0.01,
+        585.75
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "positionMirroredAtPreprocess": true
+      }
+    },
+    {
+      "id": "legacy-region-8",
+      "name": "Legacy region 8",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        -115.953125,
+        37,
+        -8
+      ],
+      "size": [
+        19.96875,
+        2,
+        44
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "positionMirroredAtPreprocess": true
+      }
+    },
+    {
+      "id": "legacy-region-9",
+      "name": "Legacy region 9",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        -87.953125,
+        -47.96875,
+        -1092.5625
+      ],
+      "size": [
+        239.90625,
+        0.01,
+        585.75
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "positionMirroredAtPreprocess": true
+      }
+    },
+    {
+      "id": "legacy-region-10",
+      "name": "Legacy region 10",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        551.78125,
+        -16,
+        -215.921875
+      ],
+      "size": [
+        495.8125,
+        32,
+        111.96875
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "positionMirroredAtPreprocess": true
+      }
+    },
+    {
+      "id": "legacy-region-11",
+      "name": "Legacy region 11",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        78.96875,
+        -47.96875,
+        -1092.5625
+      ],
+      "size": [
+        93.9375,
+        0.01,
+        585.75
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "positionMirroredAtPreprocess": true
+      }
+    },
+    {
+      "id": "legacy-region-12",
+      "name": "Legacy region 12",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        462.8125,
+        -47.96875,
+        -1092.5625
+      ],
+      "size": [
+        673.75,
+        0.01,
+        585.75
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "positionMirroredAtPreprocess": true
+      }
+    },
+    {
+      "id": "legacy-region-13",
+      "name": "Legacy region 13",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        551.78125,
+        -32,
+        -495.8125
+      ],
+      "size": [
+        495.8125,
+        0.01,
+        447.8125
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "positionMirroredAtPreprocess": true
+      }
+    },
+    {
+      "id": "legacy-region-14",
+      "name": "Legacy region 14",
+      "kind": "zone-line",
+      "enabled": true,
+      "center": [
+        -1563.375,
+        -31.984375,
+        -183.9375
+      ],
+      "size": [
+        8,
+        31.96875,
+        16
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 4,
+        "zoneLineInfo": {
+          "type": 0,
+          "index": 3
+        },
+        "sourceCoordinateSystem": "requiem-y-up",
+        "positionMirroredAtPreprocess": true
+      }
+    },
+    {
+      "id": "legacy-region-15",
+      "name": "Legacy region 15",
+      "kind": "zone-line",
+      "enabled": true,
+      "center": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.01,
+        0.01,
+        0.01
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 4,
+        "zoneLineInfo": {
+          "type": 0,
+          "index": 1
+        },
+        "sourceCoordinateSystem": "requiem-y-up",
+        "positionMirroredAtPreprocess": true
+      }
+    },
+    {
+      "id": "legacy-region-16",
+      "name": "Legacy region 16",
+      "kind": "zone-line",
+      "enabled": true,
+      "center": [
+        -1392.4375,
+        -42.96875,
+        -254.90625
+      ],
+      "size": [
+        6,
+        0.01,
+        6
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 4,
+        "zoneLineInfo": {
+          "type": 0,
+          "index": 1
+        },
+        "sourceCoordinateSystem": "requiem-y-up",
+        "positionMirroredAtPreprocess": true
+      }
+    },
+    {
+      "id": "legacy-region-17",
+      "name": "Legacy region 17",
+      "kind": "zone-line",
+      "enabled": true,
+      "center": [
+        -1410.4375,
+        48.109375,
+        -310.875
+      ],
+      "size": [
+        6,
+        22.21875,
+        6
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 4,
+        "zoneLineInfo": {
+          "type": 0,
+          "index": 2
+        },
+        "sourceCoordinateSystem": "requiem-y-up",
+        "positionMirroredAtPreprocess": true
+      }
+    },
+    {
+      "id": "legacy-region-18",
+      "name": "Legacy region 18",
+      "kind": "zone-line",
+      "enabled": true,
+      "center": [
+        -644.75,
+        68.96875,
+        -278.875
+      ],
+      "size": [
+        6,
+        0.01,
+        6
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 4,
+        "zoneLineInfo": {
+          "zoneIndex": 24,
+          "x": -394,
+          "y": -8,
+          "z": 38,
+          "rot": 510
+        },
+        "sourceCoordinateSystem": "requiem-y-up",
+        "positionMirroredAtPreprocess": true
+      }
+    },
+    {
+      "id": "legacy-region-19",
+      "name": "Legacy region 19",
+      "kind": "zone-line",
+      "enabled": true,
+      "center": [
+        -644.75,
+        68.46875,
+        -278.875
+      ],
+      "size": [
+        10,
+        1,
+        10
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 4,
+        "zoneLineInfo": {
+          "zoneIndex": 24,
+          "x": -394,
+          "y": -8,
+          "z": 38,
+          "rot": 999
+        },
+        "sourceCoordinateSystem": "requiem-y-up",
+        "positionMirroredAtPreprocess": true
+      }
+    },
+    {
+      "id": "legacy-region-20",
+      "name": "Legacy region 20",
+      "kind": "zone-line",
+      "enabled": true,
+      "center": [
+        -644.75,
+        75.46875,
+        -183.9375
+      ],
+      "size": [
+        10,
+        1,
+        12
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 4,
+        "zoneLineInfo": {
+          "zoneIndex": 23,
+          "x": 711,
+          "y": 805,
+          "z": 21,
+          "rot": 0
+        },
+        "sourceCoordinateSystem": "requiem-y-up",
+        "positionMirroredAtPreprocess": true
+      }
+    },
+    {
+      "id": "legacy-region-21",
+      "name": "Legacy region 21",
+      "kind": "zone-line",
+      "enabled": true,
+      "center": [
+        -644.75,
+        75.96875,
+        -183.9375
+      ],
+      "size": [
+        6,
+        0.01,
+        8
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 4,
+        "zoneLineInfo": {
+          "zoneIndex": 23,
+          "x": 711,
+          "y": 805,
+          "z": 21,
+          "rot": 380
+        },
+        "sourceCoordinateSystem": "requiem-y-up",
+        "positionMirroredAtPreprocess": true
+      }
+    },
+    {
+      "id": "legacy-region-22",
+      "name": "Legacy region 22",
+      "kind": "zone-line",
+      "enabled": true,
+      "center": [
+        -327.875,
+        37.484375,
+        -8
+      ],
+      "size": [
+        16,
+        1.03125,
+        32
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 4,
+        "zoneLineInfo": {
+          "zoneIndex": 24,
+          "x": -774,
+          "y": -183,
+          "z": 54,
+          "rot": 999
+        },
+        "sourceCoordinateSystem": "requiem-y-up",
+        "positionMirroredAtPreprocess": true
+      }
+    }
+  ],
+  "objects": {
+    "prototypes": [
+      {
+        "id": "barrel3",
+        "source": "/eqrequiem/objects/barrel3/final.glb",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "barrel3",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb"
+        }
+      },
+      {
+        "id": "barrel4",
+        "source": "/eqrequiem/objects/barrel4/final.glb",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "barrel4",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb"
+        }
+      },
+      {
+        "id": "bed1",
+        "source": "/eqrequiem/objects/bed1/final.glb",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "bed1",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb"
+        }
+      },
+      {
+        "id": "bed2",
+        "source": "/eqrequiem/objects/bed2/final.glb",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "bed2",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb"
+        }
+      },
+      {
+        "id": "blean1",
+        "source": "/eqrequiem/objects/blean1/final.glb",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "blean1",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb"
+        }
+      },
+      {
+        "id": "bucket1",
+        "source": "/eqrequiem/objects/bucket1/final.glb",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "bucket1",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb"
+        }
+      },
+      {
+        "id": "campfire",
+        "source": "/eqrequiem/objects/campfire/final.glb",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "campfire",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb"
+        }
+      },
+      {
+        "id": "chest1",
+        "source": "/eqrequiem/objects/chest1/final.glb",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "chest1",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb"
+        }
+      },
+      {
+        "id": "chest3",
+        "source": "/eqrequiem/objects/chest3/final.glb",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "chest3",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb"
+        }
+      },
+      {
+        "id": "erbigurn",
+        "source": "/eqrequiem/objects/erbigurn/final.glb",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "erbigurn",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb"
+        }
+      },
+      {
+        "id": "erbrazier",
+        "source": "/eqrequiem/objects/erbrazier/final.glb",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "erbrazier",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb"
+        }
+      },
+      {
+        "id": "erflag",
+        "source": "/eqrequiem/objects/erflag/final.glb",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "erflag",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb"
+        }
+      },
+      {
+        "id": "erlant",
+        "source": "/eqrequiem/objects/erlant/final.glb",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "erlant",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb"
+        }
+      },
+      {
+        "id": "erlant1",
+        "source": "/eqrequiem/objects/erlant1/final.glb",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "erlant1",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb"
+        }
+      },
+      {
+        "id": "erlant2",
+        "source": "/eqrequiem/objects/erlant2/final.glb",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "erlant2",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb"
+        }
+      },
+      {
+        "id": "erlant3",
+        "source": "/eqrequiem/objects/erlant3/final.glb",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "erlant3",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb"
+        }
+      },
+      {
+        "id": "erlant4",
+        "source": "/eqrequiem/objects/erlant4/final.glb",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "erlant4",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb"
+        }
+      },
+      {
+        "id": "erplant1",
+        "source": "/eqrequiem/objects/erplant1/final.glb",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "erplant1",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb"
+        }
+      },
+      {
+        "id": "erplant3",
+        "source": "/eqrequiem/objects/erplant3/final.glb",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "erplant3",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb"
+        }
+      },
+      {
+        "id": "erplant4",
+        "source": "/eqrequiem/objects/erplant4/final.glb",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "erplant4",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb"
+        }
+      },
+      {
+        "id": "erplant5",
+        "source": "/eqrequiem/objects/erplant5/final.glb",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "erplant5",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb"
+        }
+      },
+      {
+        "id": "erublock",
+        "source": "/eqrequiem/objects/erublock/final.glb",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "erublock",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb"
+        }
+      },
+      {
+        "id": "erurn2",
+        "source": "/eqrequiem/objects/erurn2/final.glb",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "erurn2",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb"
+        }
+      },
+      {
+        "id": "hlamp",
+        "source": "/eqrequiem/objects/hlamp/final.glb",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "hlamp",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb"
+        }
+      }
+    ],
+    "stamps": [
+      {
+        "id": "barrel3-0",
+        "prototype": "barrel3",
+        "enabled": true,
+        "position": [
+          234.80213928222656,
+          31.988197326660156,
+          59.327632904052734
+        ],
+        "rotationDegrees": [
+          0,
+          -135.703125,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "barrel3-1",
+        "prototype": "barrel3",
+        "enabled": true,
+        "position": [
+          195.51748657226562,
+          31.988197326660156,
+          24.28853988647461
+        ],
+        "rotationDegrees": [
+          0,
+          52.03125,
+          0
+        ],
+        "scale": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 1,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "barrel3-2",
+        "prototype": "barrel3",
+        "enabled": true,
+        "position": [
+          198.47596740722656,
+          31.988204956054688,
+          2.9383602142333984
+        ],
+        "rotationDegrees": [
+          0,
+          -98.4375,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 2,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "barrel3-3",
+        "prototype": "barrel3",
+        "enabled": true,
+        "position": [
+          233.08509826660156,
+          15.994610786437988,
+          107.99078369140625
+        ],
+        "rotationDegrees": [
+          0,
+          -166.640625,
+          0
+        ],
+        "scale": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 3,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "barrel3-4",
+        "prototype": "barrel3",
+        "enabled": true,
+        "position": [
+          155.4197540283203,
+          15.994608879089355,
+          113.27954864501953
+        ],
+        "rotationDegrees": [
+          0,
+          -39.375,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 4,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "barrel3-5",
+        "prototype": "barrel3",
+        "enabled": true,
+        "position": [
+          137.7821044921875,
+          15.994608879089355,
+          123.05491638183594
+        ],
+        "rotationDegrees": [
+          0,
+          -29.53125,
+          0
+        ],
+        "scale": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 5,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "barrel4-0",
+        "prototype": "barrel4",
+        "enabled": true,
+        "position": [
+          235.02366638183594,
+          31.988197326660156,
+          18.7808837890625
+        ],
+        "rotationDegrees": [
+          0,
+          139.21875,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "barrel4-1",
+        "prototype": "barrel4",
+        "enabled": true,
+        "position": [
+          235.98399353027344,
+          31.988197326660156,
+          54.90727615356445
+        ],
+        "rotationDegrees": [
+          0,
+          -158.90625,
+          0
+        ],
+        "scale": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 1,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "barrel4-2",
+        "prototype": "barrel4",
+        "enabled": true,
+        "position": [
+          230.884521484375,
+          31.988197326660156,
+          59.68519973754883
+        ],
+        "rotationDegrees": [
+          0,
+          -144.140625,
+          0
+        ],
+        "scale": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 2,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "barrel4-3",
+        "prototype": "barrel4",
+        "enabled": true,
+        "position": [
+          251.02452087402344,
+          31.9881591796875,
+          -27.740829467773438
+        ],
+        "rotationDegrees": [
+          0,
+          153.28125,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 3,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "barrel4-4",
+        "prototype": "barrel4",
+        "enabled": true,
+        "position": [
+          235.6554412841797,
+          31.988204956054688,
+          -27.73830223083496
+        ],
+        "rotationDegrees": [
+          0,
+          119.53125,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 4,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "bed1-0",
+        "prototype": "bed1",
+        "enabled": true,
+        "position": [
+          218.4062957763672,
+          31.988204956054688,
+          56.978729248046875
+        ],
+        "rotationDegrees": [
+          0,
+          93.515625,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "bed1-1",
+        "prototype": "bed1",
+        "enabled": true,
+        "position": [
+          197.71388244628906,
+          31.988204956054688,
+          36.672096252441406
+        ],
+        "rotationDegrees": [
+          0,
+          -180,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 1,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "bed1-2",
+        "prototype": "bed1",
+        "enabled": true,
+        "position": [
+          199.46783447265625,
+          31.988197326660156,
+          19.440654754638672
+        ],
+        "rotationDegrees": [
+          0,
+          -180,
+          0
+        ],
+        "scale": [
+          1.25,
+          1.25,
+          1.25
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 2,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "bed2-0",
+        "prototype": "bed2",
+        "enabled": true,
+        "position": [
+          199.695556640625,
+          31.988204956054688,
+          9.464812278747559
+        ],
+        "rotationDegrees": [
+          0,
+          -180,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "blean1-0",
+        "prototype": "blean1",
+        "enabled": true,
+        "position": [
+          238.21075439453125,
+          15.994610786437988,
+          101.91197204589844
+        ],
+        "rotationDegrees": [
+          0,
+          42.1875,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "blean1-1",
+        "prototype": "blean1",
+        "enabled": true,
+        "position": [
+          142.64002990722656,
+          15.994608879089355,
+          117.36338806152344
+        ],
+        "rotationDegrees": [
+          0,
+          54.84375,
+          0
+        ],
+        "scale": [
+          1.25,
+          1.25,
+          1.25
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 1,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "bucket1-0",
+        "prototype": "bucket1",
+        "enabled": true,
+        "position": [
+          140.8973846435547,
+          15.994608879089355,
+          123.06312561035156
+        ],
+        "rotationDegrees": [
+          0,
+          -29.53125,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "campfire-0",
+        "prototype": "campfire",
+        "enabled": true,
+        "position": [
+          -693.2401123046875,
+          51.481807708740234,
+          -280.2293701171875
+        ],
+        "rotationDegrees": [
+          0,
+          -33.75,
+          0
+        ],
+        "scale": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "campfire-1",
+        "prototype": "campfire",
+        "enabled": true,
+        "position": [
+          -1154.0811767578125,
+          52.97980880737305,
+          -336.1683654785156
+        ],
+        "rotationDegrees": [
+          0,
+          -132.1875,
+          0
+        ],
+        "scale": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 1,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "chest1-0",
+        "prototype": "chest1",
+        "enabled": true,
+        "position": [
+          227.6392822265625,
+          31.988197326660156,
+          22.026826858520508
+        ],
+        "rotationDegrees": [
+          0,
+          -48.515625,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "chest3-0",
+        "prototype": "chest3",
+        "enabled": true,
+        "position": [
+          231.49783325195312,
+          31.988204956054688,
+          9.137697219848633
+        ],
+        "rotationDegrees": [
+          0,
+          -80.859375,
+          0
+        ],
+        "scale": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erbigurn-0",
+        "prototype": "erbigurn",
+        "enabled": true,
+        "position": [
+          262.9315490722656,
+          16.04460906982422,
+          71.22061157226562
+        ],
+        "rotationDegrees": [
+          0,
+          -180,
+          0
+        ],
+        "scale": [
+          1.5,
+          1.5,
+          1.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erbigurn-1",
+        "prototype": "erbigurn",
+        "enabled": true,
+        "position": [
+          -108.54499053955078,
+          35.986610412597656,
+          -37.26683044433594
+        ],
+        "rotationDegrees": [
+          0,
+          -16.875,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 1,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erbrazier-0",
+        "prototype": "erbrazier",
+        "enabled": true,
+        "position": [
+          -1071.7506103515625,
+          47.981807708740234,
+          -212.1625518798828
+        ],
+        "rotationDegrees": [
+          0,
+          -95.625,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erbrazier-1",
+        "prototype": "erbrazier",
+        "enabled": true,
+        "position": [
+          -1071.51513671875,
+          47.981807708740234,
+          -267.6453857421875
+        ],
+        "rotationDegrees": [
+          0,
+          77.34375,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 1,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erflag-0",
+        "prototype": "erflag",
+        "enabled": true,
+        "position": [
+          -19.291942596435547,
+          15.994608879089355,
+          -37.85543441772461
+        ],
+        "rotationDegrees": [
+          0,
+          -151.875,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erflag-1",
+        "prototype": "erflag",
+        "enabled": true,
+        "position": [
+          -15.561717987060547,
+          15.994608879089355,
+          24.700477600097656
+        ],
+        "rotationDegrees": [
+          0,
+          155.390625,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 1,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant-0",
+        "prototype": "erlant",
+        "enabled": true,
+        "position": [
+          -1003.3506469726562,
+          63.97541046142578,
+          -107.70972442626953
+        ],
+        "rotationDegrees": [
+          0,
+          22.5,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant-1",
+        "prototype": "erlant",
+        "enabled": true,
+        "position": [
+          -1002.8705444335938,
+          63.97541046142578,
+          -68.22232055664062
+        ],
+        "rotationDegrees": [
+          0,
+          -38.671875,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 1,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant-2",
+        "prototype": "erlant",
+        "enabled": true,
+        "position": [
+          -948.3385620117188,
+          63.97541046142578,
+          -107.70709991455078
+        ],
+        "rotationDegrees": [
+          0,
+          138.515625,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 2,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant-3",
+        "prototype": "erlant",
+        "enabled": true,
+        "position": [
+          -899.8890380859375,
+          63.97541046142578,
+          -123.70159912109375
+        ],
+        "rotationDegrees": [
+          0,
+          133.59375,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 3,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant-4",
+        "prototype": "erlant",
+        "enabled": true,
+        "position": [
+          -939.3771362304688,
+          63.97541046142578,
+          -123.07233428955078
+        ],
+        "rotationDegrees": [
+          0,
+          49.21875,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 4,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant-5",
+        "prototype": "erlant",
+        "enabled": true,
+        "position": [
+          -914.2499389648438,
+          51.98020935058594,
+          -67.22210693359375
+        ],
+        "rotationDegrees": [
+          0,
+          -129.375,
+          0
+        ],
+        "scale": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 5,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant-6",
+        "prototype": "erlant",
+        "enabled": true,
+        "position": [
+          200.4190216064453,
+          37.73820495605469,
+          2.7324233055114746
+        ],
+        "rotationDegrees": [
+          0,
+          -9.140625,
+          0
+        ],
+        "scale": [
+          0.25,
+          0.25,
+          0.25
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 6,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant-7",
+        "prototype": "erlant",
+        "enabled": true,
+        "position": [
+          234.01882934570312,
+          35.23920440673828,
+          10.497323036193848
+        ],
+        "rotationDegrees": [
+          0,
+          90,
+          0
+        ],
+        "scale": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 7,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant-8",
+        "prototype": "erlant",
+        "enabled": true,
+        "position": [
+          195.66929626464844,
+          34.77278518676758,
+          24.373153686523438
+        ],
+        "rotationDegrees": [
+          0,
+          20.390625,
+          0
+        ],
+        "scale": [
+          0.25,
+          0.25,
+          0.25
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 8,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant-9",
+        "prototype": "erlant",
+        "enabled": true,
+        "position": [
+          234.90740966796875,
+          37.072513580322266,
+          59.4758186340332
+        ],
+        "rotationDegrees": [
+          0,
+          -135.703125,
+          0
+        ],
+        "scale": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 9,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant-10",
+        "prototype": "erlant",
+        "enabled": true,
+        "position": [
+          -731.4569702148438,
+          51.98020935058594,
+          -279.98187255859375
+        ],
+        "rotationDegrees": [
+          0,
+          -9.84375,
+          0
+        ],
+        "scale": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 10,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant-11",
+        "prototype": "erlant",
+        "enabled": true,
+        "position": [
+          -718.7928466796875,
+          51.98020935058594,
+          -299.6198425292969
+        ],
+        "rotationDegrees": [
+          0,
+          66.09375,
+          0
+        ],
+        "scale": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 11,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant-12",
+        "prototype": "erlant",
+        "enabled": true,
+        "position": [
+          -691.97216796875,
+          51.98020935058594,
+          -299.62994384765625
+        ],
+        "rotationDegrees": [
+          0,
+          133.59375,
+          0
+        ],
+        "scale": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 12,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant-13",
+        "prototype": "erlant",
+        "enabled": true,
+        "position": [
+          -1163.0811767578125,
+          67.97380828857422,
+          -78.205810546875
+        ],
+        "rotationDegrees": [
+          0,
+          -77.34375,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 13,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant-14",
+        "prototype": "erlant",
+        "enabled": true,
+        "position": [
+          -1195.2723388671875,
+          79.9690170288086,
+          -107.70654296875
+        ],
+        "rotationDegrees": [
+          0,
+          45,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 14,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant-15",
+        "prototype": "erlant",
+        "enabled": true,
+        "position": [
+          -1091.8128662109375,
+          79.9690170288086,
+          -107.70759582519531
+        ],
+        "rotationDegrees": [
+          0,
+          129.375,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 15,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant-16",
+        "prototype": "erlant",
+        "enabled": true,
+        "position": [
+          -1105.4144287109375,
+          63.97541046142578,
+          -89.76798248291016
+        ],
+        "rotationDegrees": [
+          0,
+          95.625,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 16,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant-17",
+        "prototype": "erlant",
+        "enabled": true,
+        "position": [
+          -1179.2791748046875,
+          63.97541046142578,
+          -36.235164642333984
+        ],
+        "rotationDegrees": [
+          0,
+          -45.703125,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 17,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant-18",
+        "prototype": "erlant",
+        "enabled": true,
+        "position": [
+          -1091.8126220703125,
+          63.97541046142578,
+          -36.53331756591797
+        ],
+        "rotationDegrees": [
+          0,
+          -123.75,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 18,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant-19",
+        "prototype": "erlant",
+        "enabled": true,
+        "position": [
+          -1179.279052734375,
+          63.97541046142578,
+          -91.71379089355469
+        ],
+        "rotationDegrees": [
+          0,
+          47.109375,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 19,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant-20",
+        "prototype": "erlant",
+        "enabled": true,
+        "position": [
+          -1195.272705078125,
+          79.9690170288086,
+          -36.233673095703125
+        ],
+        "rotationDegrees": [
+          0,
+          -40.78125,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 20,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant-21",
+        "prototype": "erlant",
+        "enabled": true,
+        "position": [
+          -1179.2803955078125,
+          79.9690170288086,
+          -4.245365142822266
+        ],
+        "rotationDegrees": [
+          0,
+          -43.59375,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 21,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant-22",
+        "prototype": "erlant",
+        "enabled": true,
+        "position": [
+          -1147.29150390625,
+          79.9690170288086,
+          -4.246975421905518
+        ],
+        "rotationDegrees": [
+          0,
+          -58.359375,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 22,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant-23",
+        "prototype": "erlant",
+        "enabled": true,
+        "position": [
+          -1091.8138427734375,
+          79.9690170288086,
+          -4.247090816497803
+        ],
+        "rotationDegrees": [
+          0,
+          -141.328125,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 23,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant-24",
+        "prototype": "erlant",
+        "enabled": true,
+        "position": [
+          -1091.8116455078125,
+          79.9690170288086,
+          -75.72081756591797
+        ],
+        "rotationDegrees": [
+          0,
+          139.21875,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 24,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant1-0",
+        "prototype": "erlant1",
+        "enabled": true,
+        "position": [
+          -1050.3486328125,
+          63.97541046142578,
+          -283.4808349609375
+        ],
+        "rotationDegrees": [
+          0,
+          116.015625,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant1-1",
+        "prototype": "erlant1",
+        "enabled": true,
+        "position": [
+          -1092.3839111328125,
+          63.97541046142578,
+          -283.1399841308594
+        ],
+        "rotationDegrees": [
+          0,
+          69.609375,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 1,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant1-2",
+        "prototype": "erlant1",
+        "enabled": true,
+        "position": [
+          -1050.5126953125,
+          47.981807708740234,
+          -196.17083740234375
+        ],
+        "rotationDegrees": [
+          0,
+          -97.734375,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 2,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant1-3",
+        "prototype": "erlant1",
+        "enabled": true,
+        "position": [
+          -1092.63330078125,
+          47.981807708740234,
+          -196.17221069335938
+        ],
+        "rotationDegrees": [
+          0,
+          -56.953125,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 3,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant1-4",
+        "prototype": "erlant1",
+        "enabled": true,
+        "position": [
+          -1092.6943359375,
+          47.981807708740234,
+          -283.5748291015625
+        ],
+        "rotationDegrees": [
+          0,
+          66.796875,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 4,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant1-5",
+        "prototype": "erlant1",
+        "enabled": true,
+        "position": [
+          -1050.4705810546875,
+          47.981807708740234,
+          -283.5976867675781
+        ],
+        "rotationDegrees": [
+          0,
+          108.984375,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 5,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant1-6",
+        "prototype": "erlant1",
+        "enabled": true,
+        "position": [
+          -1115.2977294921875,
+          79.9690170288086,
+          -260.97100830078125
+        ],
+        "rotationDegrees": [
+          0,
+          32.34375,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 6,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant1-7",
+        "prototype": "erlant1",
+        "enabled": true,
+        "position": [
+          -1027.838134765625,
+          79.9690170288086,
+          -260.9640808105469
+        ],
+        "rotationDegrees": [
+          0,
+          161.015625,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 7,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant1-8",
+        "prototype": "erlant1",
+        "enabled": true,
+        "position": [
+          -1027.840087890625,
+          79.9690170288086,
+          -218.84176635742188
+        ],
+        "rotationDegrees": [
+          0,
+          -151.875,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 8,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant1-9",
+        "prototype": "erlant1",
+        "enabled": true,
+        "position": [
+          -1115.3050537109375,
+          79.9690170288086,
+          -220.1609649658203
+        ],
+        "rotationDegrees": [
+          0,
+          -56.953125,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 9,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant2-0",
+        "prototype": "erlant2",
+        "enabled": true,
+        "position": [
+          -1073.245361328125,
+          74.2318115234375,
+          -237.8280792236328
+        ],
+        "rotationDegrees": [
+          0,
+          87.890625,
+          0
+        ],
+        "scale": [
+          1.25,
+          1.25,
+          1.25
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant2-1",
+        "prototype": "erlant2",
+        "enabled": true,
+        "position": [
+          262.35675048828125,
+          36.46527099609375,
+          24.02042007446289
+        ],
+        "rotationDegrees": [
+          0,
+          85.078125,
+          0
+        ],
+        "scale": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 1,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant2-2",
+        "prototype": "erlant2",
+        "enabled": true,
+        "position": [
+          241.6513214111328,
+          38.48820495605469,
+          60.22740173339844
+        ],
+        "rotationDegrees": [
+          0,
+          -45,
+          0
+        ],
+        "scale": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 2,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant2-3",
+        "prototype": "erlant2",
+        "enabled": true,
+        "position": [
+          241.84349060058594,
+          38.73820495605469,
+          -28.493436813354492
+        ],
+        "rotationDegrees": [
+          0,
+          87.1875,
+          0
+        ],
+        "scale": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 3,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant2-4",
+        "prototype": "erlant2",
+        "enabled": true,
+        "position": [
+          -73.06660461425781,
+          32.98980712890625,
+          86.5745849609375
+        ],
+        "rotationDegrees": [
+          0,
+          -135,
+          0
+        ],
+        "scale": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 4,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant2-5",
+        "prototype": "erlant2",
+        "enabled": true,
+        "position": [
+          -74.06659698486328,
+          33.23980712890625,
+          -102.87818908691406
+        ],
+        "rotationDegrees": [
+          0,
+          124.453125,
+          0
+        ],
+        "scale": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 5,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant2-6",
+        "prototype": "erlant2",
+        "enabled": true,
+        "position": [
+          -1179.114990234375,
+          67.97541046142578,
+          -4.327452659606934
+        ],
+        "rotationDegrees": [
+          0,
+          -46.40625,
+          0
+        ],
+        "scale": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 6,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant2-7",
+        "prototype": "erlant2",
+        "enabled": true,
+        "position": [
+          -1147.2939453125,
+          68.22541046142578,
+          -4.245457172393799
+        ],
+        "rotationDegrees": [
+          0,
+          -40.78125,
+          0
+        ],
+        "scale": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 7,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant2-8",
+        "prototype": "erlant2",
+        "enabled": true,
+        "position": [
+          -1091.8359375,
+          67.72541046142578,
+          -4.1663594245910645
+        ],
+        "rotationDegrees": [
+          0,
+          -138.515625,
+          0
+        ],
+        "scale": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 8,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant2-9",
+        "prototype": "erlant2",
+        "enabled": true,
+        "position": [
+          -1153.7872314453125,
+          84.2190170288086,
+          -75.72090148925781
+        ],
+        "rotationDegrees": [
+          0,
+          149.765625,
+          0
+        ],
+        "scale": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 9,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant2-10",
+        "prototype": "erlant2",
+        "enabled": true,
+        "position": [
+          -1174.2974853515625,
+          70.22941589355469,
+          -360.74652099609375
+        ],
+        "rotationDegrees": [
+          0,
+          1.40625,
+          0
+        ],
+        "scale": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 10,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant3-0",
+        "prototype": "erlant3",
+        "enabled": true,
+        "position": [
+          -960.3255615234375,
+          57.231807708740234,
+          -162.93414306640625
+        ],
+        "rotationDegrees": [
+          0,
+          90,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant3-1",
+        "prototype": "erlant3",
+        "enabled": true,
+        "position": [
+          235.90870666503906,
+          24.49460220336914,
+          30.874858856201172
+        ],
+        "rotationDegrees": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 1,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant3-2",
+        "prototype": "erlant3",
+        "enabled": true,
+        "position": [
+          196.39437866210938,
+          24.99460220336914,
+          -27.106420516967773
+        ],
+        "rotationDegrees": [
+          0,
+          -121.640625,
+          0
+        ],
+        "scale": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 2,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant3-3",
+        "prototype": "erlant3",
+        "enabled": true,
+        "position": [
+          267.2218933105469,
+          24.24460220336914,
+          -26.687557220458984
+        ],
+        "rotationDegrees": [
+          0,
+          -45.703125,
+          0
+        ],
+        "scale": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 3,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant3-4",
+        "prototype": "erlant3",
+        "enabled": true,
+        "position": [
+          197.37586975097656,
+          40.48820495605469,
+          58.922489166259766
+        ],
+        "rotationDegrees": [
+          0,
+          135,
+          0
+        ],
+        "scale": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 4,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant3-5",
+        "prototype": "erlant3",
+        "enabled": true,
+        "position": [
+          247.79931640625,
+          29.49460220336914,
+          70.03325653076172
+        ],
+        "rotationDegrees": [
+          0,
+          -90,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 5,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant3-6",
+        "prototype": "erlant3",
+        "enabled": true,
+        "position": [
+          188.92515563964844,
+          23.99460220336914,
+          31.506301879882812
+        ],
+        "rotationDegrees": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 6,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant3-7",
+        "prototype": "erlant3",
+        "enabled": true,
+        "position": [
+          237.24765014648438,
+          23.99460220336914,
+          4.185195446014404
+        ],
+        "rotationDegrees": [
+          0,
+          -38.671875,
+          0
+        ],
+        "scale": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 7,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant3-8",
+        "prototype": "erlant3",
+        "enabled": true,
+        "position": [
+          197.4207000732422,
+          23.99460220336914,
+          57.9935302734375
+        ],
+        "rotationDegrees": [
+          0,
+          129.375,
+          0
+        ],
+        "scale": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 8,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant3-9",
+        "prototype": "erlant3",
+        "enabled": true,
+        "position": [
+          268.1450500488281,
+          22.74460220336914,
+          49.47838592529297
+        ],
+        "rotationDegrees": [
+          0,
+          -55.546875,
+          0
+        ],
+        "scale": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 9,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant3-10",
+        "prototype": "erlant3",
+        "enabled": true,
+        "position": [
+          -720.35693359375,
+          56.981407165527344,
+          -252.24468994140625
+        ],
+        "rotationDegrees": [
+          0,
+          -90,
+          0
+        ],
+        "scale": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 10,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant3-11",
+        "prototype": "erlant3",
+        "enabled": true,
+        "position": [
+          -638.6688842773438,
+          72.47541046142578,
+          -115.6678466796875
+        ],
+        "rotationDegrees": [
+          0,
+          95.625,
+          0
+        ],
+        "scale": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 11,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant3-12",
+        "prototype": "erlant3",
+        "enabled": true,
+        "position": [
+          -625.0103149414062,
+          72.72541046142578,
+          -115.66636657714844
+        ],
+        "rotationDegrees": [
+          0,
+          90,
+          0
+        ],
+        "scale": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 12,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant3-13",
+        "prototype": "erlant3",
+        "enabled": true,
+        "position": [
+          -1020.7506713867188,
+          82.7318115234375,
+          -252.91476440429688
+        ],
+        "rotationDegrees": [
+          0,
+          -180,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 13,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant3-14",
+        "prototype": "erlant3",
+        "enabled": true,
+        "position": [
+          -1022.1149291992188,
+          82.7318115234375,
+          -227.64353942871094
+        ],
+        "rotationDegrees": [
+          0,
+          -180,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 14,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant3-15",
+        "prototype": "erlant3",
+        "enabled": true,
+        "position": [
+          -1187.3475341796875,
+          55.731807708740234,
+          -301.1302185058594
+        ],
+        "rotationDegrees": [
+          0,
+          -90,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 15,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant3-16",
+        "prototype": "erlant3",
+        "enabled": true,
+        "position": [
+          -1136.6907958984375,
+          69.72541046142578,
+          -99.20903015136719
+        ],
+        "rotationDegrees": [
+          0,
+          90,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 16,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant3-17",
+        "prototype": "erlant3",
+        "enabled": true,
+        "position": [
+          -1186.2154541015625,
+          70.22541046142578,
+          -82.40278625488281
+        ],
+        "rotationDegrees": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 17,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant3-18",
+        "prototype": "erlant3",
+        "enabled": true,
+        "position": [
+          -1186.5838623046875,
+          70.47541046142578,
+          -30.907695770263672
+        ],
+        "rotationDegrees": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 18,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant3-19",
+        "prototype": "erlant3",
+        "enabled": true,
+        "position": [
+          -1142.0040283203125,
+          70.72541046142578,
+          -35.98497009277344
+        ],
+        "rotationDegrees": [
+          0,
+          90,
+          0
+        ],
+        "scale": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 19,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant3-20",
+        "prototype": "erlant3",
+        "enabled": true,
+        "position": [
+          -1118.2276611328125,
+          69.97541046142578,
+          -36.235382080078125
+        ],
+        "rotationDegrees": [
+          0,
+          90,
+          0
+        ],
+        "scale": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 20,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant3-21",
+        "prototype": "erlant3",
+        "enabled": true,
+        "position": [
+          -967.4534301757812,
+          55.731807708740234,
+          -87.25599670410156
+        ],
+        "rotationDegrees": [
+          0,
+          30.9375,
+          0
+        ],
+        "scale": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 21,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant3-22",
+        "prototype": "erlant3",
+        "enabled": true,
+        "position": [
+          -948.455810546875,
+          54.48020935058594,
+          -69.69200134277344
+        ],
+        "rotationDegrees": [
+          0,
+          54.84375,
+          0
+        ],
+        "scale": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 22,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant3-23",
+        "prototype": "erlant3",
+        "enabled": true,
+        "position": [
+          -1155.5364990234375,
+          70.47541046142578,
+          -351.86053466796875
+        ],
+        "rotationDegrees": [
+          0,
+          -40.78125,
+          0
+        ],
+        "scale": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 23,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant3-24",
+        "prototype": "erlant3",
+        "enabled": true,
+        "position": [
+          -1225.58154296875,
+          70.47541046142578,
+          -308.93927001953125
+        ],
+        "rotationDegrees": [
+          0,
+          150.46875,
+          0
+        ],
+        "scale": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 24,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant3-25",
+        "prototype": "erlant3",
+        "enabled": true,
+        "position": [
+          -1199.7327880859375,
+          59.42947769165039,
+          -244.9818878173828
+        ],
+        "rotationDegrees": [
+          0,
+          82.96875,
+          0
+        ],
+        "scale": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 25,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant3-26",
+        "prototype": "erlant3",
+        "enabled": true,
+        "position": [
+          -1199.721435546875,
+          59.6711540222168,
+          -234.90806579589844
+        ],
+        "rotationDegrees": [
+          0,
+          -75.9375,
+          0
+        ],
+        "scale": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 26,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant4-0",
+        "prototype": "erlant4",
+        "enabled": true,
+        "position": [
+          -1082.8973388671875,
+          47.981807708740234,
+          -178.7509765625
+        ],
+        "rotationDegrees": [
+          0,
+          -171.5625,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant4-1",
+        "prototype": "erlant4",
+        "enabled": true,
+        "position": [
+          -1059.6895751953125,
+          47.981807708740234,
+          -179.44036865234375
+        ],
+        "rotationDegrees": [
+          0,
+          -41.484375,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 1,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant4-2",
+        "prototype": "erlant4",
+        "enabled": true,
+        "position": [
+          -1036.1322021484375,
+          47.981807708740234,
+          -81.86997985839844
+        ],
+        "rotationDegrees": [
+          0,
+          -23.90625,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 2,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant4-3",
+        "prototype": "erlant4",
+        "enabled": true,
+        "position": [
+          -987.1298217773438,
+          47.981807708740234,
+          -219.44342041015625
+        ],
+        "rotationDegrees": [
+          0,
+          48.515625,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 3,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant4-4",
+        "prototype": "erlant4",
+        "enabled": true,
+        "position": [
+          -989.0545654296875,
+          47.981807708740234,
+          -258.2048645019531
+        ],
+        "rotationDegrees": [
+          0,
+          -66.09375,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 4,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant4-5",
+        "prototype": "erlant4",
+        "enabled": true,
+        "position": [
+          -915.5504760742188,
+          48.981407165527344,
+          -226.8336181640625
+        ],
+        "rotationDegrees": [
+          0,
+          -123.046875,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 5,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant4-6",
+        "prototype": "erlant4",
+        "enabled": true,
+        "position": [
+          -739.9961547851562,
+          63.97541046142578,
+          -73.2586898803711
+        ],
+        "rotationDegrees": [
+          0,
+          21.796875,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 6,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant4-7",
+        "prototype": "erlant4",
+        "enabled": true,
+        "position": [
+          -673.9801025390625,
+          63.97541046142578,
+          -52.518070220947266
+        ],
+        "rotationDegrees": [
+          0,
+          -138.515625,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 7,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant4-8",
+        "prototype": "erlant4",
+        "enabled": true,
+        "position": [
+          219.67276000976562,
+          15.994603157043457,
+          -332.0422058105469
+        ],
+        "rotationDegrees": [
+          0,
+          141.328125,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 8,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant4-9",
+        "prototype": "erlant4",
+        "enabled": true,
+        "position": [
+          163.48687744140625,
+          15.994603157043457,
+          -332.23333740234375
+        ],
+        "rotationDegrees": [
+          0,
+          32.34375,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 9,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant4-10",
+        "prototype": "erlant4",
+        "enabled": true,
+        "position": [
+          124.40187072753906,
+          19.99300193786621,
+          -364.3051452636719
+        ],
+        "rotationDegrees": [
+          0,
+          139.921875,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 10,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant4-11",
+        "prototype": "erlant4",
+        "enabled": true,
+        "position": [
+          67.50881958007812,
+          19.99300193786621,
+          -364.3188171386719
+        ],
+        "rotationDegrees": [
+          0,
+          44.296875,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 11,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant4-12",
+        "prototype": "erlant4",
+        "enabled": true,
+        "position": [
+          100.56266021728516,
+          19.99300193786621,
+          -209.47366333007812
+        ],
+        "rotationDegrees": [
+          0,
+          -44.296875,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 12,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant4-13",
+        "prototype": "erlant4",
+        "enabled": true,
+        "position": [
+          142.57583618164062,
+          19.99300193786621,
+          -222.48081970214844
+        ],
+        "rotationDegrees": [
+          0,
+          143.4375,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 13,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant4-14",
+        "prototype": "erlant4",
+        "enabled": true,
+        "position": [
+          144.8653106689453,
+          15.994603157043457,
+          -189.79534912109375
+        ],
+        "rotationDegrees": [
+          0,
+          89.296875,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 14,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant4-15",
+        "prototype": "erlant4",
+        "enabled": true,
+        "position": [
+          131.49685668945312,
+          15.994603157043457,
+          -115.0182876586914
+        ],
+        "rotationDegrees": [
+          0,
+          -23.90625,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 15,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant4-16",
+        "prototype": "erlant4",
+        "enabled": true,
+        "position": [
+          28.729957580566406,
+          15.994603157043457,
+          66.86390686035156
+        ],
+        "rotationDegrees": [
+          0,
+          137.8125,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 16,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant4-17",
+        "prototype": "erlant4",
+        "enabled": true,
+        "position": [
+          146.24819946289062,
+          15.994603157043457,
+          67.49215698242188
+        ],
+        "rotationDegrees": [
+          0,
+          42.890625,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 17,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant4-18",
+        "prototype": "erlant4",
+        "enabled": true,
+        "position": [
+          -955.2883911132812,
+          63.97541046142578,
+          -305.92730712890625
+        ],
+        "rotationDegrees": [
+          0,
+          -47.109375,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 18,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant4-19",
+        "prototype": "erlant4",
+        "enabled": true,
+        "position": [
+          -955.9431762695312,
+          62.97581100463867,
+          -364.42413330078125
+        ],
+        "rotationDegrees": [
+          0,
+          43.59375,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 19,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant4-20",
+        "prototype": "erlant4",
+        "enabled": true,
+        "position": [
+          -865.18115234375,
+          63.97541046142578,
+          -354.41815185546875
+        ],
+        "rotationDegrees": [
+          0,
+          -120.9375,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 20,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant4-21",
+        "prototype": "erlant4",
+        "enabled": true,
+        "position": [
+          -813.4163208007812,
+          55.31309127807617,
+          -338.12469482421875
+        ],
+        "rotationDegrees": [
+          0,
+          -54.84375,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 21,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant4-22",
+        "prototype": "erlant4",
+        "enabled": true,
+        "position": [
+          -713.9789428710938,
+          48.981407165527344,
+          -213.77984619140625
+        ],
+        "rotationDegrees": [
+          0,
+          -71.015625,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 22,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant4-23",
+        "prototype": "erlant4",
+        "enabled": true,
+        "position": [
+          -666.976806640625,
+          63.97541046142578,
+          -209.56210327148438
+        ],
+        "rotationDegrees": [
+          0,
+          48.515625,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 23,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant4-24",
+        "prototype": "erlant4",
+        "enabled": true,
+        "position": [
+          -655.658935546875,
+          63.97541046142578,
+          -315.69586181640625
+        ],
+        "rotationDegrees": [
+          0,
+          89.296875,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 24,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant4-25",
+        "prototype": "erlant4",
+        "enabled": true,
+        "position": [
+          -618.8611450195312,
+          63.97541046142578,
+          -207.7895965576172
+        ],
+        "rotationDegrees": [
+          0,
+          160.3125,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 25,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant4-26",
+        "prototype": "erlant4",
+        "enabled": true,
+        "position": [
+          -668.2918090820312,
+          63.97541046142578,
+          -158.18661499023438
+        ],
+        "rotationDegrees": [
+          0,
+          -35.15625,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 26,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant4-27",
+        "prototype": "erlant4",
+        "enabled": true,
+        "position": [
+          -712.667236328125,
+          48.981407165527344,
+          -154.50442504882812
+        ],
+        "rotationDegrees": [
+          0,
+          75.234375,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 27,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant4-28",
+        "prototype": "erlant4",
+        "enabled": true,
+        "position": [
+          -667.3834838867188,
+          63.97541046142578,
+          -141.69566345214844
+        ],
+        "rotationDegrees": [
+          0,
+          31.640625,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 28,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant4-29",
+        "prototype": "erlant4",
+        "enabled": true,
+        "position": [
+          -612.3712768554688,
+          63.97541046142578,
+          -158.27650451660156
+        ],
+        "rotationDegrees": [
+          0,
+          -169.453125,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 29,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant4-30",
+        "prototype": "erlant4",
+        "enabled": true,
+        "position": [
+          -738.5430908203125,
+          48.981407165527344,
+          -277.5080261230469
+        ],
+        "rotationDegrees": [
+          0,
+          142.734375,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 30,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant4-31",
+        "prototype": "erlant4",
+        "enabled": true,
+        "position": [
+          -1083.988525390625,
+          47.981807708740234,
+          -291.2811279296875
+        ],
+        "rotationDegrees": [
+          0,
+          123.046875,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 31,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant4-32",
+        "prototype": "erlant4",
+        "enabled": true,
+        "position": [
+          -1059.9979248046875,
+          47.981807708740234,
+          -291.0373229980469
+        ],
+        "rotationDegrees": [
+          0,
+          45.703125,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 32,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant4-33",
+        "prototype": "erlant4",
+        "enabled": true,
+        "position": [
+          -1198.188232421875,
+          47.981807708740234,
+          -145.49462890625
+        ],
+        "rotationDegrees": [
+          0,
+          -91.40625,
+          0
+        ],
+        "scale": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 33,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant4-34",
+        "prototype": "erlant4",
+        "enabled": true,
+        "position": [
+          -1167.951416015625,
+          47.981807708740234,
+          -145.24285888671875
+        ],
+        "rotationDegrees": [
+          0,
+          -85.78125,
+          0
+        ],
+        "scale": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 34,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant4-35",
+        "prototype": "erlant4",
+        "enabled": true,
+        "position": [
+          -1242.1077880859375,
+          47.981807708740234,
+          -259.8860168457031
+        ],
+        "rotationDegrees": [
+          0,
+          2.8125,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 35,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erlant4-36",
+        "prototype": "erlant4",
+        "enabled": true,
+        "position": [
+          -1240.5283203125,
+          47.981807708740234,
+          -219.1461944580078
+        ],
+        "rotationDegrees": [
+          0,
+          -3.515625,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 36,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erplant1-0",
+        "prototype": "erplant1",
+        "enabled": true,
+        "position": [
+          -118.4840087890625,
+          35.986610412597656,
+          -75.22370910644531
+        ],
+        "rotationDegrees": [
+          0,
+          57.65625,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erplant3-0",
+        "prototype": "erplant3",
+        "enabled": true,
+        "position": [
+          -117.76907348632812,
+          35.98658752441406,
+          60.068267822265625
+        ],
+        "rotationDegrees": [
+          0,
+          -74.53125,
+          0
+        ],
+        "scale": [
+          1.75,
+          1.75,
+          1.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erplant4-0",
+        "prototype": "erplant4",
+        "enabled": true,
+        "position": [
+          -396.76934814453125,
+          35.98662567138672,
+          93.03276824951172
+        ],
+        "rotationDegrees": [
+          0,
+          -54.140625,
+          0
+        ],
+        "scale": [
+          1.75,
+          1.75,
+          1.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erplant5-0",
+        "prototype": "erplant5",
+        "enabled": true,
+        "position": [
+          -397.8991394042969,
+          35.98661422729492,
+          -109.86593627929688
+        ],
+        "rotationDegrees": [
+          0,
+          37.96875,
+          359.296875
+        ],
+        "scale": [
+          1.25,
+          1.25,
+          1.25
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erplant5-1",
+        "prototype": "erplant5",
+        "enabled": true,
+        "position": [
+          -398.32843017578125,
+          35.98667907714844,
+          89.43213653564453
+        ],
+        "rotationDegrees": [
+          0,
+          -54.140625,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 1,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erublock-0",
+        "prototype": "erublock",
+        "enabled": true,
+        "position": [
+          -304.0749816894531,
+          30.000999450683594,
+          -7.574532985687256
+        ],
+        "rotationDegrees": [
+          0,
+          -180,
+          0
+        ],
+        "scale": [
+          2,
+          2,
+          2
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erurn2-0",
+        "prototype": "erurn2",
+        "enabled": true,
+        "position": [
+          -107.7846450805664,
+          35.986610412597656,
+          17.771493911743164
+        ],
+        "rotationDegrees": [
+          0,
+          150.46875,
+          0
+        ],
+        "scale": [
+          1.75,
+          1.75,
+          1.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erurn2-1",
+        "prototype": "erurn2",
+        "enabled": true,
+        "position": [
+          -107.07405853271484,
+          35.986610412597656,
+          20.5830078125
+        ],
+        "rotationDegrees": [
+          0,
+          -137.109375,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 1,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erurn2-2",
+        "prototype": "erurn2",
+        "enabled": true,
+        "position": [
+          -107.1797866821289,
+          35.986610412597656,
+          -33.24864959716797
+        ],
+        "rotationDegrees": [
+          0,
+          -173.671875,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 2,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "erurn2-3",
+        "prototype": "erurn2",
+        "enabled": true,
+        "position": [
+          -107.92977905273438,
+          35.986610412597656,
+          -61.97636413574219
+        ],
+        "rotationDegrees": [
+          0,
+          90,
+          0
+        ],
+        "scale": [
+          1.75,
+          1.75,
+          1.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 3,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "hlamp-0",
+        "prototype": "hlamp",
+        "enabled": true,
+        "position": [
+          -941.1267700195312,
+          55.981807708740234,
+          -76.78682708740234
+        ],
+        "rotationDegrees": [
+          0,
+          -2.8125,
+          0
+        ],
+        "scale": [
+          1.25,
+          1.25,
+          1.25
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "hlamp-1",
+        "prototype": "hlamp",
+        "enabled": true,
+        "position": [
+          -900.1380615234375,
+          56.48020935058594,
+          -95.0016860961914
+        ],
+        "rotationDegrees": [
+          0,
+          172.96875,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 1,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "hlamp-2",
+        "prototype": "hlamp",
+        "enabled": true,
+        "position": [
+          -898.1393432617188,
+          56.231807708740234,
+          -112.06681823730469
+        ],
+        "rotationDegrees": [
+          0,
+          177.890625,
+          0
+        ],
+        "scale": [
+          1.25,
+          1.25,
+          1.25
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 2,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "hlamp-3",
+        "prototype": "hlamp",
+        "enabled": true,
+        "position": [
+          -926.132568359375,
+          55.231807708740234,
+          -112.22559356689453
+        ],
+        "rotationDegrees": [
+          0,
+          -11.25,
+          0
+        ],
+        "scale": [
+          1.25,
+          1.25,
+          1.25
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 3,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "hlamp-4",
+        "prototype": "hlamp",
+        "enabled": true,
+        "position": [
+          -966.0673828125,
+          55.981807708740234,
+          -157.43890380859375
+        ],
+        "rotationDegrees": [
+          0,
+          83.671875,
+          0
+        ],
+        "scale": [
+          1.25,
+          1.25,
+          1.25
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 4,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "hlamp-5",
+        "prototype": "hlamp",
+        "enabled": true,
+        "position": [
+          -951.958251953125,
+          55.731807708740234,
+          -130.60401916503906
+        ],
+        "rotationDegrees": [
+          0,
+          -85.78125,
+          0
+        ],
+        "scale": [
+          1.25,
+          1.25,
+          1.25
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 5,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "hlamp-6",
+        "prototype": "hlamp",
+        "enabled": true,
+        "position": [
+          -1005.10009765625,
+          56.481807708740234,
+          -133.09107971191406
+        ],
+        "rotationDegrees": [
+          0,
+          -3.515625,
+          0
+        ],
+        "scale": [
+          1.25,
+          1.25,
+          1.25
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 6,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "hlamp-7",
+        "prototype": "hlamp",
+        "enabled": true,
+        "position": [
+          -1003.100341796875,
+          55.73020935058594,
+          -84.39893341064453
+        ],
+        "rotationDegrees": [
+          0,
+          -2.8125,
+          0
+        ],
+        "scale": [
+          1.25,
+          1.25,
+          1.25
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 7,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "hlamp-8",
+        "prototype": "hlamp",
+        "enabled": true,
+        "position": [
+          -964.7589721679688,
+          57.23020935058594,
+          -111.45861053466797
+        ],
+        "rotationDegrees": [
+          0,
+          85.078125,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 8,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "hlamp-9",
+        "prototype": "hlamp",
+        "enabled": true,
+        "position": [
+          -945.9678955078125,
+          56.23020935058594,
+          -98.01538848876953
+        ],
+        "rotationDegrees": [
+          0,
+          179.296875,
+          0
+        ],
+        "scale": [
+          1.25,
+          1.25,
+          1.25
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 9,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "hlamp-10",
+        "prototype": "hlamp",
+        "enabled": true,
+        "position": [
+          -979.7238159179688,
+          57.73020935058594,
+          -66.47184753417969
+        ],
+        "rotationDegrees": [
+          0,
+          -83.671875,
+          0
+        ],
+        "scale": [
+          1.25,
+          1.25,
+          1.25
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 10,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "hlamp-11",
+        "prototype": "hlamp",
+        "enabled": true,
+        "position": [
+          -1154.284423828125,
+          55.481807708740234,
+          -314.7399597167969
+        ],
+        "rotationDegrees": [
+          0,
+          -180,
+          0
+        ],
+        "scale": [
+          1.25,
+          1.25,
+          1.25
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 11,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "hlamp-12",
+        "prototype": "hlamp",
+        "enabled": true,
+        "position": [
+          -1162.1910400390625,
+          54.731807708740234,
+          -306.62347412109375
+        ],
+        "rotationDegrees": [
+          0,
+          -85.078125,
+          0
+        ],
+        "scale": [
+          1.25,
+          1.25,
+          1.25
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 12,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "hlamp-13",
+        "prototype": "hlamp",
+        "enabled": true,
+        "position": [
+          -1189.417236328125,
+          54.481807708740234,
+          -307.87603759765625
+        ],
+        "rotationDegrees": [
+          0,
+          -88.59375,
+          0
+        ],
+        "scale": [
+          1.25,
+          1.25,
+          1.25
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 13,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "hlamp-14",
+        "prototype": "hlamp",
+        "enabled": true,
+        "position": [
+          -1228.759765625,
+          54.981807708740234,
+          -332.5269775390625
+        ],
+        "rotationDegrees": [
+          0,
+          2.109375,
+          0
+        ],
+        "scale": [
+          1.25,
+          1.25,
+          1.25
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 14,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "hlamp-15",
+        "prototype": "hlamp",
+        "enabled": true,
+        "position": [
+          -1207.460205078125,
+          54.981807708740234,
+          -364.85565185546875
+        ],
+        "rotationDegrees": [
+          0,
+          92.109375,
+          0
+        ],
+        "scale": [
+          1.25,
+          1.25,
+          1.25
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 15,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "hlamp-16",
+        "prototype": "hlamp",
+        "enabled": true,
+        "position": [
+          -1183.6209716796875,
+          55.981807708740234,
+          -352.11016845703125
+        ],
+        "rotationDegrees": [
+          0,
+          97.03125,
+          0
+        ],
+        "scale": [
+          1.25,
+          1.25,
+          1.25
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 16,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      }
+    ]
+  }
+}

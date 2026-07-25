@@ -1,0 +1,30 @@
+import type * as BJS from "@babylonjs/core";
+import { Entity } from "@game/Model/entity";
+export type CellTriple = [number, number, number];
+export declare class Grid {
+    private cellSize;
+    private scene;
+    private cells;
+    private entityToCell;
+    private debugObserver;
+    private debugEnabled;
+    private debugMeshes;
+    private playerCellMesh;
+    private static neighborOffsets;
+    constructor(cellSize: number, scene: BJS.Scene, debug?: boolean);
+    dispose(): void;
+    private get playerPosition();
+    worldToCell(p: BJS.Vector3): CellTriple;
+    static keyFromTriple([x, y, z]: CellTriple): bigint;
+    static tripleFromKey(key: bigint): CellTriple;
+    addEntity(entity: Entity): void;
+    removeEntity(entity: Entity): void;
+    updateEntityPosition(entity: Entity): void;
+    getNearbyEntities(worldPos: BJS.Vector3): Entity[];
+    private createCellMesh;
+    private updateCellVisualization;
+    private removeCellVisualization;
+    private updateDebugVisualization;
+    private clearDebugVisualization;
+    setDebugEnabled(enabled: boolean): void;
+}

@@ -264,7 +264,7 @@ async function importModel(BABYLON: typeof import('@babylonjs/core'), scene: any
   );
 }
 
-function installNodeXMLHttpRequest() {
+export function installNodeXMLHttpRequest() {
   if (typeof (globalThis as any).XMLHttpRequest !== 'undefined') return;
 
   type Listener = (event?: any) => void;

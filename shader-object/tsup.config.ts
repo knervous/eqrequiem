@@ -379,11 +379,16 @@ export default defineConfig({
   entry: {
     index: 'src/index.ts',
     'babylon/index': 'src/babylon/index.ts',
+    'core/index': 'src/core/index.ts',
+    'lite/index': 'src/lite/index.ts',
+    'renderer/index': 'src/renderer/index.ts',
+    'showcase/index': 'src/showcase/index.ts',
     'asc/index': 'src/asc/index.ts',
     'msdf/index': 'src/msdf/index.ts',
     'render/index': 'src/render/index.ts',
     'preprocess/index': 'src/preprocess/index.ts',
     'preprocess/runtime': 'src/preprocess/runtime.ts',
+    'world/index': 'src/world/index.ts',
     cli: 'src/cli.ts',
   },
   // rollup-plugin-dts cannot run against typescript 7 (tsgo); NO_DTS=1 skips
@@ -425,6 +430,7 @@ export default defineConfig({
 
   external: [
     '@babylonjs/core',
+    '@babylonjs/lite',
     '@babylonjs/loaders',
     '@babylonjs/serializers',
     'assemblyscript',

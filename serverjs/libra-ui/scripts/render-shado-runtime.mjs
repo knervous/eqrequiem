@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-// Deterministic screenshots of the live Libra /models Shado/VAT runtime.
-// This drives the exact render path a reviewer sees, so animation and
-// skeleton problems that only exist in the VAT pipeline show up here.
+// Deterministic screenshots of the live Libra /models model viewers.
+// Shado/VAT is the default; --mode raw drives the source GLB, real skinning,
+// and the diagnostic skeleton overlay used for joint-to-mesh review.
 //
 // Usage: node scripts/render-shado-runtime.mjs --model hum --clip Walk \
 //   --phases 0,0.25,0.5,0.75 --view front --output-dir /tmp/shots
@@ -15,6 +15,12 @@ import { createServer } from 'vite'
 
 const scriptPath = fileURLToPath(import.meta.url)
 const libraRoot = path.resolve(path.dirname(scriptPath), '..')
+const invocationRoot = process.cwd()
+
+// Vite resolves PostCSS/Tailwind configuration from the process working
+// directory when used programmatically. Keep this one-off renderer equivalent
+// to `npm --prefix serverjs/libra-ui run dev`, even when invoked from repo root.
+process.chdir(libraRoot)
 
 function option(name, fallback) {
   const index = process.argv.indexOf(`--${name}`)
@@ -23,6 +29,7 @@ function option(name, fallback) {
 
 const model = option('model', 'hum')
 const clip = option('clip', 'Walk')
+const mode = option('mode', 'shado')
 const sweep = Number(option('sweep', 0))
 const phases = sweep > 0
   ? Array.from({ length: sweep }, (_, index) => Number((index / sweep).toFixed(4)))
@@ -31,7 +38,7 @@ const phases = sweep > 0
 // frame mapping, later cycles use the loop-corrected mapping.
 const cycleOffset = Number(option('cycle', 0))
 const view = option('view', 'front')
-const outputDir = path.resolve(option('output-dir', '.'))
+const outputDir = path.resolve(invocationRoot, option('output-dir', '.'))
 const width = Number(option('width', 900))
 const height = Number(option('height', 900))
 
@@ -80,7 +87,17 @@ async function launchChrome(url) {
   const pending = new Map()
   socket.addEventListener('message', (event) => {
     const message = JSON.parse(event.data)
-    if (!message.id || !pending.has(message.id)) return
+    if (!message.id) {
+      if (message.method === 'Runtime.consoleAPICalled') {
+        const values = message.params.args.map((argument) => argument.value ?? argument.description)
+        console.error(`[browser ${message.params.type}]`, ...values)
+      } else if (message.method === 'Runtime.exceptionThrown') {
+        console.error('[browser exception]', message.params.exceptionDetails?.exception?.description ??
+          message.params.exceptionDetails?.text)
+      }
+      return
+    }
+    if (!pending.has(message.id)) return
     const { resolve, reject } = pending.get(message.id)
     pending.delete(message.id)
     if (message.error) reject(new Error(message.error.message))
@@ -141,14 +158,42 @@ try {
     if (ready) break
     await new Promise((resolve) => setTimeout(resolve, 250))
   }
-  if (!ready) throw new Error('Timed out waiting for the Libra viewer')
+  if (!ready) {
+    const diagnostics = await evaluate(send, sessionId, `({
+      readyState: document.readyState,
+      body: document.body?.innerText?.slice(0, 4000),
+      hasSetModel: typeof window.__libraSetModel === 'function',
+      url: location.href,
+    })()`).catch((error) => ({ diagnosticError: String(error) }))
+    throw new Error(`Timed out waiting for the Libra viewer: ${JSON.stringify(diagnostics)}`)
+  }
+
+  if (mode === 'raw') {
+    await evaluate(send, sessionId, 'window.__libraSetViewMode("raw")')
+    const rawDeadline = Date.now() + 90000
+    ready = false
+    while (Date.now() < rawDeadline) {
+      ready = await evaluate(send, sessionId, `
+        Boolean(window.__libraViewer?.mesh?.skeleton) &&
+        Array.isArray(window.__libraViewer?.animations) &&
+        typeof window.__libraViewer.animations[0] === "string"
+      `)
+      if (ready) break
+      await new Promise((resolve) => setTimeout(resolve, 250))
+    }
+    if (!ready) throw new Error('Timed out switching to the raw rig viewer')
+  }
 
   if (model !== 'hum') {
-    await evaluate(send, sessionId, `window.__libraSetModel(${JSON.stringify(model)})`)
+    await evaluate(send, sessionId, `
+      window.__previousLibraViewer = window.__libraViewer
+      window.__libraSetModel(${JSON.stringify(model)})
+    `)
     const modelDeadline = Date.now() + 90000
     ready = false
     while (Date.now() < modelDeadline) {
-      ready = await evaluate(send, sessionId, 'Boolean(window.__libraViewer)')
+      ready = await evaluate(send, sessionId,
+        'Boolean(window.__libraViewer) && window.__libraViewer !== window.__previousLibraViewer')
       if (ready) break
       await new Promise((resolve) => setTimeout(resolve, 250))
     }
@@ -156,7 +201,33 @@ try {
     await new Promise((resolve) => setTimeout(resolve, 1500))
   }
 
-  const setup = await evaluate(send, sessionId, `(() => {
+  const setup = await evaluate(send, sessionId, mode === 'raw' ? `(() => {
+    const viewer = window.__libraViewer
+    const scene = viewer.mesh.getScene()
+    scene.getEngine().stopRenderLoop()
+    viewer.playAnimation(${JSON.stringify(clip)})
+    const group = scene.animationGroups.find((entry) => entry.name === ${JSON.stringify(clip)})
+    if (!group) throw new Error('Missing raw animation group: ${clip}')
+    group.pause()
+    viewer.setSkeletonViewer(true, 'spheres')
+    const camera = scene.activeCamera
+    camera.alpha = ${view === 'side' ? '0' : '-Math.PI / 2'}
+    camera.beta = Math.PI / 2.15
+    camera.radius = 3.6
+    camera.target.copyFrom(viewer.mesh.getBoundingInfo().boundingBox.centerWorld)
+    window.__shotAt = (phase) => {
+      const frame = group.from + phase * (group.to - group.from)
+      group.play(false)
+      group.goToFrame(frame)
+      group.pause()
+      // The first pass updates the dynamic overlay geometry in onBeforeRender;
+      // the second evaluates that geometry in the scene's active-mesh list.
+      scene.render()
+      scene.render()
+      return frame
+    }
+    return { from: group.from, to: group.to, fps: 30 }
+  })()` : `(() => {
     const viewer = window.__libraViewer
     const scene = viewer.mesh.getScene()
     scene.getEngine().stopRenderLoop()
@@ -180,13 +251,69 @@ try {
   })()`)
   console.log(`clip ${clip}:`, JSON.stringify(setup))
 
+  if (mode !== 'raw') {
+    const materialDeadline = Date.now() + 30000
+    let materialReady = false
+    while (Date.now() < materialDeadline) {
+      materialReady = await evaluate(send, sessionId, `(() => {
+        const viewer = window.__libraViewer
+        const scene = viewer.mesh.getScene()
+        scene.render()
+        return Boolean(
+          viewer.mesh.material?.isReady(viewer.mesh, true) &&
+          viewer.mesh.metadata?.atlasArrayTexture?.isReady() &&
+          viewer.mesh.bakedVertexAnimationManager?.texture?.isReady()
+        )
+      })()`)
+      if (materialReady) break
+      await new Promise((resolve) => setTimeout(resolve, 50))
+    }
+    if (!materialReady) throw new Error(`Timed out compiling the ${model} Shado material`)
+    // Parallel shader compilation can report readiness before Chrome submits
+    // the first instanced draw. Give that draw two deterministic render passes.
+    await evaluate(send, sessionId, `(() => {
+      const scene = window.__libraViewer.mesh.getScene()
+      scene.render()
+      scene.render()
+    })()`)
+    const renderState = await evaluate(send, sessionId, `(() => {
+      const mesh = window.__libraViewer.mesh
+      const pool = mesh.metadata?.shadoPool?.shado
+      const actor = pool?.children?.[0]
+      return {
+        vertices: mesh.getTotalVertices(),
+        indices: mesh.getTotalIndices(),
+        thinInstances: mesh.thinInstanceCount,
+        materialReady: mesh.material?.isReady(mesh, true),
+        visibleCount: pool?.visibleCount,
+        visibilityFlag: pool?.getVisibilityFlag?.(0),
+        translation: actor ? Array.from(actor.translation) : null,
+        rotation: actor ? Array.from(actor.rotation) : null,
+        animation: actor ? Array.from(actor.animationBuffer) : null,
+        vatSize: mesh.bakedVertexAnimationManager?.texture?.getSize(),
+        atlasReady: mesh.metadata?.atlasArrayTexture?.isReady(),
+      }
+    })()`)
+    console.log('render state:', JSON.stringify(renderState))
+  }
+
   for (const phase of phases) {
-    await evaluate(send, sessionId, `window.__shotAt(${phase}, ${cycleOffset})`)
+    const shot = await evaluate(send, sessionId, mode === 'raw'
+      ? `window.__shotAt(${phase})`
+      : `window.__shotAt(${phase}, ${cycleOffset})`)
+    if (mode === 'raw') console.log('raw frame:', shot)
     await new Promise((resolve) => setTimeout(resolve, 120))
+    if (mode === 'raw') {
+      // Overlay materials compile asynchronously on their first render.
+      await evaluate(send, sessionId, `window.__shotAt(${phase})`)
+      await new Promise((resolve) => setTimeout(resolve, 50))
+    }
     const screenshot = await send('Page.captureScreenshot', {
       format: 'png', fromSurface: true, captureBeyondViewport: false,
     }, sessionId)
-    const file = path.join(outputDir, `${model}_${clip}_c${cycleOffset}_${phase}_${view}.png`)
+    const file = path.join(outputDir, mode === 'raw'
+      ? `${model}_${clip}_raw_${phase}_${view}.png`
+      : `${model}_${clip}_c${cycleOffset}_${phase}_${view}.png`)
     await fs.writeFile(file, Buffer.from(screenshot.data, 'base64'))
     console.log('wrote', file)
   }

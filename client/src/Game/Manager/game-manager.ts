@@ -1,5 +1,4 @@
 import type * as BJS from "@babylonjs/core";
-import HavokPhysics from "@babylonjs/havok";
 import BABYLON from "@bjs";
 import { animateVignette, gaussianBlurTeleport } from "@game/Effects/effects";
 import EntityCache from "@game/Model/entity-cache";
@@ -16,8 +15,13 @@ import CharacterSelect from "../Zone/character-select";
 
 declare const window: Window;
 
+let initializedHavok: Promise<unknown> | undefined;
+
 async function getInitializedHavok() {
-  return await HavokPhysics();
+  initializedHavok ??= import("@babylonjs/havok").then(
+    ({ default: HavokPhysics }) => HavokPhysics(),
+  );
+  return initializedHavok;
 }
 export default class GameManager {
   engine: (BJS.Engine | BJS.WebGPUEngine | BJS.ThinEngine) | null = null;
@@ -262,6 +266,10 @@ export default class GameManager {
     this.zoneManager?.dispose();
     this.scene = null;
     this.canvas = canvas;
+    // Physics is required before gameplay starts, but it does not depend on
+    // engine construction. Start its WASM download in parallel with WebGPU
+    // adapter/device initialization instead of placing it behind that work.
+    void getInitializedHavok();
     this.gpuPicker = new BABYLON.GPUPicker();
     if (navigator.gpu) {
       this.engine = new BABYLON.WebGPUEngine(canvas, {

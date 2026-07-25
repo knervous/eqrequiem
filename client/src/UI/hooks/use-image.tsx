@@ -1,7 +1,4 @@
-import { use, useEffect, useMemo, useState } from 'react';
-import sakAtlas from '../util/atlas-sak.json';
-import stoneAtlas from '../util/atlas-stone.json';
-import atlas from '../util/atlas.json';
+import { useEffect, useMemo, useState } from 'react';
 import { ImageCache } from '../util/image-cache';
 
 export type AtlasEntry = {
@@ -17,185 +14,152 @@ export type ImageEntry = {
   image: string | null;
 };
 
-// ––– SAK CACHE (promises) –––
-const sakCache: Record<string, Promise<string>> = {};
+type Atlas = Record<string, AtlasEntry>;
+type AtlasKind = 'default' | 'sak' | 'stone';
+const EMPTY_ATLAS_ENTRY: AtlasEntry = Object.freeze({
+  texture: '',
+  left: 0,
+  top: 0,
+  width: 0,
+  height: 0,
+});
+
+const atlasLoaders: Record<AtlasKind, () => Promise<Atlas>> = {
+  default: () =>
+    import('../util/atlas.json').then((module) => module.default as Atlas),
+  sak: () =>
+    import('../util/atlas-sak.json').then((module) => module.default as Atlas),
+  stone: () =>
+    import('../util/atlas-stone.json').then((module) => module.default as Atlas),
+};
+const atlasPromises = new Map<AtlasKind, Promise<Atlas>>();
+const imagePromises = new Map<string, Promise<string>>();
+const DEFAULT_ATLASES = ['default'] as const;
+const SAK_ATLASES = ['sak', 'stone', 'default'] as const;
+const SAK_MULTI_ATLASES = ['sak', 'default'] as const;
+const STONE_ATLASES = ['stone', 'default'] as const;
+
+function loadAtlas(kind: AtlasKind): Promise<Atlas> {
+  let promise = atlasPromises.get(kind);
+  if (!promise) {
+    promise = atlasLoaders[kind]();
+    atlasPromises.set(kind, promise);
+  }
+  return promise;
+}
+
+async function resolveAtlasEntry(
+  path: string,
+  kinds: readonly AtlasKind[],
+): Promise<AtlasEntry | undefined> {
+  for (const kind of kinds) {
+    const entry = (await loadAtlas(kind))[path];
+    if (entry) return entry;
+  }
+  return undefined;
+}
+
+function useAtlasImages(
+  paths: string[],
+  kinds: readonly AtlasKind[],
+  folder: string,
+  crop: boolean,
+): ImageEntry[] {
+  const pathKey = paths.join('\u0000');
+  const [resolved, setResolved] = useState<
+    Array<{ path: string; entry: AtlasEntry }>
+  >([]);
+  const [images, setImages] = useState<(string | null)[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const requestedPaths = pathKey ? pathKey.split('\u0000') : [];
+    void Promise.all(
+      requestedPaths.map(async (path) => ({
+        path,
+        entry: await resolveAtlasEntry(path, kinds),
+      })),
+    ).then((next) => {
+      if (cancelled) return;
+      setResolved(
+        next.filter(
+          (item): item is { path: string; entry: AtlasEntry } =>
+            Boolean(item.entry),
+        ),
+      );
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [kinds, pathKey]);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!resolved.length) {
+      setImages([]);
+      return;
+    }
+    void Promise.all(
+      resolved.map(({ path, entry }) => {
+        const cacheKey = `${folder}:${path}:${crop ? 1 : 0}`;
+        let promise = imagePromises.get(cacheKey);
+        if (!promise) {
+          promise = ImageCache.getImageUrl(
+            folder,
+            entry.texture,
+            crop,
+            entry.left,
+            entry.top,
+            entry.width,
+            entry.height,
+          );
+          imagePromises.set(cacheKey, promise);
+        }
+        return promise;
+      }),
+    ).then((next) => {
+      if (!cancelled) setImages(next);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [crop, folder, resolved]);
+
+  return resolved.map(({ entry }, index) => ({
+    entry,
+    image: images[index] ?? null,
+  }));
+}
 
 export const useSakImage = (
   path: string,
   crop: boolean = false,
-): ImageEntry => {
-  const entry = useMemo<AtlasEntry>(
-    () => sakAtlas[path] || stoneAtlas[path] || atlas[path],
-    [path],
-  );
-  const [image, setImage] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!entry) {
-      setImage(null);
-      return;
-    }
-
-    // get or create the promise
-    let promise = sakCache[path];
-    if (!promise) {
-      promise = ImageCache.getImageUrl(
-        'uifiles/sakui',
-        entry.texture,
-        crop,
-        entry.left,
-        entry.top,
-        entry.width,
-        entry.height,
-      );
-      sakCache[path] = promise;
-    }
-
-    promise.then(setImage);
-
-  }, [entry, crop, path]);
-
-  return { entry, image };
-};
+): ImageEntry =>
+  useAtlasImages([path], SAK_ATLASES, 'uifiles/sakui', crop)[0] ?? {
+    entry: EMPTY_ATLAS_ENTRY,
+    image: null,
+  };
 
 export const useSakImages = (
   paths: string[],
   crop: boolean = false,
-): ImageEntry[] => {
-  // first resolve entries for each path
-  const entries = useMemo(
-    () => paths
-      .map((p) => sakAtlas[p] || atlas[p])
-      .filter((e): e is AtlasEntry => Boolean(e)),
-    [paths],
-  );
-
-  const [images, setImages] = useState<(string | null)[]>(
-    new Array(entries.length).fill(null),
-  );
-
-  useEffect(() => {
-    if (entries.length === 0) {
-      setImages([]);
-      return;
-    }
-
-    // build or grab each promise
-    const promises = entries.map((entry, i) => {
-      const path = paths[i];
-      let promise = sakCache[path];
-      if (!promise) {
-        promise = ImageCache.getImageUrl(
-          'uifiles/sakui',
-          entry.texture,
-          crop,
-          entry.left,
-          entry.top,
-          entry.width,
-          entry.height,
-        );
-        sakCache[path] = promise;
-      }
-      return promise;
-    });
-
-    Promise.all(promises).then((imgs) => {
-      setImages(imgs);
-    });
-  }, [paths, crop, entries]);
-
-  return entries.map((entry, i) => ({
-    entry,
-    image: images[i],
-  }));
-};
-
-// ––– STONE CACHE (promises) –––
-const stoneCache: Record<string, Promise<string>> = {};
+): ImageEntry[] =>
+  useAtlasImages(paths, SAK_MULTI_ATLASES, 'uifiles/sakui', crop);
 
 export const useStoneImage = (
   path: string,
   crop: boolean = false,
-): ImageEntry => {
-  const entry = useMemo<AtlasEntry>(
-    () => stoneAtlas[path] || atlas[path],
-    [path],
-  );
-  const [image, setImage] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!entry) {
-      setImage(null);
-      return;
-    }
-
-    let promise = stoneCache[path];
-    if (!promise) {
-      promise = ImageCache.getImageUrl(
-        'uifiles/stone',
-        entry.texture,
-        crop,
-        entry.left,
-        entry.top,
-        entry.width,
-        entry.height,
-      );
-      stoneCache[path] = promise;
-    }
-
-    promise.then(setImage);
-  }, [entry, crop, path]);
-
-  return { entry, image };
-};
+): ImageEntry =>
+  useAtlasImages([path], STONE_ATLASES, 'uifiles/stone', crop)[0] ?? {
+    entry: EMPTY_ATLAS_ENTRY,
+    image: null,
+  };
 
 export const useStoneImages = (
   paths: string[],
   crop: boolean = false,
-): ImageEntry[] => {
-  const entries = useMemo(
-    () => paths
-      .map((p) => stoneAtlas[p] || atlas[p])
-      .filter((e): e is AtlasEntry => Boolean(e)),
-    [paths],
-  );
-
-  const [images, setImages] = useState<(string | null)[]>(
-    new Array(entries.length).fill(null),
-  );
-
-  useEffect(() => {
-    if (entries.length === 0) {
-      setImages([]);
-      return;
-    }
-
-    const promises = entries.map((entry, i) => {
-      const path = paths[i];
-      let promise = stoneCache[path];
-      if (!promise) {
-        promise = ImageCache.getImageUrl(
-          'uifiles/stone',
-          entry.texture,
-          crop,
-          entry.left,
-          entry.top,
-          entry.width,
-          entry.height,
-        );
-        stoneCache[path] = promise;
-      }
-      return promise;
-    });
-
-    Promise.all(promises).then(setImages);
-  }, [paths, crop, entries]);
-
-  return entries.map((entry, i) => ({
-    entry,
-    image: images[i],
-  }));
-};
+): ImageEntry[] =>
+  useAtlasImages(paths, STONE_ATLASES, 'uifiles/stone', crop);
 
 const rawCache: Record<string, Promise<string>> = {};
 export const useRawImage = (
@@ -226,27 +190,12 @@ export const useRawImage = (
 };
 
 export const useImage = (path: string, crop: boolean = false): ImageEntry => {
-  const entry = useMemo<AtlasEntry>(() => atlas[path], [path]);
-  const [image, setImage] = useState<string | null>(null);
-  useEffect(() => {
-    if (!entry) {
-      setImage(null);
-      return;
+  return (
+    useAtlasImages([path], DEFAULT_ATLASES, 'uifiles/default', crop)[0] ?? {
+      entry: EMPTY_ATLAS_ENTRY,
+      image: null,
     }
-    ImageCache.getImageUrl(
-      'uifiles/default',
-      entry.texture,
-      crop,
-      entry.left,
-      entry.top,
-      entry.width,
-      entry.height,
-    ).then(setImage);
-  }, [entry, crop]);
-  return {
-    entry,
-    image,
-  };
+  );
 };
 
 

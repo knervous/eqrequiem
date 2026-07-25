@@ -2,6 +2,8 @@ export type LocalBackendStorage = "opfs" | "memory";
 
 export type LocalBackendMessage =
   | { type: "initialize"; refreshContent: boolean }
+  | { type: "close" }
+  | { type: "closed" }
   | { type: "ready"; storage: LocalBackendStorage; sqliteVersion: string; contentVersion: string }
   | { type: "error"; message: string }
   | {

@@ -19,10 +19,13 @@ function parseArguments(argv) {
     pose: 'pos',
     poseFraction: 0,
     frontAxis: '-z',
+    focus: 'full',
     auditSamples: 0,
-    maxSpanRatio: 2,
-    maxEdgeRatio: 25,
-    maxP99EdgeRatio: 4,
+    maxSpanRatio: 1.5,
+    minEdgeRatio: 0.25,
+    maxEdgeRatio: 4,
+    maxP99EdgeRatio: 2,
+    maxExtremeEdgeFraction: 0.0015,
     glbs: [],
   }
   for (let index = 0; index < argv.length; index++) {
@@ -33,10 +36,13 @@ function parseArguments(argv) {
     else if (value === '--pose') options.pose = argv[++index]
     else if (value === '--pose-fraction') options.poseFraction = Number(argv[++index])
     else if (value === '--front-axis') options.frontAxis = argv[++index]
+    else if (value === '--focus') options.focus = argv[++index]
     else if (value === '--audit-animation-samples') options.auditSamples = Number(argv[++index])
     else if (value === '--max-span-ratio') options.maxSpanRatio = Number(argv[++index])
+    else if (value === '--min-edge-ratio') options.minEdgeRatio = Number(argv[++index])
     else if (value === '--max-edge-ratio') options.maxEdgeRatio = Number(argv[++index])
     else if (value === '--max-p99-edge-ratio') options.maxP99EdgeRatio = Number(argv[++index])
+    else if (value === '--max-extreme-edge-fraction') options.maxExtremeEdgeFraction = Number(argv[++index])
     else if (value === '--fail-on-animation-deform') options.failOnAnimationDeform = true
     else if (value === '--input-json') options.glbs.push(...JSON.parse(argv[++index]))
     else if (value === '--help') options.help = true
@@ -54,8 +60,9 @@ Options:
   --pose pos
   --pose-fraction 0.5
   --front-axis -z|+z|-x|+x
-  --audit-animation-samples 9 --max-span-ratio 2 --max-edge-ratio 25
-  --max-p99-edge-ratio 4
+  --focus full|head|hands|feet
+  --audit-animation-samples 9 --max-span-ratio 1.5 --min-edge-ratio 0.25
+  --max-edge-ratio 4 --max-p99-edge-ratio 2 --max-extreme-edge-fraction 0.0015
   --fail-on-animation-deform
   --width 1600 --height 1200`
 }
@@ -169,13 +176,27 @@ export async function renderGlbReferenceSheet(options) {
   for (const spec of specs) for (const glb of spec.glbs) await fs.access(glb)
   const output = path.resolve(options.output)
   await fs.mkdir(path.dirname(output), { recursive: true })
+  const temporaryRoot = await fs.realpath(os.tmpdir())
 
   const server = await createServer({
     root: clientRoot,
     configFile: false,
     logLevel: 'error',
     optimizeDeps: { noDiscovery: true },
-    server: { host: '127.0.0.1', port: 0, strictPort: false, fs: { allow: [repoRoot] } },
+    // Audit builds are intentionally written to isolated temporary folders;
+    // allow those inputs without requiring them to be copied into the repo.
+    server: {
+      host: '127.0.0.1',
+      port: 0,
+      strictPort: false,
+      fs: {
+        allow: [
+          repoRoot,
+          temporaryRoot,
+          ...specs.flatMap((spec) => spec.glbs.map((glb) => path.dirname(glb))),
+        ],
+      },
+    },
   })
   await server.listen()
   try {
@@ -189,10 +210,13 @@ export async function renderGlbReferenceSheet(options) {
       pose: options.pose ?? 'pos',
       poseFraction: String(options.poseFraction ?? 0),
       frontAxis: options.frontAxis ?? '-z',
+      focus: options.focus ?? 'full',
       auditSamples: String(options.auditSamples ?? 0),
-      maxSpanRatio: String(options.maxSpanRatio ?? 2),
-      maxEdgeRatio: String(options.maxEdgeRatio ?? 25),
-      maxP99EdgeRatio: String(options.maxP99EdgeRatio ?? 4),
+      maxSpanRatio: String(options.maxSpanRatio ?? 1.5),
+      minEdgeRatio: String(options.minEdgeRatio ?? 0.25),
+      maxEdgeRatio: String(options.maxEdgeRatio ?? 4),
+      maxP99EdgeRatio: String(options.maxP99EdgeRatio ?? 2),
+      maxExtremeEdgeFraction: String(options.maxExtremeEdgeFraction ?? 0.0015),
     })
     const url = `http://127.0.0.1:${address.port}/scripts/glb-reference-renderer/index.html?${query}`
     const result = await launchChrome(url, options.width ?? 1600, options.height ?? 1200)
@@ -204,13 +228,16 @@ export async function renderGlbReferenceSheet(options) {
       pose: options.pose ?? 'pos',
       poseFraction: options.poseFraction ?? 0,
       frontAxis: options.frontAxis ?? '-z',
+      focus: options.focus ?? 'full',
       width: options.width ?? 1600,
       height: options.height ?? 1200,
       animationAudit: {
         samples: options.auditSamples ?? 0,
-        maxSpanRatio: options.maxSpanRatio ?? 2,
-        maxEdgeRatio: options.maxEdgeRatio ?? 25,
-        maxP99EdgeRatio: options.maxP99EdgeRatio ?? 4,
+        maxSpanRatio: options.maxSpanRatio ?? 1.5,
+        minEdgeRatio: options.minEdgeRatio ?? 0.25,
+        maxEdgeRatio: options.maxEdgeRatio ?? 4,
+        maxP99EdgeRatio: options.maxP99EdgeRatio ?? 2,
+        maxExtremeEdgeFraction: options.maxExtremeEdgeFraction ?? 0.0015,
       },
       render: result.renderState,
     }

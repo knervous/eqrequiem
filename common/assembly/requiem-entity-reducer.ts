@@ -1,13 +1,13 @@
 // Shared EQRequiem client/server entity reducer ABI.
-// Built at development/build time through shader-object's `shado asc build` bin.
+// Built at development/build time through @knervous/shado's `shado asc build` bin.
 // Runtime code must only instantiate the resulting debug/release artifacts.
 
+// Visibility and draw-order indirection are SoA sidecars owned by Shado.
+// The logical fields occupy 30 floats, then the generated GPU struct rounds
+// the record up to a vec4-aligned 32-float/128-byte stride.
 const ACTOR_STRIDE_BYTES: usize = 128;
 const ACTOR_TRANSLATION_OFFSET: usize = 0;
-const ACTOR_VISIBLE_INDEX_OFFSET: usize = 48;
-const ACTOR_VISIBLE_FLAG_OFFSET: usize = 96;
 
-const CONTAINER_VISIBLE_COUNT_OFFSET: usize = 0;
 const CONTAINER_INSTANCES_PTR_OFFSET: usize = 4;
 const CONTAINER_INSTANCES_COUNT_OFFSET: usize = 8;
 
@@ -24,33 +24,29 @@ export function alloc(bytes: i32): usize {
 }
 
 /**
- * Marks actors visible in place and writes the compact visible-index prefix.
- * All model-specific pools use this same ABI and reducer artifact.
+ * Writes compact draw indices and visibility bytes into Shado's SoA planes.
+ * Durable actor records remain untouched by culling.
  */
-export function frustumMarkAoS(
+export function frustumMarkSoA(
   base: usize,
   planesPtr: usize,
+  visibleIndicesPtr: usize,
+  visibilityPtr: usize,
   baseRadius: f32,
   cameraX: f32,
   cameraY: f32,
   cameraZ: f32,
   maxDistance: f32,
-): void {
+): i32 {
   const count = load<u32>(base + CONTAINER_INSTANCES_COUNT_OFFSET);
-  if (count == 0) {
-    store<u32>(base + CONTAINER_VISIBLE_COUNT_OFFSET, 0);
-    return;
-  }
+  if (count == 0) return 0;
 
   const instances = <usize>load<u32>(base + CONTAINER_INSTANCES_PTR_OFFSET);
-  let writePointer = instances + ACTOR_VISIBLE_INDEX_OFFSET;
   let visibleCount: u32 = 0;
-  const limit = instances + ACTOR_STRIDE_BYTES * <usize>count;
 
   for (let index: u32 = 0; index < count; index++) {
     const actor = instances + ACTOR_STRIDE_BYTES * <usize>index;
-    store<i32>(actor + ACTOR_VISIBLE_INDEX_OFFSET, -1);
-    store<i32>(actor + ACTOR_VISIBLE_FLAG_OFFSET, 0);
+    store<u8>(visibilityPtr + <usize>index, 0);
 
     const x = load<f32>(actor + ACTOR_TRANSLATION_OFFSET);
     const y = load<f32>(actor + ACTOR_TRANSLATION_OFFSET + 4);
@@ -79,13 +75,12 @@ export function frustumMarkAoS(
         break;
       }
     }
-    if (!inside || writePointer >= limit) continue;
+    if (!inside) continue;
 
-    store<i32>(writePointer, <i32>index);
-    writePointer += ACTOR_STRIDE_BYTES;
+    store<u32>(visibleIndicesPtr + <usize>visibleCount * 4, index);
+    store<u8>(visibilityPtr + <usize>index, 1);
     visibleCount++;
-    store<i32>(actor + ACTOR_VISIBLE_FLAG_OFFSET, 1);
   }
 
-  store<u32>(base + CONTAINER_VISIBLE_COUNT_OFFSET, visibleCount);
+  return <i32>visibleCount;
 }

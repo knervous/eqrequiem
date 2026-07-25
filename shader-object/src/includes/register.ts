@@ -1,4 +1,4 @@
-import { BABYLON } from '../babylon';
+import * as BABYLON from '@babylonjs/core';
 import type { ShadoStructSchema } from '../schema/ShadoStructSchema';
 import { resolveCtor } from '../utils/type-helpers';
 

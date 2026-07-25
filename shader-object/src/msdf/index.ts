@@ -27,6 +27,13 @@ export type MSDFNameplateLayerOptions = {
   meshName?: string;
   renderingGroupId?: number;
   thickness?: number;
+  /**
+   * Where the nameplate shader reads actor visibility from.
+   *
+   * Instance pools use their compact visibility sidecar by default. Ad-hoc
+   * actor containers can instead expose a `visibleFlag` field in each actor.
+   */
+  visibilitySource?: 'sidecar' | 'actor';
 };
 
 type ShadoBufferOwner = {
@@ -119,6 +126,7 @@ export type MSDFTextShaderOptions = {
   containerStructName?: string;
   nameplateStructName?: string;
   useActorBillboardFlag?: boolean;
+  useVisibilityTexture?: boolean;
 };
 
 function normalizeOptions(
@@ -134,11 +142,47 @@ function normalizeOptions(
     containerStructName: options.containerStructName ?? 'ShadoInstanceContainer',
     nameplateStructName: options.nameplateStructName ?? 'NameplateData',
     useActorBillboardFlag: options.useActorBillboardFlag ?? false,
+    useVisibilityTexture: options.useVisibilityTexture ?? true,
   };
 }
 
 function applySchemaNames(source: string, options: Required<MSDFTextShaderOptions>): string {
   return source
+    .replaceAll(
+      '/*SHADO_MSDF_VISIBILITY_DECL_GLSL*/',
+      options.useVisibilityTexture
+        ? 'uniform highp sampler2D uShadoVisibilityFlags;\nuniform int uShadoVisibleIndexTexWidth;'
+        : ''
+    )
+    .replaceAll(
+      '/*SHADO_MSDF_VISIBILITY_FETCH_GLSL*/',
+      options.useVisibilityTexture
+        ? `int ownerVisible = texelFetch(
+    uShadoVisibilityFlags,
+    ivec2(owner % uShadoVisibleIndexTexWidth, owner / uShadoVisibleIndexTexWidth),
+    0
+  ).r > 0.5 ? 1 : 0;`
+        : 'int ownerVisible = ShadoInstanceContainer_fetch(ownerBase + ShadoActor_visibleFlag_OFF) > 0.5 ? 1 : 0;'
+    )
+    .replaceAll(
+      '/*SHADO_MSDF_VISIBILITY_DECL_WGSL*/',
+      options.useVisibilityTexture ? 'var uShadoVisibilityFlags : texture_2d<f32>;' : ''
+    )
+    .replaceAll(
+      '/*SHADO_MSDF_VISIBILITY_FETCH_WGSL*/',
+      options.useVisibilityTexture
+        ? `let visibilitySize = textureDimensions(uShadoVisibilityFlags, 0);
+  let ownerVisible = select(
+    0,
+    1,
+    textureLoad(
+      uShadoVisibilityFlags,
+      vec2i(owner % i32(visibilitySize.x), owner / i32(visibilitySize.x)),
+      0
+    ).r > 0.5
+  );`
+        : 'let ownerVisible = select(0, 1, ShadoInstanceContainer_fetch(ownerBase + ShadoActor_visibleFlag_OFF) > 0.5);'
+    )
     .replaceAll(
       '/*SHADO_MSDF_BILLBOARD_FLAG_GLSL*/',
       options.useActorBillboardFlag
@@ -170,6 +214,8 @@ uniform float uThickness;
 #include<ShadoInstanceContainerStorage>
 #include<NameplateDataStorage>
 
+/*SHADO_MSDF_VISIBILITY_DECL_GLSL*/
+
 varying vec2 vUV;
 varying float vThickness;
 varying vec4 vNameColor;
@@ -199,7 +245,7 @@ void main() {
   }
 
   int ownerBase = uShadoInstanceContainer_instancesBase + owner * uShadoInstanceContainer_instancesStride;
-  int ownerVisible = int(ShadoInstanceContainer_fetch(ownerBase + ShadoActor_visibleFlag_OFF));
+  /*SHADO_MSDF_VISIBILITY_FETCH_GLSL*/
   if (ownerVisible == 0) {
     gl_Position = vec4(2.0, 2.0, 0.0, 1.0);
     vNameColor = vec4(0.0);
@@ -297,11 +343,12 @@ varying vNameColor : vec4f;
 uniform view: mat4x4f;
 uniform worldViewProjection: mat4x4f;
 
-#include<sceneUboDeclaration>
 #include<ShadoActor>
 #include<ShadoActorOffsets>
 #include<ShadoInstanceContainerStorage>
 #include<NameplateDataStorage>
+
+/*SHADO_MSDF_VISIBILITY_DECL_WGSL*/
 
 fn shadoMsdfCamRight(view: mat4x4f) -> vec3f { return vec3f(view[0].x, view[1].x, view[2].x); }
 fn shadoMsdfCamUp(view: mat4x4f) -> vec3f { return vec3f(view[0].y, view[1].y, view[2].y); }
@@ -329,7 +376,7 @@ fn main(input: VertexInputs) -> FragmentInputs {
   }
 
   let ownerBase = uShadoInstanceContainer_instancesBase() + owner * uShadoInstanceContainer_instancesStride();
-  let ownerVisible = i32(ShadoInstanceContainer_fetch(ownerBase + ShadoActor_visibleFlag_OFF));
+  /*SHADO_MSDF_VISIBILITY_FETCH_WGSL*/
   if (ownerVisible == 0) {
     vertexOutputs.position = vec4f(2.0, 2.0, 0.0, 1.0);
     vertexOutputs.vNameColor = vec4f(0.0);
@@ -471,6 +518,14 @@ export function createMSDFNameplateLayer(
   const actorStructName = actorSchema?.name ?? 'ShadoActor';
   const useActorBillboardFlag =
     actorSchema?.fields?.some(field => field.name === 'billboardFlag') ?? false;
+  const useVisibilityTexture = options.visibilitySource !== 'actor';
+  const useStorageWGSL =
+    engine.isWebGPU && (actors.constructor as any).backingPreference === 'storage';
+  if (!useVisibilityTexture && !actorSchema?.fields?.some(field => field.name === 'visibleFlag')) {
+    throw new Error(
+      `MSDF actor visibility requires ${actorSchema?.name ?? 'actor schema'}.visibleFlag`
+    );
+  }
   const containerStructName = actors.getSchema().name;
   const nameplateStructName = nameplates.getSchema().name;
   const shaderName = `shadoMsdfText_${containerStructName}_${actorStructName}_${nameplateStructName}`;
@@ -480,6 +535,7 @@ export function createMSDFNameplateLayer(
     containerStructName,
     nameplateStructName,
     useActorBillboardFlag,
+    useVisibilityTexture,
   });
   const actorShaderIO = getShaderIO(actors, engine);
   const nameplateShaderIO = getShaderIO(nameplates, engine);
@@ -493,12 +549,18 @@ export function createMSDFNameplateLayer(
       'uDistanceRange',
       'uDebugMode',
       'uDebugColor',
-      ...actorShaderIO.uniforms,
-      ...nameplateShaderIO.uniforms,
+      ...(!useStorageWGSL && useVisibilityTexture ? ['uShadoVisibleIndexTexWidth'] : []),
+      ...(useStorageWGSL ? [] : actorShaderIO.uniforms),
+      ...(useStorageWGSL ? [] : nameplateShaderIO.uniforms),
     ])
   );
   const samplers = Array.from(
-    new Set(['uFontAtlas', ...actorShaderIO.samplers, ...nameplateShaderIO.samplers])
+    new Set([
+      'uFontAtlas',
+      ...(useVisibilityTexture ? ['uShadoVisibilityFlags'] : []),
+      ...actorShaderIO.samplers,
+      ...nameplateShaderIO.samplers,
+    ])
   );
   const mesh = new BABYLON.Mesh(
     options.meshName ?? `msdf-nameplates-${scene.meshes.length}`,
@@ -506,12 +568,7 @@ export function createMSDFNameplateLayer(
   );
 
   const vertexData = new BABYLON.VertexData();
-  vertexData.positions = [
-    0, 0, 0,
-    1, 0, 0,
-    0, 1, 0,
-    1, 1, 0,
-  ];
+  vertexData.positions = [0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0];
   vertexData.indices = [0, 1, 2, 2, 1, 3];
   vertexData.applyToMesh(mesh, false);
   mesh.setVerticesData('corner', [0, 0, 1, 0, 0, 1, 1, 1], false, 2);
@@ -519,13 +576,16 @@ export function createMSDFNameplateLayer(
   mesh.doNotSyncBoundingInfo = true;
   mesh.isPickable = false;
   mesh.renderingGroupId = options.renderingGroupId ?? getDefaultRenderingGroupId(actors);
-  mesh.isVisible = false;
+  // The layer owns this mesh and renders one thin instance per glyph. Hiding
+  // the source mesh also suppresses every glyph instance; setEnabled() alone
+  // cannot override isVisible=false.
+  mesh.isVisible = true;
 
   const material = new BABYLON.ShaderMaterial('shado-msdf-nameplates', scene, shader, {
     attributes: ['position', 'corner'],
     uniforms,
     samplers,
-    shaderLanguage: BABYLON.ShaderLanguage.GLSL,
+    shaderLanguage: useStorageWGSL ? BABYLON.ShaderLanguage.WGSL : BABYLON.ShaderLanguage.GLSL,
   });
   material.backFaceCulling = false;
   material.alphaMode = BABYLON.Engine.ALPHA_COMBINE;
@@ -534,6 +594,7 @@ export function createMSDFNameplateLayer(
   material.forceDepthWrite = false;
   material.needDepthPrePass = false;
   material.needAlphaBlending = () => true;
+  if (options.depthTest === false) material.depthFunction = BABYLON.Constants.ALWAYS;
   if (options.debug) {
     material.onCompiled = effect => {
       console.debug('[shado/msdf] material compiled', {
@@ -554,6 +615,22 @@ export function createMSDFNameplateLayer(
     };
   }
   material.setTexture('uFontAtlas', fontAsset.textures[0]);
+  const fontAtlasSize = getFontAtlasSize(fontAsset);
+  material.setFloat('uThickness', options.thickness ?? 0.0);
+  material.setFloat('uAlphaCutoff', options.alphaCutoff ?? 0.001);
+  material.setVector2('uFontAtlasSize', { x: fontAtlasSize.width, y: fontAtlasSize.height });
+  material.setFloat('uDistanceRange', getFontDistanceRange(fontAsset, options));
+  material.setInt(
+    'uDebugMode',
+    options.debugMode === 'solid' ? 1 : options.debugMode === 'atlas' ? 2 : 0
+  );
+  const debugColor = options.debugColor ?? [1, 0, 1, 0.35];
+  material.setVector4('uDebugColor', {
+    x: debugColor[0],
+    y: debugColor[1],
+    z: debugColor[2],
+    w: debugColor[3],
+  });
   mesh.material = material;
 
   const debugState = {
@@ -613,121 +690,53 @@ export function createMSDFNameplateLayer(
     });
   };
 
+  let allocatedGlyphInstances = -1;
   const updateInstanceCount = () => {
     const glyphCount = nameplates.glyphCount();
     if (glyphCount <= 0) {
-      mesh.forcedInstanceCount = 0;
+      if (allocatedGlyphInstances !== 0) {
+        mesh.thinInstanceSetBuffer('matrix', null);
+        allocatedGlyphInstances = 0;
+      }
       mesh.isVisible = false;
       logRenderState('no glyphs');
       return;
     }
 
-    mesh.isVisible = true;
-    mesh.forcedInstanceCount = 0;
-  };
-
-  const beforeRenderObserver = scene.onBeforeRenderObservable.add(updateInstanceCount);
-
-  mesh.render = (subMesh: any, enableAlphaMode: boolean): any => {
-    const glyphCount = nameplates.glyphCount();
-    if (glyphCount <= 0) {
-      logRenderState('no glyphs');
-      return mesh;
+    if (allocatedGlyphInstances !== glyphCount) {
+      // Use Babylon's supported thin-instance path rather than overriding
+      // Mesh.render(). forcedInstanceCount alone does not provide the world0-
+      // world3 attributes that ShaderMaterial enables for thin instances on
+      // WebGPU, leaving the nameplate draw without a valid vertex layout.
+      const matrices = new Float32Array(glyphCount * 16);
+      const identity = BABYLON.Matrix.IdentityReadOnly.m;
+      for (let instance = 0; instance < glyphCount; instance++) {
+        matrices.set(identity, instance * 16);
+      }
+      mesh.thinInstanceSetBuffer('matrix', matrices, 16, true);
+      allocatedGlyphInstances = glyphCount;
     }
-
     actors.commit();
     nameplates.commit();
     actors.bindMaterial?.(material);
     nameplates.bindMaterial?.(material);
     material.setTexture('uFontAtlas', fontAsset.textures[0]);
-
-    if (!material.isReadyForSubMesh(mesh, subMesh)) {
-      logRenderState('material not ready');
-      return mesh;
-    }
-
-    const effect = subMesh?.effect ?? material.getEffect();
-    if (!effect?.isReady()) {
-      logRenderState('effect not ready');
-      return mesh;
-    }
-
-    const drawWrapper = (material as any)._storeEffectOnSubMeshes
-      ? subMesh._drawWrapper
-      : (material as any)._getDrawWrapper();
-    if (!drawWrapper) {
-      logRenderState('missing draw wrapper');
-      return mesh;
-    }
-    (material as any)._preBind(drawWrapper, (mesh as any)._internalMeshDataInfo?._effectiveSideOrientation);
-
-    effect.setMatrix('worldViewProjection', mesh.getWorldMatrix().multiply(scene.getTransformMatrix()));
-    effect.setMatrix('view', scene.getViewMatrix());
-    effect.setFloat('uThickness', options.thickness ?? 0.0);
-    effect.setFloat('uAlphaCutoff', options.alphaCutoff ?? 0.001);
-    const fontTexture = fontAsset.textures[0];
-    const fontAtlasSize = getFontAtlasSize(fontAsset);
-    effect.setFloat2('uFontAtlasSize', fontAtlasSize.width, fontAtlasSize.height);
-    effect.setFloat('uDistanceRange', getFontDistanceRange(fontAsset, options));
-    effect.setInt(
-      'uDebugMode',
-      options.debugMode === 'solid' ? 1 : options.debugMode === 'atlas' ? 2 : 0
-    );
-    const debugColor = options.debugColor ?? [1, 0, 1, 0.35];
-    effect.setFloat4(
-      'uDebugColor',
-      debugColor[0],
-      debugColor[1],
-      debugColor[2],
-      debugColor[3]
-    );
-
-    mesh._bind(subMesh, effect, BABYLON.Material.TriangleFillMode);
-    if (enableAlphaMode && material.needAlphaBlending()) {
-      engine.setAlphaMode(material.alphaMode);
-    }
-
-    effect.setTexture('uFontAtlas', fontTexture);
-    actors.bind(effect);
-    nameplates.bind(effect);
-
-    const restoreDepthState = {
-      depthBuffer: engine.getDepthBuffer(),
-      depthWrite: engine.getDepthWrite(),
-    };
-    engine.setDepthBuffer(options.depthTest ?? true);
-    engine.setDepthWrite(false);
-
-    (mesh as any)._draw(subMesh, BABYLON.Material.TriangleFillMode, glyphCount);
-    material.unbind();
-    engine.setDepthBuffer(restoreDepthState.depthBuffer);
-    engine.setDepthWrite(restoreDepthState.depthWrite);
-
-    if (options.debug && subMesh && !loggedFirstDraw) {
+    mesh.isVisible = true;
+    if (options.debug && !loggedFirstDraw) {
       loggedFirstDraw = true;
-      console.debug('[shado/msdf] first instanced draw ready', {
+      console.debug('[shado/msdf] first instanced draw scheduled', {
         mesh: mesh.name,
         glyphCount,
-        indexStart: subMesh.indexStart,
-        indexCount: subMesh.indexCount,
-        forcedInstanceCount: mesh.forcedInstanceCount,
-        alphaMode: engine.getAlphaMode(),
-        depthTest: engine.getDepthBuffer(),
-        depthWrite: engine.getDepthWrite(),
-        snapshot: getNameplateDebugSnapshot(
-          actors,
-          nameplates,
-          material,
-          fontAsset,
-          uniforms,
-          samplers,
-          subMesh
-        ),
+        thinInstanceCount: mesh.thinInstanceCount,
+        alphaMode: material.alphaMode,
+        depthTest: options.depthTest ?? true,
+        depthWrite: !material.disableDepthWrite,
       });
     }
-
-    return mesh;
   };
+
+  updateInstanceCount();
+  const beforeRenderObserver = scene.onBeforeRenderObservable.add(updateInstanceCount);
 
   mesh.onDisposeObservable.add(() => {
     scene.onBeforeRenderObservable.remove(beforeRenderObserver);

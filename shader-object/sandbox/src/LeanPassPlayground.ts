@@ -65,7 +65,11 @@ export class LeanPassPlayground {
     camera.wheelPrecision = 45;
     camera.panningSensibility = 55;
 
-    const light = new BABYLON.HemisphericLight('leanPassLight', new BABYLON.Vector3(0, 1, 0), scene);
+    const light = new BABYLON.HemisphericLight(
+      'leanPassLight',
+      new BABYLON.Vector3(0, 1, 0),
+      scene
+    );
     light.intensity = 0.85;
 
     const ground = BABYLON.MeshBuilder.CreateGround(
@@ -78,7 +82,7 @@ export class LeanPassPlayground {
     groundMaterial.specularColor = BABYLON.Color3.Black();
     ground.material = groundMaterial;
 
-    await ShadoDynamicEntityContainer.initialize(engine, { wasm: false, backend: 'datatex' });
+    await ShadoDynamicEntityContainer.initialize(engine, { wasm: false });
     const atlas = createSolidColorAtlas(scene, KIND_COLORS);
     const container = new ShadoDynamicEntityContainer(engine, atlas);
     const renderer = new ShadoDynamicEntityRenderer(scene, container, atlas, {
@@ -215,7 +219,14 @@ export class LeanPassPlayground {
       moveSubset(Math.min(500, container.entityCount | 0));
     });
 
-    (window as any).leanShadoPass = { container, renderer, atlas, addEntities, moveSubset, removeEntities };
+    (window as any).leanShadoPass = {
+      container,
+      renderer,
+      atlas,
+      addEntities,
+      moveSubset,
+      removeEntities,
+    };
     return scene;
   }
 }

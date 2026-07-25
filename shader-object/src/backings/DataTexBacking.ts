@@ -1,11 +1,16 @@
 import { EMPTY_UPLOAD_STATS, type BackendKind, type GPUBacking, type GPUUploadStats, type Segment } from '../types';
-import { BABYLON } from '../babylon';
 import type { Shado } from '../core/Shado';
 import { encodeGpuFloatUploadRange } from './encodeGpuFloatUpload';
+import {
+  getShadoRendererAdapter,
+  type ShadoRendererAdapter,
+  type ShadoRendererTexture,
+} from '../renderer/ShadoRendererAdapter';
 
 export class DataTexBacking implements GPUBacking {
   public kind: BackendKind = 'datatex';
-  private bufTex?: any;
+  private renderer?: ShadoRendererAdapter;
+  private bufTex?: ShadoRendererTexture;
   private texW = 2048;
   private texH = 1;
   private capTexels = this.texW * this.texH;
@@ -19,7 +24,25 @@ export class DataTexBacking implements GPUBacking {
     private engine: any,
     private schema: any,
     private owner: Shado
-  ) {}
+  ) {
+    // Adapter lookup remains lazy for renderer-neutral schema/memory use.
+    // Production initialization installs an adapter before the first commit.
+    try {
+      this.renderer = getShadoRendererAdapter(engine);
+    } catch {
+      this.renderer = undefined;
+    }
+  }
+
+  private getRenderer(): ShadoRendererAdapter {
+    const renderer = (this.renderer ??= getShadoRendererAdapter(this.engine));
+    if (!renderer.createDataTexture) {
+      throw new Error(
+        `Renderer ${renderer.id} does not support Shado's data-texture backend. Use storage instead.`
+      );
+    }
+    return renderer;
+  }
 
   reserveFloats(minFloats: number) {
     if (minFloats <= this.capFloats && this.bufTex) return;
@@ -34,19 +57,13 @@ export class DataTexBacking implements GPUBacking {
       nextStaging.set(this.staging.subarray(0, Math.min(this.staging.length, this.capFloats)));
     }
 
-    this.bufTex?.dispose?.();
-    this.bufTex = new BABYLON.RawTexture(
+    this.bufTex?.dispose();
+    this.bufTex = this.getRenderer().createDataTexture!(
       nextStaging,
       this.texW,
       this.texH,
-      BABYLON.Engine.TEXTUREFORMAT_RGBA,
-      this.engine,
-      false,
-      false,
-      BABYLON.Texture.NEAREST_SAMPLINGMODE,
-      BABYLON.Engine.TEXTURETYPE_FLOAT
+      `${this.schema.name} data texture`
     );
-    this.bufTex.wrapU = this.bufTex.wrapV = BABYLON.Texture.CLAMP_ADDRESSMODE;
     this.staging = nextStaging;
     this.lastUsedFloats = Math.min(this.lastUsedFloats, this.capFloats);
     (this.owner.arena as any)?.markDirty?.();
@@ -106,22 +123,25 @@ export class DataTexBacking implements GPUBacking {
   }
 
   private applyBindings(target: any, includeName: string) {
+    const texture = this.bufTex;
+    if (!texture) return;
+    const renderer = this.getRenderer();
     const self: any = this.owner;
     const schema = this.schema;
 
     // Bind buffer texture
-    target.setTexture(`u${includeName}BufTex`, this.bufTex);
-    target.setInt(`u${includeName}BufTexWidth`, this.texW);
-    target.setInt(`u${includeName}HeaderBase`, self._headerSeg.offF | 0);
+    renderer.bindDataTexture!(target, `u${includeName}BufTex`, texture);
+    renderer.setInt!(target, `u${includeName}BufTexWidth`, this.texW);
+    renderer.setInt!(target, `u${includeName}HeaderBase`, self._headerSeg.offF | 0);
 
     // Bind var array uniforms
     for (const f of Object.keys(schema.varArrays)) {
       const seg: Segment = self._varSeg[f];
       const stride = schema.varArrays[f].floatStride;
       const count = Math.floor((seg?.lenF ?? 0) / stride);
-      target.setInt(`u${includeName}_${f}Base`, seg?.offF | 0);
-      target.setInt(`u${includeName}_${f}Stride`, stride | 0);
-      target.setInt(`u${includeName}_${f}Count`, count | 0);
+      renderer.setInt!(target, `u${includeName}_${f}Base`, seg?.offF | 0);
+      renderer.setInt!(target, `u${includeName}_${f}Stride`, stride | 0);
+      renderer.setInt!(target, `u${includeName}_${f}Count`, count | 0);
     }
 
     // Bind struct array uniforms
@@ -129,13 +149,13 @@ export class DataTexBacking implements GPUBacking {
       const seg: Segment = self._structSeg[f];
       const stride = schema.structArrays[f].schema.headerFloatCount;
       const count = (self._structArrayCount?.[f] as number) | 0;
-      target.setInt(`u${includeName}_${f}Base`, seg?.offF | 0);
-      target.setInt(`u${includeName}_${f}Stride`, stride | 0);
-      target.setInt(`u${includeName}_${f}Count`, count | 0);
+      renderer.setInt!(target, `u${includeName}_${f}Base`, seg?.offF | 0);
+      renderer.setInt!(target, `u${includeName}_${f}Stride`, stride | 0);
+      renderer.setInt!(target, `u${includeName}_${f}Count`, count | 0);
     }
   }
 
   dispose() {
-    this.bufTex?.dispose?.();
+    this.bufTex?.dispose();
   }
 }

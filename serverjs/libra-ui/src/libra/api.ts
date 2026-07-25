@@ -6,7 +6,7 @@ import type {
   LibraValidateResponse,
   QuestCatalogStatus,
   ZoneShard,
-} from '@/libra/types'
+} from '@libra/libra/types'
 
 const baseUrl = import.meta.env.VITE_LIBRA_API_BASE || ''
 const apiKey = import.meta.env.VITE_LIBRA_API_KEY || ''

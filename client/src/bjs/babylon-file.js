@@ -1,0 +1,22 @@
+export function prepareSerializedBabylonScene(bytes, label = "Babylon scene") {
+    let serializedScene;
+    try {
+        serializedScene = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
+    }
+    catch (error) {
+        throw new Error(`${label} is not valid uncompressed Babylon JSON`, {
+            cause: error,
+        });
+    }
+    // Babylon's serializer can persist this WebXR-only plugin on every PBR
+    // material even though it has no effect in a normal scene. A Lite runtime
+    // intentionally has no WebXR constructor, and Material._ParsePlugins
+    // otherwise throws while trying to instantiate it.
+    for (const material of serializedScene.materials ?? []) {
+        if (material.plugins) {
+            delete material.plugins.DepthSensingMaterialPlugin;
+        }
+    }
+    return serializedScene;
+}
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiYmFieWxvbi1maWxlLmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiYmFieWxvbi1maWxlLnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiJBQU1BLE1BQU0sVUFBVSw2QkFBNkIsQ0FDM0MsS0FBa0IsRUFDbEIsS0FBSyxHQUFHLGVBQWU7SUFFdkIsSUFBSSxlQUF1QyxDQUFDO0lBQzVDLElBQUksQ0FBQztRQUNILGVBQWUsR0FBRyxJQUFJLENBQUMsS0FBSyxDQUMxQixJQUFJLFdBQVcsQ0FBQyxPQUFPLEVBQUUsRUFBRSxLQUFLLEVBQUUsSUFBSSxFQUFFLENBQUMsQ0FBQyxNQUFNLENBQUMsS0FBSyxDQUFDLENBQzlCLENBQUM7SUFDOUIsQ0FBQztJQUFDLE9BQU8sS0FBSyxFQUFFLENBQUM7UUFDZixNQUFNLElBQUksS0FBSyxDQUFDLEdBQUcsS0FBSyx5Q0FBeUMsRUFBRTtZQUNqRSxLQUFLLEVBQUUsS0FBSztTQUNiLENBQUMsQ0FBQztJQUNMLENBQUM7SUFFRCx1RUFBdUU7SUFDdkUsMEVBQTBFO0lBQzFFLHFFQUFxRTtJQUNyRSxtREFBbUQ7SUFDbkQsS0FBSyxNQUFNLFFBQVEsSUFBSSxlQUFlLENBQUMsU0FBUyxJQUFJLEVBQUUsRUFBRSxDQUFDO1FBQ3ZELElBQUksUUFBUSxDQUFDLE9BQU8sRUFBRSxDQUFDO1lBQ3JCLE9BQU8sUUFBUSxDQUFDLE9BQU8sQ0FBQywwQkFBMEIsQ0FBQztRQUNyRCxDQUFDO0lBQ0gsQ0FBQztJQUVELE9BQU8sZUFBZSxDQUFDO0FBQ3pCLENBQUMiLCJzb3VyY2VzQ29udGVudCI6WyJleHBvcnQgdHlwZSBTZXJpYWxpemVkQmFieWxvblNjZW5lID0gUmVjb3JkPHN0cmluZywgdW5rbm93bj4gJiB7XG4gIG1hdGVyaWFscz86IEFycmF5PHtcbiAgICBwbHVnaW5zPzogUmVjb3JkPHN0cmluZywgdW5rbm93bj47XG4gIH0+O1xufTtcblxuZXhwb3J0IGZ1bmN0aW9uIHByZXBhcmVTZXJpYWxpemVkQmFieWxvblNjZW5lKFxuICBieXRlczogQXJyYXlCdWZmZXIsXG4gIGxhYmVsID0gXCJCYWJ5bG9uIHNjZW5lXCIsXG4pOiBTZXJpYWxpemVkQmFieWxvblNjZW5lIHtcbiAgbGV0IHNlcmlhbGl6ZWRTY2VuZTogU2VyaWFsaXplZEJhYnlsb25TY2VuZTtcbiAgdHJ5IHtcbiAgICBzZXJpYWxpemVkU2NlbmUgPSBKU09OLnBhcnNlKFxuICAgICAgbmV3IFRleHREZWNvZGVyKFwidXRmLThcIiwgeyBmYXRhbDogdHJ1ZSB9KS5kZWNvZGUoYnl0ZXMpLFxuICAgICkgYXMgU2VyaWFsaXplZEJhYnlsb25TY2VuZTtcbiAgfSBjYXRjaCAoZXJyb3IpIHtcbiAgICB0aHJvdyBuZXcgRXJyb3IoYCR7bGFiZWx9IGlzIG5vdCB2YWxpZCB1bmNvbXByZXNzZWQgQmFieWxvbiBKU09OYCwge1xuICAgICAgY2F1c2U6IGVycm9yLFxuICAgIH0pO1xuICB9XG5cbiAgLy8gQmFieWxvbidzIHNlcmlhbGl6ZXIgY2FuIHBlcnNpc3QgdGhpcyBXZWJYUi1vbmx5IHBsdWdpbiBvbiBldmVyeSBQQlJcbiAgLy8gbWF0ZXJpYWwgZXZlbiB0aG91Z2ggaXQgaGFzIG5vIGVmZmVjdCBpbiBhIG5vcm1hbCBzY2VuZS4gQSBMaXRlIHJ1bnRpbWVcbiAgLy8gaW50ZW50aW9uYWxseSBoYXMgbm8gV2ViWFIgY29uc3RydWN0b3IsIGFuZCBNYXRlcmlhbC5fUGFyc2VQbHVnaW5zXG4gIC8vIG90aGVyd2lzZSB0aHJvd3Mgd2hpbGUgdHJ5aW5nIHRvIGluc3RhbnRpYXRlIGl0LlxuICBmb3IgKGNvbnN0IG1hdGVyaWFsIG9mIHNlcmlhbGl6ZWRTY2VuZS5tYXRlcmlhbHMgPz8gW10pIHtcbiAgICBpZiAobWF0ZXJpYWwucGx1Z2lucykge1xuICAgICAgZGVsZXRlIG1hdGVyaWFsLnBsdWdpbnMuRGVwdGhTZW5zaW5nTWF0ZXJpYWxQbHVnaW47XG4gICAgfVxuICB9XG5cbiAgcmV0dXJuIHNlcmlhbGl6ZWRTY2VuZTtcbn1cbiJdfQ==

@@ -1,0 +1,38 @@
+import type * as BJS from "@babylonjs/core";
+import type Player from "./player";
+export declare class PlayerCamera {
+    private player;
+    private camera;
+    private cameraLight;
+    isFirstPerson: boolean;
+    private minCameraDistance;
+    private maxCameraDistance;
+    private cameraDistance;
+    private preferredCameraDistance;
+    private cameraCollided;
+    private cameraHeight;
+    private canvas;
+    private isLocked;
+    private lookatOffset;
+    private cameraPosition;
+    private cameraPitch;
+    cameraYaw: number;
+    private eventListeners;
+    constructor(player: Player, camera: BJS.UniversalCamera);
+    private bindInputEvents;
+    private handleMouseDown;
+    private handleMouseUp;
+    private handleMouseMove;
+    private handleWheel;
+    private onChangePointerLock;
+    private visualizeRay;
+    leftButtonDown: boolean;
+    rightButtonDown: boolean;
+    mouseInputButton(buttonIndex: number, up?: boolean, x?: number, y?: number): void;
+    attachPlayerLight(mesh: BJS.AbstractMesh): void;
+    adjustCameraDistance(delta: number): void;
+    inputMouseMotion(x: number, y: number): void;
+    private checkCollision;
+    updateCameraPosition(): void;
+    dispose(): void;
+}

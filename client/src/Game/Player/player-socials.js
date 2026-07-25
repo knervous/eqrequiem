@@ -1,0 +1,14 @@
+import { CommandParser } from '@game/ChatCommands/command-parser';
+export class PlayerSocials {
+    player;
+    constructor(player) {
+        this.player = player;
+    }
+    doSocial(actionData) {
+        for (const line of actionData.data ?? []) {
+            console.log('Executing social command:', line);
+            CommandParser.parseCommand(line);
+        }
+    }
+}
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoicGxheWVyLXNvY2lhbHMuanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyJwbGF5ZXItc29jaWFscy50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiQUFDQSxPQUFPLEVBQUUsYUFBYSxFQUFFLE1BQU0sbUNBQW1DLENBQUM7QUFLbEUsTUFBTSxPQUFPLGFBQWE7SUFDSixNQUFNO0lBQTFCLFlBQW9CLE1BQWM7c0JBQWQsTUFBTTtJQUMxQixDQUFDO0lBRU0sUUFBUSxDQUFDLFVBQXNDO1FBQ3BELEtBQUssTUFBTSxJQUFJLElBQUksVUFBVSxDQUFDLElBQUksSUFBSyxFQUFlLEVBQUUsQ0FBQztZQUN2RCxPQUFPLENBQUMsR0FBRyxDQUFDLDJCQUEyQixFQUFFLElBQUksQ0FBQyxDQUFDO1lBQy9DLGFBQWEsQ0FBQyxZQUFZLENBQUMsSUFBSSxDQUFDLENBQUM7UUFDbkMsQ0FBQztJQUNILENBQUM7Q0FDRiIsInNvdXJjZXNDb250ZW50IjpbImltcG9ydCB7IENvbW1hbmRIYW5kbGVyIH0gZnJvbSAnQGdhbWUvQ2hhdENvbW1hbmRzL2NvbW1hbmQtaGFuZGxlcic7XG5pbXBvcnQgeyBDb21tYW5kUGFyc2VyIH0gZnJvbSAnQGdhbWUvQ2hhdENvbW1hbmRzL2NvbW1hbmQtcGFyc2VyJztcbmltcG9ydCB0eXBlIHsgQWN0aW9uQnV0dG9uRGF0YSB9IGZyb20gJ0B1aS9jb21wb25lbnRzL2dhbWUvYWN0aW9uLWJ1dHRvbi9jb25zdGFudHMnO1xuaW1wb3J0IHR5cGUgUGxheWVyIGZyb20gJy4vcGxheWVyJztcblxuXG5leHBvcnQgY2xhc3MgUGxheWVyU29jaWFscyB7XG4gIGNvbnN0cnVjdG9yKHByaXZhdGUgcGxheWVyOiBQbGF5ZXIpIHtcbiAgfVxuXG4gIHB1YmxpYyBkb1NvY2lhbChhY3Rpb25EYXRhOiBBY3Rpb25CdXR0b25EYXRhPHN0cmluZ1tdPikge1xuICAgIGZvciAoY29uc3QgbGluZSBvZiBhY3Rpb25EYXRhLmRhdGEgPz8gKFtdIGFzIHN0cmluZ1tdKSkge1xuICAgICAgY29uc29sZS5sb2coJ0V4ZWN1dGluZyBzb2NpYWwgY29tbWFuZDonLCBsaW5lKTtcbiAgICAgIENvbW1hbmRQYXJzZXIucGFyc2VDb21tYW5kKGxpbmUpO1xuICAgIH1cbiAgfVxufVxuIl19

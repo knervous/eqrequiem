@@ -24,7 +24,7 @@
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-router-dom": "^7.13.1",
-    "shader-object": "file:../../shader-object",
+    "@knervous/shado": "file:../../shader-object",
     "tailwind-merge": "^3.5.0"
   },
   "devDependencies": {

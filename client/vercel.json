@@ -6,6 +6,22 @@
   "devCommand": "npm run start",
   "rewrites": [
     {
+      "source": "/apps/libra",
+      "destination": "/apps/libra/index.html"
+    },
+    {
+      "source": "/apps/libra/(.*)",
+      "destination": "/apps/libra/index.html"
+    },
+    {
+      "source": "/apps/sandbox",
+      "destination": "/apps/sandbox/index.html"
+    },
+    {
+      "source": "/apps/sandbox/(.*)",
+      "destination": "/apps/sandbox/index.html"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

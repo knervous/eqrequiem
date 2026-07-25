@@ -431,8 +431,9 @@ ${header}
 const ${name}_HEADER_FLOATS : i32 = ${headerFloats};
 ${offsets}
 
-// Arena (data) SSBO
-var<storage, read> ${lname}Buf : array<f32>;
+// Raw arena words. Float fields bitcast their IEEE-754 payload while signed
+// and unsigned integer fields retain their exact CPU representation.
+var<storage, read> ${lname}Buf : array<u32>;
 // Params SSBO (packed i32 per the indices below)
 var<storage, read> ${lname}Params : array<i32>;
 
@@ -452,9 +453,13 @@ ${[
 ].join('\n')}
 
 // Low-level fetch from arena
-fn ${name}_fetch(i:i32)->f32 { return ${lname}Buf[i]; }
+fn ${name}_fetch(i:i32)->f32 { return bitcast<f32>(${lname}Buf[i]); }
+fn ${name}_fetchI32(i:i32)->i32 { return bitcast<i32>(${lname}Buf[i]); }
+fn ${name}_fetchU32(i:i32)->u32 { return ${lname}Buf[i]; }
 fn ${name}_fetch4(i:i32)->vec4f {
-  return vec4f(${lname}Buf[i+0], ${lname}Buf[i+1], ${lname}Buf[i+2], ${lname}Buf[i+3]);
+  return bitcast<vec4f>(vec4u(
+    ${lname}Buf[i+0], ${lname}Buf[i+1], ${lname}Buf[i+2], ${lname}Buf[i+3]
+  ));
 }
 
 // Param getters
@@ -498,7 +503,7 @@ fn ${name}_${field}_count()->i32 { return ${count}; }`;
       return `
 fn ${name}_${field}_get(j:i32)->${t} {
   let b = ${base} + j * ${stride};
-  return ${t}(${name}_fetch(b));
+  return ${name}_${t === 'i32' ? 'fetchI32' : 'fetchU32'}(b);
 }
 fn ${name}_${field}_count()->i32 { return ${count}; }`;
     if (t === 'vec2')
@@ -568,8 +573,8 @@ ${child.fields
     const off = cf.headerFloatOffset ?? 0;
     const dst = `h.${cf.name}`;
     if (cf.type === 'f32') return `  ${dst} = ${name}_fetch(base + ${off});`;
-    if (cf.type === 'i32') return `  ${dst} = i32(${name}_fetch(base + ${off}));`;
-    if (cf.type === 'u32') return `  ${dst} = u32(${name}_fetch(base + ${off}));`;
+    if (cf.type === 'i32') return `  ${dst} = ${name}_fetchI32(base + ${off});`;
+    if (cf.type === 'u32') return `  ${dst} = ${name}_fetchU32(base + ${off});`;
     if (cf.type === 'vec2')
       return `  ${dst} = vec2f(${name}_fetch(base+${off + 0}), ${name}_fetch(base+${off + 1}));`;
     if (cf.type === 'vec3') return `  ${dst} = ${name}_fetch4(base + ${off}).xyz;`;
@@ -597,8 +602,8 @@ ${this.fields
     const off = f.headerFloatOffset ?? 0;
     const dst = `h.${f.name}`;
     if (f.type === 'f32') return `  ${dst} = ${name}_fetch(base + ${off});`;
-    if (f.type === 'i32') return `  ${dst} = i32(${name}_fetch(base + ${off}));`;
-    if (f.type === 'u32') return `  ${dst} = u32(${name}_fetch(base + ${off}));`;
+    if (f.type === 'i32') return `  ${dst} = ${name}_fetchI32(base + ${off});`;
+    if (f.type === 'u32') return `  ${dst} = ${name}_fetchU32(base + ${off});`;
     if (f.type === 'vec2')
       return `  ${dst} = vec2f(${name}_fetch(base+${off + 0}), ${name}_fetch(base+${off + 1}));`;
     if (f.type === 'vec3') return `  ${dst} = ${name}_fetch4(base + ${off}).xyz;`;

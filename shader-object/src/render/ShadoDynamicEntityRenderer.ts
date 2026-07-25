@@ -43,11 +43,10 @@ export interface ShadoDynamicEntityMeshVariant {
   picking?: boolean | ShadoDynamicEntityAsyncPickingOptions;
 }
 
-export interface ShadoDynamicEntityMeshVariantRendererOptions
-  extends Omit<
-    ShadoDynamicEntityRendererOptions,
-    'geometry' | 'mesh' | 'meshIndex' | 'meshTypeId' | 'meshTexture' | 'picking'
-  > {
+export interface ShadoDynamicEntityMeshVariantRendererOptions extends Omit<
+  ShadoDynamicEntityRendererOptions,
+  'geometry' | 'mesh' | 'meshIndex' | 'meshTypeId' | 'meshTexture' | 'picking'
+> {
   variants: readonly ShadoDynamicEntityMeshVariant[];
 }
 
@@ -56,7 +55,8 @@ export class ShadoDynamicEntityRenderer {
   public readonly material: ShaderMaterial;
   private readonly scene: Scene;
   private readonly engine: AbstractEngine;
-  private readonly originalRender: Mesh['render'];
+  private readonly beforeRenderObserver: any;
+  private readonly fallbackMeshTexture?: Texture;
   private pickingHandle?: ShadoPickingHandle;
   private loggedFirstDraw = false;
   /** Instances submitted by this variant's last draw, for instrumentation. */
@@ -75,7 +75,21 @@ export class ShadoDynamicEntityRenderer {
     const billboard = options.billboard ?? geometry === 'plane';
     const meshIndexInput = options.meshIndex ?? options.meshTypeId;
     const meshIndex = Number.isFinite(meshIndexInput) ? Number(meshIndexInput) : 0;
-    const meshTexture = options.meshTexture ?? atlas.texture;
+    this.fallbackMeshTexture = options.meshTexture
+      ? undefined
+      : BABYLON.RawTexture.CreateRGBATexture(
+          new Uint8Array([255, 255, 255, 255]),
+          1,
+          1,
+          scene,
+          false,
+          false,
+          BABYLON.Texture.NEAREST_SAMPLINGMODE
+        );
+    // WGSL statically declares both atlas and mesh texture views. Keep a real
+    // 2D fallback bound even when the atlas path is selected; a 2D-array view
+    // cannot satisfy a texture_2d binding on WebGPU.
+    const meshTexture = (options.meshTexture ?? this.fallbackMeshTexture)!;
     this.mesh =
       options.mesh ??
       (geometry === 'plane'
@@ -83,6 +97,8 @@ export class ShadoDynamicEntityRenderer {
         : BABYLON.MeshBuilder.CreateBox('shado-dynamic-entities', { size: 1 }, scene));
     this.mesh.alwaysSelectAsActiveMesh = true;
 
+    const useStorageWGSL =
+      this.engine.isWebGPU && (container.constructor as any).backingPreference === 'storage';
     const shaderIo = (container.constructor as ShadoConcreteCtor).shaderIO(this.engine);
     const shaderNames = container.getShaderNamesForRenderMode({ geometry, billboard });
     const uniforms = [
@@ -90,7 +106,7 @@ export class ShadoDynamicEntityRenderer {
       'uShadoEntityMeshIndex',
       'uShadoDrawOffset',
       'uUseShadoEntityMeshTexture',
-      ...shaderIo.uniforms,
+      ...(useStorageWGSL ? [] : shaderIo.uniforms),
     ];
     if (billboard) uniforms.push('view');
 
@@ -100,10 +116,11 @@ export class ShadoDynamicEntityRenderer {
       samplers: ['uShadoEntityAtlas', 'uShadoEntityMeshTexture', ...shaderIo.samplers],
       uniformBuffers: ['Scene'],
       needAlphaBlending: true,
-      shaderLanguage: BABYLON.ShaderLanguage.GLSL,
+      shaderLanguage: useStorageWGSL ? BABYLON.ShaderLanguage.WGSL : BABYLON.ShaderLanguage.GLSL,
     });
     this.material.backFaceCulling = geometry === 'box' || geometry === 'spriteSlab';
-    this.material.forceDepthWrite = geometry === 'box' || geometry === 'spriteSlab' || geometry === 'mesh';
+    this.material.forceDepthWrite =
+      geometry === 'box' || geometry === 'spriteSlab' || geometry === 'mesh';
     this.material.alphaMode = BABYLON.Engine.ALPHA_COMBINE;
     this.material.setTexture('uShadoEntityAtlas', atlas.texture);
     this.material.setTexture('uShadoEntityMeshTexture', meshTexture);
@@ -113,7 +130,6 @@ export class ShadoDynamicEntityRenderer {
 
     if (options.log) {
       this.material.onCompiled = (effect: Effect) => {
-        // eslint-disable-next-line no-console
         console.debug('[shado/render] material compiled', {
           mesh: this.mesh.name,
           uniforms: effect.getUniformNames?.(),
@@ -121,80 +137,30 @@ export class ShadoDynamicEntityRenderer {
         });
       };
       this.material.onError = (_effect: Effect, errors: string) => {
-        // eslint-disable-next-line no-console
         console.error('[shado/render] material error', errors);
       };
     }
 
-    this.originalRender = this.mesh.render.bind(this.mesh);
-    this.mesh.render = (subMesh: any, enableAlphaMode: boolean): any => {
-      // Frame-owned synchronization: the first variant renderer in a frame
-      // performs the (dirty-guarded) upload; the rest are no-ops.
+    const syncMaterial = () => {
+      // The first variant in a frame performs the dirty-guarded upload; peers
+      // become no-ops. Babylon owns the actual draw through its public material
+      // and forced-instance-count path.
       this.container.syncGpu((this.engine as any).frameId ?? 0);
       this.container.bindMaterial(this.material);
       this.material.setTexture('uShadoEntityAtlas', this.atlas.texture);
       this.material.setTexture('uShadoEntityMeshTexture', meshTexture);
       this.material.setFloat('uShadoEntityMeshIndex', meshIndex);
       this.material.setFloat('uUseShadoEntityMeshTexture', options.meshTexture ? 1 : 0);
+      const { offset: drawOffset, count: drawCount } =
+        this.container.getMeshDrawRange(meshIndex);
+      this.material.setFloat('uShadoDrawOffset', drawOffset);
+      this.mesh.forcedInstanceCount = Math.max(0, drawCount | 0);
+      this.mesh.isVisible = this.mesh.forcedInstanceCount > 0;
+      this.lastSubmittedInstances = this.mesh.forcedInstanceCount;
 
-      if (!this.material.isReadyForSubMesh(this.mesh, subMesh)) {
-        if (options.log) {
-          // eslint-disable-next-line no-console
-          console.debug('[shado/render] render skipped', {
-            reason: 'material not ready',
-            drawCount: this.container.drawCount,
-            entityCount: this.container.entityCount,
-          });
-        }
-        return this.mesh;
-      }
-
-      // Only this variant's contiguous draw-ID range is submitted, so total
-      // instances across variants equal visible entities.
-      const { offset: drawOffset, count: drawCount } = this.container.getMeshDrawRange(meshIndex);
-      if (drawCount <= 0) return this.mesh;
-
-      const effect = subMesh.effect ?? this.material.getEffect();
-      if (!effect?.isReady()) return this.mesh;
-
-      const drawWrapper = (this.material as any)._storeEffectOnSubMeshes
-        ? subMesh._drawWrapper
-        : (this.material as any)._getDrawWrapper();
-      if (!drawWrapper) return this.mesh;
-
-      if (enableAlphaMode && this.material.needAlphaBlending()) {
-        this.engine.setAlphaMode(this.material.alphaMode);
-      }
-
-      (this.material as any)._preBind(
-        drawWrapper,
-        (this.mesh as any)._internalMeshDataInfo?._effectiveSideOrientation
-      );
-      if (this.material.forceDepthWrite) {
-        this.engine.setDepthWrite(true);
-      }
-
-      effect.setMatrix(
-        'worldViewProjection',
-        this.mesh.getWorldMatrix().multiply(this.scene.getTransformMatrix())
-      );
-      if (billboard) effect.setMatrix('view', this.scene.getViewMatrix());
-      effect.setFloat('uShadoEntityMeshIndex', meshIndex);
-      effect.setFloat('uShadoDrawOffset', drawOffset);
-      effect.setFloat('uUseShadoEntityMeshTexture', options.meshTexture ? 1 : 0);
-      this.mesh._bind(subMesh, effect, BABYLON.Material.TriangleFillMode);
-
-      this.container.bind(effect);
-      effect.setTexture('uShadoEntityAtlas', this.atlas.texture);
-      effect.setTexture('uShadoEntityMeshTexture', meshTexture);
-      (this.mesh as any)._draw(subMesh, BABYLON.Material.TriangleFillMode, drawCount);
-      this.lastSubmittedInstances = drawCount;
-      this.material.unbind();
-
-      if (options.log && !this.loggedFirstDraw) {
+      if (options.log && drawCount > 0 && !this.loggedFirstDraw) {
         this.loggedFirstDraw = true;
-        // eslint-disable-next-line no-console
-        console.debug('[shado/render] first draw submitted', {
+        console.debug('[shado/render] first draw scheduled', {
           mesh: this.mesh.name,
           drawCount,
           entityCount: this.container.entityCount,
@@ -202,9 +168,9 @@ export class ShadoDynamicEntityRenderer {
           vertices: this.mesh.getTotalVertices(),
         });
       }
-
-      return this.mesh;
     };
+    syncMaterial();
+    this.beforeRenderObserver = scene.onBeforeRenderObservable.add(syncMaterial);
 
     const picking = normalizePickingOptions(options.picking);
     if (picking) {
@@ -218,16 +184,19 @@ export class ShadoDynamicEntityRenderer {
     atlas: ShadoTextureAtlas,
     options: ShadoDynamicEntityMeshVariantRendererOptions
   ): ShadoDynamicEntityRenderer[] {
-    return options.variants.map(variant => new ShadoDynamicEntityRenderer(scene, container, atlas, {
-      billboard: false,
-      geometry: 'mesh',
-      log: options.log,
-      mesh: variant.mesh,
-      meshIndex: variant.meshIndex,
-      meshTexture: variant.meshTexture,
-      picking: variant.picking,
-      sortDrawList: options.sortDrawList,
-    }));
+    return options.variants.map(
+      variant =>
+        new ShadoDynamicEntityRenderer(scene, container, atlas, {
+          billboard: false,
+          geometry: 'mesh',
+          log: options.log,
+          mesh: variant.mesh,
+          meshIndex: variant.meshIndex,
+          meshTexture: variant.meshTexture,
+          picking: variant.picking,
+          sortDrawList: options.sortDrawList,
+        })
+    );
   }
 
   public setAsyncPicking(options: boolean | ShadoDynamicEntityAsyncPickingOptions): void {
@@ -268,8 +237,10 @@ export class ShadoDynamicEntityRenderer {
   }
 
   public dispose(): void {
-    this.mesh.render = this.originalRender;
+    this.scene.onBeforeRenderObservable.remove(this.beforeRenderObserver);
+    this.mesh.forcedInstanceCount = 0;
     this.pickingHandle?.dispose();
     this.material.dispose();
+    this.fallbackMeshTexture?.dispose();
   }
 }

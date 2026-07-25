@@ -1,6 +1,7 @@
 import { FontAsset } from '@babylonjs/addons/msdfText/fontAsset';
 import * as BABYLON from '@babylonjs/core';
 import '@babylonjs/loaders/glTF';
+import { EngineInstrumentation } from '@babylonjs/core/Instrumentation/engineInstrumentation';
 import {
   createShadoVatShowcase,
   createShadoVatShowcaseUi,
@@ -16,6 +17,10 @@ export class Playground {
   ): Promise<BABYLON.Scene> {
     const scene = new BABYLON.Scene(engine);
     scene.clearColor = BABYLON.Color4.FromHexString('#0d1522ff');
+    (globalThis as any).__shadoScene = scene;
+    delete (globalThis as any).__shadoWorld;
+    const engineInstrumentation = new EngineInstrumentation(engine);
+    engineInstrumentation.captureGPUFrameTime = true;
 
     const camera = new BABYLON.ArcRotateCamera(
       'eq-showcase-camera', -Math.PI / 2, 0.78, 54,
@@ -49,16 +54,32 @@ export class Playground {
       bakeConcurrency: 3,
       fontAsset,
       createNameplateLayer: (s, actors, names, font) =>
-        createMsdfNameplateLayer(s, actors, names, font, { thickness: 0.02, depthTest: true }),
+        createMsdfNameplateLayer(s, actors, names, font, {
+          thickness: 0.02,
+          depthTest: true,
+        }),
       onStats: (stats: ShadoVatShowcaseStats) => ui?.update(stats),
     });
     // Deliberately expose the live scene/controller in the local sandbox. It
     // keeps animation/VAT diagnostics inspectable without affecting the shared
     // online Playground module or the production library API.
-    (globalThis as any).__shadoScene = scene;
     (globalThis as any).__shadoShowcase = controller;
-    ui = createShadoVatShowcaseUi(canvas, controller);
-    scene.onDisposeObservable.add(() => ui?.dispose());
+    ui = createShadoVatShowcaseUi(canvas, controller, {
+      renderBackend: engine.isWebGPU ? 'WebGPU' : 'WebGL2',
+      storageBackend: engine.isWebGPU ? 'StorageBuffer' : 'DataTexture',
+      sample: () => {
+        const gpuNanoseconds = engineInstrumentation.gpuFrameTimeCounter.current;
+        return {
+          fps: engine.getFps(),
+          frameMs: engine.getDeltaTime(),
+          gpuMs: gpuNanoseconds > 0 ? gpuNanoseconds / 1_000_000 : undefined,
+        };
+      },
+    });
+    scene.onDisposeObservable.add(() => {
+      ui?.dispose();
+      engineInstrumentation.dispose();
+    });
     return scene;
   }
 }

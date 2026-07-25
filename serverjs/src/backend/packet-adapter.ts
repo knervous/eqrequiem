@@ -41,6 +41,14 @@ export class GameBackendPacketAdapter {
     return this.backend.disconnect(sessionId);
   }
 
+  async close(sessionId: number): Promise<void> {
+    try {
+      await this.backend.disconnect(sessionId);
+    } finally {
+      await this.backend.close();
+    }
+  }
+
   async receive(
     sessionId: number,
     packet: BackendInboundPacket,

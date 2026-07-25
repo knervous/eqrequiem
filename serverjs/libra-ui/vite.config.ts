@@ -3,21 +3,50 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
 const repoRoot = path.resolve(new URL('.', import.meta.url).pathname, '../..')
+const babylonLiteRuntime = path.resolve(
+  new URL('.', import.meta.url).pathname,
+  '../../client/src/bjs/core-runtime.ts',
+)
 
 // https://vite.dev/config/
 export default defineConfig({
   publicDir: path.resolve(new URL('.', import.meta.url).pathname, '../../client/public'),
   plugins: [react()],
   resolve: {
-    dedupe: ['@babylonjs/core', 'shader-object'],
-    alias: {
-      '@': path.resolve(new URL('.', import.meta.url).pathname, './src'),
-      '@game': path.resolve(new URL('.', import.meta.url).pathname, '../../client/src/Game'),
-      '@requiem': path.resolve(new URL('.', import.meta.url).pathname, '../../client/src'),
-    },
+    dedupe: ['@babylonjs/core', '@knervous/shado'],
+    alias: [
+      // Redirect only the package root. Babylon's explicit feature subpaths
+      // must continue resolving normally.
+      { find: /^@babylonjs\/core$/, replacement: babylonLiteRuntime },
+      {
+        find: '@bjs',
+        replacement: path.resolve(
+          new URL('.', import.meta.url).pathname,
+          '../../client/src/bjs/index.ts',
+        ),
+      },
+      {
+        find: '@game',
+        replacement: path.resolve(
+          new URL('.', import.meta.url).pathname,
+          '../../client/src/Game',
+        ),
+      },
+      {
+        find: '@requiem',
+        replacement: path.resolve(
+          new URL('.', import.meta.url).pathname,
+          '../../client/src',
+        ),
+      },
+      {
+        find: '@libra',
+        replacement: path.resolve(new URL('.', import.meta.url).pathname, './src'),
+      },
+    ],
   },
   optimizeDeps: {
-    exclude: ['shader-object'],
+    exclude: ['@knervous/shado'],
   },
   // Exposes the repo root to client code (raw-rig-viewer.ts) so it can fetch
   // source GLBs directly via Vite's /@fs/ dev-only static serving, without

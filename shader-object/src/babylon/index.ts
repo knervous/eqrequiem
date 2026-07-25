@@ -44,5 +44,6 @@ export function peekBABYLON(): typeof BABYLON_CORE {
   return BABYLON_CORE;
 }
 
+export * from './adapter';
 export * from '@babylonjs/core';
 export type * from '@babylonjs/core';

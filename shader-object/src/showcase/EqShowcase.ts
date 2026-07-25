@@ -47,14 +47,60 @@ type EqArmorAtlas = {
 // legacy EQ emotes for every race. These codes come from Requiem's canonical
 // AnimationDefinitions map: pose, two idles, walk, run, cheer, wave and attack.
 const SHOWCASE_CLIPS = new Set([
-  'pos', 'p01', 'o01',
-  'l01', 'l02', 'l03', 'l04', 'l05', 'l06', 'l08', 'l09',
-  'p02', 'p03', 'p04', 'p05', 'p06',
-  'c01', 'c02', 'c03', 'c04', 'c05', 'c06', 'c07', 'c08', 'c11',
-  'd01', 'd02',
-  's01', 's02', 's03', 's04', 's06', 's07', 's08', 's09', 's10', 's11',
-  's12', 's13', 's14', 's15', 's16', 's17', 's18', 's19', 's20', 's21',
-  's22', 's23', 's24', 's25', 's26', 's27', 's28',
+  'pos',
+  'p01',
+  'o01',
+  'l01',
+  'l02',
+  'l03',
+  'l04',
+  'l05',
+  'l06',
+  'l08',
+  'l09',
+  'p02',
+  'p03',
+  'p04',
+  'p05',
+  'p06',
+  'c01',
+  'c02',
+  'c03',
+  'c04',
+  'c05',
+  'c06',
+  'c07',
+  'c08',
+  'c11',
+  'd01',
+  'd02',
+  's01',
+  's02',
+  's03',
+  's04',
+  's06',
+  's07',
+  's08',
+  's09',
+  's10',
+  's11',
+  's12',
+  's13',
+  's14',
+  's15',
+  's16',
+  's17',
+  's18',
+  's19',
+  's20',
+  's21',
+  's22',
+  's23',
+  's24',
+  's25',
+  's26',
+  's27',
+  's28',
 ]);
 
 // Bake a broad library, but only choose standing/locomotion clips for ambient
@@ -62,7 +108,17 @@ const SHOWCASE_CLIPS = new Set([
 // are valid on demand; looping them at random made an otherwise healthy crowd
 // look anatomically broken. NPC rigs get the smallest cross-race-safe subset.
 const AMBIENT_PC_CLIPS = new Set([
-  'p01', 'o01', 'l01', 'l02', 's01', 's03', 's06', 's09', 's21', 's23', 's25',
+  'p01',
+  'o01',
+  'l01',
+  'l02',
+  's01',
+  's03',
+  's06',
+  's09',
+  's21',
+  's23',
+  's25',
 ]);
 const AMBIENT_NPC_CLIPS = new Set(['p01', 'o01', 'l01', 'l02']);
 
@@ -118,9 +174,8 @@ function setActorTransform(
   actor.legTint.set([1, 1, 1, 1]);
   actor.trimTint.set([1, 1, 1, 1]);
   actor.armorClass = armorClass;
-  actor.weaponClass = Math.random() < 0.18
-    ? 0
-    : 1 + Math.floor(Math.random() * SHOWCASE_WEAPONS.length);
+  actor.weaponClass =
+    Math.random() < 0.18 ? 0 : 1 + Math.floor(Math.random() * SHOWCASE_WEAPONS.length);
   actor.__eqEquipment = (['armorless', 'leather', 'chain', 'plate'] as const)[armorClass];
   actor.nameLiftWorld = model.kind === 'npc' ? 2.5 : 3.4;
   actor.nameWorldPerEM = 0.42;
@@ -138,9 +193,7 @@ function equipmentPartForMaterial(name: string): number {
 
 function materialForSubMesh(mesh: any, subMesh: any): any {
   const material = mesh.material;
-  return material?.subMaterials
-    ? material.subMaterials[subMesh.materialIndex] ?? null
-    : material;
+  return material?.subMaterials ? (material.subMaterials[subMesh.materialIndex] ?? null) : material;
 }
 
 function stampEquipmentParts(meshes: any[]): void {
@@ -156,7 +209,10 @@ function stampEquipmentParts(meshes: any[]): void {
   }
 }
 
-function eqArmorLayerSet(materialName: string, atlas: readonly string[]): [number, number, number, number] {
+function eqArmorLayerSet(
+  materialName: string,
+  atlas: readonly string[]
+): [number, number, number, number] {
   const match = materialName.toLowerCase().match(/^([a-z]{3})(ch|ua|fa|lg|hn|ft)(\d{2})(\d{2})$/);
   if (!match) return [-1, -1, -1, -1];
   const [, model, piece, , textureNumberText] = match;
@@ -189,10 +245,17 @@ function stampEqArmorLayers(meshes: any[], atlas: readonly string[]): void {
 }
 
 function meshMatchesModel(mesh: any, modelCode: string): boolean {
-  if (String(mesh.name ?? '').toLowerCase().startsWith(modelCode)) return true;
+  if (
+    String(mesh.name ?? '')
+      .toLowerCase()
+      .startsWith(modelCode)
+  )
+    return true;
   const materials = mesh.material?.subMaterials ?? [mesh.material];
   return materials.some((material: any) =>
-    String(material?.name ?? '').toLowerCase().startsWith(modelCode)
+    String(material?.name ?? '')
+      .toLowerCase()
+      .startsWith(modelCode)
   );
 }
 
@@ -211,12 +274,22 @@ function normalizeWeaponMeshes(meshes: any[], targetLength = 1.6): void {
   for (const mesh of meshes) {
     const positions = mesh.getVerticesData?.('position') as ArrayLike<number> | null;
     if (!positions?.length) continue;
-    let minX = Infinity, minY = Infinity, minZ = Infinity;
-    let maxX = -Infinity, maxY = -Infinity, maxZ = -Infinity;
+    let minX = Infinity,
+      minY = Infinity,
+      minZ = Infinity;
+    let maxX = -Infinity,
+      maxY = -Infinity,
+      maxZ = -Infinity;
     for (let index = 0; index < positions.length; index += 3) {
-      const x = positions[index], y = positions[index + 1], z = positions[index + 2];
-      minX = Math.min(minX, x); minY = Math.min(minY, y); minZ = Math.min(minZ, z);
-      maxX = Math.max(maxX, x); maxY = Math.max(maxY, y); maxZ = Math.max(maxZ, z);
+      const x = positions[index],
+        y = positions[index + 1],
+        z = positions[index + 2];
+      minX = Math.min(minX, x);
+      minY = Math.min(minY, y);
+      minZ = Math.min(minZ, z);
+      maxX = Math.max(maxX, x);
+      maxY = Math.max(maxY, y);
+      maxZ = Math.max(maxZ, z);
     }
     extent = Math.max(extent, maxX - minX, maxY - minY, maxZ - minZ);
   }
@@ -244,8 +317,9 @@ function orientWeaponMeshes(B: any, meshes: any[]): void {
 }
 
 function bindWeaponMeshesToSkeleton(B: any, meshes: any[], skeleton: any): boolean {
-  const hand = skeleton.bones.find((bone: any) => bone.name.toLowerCase() === 'r_point')
-    ?? skeleton.bones.find((bone: any) => /right.*hand|r[_-]?hand/i.test(bone.name));
+  const hand =
+    skeleton.bones.find((bone: any) => bone.name.toLowerCase() === 'r_point') ??
+    skeleton.bones.find((bone: any) => /right.*hand|r[_-]?hand/i.test(bone.name));
   // Quadrupeds and other non-humanoid NPCs intentionally remain unarmed.
   if (!hand) return false;
   const boneIndex = hand._index ?? skeleton.bones.indexOf(hand);
@@ -267,10 +341,9 @@ function bindWeaponMeshesToSkeleton(B: any, meshes: any[], skeleton: any): boole
 }
 
 function bindHeadMeshesToSkeleton(B: any, meshes: any[], targetSkeleton: any): void {
-  const targetByName = new Map(targetSkeleton.bones.map((bone: any, index: number) => [
-    bone.name,
-    bone._index ?? index,
-  ]));
+  const targetByName = new Map(
+    targetSkeleton.bones.map((bone: any, index: number) => [bone.name, bone._index ?? index])
+  );
   for (const mesh of meshes) {
     const sourceSkeleton = mesh.skeleton;
     if (!sourceSkeleton) continue;
@@ -291,7 +364,10 @@ function bindHeadMeshesToSkeleton(B: any, meshes: any[], targetSkeleton: any): v
     ]) {
       const source = mesh.getVerticesData(kind);
       if (!source) continue;
-      const mapped = Float32Array.from(source as ArrayLike<number>, value => remap[Math.round(value)] ?? 0);
+      const mapped = Float32Array.from(
+        source as ArrayLike<number>,
+        value => remap[Math.round(value)] ?? 0
+      );
       mesh.setVerticesData(kind, mapped, false, 4);
     }
     mesh.skeleton = targetSkeleton;
@@ -301,23 +377,26 @@ function bindHeadMeshesToSkeleton(B: any, meshes: any[], targetSkeleton: any): v
 function setRandomAnimation(
   container: ShadoInstanceContainer<any>,
   actor: any,
-  model: EqShowcaseModel,
+  model: EqShowcaseModel
 ): void {
   const frameLimit = container.vat?.framesTotal ?? 0;
   const ambient = model.ambientClips?.length
     ? new Set(model.ambientClips.map(name => name.toLowerCase()))
-    : model.kind === 'pc' ? AMBIENT_PC_CLIPS : AMBIENT_NPC_CLIPS;
-  const clips = (container.vat?.clips ?? []).filter(clip =>
-    Number.isFinite(clip.from)
-    && Number.isFinite(clip.to)
-    && Number.isFinite(clip.frames)
-    && Number.isFinite(clip.fps)
-    && clip.from >= 0
-    && clip.to >= clip.from
-    && clip.to < frameLimit
-    && clip.frames === clip.to - clip.from + 1
-    && clip.fps > 0
-    && ambient.has(clip.name.toLowerCase())
+    : model.kind === 'pc'
+      ? AMBIENT_PC_CLIPS
+      : AMBIENT_NPC_CLIPS;
+  const clips = (container.vat?.clips ?? []).filter(
+    clip =>
+      Number.isFinite(clip.from) &&
+      Number.isFinite(clip.to) &&
+      Number.isFinite(clip.frames) &&
+      Number.isFinite(clip.fps) &&
+      clip.from >= 0 &&
+      clip.to >= clip.from &&
+      clip.to < frameLimit &&
+      clip.frames === clip.to - clip.from + 1 &&
+      clip.fps > 0 &&
+      ambient.has(clip.name.toLowerCase())
   );
   const clip = clips[Math.floor(Math.random() * clips.length)];
   if (!clip) {
@@ -353,7 +432,7 @@ async function loadEqArmorAtlas(
   B: any,
   scene: any,
   root: string,
-  modelCode: string,
+  modelCode: string
 ): Promise<EqArmorAtlas> {
   const [basisBytes, manifestBytes] = await Promise.all([
     fetchShadoBytes(`${root}${modelCode}.basis`),
@@ -381,14 +460,14 @@ async function loadEqArmorAtlas(
     const source = new Uint16Array(
       level.transcodedPixels.buffer,
       level.transcodedPixels.byteOffset,
-      level.transcodedPixels.byteLength / 2,
+      level.transcodedPixels.byteLength / 2
     );
     for (let pixel = 0; pixel < pixelsPerLayer; pixel++) {
       const rgb565 = source[pixel];
       const offset = (layer * pixelsPerLayer + pixel) * 4;
-      rgba[offset] = (((rgb565 >> 11) & 0x1f) * 255 / 31) | 0;
-      rgba[offset + 1] = (((rgb565 >> 5) & 0x3f) * 255 / 63) | 0;
-      rgba[offset + 2] = ((rgb565 & 0x1f) * 255 / 31) | 0;
+      rgba[offset] = ((((rgb565 >> 11) & 0x1f) * 255) / 31) | 0;
+      rgba[offset + 1] = ((((rgb565 >> 5) & 0x3f) * 255) / 63) | 0;
+      rgba[offset + 2] = (((rgb565 & 0x1f) * 255) / 31) | 0;
       rgba[offset + 3] = 255;
     }
   }
@@ -402,7 +481,7 @@ async function loadEqArmorAtlas(
     false,
     false,
     B.Constants.TEXTURE_TRILINEAR_SAMPLINGMODE,
-    B.Constants.TEXTURETYPE_UNSIGNED_BYTE,
+    B.Constants.TEXTURETYPE_UNSIGNED_BYTE
   );
   texture.name = `${modelCode}-requiem-armor-atlas`;
   texture.wrapU = B.Texture.WRAP_ADDRESSMODE;
@@ -434,7 +513,7 @@ export function createEqShowcase(
   const selectionRing = B.MeshBuilder.CreateTorus(
     'shado-selected-instance',
     { diameter: 3.8, thickness: 0.16, tessellation: 64 },
-    scene,
+    scene
   );
   const selectionMaterial = new B.StandardMaterial('shado-selected-instance-material', scene);
   selectionMaterial.diffuseColor = new B.Color3(1, 0.58, 0.08);
@@ -448,7 +527,8 @@ export function createEqShowcase(
   selectionRing.setEnabled(false);
   let disposed = false;
   let nameplatesEnabled = true;
-  let cullingRange = 180;
+  let cullingRange = 600;
+  let reducerAverageMs = 0;
   const cullingModule = decodeBase64Bytes(SHOWCASE_CULLING_WASM_BASE64);
   const cullingMode: EqShowcaseStats['cullingMode'] = WebAssembly.validate(cullingModule.buffer)
     ? 'wasm-simd'
@@ -463,6 +543,8 @@ export function createEqShowcase(
     visible: 0,
     cullingRange,
     cullingMode,
+    reducerMs: 0,
+    reducerAverageMs: 0,
     loadedCodes: [],
   };
 
@@ -472,21 +554,23 @@ export function createEqShowcase(
     const index = pool.container.children.indexOf(actor);
     if (index < 0) return undefined;
     const catalog = pool.model.catalog ?? (pool.model.custom ? 'custom' : 'shado');
-    const published = catalog === 'shado' && pool.model.kind === 'pc'
-      ? actor.getPublishedProperties().map((descriptor: ShadoPublishedProperty) => ({
-          ...descriptor,
-          value: actor.published.$get(descriptor.name),
-        }))
-      : [];
+    const published =
+      catalog === 'shado' && pool.model.kind === 'pc'
+        ? actor.getPublishedProperties().map((descriptor: ShadoPublishedProperty) => ({
+            ...descriptor,
+            value: actor.published.$get(descriptor.name),
+          }))
+        : [];
     const clips = pool.container.vat?.clips ?? [];
-    const currentClip = clips.find(clip =>
-      Math.abs(clip.from - actor.animationBuffer[0]) < 0.01
-      && Math.abs(clip.to - actor.animationBuffer[1]) < 0.01
+    const currentClip = clips.find(
+      clip =>
+        Math.abs(clip.from - actor.animationBuffer[0]) < 0.01 &&
+        Math.abs(clip.to - actor.animationBuffer[1]) < 0.01
     );
     const rotation = actor.rotation;
     const yaw = Math.atan2(
       2 * ((rotation[3] ?? 1) * (rotation[1] ?? 0) + (rotation[0] ?? 0) * (rotation[2] ?? 0)),
-      1 - 2 * ((rotation[1] ?? 0) ** 2 + (rotation[2] ?? 0) ** 2),
+      1 - 2 * ((rotation[1] ?? 0) ** 2 + (rotation[2] ?? 0) ** 2)
     );
     return {
       modelCode: pool.model.code,
@@ -501,12 +585,13 @@ export function createEqShowcase(
         z: actor.translation[2],
       },
       scale: actor.translation[3],
-      rotationDegrees: yaw * 180 / Math.PI,
+      rotationDegrees: (yaw * 180) / Math.PI,
       animation: currentClip?.name ?? '',
-      animations: clips.map(clip => ({ name: clip.name, label: showcaseAnimationLabel(clip.name) })),
-      animationSpeed: currentClip?.fps
-        ? actor.animationBuffer[3] / currentClip.fps
-        : 1,
+      animations: clips.map(clip => ({
+        name: clip.name,
+        label: showcaseAnimationLabel(clip.name),
+      })),
+      animationSpeed: currentClip?.fps ? actor.animationBuffer[3] / currentClip.fps : 1,
       published,
     };
   };
@@ -518,7 +603,7 @@ export function createEqShowcase(
     pool: LoadedPool,
     actor: any,
     result?: { distance: number },
-    event?: PointerEvent,
+    event?: PointerEvent
   ) => {
     if (event && result) {
       const best = pickCandidates.get(event);
@@ -558,16 +643,22 @@ export function createEqShowcase(
       // below is registered directly into the host engine's live stores.
       bridgeBabylonShaderStores(B);
       await ContainerClass.initialize(scene.getEngine(), {
-        backend: 'datatex',
-        wasm: cullingMode === 'wasm-simd'
-          ? { mode: 'precompiled', module: cullingModule.buffer }
-          : false,
+        backend: scene.getEngine().isWebGPU ? 'storage' : 'datatex',
+        wasm:
+          cullingMode === 'wasm-simd'
+            ? { mode: 'precompiled', module: cullingModule.buffer }
+            : false,
         extra: ActorClass,
         logShaderCode: false,
         logAscCode: false,
       });
       if (options.fontAsset) {
-        await NameplateData.initialize(scene.getEngine(), { wasm: false, logShaderCode: false, logAscCode: false });
+        await NameplateData.initialize(scene.getEngine(), {
+          backend: scene.getEngine().isWebGPU ? 'storage' : 'datatex',
+          wasm: false,
+          logShaderCode: false,
+          logAscCode: false,
+        });
       }
       bridgeBabylonShaderStores(B);
     })();
@@ -605,25 +696,33 @@ export function createEqShowcase(
       source.addAllToScene();
       headSource.addAllToScene();
       for (const weaponSource of weaponSources) weaponSource.addAllToScene();
-      const bodyCandidates = source.meshes.filter((mesh: any) => mesh.getTotalVertices?.() > 0 && mesh.skeleton);
-      const headMeshes = headSource.meshes.filter((mesh: any) => mesh.getTotalVertices?.() > 0 && mesh.skeleton);
+      const bodyCandidates = source.meshes.filter(
+        (mesh: any) => mesh.getTotalVertices?.() > 0 && mesh.skeleton
+      );
+      const headMeshes = headSource.meshes.filter(
+        (mesh: any) => mesh.getTotalVertices?.() > 0 && mesh.skeleton
+      );
       // Some decoded EQ assets retain an unused base-race skin before the skin
       // actually referenced by the visible mesh (HOM contains a dwarf base
       // skeleton at slot 0 and its halfling skeleton at slot 1). Always follow
       // the mesh binding; array order is not an ownership relationship.
       const preferredBody = bodyCandidates.find((mesh: any) => meshMatchesModel(mesh, model.code));
-      const skeleton = preferredBody?.skeleton ?? bodyCandidates[0]?.skeleton ?? source.skeletons[0];
+      const skeleton =
+        preferredBody?.skeleton ?? bodyCandidates[0]?.skeleton ?? source.skeletons[0];
       const bodyMeshes = bodyCandidates.filter((mesh: any) => mesh.skeleton === skeleton);
-      if (!bodyMeshes.length || !skeleton) throw new Error(`${model.label} has no skinned mesh/skeleton`);
+      if (!bodyMeshes.length || !skeleton)
+        throw new Error(`${model.label} has no skinned mesh/skeleton`);
       // EQ heads are separate skinned GLBs. Their joint indices use the same
       // race skeleton ordering, so bind them to the body's animated skeleton
       // before atlas stamping and merge. This makes the head part of the same
       // single VAT draw instead of leaving it behind as a source mesh.
       bindHeadMeshesToSkeleton(B, headMeshes, skeleton);
-      const minimumY = Math.min(...[...bodyMeshes, ...headMeshes].map((mesh: any) => {
-        mesh.computeWorldMatrix(true);
-        return mesh.getBoundingInfo().boundingBox.minimumWorld.y;
-      }));
+      const minimumY = Math.min(
+        ...[...bodyMeshes, ...headMeshes].map((mesh: any) => {
+          mesh.computeWorldMatrix(true);
+          return mesh.getBoundingInfo().boundingBox.minimumWorld.y;
+        })
+      );
       const groundOffset = Number.isFinite(minimumY) ? -minimumY : 0;
       const weaponMeshes: any[][] = [];
       for (const [index, weaponSource] of weaponSources.entries()) {
@@ -644,7 +743,9 @@ export function createEqShowcase(
       const showcaseGroups = source.animationGroups.filter((group: any) =>
         SHOWCASE_CLIPS.has(group.name.toLowerCase())
       );
-      const ownedGroups = showcaseGroups.length ? showcaseGroups : source.animationGroups.slice(0, 8);
+      const ownedGroups = showcaseGroups.length
+        ? showcaseGroups
+        : source.animationGroups.slice(0, 8);
       const packedVat = await packedVatPromise;
 
       const container = new ContainerClass(scene.getEngine());
@@ -656,7 +757,10 @@ export function createEqShowcase(
       }
       let pool: LoadedPool | undefined;
       await container.attachMeshes(scene, meshes, skeleton, {
-        vat: 'bake', merge: true, replaceMaterial: true, disposeOriginalMaterial: false,
+        vat: 'bake',
+        merge: true,
+        replaceMaterial: true,
+        disposeOriginalMaterial: false,
         packedVat,
         picking: pickingFor(() => pool),
         defines: armorAtlas ? ['EQ_ARMOR_VARIANTS'] : undefined,
@@ -675,7 +779,12 @@ export function createEqShowcase(
         for (const group of imported.animationGroups.slice()) group.dispose();
       }
       if (nameplates && options.createNameplateLayer) {
-        nameplateLayer = options.createNameplateLayer(scene, container, nameplates, options.fontAsset);
+        nameplateLayer = options.createNameplateLayer(
+          scene,
+          container,
+          nameplates,
+          options.fontAsset
+        );
         nameplateLayer?.setEnabled(nameplatesEnabled);
       }
       const actorName = nameFor(model, 1);
@@ -689,7 +798,12 @@ export function createEqShowcase(
         container,
         nameplates,
         nameplateLayer,
-        sources: [source, headSource, ...weaponSources, ...(armorAtlas ? [armorAtlas.texture] : [])],
+        sources: [
+          source,
+          headSource,
+          ...weaponSources,
+          ...(armorAtlas ? [armorAtlas.texture] : []),
+        ],
         groundOffset,
         nextInstanceNumber: 2,
       };
@@ -698,12 +812,14 @@ export function createEqShowcase(
       failed.delete(model.code);
       publish({ current: undefined, lastError: undefined });
       return pool;
-    })().catch(error => {
-      failed.add(model.code);
-      const message = error instanceof Error ? error.message : String(error);
-      publish({ current: undefined, lastError: `${model.label}: ${message}` });
-      throw error;
-    }).finally(() => pending.delete(model.code));
+    })()
+      .catch(error => {
+        failed.add(model.code);
+        const message = error instanceof Error ? error.message : String(error);
+        publish({ current: undefined, lastError: `${model.label}: ${message}` });
+        throw error;
+      })
+      .finally(() => pending.delete(model.code));
     pending.set(model.code, promise);
     return promise;
   };
@@ -721,16 +837,20 @@ export function createEqShowcase(
       try {
         source = await importGlbBytes(B, scene, bytes);
         source.addAllToScene();
-        const meshes = source.meshes.filter((mesh: any) => mesh.getTotalVertices?.() > 0 && mesh.skeleton);
+        const meshes = source.meshes.filter(
+          (mesh: any) => mesh.getTotalVertices?.() > 0 && mesh.skeleton
+        );
         const skeleton = source.skeletons[0] ?? meshes[0]?.skeleton;
         if (!meshes.length || !skeleton) {
           throw new Error('GLB needs at least one skinned mesh and skeleton');
         }
 
-        const validGroups = source.animationGroups.filter((group: any) =>
-          Number.isFinite(group.from) && Number.isFinite(group.to) && group.to >= group.from
+        const validGroups = source.animationGroups.filter(
+          (group: any) =>
+            Number.isFinite(group.from) && Number.isFinite(group.to) && group.to >= group.from
         );
-        if (!validGroups.length) throw new Error('GLB skeleton has no animation groups to VAT-bake');
+        if (!validGroups.length)
+          throw new Error('GLB skeleton has no animation groups to VAT-bake');
         // Keep a dropped model responsive even if it contains a large motion
         // library. Ambient-looking clips are preferred, then the first valid
         // clips fill the remaining slots up to a forum-demo-safe maximum.
@@ -738,22 +858,28 @@ export function createEqShowcase(
         const unsafePattern = /death|dead|die|fall|swim|sit|kneel|attack|combat|hit|stun/i;
         const preferred = validGroups.filter((group: any) => {
           const normalized = group.name.toLowerCase();
-          return AMBIENT_PC_CLIPS.has(normalized)
-            || (ambientPattern.test(group.name) && !unsafePattern.test(group.name));
+          return (
+            AMBIENT_PC_CLIPS.has(normalized) ||
+            (ambientPattern.test(group.name) && !unsafePattern.test(group.name))
+          );
         });
-        const selectedGroups = [...preferred, ...validGroups.filter((group: any) => !preferred.includes(group))]
-          .slice(0, 12);
+        const selectedGroups = [
+          ...preferred,
+          ...validGroups.filter((group: any) => !preferred.includes(group)),
+        ].slice(0, 12);
         model.ambientClips = (preferred.length ? preferred : selectedGroups)
           .slice(0, 8)
           .map((group: any) => group.name);
 
-        const minimumY = Math.min(...meshes.map((mesh: any) => {
-          mesh.computeWorldMatrix(true);
-          return mesh.getBoundingInfo().boundingBox.minimumWorld.y;
-        }));
-        const maximumY = Math.max(...meshes.map((mesh: any) =>
-          mesh.getBoundingInfo().boundingBox.maximumWorld.y
-        ));
+        const minimumY = Math.min(
+          ...meshes.map((mesh: any) => {
+            mesh.computeWorldMatrix(true);
+            return mesh.getBoundingInfo().boundingBox.minimumWorld.y;
+          })
+        );
+        const maximumY = Math.max(
+          ...meshes.map((mesh: any) => mesh.getBoundingInfo().boundingBox.maximumWorld.y)
+        );
         const sourceHeight = maximumY - minimumY;
         if (Number.isFinite(sourceHeight) && sourceHeight > 0.001) {
           // setActorTransform applies the showcase's 1.28 presentation scale;
@@ -783,7 +909,10 @@ export function createEqShowcase(
         }
         let pool: LoadedPool | undefined;
         await container.attachMeshes(scene, meshes, skeleton, {
-          vat: 'bake', merge: true, replaceMaterial: true, disposeOriginalMaterial: false,
+          vat: 'bake',
+          merge: true,
+          replaceMaterial: true,
+          disposeOriginalMaterial: false,
           packedVat,
           picking: pickingFor(() => pool),
           vatOptions: {
@@ -796,7 +925,12 @@ export function createEqShowcase(
         });
         for (const group of source.animationGroups.slice()) group.dispose();
         if (nameplates && options.createNameplateLayer) {
-          nameplateLayer = options.createNameplateLayer(scene, container, nameplates, options.fontAsset);
+          nameplateLayer = options.createNameplateLayer(
+            scene,
+            container,
+            nameplates,
+            options.fontAsset
+          );
           nameplateLayer?.setEnabled(nameplatesEnabled);
         }
         const actorName = nameFor(model, 1);
@@ -823,12 +957,14 @@ export function createEqShowcase(
         source?.dispose();
         throw error;
       }
-    })().catch(error => {
-      failed.add(model.code);
-      const message = error instanceof Error ? error.message : String(error);
-      publish({ current: undefined, lastError: `${model.label}: ${message}` });
-      throw error;
-    }).finally(() => pending.delete(model.code));
+    })()
+      .catch(error => {
+        failed.add(model.code);
+        const message = error instanceof Error ? error.message : String(error);
+        publish({ current: undefined, lastError: `${model.label}: ${message}` });
+        throw error;
+      })
+      .finally(() => pending.delete(model.code));
     pending.set(model.code, promise);
     return promise;
   };
@@ -849,32 +985,39 @@ export function createEqShowcase(
         source = await B.SceneLoader.LoadAssetContainerAsync(
           model.sourceUrl!.slice(0, slash),
           model.sourceUrl!.slice(slash),
-          scene,
+          scene
         );
         source.addAllToScene();
-        const meshes = source.meshes.filter((mesh: any) => mesh.getTotalVertices?.() > 0 && mesh.skeleton);
+        const meshes = source.meshes.filter(
+          (mesh: any) => mesh.getTotalVertices?.() > 0 && mesh.skeleton
+        );
         const skeleton = meshes[0]?.skeleton ?? source.skeletons[0];
         if (!meshes.length || !skeleton) {
           throw new Error('Canonical asset needs at least one skinned mesh and skeleton');
         }
-        const validGroups = source.animationGroups.filter((group: any) =>
-          Number.isFinite(group.from) && Number.isFinite(group.to) && group.to >= group.from
+        const validGroups = source.animationGroups.filter(
+          (group: any) =>
+            Number.isFinite(group.from) && Number.isFinite(group.to) && group.to >= group.from
         );
         const ambientPattern = /idle|stand|walk|run|move|locom|breathe|pose/i;
         const unsafePattern = /death|dead|die|fall|swim|sit|kneel|attack|combat|hit|stun/i;
-        const preferred = validGroups.filter((group: any) =>
-          ambientPattern.test(group.name) && !unsafePattern.test(group.name)
+        const preferred = validGroups.filter(
+          (group: any) => ambientPattern.test(group.name) && !unsafePattern.test(group.name)
         );
-        const selectedGroups = [...preferred, ...validGroups.filter((group: any) => !preferred.includes(group))]
-          .slice(0, 12);
+        const selectedGroups = [
+          ...preferred,
+          ...validGroups.filter((group: any) => !preferred.includes(group)),
+        ].slice(0, 12);
 
-        const minimumY = Math.min(...meshes.map((mesh: any) => {
-          mesh.computeWorldMatrix(true);
-          return mesh.getBoundingInfo().boundingBox.minimumWorld.y;
-        }));
-        const maximumY = Math.max(...meshes.map((mesh: any) =>
-          mesh.getBoundingInfo().boundingBox.maximumWorld.y
-        ));
+        const minimumY = Math.min(
+          ...meshes.map((mesh: any) => {
+            mesh.computeWorldMatrix(true);
+            return mesh.getBoundingInfo().boundingBox.minimumWorld.y;
+          })
+        );
+        const maximumY = Math.max(
+          ...meshes.map((mesh: any) => mesh.getBoundingInfo().boundingBox.maximumWorld.y)
+        );
         const sourceHeight = maximumY - minimumY;
         if (Number.isFinite(sourceHeight) && sourceHeight > 0.001) {
           model.scale = Math.min(100, Math.max(0.01, 5.8 / (sourceHeight * 1.28)));
@@ -893,7 +1036,10 @@ export function createEqShowcase(
         }
         let pool: LoadedPool | undefined;
         await container.attachMeshes(scene, meshes, skeleton, {
-          vat: 'bake', merge: true, replaceMaterial: true, disposeOriginalMaterial: false,
+          vat: 'bake',
+          merge: true,
+          replaceMaterial: true,
+          disposeOriginalMaterial: false,
           picking: pickingFor(() => pool),
           vatOptions: {
             useHalfDQ: true,
@@ -908,7 +1054,12 @@ export function createEqShowcase(
           .map((group: any) => group.name);
         for (const group of source.animationGroups.slice()) group.dispose();
         if (nameplates && options.createNameplateLayer) {
-          nameplateLayer = options.createNameplateLayer(scene, container, nameplates, options.fontAsset);
+          nameplateLayer = options.createNameplateLayer(
+            scene,
+            container,
+            nameplates,
+            options.fontAsset
+          );
           nameplateLayer?.setEnabled(nameplatesEnabled);
         }
         const actorName = nameFor(model, 1);
@@ -935,12 +1086,14 @@ export function createEqShowcase(
         source?.dispose();
         throw error;
       }
-    })().catch(error => {
-      failed.add(model.code);
-      const message = error instanceof Error ? error.message : String(error);
-      publish({ current: undefined, lastError: `${model.label}: ${message}` });
-      throw error;
-    }).finally(() => pending.delete(model.code));
+    })()
+      .catch(error => {
+        failed.add(model.code);
+        const message = error instanceof Error ? error.message : String(error);
+        publish({ current: undefined, lastError: `${model.label}: ${message}` });
+        throw error;
+      })
+      .finally(() => pending.delete(model.code));
     pending.set(model.code, promise);
     return promise;
   };
@@ -956,28 +1109,40 @@ export function createEqShowcase(
     const requested = list.filter(model => !pools.has(model.code));
     const hardware = typeof navigator === 'undefined' ? 2 : navigator.hardwareConcurrency || 4;
     const concurrency = options.bakeWorkerUrl
-      ? Math.max(1, Math.min(options.bakeConcurrency ?? Math.max(2, hardware - 1), 4, requested.length))
+      ? Math.max(
+          1,
+          Math.min(options.bakeConcurrency ?? Math.max(2, hardware - 1), 4, requested.length)
+        )
       : 1;
     let cursor = 0;
-    await Promise.all(Array.from({ length: concurrency }, async () => {
-      while (!disposed) {
-        const index = cursor++;
-        if (index >= requested.length) return;
-        const model = requested[index];
-        try { await loadAny(model); }
-        catch (error) { console.error('[Shado Showcase] model failed', model, error); }
-      }
-    }));
+    await Promise.all(
+      Array.from({ length: concurrency }, async () => {
+        while (!disposed) {
+          const index = cursor++;
+          if (index >= requested.length) return;
+          const model = requested[index];
+          try {
+            await loadAny(model);
+          } catch (error) {
+            console.error('[Shado Showcase] model failed', model, error);
+          }
+        }
+      })
+    );
   };
 
   const controller: EqShowcaseController = {
     stats,
     models,
-    get selected() { return selectedSnapshot(); },
-    loadAll: () => loadList(models.filter(model =>
-      (model.catalog ?? (model.custom ? 'custom' : 'shado')) === 'shado'
-    )),
-    loadKind: kind => loadList(models.filter(model => model.kind === kind && model.catalog !== 'babylon')),
+    get selected() {
+      return selectedSnapshot();
+    },
+    loadAll: () =>
+      loadList(
+        models.filter(model => (model.catalog ?? (model.custom ? 'custom' : 'shado')) === 'shado')
+      ),
+    loadKind: kind =>
+      loadList(models.filter(model => model.kind === kind && model.catalog !== 'babylon')),
     async loadModel(code) {
       const model = models.find(candidate => candidate.code === code);
       if (!model) throw new Error(`Unknown Shado showcase model: ${code}`);
@@ -990,7 +1155,11 @@ export function createEqShowcase(
         throw new Error('Only binary glTF 2.0 (.glb) files are supported');
       }
       const cleanLabel = filename.replace(/\.glb$/i, '').trim() || 'Dropped model';
-      const slug = cleanLabel.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'model';
+      const slug =
+        cleanLabel
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-|-$/g, '') || 'model';
       let code = `drop-${slug}`;
       let suffix = 2;
       while (models.some(model => model.code === code)) code = `drop-${slug}-${suffix++}`;
@@ -1072,7 +1241,7 @@ export function createEqShowcase(
       publish();
     },
     setCullingRange(distance) {
-      cullingRange = Number.isFinite(distance) ? Math.max(0, distance) : 180;
+      cullingRange = Number.isFinite(distance) ? Math.max(0, distance) : 600;
       publish();
     },
     setNameplatesEnabled(enabled) {
@@ -1095,12 +1264,14 @@ export function createEqShowcase(
       const { pool, actor } = selectedRef;
       const clip = pool.container.vat?.clips.find(candidate => candidate.name === name);
       if (!clip) return;
-      const currentSpeed = Number.isFinite(actor.animationBuffer[3]) && actor.animationBuffer[3] > 0
-        ? actor.animationBuffer[3]
-        : clip.fps;
-      const currentClip = pool.container.vat?.clips.find(candidate =>
-        Math.abs(candidate.from - actor.animationBuffer[0]) < 0.01
-        && Math.abs(candidate.to - actor.animationBuffer[1]) < 0.01
+      const currentSpeed =
+        Number.isFinite(actor.animationBuffer[3]) && actor.animationBuffer[3] > 0
+          ? actor.animationBuffer[3]
+          : clip.fps;
+      const currentClip = pool.container.vat?.clips.find(
+        candidate =>
+          Math.abs(candidate.from - actor.animationBuffer[0]) < 0.01 &&
+          Math.abs(candidate.to - actor.animationBuffer[1]) < 0.01
       );
       const speedMultiplier = currentClip?.fps ? currentSpeed / currentClip.fps : 1;
       actor.animationBuffer.set([clip.from, clip.to, 0, clip.fps * speedMultiplier]);
@@ -1110,9 +1281,10 @@ export function createEqShowcase(
     setSelectedAnimationSpeed(multiplier) {
       if (!selectedRef || !Number.isFinite(multiplier)) return;
       const { pool, actor } = selectedRef;
-      const clip = pool.container.vat?.clips.find(candidate =>
-        Math.abs(candidate.from - actor.animationBuffer[0]) < 0.01
-        && Math.abs(candidate.to - actor.animationBuffer[1]) < 0.01
+      const clip = pool.container.vat?.clips.find(
+        candidate =>
+          Math.abs(candidate.from - actor.animationBuffer[0]) < 0.01 &&
+          Math.abs(candidate.to - actor.animationBuffer[1]) < 0.01
       );
       actor.animationBuffer[3] = (clip?.fps ?? 30) * Math.max(0.1, Math.min(3, multiplier));
       actor.emitHeaderDirty();
@@ -1126,7 +1298,7 @@ export function createEqShowcase(
       if (Number.isFinite(patch.z)) actor.translation[2] = patch.z!;
       if (Number.isFinite(patch.scale)) actor.translation[3] = Math.max(0.01, patch.scale!);
       if (Number.isFinite(patch.rotationDegrees)) {
-        const yaw = patch.rotationDegrees! * Math.PI / 180;
+        const yaw = (patch.rotationDegrees! * Math.PI) / 180;
         actor.rotation.set([0, Math.sin(yaw * 0.5), 0, Math.cos(yaw * 0.5)]);
       }
       actor.emitHeaderDirty();
@@ -1150,8 +1322,8 @@ export function createEqShowcase(
       const canvas = scene.getEngine().getRenderingCanvas?.() as HTMLCanvasElement | null;
       if (!canvas) return;
       const rect = canvas.getBoundingClientRect();
-      const px = x * scene.getEngine().getRenderWidth() / Math.max(1, rect.width);
-      const py = y * scene.getEngine().getRenderHeight() / Math.max(1, rect.height);
+      const px = (x * scene.getEngine().getRenderWidth()) / Math.max(1, rect.width);
+      const py = (y * scene.getEngine().getRenderHeight()) / Math.max(1, rect.height);
       const ray = scene.createPickingRay(px, py, B.Matrix.Identity(), camera);
       const groundY = selectedRef.actor.translation[1];
       if (Math.abs(ray.direction.y) < 1e-6) return;
@@ -1191,18 +1363,28 @@ export function createEqShowcase(
       selectionRing.position.set(
         actor.translation[0],
         Number.isFinite(groundY) ? groundY + 0.08 : actor.translation[1] + 0.08,
-        actor.translation[2],
+        actor.translation[2]
       );
       selectionRing.scaling.setAll(scale);
       selectionRing.visibility = 0.72 + Math.sin(performance.now() * 0.004) * 0.18;
     } else {
       selectionRing.setEnabled(false);
     }
+    const reducerStartedAt = performance.now();
     let visible = 0;
     for (const pool of pools.values()) {
-      pool.container.frustumCull(camera, 3.5, cullingRange);
+      if (options.reduceVisibility) {
+        options.reduceVisibility(pool.container, camera, 3.5, cullingRange);
+      } else {
+        pool.container.frustumCull(camera, 3.5, cullingRange);
+      }
       visible += pool.container.visibleCount;
     }
+    const reducerMs = performance.now() - reducerStartedAt;
+    reducerAverageMs =
+      reducerAverageMs === 0 ? reducerMs : reducerAverageMs + (reducerMs - reducerAverageMs) * 0.08;
+    stats.reducerMs = reducerMs;
+    stats.reducerAverageMs = reducerAverageMs;
     if (visible !== stats.visible) publish({ visible });
   });
   scene.onDisposeObservable.add(() => {

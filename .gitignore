@@ -15,3 +15,6 @@ mono_crash.*.json
 .vercel
 
 *.sql.gz
+
+# Large, resumable LAN-generated object/item catalog outputs.
+assets/generated/eq-catalog/

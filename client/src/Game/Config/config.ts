@@ -5,7 +5,7 @@ import {
   ActionButtonType,
   ActionType,
 } from '@ui/components/game/action-button/constants';
-import { getEQFile, writeRootEQFile } from 'sage-core/util/fileHandler';
+import { getEQFile, writeRootEQFile } from '@/Core/opfs';
 import { Config, KeyBindings, Settings } from './types';
 
 const configVersion = 5;

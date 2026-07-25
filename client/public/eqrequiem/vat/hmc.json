@@ -5,19 +5,19 @@
     {
       "name": "Idle",
       "from": 0,
-      "to": 60,
+      "to": 120,
       "fps": 30
     },
     {
       "name": "Run",
-      "from": 61,
-      "to": 85,
+      "from": 121,
+      "to": 144,
       "fps": 30
     },
     {
       "name": "Walk",
-      "from": 86,
-      "to": 116,
+      "from": 145,
+      "to": 177,
       "fps": 30
     }
   ]

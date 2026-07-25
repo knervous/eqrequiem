@@ -1,4 +1,4 @@
-// Paths are relative to serverjs/, where the shader-object bin is invoked.
+// Paths are relative to serverjs/, where the @knervous/shado bin is invoked.
 const common = {
   inputPaths: ["assembly/zone-simulation.ts"],
   runtime: "stub",

@@ -3,7 +3,7 @@ import { ShadoActor } from '../extensions/ShadoActor';
 import { ShadoInstanceContainer } from '../extensions/ShadoInstanceContainer/ShadoInstanceContainer';
 import { shadoPublish } from '../publish';
 import { SHOWCASE_WEAPONS } from './EqShowcaseCatalog';
-import { EQ_SHOWCASE_GLSL } from './EqShowcaseShader';
+import { EQ_SHOWCASE_GLSL, EQ_SHOWCASE_WGSL } from './EqShowcaseShader';
 
 @gpuStruct({ name: 'EqShowcaseActor' })
 export class EqShowcaseActor extends ShadoActor {
@@ -52,5 +52,9 @@ export class EqShowcaseActor extends ShadoActor {
 export class EqShowcaseContainer extends ShadoInstanceContainer<EqShowcaseActor> {
   protected override getGLSLHooks() {
     return EQ_SHOWCASE_GLSL;
+  }
+
+  protected override getWGSLHooks() {
+    return EQ_SHOWCASE_WGSL;
   }
 }

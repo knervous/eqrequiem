@@ -9,6 +9,7 @@ type SchemaField = {
 type StructSchema = {
   fields: SchemaField[];
   headerFloatCount?: number;
+  varArrays?: Record<string, { elemType?: string; floatStride?: number }>;
   structArrays?: Record<string, { schema: StructSchema; headerFloatCount?: number }>;
 };
 
@@ -96,6 +97,48 @@ export function encodeGpuFloatUploadRange(
     const last = Math.min(count - 1, Math.floor((clampedEnd - 1 - base) / stride));
     for (let i = first; i <= last; i++) {
       encodeIntegerFields(mirror, dataView, base + i * stride, childSchema.fields);
+    }
+  }
+}
+
+/**
+ * Copy one dirty range into a storage-buffer mirror, converting numeric
+ * integer var-array values into raw i32/u32 words. Header and struct fields
+ * already use DataView-backed integer storage and therefore remain bit-exact.
+ */
+export function encodeGpuStorageUploadRange(
+  schema: StructSchema,
+  owner: any,
+  payload: Float32Array,
+  mirror: Float32Array,
+  startF: number,
+  endF: number
+): void {
+  const clampedStart = Math.max(0, startF | 0);
+  const clampedEnd = Math.min(payload.length, endF | 0);
+  if (clampedEnd <= clampedStart) return;
+  mirror.set(payload.subarray(clampedStart, clampedEnd), clampedStart);
+
+  const words = new Uint32Array(mirror.buffer, mirror.byteOffset, mirror.length);
+  for (const [field, meta] of Object.entries(schema.varArrays ?? {})) {
+    if (meta.elemType !== 'i32' && meta.elemType !== 'u32') continue;
+    const segment = owner._varSeg[field] as Segment | undefined;
+    if (!segment || segment.lenF <= 0) continue;
+
+    const stride = Math.max(1, meta.floatStride ?? 1);
+    const segmentStart = segment.offF | 0;
+    const segmentEnd = Math.min(payload.length, segmentStart + (segment.lenF | 0));
+    const first = Math.max(segmentStart, clampedStart);
+    const last = Math.min(segmentEnd, clampedEnd);
+    if (last <= first) continue;
+
+    const firstElement = Math.max(0, Math.ceil((first - segmentStart) / stride));
+    const lastElement = Math.ceil((last - segmentStart) / stride);
+    for (let element = firstElement; element < lastElement; element++) {
+      const offset = segmentStart + element * stride;
+      const value = payload[offset] ?? 0;
+      words[offset] =
+        meta.elemType === 'i32' ? (Math.trunc(value) | 0) >>> 0 : Math.trunc(Math.max(0, value)) >>> 0;
     }
   }
 }

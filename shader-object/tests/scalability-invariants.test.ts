@@ -4,6 +4,7 @@ import { NullEngine } from '@babylonjs/core';
 import { DirtyPageTracker } from '../src/arena/DirtyPageTracker';
 import { FloatArena } from '../src/arena/FloatArena';
 import { StorageBacking } from '../src/backings/StorageBacking';
+import { installBabylonShadoRenderer } from '../src/babylon/adapter';
 import { ShadoDynamicEntityContainer } from '../src/render/ShadoDynamicEntityContainer';
 
 const PAGE = DirtyPageTracker.PAGE_BYTES;
@@ -35,6 +36,14 @@ describe('DirtyPageTracker', () => {
     tracker.consumeRanges(PAGE * 10);
     for (let page = 0; page < 8; page++) tracker.markBytes(page * PAGE, 4);
     expect(tracker.consumeRanges(PAGE * 10)).toEqual([{ start: 0, end: PAGE * 10 }]);
+  });
+
+  it('caps fragmented upload calls even below the byte threshold', () => {
+    const tracker = new DirtyPageTracker();
+    const totalBytes = PAGE * 1000;
+    tracker.consumeRanges(totalBytes);
+    for (let page = 0; page < 200; page += 2) tracker.markBytes(page * PAGE, 4);
+    expect(tracker.consumeRanges(totalBytes).length).toBeLessThanOrEqual(64);
   });
 
   it('markAll produces one full range', () => {
@@ -72,10 +81,14 @@ type UpdateCall = { bytes: number; offset: number };
 
 class RecordingBacking extends StorageBacking {
   public updates: UpdateCall[] = [];
+  public buffers: Array<{ updateCount: number }> = [];
   protected override makeBuffer(_byteLength: number): any {
     const self = this;
+    const record = { updateCount: 0 };
+    this.buffers.push(record);
     return {
       update(view: Float32Array | Int32Array, offset = 0) {
+        record.updateCount++;
         self.updates.push({ bytes: view.byteLength, offset });
       },
       dispose() {},
@@ -106,15 +119,23 @@ function makeOwner(floats: number) {
   return { owner, schema, arena };
 }
 
+function makeRecordingEngine() {
+  const engine = new NullEngine();
+  installBabylonShadoRenderer(engine);
+  return engine;
+}
+
 describe('StorageBacking partial uploads', () => {
   it('uploads nothing on a clean frame and a small range for one change', () => {
     const { owner, schema, arena } = makeOwner(64 * 1024);
-    const backing = new RecordingBacking(new NullEngine(), schema, owner);
+    const backing = new RecordingBacking(makeRecordingEngine(), schema, owner);
 
     // First commit: structural, full upload expected.
     const first = backing.commit();
     expect(first.uploadCalls).toBe(1);
-    expect(first.uploadedBytes).toBe(arena.take().byteLength);
+    expect(first.uploadedBytes).toBe(
+      (owner._headerSeg.lenF + owner._structArrayCount.entities * 28) * 4
+    );
 
     // No mutations: zero uploads.
     const idle = backing.commit();
@@ -131,12 +152,97 @@ describe('StorageBacking partial uploads', () => {
 
   it('keeps the full-upload fallback for dense changes', () => {
     const { owner, schema, arena } = makeOwner(16 * 1024);
-    const backing = new RecordingBacking(new NullEngine(), schema, owner);
+    const backing = new RecordingBacking(makeRecordingEngine(), schema, owner);
     backing.commit();
     arena.markDirty();
     const stats = backing.commit();
     expect(stats.uploadCalls).toBe(1);
     expect(stats.uploadedBytes).toBe(arena.take().byteLength);
+  });
+
+  it('allocates reserved capacity without uploading unused records on first load', () => {
+    const { owner, schema, arena } = makeOwner(64 * 1024);
+    owner._structArrayCount.entities = 10;
+    owner._structSeg.entities.lenF = 10 * 28;
+    const backing = new RecordingBacking(makeRecordingEngine(), schema, owner);
+    const stats = backing.commit();
+
+    expect(stats.uploadedBytes).toBe((4 + 10 * 28) * 4);
+    expect(stats.uploadedBytes).toBeLessThan(arena.take().byteLength / 100);
+  });
+
+  it('uploads packed integer words directly and caches unchanged binding params', () => {
+    const { owner, schema, arena } = makeOwner(128);
+    const expected = 0xfedcba98;
+    arena.dataView().setUint32(12 * 4, expected, true);
+    const uploadedWords: number[] = [];
+    class WordRecordingBacking extends RecordingBacking {
+      protected override makeBuffer(byteLength: number): any {
+        const buffer = super.makeBuffer(byteLength);
+        const update = buffer.update.bind(buffer);
+        buffer.update = (view: Float32Array | Int32Array, offset = 0) => {
+          const firstWord = offset / 4;
+          const lastWord = firstWord + view.byteLength / 4;
+          if (firstWord <= 12 && lastWord > 12) {
+            uploadedWords.push(new Uint32Array(view.buffer, view.byteOffset, view.byteLength / 4)[
+              12 - firstWord
+            ]);
+          }
+          update(view, offset);
+        };
+        return buffer;
+      }
+    }
+    const backing = new WordRecordingBacking(makeRecordingEngine(), schema, owner);
+    backing.commit();
+    expect(uploadedWords).toContain(expected);
+
+    const target = { setStorageBuffer() {} };
+    backing.bind(target, 'Bench');
+    const paramsBuffer = backing.buffers[1];
+    expect(paramsBuffer.updateCount).toBe(1);
+    backing.bind(target, 'Bench');
+    expect(paramsBuffer.updateCount).toBe(1);
+  });
+
+  it('encodes numeric u32 var arrays as raw storage words', () => {
+    const arena = new FloatArena(32);
+    const owner: any = {
+      arena,
+      _arena: arena,
+      _headerSeg: { offF: 0, lenF: 1, capF: 1 },
+      _varSeg: { ids: { offF: 4, lenF: 2, capF: 2 } },
+      _structSeg: {},
+      _structArrayCount: {},
+      prepareUnifiedForUpload: () => arena.take(),
+    };
+    const schema = {
+      name: 'IntegerVarArray',
+      fields: [],
+      headerFloatCount: 1,
+      varArrays: { ids: { elemType: 'u32', floatStride: 1 } },
+      structArrays: {},
+    };
+    arena.write(4, new Float32Array([37, 912]));
+
+    const uploaded = new Map<number, number>();
+    class IntegerRecordingBacking extends StorageBacking {
+      protected override makeBuffer(_byteLength: number): any {
+        return {
+          update(view: Float32Array | Int32Array, offset = 0) {
+            const words = new Uint32Array(view.buffer, view.byteOffset, view.byteLength / 4);
+            for (let index = 0; index < words.length; index++) {
+              uploaded.set(offset / 4 + index, words[index]);
+            }
+          },
+          dispose() {},
+        };
+      }
+    }
+
+    new IntegerRecordingBacking(makeRecordingEngine(), schema, owner).commit();
+    expect(uploaded.get(4)).toBe(37);
+    expect(uploaded.get(5)).toBe(912);
   });
 });
 
@@ -214,5 +320,19 @@ describe('ShadoDynamicEntityContainer draw partitioning', () => {
     expect(commits).toBe(1);
     container.syncGpu(2);
     expect(commits).toBe(2);
+  });
+
+  it('resizes reserved arrays without losing their existing prefix', () => {
+    const container = new ShadoDynamicEntityContainer(engine);
+    container.reserveVarArray('drawIds', 4_096);
+    container.resizeVarArray('drawIds', 2);
+    container.writeVarArrayRange('drawIds', 0, [17, 29]);
+    container.resizeVarArray('drawIds', 4_096);
+
+    const seg = (container as any)._varSeg.drawIds;
+    const words = (container as any)._arena.take().subarray(seg.offF, seg.offF + seg.lenF);
+    expect(Array.from(words.subarray(0, 2))).toEqual([17, 29]);
+    expect(words[2]).toBe(0);
+    expect(container.getVarArrayCount('drawIds')).toBe(4_096);
   });
 });

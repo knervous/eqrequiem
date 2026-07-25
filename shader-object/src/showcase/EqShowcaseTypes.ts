@@ -38,6 +38,12 @@ export type EqShowcaseStats = {
   visible: number;
   cullingRange: number;
   cullingMode: 'wasm-simd' | 'cpu';
+  /** Most recent complete visibility-reducer pass, in milliseconds. */
+  reducerMs: number;
+  /** Smoothed visibility-reducer time, in milliseconds. */
+  reducerAverageMs: number;
+  /** Theoretical per-model VAT actor ceiling exposed by the active device/layout. */
+  vatActorsPerModel?: number;
   loadedCodes: string[];
   current?: string;
   lastError?: string;
@@ -68,6 +74,13 @@ export type EqShowcaseOptions = {
   bakeWorkerUrl?: string;
   /** Maximum GLBs baked in parallel. Defaults to available CPU capacity, capped at four. */
   bakeConcurrency?: number;
+  /** Optional world-aware reducer which replaces the default actor-only frustum pass. */
+  reduceVisibility?: (
+    container: ShadoInstanceContainer<any>,
+    camera: any,
+    baseRadius: number,
+    maxDistance: number
+  ) => void;
 };
 
 export type EqShowcaseAnimation = {

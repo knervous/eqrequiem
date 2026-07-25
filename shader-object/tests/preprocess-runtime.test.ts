@@ -22,4 +22,13 @@ describe('preprocess runtime artifact loading', () => {
 
     expect(new Uint8Array(bytes)).toEqual(payload);
   });
+
+  it('recognizes versioned gzip artifact URLs', async () => {
+    const compressed = gzipSync(payload);
+    const bytes = await fetchShadoBytes('/world.spatial.json.gz?v=2', {
+      fetch: fetcher(compressed),
+    });
+
+    expect(new Uint8Array(bytes)).toEqual(payload);
+  });
 });

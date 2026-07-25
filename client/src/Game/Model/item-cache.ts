@@ -3,6 +3,10 @@
 import type * as BJS from "@babylonjs/core";
 import BABYLON from "@bjs";
 import { FileSystem } from "@game/FileSystem/filesystem";
+import {
+  getAssetContainerMeshes,
+  getOrCreateAssetContainerRoot,
+} from "./asset-container";
 
 type ModelKey = string;
 
@@ -13,6 +17,33 @@ export type ItemContainer = {
 };
 
 const ANIMATION_BUFFER = new BABYLON.Vector4(0, 1, 0, 60);
+
+function attachItemGeometryToBone(
+  mesh: BJS.Mesh,
+  attachmentBoneIndex: number,
+): void {
+  const vertexCount = mesh.getTotalVertices();
+  const indices = new Float32Array(vertexCount * 4);
+  const weights = new Float32Array(vertexCount * 4);
+  for (let vertex = 0; vertex < vertexCount; vertex++) {
+    const offset = vertex * 4;
+    indices[offset] = attachmentBoneIndex;
+    weights[offset] = 1;
+  }
+  mesh.setVerticesData(
+    BABYLON.VertexBuffer.MatricesIndicesKind,
+    indices,
+    false,
+    4,
+  );
+  mesh.setVerticesData(
+    BABYLON.VertexBuffer.MatricesWeightsKind,
+    weights,
+    false,
+    4,
+  );
+  mesh.numBoneInfluencers = 4;
+}
 
 export class ItemCache {
   private static containers: Record<ModelKey, Promise<ItemContainer | null>> =
@@ -45,12 +76,22 @@ export class ItemCache {
     manager: BJS.BakedVertexAnimationManager | null = null,
     skeleton: BJS.Skeleton | null = null,
     flip: boolean = true,
+    attachmentBoneIndex?: number,
+    attachmentKey?: string,
+    attachmentGeometryTransform?: BJS.Matrix,
   ): Promise<ItemContainer | null> {
     model = model.toLowerCase();
+    const attachmentCacheKey =
+      attachmentKey ??
+      (attachmentBoneIndex === undefined
+        ? "unbound"
+        : `bone-${attachmentBoneIndex}`);
     // Primary weapons, off-hand weapons, and shields can share an idfile but
     // require different baked orientation. They must never share a source
     // mesh whose vertices have already been transformed for the other hand.
-    const modelKey = `${model}:${vatOwnerItemModel}:${flip ? "flipped" : "raw"}`;
+    const modelKey =
+      `${model}:${vatOwnerItemModel}:${flip ? "flipped" : "raw"}:` +
+      attachmentCacheKey;
 
     const bucket = ItemCache.getOrCreateNodeContainer(scene);
     if (!ItemCache.containers[modelKey]) {
@@ -65,12 +106,8 @@ export class ItemCache {
           console.log(`[ItemCache] Failed to load model ${model}`);
           return null;
         }
-        const file = new File([bytes], `${model}.babylon`, {
-          type: "application/babylon",
-        });
-        const container = await BABYLON.LoadAssetContainerAsync(file, scene, {
+        const container = await BABYLON.loadBabylonAssetContainer(bytes, scene, {
           name: `${model}.babylon`,
-          pluginExtension: ".babylon",
         }).catch((e) => {
           console.log(`[ItemCache] Error loading model ${model}:`, e);
           return null;
@@ -80,14 +117,22 @@ export class ItemCache {
         }
 
         // Attach to bucket
-        const root = container.rootNodes[0];
-        root.name = `container_${model}`;
-        (root as BJS.Mesh).setParent(bucket);
+        const root = getOrCreateAssetContainerRoot(
+          container,
+          scene,
+          `container_${model}`,
+        );
+        root.setParent(bucket);
 
         // Process meshes
-        const meshes = container.rootNodes[0]
-          .getChildMeshes(false)
-          .filter((m) => m.getTotalVertices() > 0) as BJS.Mesh[];
+        const meshes = getAssetContainerMeshes(container);
+        if (!meshes.length) {
+          console.warn(
+            `[ItemCache] Model ${model} contains no renderable meshes`,
+          );
+          container.dispose();
+          return null;
+        }
         for (const mesh of meshes) {
           if (mesh.material) {
             if (mesh.material instanceof BABYLON.PBRMaterial) {
@@ -98,6 +143,13 @@ export class ItemCache {
           }
           mesh.addLODLevel(500, null);
           mesh.name = mesh.material?.name?.toLowerCase() ?? "";
+          if (attachmentBoneIndex !== undefined) {
+            // Establish every vertex attribute before the first instance can
+            // compile its material. Adding skinning streams after compilation
+            // leaves WebGPU's VAT instance attribute and matricesIndices
+            // competing for the same shader location.
+            attachItemGeometryToBone(mesh, attachmentBoneIndex);
+          }
           mesh.registerInstancedBuffer(
             "bakedVertexAnimationSettingsInstanced",
             4,
@@ -106,6 +158,9 @@ export class ItemCache {
             const orient = BABYLON.Matrix.RotationX(Math.PI) // tip from +Z → +Y
               .multiply(BABYLON.Matrix.RotationZ(Math.PI)); // flip if needed
             mesh.bakeTransformIntoVertices(orient);
+          }
+          if (attachmentGeometryTransform) {
+            mesh.bakeTransformIntoVertices(attachmentGeometryTransform);
           }
           mesh.instancedBuffers.bakedVertexAnimationSettingsInstanced =
             ANIMATION_BUFFER;

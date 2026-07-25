@@ -2,13 +2,11 @@ import { RotateCcw } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 
 import type { ShadoModelViewer } from '@requiem/Game/Model/shado-model-viewer'
-import { createShadoModelViewer } from '@requiem/Game/Model/shado-model-viewer'
 import type { RawRigViewer } from '@requiem/Game/Model/raw-rig-viewer'
-import { createRawRigViewer, getRawRigModelKeys } from '@requiem/Game/Model/raw-rig-viewer'
 import { REQUIEM_APPEARANCE_SLOTS } from '@requiem/Game/Model/appearance-slots'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@libra/components/ui/badge'
+import { Button } from '@libra/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@libra/components/ui/card'
 
 const tintPresets = [
   { label: 'Default', value: [1, 1, 1] as const },
@@ -33,9 +31,8 @@ export function ModelViewerPage() {
   const [culling, setCulling] = useState(true)
   const [bodyVisible, setBodyVisible] = useState(true)
   const [skeletonView, setSkeletonView] = useState(false)
-  const [skeletonMode, setSkeletonMode] = useState<'lines' | 'spheres'>('lines')
-
-  const rawRigKeys = getRawRigModelKeys()
+  const [skeletonMode, setSkeletonMode] = useState<'lines' | 'spheres'>('spheres')
+  const [rawRigKeys, setRawRigKeys] = useState<string[]>(['hum'])
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -43,12 +40,18 @@ export function ModelViewerPage() {
     if (viewMode !== 'shado') return
     let cancelled = false
     let viewer: ShadoModelViewer | null = null
-    void createShadoModelViewer(canvas, {
-      model,
-      assetBaseUrl: import.meta.env.VITE_REQUIEM_ASSET_BASE ?? '/eqrequiem',
-      onFrame: (value) => setFps(Math.round(value)),
-      onStatus: setStatus,
-    }).then((created) => {
+    void (async () => {
+      // Keep Babylon, loaders, and the VAT runtime outside Libra's initial
+      // dashboard graph. This chunk is requested only when Shado mode mounts.
+      const { createShadoModelViewer } = await import(
+        '@requiem/Game/Model/shado-model-viewer'
+      )
+      const created = await createShadoModelViewer(canvas, {
+        model,
+        assetBaseUrl: import.meta.env.VITE_REQUIEM_ASSET_BASE ?? '/eqrequiem',
+        onFrame: (value) => setFps(Math.round(value)),
+        onStatus: setStatus,
+      })
       if (cancelled) {
         created.dispose()
         return
@@ -62,7 +65,7 @@ export function ModelViewerPage() {
       // Headless validation hook: render-shado-runtime.mjs drives the live
       // viewer deterministically through this handle.
       ;(window as unknown as Record<string, unknown>).__libraViewer = created
-    }).catch((error: unknown) => {
+    })().catch((error: unknown) => {
       setStatus(error instanceof Error ? error.message : String(error))
     })
     return () => {
@@ -79,11 +82,18 @@ export function ModelViewerPage() {
     if (viewMode !== 'raw') return
     let cancelled = false
     let viewer: RawRigViewer | null = null
-    void createRawRigViewer(canvas, {
-      model,
-      onFrame: (value) => setFps(Math.round(value)),
-      onStatus: setStatus,
-    }).then((created) => {
+    void (async () => {
+      // The raw rig debugger is a separate feature boundary from the shipped
+      // Shado viewer and therefore receives its own on-demand chunk.
+      const { createRawRigViewer, getRawRigModelKeys } = await import(
+        '@requiem/Game/Model/raw-rig-viewer'
+      )
+      setRawRigKeys(getRawRigModelKeys())
+      const created = await createRawRigViewer(canvas, {
+        model,
+        onFrame: (value) => setFps(Math.round(value)),
+        onStatus: setStatus,
+      })
       if (cancelled) {
         created.dispose()
         return
@@ -95,20 +105,25 @@ export function ModelViewerPage() {
         setAnimation(created.animations[0])
         created.playAnimation(created.animations[0])
       }
-    }).catch((error: unknown) => {
+      // Headless validation hook, matching the Shado-mode viewer below.
+      ;(window as unknown as Record<string, unknown>).__libraViewer = created
+    })().catch((error: unknown) => {
       setStatus(error instanceof Error ? error.message : String(error))
     })
     return () => {
       cancelled = true
       viewer?.dispose()
       rawViewerRef.current = null
+      delete (window as unknown as Record<string, unknown>).__libraViewer
     }
   }, [model, viewMode])
 
   useEffect(() => {
     ;(window as unknown as Record<string, unknown>).__libraSetModel = setModel
+    ;(window as unknown as Record<string, unknown>).__libraSetViewMode = setViewMode
     return () => {
       delete (window as unknown as Record<string, unknown>).__libraSetModel
+      delete (window as unknown as Record<string, unknown>).__libraSetViewMode
     }
   }, [])
 
@@ -185,10 +200,11 @@ export function ModelViewerPage() {
             >
               {viewMode === 'shado' ? (
                 <>
-                  <option value='hum'>Human male — CMU mocap v11</option>
-                  <option value='huf'>Human female — CMU mocap v12 (Hunyuan geometry + fixed VAT bake)</option>
-                  <option value='hmc'>Human male — ComfyUI/Hunyuan POC</option>
-                  <option value='hfc'>Human female — ComfyUI/Hunyuan POC</option>
+                  <option value='hum'>Human male — Hunyuan body + CMU/EQ HUM motion library</option>
+                  <option value='huf'>Human female — Hunyuan body + CMU/EQ HUM motion library</option>
+                  <option value='hem'>Half Elf male — EQ HAM head/body reference + Hunyuan</option>
+                  <option value='hmc'>Human male — passing ComfyUI/Hunyuan v5</option>
+                  <option value='hfc'>Human female — passing ComfyUI/Hunyuan v6</option>
                 </>
               ) : (
                 rawRigKeys.map((key) => <option key={key} value={key}>{key}</option>)
@@ -260,6 +276,11 @@ export function ModelViewerPage() {
                 sampled entirely in the vertex shader and never touches this mesh's
                 Babylon skeleton after import. Switch to Raw rig preview for a
                 meaningful overlay, at rest or during animation.
+              </p>
+            )}
+            {skeletonView && viewMode === 'raw' && (
+              <p className='text-xs text-muted-foreground'>
+                Shows the 21 anatomical joint nodes. The non-deforming equipment sockets and root control are intentionally excluded from joint-to-mesh fit review.
               </p>
             )}
           </CardContent>

@@ -1,5 +1,8 @@
 import * as BABYLON from '@babylonjs/core'
-import '@babylonjs/loaders/glTF/glTFFileLoader.js'
+// Register the complete glTF loader, including the glTF 2.0 implementation.
+// Importing only glTFFileLoader registers the dispatcher but leaves fresh
+// Blender 2.0 exports without a version-specific loader.
+import '@babylonjs/loaders/glTF/index.js'
 
 const state = { status: 'loading', models: [] }
 window.__REFERENCE_RENDER_STATE__ = state
@@ -87,10 +90,13 @@ async function run() {
   const poseName = params.get('pose') ?? 'pos'
   const poseFraction = Number(params.get('poseFraction') ?? 0)
   const frontAxis = params.get('frontAxis') ?? '-z'
+  const focus = params.get('focus') ?? 'full'
   const auditSamples = Number(params.get('auditSamples') ?? 0)
-  const maxSpanRatio = Number(params.get('maxSpanRatio') ?? 2)
-  const maxEdgeRatio = Number(params.get('maxEdgeRatio') ?? 25)
-  const maxP99EdgeRatio = Number(params.get('maxP99EdgeRatio') ?? 4)
+  const maxSpanRatio = Number(params.get('maxSpanRatio') ?? 1.5)
+  const minEdgeRatio = Number(params.get('minEdgeRatio') ?? 0.25)
+  const maxEdgeRatio = Number(params.get('maxEdgeRatio') ?? 4)
+  const maxP99EdgeRatio = Number(params.get('maxP99EdgeRatio') ?? 2)
+  const maxExtremeEdgeFraction = Number(params.get('maxExtremeEdgeFraction') ?? 0.0015)
   if (!Array.isArray(modelSpecs) || !modelSpecs.length) {
     throw new Error('At least one GLB is required')
   }
@@ -146,12 +152,10 @@ async function run() {
       const pose = container.animationGroups.find(
         (group) => group.name.toLowerCase() === poseName.toLowerCase(),
       )
-      if (pose) {
-        pose.start(false, 1, pose.from, pose.to)
-        pose.goToFrame(pose.from + (pose.to - pose.from) * poseFraction)
-        pose.pause()
-      } else {
-        for (const skeleton of container.skeletons) skeleton.returnToRest()
+      for (const skeleton of container.skeletons) {
+        skeleton.returnToRest()
+        skeleton.prepare(true)
+        skeleton.computeAbsoluteMatrices(true)
       }
       poses.push(pose)
       for (const node of container.rootNodes) node.parent = root
@@ -160,15 +164,22 @@ async function run() {
     const meshes = containers.flatMap((container) =>
       container.meshes.filter((mesh) => mesh.getTotalVertices() > 0),
     )
-    const bounds = finiteBounds(meshes)
+    const baselineBounds = finiteBounds(meshes)
     const edgeBaselines = meshes.map(createEdgeBaseline)
-    entries.push({ containers, root, meshes, bounds, spec, poses, edgeBaselines })
+    for (const pose of poses.filter(Boolean)) {
+      pose.start(false, 1, pose.from, pose.to)
+      pose.goToFrame(pose.from + (pose.to - pose.from) * poseFraction)
+      pose.pause()
+    }
+    for (const container of containers) {
+      for (const skeleton of container.skeletons) {
+        skeleton.prepare(true)
+        skeleton.computeAbsoluteMatrices(true)
+      }
+    }
+    const bounds = finiteBounds(meshes)
+    entries.push({ containers, root, meshes, bounds, baselineBounds, spec, poses, edgeBaselines })
   }
-
-  // TEMP diagnostic hook — revert before committing.
-  window.__REFERENCE_SCENE__ = scene
-  window.__REFERENCE_ENTRIES__ = entries
-  window.BABYLON = BABYLON
 
   const maxHeight = Math.max(...entries.map(({ bounds }) => bounds.max.y - bounds.min.y))
   const gap = maxHeight * 0.16
@@ -188,7 +199,7 @@ async function run() {
   const animationAudit = []
   if (auditSamples >= 2) {
     for (const entry of entries) {
-      const baselineSize = entry.bounds.max.subtract(entry.bounds.min)
+      const baselineSize = entry.baselineBounds.max.subtract(entry.baselineBounds.min)
       const baselineMaxSpan = Math.max(...baselineSize.asArray())
       const groups = entry.containers.flatMap((container) => container.animationGroups)
       for (const group of groups) {
@@ -233,14 +244,25 @@ async function run() {
           if (!worst || edges.maxEdgeRatio > worst.maxEdgeRatio) worst = result
         }
         group.stop()
+        const failed = samples.some((sample) =>
+          sample.maxSpanRatio > maxSpanRatio
+          || sample.maxEdgeRatio > maxEdgeRatio
+          || sample.p99EdgeRatio > maxP99EdgeRatio
+          || sample.extremeEdgeFraction > maxExtremeEdgeFraction)
+        const envelope = {
+          maxSpanRatio: Math.max(...samples.map((sample) => sample.maxSpanRatio)),
+          minEdgeRatio: Math.min(...samples.map((sample) => sample.minEdgeRatio)),
+          maxP99EdgeRatio: Math.max(...samples.map((sample) => sample.p99EdgeRatio)),
+          maxEdgeRatio: Math.max(...samples.map((sample) => sample.maxEdgeRatio)),
+          maxExtremeEdgeFraction: Math.max(...samples.map((sample) => sample.extremeEdgeFraction)),
+        }
         animationAudit.push({
           model: entry.spec.label,
           animation: group.name,
           from: group.from,
           to: group.to,
-          failed: worst.maxSpanRatio > maxSpanRatio
-            || worst.maxEdgeRatio > maxEdgeRatio
-            || worst.p99EdgeRatio > maxP99EdgeRatio,
+          failed,
+          envelope,
           worst,
           samples,
         })
@@ -266,7 +288,18 @@ async function run() {
   const height = bounds.max.y - bounds.min.y
   const depth = bounds.max.z - bounds.min.z
   const aspect = engine.getRenderWidth() / engine.getRenderHeight()
-  const halfHeight = Math.max(height * 0.58, (width / aspect) * 0.58)
+  const focusSpecs = {
+    full: { centerY: 0.5, width: 1, height: 1 },
+    head: { centerY: 0.865, width: 0.34, height: 0.29 },
+    hands: { centerY: 0.39, width: 1, height: 0.34 },
+    feet: { centerY: 0.105, width: 0.72, height: 0.24 },
+  }
+  const focusSpec = focusSpecs[focus]
+  if (!focusSpec) throw new Error(`Unsupported focus: ${focus}`)
+  center.y = bounds.min.y + height * focusSpec.centerY
+  const focusWidth = width * focusSpec.width
+  const focusHeight = height * focusSpec.height
+  const halfHeight = Math.max(focusHeight * 0.58, (focusWidth / aspect) * 0.58)
   const halfWidth = halfHeight * aspect
   const distance = Math.max(width, height, depth) * 3 + 1
 
@@ -314,11 +347,14 @@ async function run() {
   }))
   state.bounds = { min: bounds.min.asArray(), max: bounds.max.asArray() }
   state.frontAxis = frontAxis
+  state.focus = focus
   state.animationAudit = {
     sampleCount: auditSamples,
     maxSpanRatio,
+    minEdgeRatio,
     maxEdgeRatio,
     maxP99EdgeRatio,
+    maxExtremeEdgeFraction,
     clipCount: animationAudit.length,
     failedClipCount: animationAudit.filter((clip) => clip.failed).length,
     clips: animationAudit,

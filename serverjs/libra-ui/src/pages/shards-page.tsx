@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useState } from 'react'
 
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { getQuestCatalog, listZoneShards, reloadQuestCatalog, startZoneShard, stopZoneShard } from '@/libra/api'
-import type { QuestCatalogStatus, ZoneShard } from '@/libra/types'
+import { Button } from '@libra/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@libra/components/ui/card'
+import { Input } from '@libra/components/ui/input'
+import { getQuestCatalog, listZoneShards, reloadQuestCatalog, startZoneShard, stopZoneShard } from '@libra/libra/api'
+import type { QuestCatalogStatus, ZoneShard } from '@libra/libra/types'
 
 export function ShardsPage() {
   const [shards, setShards] = useState<ZoneShard[]>([])

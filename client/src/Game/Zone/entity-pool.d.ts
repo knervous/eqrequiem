@@ -1,0 +1,32 @@
+import type * as BJS from '@babylonjs/core';
+import type GameManager from '@game/Manager/game-manager';
+import { Entity } from '@game/Model/entity';
+import EntityCache from '@game/Model/entity-cache';
+import { EntityAnimation, EntityPositionUpdateBase, type Spawn } from '@game/Net/messages';
+import { type WorldStatePacketView } from '@game/Net/world-state';
+export default class EntityPool {
+    private gameManager;
+    parent: BJS.Node;
+    entities: Record<number, Entity>;
+    loadedPromiseResolve: () => void;
+    loadedPromise: Promise<void> | null;
+    entityCache: EntityCache | null;
+    private spawns;
+    private pendingUpdates;
+    private spawnRevisions;
+    private latestWorldRevision;
+    latestWorldState: WorldStatePacketView | null;
+    private generation;
+    private scene;
+    private get zone();
+    constructor(gameManager: GameManager, parent: BJS.Node, scene: BJS.Scene);
+    dispose(): void;
+    getPlayerEntities(): Entity[];
+    process(): Promise<void>;
+    AddSpawn(spawn: Spawn): Promise<void>;
+    UpdateSpawnPosition(sp: EntityPositionUpdateBase): void;
+    ApplyWorldState(packet: WorldStatePacketView): Promise<void>;
+    private applyWorldStateRow;
+    RemoveSpawn(spawnId: number): void;
+    PlayAnimation(anim: EntityAnimation): void;
+}

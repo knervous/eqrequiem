@@ -61,7 +61,7 @@
     "assemblyscript": "^0.28.8",
     "binaryen": "^124.0.0",
     "oxlint": "^1.74.0",
-    "shader-object": "file:../shader-object",
+    "@knervous/shado": "file:../shader-object",
     "tsx": "^4.23.0",
     "typescript": "^7.0.2"
   }

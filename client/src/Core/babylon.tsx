@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { sleep } from '@game/Constants/util';
 import GameManager from '@game/Manager/game-manager';
+import BABYLON from '@bjs';
 import { Box } from '@mui/material';
 import Overlay from '@ui/components/overlay';
 import './player.css';
@@ -9,18 +10,26 @@ import './ui.css';
 export const BabylonWrapper = ({ splash }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
+    let cancelled = false;
     (async () => {
-
       while (!canvasRef.current) {
         await sleep(50);
       }
+      await BABYLON.initialize();
+      if (cancelled || !canvasRef.current) {
+        return;
+      }
       await GameManager.instance.loadEngine(canvasRef.current);
+      if (cancelled) {
+        return;
+      }
       window.addEventListener('resize', GameManager.instance.resize);
       window.addEventListener('keydown', GameManager.instance.keyDown);
       window.addEventListener('keyup', GameManager.instance.keyUp);
     })();
 
     return () => {
+      cancelled = true;
       window.removeEventListener('resize', GameManager.instance.resize);
       window.removeEventListener('keydown', GameManager.instance.keyDown);
       window.removeEventListener('keyup', GameManager.instance.keyUp);

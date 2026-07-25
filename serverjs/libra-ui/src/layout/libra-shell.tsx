@@ -1,8 +1,8 @@
 import { Boxes, Cuboid, Database, FileCheck2, LayoutDashboard, Map, PencilRuler, UsersRound } from 'lucide-react'
 import { Link, NavLink, Outlet } from 'react-router-dom'
 
-import { Badge } from '@/components/ui/badge'
-import { cn } from '@/lib/utils'
+import { Badge } from '@libra/components/ui/badge'
+import { cn } from '@libra/lib/utils'
 
 const navItems = [
   { to: '/', label: 'Overview', icon: LayoutDashboard },

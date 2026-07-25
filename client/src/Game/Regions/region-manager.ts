@@ -5,6 +5,7 @@ import type GameManager from '@game/Manager/game-manager';
 import { RequestClientZoneChange, ZoneChangeType, type ZonePoint } from '@game/Net/messages';
 import Player from '@game/Player/player';
 import type { ZoneMetadata } from '@game/Zone/zone-types';
+import type { ShadoWorldSpatialPackage } from '@knervous/shado/world';
 
 
 interface AABBNode {
@@ -13,6 +14,21 @@ interface AABBNode {
   index?: number; // leaf
   left?: AABBNode;
   right?: AABBNode;
+}
+
+function shadoRegionType(
+  kind: ShadoWorldSpatialPackage['regions']['kind'][number],
+): number {
+  switch (kind) {
+    case 'water':
+      return 1;
+    case 'lava':
+      return 2;
+    case 'zone-line':
+      return 4;
+    default:
+      return 0;
+  }
 }
 
 export class RegionManager {
@@ -92,6 +108,61 @@ export class RegionManager {
     metadata: ZoneMetadata,
     _zonePoints: ZonePoint[] = [],
   ): void {
+    this.instantiateRegionData(scene, metadata, _zonePoints, false);
+  }
+
+  public instantiateShadoRegions(
+    scene: BJS.Scene,
+    world: ShadoWorldSpatialPackage,
+    zonePoints: ZonePoint[] = [],
+  ): void {
+    const regions: ZoneMetadata['regions'] = world.regions.id.flatMap(
+      (_id, index) => {
+        if (!world.regions.enabled[index]) return [];
+        const center: [number, number, number] = [
+          world.regions.centerX[index],
+          world.regions.centerY[index],
+          world.regions.centerZ[index],
+        ];
+        const halfSize: [number, number, number] = [
+          Math.abs(world.regions.sizeX[index]) * 0.5,
+          Math.abs(world.regions.sizeY[index]) * 0.5,
+          Math.abs(world.regions.sizeZ[index]) * 0.5,
+        ];
+        const regionMetadata = world.regions.metadata[index] ?? {};
+        return [{
+          center,
+          minVertex: center.map(
+            (value, axis) => value - halfSize[axis],
+          ) as [number, number, number],
+          maxVertex: center.map(
+            (value, axis) => value + halfSize[axis],
+          ) as [number, number, number],
+          regionType: Number(
+            regionMetadata.legacyRegionType ??
+              shadoRegionType(world.regions.kind[index]),
+          ),
+          zoneLineInfo:
+            (regionMetadata.zoneLineInfo as
+              | ZoneMetadata['regions'][number]['zoneLineInfo']
+              | undefined) ?? null,
+        }];
+      },
+    );
+    this.instantiateRegionData(
+      scene,
+      { version: 1, objects: {}, lights: [], sounds: [], regions },
+      zonePoints,
+      true,
+    );
+  }
+
+  private instantiateRegionData(
+    scene: BJS.Scene,
+    metadata: ZoneMetadata,
+    _zonePoints: ZonePoint[],
+    babylonCoordinates: boolean,
+  ): void {
     this.dispose();
     const { regions } = metadata;
     if (!regions?.length) {
@@ -106,8 +177,16 @@ export class RegionManager {
 
     // Build raw AABB nodes
     const nodes: AABBNode[] = regions.map((r, i) => ({
-      min  : new BABYLON.Vector3(r.maxVertex[0], r.minVertex[1], r.minVertex[2]),
-      max  : new BABYLON.Vector3(r.minVertex[0], r.maxVertex[1], r.maxVertex[2]),
+      min  : new BABYLON.Vector3(
+        babylonCoordinates ? r.minVertex[0] : r.maxVertex[0],
+        r.minVertex[1],
+        r.minVertex[2],
+      ),
+      max  : new BABYLON.Vector3(
+        babylonCoordinates ? r.maxVertex[0] : r.minVertex[0],
+        r.maxVertex[1],
+        r.maxVertex[2],
+      ),
       index: i,
     }));
 

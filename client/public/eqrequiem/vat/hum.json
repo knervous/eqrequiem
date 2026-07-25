@@ -19,6 +19,150 @@
       "from": 146,
       "to": 179,
       "fps": 30
+    },
+    {
+      "name": "Block",
+      "from": 180,
+      "to": 217,
+      "fps": 30
+    },
+    {
+      "name": "Bow",
+      "from": 218,
+      "to": 278,
+      "fps": 30
+    },
+    {
+      "name": "Cheer",
+      "from": 279,
+      "to": 336,
+      "fps": 30
+    },
+    {
+      "name": "Crouch_Walk",
+      "from": 337,
+      "to": 377,
+      "fps": 30
+    },
+    {
+      "name": "Death",
+      "from": 378,
+      "to": 415,
+      "fps": 30
+    },
+    {
+      "name": "Hit_Front",
+      "from": 416,
+      "to": 432,
+      "fps": 30
+    },
+    {
+      "name": "Idle_Look",
+      "from": 433,
+      "to": 578,
+      "fps": 30
+    },
+    {
+      "name": "Jump_Land",
+      "from": 579,
+      "to": 619,
+      "fps": 30
+    },
+    {
+      "name": "Jump_Loop",
+      "from": 620,
+      "to": 644,
+      "fps": 30
+    },
+    {
+      "name": "Jump_Start",
+      "from": 645,
+      "to": 675,
+      "fps": 30
+    },
+    {
+      "name": "Kick",
+      "from": 676,
+      "to": 700,
+      "fps": 30
+    },
+    {
+      "name": "Kneel",
+      "from": 701,
+      "to": 758,
+      "fps": 30
+    },
+    {
+      "name": "Knockdown",
+      "from": 759,
+      "to": 787,
+      "fps": 30
+    },
+    {
+      "name": "No",
+      "from": 788,
+      "to": 876,
+      "fps": 30
+    },
+    {
+      "name": "Pickup",
+      "from": 877,
+      "to": 901,
+      "fps": 30
+    },
+    {
+      "name": "Point",
+      "from": 902,
+      "to": 944,
+      "fps": 30
+    },
+    {
+      "name": "Punch_Left",
+      "from": 945,
+      "to": 979,
+      "fps": 30
+    },
+    {
+      "name": "Punch_Right",
+      "from": 980,
+      "to": 1002,
+      "fps": 30
+    },
+    {
+      "name": "Sit_Idle",
+      "from": 1003,
+      "to": 1043,
+      "fps": 30
+    },
+    {
+      "name": "Strafe_Right",
+      "from": 1044,
+      "to": 1074,
+      "fps": 30
+    },
+    {
+      "name": "Swim",
+      "from": 1075,
+      "to": 1112,
+      "fps": 30
+    },
+    {
+      "name": "Turn_Right",
+      "from": 1113,
+      "to": 1147,
+      "fps": 30
+    },
+    {
+      "name": "Wave",
+      "from": 1148,
+      "to": 1200,
+      "fps": 30
+    },
+    {
+      "name": "Yes",
+      "from": 1201,
+      "to": 1243,
+      "fps": 30
     }
   ]
 }

@@ -15,6 +15,7 @@ import {
 } from "@knervous/shado";
 import requiemEntityReducerDebugUrl from "../../../../common/wasm/requiem-entity-reducer.debug.wasm?url";
 import requiemEntityReducerReleaseUrl from "../../../../common/wasm/requiem-entity-reducer.release.wasm?url";
+import type { RequiemEntityVisibilitySink } from "./requiem-entity-visibility";
 
 /**
  * The client-side view of the shared entity record. All hot render state lives
@@ -46,25 +47,12 @@ export class RequiemEntityContainer extends ShadoInstanceContainer<RequiemEntity
   public ensureAppearanceCount(count: number): void {
     const current = this.getVarArrayCount("appearance");
     if (current >= count) return;
-    const previous = current
-      ? this.arena
-          .take()
-          .slice(
-            this._varSeg.appearance.offF,
-            this._varSeg.appearance.offF + current * 4,
-          )
-      : new Float32Array();
-    const next = new Float32Array(count * 4);
-    next.set(previous);
-    this.setVarArray("appearance", next);
+    this.resizeVarArray("appearance", count);
   }
 
   public setAppearance(index: number, value: ArrayLike<number>): void {
     this.ensureAppearanceCount(index + 1);
-    const segment = this._varSeg.appearance;
-    const target = this.arena.view(segment.offF + index * 4, 4);
-    target.set(value);
-    this.markArenaDirty();
+    this.writeVarArrayRange("appearance", index, value);
   }
 }
 
@@ -94,20 +82,22 @@ async function loadRequiemEntityReducer(): Promise<ArrayBuffer> {
   const url = import.meta.env.DEV
     ? requiemEntityReducerDebugUrl
     : requiemEntityReducerReleaseUrl;
-  reducerArtifact ??= Promise.resolve(decodeInlineArtifact(url)).then(async (inline) => {
-    if (inline) return inline;
-    const response = await fetch(url).catch((error: unknown) => {
-      throw new Error(
-        `Unable to fetch the Requiem reducer at ${url}: ${error instanceof Error ? error.message : String(error)}`,
-      );
-    });
-    if (!response.ok) {
-      throw new Error(
-        `Unable to load precompiled Requiem reducer: ${response.status} ${response.statusText}`,
-      );
-    }
-    return response.arrayBuffer();
-  });
+  reducerArtifact ??= Promise.resolve(decodeInlineArtifact(url)).then(
+    async (inline) => {
+      if (inline) return inline;
+      const response = await fetch(url).catch((error: unknown) => {
+        throw new Error(
+          `Unable to fetch the Requiem reducer at ${url}: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      });
+      if (!response.ok) {
+        throw new Error(
+          `Unable to load precompiled Requiem reducer: ${response.status} ${response.statusText}`,
+        );
+      }
+      return response.arrayBuffer();
+    },
+  );
   return reducerArtifact;
 }
 
@@ -115,13 +105,13 @@ function assertRequiemReducerAbi(): void {
   const schema = RequiemEntityActor.getSchema();
   const expected = new Map<string, number>([
     ["translation", 0],
-    ["visibleIndex", 12],
-    ["visibleFlag", 24],
-    ["entityId", 28],
-    ["appearanceCount", 31],
+    ["entityId", 27],
+    ["appearanceCount", 30],
   ]);
   if (schema.headerFloatCount !== 32) {
-    throw new Error(`Requiem reducer ABI expected 32 actor floats, got ${schema.headerFloatCount}`);
+    throw new Error(
+      `Requiem reducer ABI expected 32 actor floats, got ${schema.headerFloatCount}`,
+    );
   }
   for (const [name, offset] of expected) {
     const field = schema.fields.find((candidate) => candidate.name === name);
@@ -144,8 +134,14 @@ function registerClientShaderIncludes(): void {
       [`${schema.name}Offsets`]: schema.emitOffsets(),
       [`${schema.name}Storage`]: schema.emitGLSLStorage(0, 0),
     };
+    const wgslChunks = {
+      [schema.name]: schema.emitHeaderStructWGSL(),
+      [`${schema.name}Offsets`]: schema.emitOffsetsWGSL(),
+      [`${schema.name}Storage`]: schema.emitWGSLStorage(),
+    };
     Object.assign(Effect.IncludesShadersStore, chunks);
     Object.assign(ShaderStore.IncludesShadersStore, chunks);
+    Object.assign(ShaderStore.IncludesShadersStoreWGSL, wgslChunks);
   };
   register(RequiemEntityContainer.getSchema());
 }
@@ -154,7 +150,7 @@ async function initializeShado(engine: AbstractEngine): Promise<void> {
   if (initializedEngine === engine && initialization) return initialization;
   initializedEngine = engine;
   initialization = RequiemEntityContainer.initialize(engine, {
-    backend: "datatex",
+    backend: engine.isWebGPU ? "storage" : "datatex",
     extra: RequiemEntityActor,
     wasm: {
       mode: "precompiled",
@@ -173,6 +169,12 @@ export class ShadoEntityPool {
   public readonly shado: RequiemEntityContainer;
   private readonly free: number[] = [];
   private readonly byEntityId = new Map<number, RequiemEntityActor>();
+  private readonly coarseVisibility = new WeakMap<
+    RequiemEntityActor,
+    boolean
+  >();
+  private reservedActors = 0;
+  private visibilitySink: RequiemEntityVisibilitySink | null = null;
 
   public static async create(engine: AbstractEngine): Promise<ShadoEntityPool> {
     await initializeShado(engine);
@@ -181,10 +183,19 @@ export class ShadoEntityPool {
 
   private constructor(engine: AbstractEngine) {
     this.shado = new RequiemEntityContainer(engine);
-    // WebGPU builds bind groups before onBind. Ensure the arena backing texture
-    // exists even while this model has zero actors.
+    // GPU picking retains Babylon's per-slot instanceMeshID attribute, so its
+    // compatibility pass still needs a per-source visibility lookup.
+    this.shado.requireVisibilityFlags();
+    // WebGPU builds bind groups before onBind. Ensure the arena backing exists
+    // even while this model has zero actors.
     this.shado.markArenaDirty();
     this.shado.commit();
+  }
+
+  public reserve(actorCount: number, appearanceEntries: number): void {
+    this.shado.reserveInstances(actorCount);
+    this.shado.reserveVarArray("appearance", appearanceEntries);
+    this.reservedActors = Math.max(this.reservedActors, actorCount);
   }
 
   public acquire(
@@ -200,12 +211,21 @@ export class ShadoEntityPool {
     }
 
     const reusable = this.free.pop();
+    if (
+      reusable === undefined &&
+      this.shado.children.length >= this.reservedActors
+    ) {
+      const nextCapacity = Math.max(64, this.reservedActors * 2);
+      this.reserve(nextCapacity, nextCapacity * appearanceCount);
+    }
     const actor =
       reusable === undefined
         ? this.shado.addInstance(true)
         : this.shado.children[reusable];
     const index = reusable ?? this.shado.children.length - 1;
-    actor.initialize();
+    // addInstance() already initializes new records. Reinitialize only a
+    // recycled slot whose previous actor state must be cleared.
+    if (reusable !== undefined) actor.initialize();
     actor.entityId = entityId >>> 0;
     actor.stateFlags = REQUIEM_ACTOR_ACTIVE;
     // Entity setup is asynchronous (nameplate, appearance and held-item data).
@@ -214,23 +234,25 @@ export class ShadoEntityPool {
     actor.visibleIndex = index;
     actor.appearanceOffset = index * appearanceCount;
     actor.appearanceCount = appearanceCount;
-    actor.emitHeaderDirty();
+    this.coarseVisibility.set(actor, false);
     this.shado.ensureAppearanceCount((index + 1) * appearanceCount);
     this.byEntityId.set(entityId, actor);
     this.shado.visibleCount = Math.max(this.shado.visibleCount, index + 1);
+    this.visibilitySink?.acquire(this, actor, index);
     return { actor, index };
   }
 
   public release(index: number): void {
     const actor = this.shado.children[index];
     if (!actor || !(actor.stateFlags & REQUIEM_ACTOR_ACTIVE)) return;
+    this.visibilitySink?.release(actor);
+    this.coarseVisibility.delete(actor);
     this.byEntityId.delete(actor.entityId);
     actor.entityId = 0;
     actor.stateFlags = 0;
     actor.visibleFlag = 0;
     actor.visibleIndex = -1;
-    actor.translation.set([0, -1_000_000, 0, 0]);
-    actor.emitHeaderDirty();
+    actor.translation = new Float32Array([0, -1_000_000, 0, 0]);
     this.free.push(index);
   }
 
@@ -240,34 +262,43 @@ export class ShadoEntityPool {
     rotation: Quaternion,
     scale: number,
   ): void {
-    actor.translation.set([position.x, position.y, position.z, scale]);
-    actor.rotation.set([rotation.x, rotation.y, rotation.z, rotation.w]);
-    actor.emitHeaderDirty();
+    actor.translation = new Float32Array([
+      position.x,
+      position.y,
+      position.z,
+      scale,
+    ]);
+    actor.rotation = new Float32Array([
+      rotation.x,
+      rotation.y,
+      rotation.z,
+      rotation.w,
+    ]);
+    this.visibilitySink?.transform(actor, position, scale);
   }
 
   public setAnimation(
     actor: RequiementityActorCompat,
     animation: Vector4,
   ): void {
-    actor.animationBuffer.set([
+    actor.animationBuffer = new Float32Array([
       animation.x,
       animation.y,
       animation.z,
       animation.w,
     ]);
-    actor.emitHeaderDirty();
   }
 
   public setVisible(actor: RequiementityActorCompat, visible: boolean): void {
+    this.coarseVisibility.set(actor, visible);
     actor.visibleFlag = visible ? 1 : 0;
-    actor.emitHeaderDirty();
+    this.visibilitySink?.visible(actor, visible);
   }
 
   public setSelected(actor: RequiementityActorCompat, selected: boolean): void {
     actor.stateFlags = selected
       ? actor.stateFlags | REQUIEM_ACTOR_SELECTED
       : actor.stateFlags & ~REQUIEM_ACTOR_SELECTED;
-    actor.emitHeaderDirty();
   }
 
   public setAppearance(
@@ -289,7 +320,6 @@ export class ShadoEntityPool {
     if (!actor || actor.appearanceCount === submeshCount) return;
     actor.appearanceOffset = instanceIndex * submeshCount;
     actor.appearanceCount = submeshCount;
-    actor.emitHeaderDirty();
   }
 
   public commit(): void {
@@ -303,7 +333,34 @@ export class ShadoEntityPool {
     this.shado.frustumCull(camera, radius, maxDistance);
   }
 
+  public attachVisibilitySink(sink: RequiemEntityVisibilitySink | null): void {
+    this.visibilitySink = sink;
+    if (!sink) return;
+    for (let index = 0; index < this.shado.children.length; index++) {
+      const actor = this.shado.children[index];
+      if (!(actor.stateFlags & REQUIEM_ACTOR_ACTIVE)) continue;
+      sink.acquire(this, actor, index);
+      const translation = actor.translation;
+      sink.transform(
+        actor,
+        {
+          x: Number(translation[0] ?? 0),
+          y: Number(translation[1] ?? 0),
+          z: Number(translation[2] ?? 0),
+        },
+        Number(translation[3] ?? 1),
+      );
+      sink.visible(actor, this.coarseVisibility.get(actor) ?? true);
+    }
+  }
+
+  public applyWorkerVisibility(indices: ArrayLike<number>): void {
+    this.shado.applyVisibilityReduction(indices);
+  }
+
   public dispose(): void {
+    this.visibilitySink?.detachPool(this);
+    this.visibilitySink = null;
     this.byEntityId.clear();
     this.free.length = 0;
     this.shado.dispose();

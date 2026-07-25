@@ -1,0 +1,12 @@
+export class PlayerAbility {
+    player;
+    constructor(player) {
+        this.player = player;
+    }
+    doAbility(actionData) {
+        switch (actionData.data) {
+            default: break;
+        }
+    }
+}
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoicGxheWVyLWFiaWxpdHkuanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyJwbGF5ZXItYWJpbGl0eS50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiQUFJQSxNQUFNLE9BQU8sYUFBYTtJQUNKLE1BQU07SUFBMUIsWUFBb0IsTUFBYztzQkFBZCxNQUFNO0lBQzFCLENBQUM7SUFFTSxTQUFTLENBQUMsVUFBaUM7UUFDaEQsUUFBUSxVQUFVLENBQUMsSUFBSSxFQUFFLENBQUM7WUFFeEIsU0FBUyxNQUFNO1FBQ2pCLENBQUM7SUFDSCxDQUFDO0NBQ0YiLCJzb3VyY2VzQ29udGVudCI6WyJpbXBvcnQgdHlwZSB7IEFjdGlvbkJ1dHRvbkRhdGEgfSBmcm9tICdAdWkvY29tcG9uZW50cy9nYW1lL2FjdGlvbi1idXR0b24vY29uc3RhbnRzJztcbmltcG9ydCB0eXBlIFBsYXllciBmcm9tICcuL3BsYXllcic7XG5cblxuZXhwb3J0IGNsYXNzIFBsYXllckFiaWxpdHkge1xuICBjb25zdHJ1Y3Rvcihwcml2YXRlIHBsYXllcjogUGxheWVyKSB7XG4gIH1cblxuICBwdWJsaWMgZG9BYmlsaXR5KGFjdGlvbkRhdGE6IEFjdGlvbkJ1dHRvbkRhdGE8YW55Pikge1xuICAgIHN3aXRjaCAoYWN0aW9uRGF0YS5kYXRhKSB7XG4gICAgIFxuICAgICAgZGVmYXVsdDogYnJlYWs7XG4gICAgfVxuICB9XG59XG4iXX0=

@@ -10,6 +10,7 @@ export * from './schema/AoSLayout';
 export * from './net/PackedAoSCodec';
 export * from './net/NetLayout';
 export * from './net/NetSoA';
+export * from './core/ShadoInstanceSoA';
 export * from './net/emitNetStructModule';
 export * from './includes/register';
 export * from './backings/DataTexBacking';
@@ -20,6 +21,7 @@ export * from './utils/type-helpers';
 export * from './utils/embedded-proxy';
 export * from './utils/binding-alloc';
 export * from './utils/glsl-wgsl';
+export * from './renderer';
 
 // Extensions
 export * from './extensions';

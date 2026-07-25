@@ -1,0 +1,16 @@
+import type { Entity } from '@game/Model/entity';
+import { PlayerProfile } from '@game/Net/messages';
+import type { InventorySlot, NullableItemInstance } from '@game/Player/player-constants';
+import type { PlayerInventory } from '@game/Player/player-inventory';
+import { Events } from './events';
+export declare const usePlayerName: () => string;
+export declare const useEventArg: <T extends keyof Events>(eventName: T, callback: (arg: Events[T]) => void, expectedValue?: Events[T] | ((val: any) => boolean)) => void;
+export declare const useEventArgState: <T extends keyof Events>(eventName: T, expectedValue?: Events[T] | ((val: any) => boolean), initialState?: Events[T] | null) => Events[T] | null;
+export declare const useEvent: <T extends keyof Events>(eventName: T, callback: (arg: Events[T]) => void) => void;
+export declare const useEventState: <T extends keyof Events>(eventName: T, initialState: Events[T]) => Events[T];
+export declare const usePlayerProfile: () => PlayerProfile | null;
+export declare const usePlayerLevel: () => number;
+export declare const useInventoryOpen: () => boolean;
+export declare const useTarget: () => Entity | null;
+export declare const useInventorySlot: (slot: InventorySlot, bagSlot: number) => NullableItemInstance;
+export declare const usePlayerInventory: () => PlayerInventory | null;

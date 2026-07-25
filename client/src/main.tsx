@@ -1,5 +1,4 @@
 import ReactDOM from "react-dom/client";
-import bjs from '@bjs';
 
 async function render() {
   import('./App').then(({ App }) => {
@@ -12,5 +11,4 @@ async function render() {
   );    
 }
 
-bjs.initialize().then(render);
-
+void render();

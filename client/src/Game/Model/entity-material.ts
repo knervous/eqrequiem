@@ -1,4 +1,4 @@
-import * as BABYLON from "@babylonjs/core";
+import BABYLON from "@bjs";
 import type * as BJS from "@babylonjs/core";
 import { RequiemEntityContainer } from "./shado-entity-pool";
 import type { EntityMeshMetadata } from "./entity-types";
@@ -22,6 +22,9 @@ const VS_GL = `
     uniform mat4 worldViewProjection;
     uniform int  uSubmeshCount;
     uniform int  uInstanceCount;
+    uniform highp sampler2D uShadoVisibleIndices;
+    uniform int uShadoVisibleIndexTexWidth;
+    uniform int uShadoVisibleCount;
 
     // Babylon.js includes (will be transpiled under the hood)
     #define THIN_INSTANCES
@@ -35,13 +38,26 @@ const VS_GL = `
     #include<RequiemEntityActorOffsets>
     #include<RequiemEntityContainerStorage>
 
+    int requiemVisibleActorIndex(int drawIndex) {
+      int texelIndex = drawIndex / 4;
+      vec4 packed = texelFetch(
+        uShadoVisibleIndices,
+        ivec2(texelIndex % uShadoVisibleIndexTexWidth, texelIndex / uShadoVisibleIndexTexWidth),
+        0
+      );
+      int lane = drawIndex - texelIndex * 4;
+      float value = lane == 0 ? packed.x : lane == 1 ? packed.y : lane == 2 ? packed.z : packed.w;
+      return int(value + 0.5);
+    }
+
     void main() {
-        int instIdx = gl_InstanceID;
-        RequiemEntityActorHeader actor = RequiemEntityContainer_instances_get(instIdx);
-        if (actor.visibleFlag == 0) {
+        int drawIndex = gl_InstanceID;
+        if (drawIndex >= uShadoVisibleCount) {
           gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
           return;
         }
+        int sourceIndex = requiemVisibleActorIndex(drawIndex);
+        RequiemEntityActorHeader actor = RequiemEntityContainer_instances_get(sourceIndex);
         // Shado is the authoritative instance transform. Babylon's thin
         // instance is retained only as the draw-count adapter.
         mat4 finalWorld = mat4(1.0);
@@ -79,7 +95,7 @@ const VS_GL = `
         // Pass through to fragment
         vUV = uv;
         int subIdx  = int(submeshData.y + 0.5);
-        int flatIndex = subIdx + instIdx * uSubmeshCount;
+        int flatIndex = subIdx + sourceIndex * uSubmeshCount;
         vec4 textureAttributes = RequiemEntityContainer_appearance_get(flatIndex);
         
         vTint = textureAttributes.yzw;
@@ -145,6 +161,8 @@ const PICK_VS_GL = `
     flat varying float vMeshID;
 
     uniform mat4 viewProjection;
+    uniform highp sampler2D uShadoVisibilityFlags;
+    uniform int uShadoVisibleIndexTexWidth;
 
     #define THIN_INSTANCES
     #define INSTANCES
@@ -158,13 +176,18 @@ const PICK_VS_GL = `
     #include<RequiemEntityContainerStorage>
 
     void main() {
-        int instIdx = gl_InstanceID;
-        RequiemEntityActorHeader actor = RequiemEntityContainer_instances_get(instIdx);
-        vMeshID = instanceMeshID;
-        if (actor.visibleFlag == 0) {
+        int sourceIndex = gl_InstanceID;
+        bool actorVisible = texelFetch(
+          uShadoVisibilityFlags,
+          ivec2(sourceIndex % uShadoVisibleIndexTexWidth, sourceIndex / uShadoVisibleIndexTexWidth),
+          0
+        ).r > 0.5;
+        if (!actorVisible) {
           gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
           return;
         }
+        RequiemEntityActorHeader actor = RequiemEntityContainer_instances_get(sourceIndex);
+        vMeshID = instanceMeshID;
 
         vec4 anim = actor.animationBuffer;
         float totalFrames = anim.y - anim.x + 1.0;
@@ -222,11 +245,216 @@ const PICK_FS_GL = `
     }
 `;
 
+const WGSL_VAT_DECLARATIONS = `
+attribute matricesIndices: vec4f;
+attribute matricesWeights: vec4f;
+#if NUM_BONE_INFLUENCERS > 4
+attribute matricesIndicesExtra: vec4f;
+attribute matricesWeightsExtra: vec4f;
+#endif
+uniform bakedVertexAnimationTime: f32;
+var bakedVertexAnimationTexture: texture_2d<f32>;
+
+fn requiemReadVatMatrix(index: f32, frame: f32) -> mat4x4f {
+  let offset = i32(index) * 4;
+  let row = i32(frame);
+  return mat4x4f(
+    textureLoad(bakedVertexAnimationTexture, vec2i(offset + 0, row), 0),
+    textureLoad(bakedVertexAnimationTexture, vec2i(offset + 1, row), 0),
+    textureLoad(bakedVertexAnimationTexture, vec2i(offset + 2, row), 0),
+    textureLoad(bakedVertexAnimationTexture, vec2i(offset + 3, row), 0)
+  );
+}
+
+fn requiemVatInfluence(anim: vec4f, input: VertexInputs) -> mat4x4f {
+  let totalFrames = anim.y - anim.x + 1.0;
+  let vatTime = uniforms.bakedVertexAnimationTime * anim.w / totalFrames;
+  let frameCorrection = select(1.0, 0.0, vatTime < 1.0);
+  let frameCount = totalFrames - frameCorrection;
+  var frame = floor((fract(vatTime) * frameCount + anim.z) % frameCount);
+  frame += anim.x + frameCorrection;
+  var influence =
+    requiemReadVatMatrix(input.matricesIndices[0], frame) *
+    input.matricesWeights[0];
+#if NUM_BONE_INFLUENCERS > 1
+  influence += requiemReadVatMatrix(input.matricesIndices[1], frame) * input.matricesWeights[1];
+#endif
+#if NUM_BONE_INFLUENCERS > 2
+  influence += requiemReadVatMatrix(input.matricesIndices[2], frame) * input.matricesWeights[2];
+#endif
+#if NUM_BONE_INFLUENCERS > 3
+  influence += requiemReadVatMatrix(input.matricesIndices[3], frame) * input.matricesWeights[3];
+#endif
+#if NUM_BONE_INFLUENCERS > 4
+  influence += requiemReadVatMatrix(input.matricesIndicesExtra[0], frame) * input.matricesWeightsExtra[0];
+#endif
+#if NUM_BONE_INFLUENCERS > 5
+  influence += requiemReadVatMatrix(input.matricesIndicesExtra[1], frame) * input.matricesWeightsExtra[1];
+#endif
+#if NUM_BONE_INFLUENCERS > 6
+  influence += requiemReadVatMatrix(input.matricesIndicesExtra[2], frame) * input.matricesWeightsExtra[2];
+#endif
+#if NUM_BONE_INFLUENCERS > 7
+  influence += requiemReadVatMatrix(input.matricesIndicesExtra[3], frame) * input.matricesWeightsExtra[3];
+#endif
+  return influence;
+}
+
+fn requiemRotate(q: vec4f, point: vec3f) -> vec3f {
+  return point + 2.0 * cross(q.xyz, cross(q.xyz, point) + q.w * point);
+}
+`;
+
+const VS_WGSL = `
+attribute position: vec3f;
+attribute uv: vec2f;
+attribute submeshData: vec2f;
+flat varying vSlice: i32;
+flat varying vAtlasIndex: i32;
+varying vUV: vec2f;
+varying vTint: vec3f;
+uniform worldViewProjection: mat4x4f;
+uniform uSubmeshCount: i32;
+uniform uShadoVisibleCount: i32;
+var<storage, read> uShadoVisibleIndices: array<u32>;
+
+#include<RequiemEntityActor>
+#include<RequiemEntityContainerStorage>
+${WGSL_VAT_DECLARATIONS}
+
+@vertex
+fn main(input: VertexInputs) -> FragmentInputs {
+  let drawIndex = i32(vertexInputs.instanceIndex);
+  if (drawIndex >= uniforms.uShadoVisibleCount) {
+    vertexOutputs.position = vec4f(2.0, 2.0, 2.0, 1.0);
+    return vertexOutputs;
+  }
+
+  let sourceIndex = i32(uShadoVisibleIndices[drawIndex]);
+  let actor = RequiemEntityContainer_instances_get(sourceIndex);
+  let influence = requiemVatInfluence(actor.animationBuffer, input);
+  vertexOutputs.vUV = vertexInputs.uv;
+  let submeshIndex = i32(vertexInputs.submeshData.y + 0.5);
+  let flatIndex = submeshIndex + sourceIndex * uniforms.uSubmeshCount;
+  let textureAttributes = RequiemEntityContainer_appearance_get(flatIndex);
+  vertexOutputs.vTint = textureAttributes.yzw;
+  vertexOutputs.vSlice = i32(textureAttributes.x);
+  vertexOutputs.vAtlasIndex = i32(vertexInputs.submeshData.x);
+
+  if (vertexOutputs.vSlice == -1) {
+    vertexOutputs.position = vec4f(0.0);
+    return vertexOutputs;
+  }
+  let skinned = (influence * vec4f(vertexInputs.position, 1.0)).xyz;
+  let scaled = skinned * actor.translation.w;
+  let worldPosition = requiemRotate(actor.rotation, scaled) + actor.translation.xyz;
+  vertexOutputs.position = uniforms.worldViewProjection * vec4f(worldPosition, 1.0);
+}
+`;
+
+const FS_WGSL = `
+flat varying vSlice: i32;
+flat varying vAtlasIndex: i32;
+varying vUV: vec2f;
+varying vTint: vec3f;
+var uAtlasArraySampler: sampler;
+var uAtlasArray: texture_2d_array<f32>;
+var uCloakAtlasArraySampler: sampler;
+var uCloakAtlasArray: texture_2d_array<f32>;
+var uHelmAtlasArraySampler: sampler;
+var uHelmAtlasArray: texture_2d_array<f32>;
+
+@fragment
+fn main(input: FragmentInputs) -> FragmentOutputs {
+  let slice = fragmentInputs.vSlice;
+  let c0 = textureSampleLevel(uAtlasArray, uAtlasArraySampler, fragmentInputs.vUV, slice, 0.0);
+  let c1 = textureSampleLevel(
+    uCloakAtlasArray,
+    uCloakAtlasArraySampler,
+    fragmentInputs.vUV,
+    slice,
+    0.0
+  );
+  let c2 = textureSampleLevel(
+    uHelmAtlasArray,
+    uHelmAtlasArraySampler,
+    fragmentInputs.vUV,
+    slice,
+    0.0
+  );
+  let m0 = select(0.0, 1.0, fragmentInputs.vAtlasIndex == 0);
+  let m1 = select(0.0, 1.0, fragmentInputs.vAtlasIndex == 1);
+  let m2 = select(0.0, 1.0, fragmentInputs.vAtlasIndex == 2);
+  let base = c0 * m0 + c1 * m1 + c2 * m2;
+  fragmentOutputs.color = vec4f(base.rgb * fragmentInputs.vTint, 1.0);
+}
+`;
+
+const PICK_VS_WGSL = `
+attribute position: vec3f;
+attribute instanceMeshID: f32;
+flat varying vMeshID: f32;
+uniform viewProjection: mat4x4f;
+var uShadoVisibilityFlags: texture_2d<f32>;
+
+#include<RequiemEntityActor>
+#include<RequiemEntityContainerStorage>
+${WGSL_VAT_DECLARATIONS}
+
+fn requiemPickingActorVisible(index: i32) -> bool {
+  let size = textureDimensions(uShadoVisibilityFlags, 0);
+  return textureLoad(
+    uShadoVisibilityFlags,
+    vec2i(index % i32(size.x), index / i32(size.x)),
+    0
+  ).r > 0.5;
+}
+
+@vertex
+fn main(input: VertexInputs) -> FragmentInputs {
+  let sourceIndex = i32(vertexInputs.instanceIndex);
+  if (!requiemPickingActorVisible(sourceIndex)) {
+    vertexOutputs.position = vec4f(2.0, 2.0, 2.0, 1.0);
+    return vertexOutputs;
+  }
+  let actor = RequiemEntityContainer_instances_get(sourceIndex);
+  vertexOutputs.vMeshID = vertexInputs.instanceMeshID;
+  let influence = requiemVatInfluence(actor.animationBuffer, input);
+  let skinned = (influence * vec4f(vertexInputs.position, 1.0)).xyz;
+  let worldPosition =
+    requiemRotate(actor.rotation, skinned * actor.translation.w) +
+    actor.translation.xyz;
+  vertexOutputs.position = uniforms.viewProjection * vec4f(worldPosition, 1.0);
+}
+`;
+
+const PICK_FS_WGSL = `
+flat varying vMeshID: f32;
+
+@fragment
+fn main(input: FragmentInputs) -> FragmentOutputs {
+  let id = floor(fragmentInputs.vMeshID + 0.5);
+  let encoded = vec3f(
+    floor((id % 16777216.0) / 65536.0),
+    floor((id % 65536.0) / 256.0),
+    id % 256.0
+  ) / 255.0;
+  fragmentOutputs.color = vec4f(encoded, 1.0);
+}
+`;
+
 BABYLON.Effect.ShadersStore["vatVertexShader"] = VS_GL;
 BABYLON.Effect.ShadersStore["vatFragmentShader"] = FS_GL;
 BABYLON.Effect.ShadersStore["vatPickingVertexShader"] = PICK_VS_GL;
 BABYLON.Effect.ShadersStore["vatPickingFragmentShader"] = PICK_FS_GL;
+BABYLON.ShaderStore.ShadersStoreWGSL["vatVertexShader"] = VS_WGSL;
+BABYLON.ShaderStore.ShadersStoreWGSL["vatFragmentShader"] = FS_WGSL;
+BABYLON.ShaderStore.ShadersStoreWGSL["vatPickingVertexShader"] = PICK_VS_WGSL;
+BABYLON.ShaderStore.ShadersStoreWGSL["vatPickingFragmentShader"] = PICK_FS_WGSL;
 
+// ShaderMaterial appends the active skeleton's matricesIndices/Weights streams
+// in isReady(). Listing them here as well produces duplicate WebGPU vertex
+// descriptors for the same generated shader locations.
 const VAT_ATTRIBUTES = ["position", "uv", "submeshData"];
 
 export function createVATShaderMaterial(
@@ -235,6 +463,9 @@ export function createVATShaderMaterial(
   model: string,
 ): BJS.ShaderMaterial {
   shadoPool.commit();
+  const useStorageWGSL =
+    scene.getEngine().isWebGPU &&
+    (RequiemEntityContainer as any).backingPreference === "storage";
   const shadoIo = RequiemEntityContainer.shaderIO(scene.getEngine());
   const shaderMat = new BABYLON.ShaderMaterial(
     `vatShader_${model}`,
@@ -249,9 +480,12 @@ export function createVATShaderMaterial(
         "worldViewProjection",
         "uSubmeshCount",
         "uInstanceCount",
+        "uShadoVisibleCount",
         "bakedVertexAnimationTextureSizeInverted",
         "bakedVertexAnimationTime",
-        ...shadoIo.uniforms,
+        ...(useStorageWGSL
+          ? []
+          : ["uShadoVisibleIndexTexWidth", ...shadoIo.uniforms]),
       ],
       // uniformBuffers: ['TestStructBlock'],
       samplers: [
@@ -259,7 +493,9 @@ export function createVATShaderMaterial(
         "uCloakAtlasArray",
         "uHelmAtlasArray",
         "bakedVertexAnimationTexture",
-        ...shadoIo.samplers,
+        ...(useStorageWGSL
+          ? []
+          : ["uShadoVisibleIndices", ...shadoIo.samplers]),
       ],
       defines: [
         "INSTANCES",
@@ -271,9 +507,9 @@ export function createVATShaderMaterial(
       ],
       needAlphaBlending: false,
       needAlphaTesting: false,
-      // This material is currently authored in GLSL. Babylon translates it
-      // through glslang when running on WebGPU.
-      shaderLanguage: BABYLON.ShaderLanguage.GLSL,
+      shaderLanguage: useStorageWGSL
+        ? BABYLON.ShaderLanguage.WGSL
+        : BABYLON.ShaderLanguage.GLSL,
     },
     true,
   );
@@ -298,6 +534,8 @@ export function createVATShaderMaterial(
     } = metadata;
     metadata.shadoPool.commit();
     metadata.shadoPool.shado.bind(effect);
+    const visibleCount = metadata.shadoPool.shado.getVisibleCount();
+    (mesh as BJS.Mesh).forcedInstanceCount = visibleCount;
 
     const tmgr = mesh.bakedVertexAnimationManager;
     if (atlasArrayTexture) {
@@ -311,6 +549,7 @@ export function createVATShaderMaterial(
     }
     effect.setInt("uSubmeshCount", submeshCount);
     effect.setInt("uInstanceCount", (mesh as BJS.Mesh).thinInstanceCount);
+    effect.setInt("uShadoVisibleCount", visibleCount);
 
     if (vatTexture) {
       effect.setVector2(
@@ -340,6 +579,9 @@ export function createVATPickingMaterial(
   model: string,
 ): BJS.ShaderMaterial {
   shadoPool.commit();
+  const useStorageWGSL =
+    scene.getEngine().isWebGPU &&
+    (RequiemEntityContainer as any).backingPreference === "storage";
   const shadoIo = RequiemEntityContainer.shaderIO(scene.getEngine());
   const material = new BABYLON.ShaderMaterial(
     `vatPickingShader_${model}`,
@@ -351,9 +593,15 @@ export function createVATPickingMaterial(
         "viewProjection",
         "bakedVertexAnimationTextureSizeInverted",
         "bakedVertexAnimationTime",
-        ...shadoIo.uniforms,
+        ...(useStorageWGSL
+          ? []
+          : ["uShadoVisibleIndexTexWidth", ...shadoIo.uniforms]),
       ],
-      samplers: ["bakedVertexAnimationTexture", ...shadoIo.samplers],
+      samplers: [
+        "bakedVertexAnimationTexture",
+        "uShadoVisibilityFlags",
+        ...(useStorageWGSL ? [] : shadoIo.samplers),
+      ],
       defines: [
         "INSTANCES",
         "THIN_INSTANCES",
@@ -362,7 +610,9 @@ export function createVATPickingMaterial(
           ? ["DISABLE_UNIFORM_BUFFERS"]
           : []),
       ],
-      shaderLanguage: BABYLON.ShaderLanguage.GLSL,
+      shaderLanguage: useStorageWGSL
+        ? BABYLON.ShaderLanguage.WGSL
+        : BABYLON.ShaderLanguage.GLSL,
     },
     true,
   );
@@ -373,6 +623,9 @@ export function createVATPickingMaterial(
     metadata.shadoPool.commit();
     const effect = material.getEffect();
     metadata.shadoPool.shado.bind(effect);
+    (mesh as BJS.Mesh).forcedInstanceCount = (
+      mesh as BJS.Mesh
+    ).thinInstanceCount;
     effect.setVector2(
       "bakedVertexAnimationTextureSizeInverted",
       metadata.vatTextureSizeInverted,

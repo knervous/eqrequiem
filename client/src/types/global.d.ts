@@ -1,3 +1,7 @@
+interface Window {
+	setSplash?: (visible: boolean) => void;
+}
+
 declare namespace globalThis {
 
 	function sendJSBuffer(packet: ArrayBuffer) : void;
@@ -93,4 +97,3 @@ declare namespace globalThis {
 	 */
 	const INSIDE_WORKER: true | undefined;
 }
-

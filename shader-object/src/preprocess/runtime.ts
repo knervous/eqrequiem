@@ -187,7 +187,7 @@ export async function fetchShadoBytes(
     throw new Error(`Failed to fetch '${url}': ${response.status} ${response.statusText}`);
   }
   const bytes = await response.arrayBuffer();
-  if (!url.endsWith('.gz')) return bytes;
+  if (!/\.gz(?:[?#]|$)/i.test(url)) return bytes;
   // Browsers transparently decode responses carrying Content-Encoding: gzip.
   // Static servers commonly add that header for .gz artifacts, while object
   // stores may return the same file as opaque gzip bytes. Support both forms.

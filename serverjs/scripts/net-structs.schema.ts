@@ -1,4 +1,4 @@
-import type { NetStructSpec } from "shader-object";
+import type { NetStructSpec } from "@knervous/shado";
 
 export const netStructs = [
   {

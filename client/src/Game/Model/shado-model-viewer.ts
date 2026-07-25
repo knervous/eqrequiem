@@ -1,6 +1,5 @@
-import * as BABYLON from "@babylonjs/core";
+import BABYLON from "@bjs";
 import type * as BJS from "@babylonjs/core";
-import "@babylonjs/core/Loading/Plugins/babylonFileLoader.js";
 
 import { createVATShaderMaterial } from "./entity-material";
 import { ShadoEntityPool } from "./shado-entity-pool";
@@ -83,6 +82,8 @@ export async function createShadoModelViewer(
       );
     }
   };
+  await runStage("Initializing Babylon runtime", () => BABYLON.initialize());
+
   const engine = new BABYLON.Engine(canvas, true, {
     preserveDrawingBuffer: true,
     stencil: true,
@@ -122,20 +123,64 @@ export async function createShadoModelViewer(
       fetchBytes(`${baseUrl}/basis/${model.slice(0, 3)}.rgba`),
     ]));
 
-  const sceneFile = new File([sceneBytes.slice().buffer], `${model}.babylon`, {
-    type: "application/babylon",
-  });
   const container = await runStage("Importing Babylon scene", () =>
-    BABYLON.LoadAssetContainerAsync(sceneFile, scene, {
+    BABYLON.loadBabylonAssetContainer(
+      sceneBytes.slice().buffer as ArrayBuffer,
+      scene,
+      {
       name: `${model}.babylon`,
-      pluginExtension: ".babylon",
-    }),
+      },
+    ),
   );
   container.addAllToScene();
-  const skeleton = container.skeletons[0];
-  if (!skeleton) throw new Error(`${model} has no runtime skeleton`);
+  const serializedScene = JSON.parse(
+    new TextDecoder().decode(sceneBytes),
+  ) as {
+    skeletons?: unknown[];
+    meshes?: Array<{ id?: string; geometryId?: string }>;
+    geometries?: { vertexData?: Array<{ id?: string }> };
+  };
+  let skeleton =
+    container.skeletons[0] ??
+    container.meshes.find((candidate) => candidate.skeleton)?.skeleton ??
+    scene.skeletons[0];
+  if (!skeleton) {
+    // Babylon Lite can load the geometry while omitting the skeleton from the
+    // AssetContainer bookkeeping. The native .babylon payload remains the
+    // source of truth, so recover its serialized skeleton rather than rejecting
+    // an otherwise valid promoted runtime model.
+    const serializedSkeleton = serializedScene.skeletons?.[0];
+    if (serializedSkeleton) {
+      skeleton = BABYLON.Skeleton.Parse(serializedSkeleton, scene);
+    }
+  }
+  if (!skeleton) throw new Error(`${model} has no serialized runtime skeleton`);
 
-  const meshes = container.meshes.filter(
+  const loadedMeshes = [
+    ...new Set([...container.meshes, ...scene.meshes]),
+  ] as BJS.Mesh[];
+  for (const loadedMesh of loadedMeshes) {
+    if (loadedMesh.getTotalVertices() > 0) continue;
+    const geometryId = serializedScene.meshes?.find(
+      (candidate) => candidate.id === loadedMesh.id,
+    )?.geometryId;
+    if (!geometryId) continue;
+
+    let geometry =
+      container.geometries.find((candidate) => candidate.id === geometryId) ??
+      scene.getGeometryById(geometryId);
+    if (!geometry) {
+      const serializedGeometry = serializedScene.geometries?.vertexData?.find(
+        (candidate) => candidate.id === geometryId,
+      );
+      if (serializedGeometry) {
+        geometry = BABYLON.Geometry.Parse(serializedGeometry, scene, "");
+      }
+    }
+    geometry?.applyToMesh(loadedMesh);
+  }
+
+  const meshes = loadedMeshes.filter(
     (candidate) => candidate.getTotalVertices() > 0,
   ) as BJS.Mesh[];
   if (!meshes.length) throw new Error(`${model} has no renderable geometry`);

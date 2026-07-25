@@ -9,11 +9,19 @@ import { encodeEvent, GameBackendPacketAdapter } from "./packet-adapter.js";
 
 class RecordingBackend implements GameBackend {
   request: BackendRequest | null = null;
+  disconnectedSession: number | null = null;
+  closed = false;
 
   initialize(): Promise<void> { return Promise.resolve(); }
   connect(): Promise<BackendEvent[]> { return Promise.resolve([]); }
-  disconnect(): Promise<void> { return Promise.resolve(); }
-  close(): Promise<void> { return Promise.resolve(); }
+  disconnect(sessionId: number): Promise<void> {
+    this.disconnectedSession = sessionId;
+    return Promise.resolve();
+  }
+  close(): Promise<void> {
+    this.closed = true;
+    return Promise.resolve();
+  }
   handle(_sessionId: number, request: BackendRequest): Promise<BackendEvent[]> {
     this.request = request;
     return Promise.resolve([{
@@ -62,5 +70,15 @@ describe("game backend packet adapter", () => {
     assert.equal(packet.transport, "control-stream");
     assert.equal(world?.full, true);
     assert.equal(world?.state.entityId[0], 20);
+  });
+
+  it("disconnects the session before releasing backend storage", async () => {
+    const backend = new RecordingBackend();
+    const adapter = new GameBackendPacketAdapter(backend);
+
+    await adapter.close(7);
+
+    assert.equal(backend.disconnectedSession, 7);
+    assert.equal(backend.closed, true);
   });
 });

@@ -1,4 +1,4 @@
-import * as BJS from "@babylonjs/core";
+import type * as BJS from "@babylonjs/core";
 import BABYLON from "@bjs";
 import { AnimationDefinitions } from "@game/Animation/animation-constants";
 import {
@@ -18,6 +18,7 @@ import {
 } from "@game/Player/player-constants";
 import EntityCache, { type EntityContainer } from "./entity-cache";
 import { createTargetRingMaterial } from "./entity-select-ring";
+import { heldItemLocalYOffset } from "./held-item-attachment";
 import type { RequiemEntityActor } from "./shado-entity-pool";
 
 const modelYOffset = {
@@ -31,7 +32,7 @@ const humanAnimationAliases: Readonly<Record<string, string>> = {
   l01: "Walk",
   l02: "Run",
   l03: "Jump_Start",
-  l04: "Jump_Start",
+  l04: "Jump_Land",
   l05: "Jump_Loop",
   l06: "Crouch_Walk",
   l09: "Swim",
@@ -551,44 +552,39 @@ export class Entity extends BABYLON.TransformNode {
       return;
     }
     console.log("[Entity] Updating primary weapon model", item);
-    const itemContainer = await this.entityContainer?.getItem?.(item);
+    const primaryBoneIndex =
+      this.entityContainer?.attachmentBoneIndices.r_point;
+    if (primaryBoneIndex === undefined) {
+      return;
+    }
+    const itemContainer = await this.entityContainer?.getItem?.(
+      item,
+      true,
+      primaryBoneIndex,
+      "r_point",
+    );
     if (this.disposed || generation !== this.appearanceGeneration) return;
     if (itemContainer) {
       for (const mesh of itemContainer.meshes) {
         const itemInst = mesh.createInstance(`i_primary_${item}`);
         itemInst.rotation = this.rotation;
         itemInst.setParent(this);
-        itemInst.position = new BABYLON.Vector3(0, this.spawnScale * 0.5, 0); // this.spawnPosition;
+        itemInst.position = new BABYLON.Vector3(
+          0,
+          heldItemLocalYOffset(
+            Boolean(
+              this.entityContainer.attachmentGeometryTransforms.r_point,
+            ),
+            this.spawnScale,
+          ),
+          0,
+        );
         itemInst.scaling.setAll(this.spawnScale);
-        const totalCount = itemInst.getTotalVertices();
-        const weaponMI: number[] = [];
-        const weaponMW: number[] = [];
-        const primaryBoneIndex =
-          this.entityContainer.attachmentBoneIndices.r_point;
-        if (primaryBoneIndex !== undefined) {
-          itemInst.bakedVertexAnimationManager = this.entityContainer.manager!;
-          itemInst.instancedBuffers.bakedVertexAnimationSettingsInstanced =
-            this.animationBuffer;
-          itemInst.scaling.setAll(this.spawnScale);
-          itemInst.setEnabled(!this.hidden && this.isEnabled());
-          for (let i = 0; i < totalCount; i++) {
-            weaponMI.push(primaryBoneIndex, 0, 0, 0);
-            weaponMW.push(1, 0, 0, 0);
-          }
-          itemInst.setVerticesData(
-            BABYLON.VertexBuffer.MatricesIndicesKind,
-            weaponMI,
-            false,
-          );
-          itemInst.setVerticesData(
-            BABYLON.VertexBuffer.MatricesWeightsKind,
-            weaponMW,
-            false,
-          );
-          this.primaryMeshes.push(itemInst);
-        } else {
-          itemInst.dispose();
-        }
+        itemInst.bakedVertexAnimationManager = this.entityContainer.manager!;
+        itemInst.instancedBuffers.bakedVertexAnimationSettingsInstanced =
+          this.animationBuffer;
+        itemInst.setEnabled(!this.hidden && this.isEnabled());
+        this.primaryMeshes.push(itemInst);
       }
     } else {
       console.warn(
@@ -729,9 +725,16 @@ export class Entity extends BABYLON.TransformNode {
     }
     if (item.length) {
       console.log("[Entity] Updating secondary weapon model", item);
+      const secondaryBoneIndex =
+        this.entityContainer?.attachmentBoneIndices[defaultPoint];
+      if (secondaryBoneIndex === undefined) {
+        return;
+      }
       const itemContainer = await this.entityContainer?.getItem?.(
         item,
         defaultPoint === "l_point",
+        secondaryBoneIndex,
+        defaultPoint,
       );
       if (this.disposed || generation !== this.appearanceGeneration) return;
       if (itemContainer) {
@@ -739,40 +742,25 @@ export class Entity extends BABYLON.TransformNode {
           const itemInst = mesh.createInstance(`i_secondary_${item}`);
 
           itemInst.setParent(this);
-          itemInst.position = new BABYLON.Vector3(0, this.spawnScale * 0.5, 0); // this.spawnPosition;
+          itemInst.position = new BABYLON.Vector3(
+            0,
+            heldItemLocalYOffset(
+              Boolean(
+                this.entityContainer.attachmentGeometryTransforms[defaultPoint],
+              ),
+              this.spawnScale,
+            ),
+            0,
+          );
           itemInst.rotation = this.rotation;
           itemInst.scaling.setAll(this.spawnScale);
 
-          const totalCount = itemInst.getTotalVertices();
-          const weaponMI: number[] = [];
-          const weaponMW: number[] = [];
-          const secondaryBoneIndex =
-            this.entityContainer.attachmentBoneIndices[defaultPoint];
-          if (secondaryBoneIndex !== undefined) {
-            itemInst.bakedVertexAnimationManager =
-              this.entityContainer.manager!;
-            itemInst.instancedBuffers.bakedVertexAnimationSettingsInstanced =
-              this.animationBuffer;
-            itemInst.scaling.setAll(this.spawnScale);
-            itemInst.setEnabled(!this.hidden && this.isEnabled());
-            for (let i = 0; i < totalCount; i++) {
-              weaponMI.push(secondaryBoneIndex, 0, 0, 0);
-              weaponMW.push(1, 0, 0, 0);
-            }
-            itemInst.setVerticesData(
-              BABYLON.VertexBuffer.MatricesIndicesKind,
-              weaponMI,
-              false,
-            );
-            itemInst.setVerticesData(
-              BABYLON.VertexBuffer.MatricesWeightsKind,
-              weaponMW,
-              false,
-            );
-            this.secondaryMeshes.push(itemInst);
-          } else {
-            itemInst.dispose();
-          }
+          itemInst.bakedVertexAnimationManager =
+            this.entityContainer.manager!;
+          itemInst.instancedBuffers.bakedVertexAnimationSettingsInstanced =
+            this.animationBuffer;
+          itemInst.setEnabled(!this.hidden && this.isEnabled());
+          this.secondaryMeshes.push(itemInst);
         }
       } else {
         console.warn(

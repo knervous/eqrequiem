@@ -8,19 +8,37 @@ export class ShadoActor extends Shado {
   /** World-space orientation quaternion (x, y, z, w). */
   @field('vec4') rotation!: Float32Array;
   @field('vec4') color!: Float32Array;
-  @field('i32') visibleIndex!: number; // This is indirection into the visible array
   @field('u32') nameIndex!: number;
   @field('f32') nameWorldPerEM!: number;
   @field('f32') nameLiftWorld!: number;
   @field('vec4') nameplateColor!: Float32Array;
   @field('vec4') animationBuffer!: Float32Array;
-  @field('i32') visibleFlag!: number;
   @field('f32') padding1!: number;
   @field('f32') padding2!: number;
   @field('f32') padding3!: number;
 
   private readonly _worldPerEM = 0.16;
   private readonly _yLiftWorld = 2.4;
+
+  /** Compatibility view over the container's visibility SoA plane. */
+  public get visibleFlag(): number {
+    const host = (this as any)._host;
+    const index = (this as any)._sidecarIndex;
+    return host?.getVisibilityFlag?.(index) ?? 1;
+  }
+  public set visibleFlag(value: number) {
+    const host = (this as any)._host;
+    const index = (this as any)._sidecarIndex;
+    host?.setVisibilityFlag?.(index, value !== 0);
+  }
+
+  /** The durable actor slot; draw-order indirection now lives in a SoA plane. */
+  public get visibleIndex(): number {
+    return (this as any)._sidecarIndex ?? -1;
+  }
+  public set visibleIndex(_value: number) {
+    // Kept as a no-op for source compatibility with actor initializers.
+  }
 
   constructor(engine: any) {
     super(engine, true);
@@ -44,27 +62,20 @@ export class ShadoActor extends Shado {
 
   public playRandomAnimation(animationRanges: DQClipInfo[]) {
     if (!animationRanges || animationRanges.length === 0) {
-      // No animations available - set default values
-      const animationBuffer = (this as any).animationBuffer as Float32Array;
-      animationBuffer[0] = 0; // from
-      animationBuffer[1] = 0; // to
-      animationBuffer[2] = 0; // randomStart
-      animationBuffer[3] = 60; // fps
-      this.emitHeaderDirty();
+      this.animationBuffer = new Float32Array([0, 0, 0, 60]);
       return;
     }
 
     const randomIndex = Math.floor(Math.random() * animationRanges.length);
     const clip = animationRanges[randomIndex];
-    const animationBuffer = (this as any).animationBuffer as Float32Array;
-    animationBuffer[0] = clip.from;
-    animationBuffer[1] = clip.to;
-
     const total = clip.to - clip.from;
     const randomStart = Math.floor(Math.random() * total);
-    animationBuffer[2] = randomStart;
-    animationBuffer[3] = clip.fps || 60;
-    this.emitHeaderDirty();
+    this.animationBuffer = new Float32Array([
+      clip.from,
+      clip.to,
+      randomStart,
+      clip.fps || 60,
+    ]);
   }
 
   private _rand(min: number, max: number) {

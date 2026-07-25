@@ -32,7 +32,6 @@ EQ Requiem will always remain open source and welcomes contributions of all kind
 - Run the client development server with different options
   - `npm run start:prod` - This allows you to do client-side code changes without a server spun up and depends on the live server to be up
   - `npm start` - This will try to connect to your locally running go backend on port 443
-  - `npm run sage:dev` - This is for using Sage to convert assets in runtime and requires installing the Sage core module as a sibling repo of this repo https://github.com/knervous/eqsage
 
 ## Server
 

@@ -1,0 +1,766 @@
+{
+  "kind": "shado.world.authoring",
+  "version": 1,
+  "world": "arena",
+  "coordinateSystem": "babylon-y-up",
+  "revision": 1,
+  "regions": [
+    {
+      "id": "legacy-region-0",
+      "name": "Legacy region 0",
+      "kind": "zone-line",
+      "enabled": true,
+      "center": [
+        -57.296875,
+        27.28125,
+        -851.125
+      ],
+      "size": [
+        34.34375,
+        40,
+        12
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 4,
+        "zoneLineInfo": {
+          "type": 0,
+          "index": 1
+        },
+        "sourceCoordinateSystem": "requiem-y-up",
+        "positionMirroredAtPreprocess": true
+      }
+    },
+    {
+      "id": "legacy-region-1",
+      "name": "Legacy region 1",
+      "kind": "semantic",
+      "enabled": true,
+      "center": [
+        -37.78125,
+        59.46875,
+        462.46875
+      ],
+      "size": [
+        1011.875,
+        123,
+        1011.875
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 3,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "positionMirroredAtPreprocess": true
+      }
+    }
+  ],
+  "objects": {
+    "prototypes": [
+      {
+        "id": "bbcart",
+        "source": "/eqrequiem/objects/bbcart/final.glb",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "bbcart",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb"
+        }
+      },
+      {
+        "id": "brazier1",
+        "source": "/eqrequiem/objects/brazier1/final.glb",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "brazier1",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb"
+        }
+      },
+      {
+        "id": "dwarfmeat",
+        "source": "/eqrequiem/objects/dwarfmeat/final.glb",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "dwarfmeat",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb"
+        }
+      },
+      {
+        "id": "elfmeat1",
+        "source": "/eqrequiem/objects/elfmeat1/final.glb",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "elfmeat1",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb"
+        }
+      },
+      {
+        "id": "elfmeat2",
+        "source": "/eqrequiem/objects/elfmeat2/final.glb",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "elfmeat2",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb"
+        }
+      },
+      {
+        "id": "mistthrone",
+        "source": "/eqrequiem/objects/mistthrone/final.glb",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "mistthrone",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb"
+        }
+      },
+      {
+        "id": "nerbrazier",
+        "source": "/eqrequiem/objects/nerbrazier/final.glb",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "nerbrazier",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb"
+        }
+      },
+      {
+        "id": "pksignar",
+        "source": "/eqrequiem/objects/pksignar/final.glb",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "pksignar",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb"
+        }
+      }
+    ],
+    "stamps": [
+      {
+        "id": "bbcart-0",
+        "prototype": "bbcart",
+        "enabled": true,
+        "position": [
+          -162.73104858398438,
+          0.0010020999470725656,
+          18.896770477294922
+        ],
+        "rotationDegrees": [
+          0,
+          90,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "brazier1-0",
+        "prototype": "brazier1",
+        "enabled": true,
+        "position": [
+          44.633941650390625,
+          0.0009992000414058566,
+          -388.7669372558594
+        ],
+        "rotationDegrees": [
+          0,
+          92.8125,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "brazier1-1",
+        "prototype": "brazier1",
+        "enabled": true,
+        "position": [
+          -58.33376693725586,
+          0.0009992000414058566,
+          -388.8012390136719
+        ],
+        "rotationDegrees": [
+          0,
+          90.703125,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 1,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "brazier1-2",
+        "prototype": "brazier1",
+        "enabled": true,
+        "position": [
+          461.6222839355469,
+          0.0010029999539256096,
+          967.8759765625
+        ],
+        "rotationDegrees": [
+          0,
+          -147.65625,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 2,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "brazier1-3",
+        "prototype": "brazier1",
+        "enabled": true,
+        "position": [
+          553.3626708984375,
+          0.0009992000414058566,
+          19.665264129638672
+        ],
+        "rotationDegrees": [
+          0,
+          137.8125,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 3,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "brazier1-4",
+        "prototype": "brazier1",
+        "enabled": true,
+        "position": [
+          -561.8712158203125,
+          0.0009992000414058566,
+          12.638258934020996
+        ],
+        "rotationDegrees": [
+          0,
+          39.375,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 4,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "brazier1-5",
+        "prototype": "brazier1",
+        "enabled": true,
+        "position": [
+          -472.5392150878906,
+          0.001001100055873394,
+          995.12939453125
+        ],
+        "rotationDegrees": [
+          0,
+          -59.0625,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 5,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "brazier1-6",
+        "prototype": "brazier1",
+        "enabled": true,
+        "position": [
+          -23.036361694335938,
+          0.0009983000345528126,
+          89.18701934814453
+        ],
+        "rotationDegrees": [
+          0,
+          99.140625,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 6,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "brazier1-7",
+        "prototype": "brazier1",
+        "enabled": true,
+        "position": [
+          -395.8625793457031,
+          0.0010029999539256096,
+          448.4328918457031
+        ],
+        "rotationDegrees": [
+          0,
+          -5.625,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 7,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "brazier1-8",
+        "prototype": "brazier1",
+        "enabled": true,
+        "position": [
+          -166.49237060546875,
+          0.0010029999539256096,
+          792.6705932617188
+        ],
+        "rotationDegrees": [
+          0,
+          -62.578125,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 8,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "brazier1-9",
+        "prototype": "brazier1",
+        "enabled": true,
+        "position": [
+          121.16631317138672,
+          0.0009973000269383192,
+          789.2548828125
+        ],
+        "rotationDegrees": [
+          0,
+          -118.125,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 9,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "brazier1-10",
+        "prototype": "brazier1",
+        "enabled": true,
+        "position": [
+          300.8841247558594,
+          0.00100020004902035,
+          443.6665344238281
+        ],
+        "rotationDegrees": [
+          0,
+          -176.484375,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 10,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "dwarfmeat-0",
+        "prototype": "dwarfmeat",
+        "enabled": true,
+        "position": [
+          -162.5442657470703,
+          1.8970727920532227,
+          15.451669692993164
+        ],
+        "rotationDegrees": [
+          0,
+          -90,
+          101.953125
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "elfmeat1-0",
+        "prototype": "elfmeat1",
+        "enabled": true,
+        "position": [
+          -170.75013732910156,
+          0.001001100055873394,
+          22.943763732910156
+        ],
+        "rotationDegrees": [
+          0,
+          -90,
+          282.65625
+        ],
+        "scale": [
+          1.5,
+          1.5,
+          1.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "elfmeat2-0",
+        "prototype": "elfmeat2",
+        "enabled": true,
+        "position": [
+          -164.01904296875,
+          -0.24899789690971375,
+          31.326467514038086
+        ],
+        "rotationDegrees": [
+          0,
+          142.734375,
+          287.578125
+        ],
+        "scale": [
+          1.5,
+          1.5,
+          1.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "mistthrone-0",
+        "prototype": "mistthrone",
+        "enabled": true,
+        "position": [
+          -38.59762954711914,
+          19.063499450683594,
+          393.90118408203125
+        ],
+        "rotationDegrees": [
+          0,
+          -90,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "nerbrazier-0",
+        "prototype": "nerbrazier",
+        "enabled": true,
+        "position": [
+          -108.97235107421875,
+          19.063499450683594,
+          527.8902587890625
+        ],
+        "rotationDegrees": [
+          0,
+          -47.109375,
+          0
+        ],
+        "scale": [
+          1.75,
+          1.75,
+          1.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "nerbrazier-1",
+        "prototype": "nerbrazier",
+        "enabled": true,
+        "position": [
+          24.219335556030273,
+          19.063499450683594,
+          526.6138916015625
+        ],
+        "rotationDegrees": [
+          0,
+          -136.40625,
+          0
+        ],
+        "scale": [
+          1.75,
+          1.75,
+          1.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 1,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "nerbrazier-2",
+        "prototype": "nerbrazier",
+        "enabled": true,
+        "position": [
+          24.371110916137695,
+          19.063499450683594,
+          396.64215087890625
+        ],
+        "rotationDegrees": [
+          0,
+          132.1875,
+          0
+        ],
+        "scale": [
+          1.75,
+          1.75,
+          1.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 2,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "nerbrazier-3",
+        "prototype": "nerbrazier",
+        "enabled": true,
+        "position": [
+          -105.99826049804688,
+          19.063499450683594,
+          392.24676513671875
+        ],
+        "rotationDegrees": [
+          0,
+          48.515625,
+          0
+        ],
+        "scale": [
+          1.75,
+          1.75,
+          1.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 3,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "pksignar-0",
+        "prototype": "pksignar",
+        "enabled": true,
+        "position": [
+          -98.41755676269531,
+          11.251001358032227,
+          976.4476318359375
+        ],
+        "rotationDegrees": [
+          0,
+          92.109375,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      },
+      {
+        "id": "pksignar-1",
+        "prototype": "pksignar",
+        "enabled": true,
+        "position": [
+          8.599019050598145,
+          12.00100040435791,
+          978.4199829101562
+        ],
+        "rotationDegrees": [
+          0,
+          87.1875,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 1,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "positionMirroredAtPreprocess": true
+        }
+      }
+    ]
+  }
+}

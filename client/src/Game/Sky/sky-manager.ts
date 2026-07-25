@@ -171,12 +171,10 @@ export default class DayNightSkyManager {
       console.log(`[SkyManager] Failed to load sky file: ${name}`);
       return;
     }
-    const file = new File([bytes], `${name}.babylon`, {
-      type: "application/babylon",
-    });
-    const sky = await BABYLON.LoadAssetContainerAsync(
-      file,
-          this.#scene!,
+    const sky = await BABYLON.loadBabylonAssetContainer(
+      bytes,
+      this.#scene!,
+      { name: `${name}.babylon` },
     ).catch((error) => {
       console.error(`[SkyManager] Error importing sky mesh: ${error}`);
       return null;

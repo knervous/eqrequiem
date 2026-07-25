@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
 
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { validateContent } from '@/libra/api'
-import type { ValidationIssue } from '@/libra/types'
+import { Badge } from '@libra/components/ui/badge'
+import { Button } from '@libra/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@libra/components/ui/card'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@libra/components/ui/table'
+import { validateContent } from '@libra/libra/api'
+import type { ValidationIssue } from '@libra/libra/types'
 
 export function ValidationPage() {
   const [issues, setIssues] = useState<ValidationIssue[]>([])

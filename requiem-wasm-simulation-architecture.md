@@ -325,6 +325,24 @@ shado/sim
     dirty queues
 ```
 
+The browser render adapter now selects native WGSL plus storage buffers on
+WebGPU and generated GLSL plus data textures on WebGL. Custom renderers must
+select the shader language and backing as one pair; a storage-backed schema
+must never be consumed by a GLSL/DataTexture include. The current render
+snapshot flow is:
+
+```text
+Wasm or JS mutates the packed arena
+-> one-byte dirty sidecar marks changed actor slots
+-> commit coalesces dirty byte ranges into storage-buffer subrange uploads
+-> visibility reducer publishes compact indices and visibility flags
+-> native WGSL reads the arena storage buffer and visibility sidecars
+```
+
+The Requiem entity VAT, picking, dynamic-world entity, generic instance, and
+MSDF nameplate paths all follow this selection rule. DataTexture remains the
+intentional WebGL fallback.
+
 The Node.js backend should not import Babylon dependencies.
 
 ### Existing strengths

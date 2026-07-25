@@ -47,10 +47,18 @@ shared Shado/VAT rendering path. The development server serves the checked-in
 `client/public/eqrequiem` assets. Set `VITE_REQUIEM_ASSET_BASE` only when the
 runtime bundle is hosted elsewhere.
 
-The current `hum` and `huf` entries are painted PBR manual candidates. Libra
-uses their baked Shado mesh, VAT animation data, and painted runtime atlas; the
-full-resolution PBR GLBs and normal/ORM maps remain under each source model's
-`eqref` directory for material inspection.
+The current `hum` and `huf` entries are painted Hunyuan bodies on the shared
+`humanoid_medium` rig. Libra uses their baked Shado mesh, painted runtime atlas,
+and 27-clip VAT library: the reviewed CMU Idle/Walk/Run foundation plus the
+retargeted original EQ HUM gameplay and social motions. The full-resolution PBR
+GLBs retain the latest high-detail Hunyuan paint: HUM comes from
+`grounded-fantasy-candidate/candidate-clean-final.glb`, while HUF projects the
+v12 2048-square PBR maps onto the corrected shared rig. The flat
+`texture-candidate` assets are retained only as rejected fallback history.
+The installed HUM/HUF atlases remain 2048 square and use UASTC level 3 Basis
+encoding; `basis/hum.meta.json` and `basis/huf.meta.json` record the source and
+runtime hashes so the installer cannot silently fall back to the old 1024
+default-ETC1S path.
 
 Run the model contract tests from the repository root with:
 

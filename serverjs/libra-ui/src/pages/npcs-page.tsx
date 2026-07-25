@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { searchNpcs } from '@/libra/api'
-import type { LibraRow } from '@/libra/types'
+import { Badge } from '@libra/components/ui/badge'
+import { Button } from '@libra/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@libra/components/ui/card'
+import { Input } from '@libra/components/ui/input'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@libra/components/ui/table'
+import { searchNpcs } from '@libra/libra/api'
+import type { LibraRow } from '@libra/libra/types'
 
 export function NpcsPage() {
   const [npcs, setNpcs] = useState<LibraRow[]>([])

@@ -1,0 +1,2 @@
+export * from "../../../../serverjs/src/protocol/world-state";
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoid29ybGQtc3RhdGUuanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyJ3b3JsZC1zdGF0ZS50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiQUFBQSxjQUFjLCtDQUErQyxDQUFDIiwic291cmNlc0NvbnRlbnQiOlsiZXhwb3J0ICogZnJvbSBcIi4uLy4uLy4uLy4uL3NlcnZlcmpzL3NyYy9wcm90b2NvbC93b3JsZC1zdGF0ZVwiO1xuIl19
