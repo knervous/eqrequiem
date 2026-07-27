@@ -117,7 +117,13 @@ test("ambient presentation orbits the camera and owns observer cleanup", () => {
 
 test("character preview is render-only and preserves its authored anchor", () => {
   assert.ok(characterSelectSource.includes("await this.initialize()"));
-  assert.ok(characterSelectSource.includes("this.initializePromise ??="));
+  assert.ok(characterSelectSource.includes("EntityCache.initialize("));
+  assert.ok(
+    characterSelectSource.indexOf("EntityCache.initialize(") <
+      characterSelectSource.indexOf(
+        "this.initializePromise = this.environment.initialize()",
+      ),
+  );
   assert.ok(playerSource.includes("{ renderOnly: fromCharSelect }"));
   assert.ok(entitySource.includes("this.isPlayer && !this.renderOnly"));
   assert.ok(

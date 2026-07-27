@@ -1,5 +1,6 @@
 import { supportedZones } from "@game/Constants/supportedZones";
 import { CharacterSelectEntry, PlayerProfile } from "@game/Net/messages";
+import EntityCache from "@game/Model/entity-cache";
 import Player from "@game/Player/player";
 import { CLASS_DATA_NAMES } from "../Constants/class-data";
 import type GameManager from "../Manager/game-manager";
@@ -37,7 +38,15 @@ export default class CharacterSelect {
     // finished loading. React selection effects may therefore request a model
     // during that interval. One controller-owned promise makes every caller
     // wait for the same semantic-anchor initialization.
-    this.initializePromise ??= this.environment.initialize();
+    if (!this.initializePromise) {
+      // Zone loading normally installs EntityCache's render/cull observers.
+      // Character select can be the first 3D scene in a fresh client, so it
+      // must activate that presentation renderer itself. Without this call a
+      // Shado actor may have visibleFlag=1 while its compact visible count
+      // remains zero, submitting no body instances even as weapon meshes draw.
+      EntityCache.initialize(this.gameManager.scene!);
+      this.initializePromise = this.environment.initialize();
+    }
     return this.initializePromise;
   }
 

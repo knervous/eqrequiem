@@ -36,6 +36,8 @@
     "world:objects:promote": "node scripts/promote-zone-object-assets.mjs",
     "world:minimap:bake": "node scripts/bake-zone-minimap.mjs",
     "item:icons:promote": "node scripts/promote-item-icons.mjs",
+    "icon-ai:migrate": "node scripts/migrate-legacy-icons.mjs",
+    "icon-ai:migrate:test": "node --test scripts/icon-ai/sprite-pipeline.test.mjs",
     "world:baseline": "npm --prefix ../shader-object run build && node scripts/build-legacy-zone-baseline.mjs",
     "world:baseline:dry-run": "node scripts/build-legacy-zone-baseline.mjs --dry-run",
     "world:baseline:check": "node scripts/build-legacy-zone-baseline.mjs --check",
@@ -109,7 +111,8 @@
     "tga-js": "^1.1.1",
     "use-context-selector": "^2.0.0",
     "use-debounce": "^10.0.4",
-    "usehooks-ts": "^3.1.1"
+    "usehooks-ts": "^3.1.1",
+    "zod": "^4.4.3"
   },
   "overrides": {
     "react": "$react",

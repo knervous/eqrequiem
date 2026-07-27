@@ -18,3 +18,10 @@ mono_crash.*.json
 
 # Large, resumable LAN-generated object/item catalog outputs.
 assets/generated/eq-catalog/
+
+# Local fantasy-icon inference inputs, caches, tools, and generated artifacts.
+.models/
+.cache/icon-ai/
+.local/stable-diffusion.cpp/
+build/stable-diffusion.cpp/
+artifacts/generated-icons/
