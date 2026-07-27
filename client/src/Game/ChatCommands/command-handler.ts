@@ -21,11 +21,17 @@ export function requestZoneByShortName(rawZone?: string): void {
     addChatLine('Usage: /zone {shortname} or #zone {shortname}');
     return;
   }
-  const supportedZone = Object.values(supportedZones).find(
-    (value) => value.shortName.toLowerCase() === zone,
+  const supportedZoneEntry = Object.entries(supportedZones).find(
+    ([, value]) => value.shortName.toLowerCase() === zone,
   );
-  if (!supportedZone) {
+  if (!supportedZoneEntry) {
     addChatLine(`Zone '${zone}' not found. Type /listzones to see available zones.`);
+    return;
+  }
+  const [zoneIdText, supportedZone] = supportedZoneEntry;
+  const zoneId = Number(zoneIdText);
+  if (!Number.isInteger(zoneId) || zoneId < 0) {
+    addChatLine(`Zone '${zone}' has an invalid zone ID.`);
     return;
   }
   if (!WorldSocket.isConnected) {
@@ -46,7 +52,7 @@ export function requestZoneByShortName(rawZone?: string): void {
     RequestClientZoneChange,
     {
       type: ZoneChangeType.FROM_ZONE,
-      zoneId: supportedZone.shortName,
+      zoneId,
     },
   );
   addChatLine(`Zoning to ${supportedZone.longName}...`);

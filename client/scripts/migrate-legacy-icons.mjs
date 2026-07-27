@@ -13,11 +13,24 @@ import {
   verifyRepackedSheet,
   writeCollectionManifest,
 } from './icon-ai/sprite-pipeline.mjs';
-import { generateMasters } from './icon-ai/sdcpp-client.mjs';
+import {
+  createPocContactSheet,
+  generateMasters,
+  generateNewMasters,
+} from './icon-ai/sdcpp-client.mjs';
+import { IconContextDatabase } from './icon-ai/icon-context.mjs';
+import { SdCppServer } from './icon-ai/sdcpp-server.mjs';
+import {
+  assertPromotable,
+  auditGeneratedCollection,
+  promoteGeneratedCollection,
+} from './icon-ai/production-assets.mjs';
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const defaultSource = path.join(repositoryRoot, '.cache', 'icon-ai', 'legacy-sheets');
 const defaultOutput = path.join(repositoryRoot, 'artifacts', 'generated-icons', 'legacy-sheet-migration');
+const defaultContextDatabase = path.join(repositoryRoot, 'serverjs', 'data', 'game_content.sqlite');
+const defaultPublicItems = path.join(repositoryRoot, 'client', 'public', 'eltania', 'items');
 
 function usage() {
   console.log(`Local legacy fantasy-icon sprite migration
@@ -25,11 +38,19 @@ function usage() {
 Usage:
   node scripts/migrate-legacy-icons.mjs slice [--input DIR] [--output DIR]
   node scripts/migrate-legacy-icons.mjs download [--input DIR] [--last-sheet N]
-  node scripts/migrate-legacy-icons.mjs generate [--output DIR] [--limit N] [--strength 0.34]
+  node scripts/migrate-legacy-icons.mjs generate [--output DIR] [--database FILE] [--limit N]
+    [--size 256|384|512] [--master-size 64|128|256|512] [--steps N] [--ids ID,ID]
+  node scripts/migrate-legacy-icons.mjs vary [--output DIR] [--limit N] [--strength 0.34]
+  node scripts/migrate-legacy-icons.mjs poc [--output DIR] [--limit N] [--strength 0.34]
+    [--size 384] [--master-size 256] [--steps 12]
+  node scripts/migrate-legacy-icons.mjs all [--output DIR] [--database FILE]
+    [--size 384] [--master-size 256] [--steps 12] [--seed-offset N]
   node scripts/migrate-legacy-icons.mjs passthrough [--output DIR]
   node scripts/migrate-legacy-icons.mjs repack [--input DIR] [--output DIR]
     [--format png|webp] [--from masters|slices]
   node scripts/migrate-legacy-icons.mjs verify [--input DIR] [--output DIR]
+  node scripts/migrate-legacy-icons.mjs audit [--output DIR] [--master-size 256]
+  node scripts/migrate-legacy-icons.mjs promote [--output DIR] [--public DIR] [--version v1]
 
 Workflow:
   1. Put dragitemN.webp/png sheets in --input.
@@ -38,7 +59,7 @@ Workflow:
   4. Run repack to create original-layout dragitemN sprite maps.
 
 Download explicitly acquires the existing dragitem sheets; it never downloads model weights.
-Passthrough creates 64×64 non-AI masters for geometry testing only.
+Passthrough creates 256×256 non-AI masters for geometry testing only.
 Use "--from slices --format png" for a visually lossless atlas geometry check.`);
 }
 
@@ -153,19 +174,158 @@ async function run() {
     return;
   }
   const manifest = await loadCollectionManifest(outputRoot);
+  if (command === 'audit') {
+    const audit = await auditGeneratedCollection({
+      outputRoot,
+      manifest,
+      masterSize: options['master-size'] ? Number(options['master-size']) : 256,
+    });
+    console.log(
+      `valid=${audit.valid.length} failed=${audit.failures.length} ` +
+        `blank=${audit.blank} total=${audit.total} recipe=${audit.recipeVersion}`,
+    );
+    assertPromotable(audit);
+    return;
+  }
+  if (command === 'promote') {
+    const result = await promoteGeneratedCollection({
+      outputRoot,
+      manifest,
+      publicItemsRoot: path.resolve(options.public ?? defaultPublicItems),
+      version: options.version ?? 'v1',
+      masterSize: options['master-size'] ? Number(options['master-size']) : 256,
+    });
+    console.log(`promoted ${result.iconCount} icons atomically to ${result.targetRoot}`);
+    return;
+  }
   if (command === 'passthrough') {
     const completed = await createPassthroughMasters({ outputRoot, manifest });
     console.log(`created ${completed} passthrough masters`);
     return;
   }
-  if (command === 'generate') {
-    const completed = await generateMasters({
-      outputRoot,
-      manifest,
-      limit: options.limit ? Number(options.limit) : Infinity,
-      strength: options.strength ? Number(options.strength) : 0.34,
-    });
-    console.log(`completed or resumed ${completed} generated masters`);
+  if (command === 'generate' || command === 'vary' || command === 'poc' || command === 'all') {
+    const server =
+      command === 'poc' || command === 'all'
+        ? new SdCppServer({ quiet: command === 'all' })
+        : null;
+    if (server) {
+      console.log('starting loopback sd.cpp server and loading the local checkpoint');
+      await server.start();
+      process.env.SDCPP_URL = server.baseUrl;
+    }
+    const ids = options.ids ? new Set(options.ids.split(',').filter(Boolean)) : null;
+    let completed;
+    let contextDatabase;
+    try {
+      const common = {
+        outputRoot,
+        manifest,
+        limit: options.limit ? Number(options.limit) : command === 'poc' ? 4 : Infinity,
+        generationSize: options.size
+          ? Number(options.size)
+          : command === 'poc'
+            ? 384
+            : command === 'all'
+              ? 384
+              : 512,
+        masterSize: options['master-size'] ? Number(options['master-size']) : 256,
+        steps: options.steps
+          ? Number(options.steps)
+          : command === 'poc'
+            ? 12
+            : command === 'all'
+              ? 12
+              : 24,
+        ids,
+      };
+      if (command === 'vary') {
+        completed = await generateMasters({
+          ...common,
+          strength: options.strength ? Number(options.strength) : 0.34,
+        });
+      } else {
+        contextDatabase = new IconContextDatabase(
+          path.resolve(options.database ?? defaultContextDatabase),
+        );
+        if (command === 'all') {
+          const firstSeedOffset = options['seed-offset'] ? Number(options['seed-offset']) : 0;
+          const passes = options.passes ? Number(options.passes) : 4;
+          for (let pass = 0; pass < passes; pass += 1) {
+            const seedOffset = firstSeedOffset + pass * 5;
+            console.log(`generation pass ${pass + 1}/${passes}, seed offset ${seedOffset}`);
+            completed = await generateNewMasters({
+              ...common,
+              contextDatabase,
+              continueOnError: true,
+              seedOffset,
+              verboseRejections: false,
+            });
+            if (completed.failures.length === 0) break;
+            console.warn(
+              `${completed.failures.length} icons remain after pass ${pass + 1}; ` +
+                'continuing with a fresh deterministic seed range',
+            );
+          }
+        } else {
+          completed = await generateNewMasters({
+            ...common,
+            contextDatabase,
+            continueOnError: false,
+            seedOffset: options['seed-offset'] ? Number(options['seed-offset']) : 0,
+          });
+        }
+      }
+    } finally {
+      contextDatabase?.close();
+      if (server) await server.stop();
+    }
+    const completedCount =
+      typeof completed === 'number' ? completed : completed.completed;
+    console.log(`completed or resumed ${completedCount} generated masters`);
+    if (typeof completed !== 'number' && completed.failures.length > 0) {
+      const failurePath = path.join(outputRoot, 'generation-failures.json');
+      await writeFile(
+        failurePath,
+        `${JSON.stringify(
+          {
+            createdAt: new Date().toISOString(),
+            seedOffset: options['seed-offset'] ? Number(options['seed-offset']) : 0,
+            failures: completed.failures,
+          },
+          null,
+          2,
+        )}\n`,
+      );
+      throw new Error(
+        `${completed.failures.length} icons failed this pass; details saved to ${failurePath}`,
+      );
+    }
+    if (command === 'poc') {
+      const contactSheet = await createPocContactSheet({
+        outputRoot,
+        manifest,
+        limit: options.limit ? Number(options.limit) : 4,
+      });
+      console.log(`POC contact sheet ${contactSheet}`);
+    }
+    if (command === 'all') {
+      const results = await repackSheets({
+        outputRoot,
+        sourceDirectory: inputDirectory,
+        manifest,
+        format: 'webp',
+        from: 'masters',
+      });
+      console.log(`repacked ${results.length} generated sprite maps`);
+      const result = await promoteGeneratedCollection({
+        outputRoot,
+        manifest,
+        publicItemsRoot: path.resolve(options.public ?? defaultPublicItems),
+        version: options.version ?? 'v1',
+        masterSize: options['master-size'] ? Number(options['master-size']) : 256,
+      });
+      console.log(`promoted ${result.iconCount} icons atomically to ${result.targetRoot}`);
+    }
     return;
   }
   if (command === 'repack') {

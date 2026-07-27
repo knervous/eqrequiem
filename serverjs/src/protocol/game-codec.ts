@@ -98,11 +98,10 @@ export function decodeZoneRouteRequest(payload: Uint8Array): ZoneRouteRequest {
   const y = optionalFinite(value?.y);
   const z = optionalFinite(value?.z);
   const heading = optionalFinite(value?.heading);
+  const parsedZoneId = Number(value?.zoneId ?? -1);
   return {
     zoneId:
-      typeof value?.zoneId === "number"
-        ? value.zoneId
-        : Number(value?.zoneId ?? -1),
+      Number.isInteger(parsedZoneId) && parsedZoneId >= 0 ? parsedZoneId : -1,
     instanceId: typeof value?.instanceId === "number" ? value.instanceId : 0,
     ...(x === undefined ? {} : { x }),
     ...(y === undefined ? {} : { y }),

@@ -25,10 +25,11 @@ export function decodeZoneRouteRequest(payload) {
         return packed;
     const value = decodeSidecar(SIDECAR_SCHEMA.ZONE_SESSION, payload) ??
         decodeSidecar(SIDECAR_SCHEMA.ZONE_CHANGE, payload);
+    const parsedZoneId = Number(value?.zoneId ?? -1);
     return {
-        zoneId: typeof value?.zoneId === "number"
-            ? value.zoneId
-            : Number(value?.zoneId ?? -1),
+        zoneId: Number.isInteger(parsedZoneId) && parsedZoneId >= 0
+            ? parsedZoneId
+            : -1,
         instanceId: typeof value?.instanceId === "number" ? value.instanceId : 0,
     };
 }

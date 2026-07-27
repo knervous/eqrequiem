@@ -10,10 +10,11 @@ export const LEGACY_SHEET = Object.freeze({
   columns: 6,
   rows: 6,
   slots: 36,
+  iconBase: 500,
   sourceOriginX: 0,
-  sourceOriginY: 0,
-  canonicalOriginX: 16,
-  canonicalOriginY: 16,
+  sourceOriginY: 16,
+  canonicalOriginX: 0,
+  canonicalOriginY: 0,
 });
 
 export function sha256(value) {
@@ -31,7 +32,7 @@ export function slotGeometry(slot, layout = LEGACY_SHEET) {
   }
   const column = slot % layout.columns;
   const row = Math.floor(slot / layout.columns);
-  const sourceColumn = layout.columns - column - 1;
+  const sourceColumn = column;
   const sourceRow = layout.rows - row - 1;
   return {
     slot,
@@ -89,6 +90,7 @@ export async function sliceSheet({
         width: geometry.width,
         height: geometry.height,
       })
+      .flip()
       .png();
     const tileBuffer = await operation.toBuffer();
     const stats = await sharp(tileBuffer).stats();
@@ -103,7 +105,11 @@ export async function sliceSheet({
       id,
       sheetId,
       sheetNumber,
-      atlasIconId: (sheetNumber - 1) * layout.slots + slot,
+      atlasIconId:
+        layout.iconBase +
+        (sheetNumber - 1) * layout.slots +
+        geometry.column * layout.rows +
+        geometry.row,
       ...geometry,
       sourcePath: path.relative(outputRoot, outputPath),
       sourceHash: sha256(tileBuffer),
@@ -141,13 +147,13 @@ export async function writeCollectionManifest({ outputRoot, sheets }) {
     sourceOrientation: {
       stored: 'top-left',
       correction:
-        'legacy grid order is mirrored on X and Y; tile pixels remain unrotated',
-      sourcePadding: 'right and bottom',
-      canonicalPadding: 'left and top',
+        'legacy atlas rows and cell pixels are flipped on Y; X is stored normally',
+      sourcePadding: 'right and top',
+      canonicalPadding: 'right and bottom',
     },
     generation: {
       workingSize: 512,
-      masterSize: 64,
+      masterSize: 256,
       repackedCellSize: LEGACY_SHEET.cellSize,
     },
     sheets: [...sheets].sort((a, b) => a.sheetNumber - b.sheetNumber),
@@ -163,7 +169,7 @@ export async function loadCollectionManifest(outputRoot) {
   return JSON.parse(await readFile(manifestPath, 'utf8'));
 }
 
-export async function createPassthroughMasters({ outputRoot, manifest }) {
+export async function createPassthroughMasters({ outputRoot, manifest, masterSize = 256 }) {
   let completed = 0;
   for (const sheet of manifest.sheets) {
     const masterDirectory = path.join(outputRoot, 'masters', sheet.sheetId);
@@ -173,7 +179,7 @@ export async function createPassthroughMasters({ outputRoot, manifest }) {
       const sourcePath = path.join(outputRoot, entry.sourcePath);
       const masterPath = path.join(masterDirectory, `${entry.id}.png`);
       const masterBuffer = await sharp(sourcePath)
-        .resize(64, 64, { fit: 'fill', kernel: sharp.kernel.lanczos3 })
+        .resize(masterSize, masterSize, { fit: 'fill', kernel: sharp.kernel.lanczos3 })
         .png()
         .toBuffer();
       if (!(await fileMatchesHash(masterPath, sha256(masterBuffer)))) {
@@ -185,7 +191,7 @@ export async function createPassthroughMasters({ outputRoot, manifest }) {
         operation: 'passthrough',
         outputPath: masterPath,
         outputBuffer: masterBuffer,
-        parameters: { generationSize: null, finalSize: 64 },
+        parameters: { generationSize: null, finalSize: masterSize },
       });
       completed += 1;
     }
@@ -219,13 +225,7 @@ export async function repackSheets({
       const tile =
         from === 'slices'
           ? await readFile(inputPath)
-          : await sharp(inputPath)
-              .resize(entry.width, entry.height, {
-                fit: 'fill',
-                kernel: sharp.kernel.lanczos3,
-              })
-              .png()
-              .toBuffer();
+          : await resizeMasterTile(inputPath, entry.width, entry.height);
       composites.push({ input: tile, left: entry.left, top: entry.top });
     }
     const pipeline = sharp({
@@ -239,7 +239,7 @@ export async function repackSheets({
     const outputName = `${sheet.sheetId}.${format}`;
     const outputPath = path.join(repackedDirectory, outputName);
     if (format === 'webp') {
-      await pipeline.webp({ quality: 100, alphaQuality: 100, smartSubsample: true }).toFile(outputPath);
+      await pipeline.webp({ lossless: true, alphaQuality: 100, effort: 6 }).toFile(outputPath);
     } else {
       await pipeline.png().toFile(outputPath);
     }
@@ -250,6 +250,31 @@ export async function repackSheets({
     results.push({ outputPath, width: metadata.width, height: metadata.height });
   }
   return results;
+}
+
+async function resizeMasterTile(inputPath, width, height) {
+  const { data, info } = await sharp(inputPath)
+    .resize(width, height, { fit: 'fill', kernel: sharp.kernel.lanczos3 })
+    .ensureAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      const alphaOffset = (y * width + x) * info.channels + 3;
+      if (
+        data[alphaOffset] < 8 ||
+        x === 0 ||
+        y === 0 ||
+        x === width - 1 ||
+        y === height - 1
+      ) {
+        data[alphaOffset] = 0;
+      }
+    }
+  }
+  return sharp(data, { raw: { width, height, channels: info.channels } })
+    .png()
+    .toBuffer();
 }
 
 export async function compareSheetPixels(firstPath, secondPath, tolerance = 1) {
@@ -310,31 +335,37 @@ export async function verifyRepackedSheet({
     differingBytes += comparison.differingBytes;
     maximumDelta = Math.max(maximumDelta, comparison.maximumDelta);
   }
-  const topPaddingBuffer = await sharp(repackedPath)
+  const bottomPaddingBuffer = await sharp(repackedPath)
     .extract({
       left: 0,
-      top: 0,
+      top: sheet.layout.canonicalOriginY + sheet.layout.rows * sheet.layout.cellSize,
       width: sheet.layout.width,
-      height: sheet.layout.canonicalOriginY,
+      height:
+        sheet.layout.height -
+        sheet.layout.canonicalOriginY -
+        sheet.layout.rows * sheet.layout.cellSize,
     })
     .png()
     .toBuffer();
-  const leftPaddingBuffer = await sharp(repackedPath)
+  const rightPaddingBuffer = await sharp(repackedPath)
     .extract({
-      left: 0,
-      top: sheet.layout.canonicalOriginY,
-      width: sheet.layout.canonicalOriginX,
-      height: sheet.layout.height - sheet.layout.canonicalOriginY,
+      left: sheet.layout.canonicalOriginX + sheet.layout.columns * sheet.layout.cellSize,
+      top: 0,
+      width:
+        sheet.layout.width -
+        sheet.layout.canonicalOriginX -
+        sheet.layout.columns * sheet.layout.cellSize,
+      height: sheet.layout.height,
     })
     .png()
     .toBuffer();
-  const [topPadding, leftPadding] = await Promise.all([
-    sharp(topPaddingBuffer).stats(),
-    sharp(leftPaddingBuffer).stats(),
+  const [bottomPadding, rightPadding] = await Promise.all([
+    sharp(bottomPaddingBuffer).stats(),
+    sharp(rightPaddingBuffer).stats(),
   ]);
   const paddingAlphaMaximum = Math.max(
-    topPadding.channels[3]?.max ?? 255,
-    leftPadding.channels[3]?.max ?? 255,
+    bottomPadding.channels[3]?.max ?? 255,
+    rightPadding.channels[3]?.max ?? 255,
   );
   return {
     equal: differingBytes === 0 && paddingAlphaMaximum === 0,
@@ -355,6 +386,7 @@ export async function writeMetadata({
   negativePrompt = null,
   seed = null,
   warnings = [],
+  context = null,
 }) {
   const metadataDirectory = path.join(outputRoot, 'metadata', entry.sheetId);
   await mkdir(metadataDirectory, { recursive: true });
@@ -364,7 +396,7 @@ export async function writeMetadata({
     operation,
     id: entry.id,
     sourceHash: entry.sourceHash,
-      sourceSprite: {
+    sourceSprite: {
       sheet: entry.sheetId,
       slot: entry.slot,
       sourceSlot: entry.sourceSlot,
@@ -379,6 +411,7 @@ export async function writeMetadata({
     negativePrompt,
     seed,
     parameters,
+    context,
     outputPath: path.relative(outputRoot, outputPath),
     outputHash: sha256(outputBuffer),
     warnings,

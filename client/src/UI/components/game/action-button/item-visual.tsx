@@ -18,27 +18,41 @@ const catalogIconUrl = (idfile: string): string | null => {
     : null;
 };
 
+const generatedIconUrl = (icon: number): string | null =>
+  Number.isInteger(icon) && icon >= 500
+    ? `/eltania/items/icons/v1/${icon}.webp`
+    : null;
+
+export const itemVisualUrls = (
+  item: Pick<ItemInstance, 'icon' | 'idfile'>,
+): string[] => {
+  const urls = [generatedIconUrl(item.icon)];
+  // IT63 is a shared legacy placeholder, not a meaningful visual identity.
+  if (item.idfile.toLowerCase() !== 'it63') urls.push(catalogIconUrl(item.idfile));
+  return urls.filter((url): url is string => Boolean(url));
+};
+
 export const ItemVisual: React.FC<{
   item: ItemInstance;
   isContainer?: boolean;
 }> = ({ item, isContainer = false }) => {
-  const url = catalogIconUrl(item.idfile ?? '');
-  // IT63 is a shared legacy placeholder, not a meaningful visual identity.
-  const useCatalogArt = Boolean(url) && item.idfile.toLowerCase() !== 'it63';
-  const [imageAvailable, setImageAvailable] = useState(useCatalogArt);
+  const urls = itemVisualUrls(item);
+  const urlsKey = urls.join('|');
+  const [imageIndex, setImageIndex] = useState(0);
+  const url = urls[imageIndex];
 
-  useEffect(() => setImageAvailable(useCatalogArt), [useCatalogArt, url]);
+  useEffect(() => setImageIndex(0), [urlsKey]);
 
-  if (imageAvailable && url) {
+  if (url) {
     return (
-    <img
-      alt=""
-      aria-hidden="true"
-      className="rq-item-art"
-      draggable={false}
-      src={url}
-      onError={() => setImageAvailable(false)}
-    />
+      <img
+        alt=""
+        aria-hidden="true"
+        className="rq-item-art"
+        draggable={false}
+        src={url}
+        onError={() => setImageIndex((index) => index + 1)}
+      />
     );
   }
 

@@ -616,13 +616,13 @@ const QuickControls: React.FC<{
       </button>
       {import.meta.env.DEV ? (
         <button
-          title="Open NPC AI instruments (F8)"
+          title="Open developer tools (F8)"
           onClick={(event) => {
             onDeveloperTools();
             event.currentTarget.blur();
           }}
         >
-          NPC AI <kbd>F8</kbd>
+          Dev <kbd>F8</kbd>
         </button>
       ) : null}
     </nav>

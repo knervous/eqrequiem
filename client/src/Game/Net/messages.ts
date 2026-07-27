@@ -223,7 +223,7 @@ export interface ZoneSession {
 }
 export const ZoneSession = defineNetMessage<ZoneSession>(30, "ZoneSession");
 export interface RequestClientZoneChange extends OpenMessage {
-  zoneId?: number | string;
+  zoneId?: number;
   instanceId?: number;
   type: ZoneChangeType;
   x?: number;

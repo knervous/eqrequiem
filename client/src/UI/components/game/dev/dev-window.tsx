@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { Tab, Tabs } from '@mui/material';
 import { actions } from '@ui/state/reducer';
 import { useDispatch } from '../../context';
+import { DevTools } from './dev-tools';
 import { DevPlayer } from './dev-player';
 import { DevSky } from './dev-sky';
-import { NpcDeveloper } from './npc-developer';
 
 const TabPanel: React.FC<{
   children: React.ReactNode;
@@ -74,7 +74,7 @@ export const DevWindowComponent: React.FC = () => {
   const [tab, setTab] = useState(0);
   return (
     <section className="rq-dev-window rq-hud-panel">
-      <header className="rq-hud-panel__header"><span>Field Instruments</span></header>
+      <header className="rq-hud-panel__header"><span>Developer Tools</span></header>
       <button
         className="rq-close"
         aria-label="Close developer tools"
@@ -86,12 +86,12 @@ export const DevWindowComponent: React.FC = () => {
         <Tabs value={tab} onChange={(_, value) => setTab(value)} aria-label="Developer tools">
           <Tab label="Player" />
           <Tab label="Sky" />
-          <Tab label="NPC AI" />
+          <Tab label="Dev" />
           <Tab label="Reliquary UI" />
         </Tabs>
         <TabPanel value={tab} index={0}><DevPlayer /></TabPanel>
         <TabPanel value={tab} index={1}><DevSky /></TabPanel>
-        <TabPanel value={tab} index={2}><NpcDeveloper /></TabPanel>
+        <TabPanel value={tab} index={2}><DevTools /></TabPanel>
         <TabPanel value={tab} index={3}><PrimitiveGallery /></TabPanel>
       </div>
     </section>

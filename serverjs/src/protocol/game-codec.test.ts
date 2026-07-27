@@ -15,6 +15,7 @@ import {
   decodeZoneRouteRequest,
   encodeInteger,
 } from "./game-codec.js";
+import { encodeSidecar, SIDECAR_SCHEMA } from "./sidecar-codec.js";
 
 describe("Shado game codec", () => {
   it("decodes generated fixed-size request messages", () => {
@@ -36,6 +37,21 @@ describe("Shado game codec", () => {
     assert.deepEqual(
       decodeDeleteItemRequest(encodeDeleteItemNet({ slot: 9, bag: -1 })),
       { slot: 9, bag: -1 },
+    );
+  });
+
+  it("rejects non-numeric zone route IDs without leaking NaN", () => {
+    assert.deepEqual(
+      decodeZoneRouteRequest(
+        encodeSidecar(SIDECAR_SCHEMA.ZONE_CHANGE, {
+          zoneId: "qeynos2",
+          instanceId: 0,
+        }),
+      ),
+      {
+        zoneId: -1,
+        instanceId: 0,
+      },
     );
   });
 

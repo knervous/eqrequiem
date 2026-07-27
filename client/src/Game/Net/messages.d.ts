@@ -144,7 +144,7 @@ export interface ZoneSession {
 }
 export declare const ZoneSession: NetMessageCodec<ZoneSession>;
 export interface RequestClientZoneChange extends OpenMessage {
-    zoneId?: number | string;
+    zoneId?: number;
     instanceId?: number;
     type: ZoneChangeType;
 }
