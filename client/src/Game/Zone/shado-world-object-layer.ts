@@ -2,18 +2,21 @@ import type * as BJS from "@babylonjs/core";
 import BABYLON from "@bjs";
 import {
   buildShadoWorldObjectRenderBatches,
-  deserializeShadoWorld,
   ShadoWorldVisibilityCoordinator,
   type ShadoWorldObjectRenderBatch,
   type ShadoWorldSpatialPackage,
 } from "@knervous/shado/world";
 import ObjectCache from "@/Game/Model/object-cache";
+import {
+  flattenWorldFrustumPlanes,
+  WORLD_VISIBILITY_INTERVAL_MS,
+} from "./world-visibility-policy";
 
-const CULL_INTERVAL_MS = 100;
 const DEFAULT_OBJECT_DISTANCE = 1800;
+const WORLD_OBJECT_PACKAGE_REVISION = "babylon-rhs-y-up-v3";
 
 export class ShadoWorldObjectLayer {
-  private elapsedMs = CULL_INTERVAL_MS;
+  private elapsedMs = WORLD_VISIBILITY_INTERVAL_MS;
   private updatePending = false;
   private readonly visibleStampRows = new Map<number, Uint32Array>();
 
@@ -24,31 +27,13 @@ export class ShadoWorldObjectLayer {
     private readonly scene: BJS.Scene,
   ) {}
 
-  static async load(
-    zoneName: string,
+  static async fromWorld(
+    world: ShadoWorldSpatialPackage,
+    coordinator: ShadoWorldVisibilityCoordinator,
     objectCache: ObjectCache,
     scene: BJS.Scene,
   ): Promise<ShadoWorldObjectLayer | null> {
-    const fileName = `${encodeURIComponent(zoneName.toLowerCase())}.spatial.json.gz`;
-    const candidates = [
-      `${import.meta.env.BASE_URL}eqrequiem/worlds/${fileName}`,
-      `/shado/worlds/${fileName}`,
-    ];
-
-    let world: ShadoWorldSpatialPackage | null = null;
-    for (const url of candidates) {
-      try {
-        world = await deserializeShadoWorld(url);
-        break;
-      } catch {
-        // Missing promoted packages are expected while zones migrate one at a time.
-      }
-    }
-    if (!world?.objects?.stamps.id.length) return null;
-
-    const coordinator = await ShadoWorldVisibilityCoordinator.create(world, {
-      entityVisibilityWorker: "required",
-    });
+    if (!world.objects?.stamps.id.length) return null;
     const layer = new ShadoWorldObjectLayer(
       world,
       coordinator,
@@ -56,23 +41,22 @@ export class ShadoWorldObjectLayer {
       scene,
     );
     await layer.refreshVisibility();
-    console.info(
-      `[ZoneManager] Promoted ${world.objects.stamps.id.length} object stamps ` +
-        `across ${world.objects.prototypes.id.length} prototypes from ${fileName}; ` +
-        `visibility=${coordinator.worldObjectVisibilityMode}`,
-    );
     return layer;
   }
 
   dispose(): void {
-    this.coordinator.dispose();
     this.visibleStampRows.clear();
   }
 
   tick(deltaMs: number): void {
     this.elapsedMs += deltaMs;
-    if (this.elapsedMs < CULL_INTERVAL_MS || this.updatePending) return;
-    this.elapsedMs %= CULL_INTERVAL_MS;
+    if (
+      this.elapsedMs < WORLD_VISIBILITY_INTERVAL_MS ||
+      this.updatePending
+    ) {
+      return;
+    }
+    this.elapsedMs %= WORLD_VISIBILITY_INTERVAL_MS;
     this.updatePending = true;
     void this.refreshVisibility().finally(() => {
       this.updatePending = false;
@@ -83,7 +67,10 @@ export class ShadoWorldObjectLayer {
     const camera = this.scene.activeCamera;
     if (!camera) return;
 
-    const planes = flattenFrustumPlanes(
+    // Zone ticks run from onBeforeRender, before Babylon refreshes the scene's
+    // combined view/projection matrix for the active camera.
+    this.scene.updateTransformMatrix(true);
+    const planes = flattenWorldFrustumPlanes(
       BABYLON.Frustum.GetPlanes(this.scene.getTransformMatrix()),
     );
     const position = camera.globalPosition;
@@ -110,10 +97,11 @@ export class ShadoWorldObjectLayer {
         try {
           await this.objectCache.setPromotedThinInstances(
             batch.id,
-            batch.source,
+            revisionedObjectSource(batch.source),
             this.scene,
             batch.matrices,
           );
+          this.visibleStampRows.set(batch.prototype, batch.stampIndices);
         } catch (error) {
           console.warn(
             `[ZoneManager] Failed to upload promoted object batch ${batch.id}`,
@@ -133,19 +121,17 @@ export class ShadoWorldObjectLayer {
     ) {
       return false;
     }
-    this.visibleStampRows.set(batch.prototype, current);
     return true;
   }
 }
 
-function flattenFrustumPlanes(planes: readonly BJS.Plane[]): Float32Array {
-  const values = new Float32Array(planes.length * 4);
-  planes.forEach((plane, index) => {
-    const offset = index * 4;
-    values[offset] = plane.normal.x;
-    values[offset + 1] = plane.normal.y;
-    values[offset + 2] = plane.normal.z;
-    values[offset + 3] = plane.d;
-  });
-  return values;
+function revisionedObjectSource(source: string): string {
+  const hash = source.indexOf("#");
+  const suffix = hash >= 0 ? source.slice(hash) : "";
+  const path = hash >= 0 ? source.slice(0, hash) : source;
+  const separator = path.includes("?") ? "&" : "?";
+  return (
+    `${path}${separator}revision=${WORLD_OBJECT_PACKAGE_REVISION}` +
+    suffix
+  );
 }

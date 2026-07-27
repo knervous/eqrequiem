@@ -17,7 +17,10 @@ import {
   NullableItemInstance,
 } from "@game/Player/player-constants";
 import EntityCache, { type EntityContainer } from "./entity-cache";
-import { createTargetRingMaterial } from "./entity-select-ring";
+import {
+  createTargetRingMaterial,
+  type TargetRingVisual,
+} from "./entity-select-ring";
 import { heldItemLocalYOffset } from "./held-item-attachment";
 import type { RequiemEntityActor } from "./shado-entity-pool";
 
@@ -83,47 +86,40 @@ export class Entity extends BABYLON.TransformNode {
 
   private static targetRing: BJS.Mesh;
   private static currentlySelected: Entity | null = null;
-  private static targetTexture: BJS.ProceduralTexture | null = null;
+  private static targetVisual: TargetRingVisual | null = null;
 
   public static disposeStatics() {
     if (Entity.targetRing) {
-      Entity.targetRing.dispose(false, true);
+      Entity.targetRing.dispose(false, false);
       Entity.targetRing = null as unknown as BJS.Mesh;
     }
-    if (Entity.targetTexture) {
-      Entity.targetTexture.dispose();
-      Entity.targetTexture = null;
-    }
+    Entity.targetVisual?.material.dispose(true, true);
+    Entity.targetVisual = null;
     Entity.currentlySelected = null;
+  }
+
+  private static toReadableTargetColor(color: BJS.Color4): string {
+    const channel = (value: number): string =>
+      Math.round((BABYLON.Scalar.Clamp(value) * 0.72 + 0.28) * 255)
+        .toString(16)
+        .padStart(2, "0");
+    return `#${channel(color.r)}${channel(color.g)}${channel(color.b)}`;
   }
 
   public static instantiateStatics(scene: BJS.Scene) {
     if (!Entity.targetRing) {
-      const targetRing = BABYLON.MeshBuilder.CreateTorus(
+      const targetRing = BABYLON.MeshBuilder.CreateGround(
         "selectionRing",
         {
-          diameter: 5, // outer diameter = 2 × your desired radius (5 × 2)
-          thickness: 4, // tube thickness — make this as big as you like to “fill” the hole
-          tessellation: 64, // smoothness
-          updatable: true, // if you ever want to tweak it at runtime
+          width: 10,
+          height: 10,
         },
         scene,
       );
-      const positions = targetRing.getVerticesData(
-        BABYLON.VertexBuffer.PositionKind,
-      )!;
-      const uvs = new Array((positions.length / 3) * 2);
-      for (let i = 0, j = 0; i < positions.length; i += 3, j += 2) {
-        const x = positions[i]; // ring’s local X
-        const z = positions[i + 2]; // ring’s local Z
-        uvs[j] = x / 10 + 0.5; // x∈[-5..+5] → [0..1]
-        uvs[j + 1] = z / 10 + 0.5; // z∈[-5..+5] → [0..1]
-      }
-      targetRing.setVerticesData(BABYLON.VertexBuffer.UVKind, uvs, true);
-      const [mat, texture] = createTargetRingMaterial(scene);
-      Entity.targetTexture = texture;
-      targetRing.material = mat;
+      Entity.targetVisual = createTargetRingMaterial(scene);
+      targetRing.material = Entity.targetVisual.material;
       targetRing.isPickable = false;
+      targetRing.alwaysSelectAsActiveMesh = true;
       targetRing.setEnabled(false);
       Entity.targetRing = targetRing;
     }
@@ -134,17 +130,38 @@ export class Entity extends BABYLON.TransformNode {
   private animationBuffer: BJS.Vector4 = new BABYLON.Vector4(0, 1, 0, 60);
   public meshInstance: InstanceContainer | null = null;
   public nameplateLines: string[] = [];
+  private nameplateText = "";
+  private selectedNameplateText = "";
+  private selectedNameplateColor = "#ffffff";
+  private selectedAtMs = -Infinity;
   private capsuleShape: BJS.PhysicsShapeCapsule | null = null;
   private pickInst: BJS.InstancedMesh | null = null;
   private isPlayer = false;
   private disposed = false;
   private appearanceGeneration = 0;
   private visibilityOverride: boolean | null = null;
+  private corpsePresentationApplied = false;
   private readonly itemResolver?: (slot: number) => NullableItemInstance;
   public readonly ready: Promise<void>;
 
   public get lifecycleDisposed(): boolean {
     return this.disposed;
+  }
+
+  public get isSelected(): boolean {
+    return Entity.currentlySelected === this;
+  }
+
+  public get displayNameplateText(): string {
+    return this.isSelected ? this.selectedNameplateText : this.nameplateText;
+  }
+
+  public get selectionNameplateColor(): string {
+    return this.selectedNameplateColor;
+  }
+
+  public get selectionStartedAtMs(): number {
+    return this.selectedAtMs;
   }
 
   public get isPlayerRace() {
@@ -198,7 +215,9 @@ export class Entity extends BABYLON.TransformNode {
   }
 
   private async setup() {
-    this.setupPhysics();
+    // Only the locally controlled player participates in Havok. NPCs and
+    // remote players are server-authoritative presentation entities.
+    if (this.isPlayer) this.setupPhysics();
     // Spawn headings from EQ content use the canonical 0..512 turn scale.
     this.setRotation((Number(this.spawn.heading ?? 0) * Math.PI) / 256);
     // Create body instances and assign physics body
@@ -207,7 +226,7 @@ export class Entity extends BABYLON.TransformNode {
     if (this.disposed) return;
     await this.updateModelTextures();
     if (this.disposed) return;
-    this.checkBelowAndReposition();
+    if (this.isPlayer) this.checkBelowAndReposition();
   }
 
   public get isHumanoid(): boolean {
@@ -226,7 +245,7 @@ export class Entity extends BABYLON.TransformNode {
   public getHeading(): number {
     const physicsBody = this.physicsBody;
     if (!physicsBody) {
-      return 0;
+      return this.lastYaw;
     }
 
     const [, outQuat] = this.physicsPlugin._hknp.HP_Body_GetOrientation(
@@ -247,13 +266,13 @@ export class Entity extends BABYLON.TransformNode {
   private lastYaw: number = 0;
   public setRotation(yaw: number) {
     this.lastYaw = yaw;
+    const normalized = ((yaw % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+    const q = BABYLON.Quaternion.RotationYawPitchRoll(normalized, 0, 0);
+    this.rotationQuaternion = q;
     const physicsBody = this.physicsBody;
     if (!physicsBody) {
       return;
     }
-    const normalized = ((yaw % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
-    const q = BABYLON.Quaternion.RotationYawPitchRoll(normalized, 0, 0);
-    this.rotationQuaternion = q;
     const plugin = this.gameManager
       .scene!.getPhysicsEngine()!
       .getPhysicsPlugin() as BJS.HavokPlugin;
@@ -266,10 +285,7 @@ export class Entity extends BABYLON.TransformNode {
 
   public setPosition(x: number, y: number, z: number) {
     this.spawnPosition.set(x, y, z);
-    if (Entity.currentlySelected === this && Entity.targetRing) {
-      Entity.targetRing.position.x = x;
-      Entity.targetRing.position.z = z;
-    }
+    this.updateTargetRingGroundPosition();
     const physicsBody = this.physicsBody;
     if (!physicsBody) {
       return;
@@ -320,27 +336,24 @@ export class Entity extends BABYLON.TransformNode {
         Entity.currentlySelected.setSelected(false);
       }
       Entity.currentlySelected = this;
+      this.selectedAtMs = performance.now();
 
       // Shado actors keep their world transform in the shared actor buffer; the
       // Babylon TransformNode intentionally remains at the origin. Keep the one
       // shared ring in world space so it follows the same source of truth.
       targetRing.setParent(null);
-      const result = new BABYLON.PhysicsRaycastResult();
-      const rayOrigin = this.spawnPosition.add(
-        new BABYLON.Vector3(0, 5 * this.spawnScale, 0),
-      );
-      const downEnd = rayOrigin.add(new BABYLON.Vector3(0, -1000, 0));
-      this.physicsPlugin.raycast(rayOrigin, downEnd, result);
-      const groundY = result.hasHit ? result.hitPoint.y : this.spawnPosition.y;
 
       if (color) {
-        Entity.targetTexture?.setColor4(
-          "color",
-          new BABYLON.Color4(color.r, color.g, color.b, 0.5),
-        );
+        Entity.targetVisual?.setColor(color);
+        this.selectedNameplateColor = Entity.toReadableTargetColor(color);
+      } else {
+        const fallback = new BABYLON.Color4(1, 1, 1, 1);
+        Entity.targetVisual?.setColor(fallback);
+        this.selectedNameplateColor = "#ffffff";
       }
+      Entity.targetVisual?.triggerAcquisition();
       targetRing.scaling.setAll(this.spawnScale);
-      targetRing.position.set(this.spawnPosition.x, groundY + 0.1, this.spawnPosition.z);
+      this.updateTargetRingGroundPosition();
       targetRing.setEnabled(true);
     } else {
       // only hide if *this* entity is the one that owns it
@@ -351,8 +364,36 @@ export class Entity extends BABYLON.TransformNode {
     }
   }
 
+  private updateTargetRingGroundPosition(): void {
+    if (Entity.currentlySelected !== this || !Entity.targetRing) {
+      return;
+    }
+
+    const rayOrigin = this.spawnPosition.add(
+      new BABYLON.Vector3(0, 5 * this.spawnScale, 0),
+    );
+    const downEnd = rayOrigin.add(new BABYLON.Vector3(0, -1000, 0));
+    const hits: BJS.PhysicsRaycastResult[] = [];
+    this.physicsPlugin.raycast(rayOrigin, downEnd, hits, {
+      ignoreBody: this.physicsBody ?? undefined,
+    });
+    const groundHit = hits.find(
+      (hit) =>
+        hit.hasHit &&
+        hit.body?.motionType === BABYLON.PhysicsMotionType.STATIC,
+    );
+    const groundY = groundHit?.hitPoint.y ?? this.spawnPosition.y;
+
+    Entity.targetRing.position.set(
+      this.spawnPosition.x,
+      groundY + 0.1,
+      this.spawnPosition.z,
+    );
+  }
+
   public dispose() {
     if (this.disposed) return;
+    if (this.isSelected) this.setSelected(false);
     this.disposed = true;
     this.appearanceGeneration++;
     EntityCache.unregister(this);
@@ -700,8 +741,6 @@ export class Entity extends BABYLON.TransformNode {
     }
   }
 
-  private async createParticleEffects() {}
-
   private async updateSecondary() {
     const generation = this.appearanceGeneration;
     let item = "";
@@ -1021,6 +1060,10 @@ export class Entity extends BABYLON.TransformNode {
   public async instantiateNameplate(textLines: string[]): Promise<void> {
     if (this.disposed) return;
     this.nameplateLines = [...textLines];
+    this.nameplateText = textLines.join("\n");
+    this.selectedNameplateText = textLines
+      .map((line, index) => (index === 0 ? `> ${line} <` : line))
+      .join("\n");
   }
   private lastPosition: BJS.Vector3 = new BABYLON.Vector3(0, 0, 0);
   private lastRotationQuaternion: BJS.Quaternion = new BABYLON.Quaternion(
@@ -1052,6 +1095,7 @@ export class Entity extends BABYLON.TransformNode {
   }
 
   public checkBelowAndReposition() {
+    if (!this.isPlayer) return;
     const plugin = this.physicsPlugin;
     const position = this.spawnPosition;
     if (!position) {
@@ -1171,6 +1215,58 @@ export class Entity extends BABYLON.TransformNode {
         (match.to - match.from) * (1000 / fps),
       ); // Convert frames to milliseconds
     }
+  }
+
+  /**
+   * Corpse presentation is a one-way client transition. The death clip runs
+   * once and the final VAT frame is then held until the entity despawns.
+   */
+  public presentAsCorpse(): void {
+    if (this.corpsePresentationApplied) return;
+    this.corpsePresentationApplied = true;
+    const baseName = this.spawn.name
+      .trim()
+      .replace(/(?:_| )*'s(?:_| )+corpse$/iu, "");
+    this.spawn.name = baseName.length > 0 ? `${baseName}'s corpse` : "Corpse";
+    this.name = `entity_${this.spawn.name}`;
+    void this.instantiateNameplate([this.cleanName]);
+    this.playAnimationOnceAndHold(AnimationDefinitions.Death);
+  }
+
+  public playAnimationOnceAndHold(name: string): void {
+    const resolvedName =
+      this.entityContainer.model === "hum" || this.entityContainer.model === "huf"
+        ? (humanAnimationAliases[name] ?? name)
+        : name;
+    const match = this.entityContainer.animations.find(
+      (animation) => animation.name === resolvedName,
+    );
+    const manager = this.entityContainer.manager;
+    if (!match || !manager) return;
+    if (this.animationTimeout && typeof this.animationTimeout !== "boolean") {
+      clearTimeout(this.animationTimeout);
+    }
+    this.animationTimeout = false;
+    this.queuedAnimation = null;
+    this.currentAnimation = resolvedName;
+    const fps = match.fps ?? 60;
+    const offset = this.computeOffset(match.from, match.to, manager.time, fps);
+    this.animationBuffer.set(match.from, match.to, offset, fps);
+    for (const mesh of [...this.primaryMeshes, ...this.secondaryMeshes]) {
+      mesh.instancedBuffers.bakedVertexAnimationSettingsInstanced =
+        this.animationBuffer;
+    }
+    this.updateMaterialBuffers();
+    this.animationTimeout = setTimeout(() => {
+      if (this.disposed) return;
+      this.animationTimeout = false;
+      this.animationBuffer.set(match.to, match.to, 0, 0);
+      for (const mesh of [...this.primaryMeshes, ...this.secondaryMeshes]) {
+        mesh.instancedBuffers.bakedVertexAnimationSettingsInstanced =
+          this.animationBuffer;
+      }
+      this.updateMaterialBuffers();
+    }, Math.max(0, match.to - match.from) * (1000 / fps));
   }
   private getTextureIndex(
     originalName: string,

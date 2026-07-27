@@ -1,21 +1,43 @@
 import { parentPort, workerData } from "node:worker_threads";
 
 import { OP } from "../protocol/opcodes.js";
+import { MeleeCombatSystem, type CombatEvent } from "../combat/melee-combat.js";
+import { npcCombatantStats } from "../combat/npc-combat.js";
+import { CorpseLootSystem } from "../combat/corpse-loot.js";
+import {
+  NpcEngagementSystem,
+  type NpcEngagementRules,
+} from "../ai/npc-engagement.js";
 import {
   type RenderSnapshotNetBatchView,
 } from "../protocol/generated/net-structs.js";
-import { createWorldStatePacket } from "../protocol/world-state.js";
+import { encodeWorldStateDelta } from "../protocol/world-state.js";
 import { decodeSidecar, SIDECAR_SCHEMA } from "../protocol/sidecar-codec.js";
 import type {
   ZoneWorkerInboundMessage,
   ZoneWorkerOutboundMessage,
 } from "./worker-types.js";
+import { EntityKind, NPC } from "./entity-store.js";
 import { ZoneSimulationKernel } from "./zone-kernel.js";
+import { loadZoneSimulationKernel } from "./zone-kernel-node.js";
 import { QuestManager } from "./quest-manager.js";
 import type { QuestDefinition, QuestEffect } from "./quest-types.js";
 import { questDefinitionsForZone, questRegistryForZone } from "./quest-zone-registry.js";
 import { ZoneSpatialIndex } from "./spatial-index.js";
-import type { ZoneNpcSpawnDefinition, ZonePathPoint } from "./zone-content.js";
+import type { ZoneNpcSpawnDefinition } from "./zone-content.js";
+import {
+  advanceMovementRoute,
+  type MovementRoute,
+} from "./movement-routes.js";
+import { applyClientMovement } from "./client-movement.js";
+import { eqHeadingToRadians } from "./heading.js";
+import {
+  captureZoneSnapshot,
+  decodeZoneSnapshot,
+  encodeZoneSnapshot,
+  restoreZoneSnapshot,
+  ZONE_SNAPSHOT_FORMAT_VERSION,
+} from "./zone-snapshot.js";
 
 interface WorkerBootstrap {
   zoneId: number;
@@ -24,6 +46,8 @@ interface WorkerBootstrap {
   workBudgetMs: number;
   questDefinitions: QuestDefinition[];
   questRevision: number;
+  engagementRules: NpcEngagementRules;
+  devDiagnostics: boolean;
 }
 
 const port = parentPort;
@@ -32,38 +56,65 @@ if (!port) {
 }
 const workerPort = port;
 
-const { zoneId, instanceId, tickRateHz, workBudgetMs, questDefinitions, questRevision } =
-  workerData as WorkerBootstrap;
-const queue: ZoneWorkerInboundMessage[] = [];
+const {
+  zoneId,
+  instanceId,
+  tickRateHz,
+  workBudgetMs,
+  questDefinitions,
+  questRevision,
+  engagementRules,
+  devDiagnostics,
+} = workerData as WorkerBootstrap;
+type QueuedZoneWorkerMessage = Exclude<
+  ZoneWorkerInboundMessage,
+  { type: "shutdown_commit" }
+>;
+const queue: QueuedZoneWorkerMessage[] = [];
 const opcodeCounters = new Map<number, number>();
 const positions = new Map<
   number,
   { x: number; y: number; z: number; heading: number }
 >();
+const clientJoins = new Map<
+  number,
+  Extract<ZoneWorkerInboundMessage, { type: "client_join" }>
+>();
+const clientEntityIndices = new Map<number, number>();
+const entityOwnerSessions = new Map<number, number>();
+const lastClientUpdateAt = new Map<number, number>();
 const chatRing: Array<{ sessionId: number; message: string }> = [];
 const clientNames = new Map<number, string>();
 const spatial = new ZoneSpatialIndex(300, 1);
 const visibleEntitiesBySession = new Map<number, Set<number>>();
 const pendingAoiChanges = new Map<number, { entered: Set<number>; exited: Set<number> }>();
-const movementRoutes = new Map<number, {
-  points: readonly ZonePathPoint[];
-  targetIndex: number;
-  pauseUntilTick: number;
-}>();
+const movementRoutes = new Map<number, MovementRoute>();
+const suspendedMovementRoutes = new Set<number>();
 let stopping = false;
 let kernel: ZoneSimulationKernel | null = null;
+let combat: MeleeCombatSystem | null = null;
+let corpseLoot: CorpseLootSystem | null = null;
+let engagement: NpcEngagementSystem | null = null;
 let pendingNpcs: readonly ZoneNpcSpawnDefinition[] | null = null;
+let pendingSnapshotBlob: Uint8Array | undefined;
+let zoneKey = "";
 let contentHydrated = false;
 let npcCount = 0;
 let tick = 0;
+let simulationTimeMs = 0;
+let lastTickAtMs = performance.now();
 const zoneQuestRegistry = questRegistryForZone(zoneId);
 const quests = new QuestManager(zoneId, instanceId, zoneQuestRegistry?.zone.shortName ?? null);
 quests.replace([...questDefinitionsForZone(zoneId), ...questDefinitions], questRevision);
 
-void ZoneSimulationKernel.load()
+void loadZoneSimulationKernel()
   .then((loaded) => {
     kernel = loaded;
-    if (pendingNpcs) hydrateNpcs(pendingNpcs);
+    combat = new MeleeCombatSystem(loaded.entities, tickRateHz);
+    engagement = new NpcEngagementSystem(loaded.entities, combat, engagementRules);
+    corpseLoot = new CorpseLootSystem(loaded.entities);
+    if (pendingNpcs) hydrateNpcs(pendingNpcs, pendingSnapshotBlob);
+    ensureClientEntities();
     applyQuestEffects(quests.dispatch({ type: "zone_start", tick }));
     post({
       type: "log",
@@ -86,11 +137,31 @@ void ZoneSimulationKernel.load()
   });
 
 workerPort.on("message", (message: ZoneWorkerInboundMessage) => {
+  if (message.type === "shutdown_commit") {
+    post({
+      type: "log",
+      level: message.persisted ? "info" : "warn",
+      zoneId,
+      instanceId,
+      message: message.persisted
+        ? "Zone snapshot persisted; worker exiting"
+        : "Zone snapshot persistence failed; worker exiting",
+    });
+    process.exit(message.persisted ? 0 : 1);
+    return;
+  }
   queue.push(message);
 });
 
-const tickIntervalMs = Math.max(1, Math.floor(1000 / tickRateHz));
-const timer = setInterval(() => {
+const tickPeriodMs = 1000 / tickRateHz;
+let nextTickAtMs = lastTickAtMs + tickPeriodMs;
+let timer: NodeJS.Timeout;
+
+function scheduleNextTick(): void {
+  timer = setTimeout(runZoneTick, Math.max(0, nextTickAtMs - performance.now()));
+}
+
+function runZoneTick(): void {
   tick += 1;
   const start = Date.now();
   let processed = 0;
@@ -125,12 +196,31 @@ const timer = setInterval(() => {
     }
 
     if (item.type === "zone_hydrate") {
+      zoneKey = item.zoneKey;
       pendingNpcs = item.npcs;
-      if (kernel) hydrateNpcs(item.npcs);
+      pendingSnapshotBlob = item.snapshotBlob;
+      if (kernel) hydrateNpcs(item.npcs, item.snapshotBlob);
+      continue;
+    }
+
+    if (item.type === "nav_path_result") {
+      engagement?.acceptPath(
+        item.requestId,
+        item.npcId,
+        item.targetId,
+        item.path,
+        item.error,
+      );
+      continue;
+    }
+
+    if (item.type === "loot_restore") {
+      corpseLoot?.restore(item.corpseId, item.item);
       continue;
     }
 
     if (item.type === "client_join") {
+      clientJoins.set(item.sessionId, item);
       positions.set(item.sessionId, {
         x: item.x,
         y: item.y,
@@ -141,9 +231,7 @@ const timer = setInterval(() => {
       spatial.upsertSession(item.sessionId, item);
       const visibleEntities = new Set(spatial.entitiesForSession(item.sessionId));
       visibleEntitiesBySession.set(item.sessionId, visibleEntities);
-      for (const entityIndex of visibleEntities) {
-        kernel?.entities.at(entityIndex)?.markDirty();
-      }
+      ensureClientEntity(item.sessionId);
       applyQuestEffects(quests.dispatch({
         type: "player_enter",
         tick,
@@ -160,12 +248,7 @@ const timer = setInterval(() => {
     }
 
     if (item.type === "client_leave") {
-      positions.delete(item.sessionId);
-      clientNames.delete(item.sessionId);
-      spatial.removeSession(item.sessionId);
-      visibleEntitiesBySession.delete(item.sessionId);
-      pendingAoiChanges.delete(item.sessionId);
-      quests.removePlayer(item.sessionId);
+      removeClient(item.sessionId);
       continue;
     }
 
@@ -178,24 +261,52 @@ const timer = setInterval(() => {
     }
   }
 
-  applyQuestEffects(quests.dispatch({ type: "npc_tick", tick }));
-  advanceMovementRoutes();
+  const nowMs = performance.now();
+  const deltaMs = Math.max(0, nowMs - lastTickAtMs);
+  lastTickAtMs = nowMs;
+  simulationTimeMs += deltaMs;
 
-  const snapshot = kernel?.tick(tickIntervalMs);
+  applyQuestEffects(quests.dispatch({ type: "npc_tick", tick }));
+  for (const request of engagement?.tick(tick) ?? []) {
+    if (!zoneKey) continue;
+    post({
+      type: "nav_path_request",
+      zoneKey,
+      zoneId,
+      instanceId,
+      request,
+    });
+  }
+  advanceMovementRoutes();
+  for (const event of combat?.tick(tick) ?? []) {
+    updateHateFromCombatEvent(event);
+    publishCombatEvent(event);
+  }
+  if (devDiagnostics && tick % Math.max(1, Math.round(tickRateHz / 5)) === 0) {
+    publishNpcDiagnostics();
+  }
+
+  const snapshot = kernel?.tick(deltaMs);
   if (snapshot && snapshot.dirtyIndices.length > 0) {
     const state = snapshot.state;
     const indicesBySession = new Map<number, number[]>();
     for (const index of snapshot.dirtyIndices) {
       const offset = index * 3;
       const previousRecipients = spatial.recipientsForEntity(index);
-      spatial.upsertEntity(index, {
-        x: state.statePosition[offset]!,
-        y: state.statePosition[offset + 1]!,
-        z: state.statePosition[offset + 2]!,
-      });
+      if (state.stateKind[index] === 0) {
+        spatial.removeEntity(index);
+      } else {
+        spatial.upsertEntity(index, {
+          x: state.statePosition[offset]!,
+          y: state.statePosition[offset + 1]!,
+          z: state.statePosition[offset + 2]!,
+        });
+      }
       const recipients = spatial.recipientsForEntity(index);
       syncEntityVisibility(index, previousRecipients, recipients);
+      const ownerSessionId = entityOwnerSessions.get(index);
       for (const sessionId of recipients) {
+        if (sessionId === ownerSessionId) continue;
         const indices = indicesBySession.get(sessionId) ?? [];
         indices.push(index);
         indicesBySession.set(sessionId, indices);
@@ -208,6 +319,9 @@ const timer = setInterval(() => {
       group.sessionIds.push(sessionId);
       recipientGroups.set(key, group);
     }
+    // AOI spawn/delete control packets must be queued before a delta for the
+    // same entity. Worker messages preserve this order.
+    flushAoiChanges();
     for (const group of recipientGroups.values()) {
       post({
         type: "snapshot",
@@ -218,8 +332,9 @@ const timer = setInterval(() => {
       });
     }
   }
-
-  flushAoiChanges();
+  else {
+    flushAoiChanges();
+  }
 
   post({
     type: "metrics",
@@ -235,20 +350,63 @@ const timer = setInterval(() => {
   });
 
   if (stopping) {
-    clearInterval(timer);
-    post({
-      type: "log",
-      level: "info",
-      zoneId,
-      instanceId,
-      message: "Zone worker stopped",
-      meta: {
-        opcodeCounters: Object.fromEntries(opcodeCounters.entries()),
-      },
-    });
-    process.exit(0);
+    clearTimeout(timer);
+    try {
+      const loaded = kernel;
+      if (!loaded || !pendingNpcs) {
+        post({
+          type: "persistent_snapshot",
+          zoneId,
+          instanceId,
+          formatVersion: ZONE_SNAPSHOT_FORMAT_VERSION,
+        });
+        return;
+      }
+      const blobData = encodeZoneSnapshot(captureZoneSnapshot({
+        zoneId,
+        instanceId,
+        tick,
+        simulationTimeMs,
+        definitions: pendingNpcs ?? [],
+        entities: loaded.entities,
+        movementRoutes,
+        corpseLoot: corpseLoot!,
+      }));
+      post({
+        type: "persistent_snapshot",
+        zoneId,
+        instanceId,
+        formatVersion: ZONE_SNAPSHOT_FORMAT_VERSION,
+        blobData,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      post({
+        type: "log",
+        level: "error",
+        zoneId,
+        instanceId,
+        message: "Zone snapshot capture failed",
+        meta: { error: message },
+      });
+      post({
+        type: "persistent_snapshot",
+        zoneId,
+        instanceId,
+        formatVersion: ZONE_SNAPSHOT_FORMAT_VERSION,
+        error: message,
+      });
+    }
+    return;
   }
-}, tickIntervalMs);
+
+  do {
+    nextTickAtMs += tickPeriodMs;
+  } while (nextTickAtMs <= performance.now());
+  scheduleNextTick();
+}
+
+scheduleNextTick();
 
 function handleZoneOpcode(
   opcode: number,
@@ -266,6 +424,24 @@ function handleZoneOpcode(
     case OP.CLIENT_UPDATE:
       handleClientUpdate(sessionId, payload);
       return;
+    case OP.AUTO_ATTACK:
+      handleAutoAttack(sessionId, payload);
+      return;
+    case OP.LOOT_REQUEST:
+      handleLootRequest(sessionId, payload);
+      return;
+    case OP.LOOT_ITEM:
+      handleLootItem(sessionId, payload);
+      return;
+    case OP.MERCHANT_OPEN:
+      handleMerchantIntent("open", sessionId, payload);
+      return;
+    case OP.MERCHANT_BUY:
+      handleMerchantIntent("buy", sessionId, payload);
+      return;
+    case OP.MERCHANT_SELL:
+      handleMerchantIntent("sell", sessionId, payload);
+      return;
     case OP.CHANNEL_MESSAGE:
       handleChannelMessage(sessionId, payload);
       return;
@@ -281,16 +457,264 @@ function handleZoneOpcode(
   }
 }
 
+function handleMerchantIntent(
+  action: "open" | "buy" | "sell",
+  sessionId: number,
+  payload: Uint8Array,
+): void {
+  const schema = action === "open"
+    ? SIDECAR_SCHEMA.MERCHANT_OPEN
+    : action === "buy"
+    ? SIDECAR_SCHEMA.MERCHANT_BUY
+    : SIDECAR_SCHEMA.MERCHANT_SELL;
+  const value = decodeSidecar<Record<string, unknown>>(schema, payload);
+  const npcId = Number(value?.npcId);
+  const join = clientJoins.get(sessionId);
+  const playerIndex = clientEntityIndices.get(sessionId);
+  const player = playerIndex === undefined ? undefined : kernel?.entities.at(playerIndex);
+  const npc = Number.isSafeInteger(npcId) ? kernel?.entities.get(npcId) : undefined;
+  const definition = pendingNpcs?.find((spawn) => spawn.spawnId === npcId);
+  const merchant = definition?.merchant;
+  const reject = (message: string) => post({
+    type: "merchant_error",
+    zoneId,
+    instanceId,
+    sessionId,
+    npcId: Number.isSafeInteger(npcId) ? npcId : 0,
+    message,
+  });
+  if (!value || !join || !player || !npc || !definition || !merchant) {
+    reject("That NPC is not available as a merchant.");
+    return;
+  }
+  if (
+    npc.kind !== EntityKind.npc
+    || npc.currentHp <= 0
+    || engagement?.isEngaged(npc.id)
+  ) {
+    reject("That merchant is busy right now.");
+    return;
+  }
+  const distance = Math.hypot(
+    player.position.x - npc.position.x,
+    player.position.y - npc.position.y,
+    player.position.z - npc.position.z,
+  );
+  if (distance > merchant.interactionRange) {
+    reject("You are too far away from that merchant.");
+    return;
+  }
+  const message = {
+    type: "merchant_intent" as const,
+    zoneId,
+    instanceId,
+    sessionId,
+    characterId: join.characterId,
+    npcId,
+    npcArchetypeId: definition.npcArchetypeId,
+    merchantName: definition.name,
+    action,
+  };
+  if (action === "buy") {
+    const merchantSlot = Number(value.merchantSlot);
+    const quantity = Number(value.quantity);
+    if (!Number.isSafeInteger(merchantSlot) || !Number.isSafeInteger(quantity)) {
+      reject("Invalid merchant purchase.");
+      return;
+    }
+    post({ ...message, merchantSlot, quantity });
+    return;
+  }
+  if (action === "sell") {
+    const slot = Number(value.slot);
+    const bag = Number(value.bag);
+    const quantity = Number(value.quantity);
+    if (
+      !Number.isSafeInteger(slot)
+      || !Number.isSafeInteger(bag)
+      || !Number.isSafeInteger(quantity)
+    ) {
+      reject("Invalid merchant sale.");
+      return;
+    }
+    post({ ...message, slot, bag, quantity });
+    return;
+  }
+  post(message);
+}
+
+function handleLootRequest(sessionId: number, payload: Uint8Array): void {
+  const value = decodeSidecar<{ corpseId?: unknown }>(
+    SIDECAR_SCHEMA.LOOT_REQUEST,
+    payload,
+  );
+  const corpseId = Number(value?.corpseId);
+  const index = clientEntityIndices.get(sessionId);
+  const looter = index === undefined ? undefined : kernel?.entities.at(index);
+  if (!Number.isSafeInteger(corpseId) || !looter) return;
+  const window = corpseLoot?.open(looter.id, corpseId);
+  if (!window) return;
+  post({
+    type: "loot_window",
+    zoneId,
+    instanceId,
+    sessionId,
+    corpseId,
+    corpseName: window.corpseName,
+    items: [...window.items],
+  });
+}
+
+function handleLootItem(sessionId: number, payload: Uint8Array): void {
+  const value = decodeSidecar<{
+    corpseId?: unknown;
+    lootSlot?: unknown;
+  }>(SIDECAR_SCHEMA.LOOT_ITEM, payload);
+  const corpseId = Number(value?.corpseId);
+  const lootSlot = Number(value?.lootSlot);
+  const index = clientEntityIndices.get(sessionId);
+  const looter = index === undefined ? undefined : kernel?.entities.at(index);
+  const join = clientJoins.get(sessionId);
+  if (
+    !Number.isSafeInteger(corpseId)
+    || !Number.isSafeInteger(lootSlot)
+    || !looter
+    || !join
+  ) return;
+  const item = corpseLoot?.take(looter.id, corpseId, lootSlot);
+  if (!item) return;
+  post({
+    type: "loot_award",
+    zoneId,
+    instanceId,
+    sessionId,
+    characterId: join.characterId,
+    looterId: looter.id,
+    corpseId,
+    item,
+  });
+  const remaining = corpseLoot?.open(looter.id, corpseId);
+  post({
+    type: "loot_window",
+    zoneId,
+    instanceId,
+    sessionId,
+    corpseId,
+    corpseName: remaining?.corpseName ?? "Corpse",
+    items: [...(remaining?.items ?? [])],
+  });
+}
+
+function handleAutoAttack(sessionId: number, payload: Uint8Array): void {
+  const value = decodeSidecar<{
+    enabled?: unknown;
+    targetId?: unknown;
+  }>(SIDECAR_SCHEMA.AUTO_ATTACK, payload);
+  const targetId = Number(value?.targetId);
+  const entityIndex = clientEntityIndices.get(sessionId);
+  const attacker = entityIndex === undefined
+    ? undefined
+    : kernel?.entities.at(entityIndex);
+  if (
+    !value
+    || typeof value.enabled !== "boolean"
+    || !Number.isSafeInteger(targetId)
+    || targetId < 0
+    || targetId > 0xffff_ffff
+  ) {
+    return;
+  }
+  const event = combat?.setAutoAttack(
+    attacker?.id ?? 0,
+    targetId,
+    value.enabled,
+    tick,
+  );
+  if (event) {
+    updateHateFromCombatEvent(event);
+    publishCombatEvent(event, sessionId);
+  }
+}
+
+function updateHateFromCombatEvent(event: CombatEvent): void {
+  const loaded = kernel;
+  if (!loaded || !engagement) return;
+  const attacker = loaded.entities.get(event.attackerId);
+  const target = loaded.entities.get(event.targetId);
+  if (attacker?.kind === EntityKind.pc && target?.kind === EntityKind.npc) {
+    if (event.outcome === "hit" && !event.killed) {
+      engagement.noteDamage(target.id, attacker.id, event.damage, event.tick);
+    }
+  }
+  if (event.killed) engagement.clearEntity(event.targetId);
+}
+
+function publishCombatEvent(
+  event: CombatEvent,
+  explicitSessionId?: number,
+): void {
+  const attacker = kernel?.entities.get(event.attackerId);
+  const target = kernel?.entities.get(event.targetId);
+  const ownerSessionIds = new Set<number>();
+  if (explicitSessionId !== undefined) ownerSessionIds.add(explicitSessionId);
+  const attackerOwner = attacker
+    ? entityOwnerSessions.get(attacker.index)
+    : undefined;
+  const targetOwner = target
+    ? entityOwnerSessions.get(target.index)
+    : undefined;
+  if (attackerOwner !== undefined) ownerSessionIds.add(attackerOwner);
+  if (targetOwner !== undefined) ownerSessionIds.add(targetOwner);
+  if (ownerSessionIds.size === 0) return;
+  if (event.killed) {
+    if (target) {
+      movementRoutes.delete(target.index);
+      if (target.kind === EntityKind.npc) {
+        corpseLoot?.createCorpse(target);
+      } else if (target.kind === EntityKind.pc && targetOwner !== undefined) {
+        const join = clientJoins.get(targetOwner);
+        if (join) {
+          post({
+            type: "pc_death",
+            zoneId,
+            instanceId,
+            sessionId: targetOwner,
+            characterId: join.characterId,
+            victimId: target.id,
+            killerId: event.attackerId,
+            bind: join.bind,
+          });
+        }
+      }
+    }
+  }
+  post({
+    type: "combat_event",
+    zoneId,
+    instanceId,
+    sessionIds: [...ownerSessionIds],
+    event,
+  });
+}
+
 function handleClientUpdate(sessionId: number, payload: Uint8Array): void {
   const parsed = decodePosition(payload);
   if (!parsed) {
     return;
   }
 
+  const previousPosition = positions.get(sessionId);
   positions.set(sessionId, parsed);
   const previous = spatial.entitiesForSession(sessionId);
   spatial.upsertSession(sessionId, parsed);
   syncSessionVisibility(sessionId, previous, spatial.entitiesForSession(sessionId));
+
+  const entityIndex = clientEntityIndices.get(sessionId);
+  const pc = entityIndex === undefined ? undefined : kernel?.entities.at(entityIndex);
+  if (!pc) return;
+  const previousAt = lastClientUpdateAt.get(sessionId) ?? simulationTimeMs;
+  applyClientMovement(pc, previousPosition, parsed, simulationTimeMs - previousAt);
+  lastClientUpdateAt.set(sessionId, simulationTimeMs);
 }
 
 function handleChannelMessage(sessionId: number, payload: Uint8Array): void {
@@ -361,7 +785,10 @@ function applyQuestEffects(effects: readonly QuestEffect[]): void {
   }
 }
 
-function hydrateNpcs(definitions: readonly ZoneNpcSpawnDefinition[]): void {
+function hydrateNpcs(
+  definitions: readonly ZoneNpcSpawnDefinition[],
+  snapshotBlob?: Uint8Array,
+): void {
   const loaded = kernel;
   if (!loaded || contentHydrated) return;
   contentHydrated = true;
@@ -388,12 +815,17 @@ function hydrateNpcs(definitions: readonly ZoneNpcSpawnDefinition[]): void {
     state.stateFace[index] = spawn.face;
     state.stateHelm[index] = spawn.helm;
     state.stateChest[index] = spawn.equipChest;
-    state.stateHeading[index] = spawn.heading;
+    state.statePrimary[index] = spawn.primary;
+    state.stateSecondary[index] = spawn.secondary;
+    npc.heading = eqHeadingToRadians(spawn.heading);
     npc.markDirty();
+    combat?.register(npc, npcCombatantStats(spawn));
+    engagement?.registerNpc(npc);
+    corpseLoot?.registerSpawn(spawn.spawnId, spawn.name, spawn.lootItems);
     spatial.upsertEntity(index, spawn);
     if (spawn.path.length > 0) {
       const targetIndex = spawn.path.length > 1 ? 1 : 0;
-      movementRoutes.set(index, { points: spawn.path, targetIndex, pauseUntilTick: 0 });
+      movementRoutes.set(index, { points: spawn.path, targetIndex, pauseUntilMs: 0 });
       const target = spawn.path[targetIndex]!;
       npc.target.set(target.x, target.y, target.z);
     }
@@ -401,6 +833,46 @@ function hydrateNpcs(definitions: readonly ZoneNpcSpawnDefinition[]): void {
   }
   for (const sessionId of positions.keys()) {
     visibleEntitiesBySession.set(sessionId, new Set(spatial.entitiesForSession(sessionId)));
+  }
+  ensureClientEntities();
+  if (snapshotBlob) {
+    try {
+      const report = restoreZoneSnapshot(decodeZoneSnapshot(snapshotBlob), {
+        zoneId,
+        instanceId,
+        simulationTimeMs,
+        definitions: accepted,
+        entities: loaded.entities,
+        movementRoutes,
+        corpseLoot: corpseLoot!,
+      });
+      for (let index = 0; index < accepted.length; index++) {
+        const entity = loaded.entities.at(index);
+        if (!entity) continue;
+        spatial.upsertEntity(index, {
+          x: entity.position.x,
+          y: entity.position.y,
+          z: entity.position.z,
+        });
+      }
+      post({
+        type: "log",
+        level: report.contentChanged ? "warn" : "info",
+        zoneId,
+        instanceId,
+        message: "Zone snapshot restored",
+        meta: { ...report },
+      });
+    } catch (error) {
+      post({
+        type: "log",
+        level: "warn",
+        zoneId,
+        instanceId,
+        message: "Zone snapshot was ignored",
+        meta: { error: error instanceof Error ? error.message : String(error) },
+      });
+    }
   }
   if (definitions.length > accepted.length) {
     post({
@@ -422,13 +894,98 @@ function hydrateNpcs(definitions: readonly ZoneNpcSpawnDefinition[]): void {
   });
 }
 
+function ensureClientEntities(): void {
+  for (const sessionId of clientJoins.keys()) ensureClientEntity(sessionId);
+}
+
+function ensureClientEntity(sessionId: number): void {
+  const loaded = kernel;
+  const join = clientJoins.get(sessionId);
+  if (!loaded || !contentHydrated || !join || clientEntityIndices.has(sessionId)) return;
+  try {
+    const pc = loaded.entities.spawnPC({
+      id: join.entityId,
+      x: join.x,
+      y: join.y,
+      z: join.z,
+    });
+    const index = pc.index;
+    const state = loaded.entities.publicState;
+    state.stateArchetypeId[index] = join.characterId;
+    state.stateLevel[index] = join.level;
+    state.stateRace[index] = join.race;
+    state.stateGender[index] = join.gender;
+    state.stateClassId[index] = join.charClass;
+    state.stateSize[index] = -1;
+    state.stateFace[index] = join.face;
+    pc.heading = eqHeadingToRadians(join.heading);
+    pc.markDirty();
+    combat?.register(pc, join.combat);
+    clientEntityIndices.set(sessionId, index);
+    entityOwnerSessions.set(index, sessionId);
+    lastClientUpdateAt.set(sessionId, simulationTimeMs);
+    spatial.upsertEntity(index, join);
+    visibleEntitiesBySession.get(sessionId)?.delete(index);
+    for (const visibleIndex of visibleEntitiesBySession.get(sessionId) ?? []) {
+      loaded.entities.markDirty(visibleIndex);
+    }
+    for (const recipientSessionId of spatial.recipientsForEntity(index)) {
+      if (recipientSessionId === sessionId) continue;
+      visibleEntitiesBySession.get(recipientSessionId)?.add(index);
+      queueAoiChangeById(recipientSessionId, join.entityId, true);
+    }
+  } catch (error: unknown) {
+    post({
+      type: "log",
+      level: "error",
+      zoneId,
+      instanceId,
+      message: "Failed to place client entity in the zone arena",
+      meta: {
+        sessionId,
+        entityId: join.entityId,
+        error: error instanceof Error ? error.message : String(error),
+      },
+    });
+  }
+}
+
+function removeClient(sessionId: number): void {
+  const loaded = kernel;
+  const entityIndex = clientEntityIndices.get(sessionId);
+  if (loaded && entityIndex !== undefined) {
+    const entity = loaded.entities.at(entityIndex);
+    if (entity) {
+      engagement?.clearEntity(entity.id);
+      for (const recipientSessionId of spatial.recipientsForEntity(entityIndex)) {
+        if (recipientSessionId === sessionId) continue;
+        visibleEntitiesBySession.get(recipientSessionId)?.delete(entityIndex);
+        queueAoiChangeById(recipientSessionId, entity.id, false);
+      }
+      spatial.removeEntity(entityIndex);
+      entityOwnerSessions.delete(entityIndex);
+      loaded.entities.remove(entity);
+    }
+    clientEntityIndices.delete(sessionId);
+  }
+  clientJoins.delete(sessionId);
+  lastClientUpdateAt.delete(sessionId);
+  positions.delete(sessionId);
+  clientNames.delete(sessionId);
+  spatial.removeSession(sessionId);
+  visibleEntitiesBySession.delete(sessionId);
+  pendingAoiChanges.delete(sessionId);
+  quests.removePlayer(sessionId);
+}
+
 function syncSessionVisibility(
   sessionId: number,
   previousIndices: readonly number[],
   nextIndices: readonly number[],
 ): void {
-  const previous = new Set(previousIndices);
-  const next = new Set(nextIndices);
+  const ownEntityIndex = clientEntityIndices.get(sessionId);
+  const previous = new Set(previousIndices.filter((index) => index !== ownEntityIndex));
+  const next = new Set(nextIndices.filter((index) => index !== ownEntityIndex));
   visibleEntitiesBySession.set(sessionId, next);
   for (const index of next) if (!previous.has(index)) queueAoiChange(sessionId, index, true);
   for (const index of previous) if (!next.has(index)) queueAoiChange(sessionId, index, false);
@@ -441,12 +998,15 @@ function syncEntityVisibility(
 ): void {
   const previous = new Set(previousSessionIds);
   const next = new Set(nextSessionIds);
+  const ownerSessionId = entityOwnerSessions.get(entityIndex);
   for (const sessionId of next) {
+    if (sessionId === ownerSessionId) continue;
     if (previous.has(sessionId)) continue;
     visibleEntitiesBySession.get(sessionId)?.add(entityIndex);
     queueAoiChange(sessionId, entityIndex, true);
   }
   for (const sessionId of previous) {
+    if (sessionId === ownerSessionId) continue;
     if (next.has(sessionId)) continue;
     visibleEntitiesBySession.get(sessionId)?.delete(entityIndex);
     queueAoiChange(sessionId, entityIndex, false);
@@ -456,6 +1016,10 @@ function syncEntityVisibility(
 function queueAoiChange(sessionId: number, entityIndex: number, entered: boolean): void {
   const entityId = kernel?.entities.at(entityIndex)?.id;
   if (!entityId) return;
+  queueAoiChangeById(sessionId, entityId, entered);
+}
+
+function queueAoiChangeById(sessionId: number, entityId: number, entered: boolean): void {
   const change = pendingAoiChanges.get(sessionId) ?? {
     entered: new Set<number>(),
     exited: new Set<number>(),
@@ -486,78 +1050,58 @@ function advanceMovementRoutes(): void {
   const loaded = kernel;
   if (!loaded) return;
   for (const [entityIndex, route] of movementRoutes) {
-    if (tick < route.pauseUntilTick) continue;
     const npc = loaded.entities.at(entityIndex);
-    const target = route.points[route.targetIndex];
-    if (!npc || !target) continue;
-    const dx = target.x - npc.position.x;
-    const dy = target.y - npc.position.y;
-    const dz = target.z - npc.position.z;
-    if (dx * dx + dy * dy + dz * dz > 0.04) continue;
-
-    route.pauseUntilTick = tick + Math.ceil(Math.max(0, target.pauseSeconds) * tickRateHz);
-    route.targetIndex = (route.targetIndex + 1) % route.points.length;
-    const next = route.points[route.targetIndex]!;
-    if (route.pauseUntilTick > tick) {
-      loaded.setNpcTarget(entityIndex, npc.position.x, npc.position.y, npc.position.z);
-    } else {
-      loaded.setNpcTarget(entityIndex, next.x, next.y, next.z);
+    if (!(npc instanceof NPC)) continue;
+    if (engagement?.isEngaged(npc.id)) {
+      suspendedMovementRoutes.add(entityIndex);
+      continue;
     }
+    if (suspendedMovementRoutes.delete(entityIndex)) {
+      const target = route.points[route.targetIndex];
+      if (target) npc.target.set(target.x, target.y, target.z);
+    }
+    advanceMovementRoute(npc, route, simulationTimeMs);
   }
+}
 
-  for (const [entityIndex, route] of movementRoutes) {
-    if (route.pauseUntilTick !== tick) continue;
-    const next = route.points[route.targetIndex]!;
-    loaded.setNpcTarget(entityIndex, next.x, next.y, next.z);
+function publishNpcDiagnostics(): void {
+  const loaded = kernel;
+  if (!loaded || !engagement) return;
+  for (let index = 0; index < npcCount; index++) {
+    const npc = loaded.entities.at(index);
+    if (!(npc instanceof NPC)) continue;
+    const base = engagement.diagnostic(npc.id, tick);
+    if (!base) continue;
+    const route = movementRoutes.get(index);
+    const diagnostic = {
+      ...base,
+      roam: route
+        ? {
+            suspended: engagement.isEngaged(npc.id),
+            targetIndex: route.targetIndex,
+            pauseUntilMs: route.pauseUntilMs,
+            path: route.points.map((point) => ({
+              x: point.x,
+              y: point.y,
+              z: point.z,
+            })),
+          }
+        : null,
+    };
+    const sessionIds = spatial.recipientsForEntity(index);
+    if (sessionIds.length === 0) continue;
+    post({
+      type: "npc_debug",
+      zoneId,
+      instanceId,
+      sessionIds,
+      diagnostic,
+    });
   }
 }
 
 function packSnapshot(state: RenderSnapshotNetBatchView, indices: readonly number[]): Uint8Array {
-  const packet = createWorldStatePacket(indices.length, new Uint8Array(), 0, tick);
-  const batch = packet.state;
-  for (let out = 0; out < indices.length; out++) {
-    const index = indices[out]!;
-    batch.entityId[out] = state.entityId[index]!;
-    batch.stateKind[out] = state.stateKind[index]!;
-    copyComponents(state.statePosition, batch.statePosition, index, out, 3);
-    copyComponents(state.stateVelocity, batch.stateVelocity, index, out, 3);
-    copyComponents(state.stateOrientation, batch.stateOrientation, index, out, 4);
-    batch.stateAnimation[out] = state.stateAnimation[index]!;
-    batch.stateMovementState[out] = state.stateMovementState[index]!;
-    batch.stateAppearance[out] = state.stateAppearance[index]!;
-    batch.stateNameOffset[out] = state.stateNameOffset[index]!;
-    batch.stateNameLength[out] = state.stateNameLength[index]!;
-    batch.stateArchetypeId[out] = state.stateArchetypeId[index]!;
-    batch.stateLevel[out] = state.stateLevel[index]!;
-    batch.stateRace[out] = state.stateRace[index]!;
-    batch.stateGender[out] = state.stateGender[index]!;
-    batch.stateClassId[out] = state.stateClassId[index]!;
-    batch.stateBodyType[out] = state.stateBodyType[index]!;
-    batch.stateSize[out] = state.stateSize[index]!;
-    batch.stateFace[out] = state.stateFace[index]!;
-    batch.stateHelm[out] = state.stateHelm[index]!;
-    batch.stateChest[out] = state.stateChest[index]!;
-    batch.statePrimary[out] = state.statePrimary[index]!;
-    batch.stateSecondary[out] = state.stateSecondary[index]!;
-    batch.stateModelKeyOffset[out] = state.stateModelKeyOffset[index]!;
-    batch.stateModelKeyLength[out] = state.stateModelKeyLength[index]!;
-    batch.stateHeading[out] = state.stateHeading[index]!;
-  }
-  return packet.bytes;
-}
-
-function copyComponents(
-  source: Float32Array,
-  destination: Float32Array,
-  sourceIndex: number,
-  destinationIndex: number,
-  componentCount: number,
-): void {
-  const sourceOffset = sourceIndex * componentCount;
-  const destinationOffset = destinationIndex * componentCount;
-  for (let component = 0; component < componentCount; component++) {
-    destination[destinationOffset + component] = source[sourceOffset + component]!;
-  }
+  return encodeWorldStateDelta(state, indices, tick);
 }
 
 function decodePosition(
@@ -574,7 +1118,11 @@ function decodePosition(
     typeof parsed.x !== "number" ||
     typeof parsed.y !== "number" ||
     typeof parsed.z !== "number" ||
-    typeof parsed.heading !== "number"
+    typeof parsed.heading !== "number" ||
+    !Number.isFinite(parsed.x) ||
+    !Number.isFinite(parsed.y) ||
+    !Number.isFinite(parsed.z) ||
+    !Number.isFinite(parsed.heading)
   ) {
     return null;
   }

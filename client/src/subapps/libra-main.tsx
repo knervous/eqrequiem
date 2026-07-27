@@ -2,7 +2,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { LibraApp } from '@requiem-subapp/libra';
-import { ReturnToRequiem } from './return-to-requiem';
+import { ReturnToEltania } from './return-to-eltania';
 
 const root = document.getElementById('root');
 if (!root) {
@@ -12,7 +12,7 @@ if (!root) {
 createRoot(root).render(
   <StrictMode>
     <BrowserRouter basename="/apps/libra">
-      <ReturnToRequiem />
+      <ReturnToEltania />
       <LibraApp />
     </BrowserRouter>
   </StrictMode>,

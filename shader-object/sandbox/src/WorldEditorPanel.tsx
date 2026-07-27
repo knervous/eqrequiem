@@ -100,6 +100,26 @@ export function WorldEditorPanel() {
     draftDirty.current = true;
     setDraft(current => current ? { ...current, ...next } : current);
   };
+  const updateNavigation = (
+    next: Partial<{ enabled: boolean; area: number; flags: number; excluded: boolean }>
+  ) => {
+    draftDirty.current = true;
+    setDraft(current => {
+      if (!current) return current;
+      const navigation = {
+        ...navigationFromMetadata(current.metadata),
+        ...next,
+      };
+      const metadata = { ...current.metadata };
+      if (!navigation.enabled) delete metadata.navigation;
+      else {
+        const { enabled: _enabled, ...compiled } = navigation;
+        metadata.navigation = compiled;
+      }
+      setMetadataText(JSON.stringify(metadata, null, 2));
+      return { ...current, metadata };
+    });
+  };
   const apply = () => {
     if (!draft) return;
     try {
@@ -156,6 +176,7 @@ export function WorldEditorPanel() {
   const updateObject = (next: Partial<ShadoWorldObjectStamp>) => {
     setObjectDraft(current => current ? { ...current, ...next } : current);
   };
+  const navigationDraft = navigationFromMetadata(draft?.metadata);
   return (
     <aside className="world-editor-panel">
       <header className="world-editor-header">
@@ -244,6 +265,51 @@ export function WorldEditorPanel() {
                 setMetadataText(event.target.value);
               }} />
             </label>
+          </details>
+          <details className="world-editor-metadata">
+            <summary>Recast modifier</summary>
+            <label className="world-editor-check">
+              <input
+                type="checkbox"
+                checked={navigationDraft.enabled}
+                onChange={event => updateNavigation({ enabled: event.target.checked })}
+              />
+              Compile this AABB into the navigation bake
+            </label>
+            <label className="world-editor-field">
+              Recast area ID
+              <input
+                type="number"
+                min="0"
+                max="63"
+                disabled={!navigationDraft.enabled}
+                value={navigationDraft.area}
+                onChange={event => updateNavigation({ area: Number(event.target.value) })}
+              />
+            </label>
+            <label className="world-editor-field">
+              Detour polygon flags
+              <input
+                type="number"
+                min="0"
+                max="65535"
+                disabled={!navigationDraft.enabled}
+                value={navigationDraft.flags}
+                onChange={event => updateNavigation({ flags: Number(event.target.value) })}
+              />
+            </label>
+            <label className="world-editor-check">
+              <input
+                type="checkbox"
+                disabled={!navigationDraft.enabled}
+                checked={navigationDraft.excluded}
+                onChange={event => updateNavigation({ excluded: event.target.checked })}
+              />
+              Exclude traversable spans
+            </label>
+            <small>
+              Runtime coordinates are compiled to Recast as (z, y, -x).
+            </small>
           </details>
           <button className="world-editor-apply" type="button" onClick={apply}>
             Apply changes
@@ -460,6 +526,25 @@ export function WorldEditorPanel() {
       </p>
     </aside>
   );
+}
+
+function navigationFromMetadata(metadata: Record<string, unknown> | undefined): {
+  enabled: boolean;
+  area: number;
+  flags: number;
+  excluded: boolean;
+} {
+  const value = metadata?.navigation;
+  const navigation =
+    value && typeof value === 'object' && !Array.isArray(value)
+      ? value as Record<string, unknown>
+      : undefined;
+  return {
+    enabled: Boolean(navigation),
+    area: Number.isInteger(Number(navigation?.area)) ? Number(navigation?.area) : 0,
+    flags: Number.isInteger(Number(navigation?.flags)) ? Number(navigation?.flags) : 1,
+    excluded: navigation?.excluded === true,
+  };
 }
 
 function Toggle({ label, checked, onChange }: { label: string; checked: boolean; onChange(value: boolean): void }) {

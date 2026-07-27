@@ -1,185 +1,298 @@
 // File: client/src/Game/Config/config.ts
-import emitter from '@game/Events/events';
+import emitter from "@game/Events/events";
 import {
   ActionButtonData,
   ActionButtonType,
   ActionType,
-} from '@ui/components/game/action-button/constants';
-import { getEQFile, writeRootEQFile } from '@/Core/opfs';
-import { Config, KeyBindings, Settings } from './types';
+} from "@ui/components/game/action-button/constants";
+import {
+  Config,
+  HudWindowId,
+  HudWindowPlacement,
+  KeyBindings,
+  Settings,
+  UISettings,
+} from "./types";
 
 const configVersion = 5;
+const configStoragePrefix = "eqrequiem:config:";
+const opfsConfigDirectory = "eltania/config";
+const legacyOpfsConfigDirectory = "eqrequiem/config";
+
+export const DEFAULT_HUD_WINDOWS: UISettings["hudWindows"] = {
+  player: { x: 0.014, y: 0.025, width: 230, height: 150, z: 2 },
+  target: { x: 0.365, y: 0.105, width: 350, height: 104, z: 7 },
+  compass: { x: 0.455, y: 0.018, width: 112, height: 46, z: 3 },
+  minimap: { x: 0.81, y: 0.025, width: 230, height: 310, z: 4 },
+  chat: { x: 0.014, y: 0.73, width: 440, height: 190, z: 5 },
+  commands: { x: 0.445, y: 0.79, width: 690, height: 142, z: 6 },
+};
 
 export const DEFAULT_CONFIG: Config = {
   keyBindings: {
-    moveForward   : 'W',
-    moveBackward  : 'S',
-    turnLeft      : 'A',
-    turnRight     : 'D',
-    hail          : 'H',
-    consider      : 'C',
-    jump          : 'Space',
-    sitStand      : 'Ctrl+S',
-    targetNearest : 'Tab',
-    targetPrevious: 'Shift+Tab',
-    inventory     : 'I',
-    spells        : 'P',
-    autoAttack    : 'T',
+    moveForward: "W",
+    moveBackward: "S",
+    turnLeft: "A",
+    turnRight: "D",
+    hail: "H",
+    consider: "C",
+    jump: "Space",
+    sitStand: "Ctrl+S",
+    targetNearest: "Tab",
+    targetPrevious: "Shift+Tab",
+    inventory: "I",
+    spells: "P",
+    autoAttack: "T",
+    options: "F10",
 
     // Chat
-    reply  : 'R',
+    reply: "R",
     // Misc
-    autoRun: 'Clear',
+    autoRun: "Clear",
 
     // Hotkeys
-    hotkey1 : '1',
-    hotkey2 : '2',
-    hotkey3 : '3',
-    hotkey4 : '4',
-    hotkey5 : '5',
-    hotkey6 : '6',
-    hotkey7 : '7',
-    hotkey8 : '8',
-    hotkey9 : '9',
-    hotkey10: '0',
+    hotkey1: "1",
+    hotkey2: "2",
+    hotkey3: "3",
+    hotkey4: "4",
+    hotkey5: "5",
+    hotkey6: "6",
+    hotkey7: "7",
+    hotkey8: "8",
+    hotkey9: "9",
+    hotkey10: "0",
   },
   settings: {
     particles: true,
-    sound    : true,
-    music    : true,
+    sound: true,
+    music: true,
+    musicVolume: 0.25,
+    renderScale: 1,
   },
   ui: {
-    theme       : 'default',
-    fontSize    : 14,
+    theme: "default",
+    fontSize: 14,
     showTooltips: true,
+    uiScale: 1,
+    hudLocked: false,
+    hudWindows: structuredClone(DEFAULT_HUD_WINDOWS),
   },
   hotButtons: {
     0: {
-      type  : ActionButtonType.MELEE_ATTACK,
+      type: ActionButtonType.MELEE_ATTACK,
       action: ActionType.MELEE_ATTACK,
-      label : 'Melee Attack',
-      index : 0,
+      label: "Melee Attack",
+      index: 0,
     },
-    '1': {
-      type  : ActionButtonType.SOCIALS,
+    "1": {
+      type: ActionButtonType.SOCIALS,
       action: ActionType.SOCIAL,
-      label : 'Hail',
-      color : '#00FF00',
-      data  : ['/hail'],
-      index : 0,
+      label: "Hail",
+      color: "#00FF00",
+      data: ["/hail"],
+      index: 0,
     },
-    '2': {
+    "2": {
       type: 12,
     },
-    '3': {
-      type  : ActionButtonType.SOCIALS,
+    "3": {
+      type: ActionButtonType.SOCIALS,
       action: ActionType.SOCIAL,
-      label : 'Consider',
-      color : '#FFFF00',
-      data  : ['/consider'],
-      index : 1,
+      label: "Consider",
+      color: "#FFFF00",
+      data: ["/consider"],
+      index: 1,
     },
-    '4': {
+    "4": {
       type: 8,
     },
-    '5': {
+    "5": {
       type: 13,
     },
-    '9': {
+    "9": {
       type: 11,
     },
   },
   combatButtons: {
     0: {
-      type  : ActionButtonType.MELEE_ATTACK,
+      type: ActionButtonType.MELEE_ATTACK,
       action: ActionType.MELEE_ATTACK,
-      label : 'Melee Attack',
+      label: "Melee Attack",
     },
     1: {
-      type  : ActionButtonType.RANGED_ATTACK,
+      type: ActionButtonType.RANGED_ATTACK,
       action: ActionType.RANGED_ATTACK,
-      label : 'Ranged Attack',
+      label: "Ranged Attack",
     },
   },
   socialButtons: {
     0: {
-      type  : ActionButtonType.SOCIALS,
+      type: ActionButtonType.SOCIALS,
       action: ActionType.SOCIAL,
-      label : 'Hail',
-      color : '#00FF00',
-      data  : ['/hail'],
+      label: "Hail",
+      color: "#00FF00",
+      data: ["/hail"],
     },
     1: {
-      type  : ActionButtonType.SOCIALS,
+      type: ActionButtonType.SOCIALS,
       action: ActionType.SOCIAL,
-      label : 'Consider',
-      color : '#FFFF00',
-      data  : ['/consider'],
+      label: "Consider",
+      color: "#FFFF00",
+      data: ["/consider"],
     },
     2: {
-      type  : ActionButtonType.SOCIALS,
+      type: ActionButtonType.SOCIALS,
       action: ActionType.SOCIAL,
-      label : 'Afk',
-      color : '#FF00FF',
-      data  : ['/afk'],
+      label: "Afk",
+      color: "#FF00FF",
+      data: ["/afk"],
     },
   },
   abilityButtons: {},
 };
 
+export function mergeConfig(configData: Partial<Config> | null): Config {
+  return {
+    keyBindings: {
+      ...DEFAULT_CONFIG.keyBindings,
+      ...configData?.keyBindings,
+    },
+    settings: {
+      ...DEFAULT_CONFIG.settings,
+      ...configData?.settings,
+    },
+    ui: {
+      ...DEFAULT_CONFIG.ui,
+      ...configData?.ui,
+      hudWindows: {
+        ...DEFAULT_CONFIG.ui.hudWindows,
+        ...configData?.ui?.hudWindows,
+      },
+    },
+    hotButtons: {
+      ...DEFAULT_CONFIG.hotButtons,
+      ...configData?.hotButtons,
+    },
+    combatButtons: {
+      ...DEFAULT_CONFIG.combatButtons,
+      ...configData?.combatButtons,
+    },
+    socialButtons: {
+      ...DEFAULT_CONFIG.socialButtons,
+      ...configData?.socialButtons,
+    },
+    abilityButtons: {
+      ...DEFAULT_CONFIG.abilityButtons,
+      ...configData?.abilityButtons,
+    },
+  };
+}
+
 export class UserConfig {
   private static instance_: UserConfig;
   private config: Config;
-  private configFilePath = '';
+  private configFilePath = "";
+
+  private async getOpfsConfigHandle(
+    create: boolean,
+    directoryPath = opfsConfigDirectory,
+  ): Promise<FileSystemFileHandle | null> {
+    if (!navigator.storage?.getDirectory || !this.configFilePath) return null;
+    const root = await navigator.storage.getDirectory();
+    let directory: FileSystemDirectoryHandle = root;
+    for (const segment of directoryPath.split("/")) {
+      directory = await directory.getDirectoryHandle(segment, { create });
+    }
+    return directory.getFileHandle(this.configFilePath, { create });
+  }
+
+  private async readOpfsConfig(
+    directoryPath = opfsConfigDirectory,
+  ): Promise<Partial<Config> | null> {
+    try {
+      const handle = await this.getOpfsConfigHandle(false, directoryPath);
+      if (!handle) return null;
+      const file = await handle.getFile();
+      const text = await file.text();
+      return text ? (JSON.parse(text) as Partial<Config>) : null;
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "NotFoundError") {
+        return null;
+      }
+      console.warn(
+        `Failed to read OPFS config ${directoryPath}/${this.configFilePath}:`,
+        error,
+      );
+      return null;
+    }
+  }
+
+  private async writeOpfsConfig(serialized: string): Promise<void> {
+    const handle = await this.getOpfsConfigHandle(true);
+    if (!handle) return;
+    const writable = await handle.createWritable();
+    await writable.write(serialized);
+    await writable.close();
+  }
 
   private constructor() {
     this.config = DEFAULT_CONFIG;
-    emitter.on('updateConfig', this.updateConfigEvent.bind(this));
+    emitter.on("updateConfig", this.updateConfigEvent.bind(this));
   }
 
   private updateConfigEvent(key?: keyof Config): void {
     switch (key) {
-      case 'keyBindings':
-        emitter.emit('updateKeybinds');
+      case "keyBindings":
+        emitter.emit("updateKeybinds");
         break;
-      case 'settings':
-        emitter.emit('updateSettings');
+      case "settings":
+        emitter.emit("updateSettings");
         break;
-      case 'hotButtons':
-        emitter.emit('updateHotButtons');
+      case "ui":
+        emitter.emit("updateUI");
         break;
-      case 'combatButtons':
-        emitter.emit('updateCombatButtons');
+      case "hotButtons":
+        emitter.emit("updateHotButtons");
         break;
-      case 'socialButtons':
-        emitter.emit('updateSocialButtons');
+      case "combatButtons":
+        emitter.emit("updateCombatButtons");
         break;
-      case 'abilityButtons':
-        emitter.emit('updateAbilityButtons');
+      case "socialButtons":
+        emitter.emit("updateSocialButtons");
+        break;
+      case "abilityButtons":
+        emitter.emit("updateAbilityButtons");
         break;
       default:
-        emitter.emit('updateSettings');
-        emitter.emit('updateKeybinds');
-        emitter.emit('updateHotButtons');
-        emitter.emit('updateCombatButtons');
-        emitter.emit('updateSocialButtons');
-        emitter.emit('updateAbilityButtons');
+        emitter.emit("updateSettings");
+        emitter.emit("updateUI");
+        emitter.emit("updateKeybinds");
+        emitter.emit("updateHotButtons");
+        emitter.emit("updateCombatButtons");
+        emitter.emit("updateSocialButtons");
+        emitter.emit("updateAbilityButtons");
     }
   }
 
   public async initialize(server: string, player: string): Promise<void> {
     this.configFilePath = `${server}_${player}_${configVersion}.json`;
-    const configData = (await getEQFile(
-      'config',
-      this.configFilePath,
-      'json',
-    )) as Partial<Config> | null;
-    console.log('Config data', configData);
-    this.config =
-      !configData || Object.keys(configData).length === 0
-        ? DEFAULT_CONFIG
-        : { ...DEFAULT_CONFIG, ...configData };
-    emitter.emit('updateConfig');
+    let configData = await this.readOpfsConfig();
+    if (!configData) {
+      configData = await this.readOpfsConfig(legacyOpfsConfigDirectory);
+    }
+    try {
+      if (!configData) {
+        const stored = localStorage.getItem(
+          `${configStoragePrefix}${this.configFilePath}`,
+        );
+        configData = stored ? (JSON.parse(stored) as Partial<Config>) : null;
+      }
+    } catch (error) {
+      console.error(`Failed to load config ${this.configFilePath}:`, error);
+    }
+    console.log("Config data", configData);
+    this.config = mergeConfig(configData);
+    emitter.emit("updateConfig");
     this.save();
   }
 
@@ -191,7 +304,7 @@ export class UserConfig {
     } else {
       delete this.config.hotButtons[index2];
     }
-    emitter.emit('updateConfig', 'hotButtons');
+    emitter.emit("updateConfig", "hotButtons");
     this.save();
   }
 
@@ -201,7 +314,7 @@ export class UserConfig {
     } else {
       delete this.config.hotButtons[index];
     }
-    emitter.emit('updateConfig', 'hotButtons');
+    emitter.emit("updateConfig", "hotButtons");
     this.save();
   }
 
@@ -214,7 +327,7 @@ export class UserConfig {
     } else {
       delete this.config.combatButtons[index];
     }
-    emitter.emit('updateConfig', 'combatButtons');
+    emitter.emit("updateConfig", "combatButtons");
     this.save();
   }
 
@@ -227,7 +340,7 @@ export class UserConfig {
     } else {
       delete this.config.socialButtons[index];
     }
-    emitter.emit('updateConfig', 'socialButtons');
+    emitter.emit("updateConfig", "socialButtons");
     this.save();
   }
 
@@ -240,13 +353,13 @@ export class UserConfig {
     } else {
       delete this.config.abilityButtons[index];
     }
-    emitter.emit('updateConfig', 'abilityButtons');
+    emitter.emit("updateConfig", "abilityButtons");
     this.save();
   }
 
   public updateKeybind(key: keyof KeyBindings, value: string): void {
     this.config.keyBindings[key] = value;
-    emitter.emit('updateConfig', 'keyBindings');
+    emitter.emit("updateConfig", "keyBindings");
     this.save();
   }
 
@@ -255,7 +368,31 @@ export class UserConfig {
     value: Settings[K],
   ): void {
     this.config.settings[key] = value;
-    emitter.emit('updateConfig', 'settings');
+    emitter.emit("updateConfig", "settings");
+    this.save();
+  }
+
+  public updateUISetting<K extends keyof UISettings>(
+    key: K,
+    value: UISettings[K],
+  ): void {
+    this.config.ui[key] = value;
+    emitter.emit("updateConfig", "ui");
+    this.save();
+  }
+
+  public updateHudWindow(
+    key: HudWindowId,
+    placement: HudWindowPlacement,
+  ): void {
+    this.config.ui.hudWindows[key] = placement;
+    emitter.emit("updateConfig", "ui");
+    this.save();
+  }
+
+  public resetHudWindows(): void {
+    this.config.ui.hudWindows = structuredClone(DEFAULT_HUD_WINDOWS);
+    emitter.emit("updateConfig", "ui");
     this.save();
   }
   private saveTimeout: NodeJS.Timeout | null = null;
@@ -265,12 +402,17 @@ export class UserConfig {
       clearTimeout(this.saveTimeout);
     }
     this.saveTimeout = setTimeout(async () => {
-      await writeRootEQFile(
-        'eqrequiem/config',
-        this.configFilePath,
-        JSON.stringify(this.config, null, 2),
-      );
-      console.log(`Config saved to ${this.configFilePath}`);
+      try {
+        const serialized = JSON.stringify(this.config);
+        await this.writeOpfsConfig(serialized);
+        localStorage.setItem(
+          `${configStoragePrefix}${this.configFilePath}`,
+          serialized,
+        );
+        console.log(`Config saved to OPFS: ${this.configFilePath}`);
+      } catch (error) {
+        console.error(`Failed to save config ${this.configFilePath}:`, error);
+      }
       this.saveTimeout = null;
     }, 300);
   }
@@ -295,8 +437,9 @@ export class UserConfig {
   }
 
   public reset(): void {
-    this.config = DEFAULT_CONFIG;
-    emitter.emit('updateConfig');
+    this.config = mergeConfig(null);
+    emitter.emit("updateConfig");
+    this.save();
   }
 }
 

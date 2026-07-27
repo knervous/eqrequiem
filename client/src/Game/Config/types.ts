@@ -16,6 +16,7 @@ export interface KeyBindings {
   inventory: string;
   spells: string;
   autoAttack: string;
+  options: string;
   reply: string;
   autoRun: string;
   // Hotkeys
@@ -35,12 +36,34 @@ export interface Settings {
   particles: boolean;
   sound: boolean;
   music: boolean;
+  musicVolume: number;
+  renderScale: number;
+}
+
+export type HudWindowId =
+  | 'player'
+  | 'target'
+  | 'compass'
+  | 'minimap'
+  | 'chat'
+  | 'commands';
+
+export interface HudWindowPlacement {
+  /** Viewport-relative origin; dimensions are unscaled logical CSS pixels. */
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  z: number;
 }
 
 export interface UISettings {
   theme: string;
   fontSize: number;
   showTooltips: boolean;
+  uiScale: number;
+  hudLocked: boolean;
+  hudWindows: Record<HudWindowId, HudWindowPlacement>;
 }
 
 export type ActionButtonRecord = Record<number, ActionButtonData>;

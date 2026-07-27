@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { fsBindings } from '../Core/bindings';
+import React, { useCallback, useEffect, useState } from "react";
+import { fsBindings } from "../Core/bindings";
 
 type MainContextValue = {
   ready: boolean;
@@ -31,20 +31,8 @@ export const MainProvider = ({ children }: MainProviderProps) => {
   }, []);
 
   useEffect(() => {
-    let cancelled = false;
-    void (async () => {
-      const rootFileSystemHandle = await navigator.storage.getDirectory();
-      if (!rootFileSystemHandle) {
-        throw new Error('No browser storage filesystem is available.');
-      }
-      await fsBindings.initialize({ rootFileSystemHandle, setSplash });
-      if (!cancelled) setReady(true);
-    })().catch((error) => {
-      console.error('Unable to initialize Requiem storage:', error);
-    });
-    return () => {
-      cancelled = true;
-    };
+    fsBindings.initialize({ setSplash });
+    setReady(true);
   }, [setSplash]);
 
   return (

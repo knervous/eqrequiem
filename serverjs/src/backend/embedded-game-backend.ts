@@ -4,9 +4,17 @@ import {
   applyCanonicalRuntimeSchema,
 } from "../db/canonical-schema.js";
 import { DrizzleDatabase } from "../db/drizzle-database.js";
+import { GameDataRepository } from "../persist/game-data-repository.js";
 import { QuestManager } from "../zone/quest-manager.js";
+import { radiansToEqHeading } from "../zone/heading.js";
 import type { QuestEffect } from "../zone/quest-types.js";
 import { questRegistryForZone } from "../zone/quest-zone-registry.js";
+import {
+  EmbeddedZoneRuntime,
+  type EmbeddedDeathEvent,
+  type EmbeddedZoneRuntimeOptions,
+  type ZoneKernelFactory,
+} from "../zone/embedded-zone-runtime.js";
 import {
   normalizeCharacterName,
   resolveCharacterStats,
@@ -17,6 +25,7 @@ import {
 } from "./character-rules.js";
 import type {
   BackendEvent,
+  BackendEventDelivery,
   BackendItemTemplate,
   BackendRequest,
   EmbeddedBackendContent,
@@ -24,6 +33,13 @@ import type {
 } from "./contracts.js";
 import { movementConfirmations, planInventorySwap } from "./inventory-rules.js";
 import { toItemInstance } from "./item-instance.js";
+import {
+  MerchantRepository,
+  MerchantTransactionError,
+} from "../merchant/merchant-repository.js";
+import { ZoneSnapshotRepository } from "../persist/zone-snapshot-repository.js";
+import { corpseName } from "../combat/corpse-loot.js";
+import { EntityKind } from "../zone/entity-store.js";
 
 interface EmbeddedSession {
   selectedCharacter: string | null;
@@ -54,15 +70,33 @@ interface CharacterRow extends DatabaseRow {
   intelligence: number;
   wis: number;
   cha: number;
+  appearance_schema_version: number | null;
+  body_family_id: string | null;
+  body_component_id: string | null;
+  face_component_id: string | null;
+  presentation_id: string | null;
+  calling_id: string | null;
+  origin_id: string | null;
 }
 
 interface CharacterOriginRow extends DatabaseRow {
-  zone_id: number; x: number; y: number; z: number; heading: number;
-  bind_zone_id: number; bind_x: number; bind_y: number; bind_z: number; bind_heading: number;
+  zone_id: number;
+  x: number;
+  y: number;
+  z: number;
+  heading: number;
+  bind_zone_id: number;
+  bind_x: number;
+  bind_y: number;
+  bind_z: number;
+  bind_heading: number;
 }
 
 interface StartingItemRow extends DatabaseRow {
-  item_id: number; quantity: number; inventory_slot: number | null; criteria_json: string;
+  item_id: number;
+  quantity: number;
+  inventory_slot: number | null;
+  criteria_json: string;
 }
 
 interface ItemRow extends DatabaseRow, BackendItemTemplate {
@@ -103,15 +137,55 @@ export class EmbeddedGameBackend implements GameBackend {
   private readonly sessions = new Map<number, EmbeddedSession>();
   private readonly zoneSessions = new Map<string, Set<number>>();
   private readonly questManagers = new Map<string, QuestManager>();
+  private readonly zoneRuntimes = new Map<
+    string,
+    Promise<EmbeddedZoneRuntime>
+  >();
+  private readonly sessionRuntimes = new Map<number, EmbeddedZoneRuntime>();
+  private readonly listeners = new Set<
+    (delivery: BackendEventDelivery) => void
+  >();
   private readonly database: DrizzleDatabase;
   private readonly contentPrefix: string;
+  private readonly merchantRepository: MerchantRepository;
+  private readonly zoneSnapshotRepository: ZoneSnapshotRepository;
+  private readonly createZoneKernel: ZoneKernelFactory | undefined;
+  private readonly embeddedZoneOptions: Omit<
+    EmbeddedZoneRuntimeOptions,
+    | "zoneId"
+    | "instanceId"
+    | "initialSnapshot"
+    | "zoneKey"
+    | "publishNpcDebug"
+  >;
+  private readonly devDiagnostics: boolean;
 
   constructor(
     private readonly driver: DatabaseBackend,
     private readonly content: EmbeddedBackendContent,
+    options: {
+      createZoneKernel?: ZoneKernelFactory;
+      findPath?: EmbeddedZoneRuntimeOptions["findPath"];
+      engagementRules?: EmbeddedZoneRuntimeOptions["engagementRules"];
+      devDiagnostics?: boolean;
+    } = {},
   ) {
     this.database = new DrizzleDatabase(driver);
     this.contentPrefix = content.contentDatabasePath ? "content_db." : "";
+    this.merchantRepository = new MerchantRepository(
+      driver,
+      driver,
+      this.contentPrefix,
+    );
+    this.zoneSnapshotRepository = new ZoneSnapshotRepository(driver);
+    this.createZoneKernel = options.createZoneKernel;
+    this.embeddedZoneOptions = {
+      ...(options.findPath ? { findPath: options.findPath } : {}),
+      ...(options.engagementRules
+        ? { engagementRules: options.engagementRules }
+        : {}),
+    };
+    this.devDiagnostics = options.devDiagnostics ?? false;
   }
 
   async initialize(): Promise<void> {
@@ -153,6 +227,8 @@ export class EmbeddedGameBackend implements GameBackend {
   }
 
   disconnect(sessionId: number): Promise<void> {
+    this.sessionRuntimes.get(sessionId)?.leavePlayer(sessionId);
+    this.sessionRuntimes.delete(sessionId);
     this.sessions.delete(sessionId);
     for (const members of this.zoneSessions.values()) {
       members.delete(sessionId);
@@ -184,9 +260,30 @@ export class EmbeddedGameBackend implements GameBackend {
           request.instanceId,
         );
       case "zone_change":
-        return this.changeZone(sessionId, request.zoneId, request.instanceId);
+        return this.changeZone(sessionId, request);
       case "gm_command":
         return this.gmCommand(sessionId, request.command, request.args);
+      case "client_update":
+        this.sessionRuntimes
+          .get(sessionId)
+          ?.applyClientUpdate(sessionId, request);
+        await this.persistClientLocation(sessionId, request);
+        return [];
+      case "auto_attack":
+        this.sessionRuntimes
+          .get(sessionId)
+          ?.setAutoAttack(sessionId, request.enabled, request.targetId);
+        return [];
+      case "loot_request":
+        return this.lootRequest(sessionId, request.corpseId);
+      case "loot_item":
+        return this.lootItem(sessionId, request.corpseId, request.lootSlot);
+      case "merchant_open":
+        return this.merchantRequest(sessionId, request);
+      case "merchant_buy":
+        return this.merchantRequest(sessionId, request);
+      case "merchant_sell":
+        return this.merchantRequest(sessionId, request);
       case "channel_message":
         return this.channelMessage(sessionId, request);
       case "move_item":
@@ -196,21 +293,55 @@ export class EmbeddedGameBackend implements GameBackend {
     }
   }
 
-  close(): Promise<void> {
-    return this.database.close();
+  async close(): Promise<void> {
+    this.sessionRuntimes.clear();
+    const runtimes = [...this.zoneRuntimes.values()];
+    this.zoneRuntimes.clear();
+    this.listeners.clear();
+    try {
+      for (const runtime of await Promise.all(runtimes)) {
+        runtime.stop();
+        const snapshot = runtime.snapshotBlob();
+        const identity = runtime.persistentIdentity();
+        await this.zoneSnapshotRepository.save(
+          identity.zoneId,
+          identity.instanceId,
+          snapshot,
+        );
+      }
+    } finally {
+      await this.database.close();
+    }
+  }
+
+  subscribe(listener: (delivery: BackendEventDelivery) => void): () => void {
+    this.listeners.add(listener);
+    return () => this.listeners.delete(listener);
   }
 
   private async deleteCharacter(name: string): Promise<void> {
     await this.database.transaction(async (database) => {
-      const row = (await database.query<{ id: number }>(
-        "SELECT id FROM characters WHERE name = ? LIMIT 1", [name],
-      )).rows[0];
+      const row = (
+        await database.query<{ id: number }>(
+          "SELECT id FROM characters WHERE name = ? LIMIT 1",
+          [name],
+        )
+      ).rows[0];
       if (!row) return;
       for (const table of [
-        "character_quest_state", "player_inventory", "character_languages",
-        "character_skills", "character_binds", "character_positions",
-      ]) await database.execute(`DELETE FROM ${table} WHERE character_id = ?`, [Number(row.id)]);
-      await database.execute("DELETE FROM characters WHERE id = ?", [Number(row.id)]);
+        "character_quest_state",
+        "player_inventory",
+        "character_languages",
+        "character_skills",
+        "character_binds",
+        "character_positions",
+      ])
+        await database.execute(`DELETE FROM ${table} WHERE character_id = ?`, [
+          Number(row.id),
+        ]);
+      await database.execute("DELETE FROM characters WHERE id = ?", [
+        Number(row.id),
+      ]);
     });
   }
 
@@ -226,13 +357,16 @@ export class EmbeddedGameBackend implements GameBackend {
     if (name && stats) {
       try {
         const origin = await this.resolveCharacterOrigin(character);
-        if (!origin) throw new Error("No valid starting origin for this character");
+        if (!origin)
+          throw new Error("No valid starting origin for this character");
         const accountId = await this.guestAccountId();
         const result = await this.database.execute(
           `INSERT INTO characters
             (account_id, name, class_id, race_id, gender, deity_id, face,
-             str, sta, dex, agi, intelligence, wis, cha, unspent_stat_points)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+             str, sta, dex, agi, intelligence, wis, cha, unspent_stat_points,
+             appearance_schema_version, body_family_id, body_component_id,
+             face_component_id, presentation_id, calling_id, origin_id)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
             accountId,
             name,
@@ -241,8 +375,21 @@ export class EmbeddedGameBackend implements GameBackend {
             character.gender,
             character.deity,
             character.face,
-            stats.str, stats.sta, stats.dex, stats.agi, stats.intel,
-            stats.wis, stats.cha, stats.points,
+            stats.str,
+            stats.sta,
+            stats.dex,
+            stats.agi,
+            stats.intel,
+            stats.wis,
+            stats.cha,
+            stats.points,
+            character.appearanceSchemaVersion ?? null,
+            character.bodyFamilyId ?? null,
+            character.bodyComponentId ?? null,
+            character.faceComponentId ?? null,
+            character.presentationId ?? null,
+            character.callingId ?? null,
+            character.originId ?? null,
           ],
         );
         created = result.affectedRows > 0;
@@ -253,17 +400,36 @@ export class EmbeddedGameBackend implements GameBackend {
               `INSERT INTO character_positions
                 (character_id, zone_id, instance_id, x, y, z, heading)
                VALUES (?, ?, 0, ?, ?, ?, ?)`,
-              [row.id, origin.zone_id, origin.x, origin.y, origin.z, origin.heading],
+              [
+                row.id,
+                origin.zone_id,
+                origin.x,
+                origin.y,
+                origin.z,
+                origin.heading,
+              ],
             );
             for (let slot = 0; slot < 5; slot++) {
               await this.database.execute(
                 `INSERT INTO character_binds
                   (character_id, slot, zone_id, instance_id, x, y, z, heading)
                  VALUES (?, ?, ?, 0, ?, ?, ?, ?)`,
-                [row.id, slot, origin.bind_zone_id, origin.bind_x, origin.bind_y, origin.bind_z, origin.bind_heading],
+                [
+                  row.id,
+                  slot,
+                  origin.bind_zone_id,
+                  origin.bind_x,
+                  origin.bind_y,
+                  origin.bind_z,
+                  origin.bind_heading,
+                ],
               );
             }
-            await this.seedCharacterSkillsAndLanguages(row.id, character.race, character.charClass);
+            await this.seedCharacterSkillsAndLanguages(
+              row.id,
+              character.race,
+              character.charClass,
+            );
             await this.grantStartingItems(row.id, character, origin.zone_id);
           }
         }
@@ -277,63 +443,124 @@ export class EmbeddedGameBackend implements GameBackend {
     ];
   }
 
-  private async resolveCharacterOrigin(character: Extract<BackendRequest, { type: "character_create" }>["character"]): Promise<CharacterOriginRow | null> {
-    const rows = (await this.database.query<CharacterOriginRow>(
-      `SELECT zone_id, x, y, z, heading, bind_zone_id, bind_x, bind_y, bind_z, bind_heading
+  private async resolveCharacterOrigin(
+    character: Extract<
+      BackendRequest,
+      { type: "character_create" }
+    >["character"],
+  ): Promise<CharacterOriginRow | null> {
+    const rows = (
+      await this.database.query<CharacterOriginRow>(
+        `SELECT zone_id, x, y, z, heading, bind_zone_id, bind_x, bind_y, bind_z, bind_heading
        FROM ${this.contentPrefix}character_origins
        WHERE race_id = ? AND class_id = ? AND deity_id = ?
          AND (start_zone_id = ? OR zone_id = ?)
        ORDER BY CASE WHEN start_zone_id = ? THEN 0 ELSE 1 END, priority DESC LIMIT 1`,
-      [character.race, character.charClass, character.deity, character.startZone, character.startZone, character.startZone],
-    )).rows;
+        [
+          character.race,
+          character.charClass,
+          character.deity,
+          character.startZone,
+          character.startZone,
+          character.startZone,
+        ],
+      )
+    ).rows;
     if (rows[0]) return rows[0];
-    const hasOrigins = Number((await this.database.query<{ count: number }>(
-      `SELECT COUNT(*) AS count FROM ${this.contentPrefix}character_origins`,
-    )).rows[0]?.count ?? 0) > 0;
+    const hasOrigins =
+      Number(
+        (
+          await this.database.query<{ count: number }>(
+            `SELECT COUNT(*) AS count FROM ${this.contentPrefix}character_origins`,
+          )
+        ).rows[0]?.count ?? 0,
+      ) > 0;
     if (hasOrigins) return null;
-    const zone = (await this.database.query<ZoneRow>(
-      `SELECT id, short_name AS key, name, safe_x, safe_y, safe_z FROM ${this.contentPrefix}zones WHERE id = ? LIMIT 1`,
-      [character.startZone],
-    )).rows[0];
-    return zone ? {
-      zone_id: Number(zone.id), x: Number(zone.safe_x), y: Number(zone.safe_y), z: Number(zone.safe_z), heading: 0,
-      bind_zone_id: Number(zone.id), bind_x: Number(zone.safe_x), bind_y: Number(zone.safe_y), bind_z: Number(zone.safe_z), bind_heading: 0,
-    } : null;
+    const zone = (
+      await this.database.query<ZoneRow>(
+        `SELECT id, short_name AS key, name, safe_x, safe_y, safe_z FROM ${this.contentPrefix}zones WHERE id = ? LIMIT 1`,
+        [character.startZone],
+      )
+    ).rows[0];
+    return zone
+      ? {
+          zone_id: Number(zone.id),
+          x: Number(zone.safe_x),
+          y: Number(zone.safe_y),
+          z: Number(zone.safe_z),
+          heading: 0,
+          bind_zone_id: Number(zone.id),
+          bind_x: Number(zone.safe_x),
+          bind_y: Number(zone.safe_y),
+          bind_z: Number(zone.safe_z),
+          bind_heading: 0,
+        }
+      : null;
   }
 
-  private async grantStartingItems(characterId: number, character: Extract<BackendRequest, { type: "character_create" }>["character"], zoneId: number): Promise<void> {
-    const rows = (await this.database.query<StartingItemRow>(
-      `SELECT item_id, quantity, inventory_slot, criteria_json FROM ${this.contentPrefix}character_starting_items ORDER BY id`,
-    )).rows.filter(row => startingItemMatches(row.criteria_json, character, zoneId));
+  private async grantStartingItems(
+    characterId: number,
+    character: Extract<
+      BackendRequest,
+      { type: "character_create" }
+    >["character"],
+    zoneId: number,
+  ): Promise<void> {
+    const rows = (
+      await this.database.query<StartingItemRow>(
+        `SELECT item_id, quantity, inventory_slot, criteria_json FROM ${this.contentPrefix}character_starting_items ORDER BY id`,
+      )
+    ).rows.filter((row) =>
+      startingItemMatches(row.criteria_json, character, zoneId),
+    );
     const occupied = new Set<number>();
     for (const row of rows) {
       let slot = row.inventory_slot === null ? -1 : Number(row.inventory_slot);
-      if (slot < 0 || occupied.has(slot)) slot = GENERAL_SLOTS.find(candidate => !occupied.has(candidate)) ?? 30;
+      if (slot < 0 || occupied.has(slot))
+        slot =
+          GENERAL_SLOTS.find((candidate) => !occupied.has(candidate)) ?? 30;
       occupied.add(slot);
       await this.database.execute(
         `INSERT INTO player_inventory (character_id, bag, slot, item_id, quantity)
          VALUES (?, -1, ?, ?, ?)`,
-        [characterId, slot, Number(row.item_id), Math.max(1, Number(row.quantity))],
+        [
+          characterId,
+          slot,
+          Number(row.item_id),
+          Math.max(1, Number(row.quantity)),
+        ],
       );
     }
   }
 
-  private async seedCharacterSkillsAndLanguages(characterId: number, race: number, charClass: number): Promise<void> {
+  private async seedCharacterSkillsAndLanguages(
+    characterId: number,
+    race: number,
+    charClass: number,
+  ): Promise<void> {
     const skills = new Map(startingSkills(race));
-    const classSkills = (await this.database.query<{ skill_id: number; cap: number }>(
-      `SELECT skill_id, cap FROM ${this.contentPrefix}class_skill_caps
-       WHERE class_id = ? AND level = 1 AND cap > 0`, [charClass],
-    )).rows;
+    const classSkills = (
+      await this.database.query<{ skill_id: number; cap: number }>(
+        `SELECT skill_id, cap FROM ${this.contentPrefix}class_skill_caps
+       WHERE class_id = ? AND level = 1 AND cap > 0`,
+        [charClass],
+      )
+    ).rows;
     for (const row of classSkills) {
       const skillId = Number(row.skill_id);
-      if (!skills.has(skillId) && isStartingClassSkill(skillId)) skills.set(skillId, Number(row.cap));
+      if (!skills.has(skillId) && isStartingClassSkill(skillId))
+        skills.set(skillId, Number(row.cap));
     }
-    for (const [skill, value] of skills) await this.database.execute(
-      "INSERT INTO character_skills (character_id, skill_id, value) VALUES (?, ?, ?)", [characterId, skill, value],
-    );
-    for (const [language, value] of startingLanguages(race, charClass)) await this.database.execute(
-      "INSERT INTO character_languages (character_id, language_id, value) VALUES (?, ?, ?)", [characterId, language, value],
-    );
+    for (const [skill, value] of skills)
+      await this.database.execute(
+        "INSERT INTO character_skills (character_id, skill_id, value) VALUES (?, ?, ?)",
+        [characterId, skill, value],
+      );
+    for (const [language, value] of startingLanguages(race, charClass))
+      await this.database.execute(
+        "INSERT INTO character_languages (character_id, language_id, value) VALUES (?, ?, ?)",
+        [characterId, language, value],
+      );
   }
 
   private async enterWorld(
@@ -366,10 +593,10 @@ export class EmbeddedGameBackend implements GameBackend {
 
   private async changeZone(
     sessionId: number,
-    requestedZone: number | string | undefined,
-    instanceId: number,
+    request: Extract<BackendRequest, { type: "zone_change" }>,
   ): Promise<BackendEvent[]> {
     const session = await this.ensureSelectedCharacter(sessionId);
+    const { zoneId: requestedZone, instanceId } = request;
     if (requestedZone !== undefined) {
       const zoneId = await this.resolveZoneId(requestedZone);
       if (zoneId === null) {
@@ -377,11 +604,37 @@ export class EmbeddedGameBackend implements GameBackend {
       }
       session.pendingZone = { zoneId, instanceId };
       if (session.selectedCharacter) {
-        await this.database.execute(
-          `UPDATE character_positions SET zone_id = ?, instance_id = ?, updated_at = CURRENT_TIMESTAMP
-           WHERE character_id = (SELECT id FROM characters WHERE name = ?)`,
-          [zoneId, instanceId, session.selectedCharacter],
+        const hasDestination = [request.x, request.y, request.z].every(
+          (value) => typeof value === "number" && Number.isFinite(value),
         );
+        if (hasDestination) {
+          const destinationX = Number(request.x);
+          const destinationY = Number(request.y);
+          const destinationZ = Number(request.z);
+          await this.database.execute(
+            `UPDATE character_positions
+             SET zone_id = ?, instance_id = ?, x = ?, y = ?, z = ?,
+                 heading = COALESCE(?, heading), updated_at = CURRENT_TIMESTAMP
+             WHERE character_id = (SELECT id FROM characters WHERE name = ?)`,
+            [
+              zoneId,
+              instanceId,
+              destinationX,
+              destinationY,
+              destinationZ,
+              request.heading === undefined
+                ? null
+                : radiansToEqHeading(request.heading),
+              session.selectedCharacter,
+            ],
+          );
+        } else {
+          await this.database.execute(
+            `UPDATE character_positions SET zone_id = ?, instance_id = ?, updated_at = CURRENT_TIMESTAMP
+             WHERE character_id = (SELECT id FROM characters WHERE name = ?)`,
+            [zoneId, instanceId, session.selectedCharacter],
+          );
+        }
       }
     }
     if (!session.selectedCharacter || !session.pendingZone) {
@@ -390,6 +643,29 @@ export class EmbeddedGameBackend implements GameBackend {
     session.activeZone = session.pendingZone;
     session.pendingZone = null;
     return this.zoneBootstrap(sessionId, session);
+  }
+
+  private async persistClientLocation(
+    sessionId: number,
+    location: Extract<BackendRequest, { type: "client_update" }>,
+  ): Promise<void> {
+    const session = this.sessions.get(sessionId);
+    if (!session?.selectedCharacter || !session.activeZone) return;
+    await this.database.execute(
+      `UPDATE character_positions
+       SET zone_id = ?, instance_id = ?, x = ?, y = ?, z = ?, heading = ?,
+           updated_at = CURRENT_TIMESTAMP
+       WHERE character_id = (SELECT id FROM characters WHERE name = ?)`,
+      [
+        session.activeZone.zoneId,
+        session.activeZone.instanceId,
+        location.x,
+        location.y,
+        location.z,
+        radiansToEqHeading(location.heading),
+        session.selectedCharacter,
+      ],
+    );
   }
 
   private async gmCommand(
@@ -781,6 +1057,183 @@ export class EmbeddedGameBackend implements GameBackend {
     return [event("delete_item", { slot, bag })];
   }
 
+  private lootRequest(sessionId: number, corpseId: number): BackendEvent[] {
+    const window = this.sessionRuntimes
+      .get(sessionId)
+      ?.lootWindow(sessionId, corpseId);
+    if (!window) {
+      return [
+        event(
+          "loot_error",
+          {
+            corpseId,
+            message: "That corpse cannot be looted from here.",
+          },
+          "control-stream",
+        ),
+      ];
+    }
+    return [
+      event(
+        "loot_window",
+        {
+          corpseId,
+          corpseName: window.corpseName,
+          items: window.items,
+        },
+        "control-stream",
+      ),
+    ];
+  }
+
+  private async lootItem(
+    sessionId: number,
+    corpseId: number,
+    lootSlot: number,
+  ): Promise<BackendEvent[]> {
+    const runtime = this.sessionRuntimes.get(sessionId);
+    const item = runtime?.takeLoot(sessionId, corpseId, lootSlot);
+    const session = await this.ensureSelectedCharacter(sessionId);
+    if (!runtime || !item || !session.selectedCharacter) {
+      return [
+        event(
+          "loot_error",
+          {
+            corpseId,
+            message: "That item is no longer available.",
+          },
+          "control-stream",
+        ),
+      ];
+    }
+    const character = await this.character(session.selectedCharacter);
+    if (!character) {
+      runtime.restoreLoot(corpseId, item);
+      return [];
+    }
+    const occupied = (
+      await this.database.query<{ slot: number }>(
+        `SELECT slot FROM player_inventory WHERE character_id = ?
+       AND bag = -1 AND slot BETWEEN 22 AND 30`,
+        [Number(character.id)],
+      )
+    ).rows;
+    const used = new Set(occupied.map((row) => Number(row.slot)));
+    const destination =
+      GENERAL_SLOTS.find((slot) => !used.has(slot)) ??
+      (!used.has(30) ? 30 : undefined);
+    if (destination === undefined) {
+      runtime.restoreLoot(corpseId, item);
+      return [
+        event(
+          "loot_error",
+          {
+            corpseId,
+            message: "Your inventory is full.",
+          },
+          "control-stream",
+        ),
+      ];
+    }
+    try {
+      await this.database.execute(
+        `INSERT INTO player_inventory
+         (character_id, bag, slot, item_id, quantity, charges)
+         VALUES (?, -1, ?, ?, ?, ?)`,
+        [
+          Number(character.id),
+          destination,
+          Number(item.itemId ?? item.id),
+          Math.max(1, Number(item.quantity ?? 1)),
+          Number(item.charges ?? 0),
+        ],
+      );
+    } catch (error) {
+      runtime.restoreLoot(corpseId, item);
+      throw error;
+    }
+    return [
+      event(
+        "add_item",
+        {
+          ...item,
+          slot: destination,
+          bagSlot: -1,
+        },
+        "control-stream",
+      ),
+      ...this.lootRequest(sessionId, corpseId),
+    ];
+  }
+
+  private async merchantRequest(
+    sessionId: number,
+    request: Extract<
+      BackendRequest,
+      { type: "merchant_open" | "merchant_buy" | "merchant_sell" }
+    >,
+  ): Promise<BackendEvent[]> {
+    const session = await this.ensureSelectedCharacter(sessionId);
+    const route = session.activeZone;
+    const runtime = this.sessionRuntimes.get(sessionId);
+    const definition = runtime?.merchant(sessionId, request.npcId);
+    const character = session.selectedCharacter
+      ? await this.character(session.selectedCharacter)
+      : null;
+    if (!route || !definition || !character) {
+      return [
+        event("merchant_error", {
+          npcId: request.npcId,
+          message: "That merchant cannot be used from here.",
+        }, "control-stream"),
+      ];
+    }
+    try {
+      const events: BackendEvent[] = [];
+      if (request.type === "merchant_buy") {
+        const result = await this.merchantRepository.buy({
+          characterId: Number(character.id),
+          npcArchetypeId: definition.npcArchetypeId,
+          zoneId: route.zoneId,
+          instanceId: route.instanceId,
+          merchantSlot: request.merchantSlot,
+          quantity: request.quantity,
+        });
+        events.push(mutationEvent(result.mutation));
+      } else if (request.type === "merchant_sell") {
+        const result = await this.merchantRepository.sell({
+          characterId: Number(character.id),
+          npcArchetypeId: definition.npcArchetypeId,
+          zoneId: route.zoneId,
+          instanceId: route.instanceId,
+          slot: request.slot,
+          bag: request.bag,
+          quantity: request.quantity,
+        });
+        events.push(mutationEvent(result.mutation));
+      }
+      const window = await this.merchantRepository.open(
+        Number(character.id),
+        definition.npcArchetypeId,
+        request.npcId,
+        definition.name,
+        route.zoneId,
+        route.instanceId,
+      );
+      events.push(event("merchant_window", { ...window }, "control-stream"));
+      return events;
+    } catch (error) {
+      return [
+        event("merchant_error", {
+          npcId: request.npcId,
+          message: error instanceof MerchantTransactionError
+            ? error.message
+            : "Unable to complete that merchant transaction.",
+        }, "control-stream"),
+      ];
+    }
+  }
+
   private async zoneBootstrap(
     sessionId: number,
     session: EmbeddedSession,
@@ -807,39 +1260,122 @@ export class EmbeddedGameBackend implements GameBackend {
     const members = this.zoneSessions.get(key) ?? new Set<number>();
     members.add(sessionId);
     this.zoneSessions.set(key, members);
-    const spawns = (
-      await this.database.query<DatabaseRow>(
-        `${spawnSelect(this.contentPrefix)} WHERE sp.zone_id = ? ORDER BY sp.id`,
-        [route.zoneId],
+    const definitions = await new GameDataRepository(
+      this.driver,
+      this.driver,
+      this.contentPrefix,
+    ).zoneNpcSpawns(route.zoneId, route.instanceId);
+    const playerCombat = await new GameDataRepository(
+      this.driver,
+      this.driver,
+      this.contentPrefix,
+    ).characterCombat(Number(character.id));
+    const bind = (
+      await this.database.query<{
+        zone_id: number;
+        instance_id: number;
+        x: number;
+        y: number;
+        z: number;
+        heading: number;
+      }>(
+        `SELECT zone_id, instance_id, x, y, z, heading FROM character_binds
+       WHERE character_id = ? AND slot = 0 LIMIT 1`,
+        [Number(character.id)],
       )
-    ).rows.map((spawn) => {
-      const properties = jsonObject(spawn.properties_json);
-      return {
-        id: Number(spawn.npc_id),
-        spawnId: Number(spawn.id),
-        name: String(spawn.name),
-        x: Number(spawn.x),
-        y: Number(spawn.y),
-        z: Number(spawn.z),
-        heading: Number(spawn.heading),
-        race: Number(spawn.race ?? 1),
-        gender: Number(spawn.gender ?? 0),
-        level: Number(spawn.level ?? 1),
-        isNpc: true,
-        size: finiteNumber(properties.size, 6),
-        face: finiteNumber(properties.face, 0),
-        helm: finiteNumber(properties.helm, 0),
-        equipChest: finiteNumber(properties.texture, 0),
-        equipment: {
-          head: finiteNumber(properties.helm, 0),
-          chest: finiteNumber(properties.texture, 0),
-          primary: finiteNumber(properties.primary, 0),
-          secondary: finiteNumber(properties.secondary, 0),
+    ).rows[0];
+    const spawns = definitions.map((spawn) => ({
+      id: spawn.npcArchetypeId,
+      spawnId: spawn.spawnId,
+      name: spawn.name,
+      x: spawn.x,
+      y: spawn.y,
+      z: spawn.z,
+      heading: spawn.heading,
+      kind: Number(EntityKind.npc),
+      race: spawn.race,
+      gender: spawn.gender,
+      level: spawn.level,
+      isNpc: true,
+      modelKey: spawn.modelKey,
+      size: spawn.size,
+      face: spawn.face,
+      helm: spawn.helm,
+      equipChest: spawn.equipChest,
+      equipment: {
+        head: spawn.helm,
+        chest: spawn.equipChest,
+        primary: spawn.primary,
+        secondary: spawn.secondary,
+      },
+      charClass: spawn.charClass,
+      bodytype: spawn.bodyType,
+      currentHp: spawn.maximumHp,
+      maximumHp: spawn.maximumHp,
+    }));
+    if (this.createZoneKernel) {
+      const runtime = await this.zoneRuntime(
+        key,
+        route.zoneId,
+        route.instanceId,
+        zone.key,
+        definitions,
+        this.createZoneKernel,
+      );
+      const previousRuntime = this.sessionRuntimes.get(sessionId);
+      if (previousRuntime && previousRuntime !== runtime) {
+        previousRuntime.leavePlayer(sessionId);
+      }
+      for (const spawn of spawns) {
+        const state = runtime.npcState(spawn.spawnId);
+        if (!state) continue;
+        spawn.kind = state.kind;
+        spawn.x = state.x;
+        spawn.y = state.y;
+        spawn.z = state.z;
+        spawn.heading = radiansToEqHeading(state.heading);
+        spawn.currentHp = state.currentHp;
+        spawn.maximumHp = state.maximumHp;
+        if (state.kind === EntityKind.corpse) spawn.name = corpseName(spawn.name);
+      }
+      runtime.joinPlayer({
+        sessionId,
+        entityId: embeddedPlayerEntityId(Number(character.id)),
+        x: Number(character.x),
+        y: Number(character.y),
+        z: Number(character.z),
+        heading: Number(character.heading),
+        level: Number(character.level),
+        race: Number(character.race_id),
+        gender: Number(character.gender),
+        charClass: Number(character.class_id),
+        face: Number(character.face),
+        combat: playerCombat ?? {
+          level: Number(character.level),
+          strength: Number(character.str),
+          stamina: Number(character.sta),
+          dexterity: Number(character.dex),
+          agility: Number(character.agi),
+          offense: 0,
+          defense: 0,
+          armorClass: 0,
+          maximumHp: 1,
+          weaponDamage: 2,
+          attackDelayMs: 2_500,
+          haste: 0,
+          meleeRange: 3,
         },
-        charClass: finiteNumber(properties.classId, 1),
-        bodytype: finiteNumber(properties.bodyType, 1),
-      };
-    });
+        bind: {
+          zoneId: Number(bind?.zone_id ?? route.zoneId),
+          instanceId: Number(bind?.instance_id ?? 0),
+          x: Number(bind?.x ?? zone.safe_x),
+          y: Number(bind?.y ?? zone.safe_y),
+          z: Number(bind?.z ?? zone.safe_z),
+          heading: Number(bind?.heading ?? 0),
+        },
+      });
+      this.sessionRuntimes.set(sessionId, runtime);
+    }
     this.questManager(route.zoneId, route.instanceId).hydrate({
       players: [
         {
@@ -912,6 +1448,8 @@ export class EmbeddedGameBackend implements GameBackend {
           intel: Number(character.intelligence),
           wis: Number(character.wis),
           cha: Number(character.cha),
+          curHp: playerCombat?.maximumHp ?? 1,
+          maxHp: playerCombat?.maximumHp ?? 1,
           inventoryItems: await this.inventoryItems(character.name),
         },
         "control-stream",
@@ -940,6 +1478,17 @@ export class EmbeddedGameBackend implements GameBackend {
         lastLogin: timestamp(row.last_login),
         enabled: 1,
         items: await this.inventoryItems(row.name),
+        ...(row.appearance_schema_version === null
+          ? {}
+          : {
+              appearanceSchemaVersion: Number(row.appearance_schema_version),
+              bodyFamilyId: String(row.body_family_id),
+              bodyComponentId: String(row.body_component_id),
+              faceComponentId: String(row.face_component_id),
+              presentationId: String(row.presentation_id),
+              callingId: String(row.calling_id),
+              originId: String(row.origin_id),
+            }),
       })),
     );
     return event(
@@ -982,6 +1531,113 @@ export class EmbeddedGameBackend implements GameBackend {
     };
     this.sessions.set(sessionId, created);
     return created;
+  }
+
+  private zoneRuntime(
+    key: string,
+    zoneId: number,
+    instanceId: number,
+    zoneKey: string,
+    definitions: Parameters<typeof EmbeddedZoneRuntime.create>[0],
+    createZoneKernel: ZoneKernelFactory,
+  ): Promise<EmbeddedZoneRuntime> {
+    const existing = this.zoneRuntimes.get(key);
+    if (existing) return existing;
+    const created = this.zoneSnapshotRepository
+      .latest(zoneId, instanceId)
+      .catch(() => null)
+      .then((stored) => EmbeddedZoneRuntime.create(
+        definitions,
+        createZoneKernel,
+        (sessionIds, payload) => {
+        const delivery: BackendEventDelivery = {
+          sessionIds,
+          event: event("render_snapshot", { payload }, "control-stream"),
+        };
+        for (const listener of this.listeners) listener(delivery);
+        },
+        (sessionIds, combat) => {
+        const delivery: BackendEventDelivery = {
+          sessionIds,
+          event: event("combat_event", { ...combat }, "control-stream"),
+        };
+        for (const listener of this.listeners) listener(delivery);
+        },
+        (sessionId, death) => {
+        const delivery: BackendEventDelivery = {
+          sessionIds: [sessionId],
+          event: event("death_event", { ...death }, "control-stream"),
+        };
+        for (const listener of this.listeners) listener(delivery);
+        void this.handleEmbeddedDeath(sessionId, death);
+        },
+        10,
+        {
+          ...this.embeddedZoneOptions,
+          zoneId,
+          instanceId,
+          zoneKey,
+          ...(stored
+            ? { initialSnapshot: stored.snapshot }
+            : {}),
+          ...(this.devDiagnostics
+            ? {
+                publishNpcDebug: (sessionIds, diagnostic) => {
+                const delivery: BackendEventDelivery = {
+                  sessionIds,
+                  event: event(
+                    "npc_debug_state",
+                    { ...diagnostic },
+                    "datagram",
+                  ),
+                };
+                for (const listener of this.listeners) listener(delivery);
+                },
+              }
+            : {}),
+        },
+      ));
+    this.zoneRuntimes.set(key, created);
+    void created.catch(() => {
+      if (this.zoneRuntimes.get(key) === created) {
+        this.zoneRuntimes.delete(key);
+      }
+    });
+    return created;
+  }
+
+  private async handleEmbeddedDeath(
+    sessionId: number,
+    death: EmbeddedDeathEvent,
+  ): Promise<void> {
+    const session = this.sessions.get(sessionId);
+    if (!session?.selectedCharacter) return;
+    await this.database.execute(
+      `UPDATE character_positions SET zone_id = ?, instance_id = ?,
+       x = ?, y = ?, z = ?, heading = ?, updated_at = CURRENT_TIMESTAMP
+       WHERE character_id = (
+         SELECT id FROM characters WHERE name = ?
+       )`,
+      [
+        death.bindZoneId,
+        0,
+        death.x,
+        death.y,
+        death.z,
+        death.heading,
+        session.selectedCharacter,
+      ],
+    );
+    session.pendingZone = { zoneId: death.bindZoneId, instanceId: 0 };
+    session.activeZone = { zoneId: death.bindZoneId, instanceId: 0 };
+    const events = await this.zoneBootstrap(sessionId, session);
+    for (const outbound of events) {
+      const delivery: BackendEventDelivery = {
+        sessionIds: [sessionId],
+        event: outbound,
+      };
+      for (const listener of this.listeners) listener(delivery);
+    }
   }
 
   private async resolveZoneId(value: number | string): Promise<number | null> {
@@ -1100,9 +1756,9 @@ export class EmbeddedGameBackend implements GameBackend {
         (id, name, idfile, icon, material, color, itemtype, slots, ac, bagslots,
          classes, races, stackable, stacksize, maxcharges, weight, damage, delay,
          astr, asta, adex, aagi, aint, awis, acha, hp, mana, dr, mr, cr, fr, pr,
-         haste, magic, nodrop)
+         haste, magic, nodrop, base_price, sell_rate_permille)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
-         ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+         ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT(id) DO UPDATE SET name = excluded.name, idfile = excluded.idfile,
          icon = excluded.icon, material = excluded.material, color = excluded.color,
          itemtype = excluded.itemtype, slots = excluded.slots, ac = excluded.ac,
@@ -1114,7 +1770,9 @@ export class EmbeddedGameBackend implements GameBackend {
          aint = excluded.aint, awis = excluded.awis, acha = excluded.acha,
          hp = excluded.hp, mana = excluded.mana, dr = excluded.dr, mr = excluded.mr,
          cr = excluded.cr, fr = excluded.fr, pr = excluded.pr, haste = excluded.haste,
-         magic = excluded.magic, nodrop = excluded.nodrop`,
+         magic = excluded.magic, nodrop = excluded.nodrop,
+         base_price = excluded.base_price,
+         sell_rate_permille = excluded.sell_rate_permille`,
       [
         item.id,
         item.name,
@@ -1151,6 +1809,8 @@ export class EmbeddedGameBackend implements GameBackend {
         item.haste ?? 0,
         item.magic ?? 0,
         item.nodrop ?? 0,
+        item.basePrice ?? 0,
+        item.sellRatePermille ?? 1_000,
       ],
     );
   }
@@ -1167,6 +1827,13 @@ export class EmbeddedGameBackend implements GameBackend {
       // A pre-canonical offline database is intentionally replaced below.
     }
     if (version === EMBEDDED_SCHEMA_VERSION) {
+      return;
+    }
+    if (version === "5") {
+      await this.database.execute(
+        "UPDATE app_meta SET value = ? WHERE key = 'schema_version'",
+        [EMBEDDED_SCHEMA_VERSION],
+      );
       return;
     }
     if (version === "3") {
@@ -1218,7 +1885,6 @@ export class EmbeddedGameBackend implements GameBackend {
       )
     ).rows[0];
   }
-
 }
 
 function event(
@@ -1227,6 +1893,21 @@ function event(
   transport: BackendEvent["transport"] = "datagram",
 ): BackendEvent {
   return { type, value, transport };
+}
+
+function mutationEvent(mutation: {
+  kind: "put" | "delete";
+  slot: number;
+  bag: number;
+  item?: Record<string, unknown>;
+}): BackendEvent {
+  return mutation.kind === "delete"
+    ? event("delete_item", { slot: mutation.slot, bag: mutation.bag }, "control-stream")
+    : event("add_item", mutation.item ?? {}, "control-stream");
+}
+
+function embeddedPlayerEntityId(characterId: number): number {
+  return (0x8000_0000 + (characterId >>> 0)) >>> 0;
 }
 
 function serverMessage(message: string): BackendEvent {
@@ -1246,9 +1927,17 @@ function timestamp(value: string | number | null): number {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
-const EMBEDDED_SCHEMA_VERSION = "5";
+const EMBEDDED_SCHEMA_VERSION = "6";
 
 const CONTENT_TABLES = [
+  "npc_merchant_assignments",
+  "merchant_catalog_entries",
+  "merchant_catalogs",
+  "npc_loot_group_entries",
+  "npc_loot_table_entries",
+  "npc_loot_assignments",
+  "npc_loot_tables",
+  "npc_loot_items",
   "class_skill_caps",
   "character_starting_items",
   "character_origins",
@@ -1263,6 +1952,9 @@ const CONTENT_TABLES = [
 ] as const;
 
 const RESET_TABLES = [
+  "merchant_transactions",
+  "merchant_dynamic_stock",
+  "character_currency",
   "local_inventory",
   "local_items",
   "local_spawns",
@@ -1275,6 +1967,14 @@ const RESET_TABLES = [
   "character_languages",
   "character_skills",
   "character_binds",
+  "npc_loot_group_entries",
+  "npc_merchant_assignments",
+  "merchant_catalog_entries",
+  "merchant_catalogs",
+  "npc_loot_table_entries",
+  "npc_loot_assignments",
+  "npc_loot_tables",
+  "npc_loot_items",
   "spawn_points",
   "spawn_group_members",
   "spawn_groups",
@@ -1293,6 +1993,9 @@ const RESET_TABLES = [
 const CHARACTER_SELECT = `SELECT character.id, character.name, character.level,
   character.class_id, character.race_id, character.gender, character.deity_id,
   character.face, character.last_login_at AS last_login,
+  character.appearance_schema_version, character.body_family_id,
+  character.body_component_id, character.face_component_id,
+  character.presentation_id, character.calling_id, character.origin_id,
   character.str, character.sta, character.dex, character.agi,
   character.intelligence, character.wis, character.cha,
   position.zone_id, position.instance_id AS zone_instance,
@@ -1309,21 +2012,4 @@ function spawnSelect(prefix: string): string {
     WHERE member.spawn_group_id = sp.spawn_group_id
     ORDER BY member.weight DESC, member.npc_archetype_id LIMIT 1)
   AND sp.enabled = 1`;
-}
-
-function jsonObject(value: unknown): Record<string, unknown> {
-  if (typeof value !== "string") return {};
-  try {
-    const parsed: unknown = JSON.parse(value);
-    return parsed && typeof parsed === "object" && !Array.isArray(parsed)
-      ? (parsed as Record<string, unknown>)
-      : {};
-  } catch {
-    return {};
-  }
-}
-
-function finiteNumber(value: unknown, fallback: number): number {
-  const number = Number(value);
-  return Number.isFinite(number) ? number : fallback;
 }

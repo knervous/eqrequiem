@@ -12,10 +12,15 @@ import { WorldSocket } from "@ui/net/instances";
 import { supportedZones } from "../Constants/supportedZones";
 import Player from "../Player/player";
 import CharacterSelect from "../Zone/character-select";
+import {
+  normalizeRenderViewport,
+  type CssViewportBounds,
+} from "./render-viewport";
 
 declare const window: Window;
 
 let initializedHavok: Promise<unknown> | undefined;
+const CLIENT_CAMERA_NEAR_PLANE = 0.1;
 
 async function getInitializedHavok() {
   initializedHavok ??= import("@babylonjs/havok").then(
@@ -53,6 +58,8 @@ export default class GameManager {
   }
 
   private secondaryCamera: BJS.UniversalCamera | null = null;
+  private primaryViewportBounds: CssViewportBounds | null = null;
+  private inventoryViewportBounds: CssViewportBounds | null = null;
   get SecondaryCamera(): BJS.UniversalCamera | null {
     return this.secondaryCamera;
   }
@@ -91,6 +98,7 @@ export default class GameManager {
     this.secondaryCamera.viewport = new BABYLON.Viewport(0, 0, 1, 1);
     this.secondaryCamera.attachControl(this.canvas!, true);
     this.scene.activeCameras = [this.Camera!, this.secondaryCamera];
+    this.applyInventoryViewport();
   }
 
   public removeSecondaryCamera() {
@@ -109,57 +117,39 @@ export default class GameManager {
     width: number,
     height: number,
   ) {
-    if (!this.scene || !this.secondaryCamera) {
-      return;
-    }
-    const dpi = window.devicePixelRatio || 1;
-
-    x *= dpi;
-    y *= dpi;
-    width *= dpi;
-    height *= dpi;
-    const engine = this.scene.getEngine();
-    engine.setHardwareScalingLevel(1 / window.devicePixelRatio);
-
-    const rw = engine.getRenderWidth(); // full internal pixel width
-    const rh = engine.getRenderHeight(); // full internal pixel height
-
-    const xNorm = x / rw;
-    const yNorm = (rh - y - height) / rh; // invert Y from top‐origin to bottom‐origin
-    const widthNorm = width / rw;
-    const heightNorm = height / rh;
-
-    this.secondaryCamera.viewport = new BABYLON.Viewport(
-      xNorm,
-      yNorm,
-      widthNorm,
-      heightNorm,
-    );
+    this.inventoryViewportBounds = { x, y, width, height };
+    this.applyInventoryViewport();
   }
   public setNewViewport(x: number, y: number, width: number, height: number) {
-    if (!this.scene || !this.camera) {
-      return;
-    }
-    const dpi = window.devicePixelRatio || 1;
-    x *= dpi;
-    y *= dpi;
-    width *= dpi;
-    height *= dpi;
-    const engine = this.scene.getEngine();
-    engine.setHardwareScalingLevel(1 / window.devicePixelRatio);
+    this.primaryViewportBounds = { x, y, width, height };
+    this.applyPrimaryViewport();
+  }
 
-    const rw = engine.getRenderWidth(); // full internal pixel width
-    const rh = engine.getRenderHeight(); // full internal pixel height
-    const xNorm = x / rw;
-    const yNorm = (rh - y - height) / rh; // invert Y from top‐origin to bottom‐origin
-    const widthNorm = width / rw;
-    const heightNorm = height / rh;
+  private applyPrimaryViewport(): void {
+    this.applyViewport(this.camera, this.primaryViewportBounds);
+  }
 
-    this.camera.viewport = new BABYLON.Viewport(
-      xNorm,
-      yNorm,
-      widthNorm,
-      heightNorm,
+  private applyInventoryViewport(): void {
+    this.applyViewport(this.secondaryCamera, this.inventoryViewportBounds);
+  }
+
+  private applyViewport(
+    camera: BJS.UniversalCamera | null,
+    bounds: CssViewportBounds | null,
+  ): void {
+    if (!camera || !bounds || !this.canvas) return;
+    const canvasBounds = this.canvas.getBoundingClientRect();
+    const viewport = normalizeRenderViewport(bounds, {
+      x: canvasBounds.x,
+      y: canvasBounds.y,
+      width: canvasBounds.width,
+      height: canvasBounds.height,
+    });
+    camera.viewport = new BABYLON.Viewport(
+      viewport.x,
+      viewport.y,
+      viewport.width,
+      viewport.height,
     );
   }
 
@@ -168,11 +158,19 @@ export default class GameManager {
       document.exitPointerLock();
     }
 
-    WorldSocket.sendMessage(
+    const heading = this.player?.playerEntity?.getHeading();
+    void WorldSocket.sendStreamMessage(
       OpCodes.RequestClientZoneChange,
       RequestClientZoneChange,
-      requestZone,
-    );
+      {
+        ...requestZone,
+        ...(requestZone.heading === undefined && heading !== undefined
+          ? { heading }
+          : {}),
+      },
+    ).catch((error: unknown) => {
+      console.error("Reliable zone change request failed", error);
+    });
   }
 
   async loadPhysicsEngine() {
@@ -271,31 +269,52 @@ export default class GameManager {
     // adapter/device initialization instead of placing it behind that work.
     void getInitializedHavok();
     this.gpuPicker = new BABYLON.GPUPicker();
+    let hasWebGPUAdapter = false;
     if (navigator.gpu) {
-      this.engine = new BABYLON.WebGPUEngine(canvas, {
-        deviceDescriptor: { requiredFeatures: ["timestamp-query"] },
-      });
-
-      await this.engine?.initAsync?.();
-      this.engineInitialized = true;
+      try {
+        hasWebGPUAdapter = (await navigator.gpu.requestAdapter()) != null;
+      } catch (error) {
+        console.warn("[GameManager] WebGPU adapter discovery failed", error);
+      }
+    }
+    if (hasWebGPUAdapter) {
+      // GPU timestamps are not a rendering requirement. Requiring the
+      // optional feature rejected otherwise valid adapters at cold start.
+      const webgpu = new BABYLON.WebGPUEngine(canvas);
+      try {
+        await webgpu.initAsync();
+        this.engine = webgpu;
+      } catch (error) {
+        try {
+          webgpu.dispose();
+        } catch {
+          // Babylon may fail before its WebGPU subsystems are disposable.
+        }
+        console.warn(
+          "[GameManager] WebGPU initialization failed; using WebGL",
+          error,
+        );
+        this.engine = new BABYLON.Engine(canvas);
+      }
     } else {
       this.engine = new BABYLON.Engine(canvas);
-      this.engineInitialized = true;
     }
 
     if (!this.engine) {
       console.error("[GameManager] Failed to create engine");
       return;
     }
+    this.engine.setHardwareScalingLevel(1 / window.devicePixelRatio);
+    this.engine.resize(true);
+    this.engine.disableManifestCheck = true;
+    this.engine.enableOfflineSupport = false;
+    this.engineInitialized = true;
     this.scene = new BABYLON.Scene(this.engine);
     this.scene.useRightHandedSystem = true;
     this.canvas!.oncontextmenu = (e) => e.preventDefault();
 
     this.zoneManager = new ZoneManager(this);
 
-    this.engine.setHardwareScalingLevel(1 / window.devicePixelRatio);
-    this.engine.disableManifestCheck = true;
-    this.engine.enableOfflineSupport = false;
     this.loadingRefCount = 0;
 
     if (!(await this.loadPhysicsEngine())) {
@@ -310,7 +329,9 @@ export default class GameManager {
     if (!this.engine) {
       return;
     }
-    this.engine.resize();
+    this.engine.resize(true);
+    this.applyPrimaryViewport();
+    this.applyInventoryViewport();
   }
 
   renderLoop() {
@@ -410,12 +431,26 @@ export default class GameManager {
     if (this.characterSelect) {
       this.characterSelect.dispose();
     }
+    this.zoneManager?.dispose();
+    this.camera?.dispose();
     this.camera = new BABYLON.UniversalCamera(
       "__camera__",
       new BABYLON.Vector3(0, 0, 0),
       this.scene!,
     );
-    this.characterSelect = new CharacterSelect(this);
+    this.camera.minZ = CLIENT_CAMERA_NEAR_PLANE;
+    this.applyPrimaryViewport();
+    const characterSelect = new CharacterSelect(this);
+    this.characterSelect = characterSelect;
+    try {
+      await characterSelect.initialize();
+    } catch (error) {
+      characterSelect.dispose();
+      if (this.characterSelect === characterSelect) {
+        this.characterSelect = null;
+      }
+      throw error;
+    }
   }
 
   public async loadZoneServer(zone: NewZone) {
@@ -447,6 +482,8 @@ export default class GameManager {
       new BABYLON.Vector3(0, 0, 0),
       this.scene!,
     );
+    this.camera.minZ = CLIENT_CAMERA_NEAR_PLANE;
+    this.applyPrimaryViewport();
     animateVignette(this.camera, this.scene!);
     gaussianBlurTeleport(this.camera, this.scene!);
     await this.zoneManager?.loadZone(zoneName);

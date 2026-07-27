@@ -6,6 +6,12 @@
  * Type-only imports continue to resolve against @babylonjs/core's declarations;
  * Vite maps runtime imports of the package root to this file.
  */
+// Requiem's GLSL entity shaders reference these includes directly. Register
+// them before any ShaderMaterial can ask Babylon to fetch an unregistered
+// `.fx` path (which a SPA dev server may otherwise answer with HTML).
+import '@babylonjs/core/Shaders/ShadersInclude/bonesDeclaration.js';
+import '@babylonjs/core/Shaders/ShadersInclude/bakedVertexAnimationDeclaration.js';
+
 export { Constants } from '@babylonjs/core/Engines/constants.js';
 export { AbstractEngine } from '@babylonjs/core/Engines/abstractEngine.js';
 export { Engine } from '@babylonjs/core/Engines/engine.js';

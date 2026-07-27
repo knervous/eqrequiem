@@ -17,6 +17,8 @@ const VS_GL = `
     flat varying int vAtlasIndex;
     varying vec2 vUV;
     varying vec3 vTint;
+    flat varying float vSelected;
+    varying float vSelectionPulse;
 
     // Uniforms
     uniform mat4 worldViewProjection;
@@ -58,6 +60,9 @@ const VS_GL = `
         }
         int sourceIndex = requiemVisibleActorIndex(drawIndex);
         RequiemEntityActorHeader actor = RequiemEntityContainer_instances_get(sourceIndex);
+        vSelected = (actor.stateFlags & uint(2)) != uint(0) ? 1.0 : 0.0;
+        vSelectionPulse =
+          0.5 + 0.5 * sin(bakedVertexAnimationTime * 4.0);
         // Shado is the authoritative instance transform. Babylon's thin
         // instance is retained only as the draw-count adapter.
         mat4 finalWorld = mat4(1.0);
@@ -127,6 +132,8 @@ const FS_GL = `
     flat varying int vSlice;
     flat varying int vAtlasIndex;
     varying vec3 vTint;
+    flat varying float vSelected;
+    varying float vSelectionPulse;
 
     // Atlas textures
     uniform highp sampler2DArray uAtlasArray;
@@ -146,7 +153,9 @@ const FS_GL = `
       float m2 = vAtlasIndex == 2 ? 1.0 : 0.0;
 
       vec4 base = c0 * m0 + c1 * m1 + c2 * m2;
-      gl_FragColor = vec4(base.rgb * vTint, 1.0);
+      float targetGlow = vSelected * (0.05 + vSelectionPulse * 0.045);
+      vec3 targetTint = vec3(1.0, 0.78, 0.24);
+      gl_FragColor = vec4(base.rgb * vTint + targetTint * targetGlow, 1.0);
     }
 `;
 
@@ -313,6 +322,8 @@ flat varying vSlice: i32;
 flat varying vAtlasIndex: i32;
 varying vUV: vec2f;
 varying vTint: vec3f;
+flat varying vSelected: f32;
+varying vSelectionPulse: f32;
 uniform worldViewProjection: mat4x4f;
 uniform uSubmeshCount: i32;
 uniform uShadoVisibleCount: i32;
@@ -332,6 +343,13 @@ fn main(input: VertexInputs) -> FragmentInputs {
 
   let sourceIndex = i32(uShadoVisibleIndices[drawIndex]);
   let actor = RequiemEntityContainer_instances_get(sourceIndex);
+  vertexOutputs.vSelected = select(
+    0.0,
+    1.0,
+    (actor.stateFlags & 2u) != 0u
+  );
+  vertexOutputs.vSelectionPulse =
+    0.5 + 0.5 * sin(uniforms.bakedVertexAnimationTime * 4.0);
   let influence = requiemVatInfluence(actor.animationBuffer, input);
   vertexOutputs.vUV = vertexInputs.uv;
   let submeshIndex = i32(vertexInputs.submeshData.y + 0.5);
@@ -357,6 +375,8 @@ flat varying vSlice: i32;
 flat varying vAtlasIndex: i32;
 varying vUV: vec2f;
 varying vTint: vec3f;
+flat varying vSelected: f32;
+varying vSelectionPulse: f32;
 var uAtlasArraySampler: sampler;
 var uAtlasArray: texture_2d_array<f32>;
 var uCloakAtlasArraySampler: sampler;
@@ -386,7 +406,14 @@ fn main(input: FragmentInputs) -> FragmentOutputs {
   let m1 = select(0.0, 1.0, fragmentInputs.vAtlasIndex == 1);
   let m2 = select(0.0, 1.0, fragmentInputs.vAtlasIndex == 2);
   let base = c0 * m0 + c1 * m1 + c2 * m2;
-  fragmentOutputs.color = vec4f(base.rgb * fragmentInputs.vTint, 1.0);
+  let targetGlow =
+    fragmentInputs.vSelected *
+    (0.05 + fragmentInputs.vSelectionPulse * 0.045);
+  let targetTint = vec3f(1.0, 0.78, 0.24);
+  fragmentOutputs.color = vec4f(
+    base.rgb * fragmentInputs.vTint + targetTint * targetGlow,
+    1.0
+  );
 }
 `;
 

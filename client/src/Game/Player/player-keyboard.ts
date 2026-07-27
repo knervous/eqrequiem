@@ -2,6 +2,7 @@ import type * as BJS from "@babylonjs/core";
 import BABYLON from "@bjs";
 import { CommandHandler } from "@game/ChatCommands/command-handler";
 import { UserConfig } from "@game/Config/config";
+import { keyboardEventToBinding } from "@game/Config/key-bindings";
 import emitter from "@game/Events/events";
 import type { Entity } from "@game/Model/entity";
 import type Player from "./player";
@@ -31,16 +32,7 @@ export class PlayerKeyboard {
       this.modifierKeys.ctrl = kbInfo.event.ctrlKey;
       this.modifierKeys.shift = kbInfo.event.shiftKey;
       this.modifierKeys.meta = kbInfo.event.metaKey;
-      if (
-        this.modifierKeys.alt ||
-        this.modifierKeys.ctrl ||
-        this.modifierKeys.shift ||
-        this.modifierKeys.meta
-      ) {
-        // If any modifier key is pressed, do not process other keys
-        return;
-      }
-      const code = kbInfo.event.key.toLowerCase();
+      const code = keyboardEventToBinding(kbInfo.event as KeyboardEvent);
       switch (kbInfo.type) {
         case BABYLON.KeyboardEventTypes.KEYDOWN:
           this.handleKeyDownEvent(code);

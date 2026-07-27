@@ -14,9 +14,21 @@ import {
 } from "./sidecar-codec.js";
 import type { PersistCharacter } from "../persist/types.js";
 
-export type ZoneRouteRequest = ZoneSessionNet;
+export interface ZoneRouteRequest extends ZoneSessionNet {
+  x?: number | undefined;
+  y?: number | undefined;
+  z?: number | undefined;
+  heading?: number | undefined;
+}
 export type MoveItemRequest = MoveItemNet;
 export type DeleteItemRequest = DeleteItemNet;
+
+export interface ClientPositionRequest {
+  x: number;
+  y: number;
+  z: number;
+  heading: number;
+}
 
 export function decodeJwtLoginToken(payload: Uint8Array): string {
   return (
@@ -33,8 +45,13 @@ export function decodeCharacterCreateName(payload: Uint8Array): string {
   return typeof value === "string" ? value.trim() : "";
 }
 
-export function decodeCharacterCreate(payload: Uint8Array): Record<string, unknown> | null {
-  return decodeSidecar<Record<string, unknown>>(SIDECAR_SCHEMA.CHARACTER_CREATE, payload);
+export function decodeCharacterCreate(
+  payload: Uint8Array,
+): Record<string, unknown> | null {
+  return decodeSidecar<Record<string, unknown>>(
+    SIDECAR_SCHEMA.CHARACTER_CREATE,
+    payload,
+  );
 }
 
 export function decodeCharacterDeleteName(payload: Uint8Array): string {
@@ -57,21 +74,59 @@ export function decodeZoneRouteRequest(payload: Uint8Array): ZoneRouteRequest {
   const packed = decodeZoneSessionNet(payload);
   if (packed) return packed;
   const value =
-    decodeSidecar<{ zoneId?: unknown; instanceId?: unknown }>(
-      SIDECAR_SCHEMA.ZONE_SESSION,
-      payload,
-    ) ??
-    decodeSidecar<{ zoneId?: unknown; instanceId?: unknown }>(
-      SIDECAR_SCHEMA.ZONE_CHANGE,
-      payload,
-    );
+    decodeSidecar<{
+      zoneId?: unknown;
+      instanceId?: unknown;
+      x?: unknown;
+      y?: unknown;
+      z?: unknown;
+      heading?: unknown;
+    }>(SIDECAR_SCHEMA.ZONE_SESSION, payload) ??
+    decodeSidecar<{
+      zoneId?: unknown;
+      instanceId?: unknown;
+      x?: unknown;
+      y?: unknown;
+      z?: unknown;
+      heading?: unknown;
+    }>(SIDECAR_SCHEMA.ZONE_CHANGE, payload);
+  const optionalFinite = (candidate: unknown): number | undefined => {
+    const parsed = Number(candidate);
+    return Number.isFinite(parsed) ? parsed : undefined;
+  };
+  const x = optionalFinite(value?.x);
+  const y = optionalFinite(value?.y);
+  const z = optionalFinite(value?.z);
+  const heading = optionalFinite(value?.heading);
   return {
     zoneId:
       typeof value?.zoneId === "number"
         ? value.zoneId
         : Number(value?.zoneId ?? -1),
     instanceId: typeof value?.instanceId === "number" ? value.instanceId : 0,
+    ...(x === undefined ? {} : { x }),
+    ...(y === undefined ? {} : { y }),
+    ...(z === undefined ? {} : { z }),
+    ...(heading === undefined ? {} : { heading }),
   };
+}
+
+export function decodeClientPositionRequest(
+  payload: Uint8Array,
+): ClientPositionRequest | null {
+  const value = decodeSidecar<{
+    x?: unknown;
+    y?: unknown;
+    z?: unknown;
+    heading?: unknown;
+  }>(SIDECAR_SCHEMA.CLIENT_POSITION, payload);
+  const location = {
+    x: Number(value?.x),
+    y: Number(value?.y),
+    z: Number(value?.z),
+    heading: Number(value?.heading),
+  };
+  return Object.values(location).every(Number.isFinite) ? location : null;
 }
 
 export function decodeMoveItemRequest(
@@ -142,6 +197,17 @@ export function encodeCharacterSelect(
       face: character.face ?? 0,
       enabled: 1,
       items: character.items ?? [],
+      ...(character.appearanceSchemaVersion === undefined
+        ? {}
+        : {
+            appearanceSchemaVersion: character.appearanceSchemaVersion,
+            bodyFamilyId: character.bodyFamilyId,
+            bodyComponentId: character.bodyComponentId,
+            faceComponentId: character.faceComponentId,
+            presentationId: character.presentationId,
+            callingId: character.callingId,
+            originId: character.originId,
+          }),
     })),
   });
 }

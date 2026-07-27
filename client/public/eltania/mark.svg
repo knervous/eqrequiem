@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="title">
+  <title id="title">Shadows of Eltania fractured ring emblem</title>
+  <defs>
+    <linearGradient id="stone" x1="36" y1="28" x2="211" y2="226" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#d7c28a"/>
+      <stop offset=".46" stop-color="#9b8050"/>
+      <stop offset="1" stop-color="#54462f"/>
+    </linearGradient>
+    <linearGradient id="ember" x1="128" y1="76" x2="128" y2="194" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#f0bd68"/>
+      <stop offset="1" stop-color="#9f6330"/>
+    </linearGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="5"/>
+    </filter>
+  </defs>
+  <rect width="256" height="256" rx="42" fill="#0b0e0e"/>
+  <path d="M54 174a87 87 0 0 1 54-126l10 30a55 55 0 0 0-34 80Z" fill="url(#stone)"/>
+  <path d="M139 45a87 87 0 0 1 65 127l-29-16a55 55 0 0 0-41-80Z" fill="url(#stone)"/>
+  <path d="m66 191 27-18a55 55 0 0 0 69 2l27 18a87 87 0 0 1-123-2Z" fill="url(#stone)"/>
+  <path d="M82 161h92l-10 18H92Z" fill="#070909"/>
+  <path d="m128 81 19 38-19 67-19-67Z" fill="#d29a45" opacity=".38" filter="url(#glow)"/>
+  <path d="m128 76 15 43-15 70-15-70Z" fill="url(#ember)"/>
+  <path d="m128 94 6 27-6 33-6-33Z" fill="#f5dfae"/>
+  <circle cx="128" cy="128" r="102" fill="none" stroke="#c0a873" stroke-opacity=".16" stroke-width="2"/>
+</svg>

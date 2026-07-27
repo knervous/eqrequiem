@@ -7,4 +7,4 @@
  */
 export * from './EqShowcaseCatalog';
 export * from './EqShowcaseTypes';
-export * from './EqShowcaseUi';
+export * from './ShadoVatShowcaseUi';

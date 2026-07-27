@@ -4,8 +4,11 @@ import BetterSqlite3, { type Database } from "better-sqlite3";
 
 const content = new BetterSqlite3(resolve(process.env.CANONICAL_CONTENT_PATH ?? "data/content-db.sqlite"));
 const runtime = new BetterSqlite3(resolve(process.env.CANONICAL_RUNTIME_PATH ?? "data/runtime-db.sqlite"));
-content.prepare("ATTACH DATABASE ? AS legacy").run(resolve(process.env.SQLITE_CONTENT_PATH ?? "data/game_content.sqlite"));
-runtime.prepare("ATTACH DATABASE ? AS legacy").run(resolve(process.env.SQLITE_RUNTIME_PATH ?? "data/game_runtime.sqlite"));
+const legacyContentPath = resolve(process.env.SQLITE_CONTENT_PATH ?? "data/game_content.sqlite");
+const legacyRuntimePath = resolve(process.env.SQLITE_RUNTIME_PATH ?? "data/game_runtime.sqlite");
+content.prepare("ATTACH DATABASE ? AS legacy").run(legacyContentPath);
+content.prepare("ATTACH DATABASE ? AS legacy_runtime").run(legacyRuntimePath);
+runtime.prepare("ATTACH DATABASE ? AS legacy").run(legacyRuntimePath);
 
 try {
   promoteContent(content);
@@ -17,6 +20,11 @@ try {
 
 function promoteContent(database: Database): void {
   database.pragma("foreign_keys = ON");
+  const merchantSchema = legacyTableExists(database, "merchantlist")
+    ? "legacy"
+    : legacyTableExists(database, "merchantlist", "legacy_runtime")
+    ? "legacy_runtime"
+    : null;
   database.transaction(() => {
     database.exec(`
       INSERT OR IGNORE INTO content_releases (release_key, label, state, published_at, published_by, notes)
@@ -35,7 +43,8 @@ function promoteContent(database: Database): void {
         json_object('hp', hp, 'mana', mana, 'minDamage', mindmg,
           'maxDamage', maxdmg, 'factionId', npc_faction_id, 'size', size,
           'face', face, 'helm', helmtexture, 'texture', texture,
-          'bodyType', bodytype, 'classId', class)
+          'bodyType', bodytype, 'classId', class,
+          'aggroRadius', aggroradius, 'alwaysAggro', always_aggro)
       FROM legacy.npc_types
       WHERE 1
       ON CONFLICT(id) DO UPDATE SET name = excluded.name, level = excluded.level,
@@ -43,6 +52,115 @@ function promoteContent(database: Database): void {
         movement_speed = excluded.movement_speed, model_key = excluded.model_key,
         behavior_key = excluded.behavior_key,
         properties_json = excluded.properties_json
+    `);
+    database.exec(`
+      UPDATE items
+      SET base_price = COALESCE((
+            SELECT legacy_item.Price FROM legacy.items legacy_item
+            WHERE legacy_item.id = items.id
+          ), base_price),
+          sell_rate_permille = COALESCE((
+            SELECT max(0, cast(round(legacy_item.sellrate * 1000) AS integer))
+            FROM legacy.items legacy_item WHERE legacy_item.id = items.id
+          ), sell_rate_permille)
+    `);
+    database.exec(`
+      INSERT INTO merchant_catalogs (id, merchant_key, label)
+      SELECT DISTINCT merchant_id, 'merchant:' || merchant_id, ''
+      FROM legacy.npc_types WHERE merchant_id > 0
+      ON CONFLICT(id) DO UPDATE SET merchant_key = excluded.merchant_key
+    `);
+    database.exec(`
+      INSERT INTO npc_merchant_assignments
+        (npc_archetype_id, catalog_id, keeps_sold_items, greed,
+         sell_to_player_permille, buy_from_player_permille,
+         interaction_range, pricing_policy_json)
+      SELECT npc.id, npc.merchant_id, npc.keeps_sold_items, npc.greed,
+        1000 + max(0, npc.greed) * 10, 950, 20,
+        json_object('source', 'eqemu', 'legacyGreed', npc.greed)
+      FROM legacy.npc_types npc
+      JOIN npc_archetypes archetype ON archetype.id = npc.id
+      JOIN merchant_catalogs catalog ON catalog.id = npc.merchant_id
+      WHERE npc.merchant_id > 0
+      ON CONFLICT(npc_archetype_id) DO UPDATE SET
+        catalog_id = excluded.catalog_id,
+        keeps_sold_items = excluded.keeps_sold_items,
+        greed = excluded.greed,
+        sell_to_player_permille = excluded.sell_to_player_permille,
+        buy_from_player_permille = excluded.buy_from_player_permille,
+        interaction_range = excluded.interaction_range,
+        pricing_policy_json = excluded.pricing_policy_json
+    `);
+    if (merchantSchema) database.exec(`
+      INSERT INTO merchant_catalog_entries
+        (catalog_id, merchant_slot, item_id, level_required,
+         classes_required, probability_permille)
+      SELECT list.merchantid, list.slot, list.item,
+        max(0, list.level_required), list.classes_required,
+        min(1000, max(0, cast(round(list.probability * 10) AS integer)))
+      FROM ${merchantSchema}.merchantlist list
+      JOIN merchant_catalogs catalog ON catalog.id = list.merchantid
+      JOIN items item ON item.id = list.item
+      ON CONFLICT(catalog_id, merchant_slot) DO UPDATE SET
+        item_id = excluded.item_id,
+        level_required = excluded.level_required,
+        classes_required = excluded.classes_required,
+        probability_permille = excluded.probability_permille
+    `);
+    database.exec(`
+      INSERT INTO npc_loot_tables
+        (id, loot_key, minimum_currency, maximum_currency, average_currency)
+      SELECT id, 'loot-table:' || id, mincash, maxcash, avgcoin
+      FROM legacy.loottable
+      WHERE 1
+      ON CONFLICT(id) DO UPDATE SET minimum_currency = excluded.minimum_currency,
+        maximum_currency = excluded.maximum_currency,
+        average_currency = excluded.average_currency
+    `);
+    database.exec(`
+      INSERT INTO npc_loot_assignments (npc_archetype_id, loot_table_id)
+      SELECT npc.id, npc.loottable_id
+      FROM legacy.npc_types npc
+      JOIN npc_archetypes archetype ON archetype.id = npc.id
+      JOIN npc_loot_tables loot_table ON loot_table.id = npc.loottable_id
+      WHERE npc.loottable_id > 0
+      ON CONFLICT(npc_archetype_id) DO UPDATE
+        SET loot_table_id = excluded.loot_table_id
+    `);
+    database.exec(`
+      INSERT INTO npc_loot_table_entries
+        (loot_table_id, loot_group_id, rolls, chance_permille,
+         drop_limit, minimum_drops)
+      SELECT entry.loottable_id, entry.lootdrop_id,
+        max(0, entry.multiplier),
+        min(1000, max(0, cast(round(entry.probability * 10) AS integer))),
+        max(0, entry.droplimit), max(0, entry.mindrop)
+      FROM legacy.loottable_entries entry
+      JOIN npc_loot_tables loot_table ON loot_table.id = entry.loottable_id
+      WHERE 1
+      ON CONFLICT(loot_table_id, loot_group_id) DO UPDATE SET
+        rolls = excluded.rolls,
+        chance_permille = excluded.chance_permille,
+        drop_limit = excluded.drop_limit,
+        minimum_drops = excluded.minimum_drops
+    `);
+    database.exec(`
+      INSERT INTO npc_loot_group_entries
+        (loot_group_id, item_id, chance_permille, rolls,
+         minimum_quantity, maximum_quantity,
+         npc_minimum_level, npc_maximum_level)
+      SELECT entry.lootdrop_id, entry.item_id,
+        min(1000, max(0, cast(round(entry.chance * 10) AS integer))),
+        max(1, entry.multiplier), 1, 1,
+        max(0, entry.npc_min_level), max(0, entry.npc_max_level)
+      FROM legacy.lootdrop_entries entry
+      JOIN items item ON item.id = entry.item_id
+      WHERE 1
+      ON CONFLICT(loot_group_id, item_id) DO UPDATE SET
+        chance_permille = excluded.chance_permille,
+        rolls = excluded.rolls,
+        npc_minimum_level = excluded.npc_minimum_level,
+        npc_maximum_level = excluded.npc_maximum_level
     `);
     database.exec(`
       INSERT OR IGNORE INTO spawn_groups (id, spawn_group_key, respawn_seconds, enabled)
@@ -114,7 +232,7 @@ function promoteContent(database: Database): void {
       ON CONFLICT(class_id, skill_id, level) DO UPDATE SET cap = excluded.cap
     `);
   })();
-  console.log("Promoted content:", counts(database, ["zones", "npc_archetypes", "spawn_groups", "spawn_group_members", "spawn_points", "character_origins", "character_starting_items", "class_skill_caps"]));
+  console.log("Promoted content:", counts(database, ["zones", "npc_archetypes", "spawn_groups", "spawn_group_members", "spawn_points", "npc_loot_tables", "npc_loot_assignments", "npc_loot_table_entries", "npc_loot_group_entries", "merchant_catalogs", "merchant_catalog_entries", "npc_merchant_assignments", "character_origins", "character_starting_items", "class_skill_caps"]));
 }
 
 function promoteRuntime(database: Database): void {
@@ -151,8 +269,21 @@ function promoteRuntime(database: Database): void {
       WHERE ci.slot IS NOT NULL
         AND EXISTS (SELECT 1 FROM characters c WHERE c.id = ci.character_id)
     `);
+    if (legacyTableExists(database, "character_currency")) database.exec(`
+      INSERT INTO character_currency (character_id, carried_copper, banked_copper)
+      SELECT currency.id,
+        currency.platinum * 1000 + currency.gold * 100
+          + currency.silver * 10 + currency.copper,
+        currency.platinum_bank * 1000 + currency.gold_bank * 100
+          + currency.silver_bank * 10 + currency.copper_bank
+      FROM legacy.character_currency currency
+      JOIN characters character ON character.id = currency.id
+      ON CONFLICT(character_id) DO UPDATE SET
+        carried_copper = excluded.carried_copper,
+        banked_copper = excluded.banked_copper
+    `);
   })();
-  console.log("Promoted runtime:", counts(database, ["accounts", "characters", "character_positions", "player_inventory"]));
+  console.log("Promoted runtime:", counts(database, ["accounts", "characters", "character_positions", "character_currency", "player_inventory"]));
 }
 
 function counts(database: Database, tables: string[]): Record<string, number> {
@@ -160,4 +291,18 @@ function counts(database: Database, tables: string[]): Record<string, number> {
     table,
     Number((database.prepare(`SELECT COUNT(*) AS count FROM "${table}"`).get() as { count: number }).count),
   ]));
+}
+
+function legacyTableExists(
+  database: Database,
+  table: string,
+  schema = "legacy",
+): boolean {
+  if (schema !== "legacy" && schema !== "legacy_runtime") {
+    throw new Error(`Unsupported attached schema: ${schema}`);
+  }
+  return Boolean(database.prepare(
+    `SELECT 1 FROM ${schema}.sqlite_master
+     WHERE type = 'table' AND name = ? LIMIT 1`,
+  ).get(table));
 }

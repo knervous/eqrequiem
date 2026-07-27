@@ -8,6 +8,10 @@ import {
   getAssetContainerMeshes,
   getOrCreateAssetContainerRoot,
 } from "./asset-container";
+import {
+  isIsolatedPromotedTextureUrl,
+  promotedObjectFileName,
+} from "./object-asset-identity";
 import { swapMaterialTexture } from "./bjs-utils";
 
 type ModelKey = string;
@@ -17,13 +21,15 @@ type ContainerData = {
   hasAnimations: boolean;
   animationRanges: BJS.Nullable<BJS.AnimationRange>[];
   physicsBodies: BJS.PhysicsBody[] | null;
+  physicsNodes: BJS.TransformNode[];
+  physicsShapes: BJS.PhysicsShape[];
   manager: BJS.BakedVertexAnimationManager | null;
   morphTargetManager: BJS.MorphTargetManager | undefined;
 };
 export default class ObjectCache {
   public dataContainers: Record<ModelKey, Promise<ContainerData>> = {};
   private objectContainer: BJS.TransformNode | null = null;
-  private animatedMaterialNames: string[] = [];
+  private animatedMaterials = new WeakSet<BJS.Material>();
   private managerCallbacks: (() => void)[] = [];
   private promotedMeshes = new Map<ModelKey, BJS.Mesh[]>();
   constructor(zoneContainer: BJS.TransformNode | null = null) {
@@ -38,18 +44,24 @@ export default class ObjectCache {
     promotedSource?: string,
   ): Promise<ContainerData | null> {
     if (!this.dataContainers[model]) {
-      let fileName = promotedSource ? "final.glb" : `${model}.babylon`;
+      // Babylon names embedded glTF images `data:<File.name>#imageN` and uses
+      // that URL for its internal texture cache. Naming every promoted payload
+      // `final.glb` therefore aliases image0/image1 across unrelated objects;
+      // whichever prototype loads first supplies textures for all later ones.
+      const fileName = promotedSource
+        ? promotedObjectFileName(model)
+        : `${model}.babylon`;
       let bytes: ArrayBuffer | undefined;
       if (promotedSource) {
         try {
           bytes = await fetchShadoBytes(promotedSource);
-        } catch {
-          fileName = `${model}.glb`;
+        } catch (error) {
+          throw new Error(
+            `[ObjectCache] Current asset '${promotedSource}' failed activation`,
+            { cause: error },
+          );
         }
-      }
-      bytes ??= await FileSystem.getFileBytes("eqrequiem/objects", fileName);
-      if (!bytes && promotedSource) {
-        fileName = `${model}.babylon`;
+      } else {
         bytes = await FileSystem.getFileBytes("eqrequiem/objects", fileName);
       }
       if (!bytes) {
@@ -57,32 +69,20 @@ export default class ObjectCache {
         return null;
       }
       let result: BJS.AssetContainer;
-      try {
-        result = fileName.endsWith(".glb")
-          ? await BABYLON.LoadAssetContainerAsync(
-              new File([bytes], fileName, { type: "model/gltf-binary" }),
-              scene,
-            )
-          : await BABYLON.loadBabylonAssetContainer(bytes, scene, {
-              name: fileName,
-            });
-      } catch (error) {
-        if (!promotedSource || fileName.endsWith(".babylon")) throw error;
-        const legacyFileName = `${model}.babylon`;
-        const legacyBytes = await FileSystem.getFileBytes(
-          "eqrequiem/objects",
-          legacyFileName,
-        );
-        if (!legacyBytes) throw error;
-        result = await BABYLON.loadBabylonAssetContainer(
-          legacyBytes,
-          scene,
-          { name: legacyFileName },
-        );
-      }
+      result = fileName.endsWith(".glb")
+        ? await BABYLON.LoadAssetContainerAsync(
+            new File([bytes], fileName, { type: "model/gltf-binary" }),
+            scene,
+          )
+        : await BABYLON.loadBabylonAssetContainer(bytes, scene, {
+            name: fileName,
+          });
       if (!result) {
         console.error(`Failed to load model ${model}`);
         return null;
+      }
+      if (promotedSource) {
+        validatePromotedTextureIdentity(result, fileName, model);
       }
       result.addAllToScene();
 
@@ -93,7 +93,9 @@ export default class ObjectCache {
       );
       const modelMeshes = getAssetContainerMeshes(result);
       if (!modelMeshes.length) {
-        console.warn(`[ObjectCache] Model ${model} contains no renderable meshes`);
+        console.warn(
+          `[ObjectCache] Model ${model} contains no renderable meshes`,
+        );
         result.dispose();
         return null;
       }
@@ -114,9 +116,9 @@ export default class ObjectCache {
           model,
         );
         animationGroups[0]?.play?.(true);
-        morphTargetManager = modelMeshes.find(
-          (m) => m.morphTargetManager,
-        )?.morphTargetManager ?? undefined;
+        morphTargetManager =
+          modelMeshes.find((m) => m.morphTargetManager)?.morphTargetManager ??
+          undefined;
         console.log("Setting morph target manager", morphTargetManager);
       }
 
@@ -175,6 +177,8 @@ export default class ObjectCache {
         animationRanges,
         manager,
         physicsBodies: [],
+        physicsNodes: [],
+        physicsShapes: [],
       });
     }
     return this.dataContainers[model]!;
@@ -209,6 +213,8 @@ export default class ObjectCache {
 
     // Store physics bodies for this model
     const physicsBodies: BJS.PhysicsBody[] = [];
+    const physicsNodes: BJS.TransformNode[] = [];
+    const physicsShapes: BJS.PhysicsShape[] = [];
 
     const meshes = getAssetContainerMeshes(container);
 
@@ -280,18 +286,22 @@ export default class ObjectCache {
         );
       }
 
-      if (!objectMesh.name?.endsWith("-passthrough")) {
+      const explicitlyPhysical = meshes.some((mesh) => {
+        const extras = mesh.metadata?.gltf?.extras;
+        return (
+          extras?.clientPhysics === true ||
+          extras?.blocksPlayer === true ||
+          extras?.collision === true ||
+          extras?.physicsMode === "static"
+        );
+      });
+      if (explicitlyPhysical && !objectMesh.name?.endsWith("-passthrough")) {
         // Create a physics shape for the mesh (shared across instances)
         const physicsShape = new BABYLON.PhysicsShapeMesh(
           objectMesh as BJS.Mesh,
           scene!,
         );
-        // Create a new transform node for the physics body to hold its position
-        const physicsTransformNode = new BABYLON.TransformNode(
-          `${objectMesh.name}_physics_${model}`,
-          scene!,
-        );
-        physicsTransformNode.setParent(this.objectContainer);
+        physicsShapes.push(physicsShape);
         // Create individual physics bodies for each instance
         for (let i = 0; i < count; i++) {
           const { x, y, z, rotateX, rotateY, rotateZ, scale } = transforms[i];
@@ -310,6 +320,11 @@ export default class ObjectCache {
           const transformMatrix = scaling
             .multiply(rotation)
             .multiply(translation);
+          const physicsTransformNode = new BABYLON.TransformNode(
+            `${objectMesh.name}_physics_${model}_${i}`,
+            scene!,
+          );
+          physicsTransformNode.setParent(this.objectContainer);
           physicsTransformNode.setPreTransformMatrix(transformMatrix);
 
           // Create a new physics body for this instance
@@ -324,43 +339,10 @@ export default class ObjectCache {
 
           // Store the physics body
           physicsBodies.push(physicsBody);
+          physicsNodes.push(physicsTransformNode);
         }
       }
-      for (const mesh of objectMesh.subMeshes) {
-        const materialExtras = mesh.getMaterial()?.metadata?.gltf?.extras;
-        if (
-          materialExtras?.frames?.length &&
-          materialExtras?.animationDelay &&
-          !this.animatedMaterialNames.includes(mesh.getMaterial()!.name)
-        ) {
-          const textures = mesh.getMaterial()?.getActiveTextures();
-          textures?.forEach((tex) => scene.removeTexture(tex));
-          const { frames, animationDelay } = materialExtras;
-          let currentFrameIndex = 0;
-          let elapsedMs = 0;
-          const callback = () => {
-            try {
-              elapsedMs += scene.getEngine().getDeltaTime();
-              if (elapsedMs < animationDelay * 2) return;
-              elapsedMs %= animationDelay * 2;
-              currentFrameIndex = (currentFrameIndex + 1) % frames.length;
-              const selectedFrame = frames[currentFrameIndex] as string;
-              swapMaterialTexture(mesh.getMaterial()!, selectedFrame, true);
-            } catch (error) {
-              console.error(
-                `[ObjectCache] Failed to swap texture for mesh ${mesh}:`,
-                mesh,
-                error,
-              );
-              scene.unregisterBeforeRender(callback);
-            }
-          };
-
-          scene.registerBeforeRender(callback);
-          this.managerCallbacks.push(callback);
-          this.animatedMaterialNames.push(mesh.getMaterial()!.name);
-        }
-      }
+      this.registerAnimatedMaterials([objectMesh], scene);
     } else {
       for (const mesh of meshes) {
         mesh.setParent(this.objectContainer); // put it under an enabled node
@@ -370,20 +352,23 @@ export default class ObjectCache {
         mesh.alwaysSelectAsActiveMesh = false;
         mesh.thinInstanceRefreshBoundingInfo(true, false, false);
       }
+      this.registerAnimatedMaterials(meshes, scene);
     }
 
     root.dispose();
     // Store physics bodies for this model in the cache
     dataContainer.physicsBodies =
       physicsBodies.length > 0 ? physicsBodies : null;
+    dataContainer.physicsNodes = physicsNodes;
+    dataContainer.physicsShapes = physicsShapes;
 
     return meshes;
   }
 
   /**
    * Upload final Babylon-space matrices produced by a Shado world package.
-   * Unlike the legacy Transform path, these matrices must not receive any
-   * coordinate-system or yaw correction in the client.
+   * These matrices must not receive coordinate-system or yaw correction in
+   * the client.
    */
   async setPromotedThinInstances(
     model: string,
@@ -391,7 +376,17 @@ export default class ObjectCache {
     scene: BJS.Scene,
     matrixData: Float32Array,
   ): Promise<BJS.Mesh[]> {
+    if (matrixData.length % 16 !== 0) {
+      throw new Error(
+        `[ObjectCache] Promoted batch '${model}' has ${matrixData.length} matrix values`,
+      );
+    }
+
+    const hasInstances = matrixData.length > 0;
     let renderMeshes = this.promotedMeshes.get(model);
+    // Do not fetch or instantiate prototypes that have no visible stamps.
+    if (!renderMeshes && !hasInstances) return [];
+
     if (!renderMeshes) {
       const dataContainer = await this.getContainer(model, scene, source);
       if (!dataContainer) return [];
@@ -416,7 +411,9 @@ export default class ObjectCache {
           true,
         ) as BJS.Mesh | null;
         if (!merged) {
-          console.warn(`[ObjectCache] No meshes found for promoted model ${model}`);
+          console.warn(
+            `[ObjectCache] No meshes found for promoted model ${model}`,
+          );
           return [];
         }
         merged.skeleton = container.skeletons[0] || null;
@@ -426,28 +423,98 @@ export default class ObjectCache {
 
       for (const mesh of renderMeshes) {
         mesh.setParent(this.objectContainer);
-        mesh.setEnabled(true);
         mesh.isPickable = false;
-        mesh.alwaysSelectAsActiveMesh = true;
       }
+      this.registerAnimatedMaterials(renderMeshes, scene);
       this.promotedMeshes.set(model, renderMeshes);
       root.dispose();
     }
 
     for (const mesh of renderMeshes) {
+      if (!hasInstances) {
+        mesh.setEnabled(false);
+        mesh.alwaysSelectAsActiveMesh = false;
+        mesh.thinInstanceSetBuffer("matrix", null);
+        continue;
+      }
+
       mesh.thinInstanceSetBuffer("matrix", matrixData, 16, false);
       mesh.thinInstanceRefreshBoundingInfo(true, false, false);
+      mesh.alwaysSelectAsActiveMesh = true;
+      mesh.setEnabled(true);
     }
     return renderMeshes;
   }
+
+  private registerAnimatedMaterials(
+    meshes: readonly BJS.AbstractMesh[],
+    scene: BJS.Scene,
+  ): void {
+    const materials = new Set<BJS.Material>();
+    for (const mesh of meshes) {
+      const material = mesh.material;
+      if (!material) continue;
+      const subMaterials = (material as BJS.MultiMaterial).subMaterials;
+      if (Array.isArray(subMaterials)) {
+        for (const subMaterial of subMaterials) {
+          if (subMaterial) materials.add(subMaterial);
+        }
+      } else {
+        materials.add(material);
+      }
+    }
+
+    for (const material of materials) {
+      const extras = material.metadata?.gltf?.extras;
+      const frames = extras?.frames;
+      const animationDelay = Number(extras?.animationDelay);
+      if (
+        !Array.isArray(frames) ||
+        frames.length < 2 ||
+        !Number.isFinite(animationDelay) ||
+        animationDelay <= 0 ||
+        this.animatedMaterials.has(material)
+      ) {
+        continue;
+      }
+
+      this.animatedMaterials.add(material);
+      let currentFrameIndex = 0;
+      let elapsedMs = 0;
+      const callback = () => {
+        elapsedMs += scene.getEngine().getDeltaTime();
+        if (elapsedMs < animationDelay * 2) return;
+        elapsedMs %= animationDelay * 2;
+        currentFrameIndex = (currentFrameIndex + 1) % frames.length;
+        const selectedFrame = frames[currentFrameIndex];
+        if (typeof selectedFrame !== "string") return;
+        void swapMaterialTexture(material, selectedFrame, true).catch(
+          (error) => {
+            console.error(
+              `[ObjectCache] Failed to animate material ${material.name}:`,
+              error,
+            );
+            scene.unregisterBeforeRender(callback);
+          },
+        );
+      };
+      scene.registerBeforeRender(callback);
+      this.managerCallbacks.push(callback);
+    }
+  }
+
   dispose(model: ModelKey): void {
     if (model in this.dataContainers) {
       this.dataContainers[model].then((container) => {
         // Dispose of physics body if it exists
         if (container.physicsBodies) {
-          container.physicsBodies[model]?.forEach?.((p) => p.dispose());
+          container.physicsBodies.forEach((body) => body.dispose());
           container.physicsBodies = [];
         }
+        container.physicsShapes.forEach((shape) => shape.dispose());
+        container.physicsShapes = [];
+        container.physicsNodes.forEach((node) => node.dispose());
+        container.physicsNodes = [];
         // Dispose of the container
         container.container.dispose();
       });
@@ -471,7 +538,23 @@ export default class ObjectCache {
     }
     Object.keys(this.dataContainers).forEach((model) => this.dispose(model));
     this.managerCallbacks = [];
-    this.animatedMaterialNames = [];
+    this.animatedMaterials = new WeakSet<BJS.Material>();
     this.promotedMeshes.clear();
+  }
+}
+
+function validatePromotedTextureIdentity(
+  container: BJS.AssetContainer,
+  fileName: string,
+  model: string,
+): void {
+  for (const texture of container.textures) {
+    const url = "url" in texture ? String(texture.url) : "";
+    if (!isIsolatedPromotedTextureUrl(url, fileName)) {
+      container.dispose();
+      throw new Error(
+        `[ObjectCache] Promoted model '${model}' has non-isolated embedded texture '${url}'`,
+      );
+    }
   }
 }

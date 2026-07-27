@@ -24,12 +24,14 @@ import {
   ZoneSession,
 } from '@game/Net/messages';
 import { OpCodes } from '@game/Net/opcodes';
-import { Box, Stack } from '@mui/material';
+import { Box } from '@mui/material';
 import { useDebouncedCallback } from 'use-debounce';
 import { VIEWS } from '../../../Game/Constants/constants';
-import { UiButtonComponent } from '../../common/ui-button';
-import { UiWindowComponent } from '../../common/ui-window';
 import { WorldSocket } from '../../net/instances';
+import {
+  RequiemButton,
+  RequiemPanel,
+} from '../../requiem/primitives';
 import { useUIContext } from '../context';
 import { CharacterCreate } from './char-create';
 import './component.css';
@@ -69,7 +71,7 @@ export const CharacterSelectUIComponent: React.FC = () => {
   );
 
   useEffect(() => {
-    document.title = 'EQ: Requiem';
+    document.title = 'Shadows of Eltania';
     MusicPlayer.play('character-select');
   }, []);
 
@@ -193,70 +195,59 @@ export const CharacterSelectUIComponent: React.FC = () => {
   return !gotCharInfo.current ? null : (
     <Box className="char-select">
       {view === VIEWS.CHAR_SELECT ? (
-        <UiWindowComponent
-          background="TrackingBG_TX"
-          state={{
-            fixed      : true,
-            x          : 30,
-            y          : 30,
-            fixedHeight: 600,
-            fixedWidth : 250,
-          }}
+        <RequiemPanel
+          className="rq-character-roster"
+          eyebrow="Elrador // Characters"
           title="Characters"
-          windowName={'charSelect'}
         >
-          <Stack
-            alignItems={'center'}
-            sx={{ padding: '20px', paddingTop: '30px', height: '100%' }}
-          >
+          <div className="rq-character-roster__list">
             {charInfo?.characters.map((c) => (
-              <UiButtonComponent
+              <button
+                aria-pressed={selectedChar?.name === c?.name}
+                className="rq-character-roster__entry"
                 key={`char-${c.name}`}
-                buttonName="A_BigBtn"
-                scale={1.5}
-                selected={selectedChar?.name === c?.name}
-                sx={{ margin: '12px' }}
-                text={c.name}
-                textFontSize="9px"
+                type="button"
                 onClick={() => {
                   setSelectedChar(c);
                 }}
-              />
+              >
+                <span>{c.name}</span>
+                <span>
+                  Level {c.level}{' '}
+                  {c.callingId === 'calling:eltania-vanguard-v1'
+                    ? 'vanguard'
+                    : 'wayfarer'}
+                </span>
+              </button>
             ))}
             {Array.from({ length: charSelectNum }, (_, idx) => (
-              <UiButtonComponent
+              <button
+                className="rq-character-roster__entry rq-character-roster__entry--empty"
                 key={`char-create-${idx}`}
-                buttonName="A_BigBtn"
-                scale={1.5}
-                sx={{ margin: '12px' }}
-                text={'Create New Character'}
-                textFontSize="9px"
+                type="button"
                 onClick={() => {
                   setView(VIEWS.CHAR_CREATE);
                 }}
-              />
+              >
+                <span>Create character</span>
+                <span>Empty slot</span>
+              </button>
             ))}
-
-            <Stack direction={'row'} sx={{ marginTop: '25px' }}>
-              <UiButtonComponent
-                buttonName="A_SmallBtn"
-                scale={1.3}
-                sx={{ margin: '12px' }}
-                text={'Back'}
-                textFontSize="11px"
+          </div>
+          <div className="rq-character-roster__actions">
+              <RequiemButton
+                variant="quiet"
                 onClick={() => {
                   setMode('login');
                   GameManager.instance.dispose();
                   WorldSocket.close();
                 }}
-              />
-              <UiButtonComponent
-                buttonName="A_SmallBtn"
-                isDisabled={!selectedChar}
-                scale={1.3}
-                sx={{ margin: '12px' }}
-                text={'Delete'}
-                textFontSize="11px"
+              >
+                Back
+              </RequiemButton>
+              <RequiemButton
+                disabled={!selectedChar}
+                variant="quiet"
                 onClick={() => {
                   if (!selectedChar) {
                     return;
@@ -265,21 +256,20 @@ export const CharacterSelectUIComponent: React.FC = () => {
                     value: selectedChar.name,
                   });
                 }}
-              />
-            </Stack>
-            <UiButtonComponent
-              buttonName="A_BigBtn"
-              isDisabled={!selectedChar || charSelectNum === 8}
-              scale={1.5}
-              sx={{ margin: '12px' }}
-              text={'Enter World'}
-              textFontSize="9px"
+              >
+                Delete
+              </RequiemButton>
+            <RequiemButton
+              disabled={!selectedChar || charSelectNum === 8}
+              variant="primary"
               onClick={enterWorld}
-            />
-          </Stack>
-        </UiWindowComponent>
+            >
+              Enter Elrador
+            </RequiemButton>
+          </div>
+        </RequiemPanel>
       ) : (
-        <CharacterCreate charInfo={charInfo} setView={setView} />
+        <CharacterCreate setView={setView} />
       )}
     </Box>
   );

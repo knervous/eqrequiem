@@ -1,7 +1,7 @@
 import { describe, expect, it } from '@jest/globals';
 import { gzipSync } from 'node:zlib';
 
-import { fetchShadoBytes } from '../src/preprocess/runtime';
+import { fetchShadoBytes, fetchShadoJson } from '../src/preprocess/runtime';
 
 const payload = new TextEncoder().encode('{"kind":"shado.model"}');
 
@@ -30,5 +30,15 @@ describe('preprocess runtime artifact loading', () => {
     });
 
     expect(new Uint8Array(bytes)).toEqual(payload);
+  });
+
+  it('rejects an SPA HTML fallback as a missing current JSON artifact', async () => {
+    const html = new TextEncoder().encode('<!doctype html><title>App</title>');
+
+    await expect(
+      fetchShadoJson('/world.spatial.json.gz', { fetch: fetcher(html) }),
+    ).rejects.toThrow(
+      "Current JSON artifact '/world.spatial.json.gz' returned HTML",
+    );
   });
 });

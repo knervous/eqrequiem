@@ -11,6 +11,8 @@ The current slice builds the geometry-query layer:
 - fixed outdoor streaming tiles;
 - contiguous tile/material packet ranges;
 - stable source-geometry render chunks with cluster-driven compacted indices;
+- a deterministic welded collision triangle artifact selected from source
+  collision semantics;
 - a flat, quantized BVH4;
 - a JavaScript frustum-query oracle;
 - an embedded AssemblyScript/WASM BVH4 reducer used by the browser runtime.
@@ -30,8 +32,9 @@ assets/reference/everquest_rof2/zones/qey2hh1.glb.gz
 
 Set `SHADO_QEY2HH1_GLB` to exercise another export without editing the config.
 The output is `sandbox/public/shado/worlds/qey2hh1.spatial.json.gz` and can be
-loaded in browser or Node runtimes with `deserializeShadoWorld()`. The source
-GLB is copied alongside it as `qey2hh1.glb.gz` for the demo runtime.
+loaded in browser or Node runtimes with `deserializeShadoWorld()`. The packer
+also emits required `qey2hh1.collision.bin.gz`; the source GLB is copied
+alongside them as `qey2hh1.glb.gz` for the demo runtime.
 
 The sandbox exposes two routes:
 
@@ -57,7 +60,8 @@ SoA culling-reason bytes + compact visible actor indices
 ```
 
 Both the BVH4 traversal and the entity visibility/compaction loop execute in
-the embedded AssemblyScript/WASM reducer. The artifact is format version 3;
+the embedded AssemblyScript/WASM reducer. Newly baked artifacts use the single
+current format, version 5;
 the demo uses a versioned URL so stale browser caches cannot mix layouts.
 
 Each actor culling byte records independent `Pvs`, `Geometry`, `Frustum`,
@@ -106,8 +110,9 @@ npm run migrate:zones -- --input-dir ../assets/reference/everquest_rof2/zones \
   --out-dir sandbox/public/shado/worlds
 ```
 
-Each zone produces a compressed spatial package, a copied runtime GLB, and an
-editable `<zone>.authoring.json` sidecar. When `<zone>.json` exists in the
+Each zone produces a compressed spatial package, a copied runtime GLB, a
+required compressed collision binary, and an editable
+`<zone>.authoring.json` sidecar. When `<zone>.json` exists in the
 metadata directory, its regions and object placement table are promoted
 automatically. Object model keys become deduplicated prototypes and placements
 become stable stamps with explicit degree rotations. Every conversion merges

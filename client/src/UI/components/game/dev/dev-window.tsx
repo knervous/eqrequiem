@@ -1,186 +1,99 @@
-import React, { useEffect, useState } from "react";
-import { Box, Tab, Tabs, FormControl, Slider, Typography } from "@mui/material";
-import { UiWindowComponent } from "../../../common/ui-window";
-import { useUIContext } from "../../context";
-import { DevPlayer } from "./dev-player";
-import GameManager from "@game/Manager/game-manager";
-import atlas from "../../../util/atlas";
-import stoneAtlas from "../../../util/atlas-stone";
-import sakAtlas from "../../../util/atlas-sak";
-import { useImage, useSakImage, useStoneImage } from "../../../hooks/use-image";
-import { AtlasGallery } from "./dev-ui-gallery";
+import React, { useState } from 'react';
+import { Tab, Tabs } from '@mui/material';
+import { actions } from '@ui/state/reducer';
+import { useDispatch } from '../../context';
+import { DevPlayer } from './dev-player';
+import { DevSky } from './dev-sky';
+import { NpcDeveloper } from './npc-developer';
 
-
-
-
-// TabPanel component to handle tab content
-interface TabPanelProps {
-  children?: React.ReactNode;
+const TabPanel: React.FC<{
+  children: React.ReactNode;
   index: number;
   value: number;
-}
+}> = ({ children, value, index }) => (
+  <div role="tabpanel" hidden={value !== index}>
+    {value === index ? children : null}
+  </div>
+);
 
-function TabPanel(props: TabPanelProps) {
-  const { children, value, index, ...other } = props;
+const PrimitiveGallery: React.FC = () => (
+  <div className="rq-primitive-gallery">
+    <section>
+      <h3>Buttons</h3>
+      <div className="rq-gallery-row">
+        <button>Resting</button>
+        <button className="is-active">Active</button>
+        <button disabled>Disabled</button>
+        <button className="rq-danger-button">Danger</button>
+      </div>
+    </section>
+    <section>
+      <h3>Slots</h3>
+      <div className="rq-gallery-row">
+        <div className="rq-item-slot" />
+        <div className="rq-item-slot is-active" />
+        <div className="rq-item-slot is-disabled" />
+      </div>
+    </section>
+    <section>
+      <h3>Meters</h3>
+      {[
+        ['health', 68],
+        ['mana', 44],
+        ['stamina', 83],
+        ['experience', 27],
+      ].map(([tone, value]) => (
+        <div className={`rq-meter rq-meter--${tone}`} key={tone}>
+          <div className="rq-meter__label"><span>{tone}</span><span>{value}%</span></div>
+          <div className="rq-meter__track"><span style={{ width: `${value}%` }} /></div>
+        </div>
+      ))}
+    </section>
+    <section>
+      <h3>Fields and tabs</h3>
+      <input className="rq-gallery-input" placeholder="Field log entry…" />
+      <div className="rq-tabs">
+        <button aria-selected="true">Selected</button>
+        <button aria-selected="false">Resting</button>
+        <button disabled>Disabled</button>
+      </div>
+    </section>
+    <section>
+      <h3>Empty, loading, and error</h3>
+      <div className="rq-gallery-states">
+        <p className="rq-empty-state">No companions</p>
+        <p className="is-loading">Reading the old marks…</p>
+        <p className="is-error">The record could not be opened.</p>
+      </div>
+    </section>
+  </div>
+);
 
-  return (
-    <Box
-      role="tabpanel"
-      hidden={value !== index}
-      id={`dev-tabpanel-${index}`}
-      aria-labelledby={`dev-tab-${index}`}
-      sx={{ overflow: "auto", maxHeight: "calc(100% - 50px)" }}
-      {...other}
-    >
-      {value === index && (
-        <Box sx={{ p: '0 10px', color: "white", "*": { color: "white" } }}>
-          {children}
-        </Box>
-      )}
-    </Box>
-  );
-}
-
-// Main Dev Window component
 export const DevWindowComponent: React.FC = () => {
-  const state = useUIContext((state) => state.ui.devWindow);
-  const [tabValue, setTabValue] = useState(0);
-  const [timeOfDay, setTimeOfDay] = useState(7);
-  useEffect(() => {
-    if (GameManager.instance?.ZoneManager?.SkyManager) {
-      GameManager.instance.ZoneManager?.SkyManager.setTimeOfDay(timeOfDay);
-    }
-  }, [timeOfDay]);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-
-      setTimeOfDay((prev) => {
-        const newTime = prev + 0.01;
-        if (newTime >= 24) {
-          return 0; // Reset to 0 after reaching 24
-        }
-        return newTime;
-      });
-    }, 100);
-    return () => clearInterval(interval);
-  }, []);
-
-  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
-    setTabValue(newValue);
-  };
-  const tabStyle = {
-    color: "white",
-    fontSize: "12px",
-    width: "20%",
-    minHeight: "24px", // Override MUI default min-height
-    padding: "0 8px", // Reduce padding for a tighter look
-    margin: 0, // Remove any margin
-    textTransform: "none", // Optional: Prevent uppercase text for better fit
-  };
+  const dispatch = useDispatch();
+  const [tab, setTab] = useState(0);
   return (
-    <UiWindowComponent state={state} title="Debug Mode" windowName="devWindow">
-      <Box
-        sx={{
-          width: "100%",
-          height: "100%",
-          "*": { color: "white !important" },
-        }}
+    <section className="rq-dev-window rq-hud-panel">
+      <header className="rq-hud-panel__header"><span>Field Instruments</span></header>
+      <button
+        className="rq-close"
+        aria-label="Close developer tools"
+        onClick={() => dispatch(actions.setWindowVisibility('devWindow', false))}
       >
-        <Box
-          sx={{
-            borderBottom: 1,
-            borderColor: "divider",
-            padding: 0,
-            margin: 0,
-          }}
-        >
-          <Tabs
-            value={tabValue}
-            onChange={handleTabChange}
-            sx={{
-              justifyContent: "center",
-              alignContent: "center",
-              marginTop: '5px',
-              minHeight: "20px", // Reduce Tabs container height
-              "& .MuiTabs-indicator": { display: 'none' }, // Thinner indicator
-              "& .Mui-selected": {
-                backgroundColor: "hsla(205, 100.00%, 50.00%, 0.58)", // Light highlight effect
-                color: "white",
-                fontWeight: "", // Optional: make selected tab bolder
-                borderRadius: "0px", // Optional: rounded corners for highlight
-              },
-              "& .MuiTabs-flexContainer": { height: "20px" }, // Match tab height
-            }}
-            aria-label="dev window tabs"
-          >
-            <Tab
-              sx={tabStyle}
-              label="Player"
-              id="dev-tab-0"
-              aria-controls="dev-tabpanel-0"
-            />
-            <Tab
-              sx={tabStyle}
-              label="Zone"
-              id="dev-tab-1"
-              aria-controls="dev-tabpanel-1"
-            />
-            <Tab
-              sx={tabStyle}
-              label="UI Gallery"
-              id="dev-tab-2"
-              aria-controls="dev-tabpanel-2"
-            />
-            <Tab
-              sx={tabStyle}
-              label="Stone UI"
-              id="dev-tab-3"
-              aria-controls="dev-tabpanel-3"
-            />
-            <Tab
-              sx={tabStyle}
-              label="Sak UI"
-              id="dev-tab-4"
-              aria-controls="dev-tabpanel-4"
-            />
-          </Tabs>
-        </Box>
-
-        <TabPanel value={tabValue} index={0}>
-          <DevPlayer />
-        </TabPanel>
-        <TabPanel value={tabValue} index={1}>
-          <FormControl sx={{ width: "calc(100% - 20px)", color: "white" }}>
-            <Typography
-              sx={{ fontSize: 12, marginTop: 1, width: "80%" }}
-              color="text.secondary"
-              gutterBottom
-            >
-              Time of Day: {timeOfDay.toFixed(2)}
-            </Typography>
-            <Slider
-              size={'small'}
-              value={timeOfDay}
-              onChange={(e) => {
-                setTimeOfDay(e.target.value);
-              }}
-              step={0.01}
-              min={0.1}
-              max={24}
-            />
-          </FormControl>
-        </TabPanel>
-        <TabPanel value={tabValue} index={2}>
-          <AtlasGallery atlasData={atlas} useImageHook={useImage} title="Default UI" />
-        </TabPanel>
-        <TabPanel value={tabValue} index={3}>
-          <AtlasGallery atlasData={stoneAtlas} useImageHook={useStoneImage} title="Stone UI" />
-        </TabPanel>
-        <TabPanel value={tabValue} index={4}>
-          <AtlasGallery atlasData={sakAtlas} useImageHook={useSakImage} title="Sak UI" />
-        </TabPanel>
-      </Box>
-    </UiWindowComponent>
+        ×
+      </button>
+      <div className="rq-hud-panel__body">
+        <Tabs value={tab} onChange={(_, value) => setTab(value)} aria-label="Developer tools">
+          <Tab label="Player" />
+          <Tab label="Sky" />
+          <Tab label="NPC AI" />
+          <Tab label="Reliquary UI" />
+        </Tabs>
+        <TabPanel value={tab} index={0}><DevPlayer /></TabPanel>
+        <TabPanel value={tab} index={1}><DevSky /></TabPanel>
+        <TabPanel value={tab} index={2}><NpcDeveloper /></TabPanel>
+        <TabPanel value={tab} index={3}><PrimitiveGallery /></TabPanel>
+      </div>
+    </section>
   );
 };

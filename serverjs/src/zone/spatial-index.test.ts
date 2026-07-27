@@ -26,4 +26,20 @@ describe("zone spatial AOI index", () => {
     assert.equal(index.occupiedEntityCells, 0);
     assert.equal(index.occupiedSessionCells, 0);
   });
+
+  it("returns exact, deterministic perception candidates across sparse cells", () => {
+    const index = new ZoneSpatialIndex(100, 1);
+    index.upsertEntity(9, { x: -101, y: 0, z: 0 });
+    index.upsertEntity(3, { x: 60, y: 0, z: 0 });
+    index.upsertEntity(5, { x: 80, y: 80, z: 0 });
+    index.upsertSession(12, { x: 0, y: 0, z: 75 });
+    index.upsertSession(10, { x: 0, y: 0, z: 30 });
+
+    assert.deepEqual(index.entitiesNear({ x: 0, y: 0, z: 0 }, 100), [3]);
+    assert.deepEqual(index.sessionsNear({ x: 0, y: 0, z: 0 }, 80), [10, 12]);
+
+    // Position updates inside one cell still update exact distance filtering.
+    assert.equal(index.upsertEntity(3, { x: 99, y: 0, z: 0 }), false);
+    assert.deepEqual(index.entitiesNear({ x: 0, y: 0, z: 0 }, 80), []);
+  });
 });

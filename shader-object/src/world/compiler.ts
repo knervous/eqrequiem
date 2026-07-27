@@ -6,6 +6,7 @@ import type {
 } from './types';
 import { stampShadoWorldIntegrity, validateShadoWorldPackage } from './validation';
 import { validateShadoWorldAuthoring } from './authoring';
+import { encodeShadoWorldCollision } from './collision';
 
 const LEAF_BIT = 0x80000000;
 const EMPTY_REF = 0xffffffff;
@@ -134,6 +135,10 @@ export function compileShadoWorld(
     unionBounds(clusters.filter(cluster => cluster.cellId === cell))
   );
   const compiledObjects = compileObjects(authoring, tileIds, originX, originZ, tileSize);
+  const navigationModifiers = compileNavigationModifiers(authoring);
+  const collision = encodeShadoWorldCollision(
+    options.collisionPrimitives ?? primitives
+  );
 
   const clusterIndices: number[] = [];
   const firstIndex: number[] = [];
@@ -176,11 +181,16 @@ export function compileShadoWorld(
   }
   const world: ShadoWorldSpatialPackage = {
     kind: 'shado.world.spatial',
-    version: 3,
+    version: 5,
     name: options.name,
     coordinateSystem: 'babylon-y-up',
+    sourceTransform: options.sourceTransform ?? 'identity',
     source: options.source,
     bounds: worldBounds,
+    collision: {
+      source: options.collisionSource ?? `${options.name}.collision.bin.gz`,
+      ...collision.descriptor,
+    },
     triangleCount,
     materials,
     primitives: primitives.map(primitive => ({
@@ -262,6 +272,21 @@ export function compileShadoWorld(
       firstCluster: tileFirst,
       clusterCount: tileCount,
     },
+    navigation: {
+      runtimeToRecast: 'z-y-negative-x',
+      modifiers: {
+        region: navigationModifiers.map(modifier => modifier.region),
+        area: navigationModifiers.map(modifier => modifier.area),
+        flags: navigationModifiers.map(modifier => modifier.flags),
+        excluded: navigationModifiers.map(modifier => modifier.excluded),
+        centerX: navigationModifiers.map(modifier => modifier.centerX),
+        centerY: navigationModifiers.map(modifier => modifier.centerY),
+        centerZ: navigationModifiers.map(modifier => modifier.centerZ),
+        sizeX: navigationModifiers.map(modifier => modifier.sizeX),
+        sizeY: navigationModifiers.map(modifier => modifier.sizeY),
+        sizeZ: navigationModifiers.map(modifier => modifier.sizeZ),
+      },
+    },
     // With no trustworthy visual portal topology in the source GLB, every outdoor
     // cell remains a conservative candidate. Loaded/distance masks do the pruning.
     pvs: { wordsPerRow, words: pvsWords },
@@ -271,6 +296,38 @@ export function compileShadoWorld(
   stampShadoWorldIntegrity(world);
   validateShadoWorldPackage(world);
   return world;
+}
+
+function compileNavigationModifiers(
+  authoring: ShadoWorldCompileOptions['authoring']
+): import('./types').ShadoWorldNavigationModifier[] {
+  return (authoring?.regions ?? []).flatMap((region, index) => {
+    const value = region.metadata.navigation;
+    if (!region.enabled || !value || typeof value !== 'object' || Array.isArray(value)) return [];
+    const navigation = value as Record<string, unknown>;
+    const area = Number(navigation.area);
+    const flags = Number(navigation.flags ?? 1);
+    const excluded = navigation.excluded === true;
+    if (!Number.isInteger(area) || area < 0 || area > 63) {
+      throw new Error(`Region '${region.id}' navigation area must be an integer from 0 through 63`);
+    }
+    if (!Number.isInteger(flags) || flags < 0 || flags > 0xffff) {
+      throw new Error(`Region '${region.id}' navigation flags must be an unsigned 16-bit integer`);
+    }
+    return [{
+      region: index,
+      area,
+      flags,
+      excluded: Number(excluded),
+      // Requiem runtime (x, y, z) -> Recast (z, y, -x).
+      centerX: region.center[2],
+      centerY: region.center[1],
+      centerZ: -region.center[0],
+      sizeX: region.size[2],
+      sizeY: region.size[1],
+      sizeZ: region.size[0],
+    }];
+  });
 }
 
 function compileObjects(

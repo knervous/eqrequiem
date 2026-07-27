@@ -37,6 +37,17 @@ export class PlayerInventory {
     return this.inventorySlots.get(this.makeKey(slot, bagSlot)) || null;
   }
 
+  /** Resolve a worn or carried top-level slot across canonical and imported rows. */
+  public getTopLevel(slot: InventorySlot): NullableItemInstance {
+    return this.get(slot, -1) ?? this.get(slot, 0);
+  }
+
+  public items(): NonNullable<NullableItemInstance>[] {
+    return [...this.inventorySlots.values()].filter(
+      (item): item is NonNullable<NullableItemInstance> => item !== null,
+    );
+  }
+
   /** Convenience for head equip (always bagSlot = -1) */
   public getHeadSlot(): NullableItemInstance {
     return this.get(InventorySlot.Head, -1);
@@ -95,14 +106,14 @@ export class PlayerInventory {
     return bagState;
   }
 
-  /** Toggle open/close for an equipment-bag slot (always bagSlot=0) */
+  /** Toggle open/close for a carried container slot. */
   public toggleBag(slot: InventorySlot): void {
     const open = !this.bagsOpen.get(slot)?.open;
     this.bagsOpen.get(slot)!.open = open;
     emitter.emit('updateBagState', { slot, state: this.bagsOpen.get(slot)! });
   }
 
-  /** Toggle open/close for an equipment-bag slot (always bagSlot=0) */
+  /** Close a carried container slot. */
   public closeBag(slot: InventorySlot): void {
     this.bagsOpen.get(slot)!.open = false;
     emitter.emit('updateBagState', { slot, state: this.bagsOpen.get(slot)! });

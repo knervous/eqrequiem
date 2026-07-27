@@ -1,545 +1,240 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import GameManager from '@game/Manager/game-manager';
+import {
+  defaultEltaniaCharacterDraft,
+  eltaniaCharacterContract,
+  isValidEltaniaCharacterName,
+  projectEltaniaCharacterToLegacyTransport,
+} from '@game/Content/eltania-character-contract';
 import { CharCreate, Int } from '@game/Net/messages';
 import { OpCodes } from '@game/Net/opcodes';
 import Player from '@game/Player/player';
-import {
-  Divider,
-  MenuItem,
-  Select,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
-import classNames from 'classnames';
-import { nameByRace } from 'fantasy-name-generator';
-import {
-  CharClassStrings,
-  Races,
-  VIEWS,
-  baseClassStats,
-  baseStats,
-  classLookupTable,
-  preferredStats,
-} from '../../../Game/Constants/constants';
-import {
-  getAvailableDeities,
-  startingCityMap,
-} from '../../../Game/Constants/util';
-import { UiButtonComponent } from '../../common/ui-button';
-import { UiWindowComponent } from '../../common/ui-window';
+import { VIEWS } from '../../../Game/Constants/constants';
 import { WorldSocket } from '../../net/instances';
-import { StringTable } from '../../util/string-table';
-import { SupportedClasses } from './classes';
-import { SupportedRaces } from './races';
-import { StatRow } from './stat-row';
+import {
+  RequiemButton,
+  RequiemPanel,
+  RequiemStatus,
+} from '../../requiem/primitives';
 
-const selectProps = {
-  size: 'small',
-
-  MenuProps: {
-    PaperProps: {
-      sx: {
-        color     : 'white',
-        background: 'black',
-        '*'       : {
-          fontSize: '12px',
-        },
-      },
-    },
-  },
+type CharacterCreateProps = {
+  setView: (view: number) => void;
 };
 
-const selectSx = {
-  '*': {
-    borderColor: 'rgba(255, 217, 0, 0.561) !important',
-    color      : 'white !important',
-    fontSize   : '12px !important',
-  },
-  height: '35px',
-  margin: '15px auto !important',
-  width : '200px',
-};
+const nameStarts = ['Ael', 'Bren', 'Cor', 'Dae', 'El', 'Fen', 'Ily', 'Kael', 'Mara', 'Or'];
+const nameEnds = ['dan', 'en', 'eth', 'ian', 'is', 'ora', 'ren', 'ric', 'ryn', 'va'];
 
-const statsList = [
-  ['Strength', 'str'],
-  ['Stamina', 'sta'],
-  ['Agility', 'agi'],
-  ['Dexterity', 'dex'],
-  ['Wisdom', 'wis'],
-  ['Intelligence', 'intel'],
-  ['Charisma', 'cha'],
-];
+function generatedEltaniaName(): string {
+  const start = nameStarts[Math.floor(Math.random() * nameStarts.length)]!;
+  const end = nameEnds[Math.floor(Math.random() * nameEnds.length)]!;
+  return `${start}${end}`.slice(0, 15);
+}
 
-export const CharacterCreate = ({ setView, charInfo }) => {
-  const [selectedRace, setSelectedRace] = useState('1');
-  const [selectedClass, setSelectedClass] = useState(1);
-  const [selectedDeity, setSelectedDeity] = useState(1);
-  const [selectedCity, setSelectedCity] = useState(1);
-  const [gender, setGender] = useState(0);
-  const [face, setFace] = useState(0);
-  const [name, setName] = useState('');
-  const [deities, setDeities] = useState([]);
-  const [startingCities, setStartingCities] = useState([]);
-  const [character, setCharacter] = useState({});
-  const [baseCharacter, setBaseCharacter] = useState({});
-  const [description, setDescription] = useState(CharClassStrings[1]);
-  const refreshNameplate = useRef(() => {});
+export const CharacterCreate: React.FC<CharacterCreateProps> = ({ setView }) => {
+  const [draft, setDraft] = useState(defaultEltaniaCharacterDraft);
+  const [submitting, setSubmitting] = useState(false);
+  const [message, setMessage] = useState('');
+  const bodyFamily = eltaniaCharacterContract.bodyFamilies[0];
+  const calling = eltaniaCharacterContract.callings[0];
+  const origin = eltaniaCharacterContract.origins[0];
+  const validName = isValidEltaniaCharacterName(draft.name);
 
-  const createCharacter = useCallback(() => {
-    const char = {
-      gender,
-      face,
-      name,
-      tutorial      : 0,
-      ...character,
-      race          : +selectedRace,
-      charClass     : selectedClass,
-      startZone     : selectedCity,
-      deity         : selectedDeity,
-      inventoryItems: [],
-    };
-    console.log('Send character', char);
-    WorldSocket.registerOpCodeHandler(
-      OpCodes.ApproveName_Server,
-      Int,
-      (data) => {
-        if (data.value === 1) {
-          setView(VIEWS.CHAR_SELECT);
-        } else {
-          // alert('Invalid name');
-        }
-      },
-    );
-    WorldSocket.sendMessage(
-      OpCodes.CharacterCreate,
-      CharCreate,
-      char,
-    );
-    
-  }, [
-    name,
-    gender,
-    selectedRace,
-    character,
-    selectedClass,
-    selectedDeity,
-    selectedCity,
-    face,
-    setView,
-  ]);
+  const transportCharacter = useMemo(
+    () => projectEltaniaCharacterToLegacyTransport(draft),
+    [draft],
+  );
 
   useEffect(() => {
-    setFace(0);
-    const deities = getAvailableDeities(+selectedRace, selectedClass);
-    if (!deities.length) {
-      return;
-    }
-    setDeities(deities);
-    setSelectedDeity(deities[0][0]);
-  }, [selectedRace, selectedClass]);
-
-  useEffect(() => {
-    setFace(0);
-  }, [gender]);
-
-  useEffect(() => {
-    const deity = deities.find(([val]) => val === selectedDeity);
-    const availableCities =
-      startingCityMap[selectedClass]?.[selectedRace]?.[deity];
-    if (!availableCities) {
-      return;
-    }
-    setStartingCities(availableCities);
-    setSelectedCity(availableCities[0][0]);
-  }, [selectedRace, selectedClass, selectedDeity, deities]);
-
-  useEffect(() => {
-    const newCharacter = {
-      charClass     : selectedClass,
-      race          : selectedRace,
+    const preview = {
+      ...transportCharacter,
       inventoryItems: [],
       equip         : [],
       equipment     : {},
-      name          : '',
-      face,
-      gender,
     };
-
-    // Check if we can keep the same class applied
-    // If not, find the first available class for a new race
-    if (!classLookupTable[selectedClass - 1][selectedRace - 1]) {
-      for (const [idx, classEntry] of Object.entries(classLookupTable)) {
-        if (classEntry[selectedRace - 1]) {
-          setSelectedClass(+idx + 1);
-          return;
-        }
-      }
-    }
-    GameManager.instance?.CharacterSelect?.loadModel(newCharacter, true, () => {
-      refreshNameplate.current?.();
+    GameManager.instance?.CharacterSelect?.loadModel(preview, true, () => {
+      Player.instance?.UpdateNameplate([draft.name || 'Wayfarer']);
     });
+  }, [draft.name, transportCharacter]);
 
-    const classStats = baseClassStats[selectedClass - 1];
-    const raceStats = baseStats[selectedRace - 1];
-    // Initialize stats
-    const char = {
-      str       : classStats[0] + raceStats[0],
-      sta       : classStats[1] + raceStats[1],
-      agi       : classStats[2] + raceStats[2],
-      dex       : classStats[3] + raceStats[3],
-      wis       : classStats[4] + raceStats[4],
-      intel     : classStats[5] + raceStats[5],
-      cha       : classStats[6] + raceStats[6],
-      statPoints: classStats[7],
-      deity     : 0,
-    };
-    setCharacter(char);
-    setBaseCharacter(char);
-  }, [selectedRace, selectedClass, gender]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    Player.instance?.UpdateNameplate([draft.name || 'Wayfarer']);
+  }, [draft.name]);
 
-  const updateStat = useCallback((stat, delta) => {
-    setCharacter((char) => ({
-      ...char,
-      [stat]    : char[stat] + delta,
-      statPoints: char.statPoints - delta,
+  const setBody = useCallback((bodyComponentId: string, presentationId: string) => {
+    setDraft((current) => ({
+      ...current,
+      bodyComponentId,
+      presentationId,
     }));
   }, []);
 
-  const preferredStatSet = useMemo(
-    () => new Set(preferredStats[selectedClass]),
-    [selectedClass],
-  );
-
-  const descriptionValue = useMemo(
-    () => StringTable.getString(description),
-    [description],
-  );
-  const statDecrement = useCallback(
-    (key) => {
-      updateStat(key, -1);
-    },
-    [updateStat],
-  );
-  const statIncrement = useCallback(
-    (key) => {
-      updateStat(key, 1);
-    },
-    [updateStat],
-  );
-
-  const generateName = useCallback(() => {
-    const nameMap = {
-      [Races.HUMAN]    : 'human',
-      [Races.BARBARIAN]: 'cavePerson',
-      [Races.ERUDITE]  : 'drow',
-      [Races.WOODELF]  : 'elf',
-      [Races.HIGHELF]  : 'highelf',
-      [Races.DARKELF]  : 'darkelf',
-      [Races.HALFELF]  : 'human',
-      [Races.DWARF]    : 'dwarf',
-      [Races.TROLL]    : 'ogre',
-      [Races.OGRE]     : 'ogre',
-      [Races.HALFLING] : 'halfling',
-      [Races.GNOME]    : 'gnome',
-    };
-
-    let name = nameByRace(nameMap[selectedRace], {
-      gender: gender === 0 ? 'male' : 'female',
-    }) as string;
-
-    name = name.replaceAll('-', '');
-    name = name.toLowerCase();
-    name = name[0].toUpperCase() + name.slice(1);
-    name = name.split(' ')[0];
-    setName(name);
-  }, [selectedRace, gender]);
-
-  useEffect(() => {
-    Player.instance?.UpdateNameplate([name || 'Soandso']);
-    refreshNameplate.current = () => {
-      console.log('Refreshing nameplate with name', name);
-      Player.instance?.UpdateNameplate([name || 'Soandso']);
-    };
-
-  }, [name]);
-
-  const toggleFaceIdx = useCallback((val) => () => {
-    setFace((prev) => (prev + val < 0 ? 0 : prev + val > 7 ? 7 : prev + val));
-    if (GameManager.instance?.CharacterSelect) {
-      GameManager.instance.CharacterSelect.character?.playerEntity?.setFace(
-        face + val,
-      );
+  const createCharacter = useCallback(() => {
+    if (!validName || submitting) {
+      return;
     }
-  }, [face]);
-
-  const faceBtnFocus = useCallback(() => {
-    if (GameManager.instance?.CharacterSelect) {
-      GameManager.instance.CharacterSelect.faceCam = true;
-    }
-  }, []);
-  const faceBtnBlur = useCallback(() => {
-    if (GameManager.instance?.CharacterSelect) {
-      GameManager.instance.CharacterSelect.faceCam = false;
-    }
-  }, []);
+    setSubmitting(true);
+    setMessage('Creating character…');
+    WorldSocket.registerOpCodeHandler(OpCodes.ApproveName_Server, Int, (data) => {
+      setSubmitting(false);
+      if (data.value === 1) {
+        setView(VIEWS.CHAR_SELECT);
+      } else {
+        setMessage('That identity could not be created. Choose another name.');
+      }
+    });
+    void WorldSocket.sendMessage(
+      OpCodes.CharacterCreate,
+      CharCreate,
+      transportCharacter,
+    );
+  }, [setView, submitting, transportCharacter, validName]);
 
   return (
-    <>
-      <UiWindowComponent
-        state={{
-          x          : 10,
-          y          : 25,
-          fixed      : true,
-          fixedHeight: window.innerHeight - 50,
-          fixedWidth : 350,
-        }}
+    <div className="rq-character-create">
+      <RequiemPanel
+        className="rq-character-create__composition"
+        eyebrow="Elrador // Appearance"
+        title="Create a character"
+      >
+        <div className="rq-character-create__section">
+          <div className="rq-character-create__heading">
+            <span>Body family</span>
+            <strong>{bodyFamily.label}</strong>
+          </div>
+          <div className="rq-character-create__choices">
+            {bodyFamily.components.map((component) => (
+              <button
+                aria-pressed={draft.bodyComponentId === component.id}
+                className="rq-character-create__choice"
+                key={component.id}
+                type="button"
+                onClick={() => setBody(component.id, component.presentationId)}
+              >
+                {component.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div
+          className="rq-character-create__section"
+          onBlur={() => {
+            if (GameManager.instance?.CharacterSelect) {
+              GameManager.instance.CharacterSelect.faceCam = false;
+            }
+          }}
+          onFocus={() => {
+            if (GameManager.instance?.CharacterSelect) {
+              GameManager.instance.CharacterSelect.faceCam = true;
+            }
+          }}
+        >
+          <div className="rq-character-create__heading">
+            <span>Face component</span>
+            <strong>Compatible set</strong>
+          </div>
+          <div className="rq-character-create__choices rq-character-create__choices--faces">
+            {bodyFamily.faces.map((face) => (
+              <button
+                aria-pressed={draft.faceComponentId === face.id}
+                className="rq-character-create__choice"
+                key={face.id}
+                type="button"
+                onClick={() => {
+                  setDraft((current) => ({
+                    ...current,
+                    faceComponentId: face.id,
+                  }));
+                }}
+              >
+                {face.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <RequiemButton
+          className="rq-character-create__back"
+          variant="quiet"
+          onClick={() => setView(VIEWS.CHAR_SELECT)}
+        >
+          Back to roster
+        </RequiemButton>
+      </RequiemPanel>
+
+      <RequiemPanel
+        className="rq-character-create__identity"
+        eyebrow="Elrador // Identity"
         title="Character"
       >
-        <Stack
-          alignContent={'center'}
-          alignItems={'center'}
-          direction={'row'}
-          justifyContent={'center'}
-          sx={{ marginTop: '25px' }}
-        >
-          <UiButtonComponent
-            className={classNames({ 'btn-selected': gender === 0 })}
-            selected={gender === 0}
-            text={'Male'}
-            onClick={() => {
-              setGender(0);
-            }}
-          />
-          <Divider sx={{ margin: '5px' }} />
-          <UiButtonComponent
-            className={classNames({ 'btn-selected': gender === 1 })}
-            selected={gender === 1}
-            text={'Female'}
-            onClick={() => {
-              setGender(1);
-            }}
-          />
-        </Stack>
-        <Stack
-          alignContent={'center'}
-          alignItems={'center'}
-          direction={'row'}
-          justifyContent={'space-between'}
-          sx={{ position: 'fixed', top: '10px', left: 'calc(50vw - 100px)', width: '200px' }}
-        >
-          <UiButtonComponent
-            buttonName="A_LeftArrowBtn"
-            isDisabled={face === 0}
-            onBlur={faceBtnBlur}
-            onClick={toggleFaceIdx(-1)}
-            onFocus={faceBtnFocus}
-          />
-          <Typography sx={{
-            fontSize : '15px',
-            color    : 'white',
-            textAlign: 'center',
-          
-          }}>
-          Face {face + 1}
+        <div className="rq-character-create__adapter">
+          <RequiemStatus tone="development">{origin.status}</RequiemStatus>
+        </div>
 
-          </Typography>
-          <UiButtonComponent
-            buttonName="A_RightArrowBtn"
-            className="face-button"
-            isDisabled={face >= 6}
-            onBlur={faceBtnBlur}
-            onClick={toggleFaceIdx(1)}
-            onFocus={faceBtnFocus}
-          />
-        </Stack>
-
-        <Stack
-          alignContent={'center'}
-          direction={'row'}
-          justifyContent={'center'}
-          sx={{ marginTop: '5px' }}
-        >
-          {/** Races */}
-          <SupportedRaces
-            key={selectedRace}
-            selectedRace={selectedRace}
-            setDescription={setDescription}
-            setSelectedRace={setSelectedRace}
-          />
-
-          {/** Classes */}
-          <SupportedClasses
-            selectedClass={selectedClass}
-            selectedRace={selectedRace}
-            setDescription={setDescription}
-            setSelectedClass={setSelectedClass}
-          />
-        </Stack>
-        <Stack direction="row" justifyContent="center" sx={{ width: '100%' }}>
-          <UiButtonComponent
-            scale={2}
-            sx={{
-              marginTop: '40px !important',
-            }}
-            text="Back to Character Select"
-            textFontSize={'8px'}
-            onClick={() => setView(VIEWS.CHAR_SELECT)}
-          />
-        </Stack>
-      </UiWindowComponent>
-
-      <UiWindowComponent
-        state={{
-          fixed      : true,
-          fixedHeight: 700,
-          fixedWidth : 300,
-          x          : window.innerWidth - 310,
-          y          : 25,
-        }}
-        title="Abilities"
-      >
-        <Stack
-          alignItems={'center'}
-          direction={'column'}
-          justifyContent={'center'}
-          sx={{ width: '100%', paddingTop: '30px' }}
-        >
-          <Typography noWrap component="div" sx={{ fontSize: '15px' }}>
-            Points Remaining: {character.statPoints}
-          </Typography>
-          {statsList.map(([label, key]) => (
-            <StatRow
-              key={key}
-              baseValue={baseCharacter[key]}
-              isDisabled={character.statPoints === 0}
-              isPreferred={preferredStatSet.has(key)}
-              label={label}
-              stat={key}
-              statPoints={character.statPoints}
-              value={character[key]}
-              onDecrement={statDecrement}
-              onIncrement={statIncrement}
+        <label className="rq-character-create__name">
+          <span>Wayfarer name</span>
+          <span>
+            <input
+              autoComplete="off"
+              maxLength={15}
+              placeholder="Four to fifteen letters"
+              value={draft.name}
+              onChange={(event) => {
+                const value = event.target.value.replace(/[^A-Za-z]/g, '');
+                const normalized = value
+                  ? value[0]!.toUpperCase() + value.slice(1).toLowerCase()
+                  : '';
+                setDraft((current) => ({ ...current, name: normalized }));
+              }}
+              onKeyDown={(event) => event.stopPropagation()}
             />
-          ))}
-          <Typography
-            noWrap
-            component="div"
-            sx={{ marginTop: '15px', fontSize: '15px' }}
-          >
-            Deity
-          </Typography>
-          <Select
-            value={selectedDeity}
-            {...selectProps}
-            sx={{ ...selectSx }}
-            onChange={(e) => setSelectedDeity(e.target.value)}
-          >
-            {deities.map(([value, display]) => (
-              <MenuItem value={value}>{display}</MenuItem>
-            ))}
-          </Select>
+            <RequiemButton
+              variant="quiet"
+              onClick={() => {
+                setDraft((current) => ({
+                  ...current,
+                  name: generatedEltaniaName(),
+                }));
+              }}
+            >
+              Suggest
+            </RequiemButton>
+          </span>
+          {draft.name && !validName ? (
+            <small>Use 4–15 letters, beginning with a capital.</small>
+          ) : null}
+        </label>
 
-          <Typography
-            noWrap
-            component="div"
-            sx={{ marginTop: '15px', fontSize: '15px' }}
-          >
-            Starting City
-          </Typography>
-          <Select
-            value={selectedCity}
-            {...selectProps}
-            sx={{ ...selectSx }}
-            onChange={(e) => setSelectedCity(e.target.value)}
-          >
-            {startingCities.map(([value, display]) => (
-              <MenuItem value={value}>{display}</MenuItem>
-            ))}
-          </Select>
+        <dl className="rq-character-create__summary">
+          <div>
+            <dt>Calling</dt>
+            <dd>{calling.label}</dd>
+          </div>
+          <div>
+            <dt>Origin</dt>
+            <dd>{origin.label}</dd>
+          </div>
+          <div>
+            <dt>Appearance</dt>
+            <dd>
+              {bodyFamily.components.find(
+                (component) => component.id === draft.bodyComponentId,
+              )?.label}
+              {' // '}
+              {bodyFamily.faces.find((face) => face.id === draft.faceComponentId)?.label}
+            </dd>
+          </div>
+        </dl>
 
-          <UiButtonComponent
-            isDisabled={character.statPoints > 0 || name === ''}
-            scale={1.8}
-            sx={{ marginTop: '30px !important' }}
-            text="Create Character"
-            textFontSize="9px"
-            onClick={createCharacter}
-          />
-        </Stack>
-      </UiWindowComponent>
-
-      <UiWindowComponent
-        state={{
-          fixed      : true,
-          fixedHeight: 240,
-          fixedWidth : 600,
-          x          : window.innerWidth / 2 - 300,
-          y          : window.innerHeight - 260,
-        }}
-      >
-        <Stack
-          alignContent={'center'}
-          alignItems={'center'}
-          direction={'row'}
-          justifyContent={'space-around'}
-          sx={{
-            width   : '100%',
-            padding : '10px',
-            position: 'absolute',
-            top     : '-70px',
-          }}
+        {message ? <p className="rq-character-create__message">{message}</p> : null}
+        <RequiemButton
+          disabled={!validName || submitting}
+          variant="primary"
+          onClick={createCharacter}
         >
-          <TextField
-            autoComplete="off"
-            label="Name"
-            size="small"
-            slotProps={{
-              input: {
-                sx: {
-                  background: 'rgba(0,0,0,0.5) !important',
-                  color     : 'white',
-                },
-              },
-            }}
-            sx={{
-              width: '300px',
-              color: 'white',
-              '*'  : {
-                borderColor: 'rgba(255, 217, 0, 0.561) !important',
-                color      : 'white !important',
-              },
-            }}
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            onKeyDown={(e) => {
-              e.stopPropagation();
-            }}
-          />
-          <UiButtonComponent
-            scale={1.5}
-            sx={{
-              marginRight: '50px',
-            }}
-            text="Generate Name"
-            textFontSize="9px"
-            onClick={generateName}
-          ></UiButtonComponent>
-        </Stack>
-        <textarea
-          readOnly
-          style={{
-            color     : 'white',
-            height    : '200px',
-            width     : 'calc(100% - 20px)',
-            background: 'transparent',
-            border    : 'none',
-            outline   : 'none',
-            margin    : '10px',
-          }}
-          value={descriptionValue}
-        ></textarea>
-      </UiWindowComponent>
-    </>
+          {submitting ? 'Creating…' : 'Create character'}
+        </RequiemButton>
+      </RequiemPanel>
+    </div>
   );
 };

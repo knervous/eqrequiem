@@ -1,22 +1,17 @@
-import React from "react";
-import { Box } from "@mui/material";
+import React from 'react';
+import { Box } from '@mui/material';
 
-import { MainProvider, useMainContext } from "../components/context";
+import { MainProvider, useMainContext } from '../components/context';
 
-import BabylonWrapper from "./babylon";
-import { SplashScreen } from "./splash";
-
-const bgMax = 1; //6;
-const sessionBg = `center no-repeat url('requiem/bg${Math.ceil(
-  Math.random() * bgMax,
-)}.png')`;
+import BabylonWrapper from './babylon';
+import { SplashScreen } from './splash';
 
 const GameContainerComponent: React.FC = () => {
   const { ready, splash } = useMainContext();
   return (
     <Box      sx={{
-      background: sessionBg,
-      backgroundSize: "cover",
+      minHeight     : '100vh',
+      background    : '#070909 url("/eltania/elrador-hero-v2.webp") 64% center / cover no-repeat',
     }}>
       {(splash || !ready) && <SplashScreen />}
       {ready ? <BabylonWrapper splash={splash} /> : null}

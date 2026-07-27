@@ -18,6 +18,7 @@ import { InventorySlot } from "./player-constants";
 import { PlayerInventory } from "./player-inventory";
 import { PlayerKeyboard } from "./player-keyboard";
 import { PlayerMovement } from "./player-movement";
+import { PlayerMerchant } from "./player-merchant";
 import { PlayerSocials } from "./player-socials";
 
 export default class Player {
@@ -31,6 +32,7 @@ export default class Player {
   public playerAbility: PlayerAbility;
   public playerSocials: PlayerSocials;
   public playerInventory: PlayerInventory;
+  public playerMerchant: PlayerMerchant;
 
   static instance: Player | null = null;
 
@@ -82,10 +84,15 @@ export default class Player {
     return this.target;
   }
   public set Target(target: Entity | null) {
+    const previousTargetId = this.target?.spawn.spawnId ?? 0;
     if (this.target) {
       this.target.setSelected(false);
     }
     this.target = target;
+    this.playerCombat.targetChanged(
+      previousTargetId,
+      this.target?.spawn.spawnId ?? 0,
+    );
     emitter.emit("target", target);
     if (this.target) {
       let color = new BABYLON.Color4(1, 1, 1, 1);
@@ -130,6 +137,7 @@ export default class Player {
     this.playerAbility = new PlayerAbility(this);
     this.playerSocials = new PlayerSocials(this);
     this.playerInventory = new PlayerInventory(this);
+    this.playerMerchant = new PlayerMerchant(this);
 
     Player.instance = this;
     (window as any).player = this;
@@ -155,6 +163,7 @@ export default class Player {
       this.playerMovement = null;
     }
     this.target = null;
+    this.playerCombat.reset();
     if (Player.instance === this) Player.instance = null;
   }
 
@@ -415,7 +424,7 @@ export default class Player {
     this.Running = !this.Running;
   }
   public autoAttack() {
-    console.log("Autoattack");
+    void this.playerCombat.toggleAutoAttack();
   }
 
   public rangedAttack() {

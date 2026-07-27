@@ -1,0 +1,21 @@
+{
+  "kind": "eltania.zone-minimap",
+  "version": 1,
+  "zone": "qeynos",
+  "image": "/eltania/maps/qeynos-topdown-v1.webp",
+  "north": "+x",
+  "rotationDegrees": -90,
+  "size": 1024,
+  "bounds": {
+    "minX": -841.171875,
+    "maxX": 1041.078125,
+    "minZ": -706.71875,
+    "maxZ": 1175.53125
+  },
+  "source": {
+    "spatial": "/eqrequiem/worlds/qeynos.spatial.json.gz",
+    "collision": "/eqrequiem/worlds/qeynos.collision.bin.gz",
+    "collisionHash": "8223d9b8",
+    "layoutHash": "efeef8f7"
+  }
+}

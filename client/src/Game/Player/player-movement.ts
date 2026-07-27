@@ -1,6 +1,8 @@
 import type * as BJS from '@babylonjs/core';
 import BABYLON from '@bjs';
 import { AnimationDefinitions } from '@game/Animation/animation-constants';
+import { UserConfig } from '@game/Config/config';
+import { bindingToCode } from '@game/Config/key-bindings';
 import emitter from '@game/Events/events';
 import { ClientPositionUpdate } from '@game/Net/messages';
 import { OpCodes } from '@game/Net/opcodes';
@@ -65,16 +67,18 @@ export class PlayerMovement {
   }
 
   private isActionPressed(action: string): boolean {
-    const keyMap: Record<string, string> = {
-      move_forward : 'KeyW',
-      move_backward: 'KeyS',
-      turn_left    : 'KeyA',
-      turn_right   : 'KeyD',
-      move_up      : 'Space',
+    const bindings = UserConfig.instance.getConfig().keyBindings;
+    const keyMap: Record<string, string | null> = {
+      move_forward : bindingToCode(bindings.moveForward),
+      move_backward: bindingToCode(bindings.moveBackward),
+      turn_left    : bindingToCode(bindings.turnLeft),
+      turn_right   : bindingToCode(bindings.turnRight),
+      move_up      : bindingToCode(bindings.jump),
       move_down    : 'ControlLeft',
       sprint       : 'ShiftLeft',
     };
-    return !!this.keyStates[keyMap[action]];
+    const code = keyMap[action];
+    return code ? Boolean(this.keyStates[code]) : false;
   }
 
   private isMovementKeysPressed(): boolean {

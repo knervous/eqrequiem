@@ -8,8 +8,8 @@ export enum OpCodes {
 
     // Login
     LoginAccepted,
-    PlayEverquestRequest,
-    PlayEverquestResponse,
+    EnterRealmRequest,
+    EnterRealmResponse,
     ServerListRequest,
     ServerListResponse,
 
@@ -604,5 +604,17 @@ export enum OpCodes {
     ZonePlayerToBind,
     ZoneServerReady,
     ResetAA,
-    UnderWorld
+    UnderWorld,
+    CombatEvent = 609,
+    DeathEvent = 610,
+    CorpseLootRequest = 611,
+    CorpseLootWindow = 612,
+    CorpseLootItem = 613,
+    CorpseLootError = 614,
+    NpcDebugState = 615,
+    MerchantOpen = 616,
+    MerchantWindow = 617,
+    MerchantBuy = 618,
+    MerchantSell = 619,
+    MerchantError = 620
 }

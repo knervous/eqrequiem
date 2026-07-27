@@ -61,10 +61,8 @@ export type LegacyZoneMetadataImportOptions = {
   objectSourceExtension?: string;
   defaultObjectBoundsRadius?: number;
   /**
-   * Requiem sidecars use Y-up axes, but their zone GLBs retain a root-X
-   * reflection and ObjectCache consumed the opposite yaw convention. Shado
-   * bakes both into final Babylon world space during preprocessing. Use
-   * babylon-y-up only for metadata authored natively in final world space.
+   * Requiem sidecars are already Y-up. The value records provenance while
+   * both accepted inputs use the current source-space placement contract.
    */
   sourceCoordinateSystem?: 'requiem-y-up' | 'babylon-y-up';
 };
@@ -83,32 +81,26 @@ export type LegacyZoneObjectTransform = {
 };
 
 /**
- * Converts one legacy placement into Shado's durable Babylon-space contract.
+ * Converts one imported placement into Shado's durable Y-up source-space contract.
  * Runtime consumers must use the returned values verbatim and must not repeat
- * the old ObjectCache yaw inversion.
+ * any loader or ObjectCache axis correction.
  */
 export function legacyZoneObjectTransformToBabylon(
-  transform: LegacyZoneObjectTransform,
-  sourceCoordinateSystem: 'requiem-y-up' | 'babylon-y-up' = 'requiem-y-up'
+  transform: LegacyZoneObjectTransform
 ): Pick<ShadoWorldObjectStamp, 'position' | 'rotationDegrees' | 'scale'> {
   const uniformScale = finite(transform.scale, 1);
   return {
-    // EQSage's Requiem export has already converted EQ Z-up positions to
-    // Babylon Y-up before writing the JSON sidecar. Its zone GLB keeps the
-    // historical X reflection on the root node, so bake that reflection into
-    // promoted placements as well.
+    // Requiem sidecars already carry canonical gameplay placements. Zone
+    // geometry receives its separate canonical X reflection during scene and
+    // spatial preprocessing; reflecting placements here would be incorrect.
     position: [
-      sourceCoordinateSystem === 'requiem-y-up'
-        ? -finite(transform.x)
-        : finite(transform.x),
+      finite(transform.x),
       finite(transform.y),
       finite(transform.z),
     ],
     rotationDegrees: [
       finite(transform.rotateX),
-      sourceCoordinateSystem === 'requiem-y-up'
-        ? -finite(transform.rotateY)
-        : finite(transform.rotateY),
+      finite(transform.rotateY),
       finite(transform.rotateZ),
     ],
     scale: [
@@ -148,7 +140,7 @@ export function importLegacyZoneMetadata(
   }
   const document = createShadoWorldAuthoring(world);
   const prefix = (options.objectSourcePrefix ?? '/eqrequiem/objects').replace(/\/$/, '');
-  const extension = options.objectSourceExtension ?? '/final.glb';
+  const extension = options.objectSourceExtension ?? '/final.glb.gz';
   const boundsRadius = positive(
     options.defaultObjectBoundsRadius ?? 32,
     'default object bounds radius'
@@ -166,14 +158,11 @@ export function importLegacyZoneMetadata(
       metadata: {
         legacyModel: model,
         sourceCoordinateSystem,
-        generatedAsset: 'final.glb',
+        generatedAsset: 'final.glb.gz',
       },
     });
     transforms.forEach((transform, index) => {
-      const normalized = legacyZoneObjectTransformToBabylon(
-        transform,
-        sourceCoordinateSystem
-      );
+      const normalized = legacyZoneObjectTransformToBabylon(transform);
       document.objects.stamps.push({
         id: `${prototypeId}-${index}`,
         prototype: prototypeId,
@@ -185,7 +174,7 @@ export function importLegacyZoneMetadata(
           legacyIndex: index,
           sourceCoordinateSystem,
           transformNormalizedAtPreprocess: true,
-          positionMirroredAtPreprocess: true,
+          transformContract: 'requiem-y-up-v2',
         },
       });
     });
@@ -201,7 +190,7 @@ export function importLegacyZoneMetadata(
           (min[2] + max[2]) * 0.5,
         ];
     const center: [number, number, number] = [
-      sourceCoordinateSystem === 'requiem-y-up' ? -sourceCenter[0] : sourceCenter[0],
+      sourceCenter[0],
       sourceCenter[1],
       sourceCenter[2],
     ];
@@ -223,7 +212,7 @@ export function importLegacyZoneMetadata(
         legacyRegionType: Number(region.regionType) || 0,
         zoneLineInfo: region.zoneLineInfo ?? null,
         sourceCoordinateSystem,
-        positionMirroredAtPreprocess: true,
+        transformContract: 'requiem-y-up-v2',
       },
     });
   }
@@ -231,8 +220,9 @@ export function importLegacyZoneMetadata(
 }
 
 /**
- * One-time upgrade for editor documents saved before Requiem's GLB root-X
- * reflection was baked into object and region positions.
+ * Normalizes generated authoring rows to the current source-space placement
+ * contract. Rows carrying the superseded mirror marker are transformed once;
+ * current rows have no runtime compatibility branch.
  */
 export function upgradeShadoWorldAuthoring(
   value: unknown,
@@ -248,28 +238,31 @@ export function upgradeShadoWorldAuthoring(
         : undefined;
     if (!legacyModel) continue;
     prototype.source = catalogSourceForLegacyPrototype(prototype.source, legacyModel);
-    prototype.metadata.generatedAsset = 'final.glb';
+    prototype.metadata.generatedAsset = 'final.glb.gz';
     prototype.metadata.sourceCoordinateSystem = 'requiem-y-up';
   }
   for (const stamp of document.objects.stamps) {
     if (
       Number.isInteger(stamp.metadata.legacyIndex) &&
-      stamp.metadata.positionMirroredAtPreprocess !== true
+      stamp.metadata.positionMirroredAtPreprocess === true
     ) {
       stamp.position[0] = -stamp.position[0];
-      stamp.metadata.positionMirroredAtPreprocess = true;
+      stamp.rotationDegrees[1] = -stamp.rotationDegrees[1];
+      delete stamp.metadata.positionMirroredAtPreprocess;
       stamp.metadata.transformNormalizedAtPreprocess = true;
       stamp.metadata.sourceCoordinateSystem = 'requiem-y-up';
+      stamp.metadata.transformContract = 'requiem-y-up-v2';
     }
   }
   for (const region of document.regions) {
     if (
       region.tags.includes('legacy') &&
-      region.metadata.positionMirroredAtPreprocess !== true
+      region.metadata.positionMirroredAtPreprocess === true
     ) {
       region.center[0] = -region.center[0];
-      region.metadata.positionMirroredAtPreprocess = true;
+      delete region.metadata.positionMirroredAtPreprocess;
       region.metadata.sourceCoordinateSystem = 'requiem-y-up';
+      region.metadata.transformContract = 'requiem-y-up-v2';
     }
   }
   return validateShadoWorldAuthoring(document, expectedWorld);
@@ -318,7 +311,7 @@ export function mergeLegacyZoneMetadata(
 function catalogSourceForLegacyPrototype(source: string, model: string): string {
   const match = source.match(/^(.*\/objects)(?:\/|$)/i);
   const prefix = match?.[1] ?? '/eqrequiem/objects';
-  return `${prefix}/${model}/final.glb`;
+  return `${prefix}/${model}/final.glb.gz`;
 }
 
 export function cloneShadoWorldAuthoring(

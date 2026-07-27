@@ -167,7 +167,17 @@ export async function fetchShadoJson<T>(
   url: string,
   options: { fetch?: typeof fetch } = {}
 ): Promise<T> {
-  return JSON.parse(await fetchShadoText(url, options)) as T;
+  const text = await fetchShadoText(url, options);
+  if (/^\s*</.test(text)) {
+    throw new Error(`Current JSON artifact '${url}' returned HTML`);
+  }
+  try {
+    return JSON.parse(text) as T;
+  } catch (error) {
+    throw new Error(`Current JSON artifact '${url}' is invalid`, {
+      cause: error,
+    });
+  }
 }
 
 export async function fetchShadoText(

@@ -1,5 +1,3 @@
-import { readFile } from "node:fs/promises";
-
 import {
   createRenderSnapshotNetBatch,
   NET_HEADER_BYTES,
@@ -23,11 +21,16 @@ interface ZoneKernelExports {
     positionXPtr: number,
     positionYPtr: number,
     positionZPtr: number,
+    orientationXPtr: number,
+    orientationYPtr: number,
+    orientationZPtr: number,
+    orientationWPtr: number,
     velocityXPtr: number,
     velocityYPtr: number,
     velocityZPtr: number,
     animationPtr: number,
     movementStatePtr: number,
+    headingPtr: number,
     targetXPtr: number,
     targetYPtr: number,
     targetZPtr: number,
@@ -57,8 +60,6 @@ export interface ZoneKernelSnapshot {
   /** The authoritative public arena prefix, already encoded as a Shado net batch. */
   readonly netPayload: Uint8Array;
 }
-
-export type ZoneKernelBuild = "debug" | "release";
 
 export class ZoneSimulationKernel {
   readonly entities: EntityStore;
@@ -99,6 +100,7 @@ export class ZoneSimulationKernel {
     if (cursor > arenaEnd) throw new RangeError("Shado entity planes exceed the WASM arena");
 
     const position = this.publicState.statePosition;
+    const orientation = this.publicState.stateOrientation;
     const velocity = this.publicState.stateVelocity;
     wasm.bindEntityArena(
       this.publicState.entityId.byteOffset,
@@ -106,11 +108,16 @@ export class ZoneSimulationKernel {
       position.byteOffset,
       position.byteOffset + Float32Array.BYTES_PER_ELEMENT,
       position.byteOffset + Float32Array.BYTES_PER_ELEMENT * 2,
+      orientation.byteOffset,
+      orientation.byteOffset + Float32Array.BYTES_PER_ELEMENT,
+      orientation.byteOffset + Float32Array.BYTES_PER_ELEMENT * 2,
+      orientation.byteOffset + Float32Array.BYTES_PER_ELEMENT * 3,
       velocity.byteOffset,
       velocity.byteOffset + Float32Array.BYTES_PER_ELEMENT,
       velocity.byteOffset + Float32Array.BYTES_PER_ELEMENT * 2,
       this.publicState.stateAnimation.byteOffset,
       this.publicState.stateMovementState.byteOffset,
+      this.publicState.stateHeading.byteOffset,
       targetX.byteOffset,
       targetY.byteOffset,
       targetZ.byteOffset,
@@ -138,13 +145,13 @@ export class ZoneSimulationKernel {
     this.entities = new EntityStore(binding);
   }
 
-  static async load(
-    build: ZoneKernelBuild = process.env.NODE_ENV === "production" ? "release" : "debug",
+  static async instantiate(
+    source: BufferSource | WebAssembly.Module,
   ): Promise<ZoneSimulationKernel> {
-    const bytes = await readFile(
-      new URL(`./wasm/zone-simulation.${build}.wasm`, import.meta.url),
-    );
-    const result = await WebAssembly.instantiate(bytes, {
+    const module = source instanceof WebAssembly.Module
+      ? source
+      : await WebAssembly.compile(source);
+    const instance = await WebAssembly.instantiate(module, {
       env: {
         abort(): never {
           throw new Error("AssemblyScript zone kernel aborted");
@@ -152,7 +159,7 @@ export class ZoneSimulationKernel {
       },
     });
     return new ZoneSimulationKernel(
-      result.instance.exports as unknown as ZoneKernelExports,
+      instance.exports as unknown as ZoneKernelExports,
     );
   }
 

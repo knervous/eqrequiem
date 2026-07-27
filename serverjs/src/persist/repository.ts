@@ -39,6 +39,13 @@ interface CharacterRow extends DatabaseRow {
   zone_id: number;
   instance_id: number;
   last_login_at: string | number | null;
+  appearance_schema_version: number | null;
+  body_family_id: string | null;
+  body_component_id: string | null;
+  face_component_id: string | null;
+  presentation_id: string | null;
+  calling_id: string | null;
+  origin_id: string | null;
 }
 
 interface InventoryRow extends DatabaseRow {
@@ -80,7 +87,10 @@ export class GameRepository {
     const result = await this.drizzle.query<CharacterRow>(
       sql`SELECT character.id, character.name, character.level,
           character.class_id, character.race_id, character.gender, character.deity_id,
-          character.face, character.last_login_at,
+          character.face, character.last_login_at, character.appearance_schema_version,
+          character.body_family_id, character.body_component_id,
+          character.face_component_id, character.presentation_id,
+          character.calling_id, character.origin_id,
           position.zone_id, position.instance_id
           FROM characters character
           JOIN character_positions position ON position.character_id = character.id
@@ -95,6 +105,15 @@ export class GameRepository {
       deity: Number(row.deity_id), face: Number(row.face), zoneId: Number(row.zone_id),
       zoneInstance: Number(row.instance_id), lastLogin: timestamp(row.last_login_at),
       items: await gameData.inventoryItems(Number(row.id)),
+      ...(row.appearance_schema_version === null ? {} : {
+        appearanceSchemaVersion: Number(row.appearance_schema_version),
+        bodyFamilyId           : String(row.body_family_id),
+        bodyComponentId        : String(row.body_component_id),
+        faceComponentId        : String(row.face_component_id),
+        presentationId         : String(row.presentation_id),
+        callingId              : String(row.calling_id),
+        originId               : String(row.origin_id),
+      }),
     })));
   }
 
@@ -117,11 +136,16 @@ export class GameRepository {
     await this.drizzle.execute(
       sql`INSERT INTO characters
           (account_id, name, level, class_id, race_id, gender, deity_id, face,
-           str, sta, dex, agi, intelligence, wis, cha, unspent_stat_points)
+           str, sta, dex, agi, intelligence, wis, cha, unspent_stat_points,
+           appearance_schema_version, body_family_id, body_component_id,
+           face_component_id, presentation_id, calling_id, origin_id)
           VALUES (${accountId}, ${name}, 1, ${character.charClass}, ${character.race},
             ${character.gender}, ${character.deity}, ${character.face}, ${stats.str},
             ${stats.sta}, ${stats.dex}, ${stats.agi}, ${stats.intel}, ${stats.wis},
-            ${stats.cha}, ${stats.points})`,
+            ${stats.cha}, ${stats.points}, ${character.appearanceSchemaVersion ?? null},
+            ${character.bodyFamilyId ?? null}, ${character.bodyComponentId ?? null},
+            ${character.faceComponentId ?? null}, ${character.presentationId ?? null},
+            ${character.callingId ?? null}, ${character.originId ?? null})`,
     );
     const row = (await this.drizzle.query<{ id: number }>(
       sql`SELECT id FROM characters WHERE account_id = ${accountId} AND name = ${name} LIMIT 1`,

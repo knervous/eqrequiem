@@ -1,13 +1,11 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import {
   useEventArgState,
 } from '@game/Events/event-hooks';
 import emitter from '@game/Events/events';
 import Player from '@game/Player/player';
 import { Box, Grid } from '@mui/material';
-import { UiTitleComponent } from '@ui/common/ui-title';
 import { useDrag } from '@ui/hooks/use-drag';
-import { createPortal } from 'react-dom';
 import { useDebouncedCallback } from 'use-debounce';
 import { ItemButton } from '../action-button/item-button';
 
@@ -52,6 +50,7 @@ export const Bag: React.FC<{
   );
   return <Box
     id={`bag-${slot}`}
+    className="rq-bag"
     sx={{
       position   : 'fixed',
       top        : y,
@@ -60,23 +59,26 @@ export const Bag: React.FC<{
       width      : columns * 50,
       height     : rows * 50,
       scale,
-      borderWidth: 2,
-      borderStyle: 'solid',
-      borderColor:
-          ' rgb(180, 173, 134) rgb(142, 134, 107) rgb(61, 58, 48) rgb(177, 170, 142)',
     }}
     onClick={onContainerClick}
   >
-    <UiTitleComponent
-      draggable
-      handleDragMouseDown={handleDragMouseDown}
-      marginTop={-2}
-      name={name}
-    />
+    <header className="rq-bag__header" onMouseDown={handleDragMouseDown}>
+      <span>{name}</span>
+      <button
+        aria-label={`Close ${name}`}
+        onMouseDown={(event) => event.stopPropagation()}
+        onClick={(event) => {
+          event.stopPropagation();
+          Player.instance?.playerInventory.closeBag(slot);
+        }}
+      >
+        ×
+      </button>
+    </header>
     <Grid container columns={16}>
       {Array.from({ length: slots }).map((_, idx) => {
         return (
-          <Grid key={`${idx}`} size={8} sx={{ height: 'calc(100% / 4)' }}>
+          <Grid key={`${idx}`} size={8} sx={{ height: 50 }}>
             <ItemButton
               key={`${slot}-${idx}`}
               insideBag

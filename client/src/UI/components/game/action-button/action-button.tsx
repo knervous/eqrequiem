@@ -6,7 +6,6 @@ import { useEventArg } from '@game/Events/event-hooks';
 import emitter from '@game/Events/events';
 import Player from '@game/Player/player';
 import { Box } from '@mui/material';
-import { UiButtonComponent } from '@ui/common/ui-button';
 import { ActionButtonData, ActionButtonType, FullActionData, FullItemEntryData } from './constants';
 import { useImmediateDragClone } from './hooks';
 import { ItemButton } from './item-button';
@@ -41,41 +40,10 @@ const buttonMap = {
 } as Record<ActionButtonType, keyof ActionButtonsConfig>;
 
 export const ActionButton: React.FC<ActionButtonProps> = (props) => {
-  const { elementRef, onMouseDown } = useImmediateDragClone<HTMLDivElement>(
+  const { elementRef, onMouseDown } = useImmediateDragClone<HTMLButtonElement>(
     props.scale ?? 1,
     props.actionData,
   );
-  const uiButton = useMemo(() => {
-    if (!props.buttonName) {
-      return null;
-    }
-    return (
-      <UiButtonComponent
-        buttonName={props.buttonName}
-        sx={{
-          ['&:hover']: {
-            boxShadow: '0px 0px 10px 5px inset rgba(216, 215, 208, 0.27)',
-          },
-          ...(props.useDefaultSize
-            ? {}
-            : { width: props.size, height: props.size }),
-        }}
-        text={props.text ?? props.actionData?.label}
-        textSx={{
-          fontSize: '25px',
-          font    : 'Arial',
-          color   : 'black',
-        }}
-      ></UiButtonComponent>
-    );
-  }, [
-    props.buttonName,
-    props.text,
-    props.size,
-    props.useDefaultSize,
-    props.actionData,
-  ]);
-
   const buttonAction = useMemo(
     () =>
       props.playerAction ? () => props.action(props.actionData) : props.action,
@@ -84,27 +52,21 @@ export const ActionButton: React.FC<ActionButtonProps> = (props) => {
 
   return (
     <Box
+      component="button"
+      type="button"
       ref={elementRef}
-      className="action-button"
-      sx={{
-        ['&:hover']: {
-          boxShadow: '0px 0px 10px 5px inset rgba(216, 215, 208, 0.27)',
-        },
-        ...(props.useDefaultSize
-          ? {}
-          : {
-            width : props.size,
-            height: props.size,
-          }),
-
-        display       : 'flex',
-        alignItems    : 'center',
-        justifyContent: 'center',
+      className="action-button rq-action-button"
+      sx={props.useDefaultSize ? {} : {
+        width : props.size ?? 48,
+        height: props.size ?? 48,
       }}
-      onClick={buttonAction}
+      onClick={(event) => {
+        buttonAction();
+        event.currentTarget.blur();
+      }}
       onMouseDown={onMouseDown}
     >
-      {uiButton}
+      <span>{props.text ?? props.actionData?.label ?? ''}</span>
     </Box>
   );
 };
@@ -240,14 +202,10 @@ export const ActionHotButton: React.FC<HotButtonProps> = (props) => {
           return 'Persona';
         case ActionButtonType.OPTIONS:
           return 'Options';
-        case ActionButtonType.ABILITIES:
-          return 'Abilities';
         case ActionButtonType.SPELLS:
           return 'Spells';
         case ActionButtonType.INVENTORY:
           return 'Inventory';
-        case ActionButtonType.OPTIONS:
-          return 'Options';
         case ActionButtonType.MELEE_ATTACK:
           return 'Melee';
         case ActionButtonType.RANGED_ATTACK:
@@ -360,7 +318,6 @@ export const ActionHotButton: React.FC<HotButtonProps> = (props) => {
   const linkedButton = useMemo(() => { 
     if (props.actionData?.type === ActionButtonType.INVENTORY) {
       return <ItemButton
-        bagSlot={0}
         hotButton={true}
         hotButtonIndex={props.index}
         scale={(props.scale ?? 1)}
@@ -373,17 +330,17 @@ export const ActionHotButton: React.FC<HotButtonProps> = (props) => {
       action={action}
       actionData={hotButtonActionData}
       buttonName={buttonName}
-      size={110}
+      size={props.size ?? 48}
       text={text}
     />;
 
   }, [action, props, hotButtonActionData, buttonName, text]);
 
   return (
-    <Box ref={dropRef} data-hot-button={props.index} sx={{ p: 1, ...(inventoryButton ? {
-      width : '110px',
-      height: '110px',
-    } : {}) }}>
+    <Box ref={dropRef} data-hot-button={props.index} sx={inventoryButton ? {
+      width : props.size ?? '48px',
+      height: props.size ?? '48px',
+    } : {}}>
       {linkedButton}
     </Box>
   );

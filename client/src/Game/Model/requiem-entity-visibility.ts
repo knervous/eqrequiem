@@ -170,6 +170,10 @@ export class RequiemEntityVisibility implements RequiemEntityVisibilitySink {
    */
   public update(camera: Camera, maxDistance: number): boolean {
     if (this.overflowed) return false;
+    // This runs from onBeforeRender. Force Babylon's current camera transform
+    // before publishing frustum planes instead of consuming the prior frame.
+    const scene = camera.getScene();
+    scene.updateTransformMatrix(true);
     const latest = this.worker.acquireLatest();
     if (latest) {
       this.apply(latest.visibleIndices);
@@ -180,7 +184,7 @@ export class RequiemEntityVisibility implements RequiemEntityVisibilitySink {
     if (now - this.lastRequestTime >= REQUEST_INTERVAL_MS) {
       this.lastRequestTime = now;
       Frustum.GetPlanesToRef(
-        camera.getScene().getTransformMatrix(),
+        scene.getTransformMatrix(),
         this.planes,
       );
       let offset = 0;

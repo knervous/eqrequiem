@@ -1,4 +1,5 @@
 import type { BackendCharacterCreate } from "./contracts.js";
+import { validEltaniaCharacterProjection } from "./eltania-character-adapter.js";
 
 const CHARACTER_NAME = /^[A-Z][a-z]{3,14}$/;
 
@@ -67,6 +68,7 @@ export function baseCharacterStats(race: number, charClass: number): CharacterBa
 }
 
 export function resolveCharacterStats(character: BackendCharacterCreate): CharacterBaseStats | null {
+  if (!validEltaniaCharacterProjection(character)) return null;
   const base = baseCharacterStats(character.race, character.charClass);
   if (!base) return null;
   const keys = ["str", "sta", "agi", "dex", "wis", "intel", "cha"] as const;

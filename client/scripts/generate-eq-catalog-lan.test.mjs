@@ -50,6 +50,15 @@ test('CLI accepts a mounted reference root and bounded stages', () => {
   assert.equal(options.triangleFloor, 64)
 })
 
+test('CLI supports reverse recovery queues and an explicit skip manifest', () => {
+  const options = parseArguments([
+    '--reverse',
+    '--skip-file', '/tmp/eq-skip.json',
+  ])
+  assert.equal(options.reverse, true)
+  assert.equal(options.skipFile, '/tmp/eq-skip.json')
+})
+
 test('inventory includes GLB and compressed GLB but excludes Babylon duplicates', async (context) => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'eq-catalog-test-'))
   context.after(() => fs.rm(root, { recursive: true, force: true }))

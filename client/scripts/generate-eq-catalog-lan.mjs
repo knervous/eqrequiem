@@ -52,6 +52,8 @@ Options:
   --only GLOB            Process IDs containing this case-insensitive text
   --kind items|objects   Restrict inventory to one source kind
   --limit N              Process at most N references after sorting
+  --reverse              Process the selected queue from last to first
+  --skip-file FILE       JSON skip manifest containing an assets array
   --retry-failed         Retry assets with a recorded failed stage
   --force                Ignore successful checkpoints and rebuild selected stages
   --face-count N         Hard generated triangle ceiling (default: 6000)
@@ -83,6 +85,8 @@ function parseArguments(argv) {
     only: null,
     kind: null,
     limit: Infinity,
+    reverse: false,
+    skipFile: null,
     retryFailed: false,
     force: false,
     faceCount: 6000,
@@ -114,6 +118,8 @@ function parseArguments(argv) {
     } else if (value === '--only') options.only = take(index++, 'only')
     else if (value === '--kind') options.kind = take(index++, 'kind')
     else if (value === '--limit') options.limit = Number(take(index++, 'limit'))
+    else if (value === '--reverse') options.reverse = true
+    else if (value === '--skip-file') options.skipFile = take(index++, 'skip-file')
     else if (value === '--face-count') options.faceCount = Number(take(index++, 'face-count'))
     else if (value === '--triangle-ratio') options.triangleRatio = Number(take(index++, 'triangle-ratio'))
     else if (value === '--triangle-floor') options.triangleFloor = Number(take(index++, 'triangle-floor'))
@@ -136,6 +142,7 @@ function parseArguments(argv) {
   options.cacheDir = path.resolve(options.cacheDir)
   options.itemMetadata = path.resolve(options.itemMetadata)
   options.contentDb = path.resolve(options.contentDb)
+  if (options.skipFile) options.skipFile = path.resolve(options.skipFile)
   options.server = options.server.replace(/\/$/, '')
   const unknownStages = options.stages.filter((stage) => !ALL_STAGES.includes(stage))
   if (unknownStages.length) throw new Error(`Unknown stages: ${unknownStages.join(', ')}`)
@@ -175,6 +182,25 @@ async function writeJsonAtomic(file, value) {
   const temporary = `${file}.${process.pid}.tmp`
   await fs.writeFile(temporary, `${JSON.stringify(value, null, 2)}\n`)
   await fs.rename(temporary, file)
+}
+
+async function loadSkipManifest(file) {
+  if (!file) return new Map()
+  const manifest = await readJson(file)
+  if (!manifest || !Array.isArray(manifest.assets)) {
+    throw new Error(`Skip manifest must contain an assets array: ${file}`)
+  }
+  const skipped = new Map()
+  for (const entry of manifest.assets) {
+    const key = typeof entry === 'string' ? entry : entry?.key
+    if (!/^(items|objects)\/[^/]+$/i.test(key ?? '')) {
+      throw new Error(`Invalid skip asset key in ${file}: ${JSON.stringify(entry)}`)
+    }
+    skipped.set(key.toLowerCase(), typeof entry === 'string'
+      ? { key: key.toLowerCase(), reason: 'operator skip' }
+      : { ...entry, key: key.toLowerCase() })
+  }
+  return skipped
 }
 
 async function downloadChecked(url, output, expectedSha = null) {
@@ -767,7 +793,10 @@ class HunyuanLanClient {
 
   async ensureMode(mode) {
     const flag = mode === 'shape' ? 'shape_loaded' : 'paint_loaded'
-    let current = await this.mode()
+    // A cancelled GPU request can keep the single-worker API unresponsive for
+    // one probe interval. Do not terminate a resumable catalog run merely
+    // because that previous request is still unwinding.
+    let current = await withRetries(`LAN ${mode} mode probe`, () => this.mode(), 5)
     if (current[flag]) return current
     await this.checkedFetch(`${this.server}/mode`, {
       method: 'POST',
@@ -1042,6 +1071,7 @@ async function updateDescription(asset, state, outputRoot) {
     } : null,
     stages: state.stages ?? {},
     failure: state.failure ?? null,
+    skip: state.skip ?? null,
     updatedAt: new Date().toISOString(),
   }
   await writeJsonAtomic(file, value)
@@ -1075,6 +1105,8 @@ async function writeMasterManifest(outputRoot, assets, stateByKey, options) {
         ?? null,
       status: state.excluded
         ? 'excluded_nonvisual'
+        : state.skip
+          ? 'skipped'
         : state.failure
         ? 'failed'
         : state.finalValidation?.passed
@@ -1085,6 +1117,7 @@ async function writeMasterManifest(outputRoot, assets, stateByKey, options) {
       description: path.relative(outputRoot, path.join(root, 'description.json')),
       glb: state.generated?.final ? path.relative(outputRoot, state.generated.final.file) : null,
       failure: state.failure?.message ?? null,
+      skip: state.skip ?? null,
     }
   })
   const counts = records.reduce((result, record) => {
@@ -1102,6 +1135,7 @@ async function writeMasterManifest(outputRoot, assets, stateByKey, options) {
     outputRoot,
     contentDatabase: options.contentDb,
     server: options.server,
+    skipFile: options.skipFile,
     classifier: { name: 'MobileNetV2-12', runtime: 'onnxruntime-node', modelSha256: MODEL_SHA256 },
     parameters: {
       faceCount: options.faceCount,
@@ -1111,6 +1145,7 @@ async function writeMasterManifest(outputRoot, assets, stateByKey, options) {
       octreeResolution: options.octreeResolution,
       guidanceScale: options.guidanceScale,
       views: VIEWS,
+      reverse: options.reverse,
     },
     counts,
     assets: records,
@@ -1140,6 +1175,7 @@ async function run(options) {
   await fs.access(options.contentDb)
   await fs.mkdir(options.outputRoot, { recursive: true })
   const inventoryAssets = await collectReferenceFiles(options.inputRoot)
+  const skippedByKey = await loadSkipManifest(options.skipFile)
   let assets = options.kind
     ? inventoryAssets.filter((asset) => asset.kind === options.kind)
     : [...inventoryAssets]
@@ -1147,6 +1183,8 @@ async function run(options) {
     const needle = options.only.toLowerCase()
     assets = assets.filter((asset) => asset.id.includes(needle) || asset.source.toLowerCase().includes(needle))
   }
+  assets = assets.filter((asset) => !skippedByKey.has(`${asset.kind}/${asset.id}`))
+  if (options.reverse) assets.reverse()
   assets = assets.slice(0, options.limit)
   if (!assets.length) throw new Error(`No *.glb or *.glb.gz references found under ${options.inputRoot}`)
 
@@ -1162,6 +1200,7 @@ async function run(options) {
     state.legacyItems = state.databaseSemantics.items
       ?? (asset.kind === 'items' ? summarizeItems(itemMetadata.get(asset.id)) : null)
     state.lowPolyContract = lowPolyContract(state.geometry, options)
+    state.skip = skippedByKey.get(`${asset.kind}/${asset.id}`) ?? null
     if (state.classification) {
       const sqliteCategory = state.databaseSemantics.category
       state.classification.categorySources ??= {}
@@ -1181,6 +1220,8 @@ async function run(options) {
     items: assets.filter((asset) => asset.kind === 'items').length,
     objects: assets.filter((asset) => asset.kind === 'objects').length,
     stages: options.dryRun ? ['inventory'] : options.stages,
+    order: options.reverse ? 'reverse' : 'forward',
+    skipped: skippedByKey.size,
     outputRoot: options.outputRoot,
   }))
   if (options.dryRun) {

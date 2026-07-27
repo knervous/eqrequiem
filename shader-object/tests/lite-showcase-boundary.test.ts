@@ -19,7 +19,7 @@ describe('Babylon Lite sandbox boundary', () => {
       path.join(root, 'src/showcase/index.ts'),
       'utf8'
     );
-    expect(source).toContain("export * from './EqShowcaseUi'");
+    expect(source).toContain("export * from './ShadoVatShowcaseUi'");
     expect(source).not.toContain("export * from './EqShowcase'");
     expect(source).not.toContain("export * from './ShadoShowcaseEnvironment'");
   });

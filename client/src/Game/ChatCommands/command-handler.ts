@@ -187,7 +187,7 @@ export class CommandHandler extends BaseCommandHandler {
 
   @command('options')
   commandOptions() {
-    addChatLine('Options command not implemented yet.');
+    emitter.emit('toggleOptions');
   }
 
   @command('persona')

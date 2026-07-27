@@ -58,6 +58,11 @@ export const netStructs = [
           "aggroTarget",
         ],
       },
+      {
+        name: "corpse",
+        tag: 3,
+        fields: ["position", "orientation", "animation"],
+      },
     ],
     fields: [
       { id: 1, name: "kind", type: "u8" },
@@ -84,6 +89,8 @@ export const netStructs = [
       { id: 25, name: "modelKeyOffset", type: "u32" },
       { id: 26, name: "modelKeyLength", type: "u16" },
       { id: 27, name: "heading", type: "f32" },
+      { id: 28, name: "currentHp", type: "i32" },
+      { id: 29, name: "maximumHp", type: "i32" },
       {
         id: 10,
         name: "serverFlags",

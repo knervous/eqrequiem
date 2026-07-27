@@ -32,7 +32,7 @@ export * from './materials/ShadoMaterial';
 export * from './babylon';
 export * from './render';
 export * from './showcase/EqShowcase';
-export * from './showcase/EqShowcaseUi';
+export * from './showcase/ShadoVatShowcaseUi';
 export * from './showcase/ShadoShowcaseEnvironment';
 
 export const VERSION = '1.0.5';

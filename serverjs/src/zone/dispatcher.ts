@@ -80,6 +80,41 @@ export class ZoneDispatcher {
       },
     );
 
+    this.registry.register(
+      OP.AUTO_ATTACK,
+      ({ packet, zoneId, instanceId }) => {
+        this.logger.debug("Auto attack routed to zone worker", {
+          sessionId: packet.sessionId,
+          zoneId,
+          instanceId,
+        });
+      },
+    );
+
+    for (const opcode of [OP.LOOT_REQUEST, OP.LOOT_ITEM]) {
+      this.registry.register(opcode, ({ packet, zoneId, instanceId }) => {
+        this.logger.debug("Corpse loot intent routed to zone worker", {
+          sessionId: packet.sessionId,
+          zoneId,
+          instanceId,
+          opcode,
+        });
+      });
+    }
+
+    for (
+      const opcode of [OP.MERCHANT_OPEN, OP.MERCHANT_BUY, OP.MERCHANT_SELL]
+    ) {
+      this.registry.register(opcode, ({ packet, zoneId, instanceId }) => {
+        this.logger.debug("Merchant intent routed to zone worker", {
+          sessionId: packet.sessionId,
+          zoneId,
+          instanceId,
+          opcode,
+        });
+      });
+    }
+
     this.registry.register(OP.ANIMATION, ({ packet, zoneId, instanceId }) => {
       this.logger.debug("Animation routed to zone worker", {
         sessionId: packet.sessionId,

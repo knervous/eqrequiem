@@ -1,9 +1,9 @@
 // Owned by eqrequiem. @knervous/shado is only the compiler/codegen frontend.
 // TypeScript binds these pointers to one Shado net arena before invoking reducers.
 const MAX_ENTITIES: i32 = 16384;
-// 104 public RenderSnapshotNet bytes + 36 private reducer bytes per entity,
+// Public RenderSnapshotNet bytes plus 36 private reducer bytes per entity,
 // rounded up so schema growth cannot overlap the private planes.
-const ARENA_BYTES: i32 = MAX_ENTITIES * 144 + 64;
+const ARENA_BYTES: i32 = MAX_ENTITIES * 160 + 64;
 const arena = new StaticArray<u8>(ARENA_BYTES);
 
 let ids: usize = 0;
@@ -11,6 +11,10 @@ let kinds: usize = 0;
 let positionX: usize = 0;
 let positionY: usize = 0;
 let positionZ: usize = 0;
+let orientationX: usize = 0;
+let orientationY: usize = 0;
+let orientationZ: usize = 0;
+let orientationW: usize = 0;
 let velocityX: usize = 0;
 let velocityY: usize = 0;
 let velocityZ: usize = 0;
@@ -20,6 +24,7 @@ let targetZ: usize = 0;
 let speed: usize = 0;
 let animation: usize = 0;
 let movementState: usize = 0;
+let heading: usize = 0;
 let dirtyFlags: usize = 0;
 let dirtyIndices: usize = 0;
 let dirtyCount: i32 = 0;
@@ -35,11 +40,16 @@ export function bindEntityArena(
   positionXPtr: usize,
   positionYPtr: usize,
   positionZPtr: usize,
+  orientationXPtr: usize,
+  orientationYPtr: usize,
+  orientationZPtr: usize,
+  orientationWPtr: usize,
   velocityXPtr: usize,
   velocityYPtr: usize,
   velocityZPtr: usize,
   animationPtr: usize,
   movementStatePtr: usize,
+  headingPtr: usize,
   targetXPtr: usize,
   targetYPtr: usize,
   targetZPtr: usize,
@@ -52,11 +62,16 @@ export function bindEntityArena(
   positionX = positionXPtr;
   positionY = positionYPtr;
   positionZ = positionZPtr;
+  orientationX = orientationXPtr;
+  orientationY = orientationYPtr;
+  orientationZ = orientationZPtr;
+  orientationW = orientationWPtr;
   velocityX = velocityXPtr;
   velocityY = velocityYPtr;
   velocityZ = velocityZPtr;
   animation = animationPtr;
   movementState = movementStatePtr;
+  heading = headingPtr;
   targetX = targetXPtr;
   targetY = targetYPtr;
   targetZ = targetZPtr;
@@ -108,6 +123,7 @@ export function markDirty(index: i32): void {
 export function tickNpcs(entityCount: i32, deltaMs: f32): void {
   const count = min<i32>(max<i32>(entityCount, 0), MAX_ENTITIES);
   const dt: f32 = deltaMs * <f32>0.001;
+  if (dt <= 0) return;
   for (let i = 0; i < count; i++) {
     if (load<u8>(kinds + <usize>i) != 2) continue;
     const scalarOffset = <usize>i << 2;
@@ -128,6 +144,16 @@ export function tickNpcs(entityCount: i32, deltaMs: f32): void {
     }
     const inverseDistance: f32 = <f32>1.0 / Mathf.sqrt(distanceSq);
     const moveSpeed = load<f32>(speed + scalarOffset);
+    if (moveSpeed <= 0) {
+      const wasMoving = load<u16>(movementState + (<usize>i << 1)) != 0;
+      store<f32>(velocityX + vectorOffset, 0);
+      store<f32>(velocityY + vectorOffset, 0);
+      store<f32>(velocityZ + vectorOffset, 0);
+      store<u32>(animation + scalarOffset, 0);
+      store<u16>(movementState + (<usize>i << 1), 0);
+      if (wasMoving) markDirty(i);
+      continue;
+    }
     const step: f32 = min<f32>(moveSpeed * dt, <f32>1.0 / inverseDistance);
     store<f32>(velocityX + vectorOffset, dx * inverseDistance * moveSpeed);
     store<f32>(velocityY + vectorOffset, dy * inverseDistance * moveSpeed);
@@ -135,6 +161,16 @@ export function tickNpcs(entityCount: i32, deltaMs: f32): void {
     store<f32>(positionX + vectorOffset, load<f32>(positionX + vectorOffset) + dx * inverseDistance * step);
     store<f32>(positionY + vectorOffset, load<f32>(positionY + vectorOffset) + dy * inverseDistance * step);
     store<f32>(positionZ + vectorOffset, load<f32>(positionZ + vectorOffset) + dz * inverseDistance * step);
+    // Requiem runtime models face local +X. Babylon positive yaw turns +X
+    // toward -Z, so world-space motion (dx, dz) maps to atan2(-dz, dx).
+    const yaw = Mathf.atan2(-dz * inverseDistance, dx * inverseDistance);
+    const halfYaw = yaw * <f32>0.5;
+    const orientationOffset = <usize>i * 16;
+    store<f32>(heading + scalarOffset, yaw);
+    store<f32>(orientationX + orientationOffset, 0);
+    store<f32>(orientationY + orientationOffset, Mathf.sin(halfYaw));
+    store<f32>(orientationZ + orientationOffset, 0);
+    store<f32>(orientationW + orientationOffset, Mathf.cos(halfYaw));
     store<u32>(animation + scalarOffset, 1);
     store<u16>(movementState + (<usize>i << 1), 1);
     markDirty(i);

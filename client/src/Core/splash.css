@@ -1,0 +1,91 @@
+.eltania-splash {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  color: #e7ddc5;
+  background:
+    linear-gradient(180deg, rgba(3, 7, 8, 0.28), rgba(3, 7, 8, 0.74)),
+    url("/eltania/elrador-map-loading-v1.webp") center / cover no-repeat,
+    #070909;
+}
+
+.eltania-splash__veil {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, transparent 0 12%, rgba(3, 7, 8, 0.72) 72%);
+}
+
+.eltania-splash__content {
+  position: relative;
+  width: min(480px, calc(100vw - 48px));
+  text-align: center;
+}
+
+.eltania-splash__mark {
+  width: clamp(70px, 10vw, 104px);
+  height: clamp(70px, 10vw, 104px);
+  filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.56));
+}
+
+.eltania-splash__eyebrow {
+  margin: 12px 0 0;
+  color: #c0a873;
+  font: 650 10px/1 ui-monospace, "SFMono-Regular", Consolas, monospace;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.eltania-splash h1 {
+  margin: 18px 0 0;
+  color: #e7ddc5;
+  font: 400 clamp(28px, 5vw, 44px)/1.1 Georgia, "Times New Roman", serif;
+  letter-spacing: 0.025em;
+}
+
+.eltania-splash__progress {
+  position: relative;
+  width: min(300px, 72vw);
+  height: 2px;
+  margin: 30px auto 20px;
+  overflow: hidden;
+  background: rgba(192, 168, 115, 0.22);
+}
+
+.eltania-splash__progress span {
+  position: absolute;
+  inset: 0;
+  width: 36%;
+  background: linear-gradient(90deg, transparent, #d29a45, #f0bd68, transparent);
+  animation: eltania-load 1.4s ease-in-out infinite;
+}
+
+.eltania-splash__status {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  border: 0;
+  clip: rect(0, 0, 0, 0);
+}
+
+@keyframes eltania-load {
+  from {
+    transform: translateX(-110%);
+  }
+
+  to {
+    transform: translateX(290%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .eltania-splash__progress span {
+    width: 52%;
+    animation: none;
+  }
+}

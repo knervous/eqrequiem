@@ -8,7 +8,10 @@ import {
   viewWorldStatePacket,
   WORLD_STATE_FLAGS,
 } from "./world-state.js";
-import { createRenderSnapshotNetBatch } from "./generated/net-structs.js";
+import {
+  createRenderSnapshotNetBatch,
+  NET_MAGIC,
+} from "./generated/net-structs.js";
 
 describe("Shado world state transport", () => {
   it("ships public SoA planes with a compact UTF-8 sidecar", () => {
@@ -33,6 +36,13 @@ describe("Shado world state transport", () => {
     assert.ok(packet);
     assert.equal(packet.full, true);
     assert.equal(packet.revision, 7);
+    assert.equal(
+      new DataView(
+        packet.state.bytes.buffer,
+        packet.state.bytes.byteOffset,
+      ).getUint32(0, true),
+      NET_MAGIC,
+    );
     assert.equal(packet.state.statePosition[2], 30);
     assert.equal(packet.state.statePrimary[0], 10609);
     assert.deepEqual(readWorldSpawn(packet.state, packet.sidecar, 0), {
@@ -53,8 +63,12 @@ describe("Shado world state transport", () => {
       y: 20,
       z: 30,
       heading: 1.25,
+      currentHp: 0,
+      maximumHp: 0,
       equipment: { head: 0, chest: 3, primary: 10609, secondary: 0 },
+      kind: 2,
       isNpc: true,
+      isCorpse: false,
     });
   });
 

@@ -34,13 +34,14 @@ export class BackendApp {
     this.dbService = new DbService(this.env, this.logger);
     this.persistService = new PersistService(this.env, this.logger);
     this.worldService = new WorldService(this.logger, this.persistService);
+    this.navService = new NavService(this.env, this.logger);
     this.zoneService = new ZoneService(
       this.env,
       this.logger,
       this.persistService,
       this.dbService,
+      this.navService,
     );
-    this.navService = new NavService(this.env, this.logger);
     this.transportCertProvider = new TransportCertProvider(
       this.env,
       this.logger,
@@ -87,9 +88,9 @@ export class BackendApp {
     this.services = [
       this.dbService,
       this.worldService,
+      this.navService,
       this.zoneService,
       this.persistService,
-      this.navService,
       this.libraService,
       this.gatewayService,
     ];

@@ -8,6 +8,7 @@ export interface GameItemRow extends DatabaseRow {
   astr: number; asta: number; adex: number; aagi: number; aint: number;
   awis: number; acha: number; hp: number; mana: number; dr: number; mr: number;
   cr: number; fr: number; pr: number; haste: number; magic: number; nodrop: number;
+  base_price?: number; sell_rate_permille?: number;
 }
 
 /** One item wire projection shared by offline and network backends. */

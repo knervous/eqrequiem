@@ -38,11 +38,12 @@ export function createTargetRingMaterial(scene) {
     material.transparencyMode = BABYLON.Material.MATERIAL_ALPHABLEND;
     material.disableLighting = true;
     material.diffuseTexture = null;
-    scene.onReadyObservable.addOnce(() => {
-        scene.onBeforeRenderObservable.add(() => {
-            time -= 0.01 * scene.getAnimationRatio();
-            texture.setFloat("time", time);
-        });
+    const animationObserver = scene.onBeforeRenderObservable.add(() => {
+        time -= 0.01 * scene.getAnimationRatio();
+        texture.setFloat("time", time);
+    });
+    texture.onDisposeObservable.addOnce(() => {
+        scene.onBeforeRenderObservable.remove(animationObserver);
     });
     return [material, texture];
 }

@@ -1,0 +1,93 @@
+{
+  "version": 1,
+  "asset": "requiem-character-select.glb",
+  "name": "Wayfarer's Verge",
+  "coordinateContract": "gltf-y-up-identity",
+  "semantics": {
+    "root": "CharacterSelect.Root",
+    "character": "CHARACTER_PRESENTATION_ANCHOR",
+    "camera": "CharacterSelect.CameraAnchor",
+    "cameraTarget": "CharacterSelect.CameraTarget",
+    "faceCamera": "CharacterSelect.FaceCameraAnchor",
+    "faceTarget": "CharacterSelect.FaceCameraTarget",
+    "classFx": "CharacterSelect.ClassFxAnchor",
+    "sky": "CharacterSelect.SkyDome"
+  },
+  "camera": {
+    "fov": 0.46,
+    "near": 0.1,
+    "orbitDurationSeconds": 180,
+    "horizontalCompositionOffset": 1.15
+  },
+  "character": {
+    "heading": 0,
+    "gravity": false,
+    "collision": false
+  },
+  "atmosphere": {
+    "clearColor": [
+      0.008,
+      0.014,
+      0.045,
+      1.0
+    ],
+    "fogColor": [
+      0.075,
+      0.13,
+      0.19
+    ],
+    "fogStart": 46.0,
+    "fogEnd": 138.0,
+    "ambientColor": [
+      0.12,
+      0.18,
+      0.26
+    ]
+  },
+  "lights": {
+    "key": {
+      "direction": [
+        -0.38,
+        -0.72,
+        0.42
+      ],
+      "color": [
+        0.58,
+        0.76,
+        1.0
+      ],
+      "intensity": 2.15
+    },
+    "fill": {
+      "direction": [
+        0.48,
+        -0.28,
+        -0.38
+      ],
+      "color": [
+        1.0,
+        0.39,
+        0.13
+      ],
+      "intensity": 1.15
+    },
+    "hemisphere": {
+      "direction": [
+        0.0,
+        1.0,
+        0.0
+      ],
+      "skyColor": [
+        0.2,
+        0.31,
+        0.48
+      ],
+      "groundColor": [
+        0.035,
+        0.055,
+        0.07
+      ],
+      "intensity": 0.82
+    }
+  }
+}

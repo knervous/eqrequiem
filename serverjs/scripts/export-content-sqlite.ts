@@ -29,6 +29,14 @@ const tables = [
   "character_origins",
   "character_starting_items",
   "class_skill_caps",
+  "npc_loot_items",
+  "npc_loot_tables",
+  "npc_loot_assignments",
+  "npc_loot_table_entries",
+  "npc_loot_group_entries",
+  "merchant_catalogs",
+  "merchant_catalog_entries",
+  "npc_merchant_assignments",
 ] as const;
 
 mkdirSync(dirname(sqlitePath), { recursive: true });

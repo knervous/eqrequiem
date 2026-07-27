@@ -103,4 +103,52 @@ describe("game repository", () => {
     );
     await database.close();
   });
+
+  it("persists stable Eltania composition IDs alongside the legacy projection", async () => {
+    const database = createNodeDatabase("sqlite::memory:");
+    const repository = new GameRepository(database);
+    await repository.initialize();
+    await applyCanonicalContentSchema(database);
+    await database.execute(
+      "INSERT INTO zones (id, short_name, name) VALUES (1, 'test-world', 'Test World')",
+    );
+    await database.execute(`INSERT INTO character_origins
+      (race_id, class_id, deity_id, start_zone_id, zone_id, x, y, z,
+       bind_zone_id, bind_x, bind_y, bind_z)
+      VALUES (1, 1, 207, 1, 1, 0, 0, 0, 1, 0, 0, 0)`);
+    const accountId = await repository.getOrCreateAccount("eltania-contract-test");
+    const original = {
+      ...character("Aelric"),
+      appearanceSchemaVersion: 1,
+      bodyFamilyId           : "body-family:eltania-wayfarer-v1",
+      bodyComponentId        : "body:eltania-wayfarer-a-v1",
+      faceComponentId        : "face:eltania-wayfarer-01",
+      presentationId         : "presentation:eltania-a",
+      callingId              : "calling:eltania-vanguard-v1",
+      originId               : "origin:elrador-test-world-v1",
+    };
+    assert.equal(await repository.createCharacter(accountId, original), true);
+    assert.deepEqual(await repository.listCharacters(accountId), [{
+      id: 1,
+      name: "Aelric",
+      level: 1,
+      class: 1,
+      race: 1,
+      gender: 0,
+      deity: 207,
+      face: 0,
+      zoneId: 1,
+      zoneInstance: 0,
+      lastLogin: 0,
+      items: [],
+      appearanceSchemaVersion: 1,
+      bodyFamilyId           : "body-family:eltania-wayfarer-v1",
+      bodyComponentId        : "body:eltania-wayfarer-a-v1",
+      faceComponentId        : "face:eltania-wayfarer-01",
+      presentationId         : "presentation:eltania-a",
+      callingId              : "calling:eltania-vanguard-v1",
+      originId               : "origin:elrador-test-world-v1",
+    }]);
+    await database.close();
+  });
 });

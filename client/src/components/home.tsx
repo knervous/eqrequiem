@@ -1,52 +1,26 @@
-import { useEffect } from "react";
-import { styled } from "@mui/material/styles";
-import { Box, Button, Card, CardContent, Stack, TextField } from "@mui/material";
+import { useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import DiscordIcon from '@ui/components/login/discord';
+import { DISCORD_CLIENT_ID, REDIRECT_URI } from '../UI/components/login/util';
+import styles from './home.module.css';
 
-import styles from "./home.module.css";
-import { useNavigate } from "react-router-dom";
-import { DISCORD_CLIENT_ID, REDIRECT_URI } from "../UI/components/login/util";
-import DiscordIcon from "@ui/components/login/discord";
-
-const REQUIEM_DISCORD_URL = "https://discord.gg/ptJxyejwXt";
-const PREFIX = "Home";
-const textFieldClasses = {
-  root: `${PREFIX}-root`,
-};
-const StyledBox = styled(Box)({
-  [`& .${textFieldClasses.root}`]: {
-    "& label.Mui-focused": {
-      color: "white",
-    },
-    "& .MuiOutlinedInput-root": {
-      "& fieldset": {},
-      "&:hover fieldset": {
-        borderColor: "white",
-      },
-      "&.Mui-focused fieldset": {
-        borderColor: "white",
-      },
-    },
-  },
-});
-
-export const CssTextField = TextField;
-
-const bgMax = 1; //6;
-const sessionBg = `center no-repeat url('requiem/bg${Math.ceil(
-  Math.random() * bgMax,
-)}.png')`;
+const ELTANIA_DISCORD_URL = 'https://discord.gg/ptJxyejwXt';
+const authCodeUrl =
+  import.meta.env.VITE_AUTH_CODE_URL?.trim() || '/api/auth/discord/code';
 
 export const Home = () => {
   const navigate = useNavigate();
+
   useEffect(() => {
-    const queryParamCode = new URLSearchParams(window.location.search).get("code");
+    document.title = 'Shadows of Eltania';
+    const queryParamCode = new URLSearchParams(window.location.search).get('code');
     if (queryParamCode) {
       const url = new URL(window.location.href);
-      url.searchParams.delete("code");
+      url.searchParams.delete('code');
       window.history.replaceState({}, document.title, url.toString());
       (async () => {
-        const { user, token } = await fetch("https://eqrequiem.ddns.net/code", {
-          method: "POST",
+        const { user, token } = await fetch(authCodeUrl, {
+          method: 'POST',
           body: JSON.stringify({
             code: queryParamCode,
             client_id: DISCORD_CLIENT_ID,
@@ -54,7 +28,7 @@ export const Home = () => {
           }),
         })
           .then((r) => r.json())
-          .catch((e) => { 
+          .catch((e) => {
             console.log('Error:', e);
             return {};
           });
@@ -68,68 +42,50 @@ export const Home = () => {
         navigate('/play');
       })();
     }
-
   }, [navigate]);
-  return (
-    <Box
-      sx={{
-        background: sessionBg,
-        backgroundSize: "cover",
-      }}
-      className={styles.app}
-    >
-      <StyledBox
-        className="content-card"
-        sx={{ minWidth: 275, height: "100%" }}
-      >
-        <Card
-          variant="outlined"
-          sx={{
-            position: "fixed",
-            height: "100vh",
-            width: "100vw",
-            maxHeight: "100vh",
-            overflowY: "hidden",
-            background: sessionBg,
-            backgroundSize: "cover",
-          }}
-        >
-          <CardContent sx={{ marginTop: '50px', marginBottom: '50px' }}>
-            <img
-              src="/brand/png/logo-no-background-white.png"
-              width={400}
-              alt="logo"
-            /> 
-          </CardContent>
-          <Stack sx={{ width: "285px", margin: "0 auto" }} spacing={1}>
-            <Button variant="contained" color={'primary'} sx={{ margin: 0 }} href="/play">
-              <img src="/requiem.png" width={'20px'} style={{ position: 'absolute', left: '5px' }} />
-              Play
-            </Button>
-            <Button onClick={() => {
-              window.open(REQUIEM_DISCORD_URL, "_blank");
-            }} variant="contained" color={'primary'} sx={{ margin: 0, background: 'rgb(88, 101, 242)' }}>
-              <DiscordIcon style={{ position: 'absolute', left: '5px'  }} size={20} color="white" />     Join Discord
-            </Button>
-          </Stack>
 
-          <footer
-            style={{
-              position: "fixed",
-              bottom: 15,
-              left: 15,
-              textAlign: "left",
-              maxWidth: "55%",
-              color: "white",
-            }}
+  const openDiscord = () => {
+    window.open(ELTANIA_DISCORD_URL, '_blank', 'noopener,noreferrer');
+  };
+
+  return (
+    <main className={styles.app}>
+      <div aria-hidden="true" className={styles.atmosphere} />
+      <header className={styles.masthead}>
+        <img
+          alt=""
+          className={styles.mastheadMark}
+          src="/eltania/mark.svg"
+        />
+        <span>Shadows of Eltania</span>
+        <span className={styles.mastheadRule} />
+        <span className={styles.mastheadState}>In development</span>
+      </header>
+
+      <section aria-labelledby="eltania-title" className={styles.hero}>
+        <p className={styles.eyebrow}>Elrador</p>
+        <h1 className={styles.title} id="eltania-title">
+          <span>Shadows of</span>
+          Eltania
+        </h1>
+        <div className={styles.actions}>
+          <Link className={`${styles.action} ${styles.actionPrimary}`} to="/play">
+            <span>Play</span>
+          </Link>
+          <button
+            className={`${styles.action} ${styles.actionSecondary}`}
+            type="button"
+            onClick={openDiscord}
           >
-            EverQuest is a registered trademark of Daybreak Game Company LLC.
-            <br />
-            EQ Requiem is not associated or affiliated in any way with Daybreak
-            Game Company LLC.
-          </footer>
-        </Card>
-      </StyledBox>
-    </Box>
+            <DiscordIcon color="white" size={18} />
+            <span>Discord</span>
+          </button>
+        </div>
+      </section>
+
+      <footer className={styles.footer}>
+        <span>© 2026 Shadows of Eltania</span>
+      </footer>
+    </main>
   );
 };

@@ -1,0 +1,4457 @@
+{
+  "kind": "shado.world.authoring",
+  "version": 1,
+  "world": "erudsxing",
+  "coordinateSystem": "babylon-y-up",
+  "revision": 2,
+  "regions": [
+    {
+      "id": "legacy-region-0",
+      "name": "Legacy region 0",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        974.484375,
+        -159.984375,
+        993.828125
+      ],
+      "size": [
+        8049.46875,
+        320.15625,
+        8089.40625
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-1",
+      "name": "Legacy region 1",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        3339.0625,
+        -295.84375,
+        -1994.40625
+      ],
+      "size": [
+        590.625,
+        0.01,
+        597
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-2",
+      "name": "Legacy region 2",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        2748.4375,
+        -295.84375,
+        -1994.40625
+      ],
+      "size": [
+        590.625,
+        0.01,
+        597
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-3",
+      "name": "Legacy region 3",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        2157.828125,
+        -295.84375,
+        -1994.40625
+      ],
+      "size": [
+        590.59375,
+        0.01,
+        597
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-4",
+      "name": "Legacy region 4",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        1567.21875,
+        -295.84375,
+        -1994.40625
+      ],
+      "size": [
+        590.625,
+        0.01,
+        597
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-5",
+      "name": "Legacy region 5",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        2748.4375,
+        -295.84375,
+        -1397.40625
+      ],
+      "size": [
+        590.625,
+        0.01,
+        597
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-6",
+      "name": "Legacy region 6",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        2157.828125,
+        -295.84375,
+        -1397.40625
+      ],
+      "size": [
+        590.59375,
+        0.01,
+        597
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-7",
+      "name": "Legacy region 7",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        2157.828125,
+        -295.84375,
+        -800.390625
+      ],
+      "size": [
+        590.59375,
+        0.01,
+        597.03125
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-8",
+      "name": "Legacy region 8",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        1567.21875,
+        -295.84375,
+        -1397.40625
+      ],
+      "size": [
+        590.625,
+        0.01,
+        597
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-9",
+      "name": "Legacy region 9",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        1567.21875,
+        -295.84375,
+        -800.390625
+      ],
+      "size": [
+        590.625,
+        0.01,
+        597.03125
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-10",
+      "name": "Legacy region 10",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        1567.21875,
+        -295.84375,
+        -203.375
+      ],
+      "size": [
+        590.625,
+        0.01,
+        597
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-11",
+      "name": "Legacy region 11",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        1714.875,
+        -295.84375,
+        841.375
+      ],
+      "size": [
+        295.3125,
+        0.01,
+        298.5
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-12",
+      "name": "Legacy region 12",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        1714.875,
+        -295.84375,
+        1139.890625
+      ],
+      "size": [
+        295.3125,
+        0.01,
+        298.53125
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-13",
+      "name": "Legacy region 13",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        1419.5625,
+        -295.84375,
+        841.375
+      ],
+      "size": [
+        295.3125,
+        0.01,
+        298.5
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-14",
+      "name": "Legacy region 14",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        1419.5625,
+        -295.84375,
+        1139.890625
+      ],
+      "size": [
+        295.3125,
+        0.01,
+        298.53125
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-15",
+      "name": "Legacy region 15",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        1714.875,
+        -295.84375,
+        1438.40625
+      ],
+      "size": [
+        295.3125,
+        0.01,
+        298.5
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-16",
+      "name": "Legacy region 16",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        1714.875,
+        -295.84375,
+        1736.90625
+      ],
+      "size": [
+        295.3125,
+        0.01,
+        298.5
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-17",
+      "name": "Legacy region 17",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        1419.5625,
+        -295.84375,
+        1438.40625
+      ],
+      "size": [
+        295.3125,
+        0.01,
+        298.5
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-18",
+      "name": "Legacy region 18",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        1419.5625,
+        -295.84375,
+        1736.90625
+      ],
+      "size": [
+        295.3125,
+        0.01,
+        298.5
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-19",
+      "name": "Legacy region 19",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        1714.875,
+        -295.84375,
+        2035.40625
+      ],
+      "size": [
+        295.3125,
+        0.01,
+        298.5
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-20",
+      "name": "Legacy region 20",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        1419.5625,
+        -295.84375,
+        2035.40625
+      ],
+      "size": [
+        295.3125,
+        0.01,
+        298.5
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-21",
+      "name": "Legacy region 21",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.01,
+        0.01,
+        0.01
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-22",
+      "name": "Legacy region 22",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        976.59375,
+        -295.84375,
+        -1994.40625
+      ],
+      "size": [
+        590.625,
+        0.01,
+        597
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-23",
+      "name": "Legacy region 23",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        385.984375,
+        -295.84375,
+        -1994.40625
+      ],
+      "size": [
+        590.59375,
+        0.01,
+        597
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-24",
+      "name": "Legacy region 24",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        -204.625,
+        -295.84375,
+        -1994.40625
+      ],
+      "size": [
+        590.625,
+        0.01,
+        597
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-25",
+      "name": "Legacy region 25",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        -795.25,
+        -295.84375,
+        -1994.40625
+      ],
+      "size": [
+        590.625,
+        0.01,
+        597
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-26",
+      "name": "Legacy region 26",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        976.59375,
+        -295.84375,
+        -1397.40625
+      ],
+      "size": [
+        590.625,
+        0.01,
+        597
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-27",
+      "name": "Legacy region 27",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        976.59375,
+        -295.84375,
+        -800.390625
+      ],
+      "size": [
+        590.625,
+        0.01,
+        597.03125
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-28",
+      "name": "Legacy region 28",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        385.984375,
+        -295.84375,
+        -1397.40625
+      ],
+      "size": [
+        590.59375,
+        0.01,
+        597
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-29",
+      "name": "Legacy region 29",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        385.984375,
+        -295.84375,
+        -800.390625
+      ],
+      "size": [
+        590.59375,
+        0.01,
+        597.03125
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-30",
+      "name": "Legacy region 30",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        976.59375,
+        -295.84375,
+        -203.375
+      ],
+      "size": [
+        590.625,
+        0.01,
+        597
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-31",
+      "name": "Legacy region 31",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        385.984375,
+        -295.84375,
+        -203.375
+      ],
+      "size": [
+        590.59375,
+        0.01,
+        597
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-32",
+      "name": "Legacy region 32",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        -204.625,
+        -295.84375,
+        -1397.40625
+      ],
+      "size": [
+        590.625,
+        0.01,
+        597
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-33",
+      "name": "Legacy region 33",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        -204.625,
+        -295.84375,
+        -800.390625
+      ],
+      "size": [
+        590.625,
+        0.01,
+        597.03125
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-34",
+      "name": "Legacy region 34",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        -795.25,
+        -295.84375,
+        -1397.40625
+      ],
+      "size": [
+        590.625,
+        0.01,
+        597
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-35",
+      "name": "Legacy region 35",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        -795.25,
+        -295.84375,
+        -800.390625
+      ],
+      "size": [
+        590.625,
+        0.01,
+        597.03125
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-36",
+      "name": "Legacy region 36",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        -204.625,
+        -295.84375,
+        -203.375
+      ],
+      "size": [
+        590.625,
+        0.01,
+        597
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-37",
+      "name": "Legacy region 37",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        -204.625,
+        -295.84375,
+        393.625
+      ],
+      "size": [
+        590.625,
+        0.01,
+        597
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-38",
+      "name": "Legacy region 38",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        -795.25,
+        -295.84375,
+        -203.375
+      ],
+      "size": [
+        590.625,
+        0.01,
+        597
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-39",
+      "name": "Legacy region 39",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        -795.25,
+        -295.84375,
+        393.625
+      ],
+      "size": [
+        590.625,
+        0.01,
+        597
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-40",
+      "name": "Legacy region 40",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        -1385.859375,
+        -295.84375,
+        -1994.40625
+      ],
+      "size": [
+        590.59375,
+        0.01,
+        597
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-41",
+      "name": "Legacy region 41",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        -1976.46875,
+        -295.84375,
+        -1994.40625
+      ],
+      "size": [
+        590.625,
+        0.01,
+        597
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-42",
+      "name": "Legacy region 42",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        -2951.625,
+        -295.84375,
+        -2671.890625
+      ],
+      "size": [
+        178.4375,
+        0.01,
+        757.96875
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-43",
+      "name": "Legacy region 43",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        -2951.625,
+        -295.84375,
+        -1994.40625
+      ],
+      "size": [
+        178.4375,
+        0.01,
+        597
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-44",
+      "name": "Legacy region 44",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        -1385.859375,
+        -295.84375,
+        -1397.40625
+      ],
+      "size": [
+        590.59375,
+        0.01,
+        597
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-45",
+      "name": "Legacy region 45",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        -1385.859375,
+        -295.84375,
+        -800.390625
+      ],
+      "size": [
+        590.59375,
+        0.01,
+        597.03125
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-46",
+      "name": "Legacy region 46",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        -1976.46875,
+        -295.84375,
+        -1397.40625
+      ],
+      "size": [
+        590.625,
+        0.01,
+        597
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-47",
+      "name": "Legacy region 47",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        -1976.46875,
+        -295.84375,
+        -800.390625
+      ],
+      "size": [
+        590.625,
+        0.01,
+        597.03125
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-48",
+      "name": "Legacy region 48",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        -1385.859375,
+        -295.84375,
+        -203.375
+      ],
+      "size": [
+        590.59375,
+        0.01,
+        597
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-49",
+      "name": "Legacy region 49",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        -1385.859375,
+        -295.84375,
+        393.625
+      ],
+      "size": [
+        590.59375,
+        0.01,
+        597
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-50",
+      "name": "Legacy region 50",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        -1976.46875,
+        -295.84375,
+        -203.375
+      ],
+      "size": [
+        590.625,
+        0.01,
+        597
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-51",
+      "name": "Legacy region 51",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        -1976.46875,
+        -295.84375,
+        393.625
+      ],
+      "size": [
+        590.625,
+        0.01,
+        597
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-52",
+      "name": "Legacy region 52",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        -2951.625,
+        -295.84375,
+        -1397.40625
+      ],
+      "size": [
+        178.4375,
+        0.01,
+        597
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-53",
+      "name": "Legacy region 53",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        -2951.625,
+        -295.84375,
+        -800.390625
+      ],
+      "size": [
+        178.4375,
+        0.01,
+        597.03125
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-54",
+      "name": "Legacy region 54",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        -2951.625,
+        -295.84375,
+        -203.375
+      ],
+      "size": [
+        178.4375,
+        0.01,
+        597
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-55",
+      "name": "Legacy region 55",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        -2951.625,
+        -295.84375,
+        393.625
+      ],
+      "size": [
+        178.4375,
+        0.01,
+        597
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-56",
+      "name": "Legacy region 56",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        1124.25,
+        -295.84375,
+        841.375
+      ],
+      "size": [
+        295.3125,
+        0.01,
+        298.5
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-57",
+      "name": "Legacy region 57",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        1124.25,
+        -295.84375,
+        1139.890625
+      ],
+      "size": [
+        295.3125,
+        0.01,
+        298.53125
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-58",
+      "name": "Legacy region 58",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        828.9375,
+        -295.84375,
+        841.375
+      ],
+      "size": [
+        295.3125,
+        0.01,
+        298.5
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-59",
+      "name": "Legacy region 59",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        828.9375,
+        -295.84375,
+        1139.890625
+      ],
+      "size": [
+        295.3125,
+        0.01,
+        298.53125
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-60",
+      "name": "Legacy region 60",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        1124.25,
+        -295.84375,
+        1438.40625
+      ],
+      "size": [
+        295.3125,
+        0.01,
+        298.5
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-61",
+      "name": "Legacy region 61",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        1124.25,
+        -295.84375,
+        1736.90625
+      ],
+      "size": [
+        295.3125,
+        0.01,
+        298.5
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-62",
+      "name": "Legacy region 62",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        828.9375,
+        -295.84375,
+        1438.40625
+      ],
+      "size": [
+        295.3125,
+        0.01,
+        298.5
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-63",
+      "name": "Legacy region 63",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        828.9375,
+        -295.84375,
+        1736.90625
+      ],
+      "size": [
+        295.3125,
+        0.01,
+        298.5
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-64",
+      "name": "Legacy region 64",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        1124.25,
+        -295.84375,
+        2035.40625
+      ],
+      "size": [
+        295.3125,
+        0.01,
+        298.5
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-65",
+      "name": "Legacy region 65",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        828.9375,
+        -295.84375,
+        2035.40625
+      ],
+      "size": [
+        295.3125,
+        0.01,
+        298.5
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-66",
+      "name": "Legacy region 66",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        -204.625,
+        -295.84375,
+        990.640625
+      ],
+      "size": [
+        590.625,
+        0.01,
+        597.03125
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-67",
+      "name": "Legacy region 67",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        -204.625,
+        -295.84375,
+        1587.65625
+      ],
+      "size": [
+        590.625,
+        0.01,
+        597
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-68",
+      "name": "Legacy region 68",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        -795.25,
+        -295.84375,
+        990.640625
+      ],
+      "size": [
+        590.625,
+        0.01,
+        597.03125
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-69",
+      "name": "Legacy region 69",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        -795.25,
+        -295.84375,
+        1587.65625
+      ],
+      "size": [
+        590.625,
+        0.01,
+        597
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-70",
+      "name": "Legacy region 70",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        -795.25,
+        -295.84375,
+        2184.65625
+      ],
+      "size": [
+        590.625,
+        0.01,
+        597
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-71",
+      "name": "Legacy region 71",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        -1385.859375,
+        -295.84375,
+        990.640625
+      ],
+      "size": [
+        590.59375,
+        0.01,
+        597.03125
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-72",
+      "name": "Legacy region 72",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        -1385.859375,
+        -295.84375,
+        1587.65625
+      ],
+      "size": [
+        590.59375,
+        0.01,
+        597
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-73",
+      "name": "Legacy region 73",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        -1976.46875,
+        -295.84375,
+        990.640625
+      ],
+      "size": [
+        590.625,
+        0.01,
+        597.03125
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-74",
+      "name": "Legacy region 74",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        -1976.46875,
+        -295.84375,
+        1587.65625
+      ],
+      "size": [
+        590.625,
+        0.01,
+        597
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-75",
+      "name": "Legacy region 75",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        -1385.859375,
+        -295.84375,
+        2184.65625
+      ],
+      "size": [
+        590.59375,
+        0.01,
+        597
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-76",
+      "name": "Legacy region 76",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        -1385.859375,
+        -295.84375,
+        2781.671875
+      ],
+      "size": [
+        590.59375,
+        0.01,
+        597.03125
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-77",
+      "name": "Legacy region 77",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        -1976.46875,
+        -295.84375,
+        2184.65625
+      ],
+      "size": [
+        590.625,
+        0.01,
+        597
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-78",
+      "name": "Legacy region 78",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        -1976.46875,
+        -295.84375,
+        2781.671875
+      ],
+      "size": [
+        590.625,
+        0.01,
+        597.03125
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-79",
+      "name": "Legacy region 79",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        -2951.625,
+        -295.84375,
+        990.640625
+      ],
+      "size": [
+        178.4375,
+        0.01,
+        597.03125
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-80",
+      "name": "Legacy region 80",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        -2951.625,
+        -295.84375,
+        1587.65625
+      ],
+      "size": [
+        178.4375,
+        0.01,
+        597
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-81",
+      "name": "Legacy region 81",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        -2951.625,
+        -295.84375,
+        2184.65625
+      ],
+      "size": [
+        178.4375,
+        0.01,
+        597
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-82",
+      "name": "Legacy region 82",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        -2951.625,
+        -295.84375,
+        2781.671875
+      ],
+      "size": [
+        178.4375,
+        0.01,
+        597.03125
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-83",
+      "name": "Legacy region 83",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        -1976.46875,
+        -295.84375,
+        3378.6875
+      ],
+      "size": [
+        590.625,
+        0.01,
+        597
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-84",
+      "name": "Legacy region 84",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        -2951.625,
+        -295.84375,
+        3378.6875
+      ],
+      "size": [
+        178.4375,
+        0.01,
+        597
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-85",
+      "name": "Legacy region 85",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        -2951.625,
+        -295.84375,
+        3975.6875
+      ],
+      "size": [
+        178.4375,
+        0.01,
+        597
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-86",
+      "name": "Legacy region 86",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        -2951.625,
+        -295.84375,
+        4572.6875
+      ],
+      "size": [
+        178.4375,
+        0.01,
+        597
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    }
+  ],
+  "objects": {
+    "prototypes": [
+      {
+        "id": "campfire",
+        "source": "/eqrequiem/objects/campfire/final.glb.gz",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "campfire",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb.gz"
+        }
+      },
+      {
+        "id": "hut1",
+        "source": "/eqrequiem/objects/hut1/final.glb.gz",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "hut1",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb.gz"
+        }
+      },
+      {
+        "id": "hut3",
+        "source": "/eqrequiem/objects/hut3/final.glb.gz",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "hut3",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb.gz"
+        }
+      },
+      {
+        "id": "hut5",
+        "source": "/eqrequiem/objects/hut5/final.glb.gz",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "hut5",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb.gz"
+        }
+      },
+      {
+        "id": "islandpalm",
+        "source": "/eqrequiem/objects/islandpalm/final.glb.gz",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "islandpalm",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb.gz"
+        }
+      },
+      {
+        "id": "islandpalm1",
+        "source": "/eqrequiem/objects/islandpalm1/final.glb.gz",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "islandpalm1",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb.gz"
+        }
+      },
+      {
+        "id": "monu8",
+        "source": "/eqrequiem/objects/monu8/final.glb.gz",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "monu8",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb.gz"
+        }
+      },
+      {
+        "id": "tiki",
+        "source": "/eqrequiem/objects/tiki/final.glb.gz",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "tiki",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb.gz"
+        }
+      }
+    ],
+    "stamps": [
+      {
+        "id": "campfire-0",
+        "prototype": "campfire",
+        "enabled": true,
+        "position": [
+          1517.0338134765625,
+          4.847862720489502,
+          798.3471069335938
+        ],
+        "rotationDegrees": [
+          0,
+          65.390625,
+          0
+        ],
+        "scale": [
+          2,
+          2,
+          2
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "hut1-0",
+        "prototype": "hut1",
+        "enabled": true,
+        "position": [
+          1595.3765869140625,
+          31.90780258178711,
+          980.5519409179688
+        ],
+        "rotationDegrees": [
+          0,
+          -96.328125,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "hut1-1",
+        "prototype": "hut1",
+        "enabled": true,
+        "position": [
+          1478.5733642578125,
+          10.024637222290039,
+          856.0838012695312
+        ],
+        "rotationDegrees": [
+          0,
+          7.03125,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 1,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "hut3-0",
+        "prototype": "hut3",
+        "enabled": true,
+        "position": [
+          1491.642333984375,
+          -4.839989185333252,
+          664.5607299804688
+        ],
+        "rotationDegrees": [
+          0,
+          21.796875,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "hut5-0",
+        "prototype": "hut5",
+        "enabled": true,
+        "position": [
+          1500.219970703125,
+          13.588902473449707,
+          906.5029907226562
+        ],
+        "rotationDegrees": [
+          0,
+          -52.03125,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "islandpalm-0",
+        "prototype": "islandpalm",
+        "enabled": true,
+        "position": [
+          1428.5267333984375,
+          25.400165557861328,
+          1005.349853515625
+        ],
+        "rotationDegrees": [
+          0,
+          142.734375,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "islandpalm-1",
+        "prototype": "islandpalm",
+        "enabled": true,
+        "position": [
+          932.8082275390625,
+          89.82818603515625,
+          1405.517822265625
+        ],
+        "rotationDegrees": [
+          0,
+          -23.90625,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 1,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "islandpalm-2",
+        "prototype": "islandpalm",
+        "enabled": true,
+        "position": [
+          1458.6715087890625,
+          44.59001159667969,
+          1632.0931396484375
+        ],
+        "rotationDegrees": [
+          0,
+          -4.21875,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 2,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "islandpalm-3",
+        "prototype": "islandpalm",
+        "enabled": true,
+        "position": [
+          1399.4591064453125,
+          71.00174713134766,
+          1642.258544921875
+        ],
+        "rotationDegrees": [
+          0,
+          26.71875,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 3,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "islandpalm-4",
+        "prototype": "islandpalm",
+        "enabled": true,
+        "position": [
+          1346.048095703125,
+          100.63420104980469,
+          1590.3271484375
+        ],
+        "rotationDegrees": [
+          0,
+          70.3125,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 4,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "islandpalm-5",
+        "prototype": "islandpalm",
+        "enabled": true,
+        "position": [
+          1496.704345703125,
+          67.73130798339844,
+          1357.7864990234375
+        ],
+        "rotationDegrees": [
+          0,
+          163.828125,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 5,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "islandpalm-6",
+        "prototype": "islandpalm",
+        "enabled": true,
+        "position": [
+          1514.52197265625,
+          68.1037826538086,
+          1306.4722900390625
+        ],
+        "rotationDegrees": [
+          0,
+          23.203125,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 6,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "islandpalm-7",
+        "prototype": "islandpalm",
+        "enabled": true,
+        "position": [
+          1522.34619140625,
+          69.90560150146484,
+          1248.0496826171875
+        ],
+        "rotationDegrees": [
+          0,
+          51.328125,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 7,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "islandpalm-8",
+        "prototype": "islandpalm",
+        "enabled": true,
+        "position": [
+          1498.8138427734375,
+          82.92381286621094,
+          1148.092041015625
+        ],
+        "rotationDegrees": [
+          0,
+          133.59375,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 8,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "islandpalm-9",
+        "prototype": "islandpalm",
+        "enabled": true,
+        "position": [
+          1580.9476318359375,
+          27.457857131958008,
+          1056.94775390625
+        ],
+        "rotationDegrees": [
+          0,
+          26.015625,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 9,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "islandpalm-10",
+        "prototype": "islandpalm",
+        "enabled": true,
+        "position": [
+          1551.9517822265625,
+          30.32027816772461,
+          995.2920532226562
+        ],
+        "rotationDegrees": [
+          0,
+          68.90625,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 10,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "islandpalm-11",
+        "prototype": "islandpalm",
+        "enabled": true,
+        "position": [
+          1468.9066162109375,
+          9.41127872467041,
+          886.8372192382812
+        ],
+        "rotationDegrees": [
+          0,
+          -5.625,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 11,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "islandpalm-12",
+        "prototype": "islandpalm",
+        "enabled": true,
+        "position": [
+          1333.0693359375,
+          37.829620361328125,
+          929.5899047851562
+        ],
+        "rotationDegrees": [
+          0,
+          -35.859375,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 12,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "islandpalm-13",
+        "prototype": "islandpalm",
+        "enabled": true,
+        "position": [
+          1135.2603759765625,
+          52.73305892944336,
+          938.5283813476562
+        ],
+        "rotationDegrees": [
+          0,
+          -42.890625,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 13,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "islandpalm-14",
+        "prototype": "islandpalm",
+        "enabled": true,
+        "position": [
+          1094.9356689453125,
+          78.55857849121094,
+          994.744140625
+        ],
+        "rotationDegrees": [
+          0,
+          11.953125,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 14,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "islandpalm-15",
+        "prototype": "islandpalm",
+        "enabled": true,
+        "position": [
+          1030.2296142578125,
+          28.252683639526367,
+          907.5630493164062
+        ],
+        "rotationDegrees": [
+          0,
+          41.484375,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 15,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "islandpalm-16",
+        "prototype": "islandpalm",
+        "enabled": true,
+        "position": [
+          945.944091796875,
+          20.43185806274414,
+          938.4995727539062
+        ],
+        "rotationDegrees": [
+          0,
+          -32.34375,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 16,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "islandpalm-17",
+        "prototype": "islandpalm",
+        "enabled": true,
+        "position": [
+          899.8997192382812,
+          15.456661224365234,
+          955.6395874023438
+        ],
+        "rotationDegrees": [
+          0,
+          -98.4375,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 17,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "islandpalm-18",
+        "prototype": "islandpalm",
+        "enabled": true,
+        "position": [
+          926.559326171875,
+          72.9909439086914,
+          1103.171875
+        ],
+        "rotationDegrees": [
+          0,
+          -127.96875,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 18,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "islandpalm-19",
+        "prototype": "islandpalm",
+        "enabled": true,
+        "position": [
+          911.3805541992188,
+          75.505615234375,
+          1156.1246337890625
+        ],
+        "rotationDegrees": [
+          0,
+          -42.890625,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 19,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "islandpalm-20",
+        "prototype": "islandpalm",
+        "enabled": true,
+        "position": [
+          881.900146484375,
+          67.26017761230469,
+          1208.775634765625
+        ],
+        "rotationDegrees": [
+          0,
+          -88.59375,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 20,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "islandpalm-21",
+        "prototype": "islandpalm",
+        "enabled": true,
+        "position": [
+          868.3182373046875,
+          86.36076354980469,
+          1347.088134765625
+        ],
+        "rotationDegrees": [
+          0,
+          168.046875,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 21,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "islandpalm-22",
+        "prototype": "islandpalm",
+        "enabled": true,
+        "position": [
+          800.5693969726562,
+          38.34487533569336,
+          1406.2720947265625
+        ],
+        "rotationDegrees": [
+          0,
+          -161.71875,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 22,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "islandpalm-23",
+        "prototype": "islandpalm",
+        "enabled": true,
+        "position": [
+          837.9754028320312,
+          55.999046325683594,
+          1419.5235595703125
+        ],
+        "rotationDegrees": [
+          0,
+          -101.953125,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 23,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "islandpalm-24",
+        "prototype": "islandpalm",
+        "enabled": true,
+        "position": [
+          855.1780395507812,
+          69.27265167236328,
+          1490.677734375
+        ],
+        "rotationDegrees": [
+          0,
+          -92.8125,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 24,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "islandpalm-25",
+        "prototype": "islandpalm",
+        "enabled": true,
+        "position": [
+          870.7723999023438,
+          55.48002624511719,
+          1531.9866943359375
+        ],
+        "rotationDegrees": [
+          0,
+          -141.328125,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 25,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "islandpalm-26",
+        "prototype": "islandpalm",
+        "enabled": true,
+        "position": [
+          986.8502197265625,
+          50.13346481323242,
+          1650.9385986328125
+        ],
+        "rotationDegrees": [
+          0,
+          180,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 26,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "islandpalm-27",
+        "prototype": "islandpalm",
+        "enabled": true,
+        "position": [
+          1055.063720703125,
+          61.74867248535156,
+          1633.5655517578125
+        ],
+        "rotationDegrees": [
+          0,
+          118.828125,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 27,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "islandpalm-28",
+        "prototype": "islandpalm",
+        "enabled": true,
+        "position": [
+          1108.6646728515625,
+          98.51348876953125,
+          1583.461669921875
+        ],
+        "rotationDegrees": [
+          0,
+          -140.625,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 28,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "islandpalm-29",
+        "prototype": "islandpalm",
+        "enabled": true,
+        "position": [
+          1151.2789306640625,
+          77.0094985961914,
+          1630.462890625
+        ],
+        "rotationDegrees": [
+          0,
+          40.78125,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 29,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "islandpalm-30",
+        "prototype": "islandpalm",
+        "enabled": true,
+        "position": [
+          1546.6881103515625,
+          49.75172424316406,
+          1500.1396484375
+        ],
+        "rotationDegrees": [
+          0,
+          106.171875,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 30,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "islandpalm-31",
+        "prototype": "islandpalm",
+        "enabled": true,
+        "position": [
+          1520.8720703125,
+          46.635887145996094,
+          1407.52001953125
+        ],
+        "rotationDegrees": [
+          0,
+          50.625,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 31,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "islandpalm-32",
+        "prototype": "islandpalm",
+        "enabled": true,
+        "position": [
+          1374.56103515625,
+          112.68364715576172,
+          1513.28759765625
+        ],
+        "rotationDegrees": [
+          0,
+          171.5625,
+          7.03125
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 32,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "islandpalm1-0",
+        "prototype": "islandpalm1",
+        "enabled": true,
+        "position": [
+          942.9796142578125,
+          87.4910659790039,
+          1461.431396484375
+        ],
+        "rotationDegrees": [
+          0,
+          8.4375,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "islandpalm1-1",
+        "prototype": "islandpalm1",
+        "enabled": true,
+        "position": [
+          1356.4691162109375,
+          81.37174987792969,
+          1631.5972900390625
+        ],
+        "rotationDegrees": [
+          0,
+          42.1875,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 1,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "islandpalm1-2",
+        "prototype": "islandpalm1",
+        "enabled": true,
+        "position": [
+          1307.85986328125,
+          107.55903625488281,
+          1537.9366455078125
+        ],
+        "rotationDegrees": [
+          0,
+          77.34375,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 2,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "islandpalm1-3",
+        "prototype": "islandpalm1",
+        "enabled": true,
+        "position": [
+          1385.767333984375,
+          102.07396697998047,
+          1456.3831787109375
+        ],
+        "rotationDegrees": [
+          0,
+          -150.46875,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 3,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "islandpalm1-4",
+        "prototype": "islandpalm1",
+        "enabled": true,
+        "position": [
+          1493.800048828125,
+          78.37010955810547,
+          1300.107421875
+        ],
+        "rotationDegrees": [
+          0,
+          108.28125,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 4,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "islandpalm1-5",
+        "prototype": "islandpalm1",
+        "enabled": true,
+        "position": [
+          1473.2501220703125,
+          91.49285125732422,
+          1215.0582275390625
+        ],
+        "rotationDegrees": [
+          0,
+          108.28125,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 5,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "islandpalm1-6",
+        "prototype": "islandpalm1",
+        "enabled": true,
+        "position": [
+          1475.0289306640625,
+          92.19542694091797,
+          1179.2569580078125
+        ],
+        "rotationDegrees": [
+          0,
+          138.515625,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 6,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "islandpalm1-7",
+        "prototype": "islandpalm1",
+        "enabled": true,
+        "position": [
+          1492.866943359375,
+          65.25679779052734,
+          1099.61865234375
+        ],
+        "rotationDegrees": [
+          0,
+          -164.53125,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 7,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "islandpalm1-8",
+        "prototype": "islandpalm1",
+        "enabled": true,
+        "position": [
+          1504.5302734375,
+          12.156170845031738,
+          942.7952880859375
+        ],
+        "rotationDegrees": [
+          0,
+          -152.578125,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 8,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "islandpalm1-9",
+        "prototype": "islandpalm1",
+        "enabled": true,
+        "position": [
+          1392.3406982421875,
+          23.605724334716797,
+          904.101318359375
+        ],
+        "rotationDegrees": [
+          0,
+          17.578125,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 9,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "islandpalm1-10",
+        "prototype": "islandpalm1",
+        "enabled": true,
+        "position": [
+          1282.7005615234375,
+          43.541221618652344,
+          943.843994140625
+        ],
+        "rotationDegrees": [
+          0,
+          -52.03125,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 10,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "islandpalm1-11",
+        "prototype": "islandpalm1",
+        "enabled": true,
+        "position": [
+          1237.1763916015625,
+          63.39881134033203,
+          972.4149169921875
+        ],
+        "rotationDegrees": [
+          0,
+          -153.984375,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 11,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "islandpalm1-12",
+        "prototype": "islandpalm1",
+        "enabled": true,
+        "position": [
+          1196.932861328125,
+          53.44487380981445,
+          937.778076171875
+        ],
+        "rotationDegrees": [
+          0,
+          7.734375,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 12,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "islandpalm1-13",
+        "prototype": "islandpalm1",
+        "enabled": true,
+        "position": [
+          1043.150634765625,
+          64.23274993896484,
+          976.50146484375
+        ],
+        "rotationDegrees": [
+          0,
+          38.671875,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 13,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "islandpalm1-14",
+        "prototype": "islandpalm1",
+        "enabled": true,
+        "position": [
+          982.87255859375,
+          28.80013656616211,
+          948.6780395507812
+        ],
+        "rotationDegrees": [
+          0,
+          18.984375,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 14,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "islandpalm1-15",
+        "prototype": "islandpalm1",
+        "enabled": true,
+        "position": [
+          948.1793212890625,
+          60.81635284423828,
+          1022.6743774414062
+        ],
+        "rotationDegrees": [
+          0,
+          -34.453125,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 15,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "islandpalm1-16",
+        "prototype": "islandpalm1",
+        "enabled": true,
+        "position": [
+          839.9266967773438,
+          34.419639587402344,
+          1103.5633544921875
+        ],
+        "rotationDegrees": [
+          0,
+          144.84375,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 16,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "islandpalm1-17",
+        "prototype": "islandpalm1",
+        "enabled": true,
+        "position": [
+          964.380615234375,
+          94.04267883300781,
+          1135.9962158203125
+        ],
+        "rotationDegrees": [
+          0,
+          -37.96875,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 17,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "islandpalm1-18",
+        "prototype": "islandpalm1",
+        "enabled": true,
+        "position": [
+          891.3170166015625,
+          85.77228546142578,
+          1268.8505859375
+        ],
+        "rotationDegrees": [
+          0,
+          -151.171875,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 18,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "islandpalm1-19",
+        "prototype": "islandpalm1",
+        "enabled": true,
+        "position": [
+          818.6845092773438,
+          54.27548599243164,
+          1348.2481689453125
+        ],
+        "rotationDegrees": [
+          0,
+          -90.703125,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 19,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "islandpalm1-20",
+        "prototype": "islandpalm1",
+        "enabled": true,
+        "position": [
+          859.3854370117188,
+          76.85819244384766,
+          1468.1541748046875
+        ],
+        "rotationDegrees": [
+          0,
+          -85.78125,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 20,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "islandpalm1-21",
+        "prototype": "islandpalm1",
+        "enabled": true,
+        "position": [
+          880.3521728515625,
+          45.98854446411133,
+          1570.677490234375
+        ],
+        "rotationDegrees": [
+          0,
+          -54.84375,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 21,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "islandpalm1-22",
+        "prototype": "islandpalm1",
+        "enabled": true,
+        "position": [
+          917.333740234375,
+          37.69965362548828,
+          1648.3306884765625
+        ],
+        "rotationDegrees": [
+          0,
+          179.296875,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 22,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "islandpalm1-23",
+        "prototype": "islandpalm1",
+        "enabled": true,
+        "position": [
+          1261.74560546875,
+          49.78757095336914,
+          1712.5830078125
+        ],
+        "rotationDegrees": [
+          0,
+          171.5625,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 23,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "islandpalm1-24",
+        "prototype": "islandpalm1",
+        "enabled": true,
+        "position": [
+          1539.5184326171875,
+          36.73442459106445,
+          1627.0599365234375
+        ],
+        "rotationDegrees": [
+          0,
+          142.734375,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 24,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "islandpalm1-25",
+        "prototype": "islandpalm1",
+        "enabled": true,
+        "position": [
+          1536.4835205078125,
+          41.183082580566406,
+          1557.7879638671875
+        ],
+        "rotationDegrees": [
+          0,
+          126.5625,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 25,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "islandpalm1-26",
+        "prototype": "islandpalm1",
+        "enabled": true,
+        "position": [
+          1446.235595703125,
+          86.01365661621094,
+          1488.7713623046875
+        ],
+        "rotationDegrees": [
+          0,
+          63.28125,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 26,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "monu8-0",
+        "prototype": "monu8",
+        "enabled": true,
+        "position": [
+          907.0474853515625,
+          47.021236419677734,
+          1617.3973388671875
+        ],
+        "rotationDegrees": [
+          0,
+          139.921875,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "monu8-1",
+        "prototype": "monu8",
+        "enabled": true,
+        "position": [
+          1493.475830078125,
+          38.30791473388672,
+          1594.691650390625
+        ],
+        "rotationDegrees": [
+          0,
+          147.65625,
+          339.609375
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 1,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "monu8-2",
+        "prototype": "monu8",
+        "enabled": true,
+        "position": [
+          999.4075927734375,
+          109.69094848632812,
+          1113.4613037109375
+        ],
+        "rotationDegrees": [
+          0,
+          157.5,
+          336.09375
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 2,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "monu8-3",
+        "prototype": "monu8",
+        "enabled": true,
+        "position": [
+          926.9738159179688,
+          93.9317855834961,
+          1255.306884765625
+        ],
+        "rotationDegrees": [
+          0,
+          -15.46875,
+          352.96875
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 3,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "monu8-4",
+        "prototype": "monu8",
+        "enabled": true,
+        "position": [
+          1540.7418212890625,
+          67.12303924560547,
+          1236.3172607421875
+        ],
+        "rotationDegrees": [
+          0,
+          85.078125,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 4,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "tiki-0",
+        "prototype": "tiki",
+        "enabled": true,
+        "position": [
+          1761.368408203125,
+          3.3306655883789062,
+          662.6318969726562
+        ],
+        "rotationDegrees": [
+          0,
+          -144.84375,
+          0
+        ],
+        "scale": [
+          2,
+          2,
+          2
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "tiki-1",
+        "prototype": "tiki",
+        "enabled": true,
+        "position": [
+          1784.1925048828125,
+          3.196103572845459,
+          662.7346801757812
+        ],
+        "rotationDegrees": [
+          0,
+          -10.546875,
+          0
+        ],
+        "scale": [
+          2,
+          2,
+          2
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 1,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "tiki-2",
+        "prototype": "tiki",
+        "enabled": true,
+        "position": [
+          1525.1148681640625,
+          10.156882286071777,
+          894.7286987304688
+        ],
+        "rotationDegrees": [
+          0,
+          -97.03125,
+          0
+        ],
+        "scale": [
+          2,
+          2,
+          2
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 2,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "tiki-3",
+        "prototype": "tiki",
+        "enabled": true,
+        "position": [
+          1490.7305908203125,
+          7.203336238861084,
+          845.3739624023438
+        ],
+        "rotationDegrees": [
+          0,
+          26.71875,
+          0
+        ],
+        "scale": [
+          2,
+          2,
+          2
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 3,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "tiki-4",
+        "prototype": "tiki",
+        "enabled": true,
+        "position": [
+          1608.965087890625,
+          29.574825286865234,
+          963.190185546875
+        ],
+        "rotationDegrees": [
+          0,
+          171.5625,
+          0
+        ],
+        "scale": [
+          2,
+          2,
+          2
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 4,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      }
+    ]
+  }
+}

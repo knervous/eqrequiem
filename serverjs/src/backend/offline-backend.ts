@@ -1,5 +1,9 @@
 import type { DatabaseBackend } from '../db/backend.js';
 import { BUILTIN_QUESTS } from '../zone/builtin-quests.js';
+import type {
+  EmbeddedZoneRuntimeOptions,
+  ZoneKernelFactory,
+} from '../zone/embedded-zone-runtime.js';
 import { EmbeddedGameBackend } from './embedded-game-backend.js';
 import {
   OFFLINE_GEAR_SETS,
@@ -15,19 +19,29 @@ export function createOfflineGameBackend(
   database: DatabaseBackend,
   zones: Readonly<Record<string | number, OfflineZoneCatalogEntry>>,
   contentDatabasePath?: string,
+  options: {
+    createZoneKernel?: ZoneKernelFactory;
+    findPath?: EmbeddedZoneRuntimeOptions['findPath'];
+    engagementRules?: EmbeddedZoneRuntimeOptions['engagementRules'];
+    devDiagnostics?: boolean;
+  } = {},
 ): EmbeddedGameBackend {
-  return new EmbeddedGameBackend(database, {
-    items   : OFFLINE_ITEM_TEMPLATES,
-    gearSets: OFFLINE_GEAR_SETS,
-    zones   : Object.entries(zones).map(([id, zone]) => ({
-      id       : Number(id),
-      shortName: zone.shortName,
-      longName : zone.longName,
-      ...safePoint(Number(id)),
-    })),
-    quests: BUILTIN_QUESTS,
-    ...(contentDatabasePath ? { contentDatabasePath } : {}),
-  });
+  return new EmbeddedGameBackend(
+    database,
+    {
+      items   : OFFLINE_ITEM_TEMPLATES,
+      gearSets: OFFLINE_GEAR_SETS,
+      zones   : Object.entries(zones).map(([id, zone]) => ({
+        id       : Number(id),
+        shortName: zone.shortName,
+        longName : zone.longName,
+        ...safePoint(Number(id)),
+      })),
+      quests: BUILTIN_QUESTS,
+      ...(contentDatabasePath ? { contentDatabasePath } : {}),
+    },
+    options,
+  );
 }
 
 function safePoint(id: number): { safeX: number; safeY: number; safeZ: number } {

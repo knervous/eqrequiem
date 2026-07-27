@@ -1,0 +1,7599 @@
+{
+  "kind": "shado.world.authoring",
+  "version": 1,
+  "world": "kaladimb",
+  "coordinateSystem": "babylon-y-up",
+  "revision": 2,
+  "regions": [
+    {
+      "id": "legacy-region-0",
+      "name": "Legacy region 0",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        -762.703125,
+        -85.96875,
+        301.875
+      ],
+      "size": [
+        49.96875,
+        20,
+        139.9375
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-1",
+      "name": "Legacy region 1",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        -1158.546875,
+        10,
+        131.953125
+      ],
+      "size": [
+        61.96875,
+        24,
+        91.96875
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-2",
+      "name": "Legacy region 2",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        -664.734375,
+        2.5,
+        131.9375
+      ],
+      "size": [
+        9.96875,
+        5,
+        24
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-3",
+      "name": "Legacy region 3",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        -480.8125,
+        -18,
+        -116.953125
+      ],
+      "size": [
+        281.875,
+        28,
+        133.96875
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-4",
+      "name": "Legacy region 4",
+      "kind": "zone-line",
+      "enabled": true,
+      "center": [
+        -407.84375,
+        -12,
+        341.875
+      ],
+      "size": [
+        4,
+        24,
+        16
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 4,
+        "zoneLineInfo": {
+          "type": 0,
+          "index": 1
+        },
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    },
+    {
+      "id": "legacy-region-5",
+      "name": "Legacy region 5",
+      "kind": "zone-line",
+      "enabled": true,
+      "center": [
+        -347.875,
+        12,
+        -222.90625
+      ],
+      "size": [
+        4,
+        24,
+        14
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "legacy"
+      ],
+      "metadata": {
+        "legacyRegionType": 4,
+        "zoneLineInfo": {
+          "type": 0,
+          "index": 2
+        },
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2"
+      }
+    }
+  ],
+  "objects": {
+    "prototypes": [
+      {
+        "id": "bbcart",
+        "source": "/eqrequiem/objects/bbcart/final.glb.gz",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "bbcart",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb.gz"
+        }
+      },
+      {
+        "id": "bcratea",
+        "source": "/eqrequiem/objects/bcratea/final.glb.gz",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "bcratea",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb.gz"
+        }
+      },
+      {
+        "id": "bed1",
+        "source": "/eqrequiem/objects/bed1/final.glb.gz",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "bed1",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb.gz"
+        }
+      },
+      {
+        "id": "bed5",
+        "source": "/eqrequiem/objects/bed5/final.glb.gz",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "bed5",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb.gz"
+        }
+      },
+      {
+        "id": "bench",
+        "source": "/eqrequiem/objects/bench/final.glb.gz",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "bench",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb.gz"
+        }
+      },
+      {
+        "id": "bucket1",
+        "source": "/eqrequiem/objects/bucket1/final.glb.gz",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "bucket1",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb.gz"
+        }
+      },
+      {
+        "id": "campfire",
+        "source": "/eqrequiem/objects/campfire/final.glb.gz",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "campfire",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb.gz"
+        }
+      },
+      {
+        "id": "chair2",
+        "source": "/eqrequiem/objects/chair2/final.glb.gz",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "chair2",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb.gz"
+        }
+      },
+      {
+        "id": "chair2d",
+        "source": "/eqrequiem/objects/chair2d/final.glb.gz",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "chair2d",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb.gz"
+        }
+      },
+      {
+        "id": "chair3",
+        "source": "/eqrequiem/objects/chair3/final.glb.gz",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "chair3",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb.gz"
+        }
+      },
+      {
+        "id": "chair3d",
+        "source": "/eqrequiem/objects/chair3d/final.glb.gz",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "chair3d",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb.gz"
+        }
+      },
+      {
+        "id": "cratec",
+        "source": "/eqrequiem/objects/cratec/final.glb.gz",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "cratec",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb.gz"
+        }
+      },
+      {
+        "id": "crated",
+        "source": "/eqrequiem/objects/crated/final.glb.gz",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "crated",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb.gz"
+        }
+      },
+      {
+        "id": "cratee",
+        "source": "/eqrequiem/objects/cratee/final.glb.gz",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "cratee",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb.gz"
+        }
+      },
+      {
+        "id": "darktable",
+        "source": "/eqrequiem/objects/darktable/final.glb.gz",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "darktable",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb.gz"
+        }
+      },
+      {
+        "id": "dcart",
+        "source": "/eqrequiem/objects/dcart/final.glb.gz",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "dcart",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb.gz"
+        }
+      },
+      {
+        "id": "drawer1",
+        "source": "/eqrequiem/objects/drawer1/final.glb.gz",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "drawer1",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb.gz"
+        }
+      },
+      {
+        "id": "erlant",
+        "source": "/eqrequiem/objects/erlant/final.glb.gz",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "erlant",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb.gz"
+        }
+      },
+      {
+        "id": "forge",
+        "source": "/eqrequiem/objects/forge/final.glb.gz",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "forge",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb.gz"
+        }
+      },
+      {
+        "id": "frelant",
+        "source": "/eqrequiem/objects/frelant/final.glb.gz",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "frelant",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb.gz"
+        }
+      },
+      {
+        "id": "haunch",
+        "source": "/eqrequiem/objects/haunch/final.glb.gz",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "haunch",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb.gz"
+        }
+      },
+      {
+        "id": "kalbraz",
+        "source": "/eqrequiem/objects/kalbraz/final.glb.gz",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "kalbraz",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb.gz"
+        }
+      },
+      {
+        "id": "kalcart",
+        "source": "/eqrequiem/objects/kalcart/final.glb.gz",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "kalcart",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb.gz"
+        }
+      },
+      {
+        "id": "kalgems1",
+        "source": "/eqrequiem/objects/kalgems1/final.glb.gz",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "kalgems1",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb.gz"
+        }
+      },
+      {
+        "id": "kalgems2",
+        "source": "/eqrequiem/objects/kalgems2/final.glb.gz",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "kalgems2",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb.gz"
+        }
+      },
+      {
+        "id": "kallamp1",
+        "source": "/eqrequiem/objects/kallamp1/final.glb.gz",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "kallamp1",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb.gz"
+        }
+      },
+      {
+        "id": "kallamp2",
+        "source": "/eqrequiem/objects/kallamp2/final.glb.gz",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "kallamp2",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb.gz"
+        }
+      },
+      {
+        "id": "kaltracks",
+        "source": "/eqrequiem/objects/kaltracks/final.glb.gz",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "kaltracks",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb.gz"
+        }
+      },
+      {
+        "id": "keg",
+        "source": "/eqrequiem/objects/keg/final.glb.gz",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "keg",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb.gz"
+        }
+      },
+      {
+        "id": "ladder14",
+        "source": "/eqrequiem/objects/ladder14/final.glb.gz",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "ladder14",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb.gz"
+        }
+      },
+      {
+        "id": "lamp",
+        "source": "/eqrequiem/objects/lamp/final.glb.gz",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "lamp",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb.gz"
+        }
+      },
+      {
+        "id": "mistcouch",
+        "source": "/eqrequiem/objects/mistcouch/final.glb.gz",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "mistcouch",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb.gz"
+        }
+      },
+      {
+        "id": "mistwebs",
+        "source": "/eqrequiem/objects/mistwebs/final.glb.gz",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "mistwebs",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb.gz"
+        }
+      },
+      {
+        "id": "mushroom1",
+        "source": "/eqrequiem/objects/mushroom1/final.glb.gz",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "mushroom1",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb.gz"
+        }
+      },
+      {
+        "id": "ogglantern",
+        "source": "/eqrequiem/objects/ogglantern/final.glb.gz",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "ogglantern",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb.gz"
+        }
+      },
+      {
+        "id": "oggtable",
+        "source": "/eqrequiem/objects/oggtable/final.glb.gz",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "oggtable",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb.gz"
+        }
+      },
+      {
+        "id": "pick1",
+        "source": "/eqrequiem/objects/pick1/final.glb.gz",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "pick1",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb.gz"
+        }
+      },
+      {
+        "id": "podium",
+        "source": "/eqrequiem/objects/podium/final.glb.gz",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "podium",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb.gz"
+        }
+      },
+      {
+        "id": "rug1",
+        "source": "/eqrequiem/objects/rug1/final.glb.gz",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "rug1",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb.gz"
+        }
+      },
+      {
+        "id": "rug2",
+        "source": "/eqrequiem/objects/rug2/final.glb.gz",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "rug2",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb.gz"
+        }
+      },
+      {
+        "id": "rug4",
+        "source": "/eqrequiem/objects/rug4/final.glb.gz",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "rug4",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb.gz"
+        }
+      },
+      {
+        "id": "rug5",
+        "source": "/eqrequiem/objects/rug5/final.glb.gz",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "rug5",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb.gz"
+        }
+      },
+      {
+        "id": "shovel1",
+        "source": "/eqrequiem/objects/shovel1/final.glb.gz",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "shovel1",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb.gz"
+        }
+      },
+      {
+        "id": "squaretable",
+        "source": "/eqrequiem/objects/squaretable/final.glb.gz",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "squaretable",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb.gz"
+        }
+      },
+      {
+        "id": "torch1",
+        "source": "/eqrequiem/objects/torch1/final.glb.gz",
+        "boundsRadius": 32,
+        "metadata": {
+          "legacyModel": "torch1",
+          "sourceCoordinateSystem": "requiem-y-up",
+          "generatedAsset": "final.glb.gz"
+        }
+      }
+    ],
+    "stamps": [
+      {
+        "id": "bbcart-0",
+        "prototype": "bbcart",
+        "enabled": true,
+        "position": [
+          -568.1347045898438,
+          -35.98461151123047,
+          239.51092529296875
+        ],
+        "rotationDegrees": [
+          0,
+          143.4375,
+          0
+        ],
+        "scale": [
+          0.550000011920929,
+          0.550000011920929,
+          0.550000011920929
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "bbcart-1",
+        "prototype": "bbcart",
+        "enabled": true,
+        "position": [
+          -704.4132690429688,
+          0.0010020999470725656,
+          84.75416564941406
+        ],
+        "rotationDegrees": [
+          0,
+          135.703125,
+          0
+        ],
+        "scale": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 1,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "bcratea-0",
+        "prototype": "bcratea",
+        "enabled": true,
+        "position": [
+          -762.1963500976562,
+          -67.9718017578125,
+          429.114501953125
+        ],
+        "rotationDegrees": [
+          0,
+          -28.125,
+          0
+        ],
+        "scale": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "bed1-0",
+        "prototype": "bed1",
+        "enabled": true,
+        "position": [
+          -438.6308898925781,
+          0.0010020999470725656,
+          -84.948974609375
+        ],
+        "rotationDegrees": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "bed1-1",
+        "prototype": "bed1",
+        "enabled": true,
+        "position": [
+          -438.2159423828125,
+          0.0010020999470725656,
+          -76.9165267944336
+        ],
+        "rotationDegrees": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 1,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "bed1-2",
+        "prototype": "bed1",
+        "enabled": true,
+        "position": [
+          -437.38824462890625,
+          0.0010019999463111162,
+          -69.98823547363281
+        ],
+        "rotationDegrees": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 2,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "bed5-0",
+        "prototype": "bed5",
+        "enabled": true,
+        "position": [
+          -1417.6832275390625,
+          35.98660659790039,
+          165.97914123535156
+        ],
+        "rotationDegrees": [
+          0,
+          180,
+          0
+        ],
+        "scale": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "bed5-1",
+        "prototype": "bed5",
+        "enabled": true,
+        "position": [
+          -1455.54248046875,
+          35.98660659790039,
+          173.179931640625
+        ],
+        "rotationDegrees": [
+          0,
+          -90,
+          0
+        ],
+        "scale": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 1,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "bed5-2",
+        "prototype": "bed5",
+        "enabled": true,
+        "position": [
+          -1457.3375244140625,
+          35.98660659790039,
+          98.34272766113281
+        ],
+        "rotationDegrees": [
+          0,
+          90,
+          0
+        ],
+        "scale": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 2,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "bed5-3",
+        "prototype": "bed5",
+        "enabled": true,
+        "position": [
+          -1423.21923828125,
+          35.98660659790039,
+          98.64617156982422
+        ],
+        "rotationDegrees": [
+          0,
+          180,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 3,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "bench-0",
+        "prototype": "bench",
+        "enabled": true,
+        "position": [
+          -946.3521728515625,
+          23.991403579711914,
+          148.4415283203125
+        ],
+        "rotationDegrees": [
+          0,
+          89.296875,
+          0
+        ],
+        "scale": [
+          0.6499999761581421,
+          0.6499999761581421,
+          0.6499999761581421
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "bench-1",
+        "prototype": "bench",
+        "enabled": true,
+        "position": [
+          -946.2570190429688,
+          23.991403579711914,
+          115.45255279541016
+        ],
+        "rotationDegrees": [
+          0,
+          -89.296875,
+          0
+        ],
+        "scale": [
+          0.6499999761581421,
+          0.6499999761581421,
+          0.6499999761581421
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 1,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "bench-2",
+        "prototype": "bench",
+        "enabled": true,
+        "position": [
+          -736.640625,
+          0.0010016999440267682,
+          140.82496643066406
+        ],
+        "rotationDegrees": [
+          0,
+          89.296875,
+          0
+        ],
+        "scale": [
+          0.6499999761581421,
+          0.6499999761581421,
+          0.6499999761581421
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 2,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "bench-3",
+        "prototype": "bench",
+        "enabled": true,
+        "position": [
+          -746.8372192382812,
+          0.0010017999447882175,
+          140.68826293945312
+        ],
+        "rotationDegrees": [
+          0,
+          85.078125,
+          0
+        ],
+        "scale": [
+          0.6499999761581421,
+          0.6499999761581421,
+          0.6499999761581421
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 3,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "bench-4",
+        "prototype": "bench",
+        "enabled": true,
+        "position": [
+          -737.160888671875,
+          0.0010020999470725656,
+          123.49491119384766
+        ],
+        "rotationDegrees": [
+          0,
+          -92.8125,
+          0
+        ],
+        "scale": [
+          0.6499999761581421,
+          0.6499999761581421,
+          0.6499999761581421
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 4,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "bench-5",
+        "prototype": "bench",
+        "enabled": true,
+        "position": [
+          -747.2180786132812,
+          0.0010017999447882175,
+          122.59785461425781
+        ],
+        "rotationDegrees": [
+          0,
+          -89.296875,
+          0
+        ],
+        "scale": [
+          0.6499999761581421,
+          0.6499999761581421,
+          0.6499999761581421
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 5,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "bench-6",
+        "prototype": "bench",
+        "enabled": true,
+        "position": [
+          -791.5983276367188,
+          0.0002010000025620684,
+          160.2439727783203
+        ],
+        "rotationDegrees": [
+          0,
+          87.890625,
+          0
+        ],
+        "scale": [
+          0.6499999761581421,
+          0.6499999761581421,
+          0.6499999761581421
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 6,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "bench-7",
+        "prototype": "bench",
+        "enabled": true,
+        "position": [
+          -768.6693725585938,
+          0.0010017999447882175,
+          150.7613067626953
+        ],
+        "rotationDegrees": [
+          0,
+          39.375,
+          0
+        ],
+        "scale": [
+          0.6499999761581421,
+          0.6499999761581421,
+          0.6499999761581421
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 7,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "bench-8",
+        "prototype": "bench",
+        "enabled": true,
+        "position": [
+          -768.638427734375,
+          0.0010017999447882175,
+          113.1699447631836
+        ],
+        "rotationDegrees": [
+          0,
+          -37.96875,
+          0
+        ],
+        "scale": [
+          0.6499999761581421,
+          0.6499999761581421,
+          0.6499999761581421
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 8,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "bench-9",
+        "prototype": "bench",
+        "enabled": true,
+        "position": [
+          -781.4544677734375,
+          0.0010020999470725656,
+          103.4557113647461
+        ],
+        "rotationDegrees": [
+          0,
+          -85.78125,
+          0
+        ],
+        "scale": [
+          0.6499999761581421,
+          0.6499999761581421,
+          0.6499999761581421
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 9,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "bench-10",
+        "prototype": "bench",
+        "enabled": true,
+        "position": [
+          -791.3896484375,
+          0.0010020999470725656,
+          103.22952270507812
+        ],
+        "rotationDegrees": [
+          0,
+          -88.59375,
+          0
+        ],
+        "scale": [
+          0.6499999761581421,
+          0.6499999761581421,
+          0.6499999761581421
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 10,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "bench-11",
+        "prototype": "bench",
+        "enabled": true,
+        "position": [
+          -436.15087890625,
+          0.0010020999470725656,
+          -92.46476745605469
+        ],
+        "rotationDegrees": [
+          0,
+          -90.703125,
+          0
+        ],
+        "scale": [
+          0.550000011920929,
+          0.550000011920929,
+          0.550000011920929
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 11,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "bucket1-0",
+        "prototype": "bucket1",
+        "enabled": true,
+        "position": [
+          -479.08905029296875,
+          0.0010020999470725656,
+          -147.44029235839844
+        ],
+        "rotationDegrees": [
+          0,
+          91.40625,
+          0
+        ],
+        "scale": [
+          0.4000000059604645,
+          0.4000000059604645,
+          0.4000000059604645
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "campfire-0",
+        "prototype": "campfire",
+        "enabled": true,
+        "position": [
+          -563.7627563476562,
+          -37.983802795410156,
+          215.56581115722656
+        ],
+        "rotationDegrees": [
+          0,
+          180,
+          0
+        ],
+        "scale": [
+          1.5,
+          1.5,
+          1.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "chair2-0",
+        "prototype": "chair2",
+        "enabled": true,
+        "position": [
+          -795.7762451171875,
+          2.999800443649292,
+          133.78805541992188
+        ],
+        "rotationDegrees": [
+          0,
+          -3.515625,
+          0
+        ],
+        "scale": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "chair2-1",
+        "prototype": "chair2",
+        "enabled": true,
+        "position": [
+          -796.6556396484375,
+          2.999800443649292,
+          128.65133666992188
+        ],
+        "rotationDegrees": [
+          0,
+          23.203125,
+          0
+        ],
+        "scale": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 1,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "chair2-2",
+        "prototype": "chair2",
+        "enabled": true,
+        "position": [
+          -476.1914978027344,
+          0.0010020999470725656,
+          -148.61329650878906
+        ],
+        "rotationDegrees": [
+          0,
+          -4.21875,
+          0
+        ],
+        "scale": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 2,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "chair2-3",
+        "prototype": "chair2",
+        "enabled": true,
+        "position": [
+          -474.0071105957031,
+          0.0010020999470725656,
+          -153.14810180664062
+        ],
+        "rotationDegrees": [
+          0,
+          62.578125,
+          0
+        ],
+        "scale": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 3,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "chair2-4",
+        "prototype": "chair2",
+        "enabled": true,
+        "position": [
+          -485.7359924316406,
+          0.0010020999470725656,
+          -159.73516845703125
+        ],
+        "rotationDegrees": [
+          0,
+          -59.765625,
+          0
+        ],
+        "scale": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 4,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "chair2-5",
+        "prototype": "chair2",
+        "enabled": true,
+        "position": [
+          -481.5810241699219,
+          0.0010020999470725656,
+          -159.39041137695312
+        ],
+        "rotationDegrees": [
+          0,
+          -137.109375,
+          0
+        ],
+        "scale": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 5,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "chair2-6",
+        "prototype": "chair2",
+        "enabled": true,
+        "position": [
+          -426.9151611328125,
+          0.0010020999470725656,
+          -65.47138977050781
+        ],
+        "rotationDegrees": [
+          0,
+          -78.75,
+          0
+        ],
+        "scale": [
+          0.550000011920929,
+          0.550000011920929,
+          0.550000011920929
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 6,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "chair2-7",
+        "prototype": "chair2",
+        "enabled": true,
+        "position": [
+          -423.3260803222656,
+          0.0010020999470725656,
+          -65.46652221679688
+        ],
+        "rotationDegrees": [
+          0,
+          -120.234375,
+          0
+        ],
+        "scale": [
+          0.550000011920929,
+          0.550000011920929,
+          0.550000011920929
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 7,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "chair2-8",
+        "prototype": "chair2",
+        "enabled": true,
+        "position": [
+          -583.5533447265625,
+          -24.989004135131836,
+          230.52842712402344
+        ],
+        "rotationDegrees": [
+          0,
+          -176.484375,
+          0
+        ],
+        "scale": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 8,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "chair2-9",
+        "prototype": "chair2",
+        "enabled": true,
+        "position": [
+          -587.5330810546875,
+          -24.989004135131836,
+          235.11349487304688
+        ],
+        "rotationDegrees": [
+          0,
+          -74.53125,
+          0
+        ],
+        "scale": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 9,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "chair2-10",
+        "prototype": "chair2",
+        "enabled": true,
+        "position": [
+          -590.1785888671875,
+          -24.989004135131836,
+          230.04843139648438
+        ],
+        "rotationDegrees": [
+          0,
+          4.21875,
+          0
+        ],
+        "scale": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 10,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "chair2-11",
+        "prototype": "chair2",
+        "enabled": true,
+        "position": [
+          -587.101806640625,
+          -24.989004135131836,
+          228.09640502929688
+        ],
+        "rotationDegrees": [
+          0,
+          84.375,
+          0
+        ],
+        "scale": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 11,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "chair2d-0",
+        "prototype": "chair2d",
+        "enabled": true,
+        "position": [
+          -677.044189453125,
+          0.0010019999463111162,
+          -167.2450714111328
+        ],
+        "rotationDegrees": [
+          0,
+          170.859375,
+          0
+        ],
+        "scale": [
+          0.6499999761581421,
+          0.6499999761581421,
+          0.6499999761581421
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "chair2d-1",
+        "prototype": "chair2d",
+        "enabled": true,
+        "position": [
+          -680.84423828125,
+          0.0010019999463111162,
+          -163.8230438232422
+        ],
+        "rotationDegrees": [
+          0,
+          -83.671875,
+          0
+        ],
+        "scale": [
+          0.6499999761581421,
+          0.6499999761581421,
+          0.6499999761581421
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 1,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "chair2d-2",
+        "prototype": "chair2d",
+        "enabled": true,
+        "position": [
+          -684.3857421875,
+          0.0010019999463111162,
+          -166.94393920898438
+        ],
+        "rotationDegrees": [
+          0,
+          -26.015625,
+          0
+        ],
+        "scale": [
+          0.6499999761581421,
+          0.6499999761581421,
+          0.6499999761581421
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 2,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "chair2d-3",
+        "prototype": "chair2d",
+        "enabled": true,
+        "position": [
+          -671.861328125,
+          10.996602058410645,
+          -167.63661193847656
+        ],
+        "rotationDegrees": [
+          0,
+          -163.125,
+          0
+        ],
+        "scale": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 3,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "chair2d-4",
+        "prototype": "chair2d",
+        "enabled": true,
+        "position": [
+          -688.293212890625,
+          10.996602058410645,
+          -170.13246154785156
+        ],
+        "rotationDegrees": [
+          0,
+          11.25,
+          0
+        ],
+        "scale": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 4,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "chair3-0",
+        "prototype": "chair3",
+        "enabled": true,
+        "position": [
+          -1420.1893310546875,
+          35.98660659790039,
+          131.82339477539062
+        ],
+        "rotationDegrees": [
+          0,
+          -0.703125,
+          0
+        ],
+        "scale": [
+          0.6499999761581421,
+          0.6499999761581421,
+          0.6499999761581421
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "chair3-1",
+        "prototype": "chair3",
+        "enabled": true,
+        "position": [
+          -1416.2744140625,
+          35.98660659790039,
+          138.78158569335938
+        ],
+        "rotationDegrees": [
+          0,
+          -78.75,
+          0
+        ],
+        "scale": [
+          0.6499999761581421,
+          0.6499999761581421,
+          0.6499999761581421
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 1,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "chair3-2",
+        "prototype": "chair3",
+        "enabled": true,
+        "position": [
+          -1407.8243408203125,
+          35.98660659790039,
+          139.25094604492188
+        ],
+        "rotationDegrees": [
+          0,
+          -93.515625,
+          0
+        ],
+        "scale": [
+          0.6499999761581421,
+          0.6499999761581421,
+          0.6499999761581421
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 2,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "chair3-3",
+        "prototype": "chair3",
+        "enabled": true,
+        "position": [
+          -1397.37890625,
+          35.98660659790039,
+          140.1649932861328
+        ],
+        "rotationDegrees": [
+          0,
+          -92.109375,
+          0
+        ],
+        "scale": [
+          0.6499999761581421,
+          0.6499999761581421,
+          0.6499999761581421
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 3,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "chair3-4",
+        "prototype": "chair3",
+        "enabled": true,
+        "position": [
+          -1392.326416015625,
+          35.98660659790039,
+          131.2979278564453
+        ],
+        "rotationDegrees": [
+          0,
+          175.78125,
+          0
+        ],
+        "scale": [
+          0.6499999761581421,
+          0.6499999761581421,
+          0.6499999761581421
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 4,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "chair3-5",
+        "prototype": "chair3",
+        "enabled": true,
+        "position": [
+          -1396.54248046875,
+          35.98660659790039,
+          124.68498992919922
+        ],
+        "rotationDegrees": [
+          0,
+          90.703125,
+          0
+        ],
+        "scale": [
+          0.6499999761581421,
+          0.6499999761581421,
+          0.6499999761581421
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 5,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "chair3-6",
+        "prototype": "chair3",
+        "enabled": true,
+        "position": [
+          -1403.9429931640625,
+          35.98660659790039,
+          124.24640655517578
+        ],
+        "rotationDegrees": [
+          0,
+          90.703125,
+          0
+        ],
+        "scale": [
+          0.6499999761581421,
+          0.6499999761581421,
+          0.6499999761581421
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 6,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "chair3-7",
+        "prototype": "chair3",
+        "enabled": true,
+        "position": [
+          -1413.811767578125,
+          35.98660659790039,
+          123.68729400634766
+        ],
+        "rotationDegrees": [
+          0,
+          47.109375,
+          0
+        ],
+        "scale": [
+          0.6499999761581421,
+          0.6499999761581421,
+          0.6499999761581421
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 7,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "chair3d-0",
+        "prototype": "chair3d",
+        "enabled": true,
+        "position": [
+          -1301.5638427734375,
+          35.98660659790039,
+          186.73617553710938
+        ],
+        "rotationDegrees": [
+          0,
+          -12.65625,
+          0
+        ],
+        "scale": [
+          0.550000011920929,
+          0.550000011920929,
+          0.550000011920929
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "chair3d-1",
+        "prototype": "chair3d",
+        "enabled": true,
+        "position": [
+          -1292.078369140625,
+          35.98660659790039,
+          186.56517028808594
+        ],
+        "rotationDegrees": [
+          0,
+          -176.484375,
+          0
+        ],
+        "scale": [
+          0.550000011920929,
+          0.550000011920929,
+          0.550000011920929
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 1,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "chair3d-2",
+        "prototype": "chair3d",
+        "enabled": true,
+        "position": [
+          -1291.8150634765625,
+          35.98660659790039,
+          182.29966735839844
+        ],
+        "rotationDegrees": [
+          0,
+          150.46875,
+          0
+        ],
+        "scale": [
+          0.550000011920929,
+          0.550000011920929,
+          0.550000011920929
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 2,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "chair3d-3",
+        "prototype": "chair3d",
+        "enabled": true,
+        "position": [
+          -1301.6475830078125,
+          35.98660659790039,
+          181.56039428710938
+        ],
+        "rotationDegrees": [
+          0,
+          20.390625,
+          0
+        ],
+        "scale": [
+          0.550000011920929,
+          0.550000011920929,
+          0.550000011920929
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 3,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "cratec-0",
+        "prototype": "cratec",
+        "enabled": true,
+        "position": [
+          -659.9859008789062,
+          0.0010019999463111162,
+          -160.1858367919922
+        ],
+        "rotationDegrees": [
+          0,
+          3.515625,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "cratec-1",
+        "prototype": "cratec",
+        "enabled": true,
+        "position": [
+          -681.0226440429688,
+          0.0010019999463111162,
+          -201.40289306640625
+        ],
+        "rotationDegrees": [
+          0,
+          32.34375,
+          0
+        ],
+        "scale": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 1,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "crated-0",
+        "prototype": "crated",
+        "enabled": true,
+        "position": [
+          -500.30035400390625,
+          0.0010020999470725656,
+          -157.6206817626953
+        ],
+        "rotationDegrees": [
+          0,
+          163.828125,
+          0
+        ],
+        "scale": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "crated-1",
+        "prototype": "crated",
+        "enabled": true,
+        "position": [
+          -499.0509033203125,
+          0.0010017999447882175,
+          -163.1851348876953
+        ],
+        "rotationDegrees": [
+          0,
+          -132.890625,
+          0
+        ],
+        "scale": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 1,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "cratee-0",
+        "prototype": "cratee",
+        "enabled": true,
+        "position": [
+          -685.8411254882812,
+          0.0010019999463111162,
+          -196.41830444335938
+        ],
+        "rotationDegrees": [
+          0,
+          87.1875,
+          0
+        ],
+        "scale": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "cratee-1",
+        "prototype": "cratee",
+        "enabled": true,
+        "position": [
+          -679.1700439453125,
+          0.0010019999463111162,
+          -195.82020568847656
+        ],
+        "rotationDegrees": [
+          0,
+          53.4375,
+          0
+        ],
+        "scale": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 1,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "darktable-0",
+        "prototype": "darktable",
+        "enabled": true,
+        "position": [
+          -680.622802734375,
+          0.0010019999463111162,
+          -166.9949951171875
+        ],
+        "rotationDegrees": [
+          0,
+          2.109375,
+          0
+        ],
+        "scale": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "dcart-0",
+        "prototype": "dcart",
+        "enabled": true,
+        "position": [
+          -541.07666015625,
+          -35.98461151123047,
+          221.4885711669922
+        ],
+        "rotationDegrees": [
+          0,
+          123.75,
+          0
+        ],
+        "scale": [
+          0.4000000059604645,
+          0.4000000059604645,
+          0.4000000059604645
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "dcart-1",
+        "prototype": "dcart",
+        "enabled": true,
+        "position": [
+          -662.0031127929688,
+          -55.97661590576172,
+          296.96759033203125
+        ],
+        "rotationDegrees": [
+          0,
+          35.15625,
+          0
+        ],
+        "scale": [
+          0.6499999761581421,
+          0.6499999761581421,
+          0.6499999761581421
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 1,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "dcart-2",
+        "prototype": "dcart",
+        "enabled": true,
+        "position": [
+          -745.5628662109375,
+          -67.9718017578125,
+          432.8006286621094
+        ],
+        "rotationDegrees": [
+          0,
+          -146.25,
+          0
+        ],
+        "scale": [
+          0.6499999761581421,
+          0.6499999761581421,
+          0.6499999761581421
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 2,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "drawer1-0",
+        "prototype": "drawer1",
+        "enabled": true,
+        "position": [
+          -1445.92333984375,
+          35.98660659790039,
+          172.52296447753906
+        ],
+        "rotationDegrees": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "drawer1-1",
+        "prototype": "drawer1",
+        "enabled": true,
+        "position": [
+          -1464.5474853515625,
+          35.98660659790039,
+          145.44227600097656
+        ],
+        "rotationDegrees": [
+          0,
+          90,
+          0
+        ],
+        "scale": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 1,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "drawer1-2",
+        "prototype": "drawer1",
+        "enabled": true,
+        "position": [
+          -1463.14453125,
+          35.98660659790039,
+          126.44965362548828
+        ],
+        "rotationDegrees": [
+          0,
+          -90,
+          0
+        ],
+        "scale": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 2,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "drawer1-3",
+        "prototype": "drawer1",
+        "enabled": true,
+        "position": [
+          -1445.922119140625,
+          35.98660659790039,
+          88.49996185302734
+        ],
+        "rotationDegrees": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          0.6499999761581421,
+          0.6499999761581421,
+          0.6499999761581421
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 3,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "erlant-0",
+        "prototype": "erlant",
+        "enabled": true,
+        "position": [
+          -1273.3892822265625,
+          42.983802795410156,
+          149.8223876953125
+        ],
+        "rotationDegrees": [
+          0,
+          90,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "erlant-1",
+        "prototype": "erlant",
+        "enabled": true,
+        "position": [
+          -1289.3699951171875,
+          42.983802795410156,
+          150.83506774902344
+        ],
+        "rotationDegrees": [
+          0,
+          90.703125,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 1,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "erlant-2",
+        "prototype": "erlant",
+        "enabled": true,
+        "position": [
+          -1289.677490234375,
+          42.983802795410156,
+          113.79095458984375
+        ],
+        "rotationDegrees": [
+          0,
+          -90,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 2,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "erlant-3",
+        "prototype": "erlant",
+        "enabled": true,
+        "position": [
+          -1273.395263671875,
+          42.983802795410156,
+          113.36286163330078
+        ],
+        "rotationDegrees": [
+          0,
+          -87.890625,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 3,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "erlant-4",
+        "prototype": "erlant",
+        "enabled": true,
+        "position": [
+          -897.0543823242188,
+          25.990604400634766,
+          131.99896240234375
+        ],
+        "rotationDegrees": [
+          0,
+          0.703125,
+          0
+        ],
+        "scale": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 4,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "erlant-5",
+        "prototype": "erlant",
+        "enabled": true,
+        "position": [
+          -912.1964721679688,
+          25.990604400634766,
+          88.07804107666016
+        ],
+        "rotationDegrees": [
+          0,
+          180,
+          0
+        ],
+        "scale": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 5,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "erlant-6",
+        "prototype": "erlant",
+        "enabled": true,
+        "position": [
+          -912.1897583007812,
+          25.990604400634766,
+          176.0662384033203
+        ],
+        "rotationDegrees": [
+          0,
+          -179.296875,
+          0
+        ],
+        "scale": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 6,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "forge-0",
+        "prototype": "forge",
+        "enabled": true,
+        "position": [
+          -366.75628662109375,
+          -1.998200535774231,
+          -183.92495727539062
+        ],
+        "rotationDegrees": [
+          0,
+          180,
+          0
+        ],
+        "scale": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "forge-1",
+        "prototype": "forge",
+        "enabled": true,
+        "position": [
+          -369.85345458984375,
+          -1.99820077419281,
+          -205.40093994140625
+        ],
+        "rotationDegrees": [
+          0,
+          -177.890625,
+          0
+        ],
+        "scale": [
+          0.6499999761581421,
+          0.6499999761581421,
+          0.6499999761581421
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 1,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "forge-2",
+        "prototype": "forge",
+        "enabled": true,
+        "position": [
+          -344.11151123046875,
+          0.0010020999470725656,
+          -172.76473999023438
+        ],
+        "rotationDegrees": [
+          0,
+          4.21875,
+          0
+        ],
+        "scale": [
+          0.6499999761581421,
+          0.6499999761581421,
+          0.6499999761581421
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 2,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "forge-3",
+        "prototype": "forge",
+        "enabled": true,
+        "position": [
+          -389.70562744140625,
+          0.0010020999470725656,
+          -148.1888885498047
+        ],
+        "rotationDegrees": [
+          0,
+          88.59375,
+          0
+        ],
+        "scale": [
+          0.6499999761581421,
+          0.6499999761581421,
+          0.6499999761581421
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 3,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "forge-4",
+        "prototype": "forge",
+        "enabled": true,
+        "position": [
+          -400.2012023925781,
+          0.0010020999470725656,
+          -148.1894073486328
+        ],
+        "rotationDegrees": [
+          0,
+          90.703125,
+          0
+        ],
+        "scale": [
+          0.6499999761581421,
+          0.6499999761581421,
+          0.6499999761581421
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 4,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "frelant-0",
+        "prototype": "frelant",
+        "enabled": true,
+        "position": [
+          -483.9056396484375,
+          1.4991601705551147,
+          -160.81756591796875
+        ],
+        "rotationDegrees": [
+          0,
+          -73.125,
+          0
+        ],
+        "scale": [
+          0.15000000596046448,
+          0.15000000596046448,
+          0.15000000596046448
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "frelant-1",
+        "prototype": "frelant",
+        "enabled": true,
+        "position": [
+          -473.6739501953125,
+          1.4991601705551147,
+          -148.97802734375
+        ],
+        "rotationDegrees": [
+          0,
+          -123.75,
+          0
+        ],
+        "scale": [
+          0.15000000596046448,
+          0.15000000596046448,
+          0.15000000596046448
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 1,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "haunch-0",
+        "prototype": "haunch",
+        "enabled": true,
+        "position": [
+          -1399.28759765625,
+          38.98540496826172,
+          131.80323791503906
+        ],
+        "rotationDegrees": [
+          0,
+          101.953125,
+          0
+        ],
+        "scale": [
+          0.25,
+          0.25,
+          0.25
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "haunch-1",
+        "prototype": "haunch",
+        "enabled": true,
+        "position": [
+          -1408.1136474609375,
+          38.98540496826172,
+          132.197265625
+        ],
+        "rotationDegrees": [
+          0,
+          151.171875,
+          0
+        ],
+        "scale": [
+          0.25,
+          0.25,
+          0.25
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 1,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "kalbraz-0",
+        "prototype": "kalbraz",
+        "enabled": true,
+        "position": [
+          -1333.5311279296875,
+          45.982608795166016,
+          118.51770782470703
+        ],
+        "rotationDegrees": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "kalbraz-1",
+        "prototype": "kalbraz",
+        "enabled": true,
+        "position": [
+          -1334.2601318359375,
+          45.982608795166016,
+          146.15110778808594
+        ],
+        "rotationDegrees": [
+          0,
+          3.515625,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 1,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "kalbraz-2",
+        "prototype": "kalbraz",
+        "enabled": true,
+        "position": [
+          -1430.17822265625,
+          35.98660659790039,
+          154.68878173828125
+        ],
+        "rotationDegrees": [
+          0,
+          130.78125,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 2,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "kalbraz-3",
+        "prototype": "kalbraz",
+        "enabled": true,
+        "position": [
+          -1430.177734375,
+          35.98660659790039,
+          108.95661163330078
+        ],
+        "rotationDegrees": [
+          0,
+          -136.40625,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 3,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "kalbraz-4",
+        "prototype": "kalbraz",
+        "enabled": true,
+        "position": [
+          -920.631591796875,
+          25.990604400634766,
+          123.20053100585938
+        ],
+        "rotationDegrees": [
+          0,
+          -139.21875,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 4,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "kalbraz-5",
+        "prototype": "kalbraz",
+        "enabled": true,
+        "position": [
+          -920.3820190429688,
+          25.990604400634766,
+          140.6932830810547
+        ],
+        "rotationDegrees": [
+          0,
+          139.921875,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 5,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "kalcart-0",
+        "prototype": "kalcart",
+        "enabled": true,
+        "position": [
+          -638.8123779296875,
+          -55.97661590576172,
+          313.9955749511719
+        ],
+        "rotationDegrees": [
+          0,
+          -25.3125,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "kalcart-1",
+        "prototype": "kalcart",
+        "enabled": true,
+        "position": [
+          -771.1189575195312,
+          -67.9718017578125,
+          407.2615661621094
+        ],
+        "rotationDegrees": [
+          0,
+          127.96875,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 1,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "kalcart-2",
+        "prototype": "kalcart",
+        "enabled": true,
+        "position": [
+          -750.6890258789062,
+          -67.9718017578125,
+          210.2035675048828
+        ],
+        "rotationDegrees": [
+          0,
+          -43.59375,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 2,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "kalcart-3",
+        "prototype": "kalcart",
+        "enabled": true,
+        "position": [
+          -787.6174926757812,
+          -67.9718017578125,
+          209.26649475097656
+        ],
+        "rotationDegrees": [
+          0,
+          50.625,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 3,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "kalcart-4",
+        "prototype": "kalcart",
+        "enabled": true,
+        "position": [
+          -788.2908325195312,
+          -67.9718017578125,
+          222.2154541015625
+        ],
+        "rotationDegrees": [
+          0,
+          130.078125,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 4,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "kalcart-5",
+        "prototype": "kalcart",
+        "enabled": true,
+        "position": [
+          -530.7183227539062,
+          -35.98461151123047,
+          271.4074401855469
+        ],
+        "rotationDegrees": [
+          0,
+          180,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 5,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "kalgems1-0",
+        "prototype": "kalgems1",
+        "enabled": true,
+        "position": [
+          -659.3916015625,
+          8.001002311706543,
+          122.6070785522461
+        ],
+        "rotationDegrees": [
+          0,
+          -165.9375,
+          0
+        ],
+        "scale": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "kalgems1-1",
+        "prototype": "kalgems1",
+        "enabled": true,
+        "position": [
+          -659.2337036132812,
+          7.997801303863525,
+          141.1439971923828
+        ],
+        "rotationDegrees": [
+          0,
+          90,
+          0
+        ],
+        "scale": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 1,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "kalgems1-2",
+        "prototype": "kalgems1",
+        "enabled": true,
+        "position": [
+          -697.2910766601562,
+          -67.87602996826172,
+          436.7038269042969
+        ],
+        "rotationDegrees": [
+          0,
+          0,
+          357.890625
+        ],
+        "scale": [
+          1.5,
+          1.5,
+          1.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 2,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "kalgems1-3",
+        "prototype": "kalgems1",
+        "enabled": true,
+        "position": [
+          -639.9937744140625,
+          -54.10797882080078,
+          314.3221130371094
+        ],
+        "rotationDegrees": [
+          0,
+          -25.3125,
+          0
+        ],
+        "scale": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 3,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "kalgems1-4",
+        "prototype": "kalgems1",
+        "enabled": true,
+        "position": [
+          -751.2730712890625,
+          -66.10316467285156,
+          210.7525177001953
+        ],
+        "rotationDegrees": [
+          0,
+          -68.90625,
+          0
+        ],
+        "scale": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 4,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "kalgems1-5",
+        "prototype": "kalgems1",
+        "enabled": true,
+        "position": [
+          -765.512939453125,
+          -95.96060943603516,
+          254.8023223876953
+        ],
+        "rotationDegrees": [
+          0,
+          -83.671875,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 5,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "kalgems1-6",
+        "prototype": "kalgems1",
+        "enabled": true,
+        "position": [
+          -751.112060546875,
+          -91.94068908691406,
+          343.43743896484375
+        ],
+        "rotationDegrees": [
+          0,
+          -87.1875,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 6,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "kalgems1-7",
+        "prototype": "kalgems1",
+        "enabled": true,
+        "position": [
+          -745.4351196289062,
+          -67.9718017578125,
+          419.25933837890625
+        ],
+        "rotationDegrees": [
+          0,
+          -90,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 7,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "kalgems1-8",
+        "prototype": "kalgems1",
+        "enabled": true,
+        "position": [
+          -782.4608764648438,
+          -87.247314453125,
+          329.9210510253906
+        ],
+        "rotationDegrees": [
+          0,
+          135.703125,
+          0
+        ],
+        "scale": [
+          1.25,
+          1.25,
+          1.25
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 8,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "kalgems1-9",
+        "prototype": "kalgems1",
+        "enabled": true,
+        "position": [
+          -738.3114624023438,
+          -73.92767333984375,
+          290.7381286621094
+        ],
+        "rotationDegrees": [
+          0,
+          37.265625,
+          0
+        ],
+        "scale": [
+          1.5,
+          1.5,
+          1.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 9,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "kalgems1-10",
+        "prototype": "kalgems1",
+        "enabled": true,
+        "position": [
+          -735.867919921875,
+          -72.8586196899414,
+          283.3523864746094
+        ],
+        "rotationDegrees": [
+          0,
+          14.765625,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 10,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "kalgems1-11",
+        "prototype": "kalgems1",
+        "enabled": true,
+        "position": [
+          -782.7041625976562,
+          -71.59778594970703,
+          269.3156433105469
+        ],
+        "rotationDegrees": [
+          0,
+          -35.15625,
+          348.75
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 11,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "kalgems1-12",
+        "prototype": "kalgems1",
+        "enabled": true,
+        "position": [
+          -781.8582153320312,
+          -72.08686065673828,
+          263.5581970214844
+        ],
+        "rotationDegrees": [
+          0,
+          26.71875,
+          348.75
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 12,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "kalgems1-13",
+        "prototype": "kalgems1",
+        "enabled": true,
+        "position": [
+          -788.3013305664062,
+          -69.70214080810547,
+          264.3467712402344
+        ],
+        "rotationDegrees": [
+          0,
+          177.890625,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 13,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "kalgems1-14",
+        "prototype": "kalgems1",
+        "enabled": true,
+        "position": [
+          -683.2250366210938,
+          -67.9718017578125,
+          184.85275268554688
+        ],
+        "rotationDegrees": [
+          0,
+          -4.21875,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 14,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "kalgems1-15",
+        "prototype": "kalgems1",
+        "enabled": true,
+        "position": [
+          -697.3934326171875,
+          -67.9718017578125,
+          215.71621704101562
+        ],
+        "rotationDegrees": [
+          0,
+          90,
+          0
+        ],
+        "scale": [
+          1.5,
+          1.5,
+          1.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 15,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "kalgems1-16",
+        "prototype": "kalgems1",
+        "enabled": true,
+        "position": [
+          -694.664794921875,
+          -67.9718017578125,
+          212.45021057128906
+        ],
+        "rotationDegrees": [
+          0,
+          37.265625,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 16,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "kalgems2-0",
+        "prototype": "kalgems2",
+        "enabled": true,
+        "position": [
+          -773.6919555664062,
+          -91.28923034667969,
+          367.7867736816406
+        ],
+        "rotationDegrees": [
+          0,
+          107.578125,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "kalgems2-1",
+        "prototype": "kalgems2",
+        "enabled": true,
+        "position": [
+          -762.1355590820312,
+          -95.96060943603516,
+          315.6504211425781
+        ],
+        "rotationDegrees": [
+          0,
+          68.203125,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 1,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "kalgems2-2",
+        "prototype": "kalgems2",
+        "enabled": true,
+        "position": [
+          -775.9569702148438,
+          -90.95199584960938,
+          282.55859375
+        ],
+        "rotationDegrees": [
+          0,
+          135,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 2,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "kalgems2-3",
+        "prototype": "kalgems2",
+        "enabled": true,
+        "position": [
+          -770.9077758789062,
+          -92.57257843017578,
+          308.6413879394531
+        ],
+        "rotationDegrees": [
+          0,
+          -111.796875,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 3,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "kalgems2-4",
+        "prototype": "kalgems2",
+        "enabled": true,
+        "position": [
+          -732.33447265625,
+          -71.73675537109375,
+          289.5373840332031
+        ],
+        "rotationDegrees": [
+          0,
+          -90,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 4,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "kallamp1-0",
+        "prototype": "kallamp1",
+        "enabled": true,
+        "position": [
+          -483.23406982421875,
+          0.0010022999485954642,
+          -207.74293518066406
+        ],
+        "rotationDegrees": [
+          0,
+          10.546875,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "kallamp1-1",
+        "prototype": "kallamp1",
+        "enabled": true,
+        "position": [
+          -653.5735473632812,
+          0.0010019999463111162,
+          -178.37432861328125
+        ],
+        "rotationDegrees": [
+          0,
+          -60.46875,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 1,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "kallamp1-2",
+        "prototype": "kallamp1",
+        "enabled": true,
+        "position": [
+          -725.7716674804688,
+          0.0010020999470725656,
+          137.92384338378906
+        ],
+        "rotationDegrees": [
+          0,
+          -90.703125,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 2,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "kallamp1-3",
+        "prototype": "kallamp1",
+        "enabled": true,
+        "position": [
+          -725.7371826171875,
+          0.0010020999470725656,
+          126.29325866699219
+        ],
+        "rotationDegrees": [
+          0,
+          -90,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 3,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "kallamp1-4",
+        "prototype": "kallamp1",
+        "enabled": true,
+        "position": [
+          -409.33465576171875,
+          0.0010020999470725656,
+          -181.154052734375
+        ],
+        "rotationDegrees": [
+          0,
+          88.59375,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 4,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "kallamp1-5",
+        "prototype": "kallamp1",
+        "enabled": true,
+        "position": [
+          -378.2164611816406,
+          11.996203422546387,
+          -181.42588806152344
+        ],
+        "rotationDegrees": [
+          0,
+          101.953125,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 5,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "kallamp1-6",
+        "prototype": "kallamp1",
+        "enabled": true,
+        "position": [
+          -433.32366943359375,
+          0.0010022999485954642,
+          -97.45955657958984
+        ],
+        "rotationDegrees": [
+          0,
+          180,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 6,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "kallamp1-7",
+        "prototype": "kallamp1",
+        "enabled": true,
+        "position": [
+          -537.3438720703125,
+          -35.98461151123047,
+          191.48516845703125
+        ],
+        "rotationDegrees": [
+          0,
+          -21.09375,
+          0
+        ],
+        "scale": [
+          1.25,
+          1.25,
+          1.25
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 7,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "kallamp1-8",
+        "prototype": "kallamp1",
+        "enabled": true,
+        "position": [
+          -477.43121337890625,
+          -35.98461151123047,
+          272.386962890625
+        ],
+        "rotationDegrees": [
+          0,
+          90,
+          0
+        ],
+        "scale": [
+          1.25,
+          1.25,
+          1.25
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 8,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "kallamp1-9",
+        "prototype": "kallamp1",
+        "enabled": true,
+        "position": [
+          -626.1283569335938,
+          -35.98461151123047,
+          235.6557159423828
+        ],
+        "rotationDegrees": [
+          0,
+          -93.515625,
+          0
+        ],
+        "scale": [
+          1.25,
+          1.25,
+          1.25
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 9,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "kallamp1-10",
+        "prototype": "kallamp1",
+        "enabled": true,
+        "position": [
+          -685.2246704101562,
+          0.0010034999577328563,
+          73.46944427490234
+        ],
+        "rotationDegrees": [
+          0,
+          47.109375,
+          0
+        ],
+        "scale": [
+          1.25,
+          1.25,
+          1.25
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 10,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "kallamp1-11",
+        "prototype": "kallamp1",
+        "enabled": true,
+        "position": [
+          -537.2069702148438,
+          -37.97297668457031,
+          260.958984375
+        ],
+        "rotationDegrees": [
+          0,
+          -90,
+          0
+        ],
+        "scale": [
+          1.5,
+          1.5,
+          1.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 11,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "kallamp1-12",
+        "prototype": "kallamp1",
+        "enabled": true,
+        "position": [
+          -537.1873168945312,
+          -37.23461151123047,
+          312.8865661621094
+        ],
+        "rotationDegrees": [
+          0,
+          -90,
+          0
+        ],
+        "scale": [
+          1.5,
+          1.5,
+          1.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 12,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "kallamp2-0",
+        "prototype": "kallamp2",
+        "enabled": true,
+        "position": [
+          -697.4740600585938,
+          0.0010019999463111162,
+          -160.18515014648438
+        ],
+        "rotationDegrees": [
+          0,
+          132.1875,
+          0
+        ],
+        "scale": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "kallamp2-1",
+        "prototype": "kallamp2",
+        "enabled": true,
+        "position": [
+          -697.4716186523438,
+          0.0010014999425038695,
+          -211.6653289794922
+        ],
+        "rotationDegrees": [
+          0,
+          -147.65625,
+          0
+        ],
+        "scale": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 1,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "kallamp2-2",
+        "prototype": "kallamp2",
+        "enabled": true,
+        "position": [
+          -677.97802734375,
+          0.0010014999425038695,
+          -211.66531372070312
+        ],
+        "rotationDegrees": [
+          0,
+          -44.296875,
+          0
+        ],
+        "scale": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 2,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "kallamp2-3",
+        "prototype": "kallamp2",
+        "enabled": true,
+        "position": [
+          -659.9841918945312,
+          11.122090339660645,
+          -177.29515075683594
+        ],
+        "rotationDegrees": [
+          0,
+          -90,
+          0
+        ],
+        "scale": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 3,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "kallamp2-4",
+        "prototype": "kallamp2",
+        "enabled": true,
+        "position": [
+          -697.4713134765625,
+          10.996602058410645,
+          -173.36671447753906
+        ],
+        "rotationDegrees": [
+          0,
+          179.296875,
+          0
+        ],
+        "scale": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 4,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "kallamp2-5",
+        "prototype": "kallamp2",
+        "enabled": true,
+        "position": [
+          -1414.9329833984375,
+          35.98660659790039,
+          184.42787170410156
+        ],
+        "rotationDegrees": [
+          0,
+          47.109375,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 5,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "kallamp2-6",
+        "prototype": "kallamp2",
+        "enabled": true,
+        "position": [
+          -1479.9085693359375,
+          35.98660659790039,
+          176.42977905273438
+        ],
+        "rotationDegrees": [
+          0,
+          137.8125,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 6,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "kallamp2-7",
+        "prototype": "kallamp2",
+        "enabled": true,
+        "position": [
+          -1477.9091796875,
+          35.98660659790039,
+          126.4499282836914
+        ],
+        "rotationDegrees": [
+          0,
+          132.1875,
+          0
+        ],
+        "scale": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 7,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "kallamp2-8",
+        "prototype": "kallamp2",
+        "enabled": true,
+        "position": [
+          -1418.9320068359375,
+          35.98660659790039,
+          75.46752166748047
+        ],
+        "rotationDegrees": [
+          0,
+          -47.109375,
+          0
+        ],
+        "scale": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 8,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "kallamp2-9",
+        "prototype": "kallamp2",
+        "enabled": true,
+        "position": [
+          -440.3277893066406,
+          0.0010020999470725656,
+          -65.47173309326172
+        ],
+        "rotationDegrees": [
+          0,
+          135,
+          0
+        ],
+        "scale": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 9,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "kallamp2-10",
+        "prototype": "kallamp2",
+        "enabled": true,
+        "position": [
+          -586.2661743164062,
+          -35.98461151123047,
+          247.4005126953125
+        ],
+        "rotationDegrees": [
+          0,
+          -145.546875,
+          0
+        ],
+        "scale": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 10,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "kallamp2-11",
+        "prototype": "kallamp2",
+        "enabled": true,
+        "position": [
+          -596.263427734375,
+          -35.98461151123047,
+          221.40948486328125
+        ],
+        "rotationDegrees": [
+          0,
+          -132.1875,
+          0
+        ],
+        "scale": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 11,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "kallamp2-12",
+        "prototype": "kallamp2",
+        "enabled": true,
+        "position": [
+          -579.2672729492188,
+          -35.98461151123047,
+          193.4219970703125
+        ],
+        "rotationDegrees": [
+          0,
+          -37.96875,
+          0
+        ],
+        "scale": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 12,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "kallamp2-13",
+        "prototype": "kallamp2",
+        "enabled": true,
+        "position": [
+          -579.2683715820312,
+          -35.98461151123047,
+          242.4042205810547
+        ],
+        "rotationDegrees": [
+          0,
+          42.1875,
+          0
+        ],
+        "scale": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 13,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "kallamp2-14",
+        "prototype": "kallamp2",
+        "enabled": true,
+        "position": [
+          -618.2553100585938,
+          -35.98461151123047,
+          198.42276000976562
+        ],
+        "rotationDegrees": [
+          0,
+          139.921875,
+          0
+        ],
+        "scale": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 14,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "kallamp2-15",
+        "prototype": "kallamp2",
+        "enabled": true,
+        "position": [
+          -596.2626342773438,
+          -24.989004135131836,
+          242.40264892578125
+        ],
+        "rotationDegrees": [
+          0,
+          144.84375,
+          0
+        ],
+        "scale": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 15,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "kallamp2-16",
+        "prototype": "kallamp2",
+        "enabled": true,
+        "position": [
+          -579.7151489257812,
+          -24.989004135131836,
+          221.8065948486328
+        ],
+        "rotationDegrees": [
+          0,
+          -58.359375,
+          0
+        ],
+        "scale": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 16,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "kallamp2-17",
+        "prototype": "kallamp2",
+        "enabled": true,
+        "position": [
+          -452.7192077636719,
+          0.0010017999447882175,
+          -28.3946590423584
+        ],
+        "rotationDegrees": [
+          0,
+          92.109375,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 17,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "kallamp2-18",
+        "prototype": "kallamp2",
+        "enabled": true,
+        "position": [
+          -485.7185974121094,
+          0.19752639532089233,
+          -141.69578552246094
+        ],
+        "rotationDegrees": [
+          0,
+          -87.890625,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 18,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "kallamp2-19",
+        "prototype": "kallamp2",
+        "enabled": true,
+        "position": [
+          -466.3150329589844,
+          0.0010017999447882175,
+          -155.02273559570312
+        ],
+        "rotationDegrees": [
+          0,
+          90,
+          0
+        ],
+        "scale": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 19,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "kaltracks-0",
+        "prototype": "kaltracks",
+        "enabled": true,
+        "position": [
+          -761.7318115234375,
+          -67.9718017578125,
+          353.14044189453125
+        ],
+        "rotationDegrees": [
+          0,
+          -90,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "kaltracks-1",
+        "prototype": "kaltracks",
+        "enabled": true,
+        "position": [
+          -761.7732543945312,
+          -67.9718017578125,
+          259.4035949707031
+        ],
+        "rotationDegrees": [
+          0,
+          90,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 1,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "kaltracks-2",
+        "prototype": "kaltracks",
+        "enabled": true,
+        "position": [
+          -761.7352905273438,
+          -67.9718017578125,
+          290.9068298339844
+        ],
+        "rotationDegrees": [
+          0,
+          -90,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 2,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "kaltracks-3",
+        "prototype": "kaltracks",
+        "enabled": true,
+        "position": [
+          -761.7181396484375,
+          -67.9718017578125,
+          321.8932800292969
+        ],
+        "rotationDegrees": [
+          0,
+          -90,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 3,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "keg-0",
+        "prototype": "keg",
+        "enabled": true,
+        "position": [
+          -496.34320068359375,
+          0.0010020999470725656,
+          -161.06939697265625
+        ],
+        "rotationDegrees": [
+          0,
+          -103.359375,
+          0
+        ],
+        "scale": [
+          1.75,
+          1.75,
+          1.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "keg-1",
+        "prototype": "keg",
+        "enabled": true,
+        "position": [
+          -493.3031311035156,
+          0.0010020999470725656,
+          -157.09274291992188
+        ],
+        "rotationDegrees": [
+          0,
+          -93.515625,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 1,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "keg-2",
+        "prototype": "keg",
+        "enabled": true,
+        "position": [
+          -493.5150451660156,
+          0.0010020999470725656,
+          -164.43475341796875
+        ],
+        "rotationDegrees": [
+          0,
+          -93.515625,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 2,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "keg-3",
+        "prototype": "keg",
+        "enabled": true,
+        "position": [
+          -762.1947631835938,
+          -67.9718017578125,
+          436.3259582519531
+        ],
+        "rotationDegrees": [
+          0,
+          131.484375,
+          0
+        ],
+        "scale": [
+          1.75,
+          1.75,
+          1.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 3,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "ladder14-0",
+        "prototype": "ladder14",
+        "enabled": true,
+        "position": [
+          -753.7886352539062,
+          -93.1744384765625,
+          367.6901550292969
+        ],
+        "rotationDegrees": [
+          0,
+          95.625,
+          348.046875
+        ],
+        "scale": [
+          1.25,
+          1.25,
+          1.25
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "lamp-0",
+        "prototype": "lamp",
+        "enabled": true,
+        "position": [
+          -868.4571533203125,
+          23.743803024291992,
+          184.80279541015625
+        ],
+        "rotationDegrees": [
+          0,
+          85.78125,
+          0
+        ],
+        "scale": [
+          0.4000000059604645,
+          0.4000000059604645,
+          0.4000000059604645
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "lamp-1",
+        "prototype": "lamp",
+        "enabled": true,
+        "position": [
+          -1278.6121826171875,
+          39.48660659790039,
+          94.29293060302734
+        ],
+        "rotationDegrees": [
+          0,
+          0.703125,
+          0
+        ],
+        "scale": [
+          0.4000000059604645,
+          0.4000000059604645,
+          0.4000000059604645
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 1,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "lamp-2",
+        "prototype": "lamp",
+        "enabled": true,
+        "position": [
+          -1278.61279296875,
+          39.73660659790039,
+          66.71643829345703
+        ],
+        "rotationDegrees": [
+          0,
+          -4.921875,
+          0
+        ],
+        "scale": [
+          0.4000000059604645,
+          0.4000000059604645,
+          0.4000000059604645
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 2,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "lamp-3",
+        "prototype": "lamp",
+        "enabled": true,
+        "position": [
+          -1341.22705078125,
+          40.48660659790039,
+          107.33380126953125
+        ],
+        "rotationDegrees": [
+          0,
+          88.59375,
+          0
+        ],
+        "scale": [
+          0.4000000059604645,
+          0.4000000059604645,
+          0.4000000059604645
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 3,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "lamp-4",
+        "prototype": "lamp",
+        "enabled": true,
+        "position": [
+          -867.4089965820312,
+          23.493803024291992,
+          79.09139251708984
+        ],
+        "rotationDegrees": [
+          0,
+          -86.484375,
+          0
+        ],
+        "scale": [
+          0.4499998092651367,
+          0.4499998092651367,
+          0.4499998092651367
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 4,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "lamp-5",
+        "prototype": "lamp",
+        "enabled": true,
+        "position": [
+          -1448.5462646484375,
+          39.73660659790039,
+          108.82074737548828
+        ],
+        "rotationDegrees": [
+          0,
+          173.671875,
+          0
+        ],
+        "scale": [
+          0.4000000059604645,
+          0.4000000059604645,
+          0.4000000059604645
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 5,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "lamp-6",
+        "prototype": "lamp",
+        "enabled": true,
+        "position": [
+          -1438.548583984375,
+          39.48660659790039,
+          155.69114685058594
+        ],
+        "rotationDegrees": [
+          0,
+          5.625,
+          0
+        ],
+        "scale": [
+          0.4000000059604645,
+          0.4000000059604645,
+          0.4000000059604645
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 6,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "lamp-7",
+        "prototype": "lamp",
+        "enabled": true,
+        "position": [
+          -1280.6123046875,
+          41.48660659790039,
+          202.17767333984375
+        ],
+        "rotationDegrees": [
+          0,
+          2.109375,
+          0
+        ],
+        "scale": [
+          0.4000000059604645,
+          0.4000000059604645,
+          0.4000000059604645
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 7,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "lamp-8",
+        "prototype": "lamp",
+        "enabled": true,
+        "position": [
+          -1280.612060546875,
+          41.23660659790039,
+          172.4710235595703
+        ],
+        "rotationDegrees": [
+          0,
+          -6.328125,
+          0
+        ],
+        "scale": [
+          0.4000000059604645,
+          0.4000000059604645,
+          0.4000000059604645
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 8,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "lamp-9",
+        "prototype": "lamp",
+        "enabled": true,
+        "position": [
+          -1340.2275390625,
+          41.23660659790039,
+          156.56236267089844
+        ],
+        "rotationDegrees": [
+          0,
+          -87.1875,
+          0
+        ],
+        "scale": [
+          0.4000000059604645,
+          0.4000000059604645,
+          0.4000000059604645
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 9,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "mistcouch-0",
+        "prototype": "mistcouch",
+        "enabled": true,
+        "position": [
+          -1297.4229736328125,
+          35.98660659790039,
+          73.86992645263672
+        ],
+        "rotationDegrees": [
+          0,
+          87.890625,
+          0
+        ],
+        "scale": [
+          0.550000011920929,
+          0.550000011920929,
+          0.550000011920929
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "mistcouch-1",
+        "prototype": "mistcouch",
+        "enabled": true,
+        "position": [
+          -1297.385498046875,
+          35.98660659790039,
+          85.17471313476562
+        ],
+        "rotationDegrees": [
+          0,
+          -89.296875,
+          0
+        ],
+        "scale": [
+          0.550000011920929,
+          0.550000011920929,
+          0.550000011920929
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 1,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "mistcouch-2",
+        "prototype": "mistcouch",
+        "enabled": true,
+        "position": [
+          -1291.720458984375,
+          35.98660659790039,
+          79.17790985107422
+        ],
+        "rotationDegrees": [
+          0,
+          175.078125,
+          0
+        ],
+        "scale": [
+          0.550000011920929,
+          0.550000011920929,
+          0.550000011920929
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 2,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "mistwebs-0",
+        "prototype": "mistwebs",
+        "enabled": true,
+        "position": [
+          -394.0278625488281,
+          -23.98940086364746,
+          345.84326171875
+        ],
+        "rotationDegrees": [
+          0,
+          52.734375,
+          0
+        ],
+        "scale": [
+          1.25,
+          1.25,
+          1.25
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "mistwebs-1",
+        "prototype": "mistwebs",
+        "enabled": true,
+        "position": [
+          -669.4837646484375,
+          -29.880104064941406,
+          183.97830200195312
+        ],
+        "rotationDegrees": [
+          0,
+          -146.25,
+          0
+        ],
+        "scale": [
+          1.25,
+          1.25,
+          1.25
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 1,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "mistwebs-2",
+        "prototype": "mistwebs",
+        "enabled": true,
+        "position": [
+          -564.1322631835938,
+          -9.922856330871582,
+          55.643035888671875
+        ],
+        "rotationDegrees": [
+          0,
+          -2.109375,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 2,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "mistwebs-3",
+        "prototype": "mistwebs",
+        "enabled": true,
+        "position": [
+          -573.52197265625,
+          -47.86476516723633,
+          293.49554443359375
+        ],
+        "rotationDegrees": [
+          0,
+          144.140625,
+          0
+        ],
+        "scale": [
+          0.800000011920929,
+          0.800000011920929,
+          0.800000011920929
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 3,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "mushroom1-0",
+        "prototype": "mushroom1",
+        "enabled": true,
+        "position": [
+          -640.6869506835938,
+          1.0991615056991577,
+          -140.139892578125
+        ],
+        "rotationDegrees": [
+          0,
+          -89.296875,
+          0
+        ],
+        "scale": [
+          1.25,
+          1.25,
+          1.25
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "mushroom1-1",
+        "prototype": "mushroom1",
+        "enabled": true,
+        "position": [
+          -640.8046264648438,
+          1.0006014108657837,
+          -130.556640625
+        ],
+        "rotationDegrees": [
+          0,
+          -89.296875,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 1,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "mushroom1-2",
+        "prototype": "mushroom1",
+        "enabled": true,
+        "position": [
+          -640.4248046875,
+          1.0006014108657837,
+          -120.76586151123047
+        ],
+        "rotationDegrees": [
+          0,
+          -89.296875,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 2,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "mushroom1-3",
+        "prototype": "mushroom1",
+        "enabled": true,
+        "position": [
+          -640.5438842773438,
+          1.0006014108657837,
+          -110.80231475830078
+        ],
+        "rotationDegrees": [
+          0,
+          -89.296875,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 3,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "mushroom1-4",
+        "prototype": "mushroom1",
+        "enabled": true,
+        "position": [
+          -641.144287109375,
+          1.0006014108657837,
+          -102.41255950927734
+        ],
+        "rotationDegrees": [
+          0,
+          -89.296875,
+          359.296875
+        ],
+        "scale": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 4,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "mushroom1-5",
+        "prototype": "mushroom1",
+        "enabled": true,
+        "position": [
+          -640.5567016601562,
+          1.0006014108657837,
+          -89.4382095336914
+        ],
+        "rotationDegrees": [
+          0,
+          -90.703125,
+          0
+        ],
+        "scale": [
+          1.25,
+          1.25,
+          1.25
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 5,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "mushroom1-6",
+        "prototype": "mushroom1",
+        "enabled": true,
+        "position": [
+          -651.08984375,
+          1.0006012916564941,
+          -87.08413696289062
+        ],
+        "rotationDegrees": [
+          0,
+          90,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 6,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "mushroom1-7",
+        "prototype": "mushroom1",
+        "enabled": true,
+        "position": [
+          -651.1875,
+          1.0006012916564941,
+          -95.04264831542969
+        ],
+        "rotationDegrees": [
+          0,
+          90,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 7,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "mushroom1-8",
+        "prototype": "mushroom1",
+        "enabled": true,
+        "position": [
+          -651.29736328125,
+          1.0006012916564941,
+          -103.99703979492188
+        ],
+        "rotationDegrees": [
+          0,
+          90,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 8,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "mushroom1-9",
+        "prototype": "mushroom1",
+        "enabled": true,
+        "position": [
+          -651.4423217773438,
+          1.0006012916564941,
+          -115.81497955322266
+        ],
+        "rotationDegrees": [
+          0,
+          90,
+          0
+        ],
+        "scale": [
+          1.5,
+          1.5,
+          1.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 9,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "mushroom1-10",
+        "prototype": "mushroom1",
+        "enabled": true,
+        "position": [
+          -651.536865234375,
+          1.0006012916564941,
+          -123.57026672363281
+        ],
+        "rotationDegrees": [
+          0,
+          90,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 10,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "mushroom1-11",
+        "prototype": "mushroom1",
+        "enabled": true,
+        "position": [
+          -650.9556884765625,
+          1.0006014108657837,
+          -139.38111877441406
+        ],
+        "rotationDegrees": [
+          0,
+          92.8125,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 11,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "mushroom1-12",
+        "prototype": "mushroom1",
+        "enabled": true,
+        "position": [
+          -660.59814453125,
+          1.0875914096832275,
+          -142.93411254882812
+        ],
+        "rotationDegrees": [
+          0,
+          -92.109375,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 12,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "mushroom1-13",
+        "prototype": "mushroom1",
+        "enabled": true,
+        "position": [
+          -660.5708618164062,
+          1.0771688222885132,
+          -132.6484832763672
+        ],
+        "rotationDegrees": [
+          0,
+          -92.109375,
+          0
+        ],
+        "scale": [
+          1.25,
+          1.25,
+          1.25
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 13,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "mushroom1-14",
+        "prototype": "mushroom1",
+        "enabled": true,
+        "position": [
+          -659.1365966796875,
+          0.8110120892524719,
+          -118.22478485107422
+        ],
+        "rotationDegrees": [
+          0,
+          -91.40625,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 14,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "mushroom1-15",
+        "prototype": "mushroom1",
+        "enabled": true,
+        "position": [
+          -660.849365234375,
+          1.0933932065963745,
+          -108.20236206054688
+        ],
+        "rotationDegrees": [
+          0,
+          -85.78125,
+          0
+        ],
+        "scale": [
+          1.25,
+          1.25,
+          1.25
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 15,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "mushroom1-16",
+        "prototype": "mushroom1",
+        "enabled": true,
+        "position": [
+          -660.2862548828125,
+          1.0006014108657837,
+          -93.03988647460938
+        ],
+        "rotationDegrees": [
+          0,
+          -87.1875,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 16,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "mushroom1-17",
+        "prototype": "mushroom1",
+        "enabled": true,
+        "position": [
+          -670.7042846679688,
+          1.0006014108657837,
+          -89.22766876220703
+        ],
+        "rotationDegrees": [
+          0,
+          87.890625,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 17,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "mushroom1-18",
+        "prototype": "mushroom1",
+        "enabled": true,
+        "position": [
+          -670.77001953125,
+          1.0006014108657837,
+          -105.83384704589844
+        ],
+        "rotationDegrees": [
+          0,
+          87.890625,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 18,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "mushroom1-19",
+        "prototype": "mushroom1",
+        "enabled": true,
+        "position": [
+          -670.7382202148438,
+          1.0006014108657837,
+          -124.33038330078125
+        ],
+        "rotationDegrees": [
+          0,
+          87.1875,
+          0
+        ],
+        "scale": [
+          1.25,
+          1.25,
+          1.25
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 19,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "mushroom1-20",
+        "prototype": "mushroom1",
+        "enabled": true,
+        "position": [
+          -670.3828735351562,
+          1.0006014108657837,
+          -143.02053833007812
+        ],
+        "rotationDegrees": [
+          0,
+          97.734375,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 20,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "ogglantern-0",
+        "prototype": "ogglantern",
+        "enabled": true,
+        "position": [
+          -576.8860473632812,
+          12.751002311706543,
+          -282.5638732910156
+        ],
+        "rotationDegrees": [
+          0,
+          -106.875,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "ogglantern-1",
+        "prototype": "ogglantern",
+        "enabled": true,
+        "position": [
+          -598.0184326171875,
+          17.50100326538086,
+          -228.19932556152344
+        ],
+        "rotationDegrees": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 1,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "ogglantern-2",
+        "prototype": "ogglantern",
+        "enabled": true,
+        "position": [
+          -701.4736938476562,
+          11.251002311706543,
+          0.17588689923286438
+        ],
+        "rotationDegrees": [
+          0,
+          -154.6875,
+          0
+        ],
+        "scale": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 2,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "ogglantern-3",
+        "prototype": "ogglantern",
+        "enabled": true,
+        "position": [
+          -649.9615478515625,
+          9.292186737060547,
+          -5.9084601402282715
+        ],
+        "rotationDegrees": [
+          0,
+          -55.546875,
+          0
+        ],
+        "scale": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 3,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "ogglantern-4",
+        "prototype": "ogglantern",
+        "enabled": true,
+        "position": [
+          -570.2099609375,
+          2.962970733642578,
+          38.19231414794922
+        ],
+        "rotationDegrees": [
+          0,
+          -45,
+          0
+        ],
+        "scale": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 4,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "ogglantern-5",
+        "prototype": "ogglantern",
+        "enabled": true,
+        "position": [
+          -574.0238647460938,
+          -6.185964584350586,
+          109.7294921875
+        ],
+        "rotationDegrees": [
+          0,
+          38.671875,
+          0
+        ],
+        "scale": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 5,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "ogglantern-6",
+        "prototype": "ogglantern",
+        "enabled": true,
+        "position": [
+          -627.424072265625,
+          -12.232990264892578,
+          144.32913208007812
+        ],
+        "rotationDegrees": [
+          0,
+          -132.890625,
+          0
+        ],
+        "scale": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 6,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "ogglantern-7",
+        "prototype": "ogglantern",
+        "enabled": true,
+        "position": [
+          -669.2335815429688,
+          -18.13009262084961,
+          184.00714111328125
+        ],
+        "rotationDegrees": [
+          0,
+          -147.65625,
+          0
+        ],
+        "scale": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 7,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "ogglantern-8",
+        "prototype": "ogglantern",
+        "enabled": true,
+        "position": [
+          -651.4654541015625,
+          -24.297775268554688,
+          249.54539489746094
+        ],
+        "rotationDegrees": [
+          0,
+          132.890625,
+          0
+        ],
+        "scale": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 8,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "ogglantern-9",
+        "prototype": "ogglantern",
+        "enabled": true,
+        "position": [
+          -632.5487060546875,
+          -52.82303237915039,
+          337.6116943359375
+        ],
+        "rotationDegrees": [
+          0,
+          -52.03125,
+          0
+        ],
+        "scale": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 9,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "ogglantern-10",
+        "prototype": "ogglantern",
+        "enabled": true,
+        "position": [
+          -773.5780639648438,
+          -61.2218017578125,
+          413.7545471191406
+        ],
+        "rotationDegrees": [
+          0,
+          148.359375,
+          0
+        ],
+        "scale": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 10,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "ogglantern-11",
+        "prototype": "ogglantern",
+        "enabled": true,
+        "position": [
+          -763.4452514648438,
+          -59.9718017578125,
+          437.7132873535156
+        ],
+        "rotationDegrees": [
+          0,
+          137.109375,
+          0
+        ],
+        "scale": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 11,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "ogglantern-12",
+        "prototype": "ogglantern",
+        "enabled": true,
+        "position": [
+          -793.4331665039062,
+          -61.2218017578125,
+          212.91888427734375
+        ],
+        "rotationDegrees": [
+          0,
+          -177.890625,
+          0
+        ],
+        "scale": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 12,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "ogglantern-13",
+        "prototype": "ogglantern",
+        "enabled": true,
+        "position": [
+          -757.7413330078125,
+          -60.4718017578125,
+          182.17391967773438
+        ],
+        "rotationDegrees": [
+          0,
+          -71.015625,
+          0
+        ],
+        "scale": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 13,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "ogglantern-14",
+        "prototype": "ogglantern",
+        "enabled": true,
+        "position": [
+          -654.0057983398438,
+          -53.56902313232422,
+          265.85498046875
+        ],
+        "rotationDegrees": [
+          0,
+          -42.1875,
+          0
+        ],
+        "scale": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 14,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "ogglantern-15",
+        "prototype": "ogglantern",
+        "enabled": true,
+        "position": [
+          -601.7346801757812,
+          -44.50442886352539,
+          282.1363220214844
+        ],
+        "rotationDegrees": [
+          0,
+          -115.3125,
+          0
+        ],
+        "scale": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 15,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "ogglantern-16",
+        "prototype": "ogglantern",
+        "enabled": true,
+        "position": [
+          -441.84149169921875,
+          -20.486204147338867,
+          277.95330810546875
+        ],
+        "rotationDegrees": [
+          0,
+          -52.03125,
+          0
+        ],
+        "scale": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 16,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "ogglantern-17",
+        "prototype": "ogglantern",
+        "enabled": true,
+        "position": [
+          -431.5799255371094,
+          -17.114240646362305,
+          325.68560791015625
+        ],
+        "rotationDegrees": [
+          0,
+          165.9375,
+          0
+        ],
+        "scale": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 17,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "ogglantern-18",
+        "prototype": "ogglantern",
+        "enabled": true,
+        "position": [
+          -380.1841125488281,
+          -13.989400863647461,
+          321.6567687988281
+        ],
+        "rotationDegrees": [
+          0,
+          9.140625,
+          0
+        ],
+        "scale": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 18,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "ogglantern-19",
+        "prototype": "ogglantern",
+        "enabled": true,
+        "position": [
+          -519.2044677734375,
+          -23.027050018310547,
+          159.48272705078125
+        ],
+        "rotationDegrees": [
+          0,
+          11.25,
+          0
+        ],
+        "scale": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 19,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "ogglantern-20",
+        "prototype": "ogglantern",
+        "enabled": true,
+        "position": [
+          -484.87921142578125,
+          -16.51224136352539,
+          119.3439712524414
+        ],
+        "rotationDegrees": [
+          0,
+          31.640625,
+          0
+        ],
+        "scale": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 20,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "ogglantern-21",
+        "prototype": "ogglantern",
+        "enabled": true,
+        "position": [
+          -481.5130310058594,
+          -8.033531188964844,
+          78.69890594482422
+        ],
+        "rotationDegrees": [
+          0,
+          -136.40625,
+          0
+        ],
+        "scale": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 21,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "ogglantern-22",
+        "prototype": "ogglantern",
+        "enabled": true,
+        "position": [
+          -434.2877502441406,
+          -2.125814437866211,
+          81.4136962890625
+        ],
+        "rotationDegrees": [
+          0,
+          66.09375,
+          0
+        ],
+        "scale": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 22,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "ogglantern-23",
+        "prototype": "ogglantern",
+        "enabled": true,
+        "position": [
+          -439.26605224609375,
+          6.549267768859863,
+          35.52298355102539
+        ],
+        "rotationDegrees": [
+          0,
+          162.421875,
+          0
+        ],
+        "scale": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 23,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "ogglantern-24",
+        "prototype": "ogglantern",
+        "enabled": true,
+        "position": [
+          -414.39764404296875,
+          11.501001358032227,
+          -5.363804340362549
+        ],
+        "rotationDegrees": [
+          0,
+          -47.8125,
+          0
+        ],
+        "scale": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 24,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "ogglantern-25",
+        "prototype": "ogglantern",
+        "enabled": true,
+        "position": [
+          -420.4095153808594,
+          10.001001358032227,
+          -239.91409301757812
+        ],
+        "rotationDegrees": [
+          0,
+          33.046875,
+          0
+        ],
+        "scale": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 25,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "oggtable-0",
+        "prototype": "oggtable",
+        "enabled": true,
+        "position": [
+          -1296.5555419921875,
+          35.98660659790039,
+          185.1483917236328
+        ],
+        "rotationDegrees": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "pick1-0",
+        "prototype": "pick1",
+        "enabled": true,
+        "position": [
+          -604.8102416992188,
+          -7.407583713531494,
+          48.588623046875
+        ],
+        "rotationDegrees": [
+          0,
+          101.953125,
+          343.125
+        ],
+        "scale": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "pick1-1",
+        "prototype": "pick1",
+        "enabled": true,
+        "position": [
+          -726.1939697265625,
+          -67.9718017578125,
+          225.306640625
+        ],
+        "rotationDegrees": [
+          0,
+          148.359375,
+          335.390625
+        ],
+        "scale": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 1,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "pick1-2",
+        "prototype": "pick1",
+        "enabled": true,
+        "position": [
+          -661.7508544921875,
+          -55.97661590576172,
+          310.4911804199219
+        ],
+        "rotationDegrees": [
+          0,
+          161.71875,
+          335.390625
+        ],
+        "scale": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 2,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "pick1-3",
+        "prototype": "pick1",
+        "enabled": true,
+        "position": [
+          -741.2114868164062,
+          -67.9718017578125,
+          394.1792297363281
+        ],
+        "rotationDegrees": [
+          0,
+          -11.953125,
+          332.578125
+        ],
+        "scale": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 3,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "pick1-4",
+        "prototype": "pick1",
+        "enabled": true,
+        "position": [
+          -769.5364990234375,
+          -67.9718017578125,
+          416.4790954589844
+        ],
+        "rotationDegrees": [
+          0,
+          144.84375,
+          332.578125
+        ],
+        "scale": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 4,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "podium-0",
+        "prototype": "podium",
+        "enabled": true,
+        "position": [
+          -795.3143310546875,
+          2.999800443649292,
+          131.2885284423828
+        ],
+        "rotationDegrees": [
+          0,
+          180,
+          0
+        ],
+        "scale": [
+          0.8500000238418579,
+          0.8500000238418579,
+          0.8500000238418579
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "rug1-0",
+        "prototype": "rug1",
+        "enabled": true,
+        "position": [
+          -1434.249267578125,
+          36.086605072021484,
+          91.92908477783203
+        ],
+        "rotationDegrees": [
+          0,
+          -42.890625,
+          0
+        ],
+        "scale": [
+          1.25,
+          1.25,
+          1.25
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "rug2-0",
+        "prototype": "rug2",
+        "enabled": true,
+        "position": [
+          -1466.824951171875,
+          36.086605072021484,
+          108.81812286376953
+        ],
+        "rotationDegrees": [
+          0,
+          -118.828125,
+          0
+        ],
+        "scale": [
+          1.5,
+          1.5,
+          1.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "rug2-1",
+        "prototype": "rug2",
+        "enabled": true,
+        "position": [
+          -1296.7059326171875,
+          36.086605072021484,
+          185.9065399169922
+        ],
+        "rotationDegrees": [
+          0,
+          -90,
+          0
+        ],
+        "scale": [
+          1.75,
+          1.75,
+          1.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 1,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "rug4-0",
+        "prototype": "rug4",
+        "enabled": true,
+        "position": [
+          -687.5164184570312,
+          0.10100159794092178,
+          -203.51304626464844
+        ],
+        "rotationDegrees": [
+          0,
+          -37.265625,
+          0
+        ],
+        "scale": [
+          1.5,
+          1.5,
+          1.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "rug4-1",
+        "prototype": "rug4",
+        "enabled": true,
+        "position": [
+          -692.22314453125,
+          0.10100159794092178,
+          -166.3038787841797
+        ],
+        "rotationDegrees": [
+          0,
+          -84.375,
+          0
+        ],
+        "scale": [
+          1.5,
+          1.5,
+          1.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 1,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "rug4-2",
+        "prototype": "rug4",
+        "enabled": true,
+        "position": [
+          -1461.1893310546875,
+          36.086605072021484,
+          157.9046630859375
+        ],
+        "rotationDegrees": [
+          0,
+          137.109375,
+          0
+        ],
+        "scale": [
+          1.5,
+          1.5,
+          1.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 2,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "rug4-3",
+        "prototype": "rug4",
+        "enabled": true,
+        "position": [
+          -429.4927062988281,
+          0.10100209712982178,
+          -76.76155090332031
+        ],
+        "rotationDegrees": [
+          0,
+          69.609375,
+          0
+        ],
+        "scale": [
+          1.5,
+          1.5,
+          1.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 3,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "rug4-4",
+        "prototype": "rug4",
+        "enabled": true,
+        "position": [
+          -429.4927062988281,
+          0.0010020999470725656,
+          -76.76155090332031
+        ],
+        "rotationDegrees": [
+          0,
+          69.609375,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 4,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "rug5-0",
+        "prototype": "rug5",
+        "enabled": true,
+        "position": [
+          -681.7868041992188,
+          11.096602439880371,
+          -167.32005310058594
+        ],
+        "rotationDegrees": [
+          0,
+          -26.71875,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "rug5-1",
+        "prototype": "rug5",
+        "enabled": true,
+        "position": [
+          -1432.4295654296875,
+          36.086605072021484,
+          167.9170379638672
+        ],
+        "rotationDegrees": [
+          0,
+          19.6875,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 1,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "rug5-2",
+        "prototype": "rug5",
+        "enabled": true,
+        "position": [
+          -1296.62353515625,
+          36.086605072021484,
+          79.55768585205078
+        ],
+        "rotationDegrees": [
+          0,
+          -90,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 2,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "rug5-3",
+        "prototype": "rug5",
+        "enabled": true,
+        "position": [
+          -586.5242919921875,
+          -24.88900375366211,
+          231.91563415527344
+        ],
+        "rotationDegrees": [
+          0,
+          -142.734375,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 3,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "shovel1-0",
+        "prototype": "shovel1",
+        "enabled": true,
+        "position": [
+          -662.6591186523438,
+          -55.97661590576172,
+          308.6734313964844
+        ],
+        "rotationDegrees": [
+          0,
+          159.609375,
+          341.015625
+        ],
+        "scale": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "shovel1-1",
+        "prototype": "shovel1",
+        "enabled": true,
+        "position": [
+          -771.0117797851562,
+          -67.9718017578125,
+          414.7098083496094
+        ],
+        "rotationDegrees": [
+          0,
+          138.515625,
+          340.3125
+        ],
+        "scale": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 1,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "squaretable-0",
+        "prototype": "squaretable",
+        "enabled": true,
+        "position": [
+          -473.92340087890625,
+          0.0010020999470725656,
+          -149.1122283935547
+        ],
+        "rotationDegrees": [
+          0,
+          28.828125,
+          0
+        ],
+        "scale": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "squaretable-1",
+        "prototype": "squaretable",
+        "enabled": true,
+        "position": [
+          -483.8360290527344,
+          0.0010020999470725656,
+          -161.35525512695312
+        ],
+        "rotationDegrees": [
+          0,
+          -137.8125,
+          0
+        ],
+        "scale": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 1,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "squaretable-2",
+        "prototype": "squaretable",
+        "enabled": true,
+        "position": [
+          -586.6052856445312,
+          -24.989004135131836,
+          231.1553497314453
+        ],
+        "rotationDegrees": [
+          0,
+          179.296875,
+          0
+        ],
+        "scale": [
+          0.6499999761581421,
+          0.6499999761581421,
+          0.6499999761581421
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 2,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "torch1-0",
+        "prototype": "torch1",
+        "enabled": true,
+        "position": [
+          -370.1653137207031,
+          5.001002311706543,
+          -176.68020629882812
+        ],
+        "rotationDegrees": [
+          0,
+          90,
+          0
+        ],
+        "scale": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 0,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "torch1-1",
+        "prototype": "torch1",
+        "enabled": true,
+        "position": [
+          -343.6121520996094,
+          3.501002073287964,
+          -210.91656494140625
+        ],
+        "rotationDegrees": [
+          0,
+          120.234375,
+          0
+        ],
+        "scale": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "phaseMask": 4294967295,
+        "tags": [],
+        "metadata": {
+          "legacyIndex": 1,
+          "sourceCoordinateSystem": "requiem-y-up",
+          "transformNormalizedAtPreprocess": true,
+          "transformContract": "requiem-y-up-v2"
+        }
+      }
+    ]
+  }
+}

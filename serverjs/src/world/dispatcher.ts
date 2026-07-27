@@ -15,6 +15,7 @@ import type { PersistService } from "../persist/index.js";
 import type { Logger } from "../shared/logger.js";
 import type { GameMessenger } from "../transport/game-transport.js";
 import { SessionManager, type SessionState } from "./session-manager.js";
+import { readEltaniaCharacterContractFields } from "../backend/eltania-character-adapter.js";
 
 export type GatewayMessenger = GameMessenger;
 
@@ -195,6 +196,7 @@ export class WorldDispatcher {
         agi: number(value.agi, Number.NaN), dex: number(value.dex, Number.NaN),
         wis: number(value.wis, Number.NaN), intel: number(value.intel, Number.NaN),
         cha: number(value.cha, Number.NaN),
+        ...readEltaniaCharacterContractFields(value),
       };
       void this.persist
         .createCharacter(session.accountId, character)

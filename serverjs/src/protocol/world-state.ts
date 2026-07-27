@@ -76,6 +76,8 @@ export interface WorldSpawnInput {
   readonly y?: number;
   readonly z?: number;
   readonly heading?: number;
+  readonly currentHp?: number;
+  readonly maximumHp?: number;
   readonly equipment?: {
     readonly head?: number;
     readonly chest?: number;
@@ -104,6 +106,55 @@ export function encodeWorldStatePacket(
   bytes.set(state.bytes, WORLD_STATE_HEADER_BYTES);
   bytes.set(sidecar, WORLD_STATE_HEADER_BYTES + state.bytes.byteLength);
   return bytes;
+}
+
+/** Compact selected authoritative SoA rows into one revisioned Shado world-state delta. */
+export function encodeWorldStateDelta(
+  state: RenderSnapshotNetBatchView,
+  indices: readonly number[],
+  revision = 0,
+): Uint8Array {
+  const packet = createWorldStatePacket(
+    indices.length,
+    new Uint8Array(),
+    WORLD_STATE_FLAGS.DELTA,
+    revision,
+  );
+  const batch = packet.state;
+  for (let out = 0; out < indices.length; out++) {
+    const index = indices[out]!;
+    if (!Number.isSafeInteger(index) || index < 0 || index >= state.count) {
+      throw new RangeError("World-state source row is out of bounds");
+    }
+    batch.entityId[out] = state.entityId[index]!;
+    batch.stateKind[out] = state.stateKind[index]!;
+    copyComponents(state.statePosition, batch.statePosition, index, out, 3);
+    copyComponents(state.stateVelocity, batch.stateVelocity, index, out, 3);
+    copyComponents(state.stateOrientation, batch.stateOrientation, index, out, 4);
+    batch.stateAnimation[out] = state.stateAnimation[index]!;
+    batch.stateMovementState[out] = state.stateMovementState[index]!;
+    batch.stateAppearance[out] = state.stateAppearance[index]!;
+    batch.stateNameOffset[out] = state.stateNameOffset[index]!;
+    batch.stateNameLength[out] = state.stateNameLength[index]!;
+    batch.stateArchetypeId[out] = state.stateArchetypeId[index]!;
+    batch.stateLevel[out] = state.stateLevel[index]!;
+    batch.stateRace[out] = state.stateRace[index]!;
+    batch.stateGender[out] = state.stateGender[index]!;
+    batch.stateClassId[out] = state.stateClassId[index]!;
+    batch.stateBodyType[out] = state.stateBodyType[index]!;
+    batch.stateSize[out] = state.stateSize[index]!;
+    batch.stateFace[out] = state.stateFace[index]!;
+    batch.stateHelm[out] = state.stateHelm[index]!;
+    batch.stateChest[out] = state.stateChest[index]!;
+    batch.statePrimary[out] = state.statePrimary[index]!;
+    batch.stateSecondary[out] = state.stateSecondary[index]!;
+    batch.stateModelKeyOffset[out] = state.stateModelKeyOffset[index]!;
+    batch.stateModelKeyLength[out] = state.stateModelKeyLength[index]!;
+    batch.stateHeading[out] = state.stateHeading[index]!;
+    batch.stateCurrentHp[out] = state.stateCurrentHp[index]!;
+    batch.stateMaximumHp[out] = state.stateMaximumHp[index]!;
+  }
+  return packet.bytes;
 }
 
 export function viewWorldStatePacket(bytes: Uint8Array): WorldStatePacketView | null {
@@ -180,6 +231,8 @@ export function encodeWorldSpawnBatch(
     state.stateModelKeyOffset[index] = modelKey.offset;
     state.stateModelKeyLength[index] = modelKey.length;
     state.stateHeading[index] = finite(spawn.heading);
+    state.stateCurrentHp[index] = finite(spawn.currentHp);
+    state.stateMaximumHp[index] = finite(spawn.maximumHp);
   }
   return packet.bytes;
 }
@@ -197,7 +250,10 @@ export function readWorldSpawn(
   state: RenderSnapshotNetBatchView,
   sidecar: Uint8Array,
   index: number,
-): WorldSpawnInput & { readonly isNpc: boolean } {
+): WorldSpawnInput & {
+  readonly isNpc: boolean;
+  readonly isCorpse: boolean;
+} {
   if (index < 0 || index >= state.count) throw new RangeError("World state row is out of bounds");
   const position = index * 3;
   return {
@@ -222,13 +278,17 @@ export function readWorldSpawn(
     y: state.statePosition[position + 1]!,
     z: state.statePosition[position + 2]!,
     heading: state.stateHeading[index]!,
+    currentHp: state.stateCurrentHp[index]!,
+    maximumHp: state.stateMaximumHp[index]!,
     equipment: {
       head: state.stateHelm[index]!,
       chest: state.stateChest[index]!,
       primary: state.statePrimary[index]!,
       secondary: state.stateSecondary[index]!,
     },
-    isNpc: state.stateKind[index] === 2,
+    kind: state.stateKind[index]!,
+    isNpc: state.stateKind[index] === 2 || state.stateKind[index] === 3,
+    isCorpse: state.stateKind[index] === 3,
   };
 }
 
@@ -258,4 +318,18 @@ class StringTable {
 function finite(value: unknown, fallback = 0): number {
   const number = Number(value);
   return Number.isFinite(number) ? number : fallback;
+}
+
+function copyComponents(
+  source: Float32Array,
+  destination: Float32Array,
+  sourceIndex: number,
+  destinationIndex: number,
+  componentCount: number,
+): void {
+  const sourceOffset = sourceIndex * componentCount;
+  const destinationOffset = destinationIndex * componentCount;
+  for (let component = 0; component < componentCount; component++) {
+    destination[destinationOffset + component] = source[sourceOffset + component]!;
+  }
 }

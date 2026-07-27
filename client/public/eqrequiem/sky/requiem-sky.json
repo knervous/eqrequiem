@@ -1,0 +1,363 @@
+{
+  "version": 2,
+  "asset": "requiem-sky.glb",
+  "runtimeScale": 7000,
+  "layers": {
+    "root": "Sky.Root",
+    "visualDome": "Sky.VisualDome",
+    "cloudLow": "Sky.Clouds.Low",
+    "cloudHigh": "Sky.Clouds.High",
+    "horizon": "Sky.HorizonProxy",
+    "sun": "Sky.SunDisc",
+    "moon": "Sky.MoonDisc"
+  },
+  "keyframes": [
+    {
+      "hour": 0,
+      "low": [0.03, 0.04, 0.105],
+      "mid": [0.018, 0.03, 0.095],
+      "high": [0.012, 0.022, 0.07],
+      "zenith": [0.006, 0.012, 0.04],
+      "cloud": [0.09, 0.12, 0.19],
+      "horizon": [0.075, 0.09, 0.155],
+      "stars": 0.72,
+      "cloudLowOpacity": 0.38,
+      "cloudHighOpacity": 0.2,
+      "sunIntensity": 0.05,
+      "fogStart": 1000,
+      "fogEnd": 4200
+    },
+    {
+      "hour": 6,
+      "low": [0.945, 0.3, 0.155],
+      "mid": [0.575, 0.235, 0.41],
+      "high": [0.205, 0.245, 0.505],
+      "zenith": [0.055, 0.095, 0.26],
+      "cloud": [0.98, 0.57, 0.5],
+      "horizon": [1, 0.43, 0.21],
+      "stars": 0.015,
+      "cloudLowOpacity": 0.62,
+      "cloudHighOpacity": 0.34,
+      "sunIntensity": 0.55,
+      "fogStart": 850,
+      "fogEnd": 4600
+    },
+    {
+      "hour": 12,
+      "low": [0.735, 0.875, 0.97],
+      "mid": [0.285, 0.575, 0.89],
+      "high": [0.08, 0.275, 0.68],
+      "zenith": [0.025, 0.125, 0.42],
+      "cloud": [0.92, 0.955, 1],
+      "horizon": [0.78, 0.885, 0.955],
+      "stars": 0,
+      "cloudLowOpacity": 0.68,
+      "cloudHighOpacity": 0.28,
+      "sunIntensity": 1.8,
+      "fogStart": 1200,
+      "fogEnd": 5600
+    },
+    {
+      "hour": 18,
+      "low": [0.965, 0.225, 0.09],
+      "mid": [0.635, 0.175, 0.33],
+      "high": [0.215, 0.155, 0.43],
+      "zenith": [0.05, 0.055, 0.205],
+      "cloud": [0.965, 0.42, 0.32],
+      "horizon": [1, 0.315, 0.125],
+      "stars": 0.01,
+      "cloudLowOpacity": 0.64,
+      "cloudHighOpacity": 0.35,
+      "sunIntensity": 0.48,
+      "fogStart": 850,
+      "fogEnd": 4500
+    }
+  ],
+  "clouds": {
+    "low": {
+      "scale": 5.8,
+      "coverage": 0.61,
+      "rate": [0.0000035, 0.000001],
+      "softness": 0.16,
+      "detail": 0.28,
+      "warp": 0.34,
+      "stretch": 1,
+      "lightStrength": 0.72
+    },
+    "high": {
+      "scale": 8.4,
+      "coverage": 0.66,
+      "rate": [-0.0000012, 0.0000022],
+      "softness": 0.24,
+      "detail": 0.44,
+      "warp": 0.16,
+      "stretch": 2.6,
+      "lightStrength": 0.48
+    }
+  },
+  "defaultBiome": "temperate",
+  "biomeTransitionMs": 900,
+  "biomes": {
+    "temperate": {
+      "skyTint": [1, 1, 1],
+      "horizonTint": [1, 1, 1],
+      "cloudTint": [1, 1, 1],
+      "sunTint": [1, 1, 1],
+      "fogTint": [1, 1, 1],
+      "saturation": 1,
+      "exposure": 1,
+      "haze": 0.22,
+      "fogStartMultiplier": 1,
+      "fogEndMultiplier": 1,
+      "clouds": {
+        "low": {
+          "coverageOffset": 0,
+          "opacityMultiplier": 1,
+          "speedMultiplier": 1,
+          "scaleMultiplier": 1
+        },
+        "high": {
+          "coverageOffset": 0,
+          "opacityMultiplier": 1,
+          "speedMultiplier": 1,
+          "scaleMultiplier": 1
+        }
+      }
+    },
+    "forest": {
+      "skyTint": [0.86, 1.02, 0.96],
+      "horizonTint": [0.76, 0.98, 0.82],
+      "cloudTint": [0.88, 1, 0.94],
+      "sunTint": [0.95, 1, 0.82],
+      "fogTint": [0.68, 0.9, 0.72],
+      "saturation": 0.88,
+      "exposure": 0.9,
+      "haze": 0.46,
+      "fogStartMultiplier": 0.72,
+      "fogEndMultiplier": 0.72,
+      "clouds": {
+        "low": {
+          "coverageOffset": -0.035,
+          "opacityMultiplier": 1.16,
+          "speedMultiplier": 0.78,
+          "scaleMultiplier": 1.14
+        },
+        "high": {
+          "coverageOffset": 0.025,
+          "opacityMultiplier": 0.88,
+          "speedMultiplier": 0.84,
+          "scaleMultiplier": 1.08
+        }
+      }
+    },
+    "desert": {
+      "skyTint": [1.08, 0.94, 0.76],
+      "horizonTint": [1.2, 0.82, 0.55],
+      "cloudTint": [1.08, 0.91, 0.73],
+      "sunTint": [1.16, 0.91, 0.64],
+      "fogTint": [1.22, 0.84, 0.58],
+      "saturation": 1.08,
+      "exposure": 1.08,
+      "haze": 0.62,
+      "fogStartMultiplier": 0.9,
+      "fogEndMultiplier": 0.82,
+      "clouds": {
+        "low": {
+          "coverageOffset": 0.115,
+          "opacityMultiplier": 0.52,
+          "speedMultiplier": 1.2,
+          "scaleMultiplier": 0.9
+        },
+        "high": {
+          "coverageOffset": 0.045,
+          "opacityMultiplier": 1.08,
+          "speedMultiplier": 1.32,
+          "scaleMultiplier": 0.84
+        }
+      }
+    },
+    "swamp": {
+      "skyTint": [0.68, 0.86, 0.65],
+      "horizonTint": [0.62, 0.72, 0.42],
+      "cloudTint": [0.67, 0.76, 0.58],
+      "sunTint": [1, 0.76, 0.42],
+      "fogTint": [0.56, 0.65, 0.37],
+      "saturation": 0.72,
+      "exposure": 0.72,
+      "haze": 0.82,
+      "fogStartMultiplier": 0.34,
+      "fogEndMultiplier": 0.42,
+      "clouds": {
+        "low": {
+          "coverageOffset": -0.09,
+          "opacityMultiplier": 1.34,
+          "speedMultiplier": 0.48,
+          "scaleMultiplier": 1.28
+        },
+        "high": {
+          "coverageOffset": -0.03,
+          "opacityMultiplier": 0.9,
+          "speedMultiplier": 0.62,
+          "scaleMultiplier": 1.18
+        }
+      }
+    },
+    "tundra": {
+      "skyTint": [0.78, 0.96, 1.18],
+      "horizonTint": [0.88, 1.05, 1.16],
+      "cloudTint": [0.9, 1.04, 1.18],
+      "sunTint": [0.92, 0.98, 1.12],
+      "fogTint": [0.85, 1.02, 1.14],
+      "saturation": 0.78,
+      "exposure": 1.04,
+      "haze": 0.54,
+      "fogStartMultiplier": 0.68,
+      "fogEndMultiplier": 0.74,
+      "clouds": {
+        "low": {
+          "coverageOffset": -0.055,
+          "opacityMultiplier": 1.22,
+          "speedMultiplier": 1.08,
+          "scaleMultiplier": 1.18
+        },
+        "high": {
+          "coverageOffset": -0.015,
+          "opacityMultiplier": 1.18,
+          "speedMultiplier": 1.42,
+          "scaleMultiplier": 0.92
+        }
+      }
+    },
+    "volcanic": {
+      "skyTint": [0.72, 0.54, 0.48],
+      "horizonTint": [1.18, 0.48, 0.22],
+      "cloudTint": [0.54, 0.42, 0.38],
+      "sunTint": [1.32, 0.5, 0.18],
+      "fogTint": [0.58, 0.38, 0.3],
+      "saturation": 0.88,
+      "exposure": 0.7,
+      "haze": 0.9,
+      "fogStartMultiplier": 0.42,
+      "fogEndMultiplier": 0.5,
+      "clouds": {
+        "low": {
+          "coverageOffset": -0.12,
+          "opacityMultiplier": 1.42,
+          "speedMultiplier": 0.72,
+          "scaleMultiplier": 1.34
+        },
+        "high": {
+          "coverageOffset": -0.08,
+          "opacityMultiplier": 1.26,
+          "speedMultiplier": 1.05,
+          "scaleMultiplier": 1.12
+        }
+      }
+    },
+    "coastal": {
+      "skyTint": [0.84, 1.02, 1.14],
+      "horizonTint": [0.82, 1.04, 1.13],
+      "cloudTint": [0.9, 1.04, 1.13],
+      "sunTint": [1.04, 1, 0.88],
+      "fogTint": [0.76, 0.98, 1.08],
+      "saturation": 0.9,
+      "exposure": 1,
+      "haze": 0.48,
+      "fogStartMultiplier": 0.72,
+      "fogEndMultiplier": 0.78,
+      "clouds": {
+        "low": {
+          "coverageOffset": -0.03,
+          "opacityMultiplier": 1.12,
+          "speedMultiplier": 1.38,
+          "scaleMultiplier": 1.06
+        },
+        "high": {
+          "coverageOffset": 0.005,
+          "opacityMultiplier": 1.04,
+          "speedMultiplier": 1.7,
+          "scaleMultiplier": 0.88
+        }
+      }
+    },
+    "planar": {
+      "skyTint": [0.76, 0.62, 1.2],
+      "horizonTint": [1.08, 0.48, 1.08],
+      "cloudTint": [0.72, 0.62, 1.08],
+      "sunTint": [1.18, 0.72, 1.12],
+      "fogTint": [0.74, 0.48, 0.9],
+      "saturation": 1.22,
+      "exposure": 0.86,
+      "haze": 0.68,
+      "fogStartMultiplier": 0.62,
+      "fogEndMultiplier": 0.68,
+      "clouds": {
+        "low": {
+          "coverageOffset": -0.04,
+          "opacityMultiplier": 1.12,
+          "speedMultiplier": 0.64,
+          "scaleMultiplier": 1.2
+        },
+        "high": {
+          "coverageOffset": -0.07,
+          "opacityMultiplier": 1.34,
+          "speedMultiplier": 1.9,
+          "scaleMultiplier": 0.72
+        }
+      }
+    }
+  },
+  "zoneBiomes": {
+    "qrg": "forest",
+    "rivervale": "forest",
+    "kithicor": "forest",
+    "nektulos": "forest",
+    "misty": "forest",
+    "tox": "forest",
+    "gfaydark": "forest",
+    "lfaydark": "forest",
+    "emeraldjungle": "forest",
+    "commons": "desert",
+    "ecommons": "desert",
+    "nro": "desert",
+    "southro": "desert",
+    "oasis": "desert",
+    "innothule": "swamp",
+    "feerrott": "swamp",
+    "cazicthule": "swamp",
+    "guktop": "swamp",
+    "gukbottom": "swamp",
+    "halas": "tundra",
+    "everfrost": "tundra",
+    "permafrost": "tundra",
+    "lavastorm": "volcanic",
+    "soldunga": "volcanic",
+    "soldungb": "volcanic",
+    "najena": "volcanic",
+    "oot": "coastal",
+    "butcher": "coastal",
+    "cauldron": "coastal",
+    "kerraridge": "coastal",
+    "erudsxing": "coastal",
+    "airplane": "planar",
+    "fearplane": "planar",
+    "hateplane": "planar"
+  },
+  "sun": {
+    "azimuthBasisRadians": 1.5707963267948966,
+    "distance": 0.89,
+    "lightDistance": 1000,
+    "nightColor": [0.22, 0.28, 0.42],
+    "dawnColor": [1, 0.38, 0.16],
+    "noonColor": [1, 0.96, 0.82],
+    "duskColor": [1, 0.26, 0.1]
+  },
+  "moon": {
+    "color": [0.62, 0.76, 1],
+    "distance": 0.88
+  },
+  "environment": {
+    "visibleSkyContributesDiffuse": false,
+    "reflectionBinding": null
+  }
+}

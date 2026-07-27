@@ -10,14 +10,35 @@ export interface ZoneShutdownMessage {
   type: "shutdown";
 }
 
+export interface ZoneShutdownCommitMessage {
+  type: "shutdown_commit";
+  persisted: boolean;
+}
+
 export interface ZoneClientJoinMessage {
   type: "client_join";
   sessionId: number;
+  entityId: number;
+  characterId: number;
   x: number;
   y: number;
   z: number;
   heading: number;
   characterName: string;
+  level: number;
+  race: number;
+  gender: number;
+  charClass: number;
+  face: number;
+  combat: CombatantStats;
+  bind: {
+    zoneId: number;
+    instanceId: number;
+    x: number;
+    y: number;
+    z: number;
+    heading: number;
+  };
 }
 
 export interface ZoneClientLeaveMessage {
@@ -38,17 +59,37 @@ export interface ZoneQuestHydrateMessage {
 
 export interface ZoneContentHydrateMessage {
   type: "zone_hydrate";
+  zoneKey: string;
   npcs: ZoneNpcSpawnDefinition[];
+  snapshotBlob?: Uint8Array;
+}
+
+export interface ZoneNavPathResultMessage {
+  type: "nav_path_result";
+  requestId: number;
+  npcId: number;
+  targetId: number;
+  path: NpcPathPoint[];
+  error?: string;
+}
+
+export interface ZoneLootRestoreMessage {
+  type: "loot_restore";
+  corpseId: number;
+  item: Record<string, unknown>;
 }
 
 export type ZoneWorkerInboundMessage =
   | ZonePacketMessage
   | ZoneShutdownMessage
+  | ZoneShutdownCommitMessage
   | ZoneQuestUpdateMessage
   | ZoneQuestHydrateMessage
   | ZoneContentHydrateMessage
+  | ZoneNavPathResultMessage
   | ZoneClientJoinMessage
-  | ZoneClientLeaveMessage;
+  | ZoneClientLeaveMessage
+  | ZoneLootRestoreMessage;
 
 export interface ZoneMetricsMessage {
   type: "metrics";
@@ -100,11 +141,119 @@ export interface ZoneAoiChangeMessage {
   exitedSpawnIds: number[];
 }
 
+export interface ZoneCombatEventMessage {
+  type: "combat_event";
+  zoneId: number;
+  instanceId: number;
+  sessionIds: number[];
+  event: CombatEvent;
+}
+
+export interface ZonePcDeathMessage {
+  type: "pc_death";
+  zoneId: number;
+  instanceId: number;
+  sessionId: number;
+  characterId: number;
+  victimId: number;
+  killerId: number;
+  bind: ZoneClientJoinMessage["bind"];
+}
+
+export interface ZoneLootWindowMessage {
+  type: "loot_window";
+  zoneId: number;
+  instanceId: number;
+  sessionId: number;
+  corpseId: number;
+  corpseName: string;
+  items: Record<string, unknown>[];
+}
+
+export interface ZoneLootAwardMessage {
+  type: "loot_award";
+  zoneId: number;
+  instanceId: number;
+  sessionId: number;
+  characterId: number;
+  looterId: number;
+  corpseId: number;
+  item: Record<string, unknown>;
+}
+
+export interface ZoneNavPathRequestMessage {
+  type: "nav_path_request";
+  zoneKey: string;
+  zoneId: number;
+  instanceId: number;
+  request: NpcPathRequest;
+}
+
+export interface ZoneNpcDebugMessage {
+  type: "npc_debug";
+  zoneId: number;
+  instanceId: number;
+  sessionIds: number[];
+  diagnostic: NpcEngagementDiagnostic;
+}
+
+export interface ZoneMerchantIntentMessage {
+  type: "merchant_intent";
+  zoneId: number;
+  instanceId: number;
+  sessionId: number;
+  characterId: number;
+  npcId: number;
+  npcArchetypeId: number;
+  merchantName: string;
+  action: "open" | "buy" | "sell";
+  merchantSlot?: number;
+  slot?: number;
+  bag?: number;
+  quantity?: number;
+}
+
+export interface ZoneMerchantErrorMessage {
+  type: "merchant_error";
+  zoneId: number;
+  instanceId: number;
+  sessionId: number;
+  npcId: number;
+  message: string;
+}
+
+export interface ZonePersistentSnapshotMessage {
+  type: "persistent_snapshot";
+  zoneId: number;
+  instanceId: number;
+  formatVersion: number;
+  blobData?: Uint8Array;
+  error?: string;
+}
+
 export type ZoneWorkerOutboundMessage =
   | ZoneMetricsMessage
   | ZoneLogMessage
   | ZoneSnapshotMessage
   | ZoneAoiChangeMessage
-  | ZoneQuestSayMessage;
+  | ZoneQuestSayMessage
+  | ZoneCombatEventMessage
+  | ZonePcDeathMessage
+  | ZoneLootWindowMessage
+  | ZoneLootAwardMessage
+  | ZoneNavPathRequestMessage
+  | ZoneNpcDebugMessage
+  | ZoneMerchantIntentMessage
+  | ZoneMerchantErrorMessage
+  | ZonePersistentSnapshotMessage;
 import type { QuestDefinition, QuestNpcSnapshot } from "./quest-types.js";
 import type { ZoneNpcSpawnDefinition } from "./zone-content.js";
+import type {
+  CombatEvent,
+  CombatantStats,
+} from "../combat/melee-combat.js";
+import type {
+  NpcEngagementDiagnostic,
+  NpcPathPoint,
+  NpcPathRequest,
+} from "../ai/npc-engagement.js";

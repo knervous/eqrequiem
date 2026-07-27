@@ -10,6 +10,7 @@ import { RegisterPhysicsV2PhysicsEngineComponent } from '@babylonjs/core/Physics
 import {
   NullEngine,
   Scene,
+  ShaderStore,
   TransformNode,
   Vector3,
 } from '../src/bjs/core-runtime.ts';
@@ -42,6 +43,18 @@ assert.ok(
   Object.getOwnPropertyDescriptor(TransformNode.prototype, 'physicsBody'),
   'The Physics V2 TransformNode component is not registered.',
 );
+for (const include of [
+  'bonesDeclaration',
+  'bakedVertexAnimationDeclaration',
+]) {
+  const source = ShaderStore.IncludesShadersStore[include];
+  assert.ok(source, `The ${include} GLSL include is not registered.`);
+  assert.equal(
+    source.includes('<!DOCTYPE html>'),
+    false,
+    `The ${include} GLSL include was replaced by the SPA shell.`,
+  );
+}
 
 const source = JSON.stringify({
   materials: [{

@@ -10,6 +10,10 @@ import { applyCanonicalContentSchema } from "../db/canonical-schema.js";
 import type { BackendItemTemplate } from "./contracts.js";
 import { EmbeddedGameBackend } from "./embedded-game-backend.js";
 import { BUILTIN_QUESTS } from "../zone/builtin-quests.js";
+import { OP } from "../protocol/opcodes.js";
+import { viewWorldStatePacket } from "../protocol/world-state.js";
+import { GameBackendPacketAdapter } from "./packet-adapter.js";
+import { loadZoneSimulationKernel } from "../zone/zone-kernel-node.js";
 
 const sword: BackendItemTemplate = {
   id: 5013,
@@ -31,7 +35,8 @@ const sword: BackendItemTemplate = {
 
 describe("embedded game backend", () => {
   it("runs the same character, zone, command, and inventory API on SQLite", async () => {
-    const backend = new EmbeddedGameBackend(new SqliteBackend(), {
+    const database = new SqliteBackend();
+    const backend = new EmbeddedGameBackend(database, {
       items: [sword],
       gearSets: { "1:1": [[13, sword.id]] },
       zones: [{ id: 1, shortName: "qeynos", longName: "South Qeynos" }],
@@ -96,6 +101,56 @@ describe("embedded game backend", () => {
       selectedCharacters[0]?.items.map(({ id, slot }) => ({ id, slot })),
       [{ id: sword.id, slot: 13 }],
     );
+
+    await backend.handle(7, {
+      type: "client_update",
+      x: 12.5,
+      y: 3.25,
+      z: -44,
+      heading: Math.PI / 2,
+    });
+    const persisted = (
+      await database.query<{
+        zone_id: number;
+        instance_id: number;
+        x: number;
+        y: number;
+        z: number;
+        heading: number;
+      }>(
+        `SELECT zone_id, instance_id, x, y, z, heading
+         FROM character_positions
+         WHERE character_id = (SELECT id FROM characters WHERE name = 'Shared')`,
+      )
+    ).rows[0];
+    assert.deepEqual(persisted, {
+      zone_id: 1,
+      instance_id: 0,
+      x: 12.5,
+      y: 3.25,
+      z: -44,
+      heading: 128,
+    });
+
+    await backend.disconnect(7);
+    await backend.connect(8);
+    await backend.handle(8, { type: "enter_world", name: "Shared" });
+    await backend.handle(8, {
+      type: "zone_session",
+      zoneId: 1,
+      instanceId: 0,
+    });
+    const restored = await backend.handle(8, {
+      type: "zone_change",
+      instanceId: 0,
+    });
+    const restoredProfile = restored.find(
+      (entry) => entry.type === "player_profile",
+    );
+    assert.equal(restoredProfile?.value.x, 12.5);
+    assert.equal(restoredProfile?.value.y, 3.25);
+    assert.equal(restoredProfile?.value.z, -44);
+    assert.equal(restoredProfile?.value.heading, 128);
     await backend.close();
   });
 
@@ -192,6 +247,82 @@ describe("embedded game backend", () => {
       },
     ]);
     await backend.close();
+  });
+
+  it("publishes SQLite-backed NPC movement ticks through the Shado packet adapter", async () => {
+    const database = new SqliteBackend();
+    const backend = new EmbeddedGameBackend(
+      database,
+      {
+        items: [],
+        gearSets: {},
+        zones: [{ id: 1, shortName: "qeynos", longName: "South Qeynos" }],
+      },
+      {
+        createZoneKernel: () => loadZoneSimulationKernel("debug"),
+      },
+    );
+    await backend.initialize();
+    await database.execute(
+      `INSERT INTO npc_archetypes
+       (id, npc_key, name, level, race_id, gender, movement_speed, properties_json)
+       VALUES (100, 'npc:mover', 'Mover', 1, 1, 0, 1, '{}')`,
+    );
+    await database.execute(
+      "INSERT INTO spawn_groups (id, spawn_group_key) VALUES (100, 'test:mover')",
+    );
+    await database.execute(
+      "INSERT INTO spawn_group_members VALUES (100, 100, 1)",
+    );
+    await database.execute(
+      `INSERT INTO spawn_points
+       (id, zone_id, spawn_group_id, x, y, z, heading, movement_path_json)
+       VALUES (100, 1, 100, 0, 0, 0, 0, '[[0,0,0,0,0],[10,0,0,0,0]]')`,
+    );
+    await backend.handle(1, {
+      type: "character_create",
+      character: {
+        name: "Offline",
+        charClass: 1,
+        race: 1,
+        gender: 0,
+        deity: 0,
+        startZone: 1,
+        face: 0,
+      },
+    });
+    await backend.handle(1, { type: "enter_world", name: "Offline" });
+    await backend.handle(1, {
+      type: "zone_session",
+      zoneId: 1,
+      instanceId: 0,
+    });
+
+    const adapter = new GameBackendPacketAdapter(backend);
+    const movementPacket = new Promise<Uint8Array>((resolve, reject) => {
+      const timeout = setTimeout(
+        () => reject(new Error("Timed out waiting for offline movement tick")),
+        2_000,
+      );
+      adapter.onPacket((sessionIds, packet) => {
+        if (packet.opcode !== OP.RENDER_SNAPSHOT || !sessionIds.includes(1)) {
+          return;
+        }
+        clearTimeout(timeout);
+        resolve(packet.payload);
+      });
+    });
+    await backend.handle(1, { type: "zone_change", instanceId: 0 });
+
+    const world = viewWorldStatePacket(await movementPacket);
+    assert.ok(world);
+    assert.ok(world.revision > 0);
+    assert.equal(world.state.entityId[0], 100);
+    assert.ok(world.state.statePosition[0]! > 0);
+    assert.ok(Math.abs(world.state.stateHeading[0]!) < 1e-6);
+    assert.ok(Math.abs(world.state.stateOrientation[1]!) < 1e-6);
+    assert.ok(Math.abs(world.state.stateOrientation[3]! - 1) < 1e-6);
+    await adapter.close(1);
   });
 
   it("replaces attached content without coupling it to persistent runtime state", async () => {

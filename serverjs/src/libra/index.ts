@@ -362,6 +362,12 @@ export class LibraService {
       { child: "spawn_points", childKey: "spawn_group_id", parent: "spawn_groups", parentKey: "id" },
       { child: "spawn_group_members", childKey: "spawn_group_id", parent: "spawn_groups", parentKey: "id" },
       { child: "spawn_group_members", childKey: "npc_archetype_id", parent: "npc_archetypes", parentKey: "id" },
+      { child: "npc_loot_assignments", childKey: "npc_archetype_id", parent: "npc_archetypes", parentKey: "id" },
+      { child: "npc_loot_assignments", childKey: "loot_table_id", parent: "npc_loot_tables", parentKey: "id" },
+      { child: "npc_loot_table_entries", childKey: "loot_table_id", parent: "npc_loot_tables", parentKey: "id" },
+      { child: "npc_loot_group_entries", childKey: "item_id", parent: "items", parentKey: "id" },
+      { child: "npc_loot_items", childKey: "npc_archetype_id", parent: "npc_archetypes", parentKey: "id" },
+      { child: "npc_loot_items", childKey: "item_id", parent: "items", parentKey: "id" },
     ];
     const issues: ValidationIssue[] = [];
     for (const check of checks) {

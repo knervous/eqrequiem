@@ -31,6 +31,7 @@ const sharedNames = {
   LEVEL_UPDATE: "LevelUpdate",
   REQUEST_CLIENT_ZONE_CHANGE: "RequestClientZoneChange",
   RENDER_SNAPSHOT: "SpawnPositionUpdate",
+  NPC_DEBUG_STATE: "NpcDebugState",
 } as const;
 
 describe("shared opcode contract", () => {

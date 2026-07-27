@@ -1,0 +1,4020 @@
+{
+  "kind": "requiem.legacy-zone-baseline",
+  "version": 4,
+  "coordinateSystem": "babylon-y-up",
+  "sourceTransform": "mirror-x",
+  "runtimeSceneContract": "babylon-rhs-y-up-v4",
+  "supportedZoneRegistry": "client/src/Game/Constants/supportedZones.ts",
+  "requiredClientWorldRegistry": "client/src/Game/Constants/client-world-scenes.ts",
+  "sourceRoot": "assets/reference/everquest_rof2/zones",
+  "runtimeWorldPrefix": "/eqrequiem/worlds",
+  "runtimeObjectPrefix": "/eqrequiem/objects",
+  "counts": {
+    "ready": 69,
+    "missingSource": 5,
+    "packFailed": 2
+  },
+  "zones": [
+    {
+      "id": 1,
+      "shortName": "qeynos",
+      "longName": "South Qeynos",
+      "status": "ready",
+      "source": {
+        "path": "assets/reference/everquest_rof2/zones/qeynos.glb.gz",
+        "sha256": "b1ab1749e6c225d3a7e02332f34c4bb77186946e7189c4e512c6c3e7fdb47f7c",
+        "bytes": 3642123
+      },
+      "metadata": {
+        "path": "assets/reference/everquest_rof2/zones/qeynos.json",
+        "sha256": "a1a3ff016628801162aa22cc6fa81502f5acfa836deb274ede8abcc7f6aa0749",
+        "bytes": 122108
+      },
+      "authoring": {
+        "path": "shader-object/sandbox/public/shado/worlds/qeynos.authoring.json",
+        "sha256": "5eb3eaebf0d76c59427e3789eab0ff373b5956498e58c5c7e1fc061886b97384",
+        "bytes": 351786
+      },
+      "runtime": {
+        "source": "/eqrequiem/worlds/qeynos.glb.gz",
+        "scene": {
+          "path": "client/public/eqrequiem/worlds/qeynos.glb.gz",
+          "sha256": "6a372b24edd193557cc83f5de88f61e1a06d0d3e9f179e2a2a47b95bedfefec2",
+          "bytes": 3641025
+        },
+        "spatial": {
+          "path": "client/public/eqrequiem/worlds/qeynos.spatial.json.gz",
+          "sha256": "d524173fa81af449a9694fbd5f638bba357fa2b2a84137a4cc4dac99c21d1431",
+          "bytes": 187560
+        },
+        "collision": {
+          "path": "client/public/eqrequiem/worlds/qeynos.collision.bin.gz",
+          "sha256": "c612bcf9656f4ca9dc2b0819a104f359102e9e966f39518c08d9cc5df0d3fe32",
+          "bytes": 166862
+        }
+      },
+      "stats": {
+        "primitives": 243,
+        "triangles": 34479,
+        "clusters": 451,
+        "renderChunks": 243,
+        "cells": 28,
+        "portals": 0,
+        "regions": 44,
+        "objectPrototypes": 84,
+        "objectStamps": 476,
+        "tiles": 28,
+        "collisionVertices": 14327,
+        "collisionTriangles": 29948
+      },
+      "warnings": []
+    },
+    {
+      "id": 2,
+      "shortName": "qeynos2",
+      "longName": "North Qeynos",
+      "status": "ready",
+      "source": {
+        "path": "assets/reference/everquest_rof2/zones/qeynos2.glb.gz",
+        "sha256": "c7550370f2b4b9b5749180161d54936ec18641255f0e79009869f3193285a80c",
+        "bytes": 2138164
+      },
+      "metadata": {
+        "path": "assets/reference/everquest_rof2/zones/qeynos2.json",
+        "sha256": "ba22ac04d73b7606c080804c9fdc5de4ba9f37dc363df3f4a0790d91c9b66dd3",
+        "bytes": 93596
+      },
+      "authoring": {
+        "path": "shader-object/sandbox/public/shado/worlds/qeynos2.authoring.json",
+        "sha256": "cd01c9448f689294ba0a187d41d71c9abb1c0aff1734c70c3edfea8f63c90fb1",
+        "bytes": 325315
+      },
+      "runtime": {
+        "source": "/eqrequiem/worlds/qeynos2.glb.gz",
+        "scene": {
+          "path": "client/public/eqrequiem/worlds/qeynos2.glb.gz",
+          "sha256": "ac084cb524577aceab77817e9e1163d49a8d2899dc7feb8ac98ccf78f1118d6c",
+          "bytes": 2140136
+        },
+        "spatial": {
+          "path": "client/public/eqrequiem/worlds/qeynos2.spatial.json.gz",
+          "sha256": "8868c7091b619d276086f278a39d75498cad09f1ae76aa49e09be8b1050ce711",
+          "bytes": 107262
+        },
+        "collision": {
+          "path": "client/public/eqrequiem/worlds/qeynos2.collision.bin.gz",
+          "sha256": "d25e4006706ad796124acc7d7e81440e413875867f86763dcbc32c5e6414bf20",
+          "bytes": 89686
+        }
+      },
+      "stats": {
+        "primitives": 136,
+        "triangles": 19470,
+        "clusters": 252,
+        "renderChunks": 136,
+        "cells": 22,
+        "portals": 0,
+        "regions": 20,
+        "objectPrototypes": 48,
+        "objectStamps": 480,
+        "tiles": 22,
+        "collisionVertices": 8085,
+        "collisionTriangles": 16038
+      },
+      "warnings": []
+    },
+    {
+      "id": 3,
+      "shortName": "qrg",
+      "longName": "Surefall Glade",
+      "status": "ready",
+      "source": {
+        "path": "assets/reference/everquest_rof2/zones/qrg.glb.gz",
+        "sha256": "a29b854146005441326be70af62e1a53a78ffd701f7faa84f6fa65dd6da62b31",
+        "bytes": 839106
+      },
+      "metadata": {
+        "path": "assets/reference/everquest_rof2/zones/qrg.json",
+        "sha256": "3feed85e5e7d10643b47e89895ccef64bcf61aa1d5affd4170f8398c5faf41d5",
+        "bytes": 42565
+      },
+      "authoring": {
+        "path": "shader-object/sandbox/public/shado/worlds/qrg.authoring.json",
+        "sha256": "814c1ec5548fd903103b02ef0b4426bb535aaa83fcbdcfac3707467f08f83cab",
+        "bytes": 95022
+      },
+      "runtime": {
+        "source": "/eqrequiem/worlds/qrg.glb.gz",
+        "scene": {
+          "path": "client/public/eqrequiem/worlds/qrg.glb.gz",
+          "sha256": "826070d19fb004821f9122bc61e4b0c48ce4930d08d9deb84b1b03a03755fd01",
+          "bytes": 840471
+        },
+        "spatial": {
+          "path": "client/public/eqrequiem/worlds/qrg.spatial.json.gz",
+          "sha256": "38159776fa2a2d65732beaaa96828872c2d7491006ae32b8e1485c94f53be885",
+          "bytes": 61651
+        },
+        "collision": {
+          "path": "client/public/eqrequiem/worlds/qrg.collision.bin.gz",
+          "sha256": "9c0b806d5de6356323b8c26491fd74b4044a57e9f676cc47f00b204c16d5bff4",
+          "bytes": 48168
+        }
+      },
+      "stats": {
+        "primitives": 48,
+        "triangles": 10659,
+        "clusters": 118,
+        "renderChunks": 48,
+        "cells": 19,
+        "portals": 0,
+        "regions": 7,
+        "objectPrototypes": 21,
+        "objectStamps": 137,
+        "tiles": 19,
+        "collisionVertices": 4029,
+        "collisionTriangles": 7726
+      },
+      "warnings": []
+    },
+    {
+      "id": 4,
+      "shortName": "qeytoqrg",
+      "longName": "Qeynos Hills",
+      "status": "ready",
+      "source": {
+        "path": "assets/reference/everquest_rof2/zones/qeytoqrg.glb.gz",
+        "sha256": "cb68efafa94f76f3b63f6c0e31042ee51c5538333d2baddd2d1ccd4b7727ebaf",
+        "bytes": 1266980
+      },
+      "metadata": {
+        "path": "assets/reference/everquest_rof2/zones/qeytoqrg.json",
+        "sha256": "4f0c1775f9724e5a7de6aac3754aa51b057f89a2312cf765b423b6c34c9b24c3",
+        "bytes": 59199
+      },
+      "authoring": {
+        "path": "shader-object/sandbox/public/shado/worlds/qeytoqrg.authoring.json",
+        "sha256": "2d6bc9f8b9513b84352b6b9e679bfad927a838070c3aaf3619bce09dc2ead1f5",
+        "bytes": 262561
+      },
+      "runtime": {
+        "source": "/eqrequiem/worlds/qeytoqrg.glb.gz",
+        "scene": {
+          "path": "client/public/eqrequiem/worlds/qeytoqrg.glb.gz",
+          "sha256": "d9dd10dab167084cc0ae2a90c80a703407155559b9267f0205b9147cc60f5f9f",
+          "bytes": 1267989
+        },
+        "spatial": {
+          "path": "client/public/eqrequiem/worlds/qeytoqrg.spatial.json.gz",
+          "sha256": "115811e24915eca88d3d61305a5a14f6271fa7855ff08a620210fc69d7c50d37",
+          "bytes": 72742
+        },
+        "collision": {
+          "path": "client/public/eqrequiem/worlds/qeytoqrg.collision.bin.gz",
+          "sha256": "f7db94375375f1a602a9d5462f1422cd3bd5238b1ab8ba87a0104423c4fc5265",
+          "bytes": 75131
+        }
+      },
+      "stats": {
+        "primitives": 61,
+        "triangles": 11265,
+        "clusters": 131,
+        "renderChunks": 61,
+        "cells": 75,
+        "portals": 0,
+        "regions": 30,
+        "objectPrototypes": 15,
+        "objectStamps": 383,
+        "tiles": 75,
+        "collisionVertices": 5868,
+        "collisionTriangles": 11195
+      },
+      "warnings": []
+    },
+    {
+      "id": 6,
+      "shortName": "highkeep",
+      "longName": "HighKeep",
+      "status": "ready",
+      "source": {
+        "path": "assets/reference/everquest_rof2/zones/highkeep.glb.gz",
+        "sha256": "589a17b9d62daeedd0c88d1e510db2146577084ba82790616c683c674f675e21",
+        "bytes": 1648206
+      },
+      "metadata": {
+        "path": "assets/reference/everquest_rof2/zones/highkeep.json",
+        "sha256": "80a030b95b1e56082e5eb7a716e6f55d9d02310f33c874d8885b56e45b0cca35",
+        "bytes": 109099
+      },
+      "authoring": {
+        "path": "shader-object/sandbox/public/shado/worlds/highkeep.authoring.json",
+        "sha256": "1e8199bc5f78fa7c869d06cc3b305fbaece50057e7fd8883bda9f050bf1255bf",
+        "bytes": 365705
+      },
+      "runtime": {
+        "source": "/eqrequiem/worlds/highkeep.glb.gz",
+        "scene": {
+          "path": "client/public/eqrequiem/worlds/highkeep.glb.gz",
+          "sha256": "50b7cf347f287a108589bb17f85964c52922ac917413999f025010a7c3caba7a",
+          "bytes": 1648361
+        },
+        "spatial": {
+          "path": "client/public/eqrequiem/worlds/highkeep.spatial.json.gz",
+          "sha256": "b06def395ee58b24efa5433ad2a4a9a989101f1e1fe355c240f372b828eede54",
+          "bytes": 103763
+        },
+        "collision": {
+          "path": "client/public/eqrequiem/worlds/highkeep.collision.bin.gz",
+          "sha256": "67704e8365fc2757f934a08e7a232e0128ccdfb86becc263879baacc1d8e55b8",
+          "bytes": 105536
+        }
+      },
+      "stats": {
+        "primitives": 109,
+        "triangles": 18998,
+        "clusters": 225,
+        "renderChunks": 109,
+        "cells": 8,
+        "portals": 0,
+        "regions": 2,
+        "objectPrototypes": 40,
+        "objectStamps": 551,
+        "tiles": 8,
+        "collisionVertices": 9097,
+        "collisionTriangles": 18515
+      },
+      "warnings": []
+    },
+    {
+      "id": 8,
+      "shortName": "freportn",
+      "longName": "North Freeport",
+      "status": "ready",
+      "source": {
+        "path": "assets/reference/everquest_rof2/zones/freportn.glb.gz",
+        "sha256": "d29906efcd074c4f26e0a1f7dce48435a466cc804634b5d9963d228fda5768f8",
+        "bytes": 3045544
+      },
+      "metadata": {
+        "path": "assets/reference/everquest_rof2/zones/freportn.json",
+        "sha256": "b97ead267e21d1f150a736a4ed16077d434eabdbccc24bd5cdddfd4e136d3750",
+        "bytes": 160875
+      },
+      "authoring": {
+        "path": "shader-object/sandbox/public/shado/worlds/freportn.authoring.json",
+        "sha256": "750578e313901b73a8c61852100fb529e5b304d708d7c5784d30af2943111d5e",
+        "bytes": 390888
+      },
+      "runtime": {
+        "source": "/eqrequiem/worlds/freportn.glb.gz",
+        "scene": {
+          "path": "client/public/eqrequiem/worlds/freportn.glb.gz",
+          "sha256": "fa5d2fe81773b889599c0c98440ba5285b95eeb4e1ee76bb3e4e74ad5acfb0dc",
+          "bytes": 3047409
+        },
+        "spatial": {
+          "path": "client/public/eqrequiem/worlds/freportn.spatial.json.gz",
+          "sha256": "79f43e4b11183d50c068f1d07edab3c143807a52d24807b716454800d8a967c7",
+          "bytes": 200492
+        },
+        "collision": {
+          "path": "client/public/eqrequiem/worlds/freportn.collision.bin.gz",
+          "sha256": "92cd87e08f6440b100fcf5e3af512ae4e3641e691558ad228f3f4111ec4e0d2a",
+          "bytes": 213643
+        }
+      },
+      "stats": {
+        "primitives": 158,
+        "triangles": 39419,
+        "clusters": 404,
+        "renderChunks": 158,
+        "cells": 12,
+        "portals": 0,
+        "regions": 14,
+        "objectPrototypes": 61,
+        "objectStamps": 556,
+        "tiles": 12,
+        "collisionVertices": 18789,
+        "collisionTriangles": 38163
+      },
+      "warnings": []
+    },
+    {
+      "id": 9,
+      "shortName": "freportw",
+      "longName": "West Freeport",
+      "status": "ready",
+      "source": {
+        "path": "assets/reference/everquest_rof2/zones/freportw.glb.gz",
+        "sha256": "46c21e0cd770292f495089c399bfac01022430a2bebc0ab6f4b1b7581401e42f",
+        "bytes": 2032552
+      },
+      "metadata": {
+        "path": "assets/reference/everquest_rof2/zones/freportw.json",
+        "sha256": "745b3db73340ddce6bfcd2078021d9e5d213ed6c9e4a94fe74c6d600aa2b175e",
+        "bytes": 244271
+      },
+      "authoring": {
+        "path": "shader-object/sandbox/public/shado/worlds/freportw.authoring.json",
+        "sha256": "d9829ba173eaa8ddf1520e002f6e8c04fcbd37d1bf61b74d096e72784f38e552",
+        "bytes": 525568
+      },
+      "runtime": {
+        "source": "/eqrequiem/worlds/freportw.glb.gz",
+        "scene": {
+          "path": "client/public/eqrequiem/worlds/freportw.glb.gz",
+          "sha256": "e75ef6325aca09122a386347b421115a4d90ae97990b58f6f499c4da719e1012",
+          "bytes": 2036093
+        },
+        "spatial": {
+          "path": "client/public/eqrequiem/worlds/freportw.spatial.json.gz",
+          "sha256": "912642392de6da32d5e7721700dcd143b8b313a9b81da65de3bd1b1590dc6600",
+          "bytes": 240807
+        },
+        "collision": {
+          "path": "client/public/eqrequiem/worlds/freportw.collision.bin.gz",
+          "sha256": "ea04ea51dc2f7ca0830da111ef403b05b5173eb4899f658eff3b3a3de48a0e85",
+          "bytes": 232955
+        }
+      },
+      "stats": {
+        "primitives": 108,
+        "triangles": 42521,
+        "clusters": 401,
+        "renderChunks": 108,
+        "cells": 37,
+        "portals": 0,
+        "regions": 25,
+        "objectPrototypes": 63,
+        "objectStamps": 758,
+        "tiles": 37,
+        "collisionVertices": 19695,
+        "collisionTriangles": 41202
+      },
+      "warnings": []
+    },
+    {
+      "id": 10,
+      "shortName": "freporte",
+      "longName": "East Freeport",
+      "status": "ready",
+      "source": {
+        "path": "assets/reference/everquest_rof2/zones/freporte.glb.gz",
+        "sha256": "4e44dc41451a2143865256e471583020473210bae4c0c6206570bef7c48a24bb",
+        "bytes": 3198804
+      },
+      "metadata": {
+        "path": "assets/reference/everquest_rof2/zones/freporte.json",
+        "sha256": "0af364d55d87dd28dd79a7b3690f1fba1efee3cb51837f32f09a1fcb24510be5",
+        "bytes": 309883
+      },
+      "authoring": {
+        "path": "shader-object/sandbox/public/shado/worlds/freporte.authoring.json",
+        "sha256": "621a9f3a8ac6b13a64aa23875dd8b03fcdc4d883bf0a99d4aaa5f63dda14a4dd",
+        "bytes": 760316
+      },
+      "runtime": {
+        "source": "/eqrequiem/worlds/freporte.glb.gz",
+        "scene": {
+          "path": "client/public/eqrequiem/worlds/freporte.glb.gz",
+          "sha256": "e099d91bc41a290f395d83555ca38c33a290231dc71729a9bcdd9be28763488e",
+          "bytes": 3206014
+        },
+        "spatial": {
+          "path": "client/public/eqrequiem/worlds/freporte.spatial.json.gz",
+          "sha256": "73a39ac0ade1913c512efe4435be80521efd1fae441c659738a2b02c509225a1",
+          "bytes": 286593
+        },
+        "collision": {
+          "path": "client/public/eqrequiem/worlds/freporte.collision.bin.gz",
+          "sha256": "0acc1441351b00a0c8dcdf8a1874efac5a06200fbe4b4907bf6ec0b797bd309d",
+          "bytes": 280196
+        }
+      },
+      "stats": {
+        "primitives": 152,
+        "triangles": 50431,
+        "clusters": 494,
+        "renderChunks": 152,
+        "cells": 33,
+        "portals": 0,
+        "regions": 25,
+        "objectPrototypes": 51,
+        "objectStamps": 1125,
+        "tiles": 33,
+        "collisionVertices": 23654,
+        "collisionTriangles": 48913
+      },
+      "warnings": []
+    },
+    {
+      "id": 11,
+      "shortName": "runnyeye",
+      "longName": "Clan RunnyEye",
+      "status": "ready",
+      "source": {
+        "path": "assets/reference/everquest_rof2/zones/runnyeye.glb.gz",
+        "sha256": "57443de0723916b184fd397d52534b1fe70f4252e3784cf49c14dedc40a5acf5",
+        "bytes": 1972694
+      },
+      "metadata": {
+        "path": "assets/reference/everquest_rof2/zones/runnyeye.json",
+        "sha256": "d28b82c91cb030d8afb4eb5e75e67308c152e143f0ed619b32b1733167d05ce8",
+        "bytes": 154568
+      },
+      "authoring": {
+        "path": "shader-object/sandbox/public/shado/worlds/runnyeye.authoring.json",
+        "sha256": "7e1f5797e6ee4c075a292b2bea46643da7e009ffe7b86ff98621c196ff517b1c",
+        "bytes": 450216
+      },
+      "runtime": {
+        "source": "/eqrequiem/worlds/runnyeye.glb.gz",
+        "scene": {
+          "path": "client/public/eqrequiem/worlds/runnyeye.glb.gz",
+          "sha256": "39b3efba2b1b4c51ad813c33b28372709b76ef48c8f7270d735a7321edcc53e2",
+          "bytes": 1976312
+        },
+        "spatial": {
+          "path": "client/public/eqrequiem/worlds/runnyeye.spatial.json.gz",
+          "sha256": "2e5502cabdbf34d3b2a1527c948e0699b7804f556a27f27ccc4d3b44160607fa",
+          "bytes": 140302
+        },
+        "collision": {
+          "path": "client/public/eqrequiem/worlds/runnyeye.collision.bin.gz",
+          "sha256": "c2f11425e2568987bc87d6403e5bfdbaf834b31f498a014cf8aa314ee87a5986",
+          "bytes": 116892
+        }
+      },
+      "stats": {
+        "primitives": 110,
+        "triangles": 23591,
+        "clusters": 260,
+        "renderChunks": 110,
+        "cells": 5,
+        "portals": 0,
+        "regions": 23,
+        "objectPrototypes": 61,
+        "objectStamps": 648,
+        "tiles": 5,
+        "collisionVertices": 9701,
+        "collisionTriangles": 19322
+      },
+      "warnings": []
+    },
+    {
+      "id": 12,
+      "shortName": "qey2hh1",
+      "longName": "West Karana",
+      "status": "ready",
+      "source": {
+        "path": "assets/reference/everquest_rof2/zones/qey2hh1.glb.gz",
+        "sha256": "313c2cd3bcfd4b4c9141e989a63435dbb02bcb2e473ec29f14b7ce5bf6ef2870",
+        "bytes": 981213
+      },
+      "metadata": {
+        "path": "assets/reference/everquest_rof2/zones/qey2hh1.json",
+        "sha256": "6caa46b725732a536c958a4d79b300e0cc03e80c26385d1660669b946d530cdd",
+        "bytes": 406738
+      },
+      "authoring": {
+        "path": "shader-object/sandbox/public/shado/worlds/qey2hh1.authoring.json",
+        "sha256": "2ccccdf98142343b28aaec0deca19a17b58bfe6e726b48135fc1b48b1634c809",
+        "bytes": 2369083
+      },
+      "runtime": {
+        "source": "/eqrequiem/worlds/qey2hh1.glb.gz",
+        "scene": {
+          "path": "client/public/eqrequiem/worlds/qey2hh1.glb.gz",
+          "sha256": "5cc5271317844c74043bcf75a9892a96134eee077d39d3a7beab97ed4b0f37d1",
+          "bytes": 982524
+        },
+        "spatial": {
+          "path": "client/public/eqrequiem/worlds/qey2hh1.spatial.json.gz",
+          "sha256": "7d5fb375143730d0775998272273ba1188608cf4ff640bef7e5b2f9643c4fd37",
+          "bytes": 150979
+        },
+        "collision": {
+          "path": "client/public/eqrequiem/worlds/qey2hh1.collision.bin.gz",
+          "sha256": "3e75a092c6c7e5d9400ec027397456eef607573c66ca946a4db0870389e52a8c",
+          "bytes": 80332
+        }
+      },
+      "stats": {
+        "primitives": 45,
+        "triangles": 12652,
+        "clusters": 127,
+        "renderChunks": 45,
+        "cells": 112,
+        "portals": 0,
+        "regions": 26,
+        "objectPrototypes": 62,
+        "objectStamps": 3757,
+        "tiles": 112,
+        "collisionVertices": 6291,
+        "collisionTriangles": 11880
+      },
+      "warnings": []
+    },
+    {
+      "id": 13,
+      "shortName": "northkarana",
+      "longName": "North Karana",
+      "status": "ready",
+      "source": {
+        "path": "assets/reference/everquest_rof2/zones/northkarana.glb.gz",
+        "sha256": "0d074c1aeef33628f0f54c1f169da2e5dd19da53e8906f5e27f86f52662a86ce",
+        "bytes": 759720
+      },
+      "metadata": {
+        "path": "assets/reference/everquest_rof2/zones/northkarana.json",
+        "sha256": "35132422d61b3f34efaa1278c45e8acc25011aab06db9dbad3914a9ad8aa7226",
+        "bytes": 206830
+      },
+      "authoring": {
+        "path": "shader-object/sandbox/public/shado/worlds/northkarana.authoring.json",
+        "sha256": "4592eda31b1fb076ff166ef496be795d3c6ab55d8e07e62794bfa24ee5ff96f4",
+        "bytes": 1222730
+      },
+      "runtime": {
+        "source": "/eqrequiem/worlds/northkarana.glb.gz",
+        "scene": {
+          "path": "client/public/eqrequiem/worlds/northkarana.glb.gz",
+          "sha256": "3539ab5568441e11d89a5cad6067003542f2131b7b2a8a302c7c87ec7c3282e0",
+          "bytes": 761564
+        },
+        "spatial": {
+          "path": "client/public/eqrequiem/worlds/northkarana.spatial.json.gz",
+          "sha256": "e35edf9730a9a14267ea39fbe4de1b70589a5a754644ec95c16be2b2ae05c11e",
+          "bytes": 90845
+        },
+        "collision": {
+          "path": "client/public/eqrequiem/worlds/northkarana.collision.bin.gz",
+          "sha256": "7c91b31c98c193b63e678bcb366ce3631486d02af21cb818e603788b86552ed2",
+          "bytes": 53067
+        }
+      },
+      "stats": {
+        "primitives": 38,
+        "triangles": 9310,
+        "clusters": 94,
+        "renderChunks": 38,
+        "cells": 65,
+        "portals": 0,
+        "regions": 14,
+        "objectPrototypes": 36,
+        "objectStamps": 1933,
+        "tiles": 65,
+        "collisionVertices": 4460,
+        "collisionTriangles": 8400
+      },
+      "warnings": []
+    },
+    {
+      "id": 14,
+      "shortName": "southkarana",
+      "longName": "South Karana",
+      "status": "ready",
+      "source": {
+        "path": "assets/reference/everquest_rof2/zones/southkarana.glb.gz",
+        "sha256": "63cbf734245af738562c296bd58bef8cd4ff69f636955b374da6c1556a14686a",
+        "bytes": 1641291
+      },
+      "metadata": {
+        "path": "assets/reference/everquest_rof2/zones/southkarana.json",
+        "sha256": "eea3bbc99a3879804a465ea2680dbe2ce93a07f3417659bc75b431de2b286e9e",
+        "bytes": 393041
+      },
+      "authoring": {
+        "path": "shader-object/sandbox/public/shado/worlds/southkarana.authoring.json",
+        "sha256": "235575a3af7432f5a241216820bb88da1572a8839106c6af5ec12c4599dd044f",
+        "bytes": 2360919
+      },
+      "runtime": {
+        "source": "/eqrequiem/worlds/southkarana.glb.gz",
+        "scene": {
+          "path": "client/public/eqrequiem/worlds/southkarana.glb.gz",
+          "sha256": "e46c20271b445278e964af6a0c8ecaa81876d1ca1fcd68eee4b17db34be9e064",
+          "bytes": 1642342
+        },
+        "spatial": {
+          "path": "client/public/eqrequiem/worlds/southkarana.spatial.json.gz",
+          "sha256": "4d73a366f03a68a44c63312472b510d280757fd91d978640593502e8cbfdde5c",
+          "bytes": 173813
+        },
+        "collision": {
+          "path": "client/public/eqrequiem/worlds/southkarana.collision.bin.gz",
+          "sha256": "68dd955e59eefa2f227a8b90ce91198a9d54ff84d9860467e5b3ba1f6e683388",
+          "bytes": 115132
+        }
+      },
+      "stats": {
+        "primitives": 86,
+        "triangles": 18464,
+        "clusters": 197,
+        "renderChunks": 86,
+        "cells": 117,
+        "portals": 0,
+        "regions": 6,
+        "objectPrototypes": 29,
+        "objectStamps": 3790,
+        "tiles": 117,
+        "collisionVertices": 9584,
+        "collisionTriangles": 17813
+      },
+      "warnings": []
+    },
+    {
+      "id": 15,
+      "shortName": "eastkarana",
+      "longName": "East Karana",
+      "status": "ready",
+      "source": {
+        "path": "assets/reference/everquest_rof2/zones/eastkarana.glb.gz",
+        "sha256": "b9a1186aeac15727dc332ec3a2f4276d9a95678d40f0329f1506d5ca59badf58",
+        "bytes": 1092372
+      },
+      "metadata": {
+        "path": "assets/reference/everquest_rof2/zones/eastkarana.json",
+        "sha256": "d9e0d7cb4c060fb64b0b6a6d10ef17e6de4c4c6f467b5ebc5e9c8fe7ec32ae78",
+        "bytes": 164835
+      },
+      "authoring": {
+        "path": "shader-object/sandbox/public/shado/worlds/eastkarana.authoring.json",
+        "sha256": "df3e7dc27f5f1a7f802b4429326a911c6b1ca2fd8c2dbabb30afd7de8099c4ac",
+        "bytes": 922985
+      },
+      "runtime": {
+        "source": "/eqrequiem/worlds/eastkarana.glb.gz",
+        "scene": {
+          "path": "client/public/eqrequiem/worlds/eastkarana.glb.gz",
+          "sha256": "d08b199ad3b6fd134f12a0413dcc3f603ca097303150c3f9b5c66df2fbff978a",
+          "bytes": 1093202
+        },
+        "spatial": {
+          "path": "client/public/eqrequiem/worlds/eastkarana.spatial.json.gz",
+          "sha256": "1225056b5ee86a5ca46e303ba6373bcc302e9b702ff369a44eb7438c28600b09",
+          "bytes": 102353
+        },
+        "collision": {
+          "path": "client/public/eqrequiem/worlds/eastkarana.collision.bin.gz",
+          "sha256": "57f68dd89689e5c197d731a9f070c4a6080c95f63127acb477b6243fb076b2d9",
+          "bytes": 74895
+        }
+      },
+      "stats": {
+        "primitives": 54,
+        "triangles": 11582,
+        "clusters": 127,
+        "renderChunks": 54,
+        "cells": 105,
+        "portals": 0,
+        "regions": 8,
+        "objectPrototypes": 51,
+        "objectStamps": 1446,
+        "tiles": 105,
+        "collisionVertices": 5593,
+        "collisionTriangles": 10628
+      },
+      "warnings": []
+    },
+    {
+      "id": 16,
+      "shortName": "beholder",
+      "longName": "Gorge of King Xorbb",
+      "status": "ready",
+      "source": {
+        "path": "assets/reference/everquest_rof2/zones/beholder.glb.gz",
+        "sha256": "f7dce8c9adccf3a3e004c92757bb73b545eaea2fd34f412178944466cae64a98",
+        "bytes": 547665
+      },
+      "metadata": {
+        "path": "assets/reference/everquest_rof2/zones/beholder.json",
+        "sha256": "54ef5a2a7ec02c76814727d193973ebe637629a4f32b8e49accce05c085c2be7",
+        "bytes": 24086
+      },
+      "authoring": {
+        "path": "shader-object/sandbox/public/shado/worlds/beholder.authoring.json",
+        "sha256": "017a2ea74284079fc49916ceee175b5cafa41fee27da7f59d1e59ca3a53abceb",
+        "bytes": 103321
+      },
+      "runtime": {
+        "source": "/eqrequiem/worlds/beholder.glb.gz",
+        "scene": {
+          "path": "client/public/eqrequiem/worlds/beholder.glb.gz",
+          "sha256": "e544e2aedf6b6c36826120eeb43ce936b85cdcf3d7eae880db8bb0cc585e4870",
+          "bytes": 548947
+        },
+        "spatial": {
+          "path": "client/public/eqrequiem/worlds/beholder.spatial.json.gz",
+          "sha256": "161dd4aa67128954046a0f9d9025a781f4bf85bfdf3e9ca679f628a5b3cd1ad4",
+          "bytes": 56206
+        },
+        "collision": {
+          "path": "client/public/eqrequiem/worlds/beholder.collision.bin.gz",
+          "sha256": "edc52082df5c355b92fb3fc567d09ed574052e37b0ff4f1b1c3bd455e3bf711d",
+          "bytes": 65085
+        }
+      },
+      "stats": {
+        "primitives": 25,
+        "triangles": 8578,
+        "clusters": 85,
+        "renderChunks": 25,
+        "cells": 36,
+        "portals": 0,
+        "regions": 3,
+        "objectPrototypes": 11,
+        "objectStamps": 152,
+        "tiles": 36,
+        "collisionVertices": 4557,
+        "collisionTriangles": 8569
+      },
+      "warnings": []
+    },
+    {
+      "id": 17,
+      "shortName": "blackburrow",
+      "longName": "BlackBurrow",
+      "status": "ready",
+      "source": {
+        "path": "assets/reference/everquest_rof2/zones/blackburrow.glb.gz",
+        "sha256": "cd7fa227d9bf72503281c5316b460ac810c824f1a889a5822ff3b3be9745e847",
+        "bytes": 700621
+      },
+      "metadata": {
+        "path": "assets/reference/everquest_rof2/zones/blackburrow.json",
+        "sha256": "53042342035a007cf7cf8d7e19d295afb61f95014f1c5f19fd2bc896f9120ec2",
+        "bytes": 102406
+      },
+      "authoring": {
+        "path": "shader-object/sandbox/public/shado/worlds/blackburrow.authoring.json",
+        "sha256": "8fd8be8e77059b34a382480a114f254919838c42bda216d3c86eaf17803f0170",
+        "bytes": 196415
+      },
+      "runtime": {
+        "source": "/eqrequiem/worlds/blackburrow.glb.gz",
+        "scene": {
+          "path": "client/public/eqrequiem/worlds/blackburrow.glb.gz",
+          "sha256": "3c31ed83e42178b1e25f30e115fe8c33ea8dcede501ac55fa6670483808437f9",
+          "bytes": 705527
+        },
+        "spatial": {
+          "path": "client/public/eqrequiem/worlds/blackburrow.spatial.json.gz",
+          "sha256": "18aed84d937cbb9962b14d0184d3070c9f9b145d3bd0e9b1fbb747c0ffe58dcb",
+          "bytes": 114632
+        },
+        "collision": {
+          "path": "client/public/eqrequiem/worlds/blackburrow.collision.bin.gz",
+          "sha256": "623e926207c57073511636a9d80197c1dbf38f2be4b422982b2957b6b6ddbc43",
+          "bytes": 98321
+        }
+      },
+      "stats": {
+        "primitives": 53,
+        "triangles": 19962,
+        "clusters": 192,
+        "renderChunks": 53,
+        "cells": 10,
+        "portals": 0,
+        "regions": 6,
+        "objectPrototypes": 34,
+        "objectStamps": 283,
+        "tiles": 10,
+        "collisionVertices": 8112,
+        "collisionTriangles": 16099
+      },
+      "warnings": []
+    },
+    {
+      "id": 18,
+      "shortName": "paw",
+      "longName": "Infected Paw",
+      "status": "ready",
+      "source": {
+        "path": "assets/reference/everquest_rof2/zones/paw.glb.gz",
+        "sha256": "398de1cae429454fd20c115784d30a8246b00af6dc5cb7ae7c8b0567e78e4bb2",
+        "bytes": 960712
+      },
+      "metadata": {
+        "path": "assets/reference/everquest_rof2/zones/paw.json",
+        "sha256": "c1f5dae198a42dde063c76095e9b2540cb8232c30294ff1697b78954b8505c5e",
+        "bytes": 81958
+      },
+      "authoring": {
+        "path": "shader-object/sandbox/public/shado/worlds/paw.authoring.json",
+        "sha256": "15399740b6436525b7289e35a27738b80c2373dcad788a4459c9cccadf14cc25",
+        "bytes": 232895
+      },
+      "runtime": {
+        "source": "/eqrequiem/worlds/paw.glb.gz",
+        "scene": {
+          "path": "client/public/eqrequiem/worlds/paw.glb.gz",
+          "sha256": "c16a3cd58846203aa2366fa22d614fa93e41a07ed06f46bcc16a664eba614043",
+          "bytes": 963736
+        },
+        "spatial": {
+          "path": "client/public/eqrequiem/worlds/paw.spatial.json.gz",
+          "sha256": "3962426635d2f04c6d90d70b957bdd6a70e00a01cc76c95f153eaa481c1962f2",
+          "bytes": 94334
+        },
+        "collision": {
+          "path": "client/public/eqrequiem/worlds/paw.collision.bin.gz",
+          "sha256": "b4edb4d97637418f99048f7b4e3dade7acaa8860b6bdb99c200f20e896117496",
+          "bytes": 89891
+        }
+      },
+      "stats": {
+        "primitives": 41,
+        "triangles": 15360,
+        "clusters": 145,
+        "renderChunks": 41,
+        "cells": 13,
+        "portals": 0,
+        "regions": 11,
+        "objectPrototypes": 17,
+        "objectStamps": 344,
+        "tiles": 13,
+        "collisionVertices": 7028,
+        "collisionTriangles": 14095
+      },
+      "warnings": []
+    },
+    {
+      "id": 19,
+      "shortName": "rivervale",
+      "longName": "Rivervale",
+      "status": "ready",
+      "source": {
+        "path": "assets/reference/everquest_rof2/zones/rivervale.glb.gz",
+        "sha256": "fb2fd91f4dddd2f5cc8d438ef716d0fd79a02940d472445fb6fc187194bfebd1",
+        "bytes": 1355593
+      },
+      "metadata": {
+        "path": "assets/reference/everquest_rof2/zones/rivervale.json",
+        "sha256": "c4ec0e53bb2bc2948a088bef3a692904ff9a6136678aa654f940844b73087978",
+        "bytes": 114697
+      },
+      "authoring": {
+        "path": "shader-object/sandbox/public/shado/worlds/rivervale.authoring.json",
+        "sha256": "db9532c01f2ec5ded00aa76dda66932715db2b790d04fb973d10cb262b943b69",
+        "bytes": 360700
+      },
+      "runtime": {
+        "source": "/eqrequiem/worlds/rivervale.glb.gz",
+        "scene": {
+          "path": "client/public/eqrequiem/worlds/rivervale.glb.gz",
+          "sha256": "4a4f77648856520548a3c1412159fb3a9f4968cba5a1df00fe43833e24089403",
+          "bytes": 1356332
+        },
+        "spatial": {
+          "path": "client/public/eqrequiem/worlds/rivervale.spatial.json.gz",
+          "sha256": "153d5daa088ed126524d0f94d8d97a45d2211ed9141c01f8dc6d64176b555e4a",
+          "bytes": 126869
+        },
+        "collision": {
+          "path": "client/public/eqrequiem/worlds/rivervale.collision.bin.gz",
+          "sha256": "b75e333f049abd6b005c09c74043aa2de07463fb03715928b22688314b5be741",
+          "bytes": 121124
+        }
+      },
+      "stats": {
+        "primitives": 84,
+        "triangles": 21658,
+        "clusters": 219,
+        "renderChunks": 84,
+        "cells": 11,
+        "portals": 0,
+        "regions": 3,
+        "objectPrototypes": 56,
+        "objectStamps": 531,
+        "tiles": 11,
+        "collisionVertices": 10334,
+        "collisionTriangles": 21164
+      },
+      "warnings": []
+    },
+    {
+      "id": 20,
+      "shortName": "kithicor",
+      "longName": "Kithicor Forest",
+      "status": "ready",
+      "source": {
+        "path": "assets/reference/everquest_rof2/zones/kithicor.glb.gz",
+        "sha256": "5c50546c7708e735e192c7f521e3ddf54e893e27787bffa9c05c19bda650e88a",
+        "bytes": 885626
+      },
+      "metadata": {
+        "path": "assets/reference/everquest_rof2/zones/kithicor.json",
+        "sha256": "0b9d93b10e2a07ee88e5bebfc1b07a61e8b81bbfbf78cf11ef13ed841cfef35a",
+        "bytes": 208280
+      },
+      "authoring": {
+        "path": "shader-object/sandbox/public/shado/worlds/kithicor.authoring.json",
+        "sha256": "3fde3dfe39dfd2f5616c1a0de674bc98c2074e82148f862e2b04f11b95b200d7",
+        "bytes": 1126216
+      },
+      "runtime": {
+        "source": "/eqrequiem/worlds/kithicor.glb.gz",
+        "scene": {
+          "path": "client/public/eqrequiem/worlds/kithicor.glb.gz",
+          "sha256": "d8dbe2d257d13bee71f51a58ea7804aa875ab76db9cf49587344068680cab2fc",
+          "bytes": 886036
+        },
+        "spatial": {
+          "path": "client/public/eqrequiem/worlds/kithicor.spatial.json.gz",
+          "sha256": "73a39ae726f6e2984a9096712e4982373e717c70b40ab76c34d311e79f037245",
+          "bytes": 106846
+        },
+        "collision": {
+          "path": "client/public/eqrequiem/worlds/kithicor.collision.bin.gz",
+          "sha256": "c439f394972c0f22e2061090a5cff8021141c69e61a9d70f9297eeac65343fdb",
+          "bytes": 74580
+        }
+      },
+      "stats": {
+        "primitives": 39,
+        "triangles": 11259,
+        "clusters": 117,
+        "renderChunks": 39,
+        "cells": 85,
+        "portals": 0,
+        "regions": 5,
+        "objectPrototypes": 32,
+        "objectStamps": 1776,
+        "tiles": 85,
+        "collisionVertices": 5721,
+        "collisionTriangles": 11143
+      },
+      "warnings": []
+    },
+    {
+      "id": 21,
+      "shortName": "commons",
+      "longName": "West Commonlands",
+      "status": "ready",
+      "source": {
+        "path": "assets/reference/everquest_rof2/zones/commons.glb.gz",
+        "sha256": "97e782587a46c73763e49484f3bb62ebc2d3792215d1349d9c009ce0329e5c84",
+        "bytes": 807738
+      },
+      "metadata": {
+        "path": "assets/reference/everquest_rof2/zones/commons.json",
+        "sha256": "8793c3f9ed90ad141933f421752221e4a7b23a240ded5be702c19c82dc9e54cb",
+        "bytes": 181762
+      },
+      "authoring": {
+        "path": "shader-object/sandbox/public/shado/worlds/commons.authoring.json",
+        "sha256": "c77b677150ee6400ca9b19b56cd742a4ba0dd47900b1cec0f9580d2282fb85fe",
+        "bytes": 1000479
+      },
+      "runtime": {
+        "source": "/eqrequiem/worlds/commons.glb.gz",
+        "scene": {
+          "path": "client/public/eqrequiem/worlds/commons.glb.gz",
+          "sha256": "bdf605dad782f181ad7ebfb23a5613269e925acaef8cfab990f68895ffdc63f9",
+          "bytes": 807571
+        },
+        "spatial": {
+          "path": "client/public/eqrequiem/worlds/commons.spatial.json.gz",
+          "sha256": "7d34f4dca8d7fa5c7d246adf513029ff08aa70dd6a9dcefc4bcc83482f016610",
+          "bytes": 92482
+        },
+        "collision": {
+          "path": "client/public/eqrequiem/worlds/commons.collision.bin.gz",
+          "sha256": "07ac74a05acdbf2039bdea97669651252467334a8ca82d34ce0f51a24fec51ef",
+          "bytes": 62386
+        }
+      },
+      "stats": {
+        "primitives": 41,
+        "triangles": 10048,
+        "clusters": 111,
+        "renderChunks": 41,
+        "cells": 83,
+        "portals": 0,
+        "regions": 18,
+        "objectPrototypes": 34,
+        "objectStamps": 1575,
+        "tiles": 83,
+        "collisionVertices": 5118,
+        "collisionTriangles": 9931
+      },
+      "warnings": []
+    },
+    {
+      "id": 22,
+      "shortName": "ecommons",
+      "longName": "East Commonlands",
+      "status": "ready",
+      "source": {
+        "path": "assets/reference/everquest_rof2/zones/ecommons.glb.gz",
+        "sha256": "54fbe5ea3d131a565f0e0d2cdafaf3b3bbe146c26fdd009c3921b2605debc25e",
+        "bytes": 986537
+      },
+      "metadata": {
+        "path": "assets/reference/everquest_rof2/zones/ecommons.json",
+        "sha256": "ff93ebec78641fbcd3fa7114347ae08f00361ffee9b112c9e484bd1033b8b938",
+        "bytes": 208616
+      },
+      "authoring": {
+        "path": "shader-object/sandbox/public/shado/worlds/ecommons.authoring.json",
+        "sha256": "c8f12515fefadeab04979aa633ea78a9f09a1bc10be215d421e27cd5988a0d95",
+        "bytes": 1151799
+      },
+      "runtime": {
+        "source": "/eqrequiem/worlds/ecommons.glb.gz",
+        "scene": {
+          "path": "client/public/eqrequiem/worlds/ecommons.glb.gz",
+          "sha256": "561f765cc4c50c7eb65ae5447b18223598822fcf10bc9ec091e29acd87d08188",
+          "bytes": 987510
+        },
+        "spatial": {
+          "path": "client/public/eqrequiem/worlds/ecommons.spatial.json.gz",
+          "sha256": "a628d799648bf85a5c0f8473388d04b4d0f5b2f7951b75def86f8e62777b7487",
+          "bytes": 109150
+        },
+        "collision": {
+          "path": "client/public/eqrequiem/worlds/ecommons.collision.bin.gz",
+          "sha256": "c9941faa414fdddf20b6d1e4560d18aab2376183891e76c23fd784ca4da6d92c",
+          "bytes": 77364
+        }
+      },
+      "stats": {
+        "primitives": 44,
+        "triangles": 12215,
+        "clusters": 130,
+        "renderChunks": 44,
+        "cells": 98,
+        "portals": 0,
+        "regions": 5,
+        "objectPrototypes": 46,
+        "objectStamps": 1809,
+        "tiles": 98,
+        "collisionVertices": 6235,
+        "collisionTriangles": 12203
+      },
+      "warnings": []
+    },
+    {
+      "id": 23,
+      "shortName": "erudnint",
+      "longName": "Erudin Palace",
+      "status": "ready",
+      "source": {
+        "path": "assets/reference/everquest_rof2/zones/erudnint.glb.gz",
+        "sha256": "d9993643809ac610e40c7b1ad027529d39486dc9ff5245af86439044ac45710d",
+        "bytes": 638147
+      },
+      "metadata": {
+        "path": "assets/reference/everquest_rof2/zones/erudnint.json",
+        "sha256": "8349c863790eaa6f57297812e0f538b063d2bb9097bf3fe79bd06f4775840629",
+        "bytes": 95406
+      },
+      "authoring": {
+        "path": "shader-object/sandbox/public/shado/worlds/erudnint.authoring.json",
+        "sha256": "5411a913a9c4d84cd15f72fa88dabe36e3754204f8e242c4253970753dc7ad6f",
+        "bytes": 238388
+      },
+      "runtime": {
+        "source": "/eqrequiem/worlds/erudnint.glb.gz",
+        "scene": {
+          "path": "client/public/eqrequiem/worlds/erudnint.glb.gz",
+          "sha256": "c3d4223b9d4e31ae1b98ddd566575908d2cfdf9cb2be47b0401d20bc16ca0612",
+          "bytes": 641375
+        },
+        "spatial": {
+          "path": "client/public/eqrequiem/worlds/erudnint.spatial.json.gz",
+          "sha256": "22603a08b9d202cfd6ff76e6dbc38213b9e0f22ec8a8b15800051e403ebf395c",
+          "bytes": 142796
+        },
+        "collision": {
+          "path": "client/public/eqrequiem/worlds/erudnint.collision.bin.gz",
+          "sha256": "6ed6d317cea97751191b1da7cf71759dde42cff5622f04d918abecf72819197c",
+          "bytes": 135020
+        }
+      },
+      "stats": {
+        "primitives": 47,
+        "triangles": 25442,
+        "clusters": 232,
+        "renderChunks": 47,
+        "cells": 16,
+        "portals": 0,
+        "regions": 4,
+        "objectPrototypes": 33,
+        "objectStamps": 353,
+        "tiles": 16,
+        "collisionVertices": 11864,
+        "collisionTriangles": 24035
+      },
+      "warnings": []
+    },
+    {
+      "id": 24,
+      "shortName": "erudnext",
+      "longName": "Erudin",
+      "status": "ready",
+      "source": {
+        "path": "assets/reference/everquest_rof2/zones/erudnext.glb.gz",
+        "sha256": "4e210a09cf1cfd660ba30be0f8672abf8c8eda98d5eb6fcd6eda8522f01ca233",
+        "bytes": 1271458
+      },
+      "metadata": {
+        "path": "assets/reference/everquest_rof2/zones/erudnext.json",
+        "sha256": "1833cc79de5583977ab25e60aca578bfc1daa7a443f0e64d1b59d2c17b49b705",
+        "bytes": 101363
+      },
+      "authoring": {
+        "path": "shader-object/sandbox/public/shado/worlds/erudnext.authoring.json",
+        "sha256": "a0c5d61ffbfcf73dd1288af9915f1f08479f0dabd89eec69b752474e19a1ef71",
+        "bytes": 126409
+      },
+      "runtime": {
+        "source": "/eqrequiem/worlds/erudnext.glb.gz",
+        "scene": {
+          "path": "client/public/eqrequiem/worlds/erudnext.glb.gz",
+          "sha256": "f95345f4c53cc0f8ebf212c4cecbd2861a0a3e312b39a50f932ef72f90a1d332",
+          "bytes": 1273150
+        },
+        "spatial": {
+          "path": "client/public/eqrequiem/worlds/erudnext.spatial.json.gz",
+          "sha256": "a6d1221167a937a96d5243955bf172f0dde4b4c48162de3390cf78caa5d9106d",
+          "bytes": 180122
+        },
+        "collision": {
+          "path": "client/public/eqrequiem/worlds/erudnext.collision.bin.gz",
+          "sha256": "0fe18388c82167d448fd45a3c844360e58654e25da1bd9c4ebe8277335ed9d51",
+          "bytes": 183872
+        }
+      },
+      "stats": {
+        "primitives": 79,
+        "triangles": 33847,
+        "clusters": 310,
+        "renderChunks": 79,
+        "cells": 30,
+        "portals": 0,
+        "regions": 23,
+        "objectPrototypes": 24,
+        "objectStamps": 165,
+        "tiles": 30,
+        "collisionVertices": 15747,
+        "collisionTriangles": 31843
+      },
+      "warnings": []
+    },
+    {
+      "id": 25,
+      "shortName": "nektulos",
+      "longName": "Nektulos Forest",
+      "status": "ready",
+      "source": {
+        "path": "assets/reference/everquest_rof2/zones/nektulos.glb.gz",
+        "sha256": "418b4c20ba1ce0f909d4ac0b582e0e8da7cf2cc08df9466af9b85684288c8058",
+        "bytes": 929646
+      },
+      "metadata": {
+        "path": "assets/reference/everquest_rof2/zones/nektulos.json",
+        "sha256": "e1b3ab1828ac0b9f947f92caa368efa8410cc2f36ba2e5e4d76404ab3d901f08",
+        "bytes": 105856
+      },
+      "authoring": {
+        "path": "shader-object/sandbox/public/shado/worlds/nektulos.authoring.json",
+        "sha256": "47fe59ffe33b19baa126041715771323c074bb598a22c6cb2b71aba26dba00b6",
+        "bytes": 591878
+      },
+      "runtime": {
+        "source": "/eqrequiem/worlds/nektulos.glb.gz",
+        "scene": {
+          "path": "client/public/eqrequiem/worlds/nektulos.glb.gz",
+          "sha256": "8fd87f418675e77d94fd0e649f845b669fd863fcb6f884f43ccb35a6b944d946",
+          "bytes": 929916
+        },
+        "spatial": {
+          "path": "client/public/eqrequiem/worlds/nektulos.spatial.json.gz",
+          "sha256": "a0e8cb502e4d642dbb04e3301c107580ab860a749739f24ac9a1431ed4ae12bb",
+          "bytes": 90784
+        },
+        "collision": {
+          "path": "client/public/eqrequiem/worlds/nektulos.collision.bin.gz",
+          "sha256": "1a4b29873ae805cdafe68d77976f0bd20430551fd440a71bdcaab9208f6c9be0",
+          "bytes": 74135
+        }
+      },
+      "stats": {
+        "primitives": 41,
+        "triangles": 11771,
+        "clusters": 122,
+        "renderChunks": 41,
+        "cells": 82,
+        "portals": 0,
+        "regions": 7,
+        "objectPrototypes": 24,
+        "objectStamps": 917,
+        "tiles": 82,
+        "collisionVertices": 5791,
+        "collisionTriangles": 11205
+      },
+      "warnings": []
+    },
+    {
+      "id": 27,
+      "shortName": "lavastorm",
+      "longName": "Lavastorm Mountains",
+      "status": "ready",
+      "source": {
+        "path": "assets/reference/everquest_rof2/zones/lavastorm.glb.gz",
+        "sha256": "c1543dfaa761acad8e5ac78e8c77a1acfe521443dfad22f2c84b53b00e523cc2",
+        "bytes": 392760
+      },
+      "metadata": {
+        "path": "assets/reference/everquest_rof2/zones/lavastorm.json",
+        "sha256": "f551232b7a0779efbc14c8fe80728e7c40416d5553c29a3193d706e9a8c1ca35",
+        "bytes": 100684
+      },
+      "authoring": {
+        "path": "shader-object/sandbox/public/shado/worlds/lavastorm.authoring.json",
+        "sha256": "3f01508968725c90a40e5470eb5938e5de78a54ab816dbff72dfa608c601e65c",
+        "bytes": 348488
+      },
+      "runtime": {
+        "source": "/eqrequiem/worlds/lavastorm.glb.gz",
+        "scene": {
+          "path": "client/public/eqrequiem/worlds/lavastorm.glb.gz",
+          "sha256": "6c1a89982d0c197606c16cbc0e4497d41ac656f1afc76124ece99025d5c2d3cf",
+          "bytes": 392696
+        },
+        "spatial": {
+          "path": "client/public/eqrequiem/worlds/lavastorm.spatial.json.gz",
+          "sha256": "cf810f52ea26dae9e4b338e9cd8577e63dd9e459ccb80c258228cb521967ae6d",
+          "bytes": 70574
+        },
+        "collision": {
+          "path": "client/public/eqrequiem/worlds/lavastorm.collision.bin.gz",
+          "sha256": "0314b580c501fe7970c86c0ef62463c1d50024ef0d0394aa28f39d0db0c755f5",
+          "bytes": 61549
+        }
+      },
+      "stats": {
+        "primitives": 15,
+        "triangles": 9817,
+        "clusters": 88,
+        "renderChunks": 15,
+        "cells": 59,
+        "portals": 0,
+        "regions": 30,
+        "objectPrototypes": 11,
+        "objectStamps": 523,
+        "tiles": 59,
+        "collisionVertices": 4756,
+        "collisionTriangles": 9231
+      },
+      "warnings": []
+    },
+    {
+      "id": 29,
+      "shortName": "halas",
+      "longName": "Halas",
+      "status": "ready",
+      "source": {
+        "path": "assets/reference/everquest_rof2/zones/halas.glb.gz",
+        "sha256": "d2eec91fb81c55495d9b2f16ad08ef7e3adcf5ec042b288a9e8619d6ef447e1f",
+        "bytes": 1683170
+      },
+      "metadata": {
+        "path": "assets/reference/everquest_rof2/zones/halas.json",
+        "sha256": "1fcf59a5d384fab19df439084a88de14839100773c7863fb3a1e21e16b14870b",
+        "bytes": 97776
+      },
+      "authoring": {
+        "path": "shader-object/sandbox/public/shado/worlds/halas.authoring.json",
+        "sha256": "bb7556ca29bc1387aea55ec79413dd514c01e1e6ca2fdc15fe80594db4de7a11",
+        "bytes": 319432
+      },
+      "runtime": {
+        "source": "/eqrequiem/worlds/halas.glb.gz",
+        "scene": {
+          "path": "client/public/eqrequiem/worlds/halas.glb.gz",
+          "sha256": "dfb759de7a3f9f5198e7a023a8784fedf85784cadc86c1f7ec9133c9f7126088",
+          "bytes": 1686962
+        },
+        "spatial": {
+          "path": "client/public/eqrequiem/worlds/halas.spatial.json.gz",
+          "sha256": "b6552b2ed635be7bd2b1a87c53388fc685ded32e8f5c11048895a130651cdbc4",
+          "bytes": 160217
+        },
+        "collision": {
+          "path": "client/public/eqrequiem/worlds/halas.collision.bin.gz",
+          "sha256": "da1418bd8068e7a27f0357002f6ed64aef520a6cd9b8935e2832d73c3e3615d6",
+          "bytes": 156395
+        }
+      },
+      "stats": {
+        "primitives": 69,
+        "triangles": 26977,
+        "clusters": 260,
+        "renderChunks": 69,
+        "cells": 19,
+        "portals": 0,
+        "regions": 9,
+        "objectPrototypes": 91,
+        "objectStamps": 445,
+        "tiles": 19,
+        "collisionVertices": 13179,
+        "collisionTriangles": 26508
+      },
+      "warnings": []
+    },
+    {
+      "id": 30,
+      "shortName": "everfrost",
+      "longName": "Everfrost Peaks",
+      "status": "ready",
+      "source": {
+        "path": "assets/reference/everquest_rof2/zones/everfrost.glb.gz",
+        "sha256": "7528d1abc8d1f76c1d7a53958b8cd7b8c1f91662799ac746a2f0a2d5ea6fc2de",
+        "bytes": 2477477
+      },
+      "metadata": {
+        "path": "assets/reference/everquest_rof2/zones/everfrost.json",
+        "sha256": "742db3c65e7e81535d53e7851a2a59b3cc435d9fc3481d72bcf83d4acdad19d9",
+        "bytes": 107053
+      },
+      "authoring": {
+        "path": "shader-object/sandbox/public/shado/worlds/everfrost.authoring.json",
+        "sha256": "a17638cd8b48350055a96c1afa107e956f1303d6d5ffd00e841e6073b91b6697",
+        "bytes": 454274
+      },
+      "runtime": {
+        "source": "/eqrequiem/worlds/everfrost.glb.gz",
+        "scene": {
+          "path": "client/public/eqrequiem/worlds/everfrost.glb.gz",
+          "sha256": "f80c798088be5fca7c7c8e1b6a67b7b9b9f870d6f834c56000b9692e2d0f6d3e",
+          "bytes": 2479767
+        },
+        "spatial": {
+          "path": "client/public/eqrequiem/worlds/everfrost.spatial.json.gz",
+          "sha256": "92751cf62044e68ce841f1de11b8c54d8162e3aeb1b24c4b3017bbc08c7ce43a",
+          "bytes": 501540
+        },
+        "collision": {
+          "path": "client/public/eqrequiem/worlds/everfrost.collision.bin.gz",
+          "sha256": "1b6f9839bfe74885fddae5a5f8801004f1208a6ec879d916ac10023ae515f1da",
+          "bytes": 582668
+        }
+      },
+      "stats": {
+        "primitives": 91,
+        "triangles": 89716,
+        "clusters": 755,
+        "renderChunks": 91,
+        "cells": 393,
+        "portals": 0,
+        "regions": 6,
+        "objectPrototypes": 28,
+        "objectStamps": 675,
+        "tiles": 393,
+        "collisionVertices": 44744,
+        "collisionTriangles": 88010
+      },
+      "warnings": []
+    },
+    {
+      "id": 31,
+      "shortName": "soldunga",
+      "longName": "Solusek's Eye",
+      "status": "ready",
+      "source": {
+        "path": "assets/reference/everquest_rof2/zones/soldunga.glb.gz",
+        "sha256": "8eec91d2aff434c960430caee83cccc8b16923661a4a08bef1005f46d61aaf4c",
+        "bytes": 2476237
+      },
+      "metadata": {
+        "path": "assets/reference/everquest_rof2/zones/soldunga.json",
+        "sha256": "e1b188b1dda15b04f592b8f32be9ea21db4a6ce53ec16f38f5c59dbd6469776e",
+        "bytes": 133342
+      },
+      "authoring": {
+        "path": "shader-object/sandbox/public/shado/worlds/soldunga.authoring.json",
+        "sha256": "9bf3edbe6d2ccb3332facb9883bbdf6c7a37b27504b2a0131e0a3ea3a9bda940",
+        "bytes": 330930
+      },
+      "runtime": {
+        "source": "/eqrequiem/worlds/soldunga.glb.gz",
+        "scene": {
+          "path": "client/public/eqrequiem/worlds/soldunga.glb.gz",
+          "sha256": "62f688b2bfe0e6f51de1d501496e9c6e8726fadb70b75244dcbe40c0a54cb509",
+          "bytes": 2484465
+        },
+        "spatial": {
+          "path": "client/public/eqrequiem/worlds/soldunga.spatial.json.gz",
+          "sha256": "f9113fe6b802ddf170415534320b68ab0137780b38ceee39ed3dc2a76dbb85f0",
+          "bytes": 244633
+        },
+        "collision": {
+          "path": "client/public/eqrequiem/worlds/soldunga.collision.bin.gz",
+          "sha256": "66ace4a348ea6890f4ad60a05988d09c2a3932270dcc6c6a7ba43b17b10927f2",
+          "bytes": 221101
+        }
+      },
+      "stats": {
+        "primitives": 143,
+        "triangles": 41913,
+        "clusters": 436,
+        "renderChunks": 143,
+        "cells": 15,
+        "portals": 0,
+        "regions": 30,
+        "objectPrototypes": 55,
+        "objectStamps": 461,
+        "tiles": 15,
+        "collisionVertices": 18359,
+        "collisionTriangles": 36398
+      },
+      "warnings": []
+    },
+    {
+      "id": 32,
+      "shortName": "soldungb",
+      "longName": "Nagafen's Lair",
+      "status": "ready",
+      "source": {
+        "path": "assets/reference/everquest_rof2/zones/soldungb.glb.gz",
+        "sha256": "266d672f786ec96e84244ed88ddc9cf6282670628dceb5bf8f31c5e96970128d",
+        "bytes": 1529713
+      },
+      "metadata": {
+        "path": "assets/reference/everquest_rof2/zones/soldungb.json",
+        "sha256": "20e44ec6344e892e1365d7a625143596fcdb6f4ebb6f8b5627bf982a62520a04",
+        "bytes": 135154
+      },
+      "authoring": {
+        "path": "shader-object/sandbox/public/shado/worlds/soldungb.authoring.json",
+        "sha256": "2b12f551008b7350504ed23df97b5afcc8240b487b4011c5c070abb52af0a1c8",
+        "bytes": 249336
+      },
+      "runtime": {
+        "source": "/eqrequiem/worlds/soldungb.glb.gz",
+        "scene": {
+          "path": "client/public/eqrequiem/worlds/soldungb.glb.gz",
+          "sha256": "5624e0cb703724b665b392220eab0a4ba14a1a57fadb37228dec075ac77d5b16",
+          "bytes": 1537631
+        },
+        "spatial": {
+          "path": "client/public/eqrequiem/worlds/soldungb.spatial.json.gz",
+          "sha256": "c25eec3f52c553adb9ca4cf76f8030ae05843a62f097a3d61896cec4435984c3",
+          "bytes": 159589
+        },
+        "collision": {
+          "path": "client/public/eqrequiem/worlds/soldungb.collision.bin.gz",
+          "sha256": "e6f6534d0422ac7cac620db22983f36711a913cc777f987732cd2fea4850806f",
+          "bytes": 131301
+        }
+      },
+      "stats": {
+        "primitives": 80,
+        "triangles": 26486,
+        "clusters": 268,
+        "renderChunks": 80,
+        "cells": 24,
+        "portals": 0,
+        "regions": 34,
+        "objectPrototypes": 46,
+        "objectStamps": 337,
+        "tiles": 24,
+        "collisionVertices": 10637,
+        "collisionTriangles": 20288
+      },
+      "warnings": []
+    },
+    {
+      "id": 33,
+      "shortName": "misty",
+      "longName": "Misty Thicket",
+      "status": "missing-source",
+      "source": null,
+      "metadata": {
+        "path": "assets/reference/everquest_rof2/zones/misty.json",
+        "sha256": "c455d4ceb7a1f7a6840e9216ecd37d92d312a3dcbcc92b95efb9ec7a9aa0cf7a",
+        "bytes": 93572
+      },
+      "unresolvedObjectIds": [
+        "hohouse",
+        "mstump"
+      ],
+      "warnings": [
+        "unresolved-legacy-object-prototypes"
+      ]
+    },
+    {
+      "id": 34,
+      "shortName": "nro",
+      "longName": "North Ro",
+      "status": "ready",
+      "source": {
+        "path": "assets/reference/everquest_rof2/zones/nro.glb.gz",
+        "sha256": "f40094ff36e2783de190ee352d0a0e96d9df94f7493212cd0b822899aa46fce3",
+        "bytes": 815115
+      },
+      "metadata": {
+        "path": "assets/reference/everquest_rof2/zones/nro.json",
+        "sha256": "7ba7372147ad219557278b9c0ef4b98a8fef29ce801e401dea8381659f8febcc",
+        "bytes": 45214
+      },
+      "authoring": {
+        "path": "shader-object/sandbox/public/shado/worlds/nro.authoring.json",
+        "sha256": "38f48fd5b2d72548064d33d4fa9c42a913aa9a7172ca733187fb91cd1ec4992c",
+        "bytes": 235686
+      },
+      "runtime": {
+        "source": "/eqrequiem/worlds/nro.glb.gz",
+        "scene": {
+          "path": "client/public/eqrequiem/worlds/nro.glb.gz",
+          "sha256": "1841e37bce85b932e1e7199fded23045f3ef57a63a37d951b08a3d08bf9a5dc5",
+          "bytes": 815406
+        },
+        "spatial": {
+          "path": "client/public/eqrequiem/worlds/nro.spatial.json.gz",
+          "sha256": "cbe1184162e6f7ec490371830b6f394973d08b2da38b9f15634b418ab9381bab",
+          "bytes": 74102
+        },
+        "collision": {
+          "path": "client/public/eqrequiem/worlds/nro.collision.bin.gz",
+          "sha256": "78528ad452032d2cdd2fcd699f7e6171a7f36728a39c16dcd066df568b3f6ce8",
+          "bytes": 69688
+        }
+      },
+      "stats": {
+        "primitives": 36,
+        "triangles": 11427,
+        "clusters": 117,
+        "renderChunks": 36,
+        "cells": 86,
+        "portals": 0,
+        "regions": 5,
+        "objectPrototypes": 41,
+        "objectStamps": 345,
+        "tiles": 86,
+        "collisionVertices": 5611,
+        "collisionTriangles": 10922
+      },
+      "warnings": []
+    },
+    {
+      "id": 35,
+      "shortName": "southro",
+      "longName": "South Ro",
+      "status": "pack-failed",
+      "source": {
+        "path": "assets/reference/everquest_rof2/zones/southro.glb.gz",
+        "sha256": "9a8259510eda17571dbbd6ac65c06a1beb25ccb2629e5510a8633ff2f9113fb7",
+        "bytes": 32090
+      },
+      "metadata": null,
+      "error": "World GLB has no indexed triangle primitives",
+      "warnings": [
+        "missing-legacy-metadata"
+      ]
+    },
+    {
+      "id": 36,
+      "shortName": "befallen",
+      "longName": "Befallen",
+      "status": "ready",
+      "source": {
+        "path": "assets/reference/everquest_rof2/zones/befallen.glb.gz",
+        "sha256": "cd85c118acee8dc775eff8ad00598e854a983b5b689eff374570149f659e26e4",
+        "bytes": 520675
+      },
+      "metadata": {
+        "path": "assets/reference/everquest_rof2/zones/befallen.json",
+        "sha256": "f9a78bbe1dd514be33944b2cfbae2b8bcfacde65233a34de6f546ced83d8906d",
+        "bytes": 92645
+      },
+      "authoring": {
+        "path": "shader-object/sandbox/public/shado/worlds/befallen.authoring.json",
+        "sha256": "08b9dc31964450f06ce852967348a1092db1c7eee5dff3db1ed5c97f293a9210",
+        "bytes": 236267
+      },
+      "runtime": {
+        "source": "/eqrequiem/worlds/befallen.glb.gz",
+        "scene": {
+          "path": "client/public/eqrequiem/worlds/befallen.glb.gz",
+          "sha256": "373ab2af59b199cb9e41479718c06a36a3b3fc5e282b2bb9bd436653b9c1c204",
+          "bytes": 526629
+        },
+        "spatial": {
+          "path": "client/public/eqrequiem/worlds/befallen.spatial.json.gz",
+          "sha256": "b06c300bdaae1776d85710d0d5288c0ac3530cdb2e3851b56587e030bc572b4e",
+          "bytes": 140891
+        },
+        "collision": {
+          "path": "client/public/eqrequiem/worlds/befallen.collision.bin.gz",
+          "sha256": "a229177692a3164e323fdb50c22518e81ffddca6ab875a2bcd1e4fe649b55ef3",
+          "bytes": 132262
+        }
+      },
+      "stats": {
+        "primitives": 18,
+        "triangles": 23314,
+        "clusters": 192,
+        "renderChunks": 18,
+        "cells": 8,
+        "portals": 0,
+        "regions": 1,
+        "objectPrototypes": 34,
+        "objectStamps": 346,
+        "tiles": 8,
+        "collisionVertices": 10350,
+        "collisionTriangles": 23275
+      },
+      "warnings": []
+    },
+    {
+      "id": 37,
+      "shortName": "oasis",
+      "longName": "Oasis of Marr",
+      "status": "ready",
+      "source": {
+        "path": "assets/reference/everquest_rof2/zones/oasis.glb.gz",
+        "sha256": "08c6c186ed760d1a204ca647fbc74a84a4278f38a7c1b121aa2c66abd41db243",
+        "bytes": 411961
+      },
+      "metadata": {
+        "path": "assets/reference/everquest_rof2/zones/oasis.json",
+        "sha256": "4de8cded2f6a1cd07260f1de15b0e8e88e8084d9b4f9d9dbdcaf8f60c1277031",
+        "bytes": 40613
+      },
+      "authoring": {
+        "path": "shader-object/sandbox/public/shado/worlds/oasis.authoring.json",
+        "sha256": "a68b7dd413cb52094d24763ab52a3e9dab910bd5e93f44f67a68670ebdc05f09",
+        "bytes": 189041
+      },
+      "runtime": {
+        "source": "/eqrequiem/worlds/oasis.glb.gz",
+        "scene": {
+          "path": "client/public/eqrequiem/worlds/oasis.glb.gz",
+          "sha256": "d909f286cac5c13836888216bcaa7e9e401b6c8d245ce442876d07b393efc203",
+          "bytes": 412355
+        },
+        "spatial": {
+          "path": "client/public/eqrequiem/worlds/oasis.spatial.json.gz",
+          "sha256": "967b6674f15cc663078166640c7f549dba3193c0e4c6552bc83a25a3a246f1e9",
+          "bytes": 75957
+        },
+        "collision": {
+          "path": "client/public/eqrequiem/worlds/oasis.collision.bin.gz",
+          "sha256": "ad6ecce54a2a150731c2cbdc92965c78b2848f22194e9c53f65c728202d306bf",
+          "bytes": 72560
+        }
+      },
+      "stats": {
+        "primitives": 16,
+        "triangles": 12096,
+        "clusters": 103,
+        "renderChunks": 16,
+        "cells": 63,
+        "portals": 0,
+        "regions": 30,
+        "objectPrototypes": 36,
+        "objectStamps": 247,
+        "tiles": 63,
+        "collisionVertices": 5779,
+        "collisionTriangles": 11324
+      },
+      "warnings": []
+    },
+    {
+      "id": 38,
+      "shortName": "tox",
+      "longName": "Toxxulia Forest",
+      "status": "missing-source",
+      "source": null,
+      "metadata": {
+        "path": "assets/reference/everquest_rof2/zones/tox.json",
+        "sha256": "872c469f08065cc253f4fdb43eb9bf22912e4206aac2910661b21e6e4c8c0311",
+        "bytes": 134328
+      },
+      "unresolvedObjectIds": [
+        "erhouse",
+        "erudent",
+        "tbridge",
+        "trunk4",
+        "trunk5"
+      ],
+      "warnings": [
+        "unresolved-legacy-object-prototypes"
+      ]
+    },
+    {
+      "id": 39,
+      "shortName": "hole",
+      "longName": "The Ruins of Old Paineel",
+      "status": "ready",
+      "source": {
+        "path": "assets/reference/everquest_rof2/zones/hole.glb.gz",
+        "sha256": "92987e908ad60c232679dd64b294ff76a4fdff7f3840b7c986bd8ebe9b9ba6ce",
+        "bytes": 2255923
+      },
+      "metadata": {
+        "path": "assets/reference/everquest_rof2/zones/hole.json",
+        "sha256": "de6bed9fb1318d323df6753ab386fd1976503a1199832d12e82e21444abf5077",
+        "bytes": 328909
+      },
+      "authoring": {
+        "path": "shader-object/sandbox/public/shado/worlds/hole.authoring.json",
+        "sha256": "c19e6d5b6bcb9c34a8a95bd0587e1744e306ffb6df9109d713890b358b6a714a",
+        "bytes": 968097
+      },
+      "runtime": {
+        "source": "/eqrequiem/worlds/hole.glb.gz",
+        "scene": {
+          "path": "client/public/eqrequiem/worlds/hole.glb.gz",
+          "sha256": "37e4c1b7fb6780764b82231e02c739bae71ee1e5bbec7442fc601ed672e31bce",
+          "bytes": 2289287
+        },
+        "spatial": {
+          "path": "client/public/eqrequiem/worlds/hole.spatial.json.gz",
+          "sha256": "292ca1176fdfb8af329a1568933d880501af03b242f69ab0baab49fa8b1f8c5c",
+          "bytes": 642520
+        },
+        "collision": {
+          "path": "client/public/eqrequiem/worlds/hole.collision.bin.gz",
+          "sha256": "62200e2717d7145e1a2f37583ae44d24421f1a5b36f0d9c11d7b9d656b602f25",
+          "bytes": 635522
+        }
+      },
+      "stats": {
+        "primitives": 80,
+        "triangles": 115921,
+        "clusters": 958,
+        "renderChunks": 80,
+        "cells": 30,
+        "portals": 0,
+        "regions": 31,
+        "objectPrototypes": 58,
+        "objectStamps": 1445,
+        "tiles": 30,
+        "collisionVertices": 53528,
+        "collisionTriangles": 112214
+      },
+      "warnings": []
+    },
+    {
+      "id": 40,
+      "shortName": "neriaka",
+      "longName": "Neriak Foreign Quarter",
+      "status": "ready",
+      "source": {
+        "path": "assets/reference/everquest_rof2/zones/neriaka.glb.gz",
+        "sha256": "cadc42eec8a40e20e17d24997fc0c22eb9298d178bcf19994fb1489b725b6c22",
+        "bytes": 1900630
+      },
+      "metadata": {
+        "path": "assets/reference/everquest_rof2/zones/neriaka.json",
+        "sha256": "c13cf759141cc11769562dd36d0d170cd00fd22ceb06bcce0b758fbd9b6829ff",
+        "bytes": 129340
+      },
+      "authoring": {
+        "path": "shader-object/sandbox/public/shado/worlds/neriaka.authoring.json",
+        "sha256": "1c6bce2a1cdd3cf535658c6cc8a032c4fd35d3f6bcb662ab1e43020d1e7f2d70",
+        "bytes": 364971
+      },
+      "runtime": {
+        "source": "/eqrequiem/worlds/neriaka.glb.gz",
+        "scene": {
+          "path": "client/public/eqrequiem/worlds/neriaka.glb.gz",
+          "sha256": "4d6b8b485ed1c2c0796bb9c21ed4273b33527118c01acc6db14b07104c27137b",
+          "bytes": 1903018
+        },
+        "spatial": {
+          "path": "client/public/eqrequiem/worlds/neriaka.spatial.json.gz",
+          "sha256": "d0a19a7a6c4541eaee8733199137018d8a7d928900f3aad397962dc70872fc36",
+          "bytes": 126729
+        },
+        "collision": {
+          "path": "client/public/eqrequiem/worlds/neriaka.collision.bin.gz",
+          "sha256": "a4d3636a9e7f382924f1d6f7f09db00ce8e68950c79b13b0ad7c0d827188357d",
+          "bytes": 122654
+        }
+      },
+      "stats": {
+        "primitives": 124,
+        "triangles": 21874,
+        "clusters": 258,
+        "renderChunks": 124,
+        "cells": 10,
+        "portals": 0,
+        "regions": 5,
+        "objectPrototypes": 81,
+        "objectStamps": 525,
+        "tiles": 10,
+        "collisionVertices": 10738,
+        "collisionTriangles": 21747
+      },
+      "warnings": []
+    },
+    {
+      "id": 41,
+      "shortName": "neriakb",
+      "longName": "Neriak Commons",
+      "status": "ready",
+      "source": {
+        "path": "assets/reference/everquest_rof2/zones/neriakb.glb.gz",
+        "sha256": "23facb55c2688869ea38d1a950394ef2e4eb3d6b73c64a222db94e77a5270173",
+        "bytes": 1889067
+      },
+      "metadata": {
+        "path": "assets/reference/everquest_rof2/zones/neriakb.json",
+        "sha256": "e35fbad12e424fe7c5b54e1f020f400d7e758afc64da8704613c477b7b171132",
+        "bytes": 109446
+      },
+      "authoring": {
+        "path": "shader-object/sandbox/public/shado/worlds/neriakb.authoring.json",
+        "sha256": "b8bd9493c536b1f98f72ecfcba5e42261a3dd1ee96e98996895fd33a152becb7",
+        "bytes": 276369
+      },
+      "runtime": {
+        "source": "/eqrequiem/worlds/neriakb.glb.gz",
+        "scene": {
+          "path": "client/public/eqrequiem/worlds/neriakb.glb.gz",
+          "sha256": "8377f128b3f7e2e752f79a9ebe53118beaf9bc558b761840dcd0269d45a4590c",
+          "bytes": 1895842
+        },
+        "spatial": {
+          "path": "client/public/eqrequiem/worlds/neriakb.spatial.json.gz",
+          "sha256": "0ad3f406234ee0fa7362b8cb792652619354163a23a5a1c4fe75affe8e5ba139",
+          "bytes": 196762
+        },
+        "collision": {
+          "path": "client/public/eqrequiem/worlds/neriakb.collision.bin.gz",
+          "sha256": "ab0579cacab8ef751c07105875cc43d0fc34de908e1a1c4a7c186fd7172bb879",
+          "bytes": 196288
+        }
+      },
+      "stats": {
+        "primitives": 110,
+        "triangles": 36395,
+        "clusters": 363,
+        "renderChunks": 110,
+        "cells": 11,
+        "portals": 0,
+        "regions": 7,
+        "objectPrototypes": 69,
+        "objectStamps": 387,
+        "tiles": 11,
+        "collisionVertices": 17218,
+        "collisionTriangles": 34578
+      },
+      "warnings": []
+    },
+    {
+      "id": 42,
+      "shortName": "neriakc",
+      "longName": "Neriak Third Gate",
+      "status": "ready",
+      "source": {
+        "path": "assets/reference/everquest_rof2/zones/neriakc.glb.gz",
+        "sha256": "877a6e12bfff7e664d2ccb2c3e1157a19174d9b8547a80580eca60ad7177a559",
+        "bytes": 1587147
+      },
+      "metadata": {
+        "path": "assets/reference/everquest_rof2/zones/neriakc.json",
+        "sha256": "d178862a0fb91e745a7f81c93d502c232e4f3b02b00d39349ded084c31f9b609",
+        "bytes": 175673
+      },
+      "authoring": {
+        "path": "shader-object/sandbox/public/shado/worlds/neriakc.authoring.json",
+        "sha256": "45864f5404d844851c13888a5389be3dddceaa298151ae0361a250bb852e0c72",
+        "bytes": 316866
+      },
+      "runtime": {
+        "source": "/eqrequiem/worlds/neriakc.glb.gz",
+        "scene": {
+          "path": "client/public/eqrequiem/worlds/neriakc.glb.gz",
+          "sha256": "0b7f5d49d1814d43736b96a36041f60cad09e228afda2f707e6e64a2857d00bd",
+          "bytes": 1597732
+        },
+        "spatial": {
+          "path": "client/public/eqrequiem/worlds/neriakc.spatial.json.gz",
+          "sha256": "d79ad4195ee3c2c15ea3638553c594406119242d466509ab73859254cc910f8d",
+          "bytes": 259180
+        },
+        "collision": {
+          "path": "client/public/eqrequiem/worlds/neriakc.collision.bin.gz",
+          "sha256": "fa71a523461a81f3c8f4f77448ac21f8cb1b13ff0dd8597a19d4a50e839c1645",
+          "bytes": 244814
+        }
+      },
+      "stats": {
+        "primitives": 83,
+        "triangles": 46138,
+        "clusters": 415,
+        "renderChunks": 83,
+        "cells": 20,
+        "portals": 0,
+        "regions": 13,
+        "objectPrototypes": 82,
+        "objectStamps": 438,
+        "tiles": 20,
+        "collisionVertices": 21750,
+        "collisionTriangles": 43320
+      },
+      "warnings": []
+    },
+    {
+      "id": 43,
+      "shortName": "neriakd",
+      "longName": "Neriak Palace",
+      "status": "missing-source",
+      "source": null,
+      "metadata": null,
+      "unresolvedObjectIds": [],
+      "warnings": [
+        "missing-legacy-metadata"
+      ]
+    },
+    {
+      "id": 44,
+      "shortName": "najena",
+      "longName": "Najena",
+      "status": "ready",
+      "source": {
+        "path": "assets/reference/everquest_rof2/zones/najena.glb.gz",
+        "sha256": "a7ca678bf85252c3c5550601af287e5b32a06bf76b757566bcdc6f64b695f7e2",
+        "bytes": 502412
+      },
+      "metadata": {
+        "path": "assets/reference/everquest_rof2/zones/najena.json",
+        "sha256": "2086cd1b343ad5c694092e7f55fad03d67e9ec97067d67c1ab75b261f0fde048",
+        "bytes": 122747
+      },
+      "authoring": {
+        "path": "shader-object/sandbox/public/shado/worlds/najena.authoring.json",
+        "sha256": "0bed5eca3ce830a8511b7dfa71a57bc5074616e9863b29a5ab5d191dd106a14b",
+        "bytes": 280493
+      },
+      "runtime": {
+        "source": "/eqrequiem/worlds/najena.glb.gz",
+        "scene": {
+          "path": "client/public/eqrequiem/worlds/najena.glb.gz",
+          "sha256": "1f33300e435a7c2d52d4b8a3bb5cde21d3c485a56a5424f969cf55408e854ee3",
+          "bytes": 505340
+        },
+        "spatial": {
+          "path": "client/public/eqrequiem/worlds/najena.spatial.json.gz",
+          "sha256": "04e48fccc4dc19037d46ca336ccc4d97a0b0371d06f53911a0d0e1a41a7eedc7",
+          "bytes": 76802
+        },
+        "collision": {
+          "path": "client/public/eqrequiem/worlds/najena.collision.bin.gz",
+          "sha256": "4276de966e2650eaede8e982d4fdd2f433c6f82356667047d40c91a7e6c55605",
+          "bytes": 62750
+        }
+      },
+      "stats": {
+        "primitives": 42,
+        "triangles": 11588,
+        "clusters": 119,
+        "renderChunks": 42,
+        "cells": 12,
+        "portals": 0,
+        "regions": 3,
+        "objectPrototypes": 36,
+        "objectStamps": 414,
+        "tiles": 12,
+        "collisionVertices": 5255,
+        "collisionTriangles": 11224
+      },
+      "warnings": []
+    },
+    {
+      "id": 45,
+      "shortName": "qcat",
+      "longName": "Qeynos Catacombs",
+      "status": "ready",
+      "source": {
+        "path": "assets/reference/everquest_rof2/zones/qcat.glb.gz",
+        "sha256": "f3ae2338517022d57d3b827fe53eac90ddc393c89edc402ab63cbc10f1c363c9",
+        "bytes": 765283
+      },
+      "metadata": {
+        "path": "assets/reference/everquest_rof2/zones/qcat.json",
+        "sha256": "78f2bbab73fbb53afce0f565faf6f04489805c0e7ff2af91d4d68fcc3336e357",
+        "bytes": 82925
+      },
+      "authoring": {
+        "path": "shader-object/sandbox/public/shado/worlds/qcat.authoring.json",
+        "sha256": "29f360cb493303688e34ee211982abe56e6e23b9d62a597b8f8a11e7151e3be4",
+        "bytes": 74189
+      },
+      "runtime": {
+        "source": "/eqrequiem/worlds/qcat.glb.gz",
+        "scene": {
+          "path": "client/public/eqrequiem/worlds/qcat.glb.gz",
+          "sha256": "fd32648652ca352b03f32f53cae57b3a344d4faff5a65dc86465e680822d5427",
+          "bytes": 767887
+        },
+        "spatial": {
+          "path": "client/public/eqrequiem/worlds/qcat.spatial.json.gz",
+          "sha256": "f3cdf3e138fbe42ed0deec516aba95cda993d88543f68cef08fc21a8efeb2b3f",
+          "bytes": 57892
+        },
+        "collision": {
+          "path": "client/public/eqrequiem/worlds/qcat.collision.bin.gz",
+          "sha256": "878cf8442e521b386b52da6a56e5dc939a635d561b11bf3c35ea540dc22579d4",
+          "bytes": 42875
+        }
+      },
+      "stats": {
+        "primitives": 46,
+        "triangles": 9938,
+        "clusters": 114,
+        "renderChunks": 46,
+        "cells": 14,
+        "portals": 0,
+        "regions": 18,
+        "objectPrototypes": 14,
+        "objectStamps": 93,
+        "tiles": 14,
+        "collisionVertices": 3731,
+        "collisionTriangles": 7491
+      },
+      "warnings": []
+    },
+    {
+      "id": 46,
+      "shortName": "innothule",
+      "longName": "Innothule Swamp",
+      "status": "missing-source",
+      "source": null,
+      "metadata": {
+        "path": "assets/reference/everquest_rof2/zones/innothule.json",
+        "sha256": "df9c2e3717a018896d532e5a73d927a15bf44e1ec523b69e23bc6ba24cb273b7",
+        "bytes": 232610
+      },
+      "unresolvedObjectIds": [
+        "fboatw",
+        "hand",
+        "trleanto"
+      ],
+      "warnings": [
+        "unresolved-legacy-object-prototypes"
+      ]
+    },
+    {
+      "id": 47,
+      "shortName": "feerrott",
+      "longName": "The Feerrott(A)",
+      "status": "ready",
+      "source": {
+        "path": "assets/reference/everquest_rof2/zones/feerrott.glb.gz",
+        "sha256": "7f7daf74ed147294be148fd757157f1cd61957aaf47e76a2d1ad562e0bb12a48",
+        "bytes": 1491179
+      },
+      "metadata": {
+        "path": "assets/reference/everquest_rof2/zones/feerrott.json",
+        "sha256": "9474db385f1126efc5080d0e9365fea7113490a51fb9ea67f859ab958d0925dc",
+        "bytes": 252393
+      },
+      "authoring": {
+        "path": "shader-object/sandbox/public/shado/worlds/feerrott.authoring.json",
+        "sha256": "a71968f1a26a81105ea3274cc692f23af0419e792fb6cd83a506d1bc3d7e8a4d",
+        "bytes": 1339271
+      },
+      "runtime": {
+        "source": "/eqrequiem/worlds/feerrott.glb.gz",
+        "scene": {
+          "path": "client/public/eqrequiem/worlds/feerrott.glb.gz",
+          "sha256": "ecf6e1a35a5c41e0bdacd1816fac71d47927b842c1af8814e426aedac37c9ca3",
+          "bytes": 1492360
+        },
+        "spatial": {
+          "path": "client/public/eqrequiem/worlds/feerrott.spatial.json.gz",
+          "sha256": "91823e38678ab246ce74ebc0749a86112f8650c851d4d43cf112cd7c5f6a3579",
+          "bytes": 205253
+        },
+        "collision": {
+          "path": "client/public/eqrequiem/worlds/feerrott.collision.bin.gz",
+          "sha256": "2a2f5fa1eff98cdec15e7b8d5afac19ab3d997df8aa722878300c3ff899430f3",
+          "bytes": 180662
+        }
+      },
+      "stats": {
+        "primitives": 62,
+        "triangles": 28121,
+        "clusters": 258,
+        "renderChunks": 62,
+        "cells": 140,
+        "portals": 0,
+        "regions": 7,
+        "objectPrototypes": 34,
+        "objectStamps": 2088,
+        "tiles": 140,
+        "collisionVertices": 14243,
+        "collisionTriangles": 27429
+      },
+      "warnings": []
+    },
+    {
+      "id": 48,
+      "shortName": "cazicthule",
+      "longName": "Cazic-Thule",
+      "status": "ready",
+      "source": {
+        "path": "assets/reference/everquest_rof2/zones/cazicthule.glb.gz",
+        "sha256": "be5aa8d30e313c50b15eef1d5dfd1308c8b27f861177ea53d6f87404be7192be",
+        "bytes": 1040365
+      },
+      "metadata": {
+        "path": "assets/reference/everquest_rof2/zones/cazicthule.json",
+        "sha256": "b6879e86f2499285b34192f23d188d4f1129302251af5996b096f6ba911ac61e",
+        "bytes": 219540
+      },
+      "authoring": {
+        "path": "shader-object/sandbox/public/shado/worlds/cazicthule.authoring.json",
+        "sha256": "74468332d782a8a1dd1d59724ec75b3a84d425103c9bc836f0fffabf4a988bd6",
+        "bytes": 343118
+      },
+      "runtime": {
+        "source": "/eqrequiem/worlds/cazicthule.glb.gz",
+        "scene": {
+          "path": "client/public/eqrequiem/worlds/cazicthule.glb.gz",
+          "sha256": "8d19dad3f587cb9be309eb15035f0f5cb04f118955509a737f606c503137ec6c",
+          "bytes": 1048207
+        },
+        "spatial": {
+          "path": "client/public/eqrequiem/worlds/cazicthule.spatial.json.gz",
+          "sha256": "c007a82c7c6612bd0df6557584f5e62c4f27ea89f8d753c575febcf5923e248f",
+          "bytes": 183450
+        },
+        "collision": {
+          "path": "client/public/eqrequiem/worlds/cazicthule.collision.bin.gz",
+          "sha256": "2453b4a4e2d7f613b3b6a15c9effb792bd25fc19da73ab13a947d62dcbca6bbe",
+          "bytes": 134072
+        }
+      },
+      "stats": {
+        "primitives": 55,
+        "triangles": 33010,
+        "clusters": 288,
+        "renderChunks": 55,
+        "cells": 18,
+        "portals": 0,
+        "regions": 120,
+        "objectPrototypes": 34,
+        "objectStamps": 416,
+        "tiles": 18,
+        "collisionVertices": 11720,
+        "collisionTriangles": 23057
+      },
+      "warnings": []
+    },
+    {
+      "id": 49,
+      "shortName": "oggok",
+      "longName": "Oggok",
+      "status": "ready",
+      "source": {
+        "path": "assets/reference/everquest_rof2/zones/oggok.glb.gz",
+        "sha256": "c541a611f1b40589d8b284330f6385fd5545d51ded8819c1c28cc94661d391b1",
+        "bytes": 763740
+      },
+      "metadata": {
+        "path": "assets/reference/everquest_rof2/zones/oggok.json",
+        "sha256": "3d71696abfc6ce09eb0eb2dd32ec538473df1f144f209c27ee6fd774ce3f4942",
+        "bytes": 144865
+      },
+      "authoring": {
+        "path": "shader-object/sandbox/public/shado/worlds/oggok.authoring.json",
+        "sha256": "24aaa2b1f9602de18b0f5de81ccc1e5a82ef8f108f620308acd35c022842c874",
+        "bytes": 253578
+      },
+      "runtime": {
+        "source": "/eqrequiem/worlds/oggok.glb.gz",
+        "scene": {
+          "path": "client/public/eqrequiem/worlds/oggok.glb.gz",
+          "sha256": "97c5fb1977e6129a4f92b4d4024fbe28928165d866337c9a4f3b35ab8a710e94",
+          "bytes": 767811
+        },
+        "spatial": {
+          "path": "client/public/eqrequiem/worlds/oggok.spatial.json.gz",
+          "sha256": "b580ebc329255b1dfb5377fd26da6a7cbd2fe4e2e0779aff5af418f64bef9dea",
+          "bytes": 96042
+        },
+        "collision": {
+          "path": "client/public/eqrequiem/worlds/oggok.collision.bin.gz",
+          "sha256": "27a8b3eb13f0e975dbd73518bd771222dafe4e11508f321e4382b3318d79bee0",
+          "bytes": 80427
+        }
+      },
+      "stats": {
+        "primitives": 35,
+        "triangles": 15319,
+        "clusters": 142,
+        "renderChunks": 35,
+        "cells": 22,
+        "portals": 0,
+        "regions": 7,
+        "objectPrototypes": 32,
+        "objectStamps": 370,
+        "tiles": 22,
+        "collisionVertices": 6984,
+        "collisionTriangles": 14035
+      },
+      "warnings": []
+    },
+    {
+      "id": 50,
+      "shortName": "rathemtn",
+      "longName": "Mountains of Rathe",
+      "status": "ready",
+      "source": {
+        "path": "assets/reference/everquest_rof2/zones/rathemtn.glb.gz",
+        "sha256": "e6838f3aec34b09ee7df968304de2e84d8e9925d24789d118aeabcb950b59d65",
+        "bytes": 1051701
+      },
+      "metadata": {
+        "path": "assets/reference/everquest_rof2/zones/rathemtn.json",
+        "sha256": "c723f15344b84ba4abe6bf9bb9fc7be1b50cad79c51f55ef25f5e95ebd8d57b5",
+        "bytes": 238292
+      },
+      "authoring": {
+        "path": "shader-object/sandbox/public/shado/worlds/rathemtn.authoring.json",
+        "sha256": "8b511040212a067ced68993abbef09a1f9ca9a223d06291759e13aeb372eeea4",
+        "bytes": 1342210
+      },
+      "runtime": {
+        "source": "/eqrequiem/worlds/rathemtn.glb.gz",
+        "scene": {
+          "path": "client/public/eqrequiem/worlds/rathemtn.glb.gz",
+          "sha256": "d49454c7b29f130c236d44a6314e49f5fa75b6c5e83094b73e34f10136ec71e9",
+          "bytes": 1054878
+        },
+        "spatial": {
+          "path": "client/public/eqrequiem/worlds/rathemtn.spatial.json.gz",
+          "sha256": "7962ecddedef1622231490e2b49f817e28fe483d738fbd1d4670f57bd52c968c",
+          "bytes": 259729
+        },
+        "collision": {
+          "path": "client/public/eqrequiem/worlds/rathemtn.collision.bin.gz",
+          "sha256": "7eae488889dcbc485d23d42594a1fd78bc71f7eadf6c93e4ee54bc83d22ac66a",
+          "bytes": 248750
+        }
+      },
+      "stats": {
+        "primitives": 24,
+        "triangles": 37630,
+        "clusters": 309,
+        "renderChunks": 24,
+        "cells": 197,
+        "portals": 0,
+        "regions": 2,
+        "objectPrototypes": 70,
+        "objectStamps": 2087,
+        "tiles": 197,
+        "collisionVertices": 19684,
+        "collisionTriangles": 37630
+      },
+      "warnings": []
+    },
+    {
+      "id": 51,
+      "shortName": "lakerathe",
+      "longName": "Lake Rathetear",
+      "status": "ready",
+      "source": {
+        "path": "assets/reference/everquest_rof2/zones/lakerathe.glb.gz",
+        "sha256": "cc0dfdf6dc638fff6533f814dc7fc79cef3e958f2a75b6b8f611db3d84936e37",
+        "bytes": 793762
+      },
+      "metadata": {
+        "path": "assets/reference/everquest_rof2/zones/lakerathe.json",
+        "sha256": "a5e733e4c7aa8bce8c81edea36eb9bb591c6bcd930e4fdfc8a019971cf49601e",
+        "bytes": 102065
+      },
+      "authoring": {
+        "path": "shader-object/sandbox/public/shado/worlds/lakerathe.authoring.json",
+        "sha256": "18d48ab451455ceef6cdffeabea922d716b53e158478895c99ca2cc544d859e3",
+        "bytes": 319392
+      },
+      "runtime": {
+        "source": "/eqrequiem/worlds/lakerathe.glb.gz",
+        "scene": {
+          "path": "client/public/eqrequiem/worlds/lakerathe.glb.gz",
+          "sha256": "caf9cdf7e75a0c080080e38f06e9da3764bfc33e224775ffbe21fc1da8a714e8",
+          "bytes": 794502
+        },
+        "spatial": {
+          "path": "client/public/eqrequiem/worlds/lakerathe.spatial.json.gz",
+          "sha256": "b9f056e5b6a294c51bf89aaee8ad42d2a082072ad29c614ecd514b04d9085ee3",
+          "bytes": 180925
+        },
+        "collision": {
+          "path": "client/public/eqrequiem/worlds/lakerathe.collision.bin.gz",
+          "sha256": "41570e4ae32634b6b6e00bb1d9d381fe9a8fdf8f41f175cc879d35cd1a570656",
+          "bytes": 193698
+        }
+      },
+      "stats": {
+        "primitives": 19,
+        "triangles": 30796,
+        "clusters": 252,
+        "renderChunks": 19,
+        "cells": 164,
+        "portals": 0,
+        "regions": 49,
+        "objectPrototypes": 66,
+        "objectStamps": 416,
+        "tiles": 164,
+        "collisionVertices": 14998,
+        "collisionTriangles": 29572
+      },
+      "warnings": []
+    },
+    {
+      "id": 52,
+      "shortName": "grobb",
+      "longName": "Grobb",
+      "status": "ready",
+      "source": {
+        "path": "assets/reference/everquest_rof2/zones/grobb.glb.gz",
+        "sha256": "f4cd953fdc737df18cd8eb406c64c749c43fe46a878dd1e7a88eaf9d0613a002",
+        "bytes": 874720
+      },
+      "metadata": {
+        "path": "assets/reference/everquest_rof2/zones/grobb.json",
+        "sha256": "6b9516d1feeb25478ad7c10a8b0247437be7d625c428dd52be8e4f305c12715d",
+        "bytes": 62567
+      },
+      "authoring": {
+        "path": "shader-object/sandbox/public/shado/worlds/grobb.authoring.json",
+        "sha256": "ee8ea0142b77a0ea43829a53a7defd435f017a144498a1439d5d8238c3b499e0",
+        "bytes": 156804
+      },
+      "runtime": {
+        "source": "/eqrequiem/worlds/grobb.glb.gz",
+        "scene": {
+          "path": "client/public/eqrequiem/worlds/grobb.glb.gz",
+          "sha256": "1df1999e407d3af850d7499e3c042316ba5bbf5395e54e23a6b59d3af5179a83",
+          "bytes": 880313
+        },
+        "spatial": {
+          "path": "client/public/eqrequiem/worlds/grobb.spatial.json.gz",
+          "sha256": "36602ba70b74acce96bb277bd05e1f9247175efc6fde8fa2f692859d5dc51395",
+          "bytes": 130101
+        },
+        "collision": {
+          "path": "client/public/eqrequiem/worlds/grobb.collision.bin.gz",
+          "sha256": "b023b0c4eeb6026879e67425068bbdcf1635f7faa13df33e0a77856060371d07",
+          "bytes": 114787
+        }
+      },
+      "stats": {
+        "primitives": 45,
+        "triangles": 22235,
+        "clusters": 206,
+        "renderChunks": 45,
+        "cells": 13,
+        "portals": 0,
+        "regions": 9,
+        "objectPrototypes": 35,
+        "objectStamps": 217,
+        "tiles": 13,
+        "collisionVertices": 9864,
+        "collisionTriangles": 19371
+      },
+      "warnings": []
+    },
+    {
+      "id": 54,
+      "shortName": "gfaydark",
+      "longName": "The Greater Faydark",
+      "status": "ready",
+      "source": {
+        "path": "assets/reference/everquest_rof2/zones/gfaydark.glb.gz",
+        "sha256": "841e84a798dc5fd088e75069c942dd8c058ca2b5f2cf83cfcc17a3b59ac9cf6b",
+        "bytes": 1666133
+      },
+      "metadata": {
+        "path": "assets/reference/everquest_rof2/zones/gfaydark.json",
+        "sha256": "03949919af6faa29a2b306df47d855ee461a724aade37346511b8462ea8cae95",
+        "bytes": 357833
+      },
+      "authoring": {
+        "path": "shader-object/sandbox/public/shado/worlds/gfaydark.authoring.json",
+        "sha256": "d53a919e8224cf32ada00b24fcbf1eaf9e0e1a2e41d7c8d62586f94c705cb3eb",
+        "bytes": 1895723
+      },
+      "runtime": {
+        "source": "/eqrequiem/worlds/gfaydark.glb.gz",
+        "scene": {
+          "path": "client/public/eqrequiem/worlds/gfaydark.glb.gz",
+          "sha256": "b6e755c4d7e63557ad8c687cc0e3cce920fcb10550e9fc528b42ff95adc106c6",
+          "bytes": 1678169
+        },
+        "spatial": {
+          "path": "client/public/eqrequiem/worlds/gfaydark.spatial.json.gz",
+          "sha256": "a469d57f2fbd9e425a98d9917b7b6f48c52f1e3b530e00786f4ad977db806c5e",
+          "bytes": 506674
+        },
+        "collision": {
+          "path": "client/public/eqrequiem/worlds/gfaydark.collision.bin.gz",
+          "sha256": "a4ff515d1fb18c72e30d41d5fd5cc6c2db79506f474dda67948b4a91df3923cf",
+          "bytes": 457393
+        }
+      },
+      "stats": {
+        "primitives": 42,
+        "triangles": 74981,
+        "clusters": 612,
+        "renderChunks": 42,
+        "cells": 171,
+        "portals": 0,
+        "regions": 4,
+        "objectPrototypes": 79,
+        "objectStamps": 2829,
+        "tiles": 171,
+        "collisionVertices": 38938,
+        "collisionTriangles": 71654
+      },
+      "warnings": []
+    },
+    {
+      "id": 55,
+      "shortName": "akanon",
+      "longName": "Ak'Anon",
+      "status": "ready",
+      "source": {
+        "path": "assets/reference/everquest_rof2/zones/akanon.glb.gz",
+        "sha256": "d32a6cca1b7e0d9e9fabdbaba5d693505fb34446f13e0801e141863572ce3084",
+        "bytes": 1070300
+      },
+      "metadata": {
+        "path": "assets/reference/everquest_rof2/zones/akanon.json",
+        "sha256": "37ba38a324904dd21366ecae281bcafaa1e400790ec452fbd06a62838526d103",
+        "bytes": 201309
+      },
+      "authoring": {
+        "path": "shader-object/sandbox/public/shado/worlds/akanon.authoring.json",
+        "sha256": "0c73f67e80e1954803572f2ca38183ada9b753dcaf1c4ac836c0e13c316b507a",
+        "bytes": 308571
+      },
+      "runtime": {
+        "source": "/eqrequiem/worlds/akanon.glb.gz",
+        "scene": {
+          "path": "client/public/eqrequiem/worlds/akanon.glb.gz",
+          "sha256": "73a593543caedeee71ca4ee68bdaed65d356eb2aaa9604bea94c19351d5d4854",
+          "bytes": 1076942
+        },
+        "spatial": {
+          "path": "client/public/eqrequiem/worlds/akanon.spatial.json.gz",
+          "sha256": "5eaebf32f1693fe314c6af641ec40dae3b4e7cc4562ef7616c39415ca0f1340c",
+          "bytes": 204582
+        },
+        "collision": {
+          "path": "client/public/eqrequiem/worlds/akanon.collision.bin.gz",
+          "sha256": "de81fec8158fa39b574a56bae7d7fb0561aaf1eb5f2f6906204ce2b5366a3f52",
+          "bytes": 181138
+        }
+      },
+      "stats": {
+        "primitives": 61,
+        "triangles": 36325,
+        "clusters": 322,
+        "renderChunks": 61,
+        "cells": 27,
+        "portals": 0,
+        "regions": 5,
+        "objectPrototypes": 36,
+        "objectStamps": 452,
+        "tiles": 27,
+        "collisionVertices": 15972,
+        "collisionTriangles": 32024
+      },
+      "warnings": []
+    },
+    {
+      "id": 56,
+      "shortName": "steamfont",
+      "longName": "Steamfont Mountains",
+      "status": "missing-source",
+      "source": null,
+      "metadata": {
+        "path": "assets/reference/everquest_rof2/zones/steamfont.json",
+        "sha256": "4a13ade364009172891d1d71e519d1b200d13a9a57d07213b529657105bf32b3",
+        "bytes": 116827
+      },
+      "unresolvedObjectIds": [
+        "gdrag",
+        "minecover",
+        "shaft1",
+        "wmill"
+      ],
+      "warnings": [
+        "unresolved-legacy-object-prototypes"
+      ]
+    },
+    {
+      "id": 57,
+      "shortName": "lfaydark",
+      "longName": "The Lesser Faydark",
+      "status": "ready",
+      "source": {
+        "path": "assets/reference/everquest_rof2/zones/lfaydark.glb.gz",
+        "sha256": "9b450091a6f7eb2c84174e1c0c8cfac5ae632b6652d1be07b705eda799af579d",
+        "bytes": 645566
+      },
+      "metadata": {
+        "path": "assets/reference/everquest_rof2/zones/lfaydark.json",
+        "sha256": "8818f44fd97430b80dbe1b5546728878ffb2284012b1544de0fcbbf89e6a7067",
+        "bytes": 274513
+      },
+      "authoring": {
+        "path": "shader-object/sandbox/public/shado/worlds/lfaydark.authoring.json",
+        "sha256": "baf062acb1e622f754849b3fe2edc519ff242e394ad264efb3cabbd27b06e3e5",
+        "bytes": 1481158
+      },
+      "runtime": {
+        "source": "/eqrequiem/worlds/lfaydark.glb.gz",
+        "scene": {
+          "path": "client/public/eqrequiem/worlds/lfaydark.glb.gz",
+          "sha256": "8e212d6f00325edbba7326a3b5975228651a1daddb4e4f564213abfcf0936853",
+          "bytes": 644125
+        },
+        "spatial": {
+          "path": "client/public/eqrequiem/worlds/lfaydark.spatial.json.gz",
+          "sha256": "34747531a40f138a616bef58ec7ba07fb8a9b15eea523198f082110408aa15e1",
+          "bytes": 208156
+        },
+        "collision": {
+          "path": "client/public/eqrequiem/worlds/lfaydark.collision.bin.gz",
+          "sha256": "445789d614e510c830ea61c7a6dbb31ee5815f6a4f3d6a8da9638e49b43a6d2a",
+          "bytes": 157591
+        }
+      },
+      "stats": {
+        "primitives": 17,
+        "triangles": 25000,
+        "clusters": 207,
+        "renderChunks": 17,
+        "cells": 135,
+        "portals": 0,
+        "regions": 4,
+        "objectPrototypes": 56,
+        "objectStamps": 2207,
+        "tiles": 135,
+        "collisionVertices": 12757,
+        "collisionTriangles": 25000
+      },
+      "warnings": []
+    },
+    {
+      "id": 58,
+      "shortName": "crushbone",
+      "longName": "Clan Crushbone",
+      "status": "ready",
+      "source": {
+        "path": "assets/reference/everquest_rof2/zones/crushbone.glb.gz",
+        "sha256": "1e4381b3c46e9bccb1b311a9b6e7af0d2aa8b7f4853154f3d5a181fe2abd3a40",
+        "bytes": 967217
+      },
+      "metadata": {
+        "path": "assets/reference/everquest_rof2/zones/crushbone.json",
+        "sha256": "116a68ee4ec0a09dc89cd3bf256ab899a0af7569ea9268991e45f9791f614989",
+        "bytes": 74160
+      },
+      "authoring": {
+        "path": "shader-object/sandbox/public/shado/worlds/crushbone.authoring.json",
+        "sha256": "da33bed067fefcf3488a4fae25ad11813159d7b41015637058cc9d39dafb2027",
+        "bytes": 131793
+      },
+      "runtime": {
+        "source": "/eqrequiem/worlds/crushbone.glb.gz",
+        "scene": {
+          "path": "client/public/eqrequiem/worlds/crushbone.glb.gz",
+          "sha256": "ada3a9ccaf312efc828ec372a41b9cbb958316e879b4841819ac9b602261f780",
+          "bytes": 973101
+        },
+        "spatial": {
+          "path": "client/public/eqrequiem/worlds/crushbone.spatial.json.gz",
+          "sha256": "1dba61c8d1786964a827cd5f0976eeaeb691f28093ef81a6b3acaa59f8e4afc1",
+          "bytes": 123558
+        },
+        "collision": {
+          "path": "client/public/eqrequiem/worlds/crushbone.collision.bin.gz",
+          "sha256": "f8a0aa8c991af6539f2f48bc30521b9faf2a3037a4108090b4e32be5bc0476c7",
+          "bytes": 118223
+        }
+      },
+      "stats": {
+        "primitives": 46,
+        "triangles": 21834,
+        "clusters": 199,
+        "renderChunks": 46,
+        "cells": 14,
+        "portals": 0,
+        "regions": 7,
+        "objectPrototypes": 42,
+        "objectStamps": 178,
+        "tiles": 14,
+        "collisionVertices": 9871,
+        "collisionTriangles": 19783
+      },
+      "warnings": []
+    },
+    {
+      "id": 59,
+      "shortName": "mistmoore",
+      "longName": "Castle Mistmoore",
+      "status": "ready",
+      "source": {
+        "path": "assets/reference/everquest_rof2/zones/mistmoore.glb.gz",
+        "sha256": "febfef44694560cfde7ebf7df1936501683f2919ced79ce40e437eec599ea039",
+        "bytes": 967105
+      },
+      "metadata": {
+        "path": "assets/reference/everquest_rof2/zones/mistmoore.json",
+        "sha256": "ff4000b9a576d14a89cf83f6e4e4a9888d042f5ed4e8db2a879deb2a820b6b93",
+        "bytes": 120314
+      },
+      "authoring": {
+        "path": "shader-object/sandbox/public/shado/worlds/mistmoore.authoring.json",
+        "sha256": "68b08b6607acf48af6c9083d87301bab0dd2fc98020a8515e885487cca4a2bf5",
+        "bytes": 279262
+      },
+      "runtime": {
+        "source": "/eqrequiem/worlds/mistmoore.glb.gz",
+        "scene": {
+          "path": "client/public/eqrequiem/worlds/mistmoore.glb.gz",
+          "sha256": "1cf918c77f8865896887c1d8cee58e0fbe61e6bb7ac841611ce3cfeb1b9ed42c",
+          "bytes": 971247
+        },
+        "spatial": {
+          "path": "client/public/eqrequiem/worlds/mistmoore.spatial.json.gz",
+          "sha256": "8f246d7a4cfb289a4418820a56f6460b92a2b98c19fab161c65cecb34796095e",
+          "bytes": 151518
+        },
+        "collision": {
+          "path": "client/public/eqrequiem/worlds/mistmoore.collision.bin.gz",
+          "sha256": "bd0f068eb270ff051a00bfb56dd965b2ab683da37492e3f50cfa710b659871c2",
+          "bytes": 147893
+        }
+      },
+      "stats": {
+        "primitives": 58,
+        "triangles": 26977,
+        "clusters": 249,
+        "renderChunks": 58,
+        "cells": 9,
+        "portals": 0,
+        "regions": 4,
+        "objectPrototypes": 39,
+        "objectStamps": 401,
+        "tiles": 9,
+        "collisionVertices": 12931,
+        "collisionTriangles": 26401
+      },
+      "warnings": []
+    },
+    {
+      "id": 60,
+      "shortName": "kaladima",
+      "longName": "South Kaladim",
+      "status": "ready",
+      "source": {
+        "path": "assets/reference/everquest_rof2/zones/kaladima.glb.gz",
+        "sha256": "6e1a4e0f0e70a98a8792f5377faa091c3a15816c01a85890934dc61994a56107",
+        "bytes": 1304682
+      },
+      "metadata": {
+        "path": "assets/reference/everquest_rof2/zones/kaladima.json",
+        "sha256": "a59c0eccd596474da99b9ac92a11fe1e964d4f5e9dff6334258a3ee2120c22ef",
+        "bytes": 96701
+      },
+      "authoring": {
+        "path": "shader-object/sandbox/public/shado/worlds/kaladima.authoring.json",
+        "sha256": "24be31276eca09acda129110a88a4966d5720ff4e3ba42266c5916a56dec14dd",
+        "bytes": 192033
+      },
+      "runtime": {
+        "source": "/eqrequiem/worlds/kaladima.glb.gz",
+        "scene": {
+          "path": "client/public/eqrequiem/worlds/kaladima.glb.gz",
+          "sha256": "2051ddbf9a9c716381ab3920f83035fbb2f9ea425398322c54762473da9fe2ed",
+          "bytes": 1306406
+        },
+        "spatial": {
+          "path": "client/public/eqrequiem/worlds/kaladima.spatial.json.gz",
+          "sha256": "4cd783bb92a3ac8c2d2108c6b6038d59b9b0045d2b04004d6ad709270d55080c",
+          "bytes": 98839
+        },
+        "collision": {
+          "path": "client/public/eqrequiem/worlds/kaladima.collision.bin.gz",
+          "sha256": "dcbe129784e3b62b314e9be9c0222d295b911343b8c39a566ce4ea0d6547b807",
+          "bytes": 95640
+        }
+      },
+      "stats": {
+        "primitives": 88,
+        "triangles": 17834,
+        "clusters": 197,
+        "renderChunks": 88,
+        "cells": 9,
+        "portals": 0,
+        "regions": 5,
+        "objectPrototypes": 48,
+        "objectStamps": 266,
+        "tiles": 9,
+        "collisionVertices": 8559,
+        "collisionTriangles": 17286
+      },
+      "warnings": []
+    },
+    {
+      "id": 61,
+      "shortName": "felwithea",
+      "longName": "Felwithe (A)",
+      "status": "ready",
+      "source": {
+        "path": "assets/reference/everquest_rof2/zones/felwithea.glb.gz",
+        "sha256": "3a361100b79e5d79124722525e8db1f89ab7eb5e1fa4ffbbe60f2ab394b6d769",
+        "bytes": 1482154
+      },
+      "metadata": {
+        "path": "assets/reference/everquest_rof2/zones/felwithea.json",
+        "sha256": "8a83f83f671f64e8e3499e59991b248d8c0440440152769ced22001d721fe861",
+        "bytes": 118133
+      },
+      "authoring": {
+        "path": "shader-object/sandbox/public/shado/worlds/felwithea.authoring.json",
+        "sha256": "46ff6b48afdb62cf84c1f0c39b22571c595f49a07bc2ae75999c346154d10ea2",
+        "bytes": 155261
+      },
+      "runtime": {
+        "source": "/eqrequiem/worlds/felwithea.glb.gz",
+        "scene": {
+          "path": "client/public/eqrequiem/worlds/felwithea.glb.gz",
+          "sha256": "889dcf785183e702575be75a88808bcbd10ff016412666d2e09e8d915aae7efa",
+          "bytes": 1484512
+        },
+        "spatial": {
+          "path": "client/public/eqrequiem/worlds/felwithea.spatial.json.gz",
+          "sha256": "b36ab53fe99b67ed8dba2a79024d0b69495cdc15eb4a19ad0b43350603120bfb",
+          "bytes": 102103
+        },
+        "collision": {
+          "path": "client/public/eqrequiem/worlds/felwithea.collision.bin.gz",
+          "sha256": "25c9625f3d74a8ac785f2171d956bc47c7afada6ea3ddcb0f4f77ecf8791a10a",
+          "bytes": 106525
+        }
+      },
+      "stats": {
+        "primitives": 96,
+        "triangles": 19176,
+        "clusters": 216,
+        "renderChunks": 96,
+        "cells": 10,
+        "portals": 0,
+        "regions": 5,
+        "objectPrototypes": 44,
+        "objectStamps": 213,
+        "tiles": 10,
+        "collisionVertices": 9221,
+        "collisionTriangles": 18689
+      },
+      "warnings": []
+    },
+    {
+      "id": 62,
+      "shortName": "felwitheb",
+      "longName": "Felwithe (B)",
+      "status": "ready",
+      "source": {
+        "path": "assets/reference/everquest_rof2/zones/felwitheb.glb.gz",
+        "sha256": "d3017f938aa9d369556a9716701442bc9f9c834b3b4a38a69099b386cf477083",
+        "bytes": 454366
+      },
+      "metadata": {
+        "path": "assets/reference/everquest_rof2/zones/felwitheb.json",
+        "sha256": "fdd3b11fa39783b1b154ad0e97eccdf90a7576ffb8f065b3f5a03278b466c88b",
+        "bytes": 81222
+      },
+      "authoring": {
+        "path": "shader-object/sandbox/public/shado/worlds/felwitheb.authoring.json",
+        "sha256": "8696b4ed0ccd16e73aa246c338ca16db6c08faaa47487868137ef3e80fa27001",
+        "bytes": 104998
+      },
+      "runtime": {
+        "source": "/eqrequiem/worlds/felwitheb.glb.gz",
+        "scene": {
+          "path": "client/public/eqrequiem/worlds/felwitheb.glb.gz",
+          "sha256": "1061991ebfc0b238767834d99460792485430bc1337855adb98ec64ab9f91666",
+          "bytes": 458030
+        },
+        "spatial": {
+          "path": "client/public/eqrequiem/worlds/felwitheb.spatial.json.gz",
+          "sha256": "a98c169c4412f29bb2fcb58b6a18d8d3d08b67d157918afee697efd00878eca1",
+          "bytes": 80868
+        },
+        "collision": {
+          "path": "client/public/eqrequiem/worlds/felwitheb.collision.bin.gz",
+          "sha256": "82d9e82cc0c7652243c6be932646a7b0d225fd5364a8100ffb34b98507c4aa5e",
+          "bytes": 77030
+        }
+      },
+      "stats": {
+        "primitives": 28,
+        "triangles": 14171,
+        "clusters": 129,
+        "renderChunks": 28,
+        "cells": 7,
+        "portals": 0,
+        "regions": 10,
+        "objectPrototypes": 26,
+        "objectStamps": 141,
+        "tiles": 7,
+        "collisionVertices": 6764,
+        "collisionTriangles": 13743
+      },
+      "warnings": []
+    },
+    {
+      "id": 63,
+      "shortName": "unrest",
+      "longName": "Estate of Unrest",
+      "status": "ready",
+      "source": {
+        "path": "assets/reference/everquest_rof2/zones/unrest.glb.gz",
+        "sha256": "447377491934328228331519d6787fe2a9263c306f0ab562719c1d10840d533a",
+        "bytes": 993866
+      },
+      "metadata": {
+        "path": "assets/reference/everquest_rof2/zones/unrest.json",
+        "sha256": "3bce8726c1ad3629e7f9023c71558076afe729508c74c16556b1077f99368895",
+        "bytes": 111501
+      },
+      "authoring": {
+        "path": "shader-object/sandbox/public/shado/worlds/unrest.authoring.json",
+        "sha256": "5e614ace2ebb71f494835fe52837bbc6f0a9474983d7da26a1d18ee349078e47",
+        "bytes": 119448
+      },
+      "runtime": {
+        "source": "/eqrequiem/worlds/unrest.glb.gz",
+        "scene": {
+          "path": "client/public/eqrequiem/worlds/unrest.glb.gz",
+          "sha256": "b087c09448d9304ffa69e6f8c6dc7e5b8b9058220e25c989fab6ad270a952560",
+          "bytes": 995856
+        },
+        "spatial": {
+          "path": "client/public/eqrequiem/worlds/unrest.spatial.json.gz",
+          "sha256": "0cb10064fc73642c1555d827a3e973ec209f02257827a963b880d10d76650aa5",
+          "bytes": 134108
+        },
+        "collision": {
+          "path": "client/public/eqrequiem/worlds/unrest.collision.bin.gz",
+          "sha256": "93afaf3a0db8ed9ac7f69920ae39ffb50f44636d254cf5bcb38ea403c31ef6df",
+          "bytes": 140924
+        }
+      },
+      "stats": {
+        "primitives": 66,
+        "triangles": 26291,
+        "clusters": 245,
+        "renderChunks": 66,
+        "cells": 9,
+        "portals": 0,
+        "regions": 5,
+        "objectPrototypes": 35,
+        "objectStamps": 164,
+        "tiles": 9,
+        "collisionVertices": 12571,
+        "collisionTriangles": 25528
+      },
+      "warnings": []
+    },
+    {
+      "id": 64,
+      "shortName": "kedge",
+      "longName": "Kedge Keep",
+      "status": "pack-failed",
+      "source": {
+        "path": "assets/reference/everquest_rof2/zones/kedge.glb.gz",
+        "sha256": "457041a7728306db4973e93bdb7d137b0e5410549dd0ca2799df29506ed12e2d",
+        "bytes": 236869
+      },
+      "metadata": {
+        "path": "assets/reference/everquest_rof2/zones/kedge.json",
+        "sha256": "7c53cabfc7fbd55849e6844b99f4500f25bfe3459f92c4d451a494f0d5ff4677",
+        "bytes": 93834
+      },
+      "error": "World GLB has no collision-selected triangle primitives",
+      "warnings": []
+    },
+    {
+      "id": 65,
+      "shortName": "guktop",
+      "longName": "Upper Guk",
+      "status": "ready",
+      "source": {
+        "path": "assets/reference/everquest_rof2/zones/guktop.glb.gz",
+        "sha256": "a536a10ac068274fcc741ff2eb7f6bd0c35df8e823af2fcc208896b332568266",
+        "bytes": 2487344
+      },
+      "metadata": {
+        "path": "assets/reference/everquest_rof2/zones/guktop.json",
+        "sha256": "32b388f798617eb67ead1c5e136125c9c5014e1290206bd777ef9fef097eba14",
+        "bytes": 209686
+      },
+      "authoring": {
+        "path": "shader-object/sandbox/public/shado/worlds/guktop.authoring.json",
+        "sha256": "40a58a7ec6ccbd26c0fa9f4e263681695c7d4633e5c3501cb8ba598a253838ab",
+        "bytes": 286020
+      },
+      "runtime": {
+        "source": "/eqrequiem/worlds/guktop.glb.gz",
+        "scene": {
+          "path": "client/public/eqrequiem/worlds/guktop.glb.gz",
+          "sha256": "5a6a507ef1e8a3a43f235b666db6cfe9f9a8893d894eeb94c92a840c0162ce36",
+          "bytes": 2492303
+        },
+        "spatial": {
+          "path": "client/public/eqrequiem/worlds/guktop.spatial.json.gz",
+          "sha256": "12c53fc752f611638ec2fe5fee0ca4fbac51d196490601bc44a92a9d6a155bea",
+          "bytes": 175241
+        },
+        "collision": {
+          "path": "client/public/eqrequiem/worlds/guktop.collision.bin.gz",
+          "sha256": "e5a10e24f4e05f32ac28881a9fd17ab731c854dc3c083c04995b3e6cedae56b3",
+          "bytes": 131056
+        }
+      },
+      "stats": {
+        "primitives": 152,
+        "triangles": 30239,
+        "clusters": 354,
+        "renderChunks": 152,
+        "cells": 28,
+        "portals": 0,
+        "regions": 35,
+        "objectPrototypes": 34,
+        "objectStamps": 395,
+        "tiles": 28,
+        "collisionVertices": 11339,
+        "collisionTriangles": 21583
+      },
+      "warnings": []
+    },
+    {
+      "id": 66,
+      "shortName": "gukbottom",
+      "longName": "Lower Guk",
+      "status": "ready",
+      "source": {
+        "path": "assets/reference/everquest_rof2/zones/gukbottom.glb.gz",
+        "sha256": "0ad0acec6fccb8c02dad35c050946692332329a20041745b109874d0aec8b768",
+        "bytes": 2103267
+      },
+      "metadata": {
+        "path": "assets/reference/everquest_rof2/zones/gukbottom.json",
+        "sha256": "12f582fe00873b75a3b767bf4c6b3e9f51e31d28e56f019704a1da0f7f9f0e0d",
+        "bytes": 221944
+      },
+      "authoring": {
+        "path": "shader-object/sandbox/public/shado/worlds/gukbottom.authoring.json",
+        "sha256": "9718898eb752550175d0001de11d8dcdcbce823d4342a330f4e89b685df097de",
+        "bytes": 339696
+      },
+      "runtime": {
+        "source": "/eqrequiem/worlds/gukbottom.glb.gz",
+        "scene": {
+          "path": "client/public/eqrequiem/worlds/gukbottom.glb.gz",
+          "sha256": "34f11543a7d640252d21d8d26ffc535061b07b3ccc200dc9575de33b8a4265f4",
+          "bytes": 2110939
+        },
+        "spatial": {
+          "path": "client/public/eqrequiem/worlds/gukbottom.spatial.json.gz",
+          "sha256": "0b298856997ade975d5b3b33f730c0e363c375434824b998b08b4ea307dc9581",
+          "bytes": 195995
+        },
+        "collision": {
+          "path": "client/public/eqrequiem/worlds/gukbottom.collision.bin.gz",
+          "sha256": "caa3cff8eaa476e3f2c002989718b0d847958c97b5b4d2a2c3f8d181057f3e05",
+          "bytes": 167683
+        }
+      },
+      "stats": {
+        "primitives": 124,
+        "triangles": 32877,
+        "clusters": 345,
+        "renderChunks": 124,
+        "cells": 38,
+        "portals": 0,
+        "regions": 23,
+        "objectPrototypes": 39,
+        "objectStamps": 482,
+        "tiles": 38,
+        "collisionVertices": 14349,
+        "collisionTriangles": 28317
+      },
+      "warnings": []
+    },
+    {
+      "id": 67,
+      "shortName": "kaladimb",
+      "longName": "Kaladim (B)",
+      "status": "ready",
+      "source": {
+        "path": "assets/reference/everquest_rof2/zones/kaladimb.glb.gz",
+        "sha256": "ccf907ba136abbfd0d5f2dda467b7e988cce8ddf637a50d27d83a4fa96a78fad",
+        "bytes": 992793
+      },
+      "metadata": {
+        "path": "assets/reference/everquest_rof2/zones/kaladimb.json",
+        "sha256": "5109922ea31c330660866464f451db982f75e07f430f75fe9e931f4d0025183c",
+        "bytes": 105914
+      },
+      "authoring": {
+        "path": "shader-object/sandbox/public/shado/worlds/kaladimb.authoring.json",
+        "sha256": "b1c1824fbc3a3a8af97d72c68423d3024b0fab8330f707ae6b7257563a731576",
+        "bytes": 180151
+      },
+      "runtime": {
+        "source": "/eqrequiem/worlds/kaladimb.glb.gz",
+        "scene": {
+          "path": "client/public/eqrequiem/worlds/kaladimb.glb.gz",
+          "sha256": "d4ad785a6f75f92d26c5a3d8637919d52fe49ebdb5c8b1e7beabd87adc401411",
+          "bytes": 993784
+        },
+        "spatial": {
+          "path": "client/public/eqrequiem/worlds/kaladimb.spatial.json.gz",
+          "sha256": "73916440b366c453fc160552be7979c4b945d0649a697031bc40bfd630974cab",
+          "bytes": 129876
+        },
+        "collision": {
+          "path": "client/public/eqrequiem/worlds/kaladimb.collision.bin.gz",
+          "sha256": "16390ecb05bec80b28b2ef8051a689894e085697cee52c9895d9aff62d216768",
+          "bytes": 124446
+        }
+      },
+      "stats": {
+        "primitives": 88,
+        "triangles": 23213,
+        "clusters": 239,
+        "renderChunks": 88,
+        "cells": 11,
+        "portals": 0,
+        "regions": 6,
+        "objectPrototypes": 45,
+        "objectStamps": 249,
+        "tiles": 11,
+        "collisionVertices": 11050,
+        "collisionTriangles": 22332
+      },
+      "warnings": []
+    },
+    {
+      "id": 68,
+      "shortName": "butcher",
+      "longName": "Butcherblock Mountains",
+      "status": "ready",
+      "source": {
+        "path": "assets/reference/everquest_rof2/zones/butcher.glb.gz",
+        "sha256": "54a182edc60f438329f8bdeedb5969bca4b5e001688ef8841bae8f544e11069a",
+        "bytes": 1638274
+      },
+      "metadata": {
+        "path": "assets/reference/everquest_rof2/zones/butcher.json",
+        "sha256": "dd1b8af0e9570407d35472bed4cbb1b91856d20321dc56d6e3505272dd15b37b",
+        "bytes": 276747
+      },
+      "authoring": {
+        "path": "shader-object/sandbox/public/shado/worlds/butcher.authoring.json",
+        "sha256": "e02399a44b200bd431b8536bbe7b4de738a8d29236870a500be06047a081fbd3",
+        "bytes": 1271015
+      },
+      "runtime": {
+        "source": "/eqrequiem/worlds/butcher.glb.gz",
+        "scene": {
+          "path": "client/public/eqrequiem/worlds/butcher.glb.gz",
+          "sha256": "fc6c34d102267d2d2fbbf9a0296fa0f8c5a279ab4a58f5905a042e7a746e078f",
+          "bytes": 1643735
+        },
+        "spatial": {
+          "path": "client/public/eqrequiem/worlds/butcher.spatial.json.gz",
+          "sha256": "1e559423af98fdaddd29b4cc386714966232c17e548f6910a1c17197bd71499e",
+          "bytes": 344522
+        },
+        "collision": {
+          "path": "client/public/eqrequiem/worlds/butcher.collision.bin.gz",
+          "sha256": "f0abc677efef08074114e34c5d9568acef83a45f139e24c2a34048c890501541",
+          "bytes": 345491
+        }
+      },
+      "stats": {
+        "primitives": 58,
+        "triangles": 52695,
+        "clusters": 444,
+        "renderChunks": 58,
+        "cells": 237,
+        "portals": 0,
+        "regions": 12,
+        "objectPrototypes": 69,
+        "objectStamps": 1884,
+        "tiles": 237,
+        "collisionVertices": 27222,
+        "collisionTriangles": 51824
+      },
+      "warnings": []
+    },
+    {
+      "id": 69,
+      "shortName": "oot",
+      "longName": "Ocean of Tears",
+      "status": "ready",
+      "source": {
+        "path": "assets/reference/everquest_rof2/zones/oot.glb.gz",
+        "sha256": "14a75a1dea8e0decaf7c2289e452e6b2650043e3ab1090b233fe3cbc902d52b8",
+        "bytes": 1221600
+      },
+      "metadata": {
+        "path": "assets/reference/everquest_rof2/zones/oot.json",
+        "sha256": "51e266b17db365e0d9081564d9d9fbdd45d8b8b82154402143fe8b8466a30fe5",
+        "bytes": 166026
+      },
+      "authoring": {
+        "path": "shader-object/sandbox/public/shado/worlds/oot.authoring.json",
+        "sha256": "507e42afb3d7c52c514843db909442e48998b85683fe3189b71d955ef32b8102",
+        "bytes": 551257
+      },
+      "runtime": {
+        "source": "/eqrequiem/worlds/oot.glb.gz",
+        "scene": {
+          "path": "client/public/eqrequiem/worlds/oot.glb.gz",
+          "sha256": "129d35a4952f1ed7d25c2fdd0d6a6c04277e95e3a888e901724a92739f2a5d6d",
+          "bytes": 1226256
+        },
+        "spatial": {
+          "path": "client/public/eqrequiem/worlds/oot.spatial.json.gz",
+          "sha256": "ddd4bf192a389a2a4ee8bbd1bd02001bb403b9b37b7dc28eceaf8add5f3fe76e",
+          "bytes": 267467
+        },
+        "collision": {
+          "path": "client/public/eqrequiem/worlds/oot.collision.bin.gz",
+          "sha256": "e29f051f704672d1261009cc7c0e6251e405c3c7c436a8aa8834cf0b91ba40f5",
+          "bytes": 284112
+        }
+      },
+      "stats": {
+        "primitives": 33,
+        "triangles": 43672,
+        "clusters": 358,
+        "renderChunks": 33,
+        "cells": 211,
+        "portals": 0,
+        "regions": 294,
+        "objectPrototypes": 49,
+        "objectStamps": 575,
+        "tiles": 211,
+        "collisionVertices": 20083,
+        "collisionTriangles": 39421
+      },
+      "warnings": []
+    },
+    {
+      "id": 70,
+      "shortName": "cauldron",
+      "longName": "Dagnor's Cauldron",
+      "status": "ready",
+      "source": {
+        "path": "assets/reference/everquest_rof2/zones/cauldron.glb.gz",
+        "sha256": "c85d5aa0e25cb7036b6da9f81951104c8034baabb86fa9fb64a6715275708fe5",
+        "bytes": 946543
+      },
+      "metadata": {
+        "path": "assets/reference/everquest_rof2/zones/cauldron.json",
+        "sha256": "5a009880f40c30e3fa48f9be320d45120da8d06515588b609c30a68076f8d9fc",
+        "bytes": 29912
+      },
+      "authoring": {
+        "path": "shader-object/sandbox/public/shado/worlds/cauldron.authoring.json",
+        "sha256": "f3c1c2d63ea4dd27cfc9d471ea95055e8d9d6f7bf227f54e0577b24aa3330383",
+        "bytes": 148432
+      },
+      "runtime": {
+        "source": "/eqrequiem/worlds/cauldron.glb.gz",
+        "scene": {
+          "path": "client/public/eqrequiem/worlds/cauldron.glb.gz",
+          "sha256": "ce9fffa131c059ed0d3beb006ab863c2b34c779bccb2f271c610df60cd6e3f2f",
+          "bytes": 948220
+        },
+        "spatial": {
+          "path": "client/public/eqrequiem/worlds/cauldron.spatial.json.gz",
+          "sha256": "fb1f20f84631b8b8d6df09ffd9bb4c77d750bd8d73fa7d4c19f1bb91d3331b43",
+          "bytes": 138997
+        },
+        "collision": {
+          "path": "client/public/eqrequiem/worlds/cauldron.collision.bin.gz",
+          "sha256": "551972222dbf904aa2a482c4245d3b1594e26271897c0b92b9fa4a8b12ccb46e",
+          "bytes": 167982
+        }
+      },
+      "stats": {
+        "primitives": 29,
+        "triangles": 24989,
+        "clusters": 212,
+        "renderChunks": 29,
+        "cells": 101,
+        "portals": 0,
+        "regions": 5,
+        "objectPrototypes": 19,
+        "objectStamps": 211,
+        "tiles": 101,
+        "collisionVertices": 12463,
+        "collisionTriangles": 24455
+      },
+      "warnings": []
+    },
+    {
+      "id": 71,
+      "shortName": "airplane",
+      "longName": "Plane of Sky",
+      "status": "ready",
+      "source": {
+        "path": "assets/reference/everquest_rof2/zones/airplane.glb.gz",
+        "sha256": "0f4fa776d529ded192eb532d776072d73c8c8c022250a57ccfa84c5c8931193a",
+        "bytes": 797087
+      },
+      "metadata": {
+        "path": "assets/reference/everquest_rof2/zones/airplane.json",
+        "sha256": "fe5316b35f3d338d618b2dbe5934cb402d2f637bbe798d42834ba2df4c86f809",
+        "bytes": 39457
+      },
+      "authoring": {
+        "path": "shader-object/sandbox/public/shado/worlds/airplane.authoring.json",
+        "sha256": "9c5beda832a7450436d0f9ff5ecbe5f7d26833730187a2185d9c58077d519034",
+        "bytes": 58942
+      },
+      "runtime": {
+        "source": "/eqrequiem/worlds/airplane.glb.gz",
+        "scene": {
+          "path": "client/public/eqrequiem/worlds/airplane.glb.gz",
+          "sha256": "1a3f004dcf996969345cf4035b6075c1efe065181cfe553e8985d7d7fa3b9163",
+          "bytes": 796946
+        },
+        "spatial": {
+          "path": "client/public/eqrequiem/worlds/airplane.spatial.json.gz",
+          "sha256": "a50fc46cda2455f88e0d14f86705b1145675434db42ed12dcc643cd8e65e8f43",
+          "bytes": 157248
+        },
+        "collision": {
+          "path": "client/public/eqrequiem/worlds/airplane.collision.bin.gz",
+          "sha256": "66b4ba7a944452be8cc89a696045381925b42b243b7fd1674d789781c1371baa",
+          "bytes": 191216
+        }
+      },
+      "stats": {
+        "primitives": 26,
+        "triangles": 29030,
+        "clusters": 242,
+        "renderChunks": 26,
+        "cells": 87,
+        "portals": 0,
+        "regions": 65,
+        "objectPrototypes": 11,
+        "objectStamps": 26,
+        "tiles": 87,
+        "collisionVertices": 14664,
+        "collisionTriangles": 29028
+      },
+      "warnings": []
+    },
+    {
+      "id": 72,
+      "shortName": "fearplane",
+      "longName": "Plane of Fear",
+      "status": "ready",
+      "source": {
+        "path": "assets/reference/everquest_rof2/zones/fearplane.glb.gz",
+        "sha256": "716121a50cc57eb6004c09ee1e5729eb942b3f4813ca512524b0df8151ea3cc5",
+        "bytes": 711591
+      },
+      "metadata": {
+        "path": "assets/reference/everquest_rof2/zones/fearplane.json",
+        "sha256": "9c9462a6998a1f0f0c00cad35c56f05b368dd39c89fed8620877c73b98678ec1",
+        "bytes": 117123
+      },
+      "authoring": {
+        "path": "shader-object/sandbox/public/shado/worlds/fearplane.authoring.json",
+        "sha256": "60fa1ddb22d8039e52b73ab52bd0b24a1d3c9acadf138b313a12855f863d09e2",
+        "bytes": 510525
+      },
+      "runtime": {
+        "source": "/eqrequiem/worlds/fearplane.glb.gz",
+        "scene": {
+          "path": "client/public/eqrequiem/worlds/fearplane.glb.gz",
+          "sha256": "f13a02f4bd0218980596273df6122ffe65d3ac3ec7c44404fc3c96b1b95d7f34",
+          "bytes": 714957
+        },
+        "spatial": {
+          "path": "client/public/eqrequiem/worlds/fearplane.spatial.json.gz",
+          "sha256": "f8c0551624e9a0402617169b1dfffdd5b983a0af451175cdde7dea823d6e0a89",
+          "bytes": 130416
+        },
+        "collision": {
+          "path": "client/public/eqrequiem/worlds/fearplane.collision.bin.gz",
+          "sha256": "568d946878469356529b4e83692cb5b482f85f13fed9ee7354b5b0ab842b5d38",
+          "bytes": 100252
+        }
+      },
+      "stats": {
+        "primitives": 27,
+        "triangles": 19856,
+        "clusters": 169,
+        "renderChunks": 27,
+        "cells": 72,
+        "portals": 0,
+        "regions": 3,
+        "objectPrototypes": 38,
+        "objectStamps": 752,
+        "tiles": 72,
+        "collisionVertices": 8320,
+        "collisionTriangles": 16152
+      },
+      "warnings": []
+    },
+    {
+      "id": 73,
+      "shortName": "permafrost",
+      "longName": "Permafrost Keep",
+      "status": "ready",
+      "source": {
+        "path": "assets/reference/everquest_rof2/zones/permafrost.glb.gz",
+        "sha256": "34b28b7182b62c842eee371bb9ffad423e32cf6d890b2acf1fdee7f21837e44f",
+        "bytes": 937219
+      },
+      "metadata": {
+        "path": "assets/reference/everquest_rof2/zones/permafrost.json",
+        "sha256": "acf0df6b5fbf3a35154d0379f9d80c21d27de474b2daa4985c9d54109aa25d69",
+        "bytes": 151256
+      },
+      "authoring": {
+        "path": "shader-object/sandbox/public/shado/worlds/permafrost.authoring.json",
+        "sha256": "ca0dc900489be06a640d953bc14b145cc19d0ec90bad96f17e8c400d9a82d948",
+        "bytes": 337043
+      },
+      "runtime": {
+        "source": "/eqrequiem/worlds/permafrost.glb.gz",
+        "scene": {
+          "path": "client/public/eqrequiem/worlds/permafrost.glb.gz",
+          "sha256": "55f45afd92e79fd3d42c23a16dfefc3a7edb29173ffe0afb1bfb050ba5ee3916",
+          "bytes": 941015
+        },
+        "spatial": {
+          "path": "client/public/eqrequiem/worlds/permafrost.spatial.json.gz",
+          "sha256": "143819dda9d2f285b4d1d8a09277889bdd8348674c127f61973fc1ece961f773",
+          "bytes": 119669
+        },
+        "collision": {
+          "path": "client/public/eqrequiem/worlds/permafrost.collision.bin.gz",
+          "sha256": "e94f7751d7d52fc625f40fd629a5fe4fa1900d0e27ec9e85e92108efebb62e44",
+          "bytes": 104323
+        }
+      },
+      "stats": {
+        "primitives": 34,
+        "triangles": 18251,
+        "clusters": 167,
+        "renderChunks": 34,
+        "cells": 19,
+        "portals": 0,
+        "regions": 1,
+        "objectPrototypes": 27,
+        "objectStamps": 502,
+        "tiles": 19,
+        "collisionVertices": 8551,
+        "collisionTriangles": 18203
+      },
+      "warnings": []
+    },
+    {
+      "id": 74,
+      "shortName": "kerraridge",
+      "longName": "Kerra Isle",
+      "status": "ready",
+      "source": {
+        "path": "assets/reference/everquest_rof2/zones/kerraridge.glb.gz",
+        "sha256": "7722e6a8adfc977ebf4da48b73475d1bddb30fefa983058ea9a7d9ed52c891da",
+        "bytes": 950142
+      },
+      "metadata": {
+        "path": "assets/reference/everquest_rof2/zones/kerraridge.json",
+        "sha256": "82cef1d126d797dc841dd72264f1a13414444ed3a82af2f61d9b1aa10f81eec9",
+        "bytes": 43661
+      },
+      "authoring": {
+        "path": "shader-object/sandbox/public/shado/worlds/kerraridge.authoring.json",
+        "sha256": "24d6378635d4e8e180a8e7af831eec147b32c064f0ee5476c8399e66d7a950de",
+        "bytes": 182481
+      },
+      "runtime": {
+        "source": "/eqrequiem/worlds/kerraridge.glb.gz",
+        "scene": {
+          "path": "client/public/eqrequiem/worlds/kerraridge.glb.gz",
+          "sha256": "e80d2270a0e4a10204a9431e808254b5db535667f3e2b2aa235d4a6d9ac5b4b6",
+          "bytes": 955160
+        },
+        "spatial": {
+          "path": "client/public/eqrequiem/worlds/kerraridge.spatial.json.gz",
+          "sha256": "c8f99fd4717daf9aa32c7a7c1a88bf7eff936d8e3a7e2efa31345345e8c90781",
+          "bytes": 104262
+        },
+        "collision": {
+          "path": "client/public/eqrequiem/worlds/kerraridge.collision.bin.gz",
+          "sha256": "512b5b87dca304c12108f913a02597e3a53bf95907d3e3296e8a01fac404527a",
+          "bytes": 98696
+        }
+      },
+      "stats": {
+        "primitives": 57,
+        "triangles": 19004,
+        "clusters": 182,
+        "renderChunks": 57,
+        "cells": 26,
+        "portals": 0,
+        "regions": 5,
+        "objectPrototypes": 31,
+        "objectStamps": 260,
+        "tiles": 26,
+        "collisionVertices": 8407,
+        "collisionTriangles": 16812
+      },
+      "warnings": []
+    },
+    {
+      "id": 75,
+      "shortName": "paineel",
+      "longName": "Paineel",
+      "status": "ready",
+      "source": {
+        "path": "assets/reference/everquest_rof2/zones/paineel.glb.gz",
+        "sha256": "e97f1d7c784f121ef35897893e3f3def3e65bd92aa6ac5985d9ef94374d1fbbd",
+        "bytes": 1278658
+      },
+      "metadata": {
+        "path": "assets/reference/everquest_rof2/zones/paineel.json",
+        "sha256": "5df6c316d0da3f7ee25b51371eed7737280ee7ed28e4c409c1d0eea1b10831e2",
+        "bytes": 176633
+      },
+      "authoring": {
+        "path": "shader-object/sandbox/public/shado/worlds/paineel.authoring.json",
+        "sha256": "57b98f4e4d98c08ae7082a022c9005aaf31024ffcd0f37faaebf871753750068",
+        "bytes": 382235
+      },
+      "runtime": {
+        "source": "/eqrequiem/worlds/paineel.glb.gz",
+        "scene": {
+          "path": "client/public/eqrequiem/worlds/paineel.glb.gz",
+          "sha256": "b76c37fae26d09225baea219f9260bf716f5156aa337ca9ed856c08c9786d919",
+          "bytes": 1294541
+        },
+        "spatial": {
+          "path": "client/public/eqrequiem/worlds/paineel.spatial.json.gz",
+          "sha256": "1e2f4abc6d179b96b5f04e8ddbd66fc7878b3c5ad02be29ac416cf50f7f81e81",
+          "bytes": 345383
+        },
+        "collision": {
+          "path": "client/public/eqrequiem/worlds/paineel.collision.bin.gz",
+          "sha256": "c5ecb348ab825de26417a5c7e00699c58ad137671598acf3aca2fcd196c5137e",
+          "bytes": 329645
+        }
+      },
+      "stats": {
+        "primitives": 50,
+        "triangles": 60895,
+        "clusters": 507,
+        "renderChunks": 50,
+        "cells": 29,
+        "portals": 0,
+        "regions": 39,
+        "objectPrototypes": 45,
+        "objectStamps": 531,
+        "tiles": 29,
+        "collisionVertices": 27869,
+        "collisionTriangles": 59060
+      },
+      "warnings": []
+    },
+    {
+      "id": 76,
+      "shortName": "hateplane",
+      "longName": "The Plane of Hate",
+      "status": "ready",
+      "source": {
+        "path": "assets/reference/everquest_rof2/zones/hateplane.glb.gz",
+        "sha256": "fb8fd108ab23d30ae0ed16f1f873d97382713ae13a9d21db02110dd1cd82f0c2",
+        "bytes": 1941550
+      },
+      "metadata": {
+        "path": "assets/reference/everquest_rof2/zones/hateplane.json",
+        "sha256": "55b5ff80bbd8c4a54d679d16d17ac2b986b76d4e3f2c6ba4071cd66f7eb5326d",
+        "bytes": 56019
+      },
+      "authoring": {
+        "path": "shader-object/sandbox/public/shado/worlds/hateplane.authoring.json",
+        "sha256": "a4158636f457afaca155f69d2371bb95b6809b1de9ab723fa2c536c6075f2d32",
+        "bytes": 241703
+      },
+      "runtime": {
+        "source": "/eqrequiem/worlds/hateplane.glb.gz",
+        "scene": {
+          "path": "client/public/eqrequiem/worlds/hateplane.glb.gz",
+          "sha256": "c1ee1b199fd66ef13abfd6ef4a56d4124c87b8f74f13407aa50a892b4df94fae",
+          "bytes": 1971728
+        },
+        "spatial": {
+          "path": "client/public/eqrequiem/worlds/hateplane.spatial.json.gz",
+          "sha256": "8edd9978c7570d05506e17d4b7643c37a794260b253bda751557fe990244e281",
+          "bytes": 602443
+        },
+        "collision": {
+          "path": "client/public/eqrequiem/worlds/hateplane.collision.bin.gz",
+          "sha256": "17780c7b231275d432c5e44967aaed365e9e727721454ba79e931d2b9ae5abb7",
+          "bytes": 677456
+        }
+      },
+      "stats": {
+        "primitives": 42,
+        "triangles": 107473,
+        "clusters": 861,
+        "renderChunks": 42,
+        "cells": 32,
+        "portals": 0,
+        "regions": 0,
+        "objectPrototypes": 63,
+        "objectStamps": 349,
+        "tiles": 32,
+        "collisionVertices": 57841,
+        "collisionTriangles": 106783
+      },
+      "warnings": []
+    },
+    {
+      "id": 77,
+      "shortName": "arena",
+      "longName": "The Arena",
+      "status": "ready",
+      "source": {
+        "path": "assets/reference/everquest_rof2/zones/arena.glb.gz",
+        "sha256": "19d98e5aac71146987c753121d7d3c5790022cb9a8f7bf4192e2a8ee08e4c426",
+        "bytes": 126749
+      },
+      "metadata": {
+        "path": "assets/reference/everquest_rof2/zones/arena.json",
+        "sha256": "662da811e9ac170c646eabe39139aa5c0aa2dd7e1c124af3e2d3c34c6b1b6db5",
+        "bytes": 5391
+      },
+      "authoring": {
+        "path": "shader-object/sandbox/public/shado/worlds/arena.authoring.json",
+        "sha256": "8719551f890ecd1650cea24d993ee1613051513d50f029453e9c68e251df4275",
+        "bytes": 17962
+      },
+      "runtime": {
+        "source": "/eqrequiem/worlds/arena.glb.gz",
+        "scene": {
+          "path": "client/public/eqrequiem/worlds/arena.glb.gz",
+          "sha256": "daf521b0240048396181f23535cf7fdd44ca16c18673a5e5616c483267d34168",
+          "bytes": 126933
+        },
+        "spatial": {
+          "path": "client/public/eqrequiem/worlds/arena.spatial.json.gz",
+          "sha256": "6ef052c3915607d435a538ea76173f89757b07181da71d5c000038090f44d308",
+          "bytes": 16792
+        },
+        "collision": {
+          "path": "client/public/eqrequiem/worlds/arena.collision.bin.gz",
+          "sha256": "d3e90aafadc5d7f28114d4aa136cc837cafdcdcff2a498a1e31e683a036f8b65",
+          "bytes": 17085
+        }
+      },
+      "stats": {
+        "primitives": 7,
+        "triangles": 2600,
+        "clusters": 25,
+        "renderChunks": 7,
+        "cells": 14,
+        "portals": 0,
+        "regions": 2,
+        "objectPrototypes": 8,
+        "objectStamps": 22,
+        "tiles": 14,
+        "collisionVertices": 1336,
+        "collisionTriangles": 2600
+      },
+      "warnings": []
+    },
+    {
+      "id": 94,
+      "shortName": "emeraldjungle",
+      "longName": "The Emerald Jungle",
+      "status": "ready",
+      "source": {
+        "path": "assets/reference/everquest_rof2/zones/emeraldjungle.glb.gz",
+        "sha256": "322a0c5ec3715214b814528b9b91b3245d269de79c803d75fcec9da1c53419c5",
+        "bytes": 1764240
+      },
+      "metadata": {
+        "path": "assets/reference/everquest_rof2/zones/emeraldjungle.json",
+        "sha256": "0ca57e7b73882b080c65761a80ad2d68209622d52c1948fd601eec380189d938",
+        "bytes": 2825515
+      },
+      "authoring": {
+        "path": "shader-object/sandbox/public/shado/worlds/emeraldjungle.authoring.json",
+        "sha256": "b0e05e1f4acd1f734e99160be7553f517c2c86c7dcb71a23d2c82d45c0fbc422",
+        "bytes": 16438313
+      },
+      "runtime": {
+        "source": "/eqrequiem/worlds/emeraldjungle.glb.gz",
+        "scene": {
+          "path": "client/public/eqrequiem/worlds/emeraldjungle.glb.gz",
+          "sha256": "57567dee94644758ea37907d5a145a6f01a3f3471c06954bf57124888a9db6d6",
+          "bytes": 1762738
+        },
+        "spatial": {
+          "path": "client/public/eqrequiem/worlds/emeraldjungle.spatial.json.gz",
+          "sha256": "8a78bcf61447dee7cdff0c43d162a5308058f3de9dccb06a97f8bf906c1ae347",
+          "bytes": 1040590
+        },
+        "collision": {
+          "path": "client/public/eqrequiem/worlds/emeraldjungle.collision.bin.gz",
+          "sha256": "584c09f0d5c0b363af47d8d10795995ef42daa207582a1c4e61aeac48a462120",
+          "bytes": 498597
+        }
+      },
+      "stats": {
+        "primitives": 36,
+        "triangles": 73691,
+        "clusters": 597,
+        "renderChunks": 36,
+        "cells": 356,
+        "portals": 0,
+        "regions": 11,
+        "objectPrototypes": 57,
+        "objectStamps": 24505,
+        "tiles": 356,
+        "collisionVertices": 36845,
+        "collisionTriangles": 73580
+      },
+      "warnings": []
+    },
+    {
+      "id": 98,
+      "shortName": "erudsxing",
+      "longName": "Erud's Crossing",
+      "status": "ready",
+      "source": {
+        "path": "assets/reference/everquest_rof2/zones/erudsxing.glb.gz",
+        "sha256": "8fb5f2f7de9d18a7c24ab4ee044d685d482a2af0e9b0d83280d521cb68e88a44",
+        "bytes": 655306
+      },
+      "metadata": {
+        "path": "assets/reference/everquest_rof2/zones/erudsxing.json",
+        "sha256": "9d46aa70a7d1efd2c46df5842962d1c954ab92f88b7af675b7a7c3fb71258023",
+        "bytes": 29556
+      },
+      "authoring": {
+        "path": "shader-object/sandbox/public/shado/worlds/erudsxing.authoring.json",
+        "sha256": "6fe079190e9983dc66173af6e928be0424d5a9611f75fe6141a6fb5df2aeaf43",
+        "bytes": 97865
+      },
+      "runtime": {
+        "source": "/eqrequiem/worlds/erudsxing.glb.gz",
+        "scene": {
+          "path": "client/public/eqrequiem/worlds/erudsxing.glb.gz",
+          "sha256": "7ed3fc24c2fcade6e3ab48ae36f711c1be76bdb0b71b07a1cb251a5a10b9e844",
+          "bytes": 656042
+        },
+        "spatial": {
+          "path": "client/public/eqrequiem/worlds/erudsxing.spatial.json.gz",
+          "sha256": "4b5771e0685ed94e3f23b3e1ed2615d8102610e99e38619a4cacf8600d87ebe9",
+          "bytes": 43522
+        },
+        "collision": {
+          "path": "client/public/eqrequiem/worlds/erudsxing.collision.bin.gz",
+          "sha256": "0420a035fbdcc51ba094113e36c5706482c712cba8639cf369c33a2ab3459e65",
+          "bytes": 38435
+        }
+      },
+      "stats": {
+        "primitives": 47,
+        "triangles": 7214,
+        "clusters": 88,
+        "renderChunks": 47,
+        "cells": 34,
+        "portals": 0,
+        "regions": 87,
+        "objectPrototypes": 8,
+        "objectStamps": 75,
+        "tiles": 34,
+        "collisionVertices": 3125,
+        "collisionTriangles": 5969
+      },
+      "warnings": []
+    },
+    {
+      "id": 100,
+      "shortName": "stonebrunt",
+      "longName": "Stonebrunt Mountains",
+      "status": "ready",
+      "source": {
+        "path": "assets/reference/everquest_rof2/zones/stonebrunt.glb.gz",
+        "sha256": "f61bf96f92c5b2b4b27d9acc5c5aed95a9c0f1fc94fb06443c449e7eba1c7faa",
+        "bytes": 2924489
+      },
+      "metadata": {
+        "path": "assets/reference/everquest_rof2/zones/stonebrunt.json",
+        "sha256": "6afb3e1b0568a9e73b89db6d643122044f343f8f84dacb53f2a8d2bd52356ad2",
+        "bytes": 317565
+      },
+      "authoring": {
+        "path": "shader-object/sandbox/public/shado/worlds/stonebrunt.authoring.json",
+        "sha256": "32280d48f63c256714c4f0acce455983ff4b92be714a3fa4ddbc2f5215d6f701",
+        "bytes": 882255
+      },
+      "runtime": {
+        "source": "/eqrequiem/worlds/stonebrunt.glb.gz",
+        "scene": {
+          "path": "client/public/eqrequiem/worlds/stonebrunt.glb.gz",
+          "sha256": "f3cd45931572274e95072326a0431fb85a53d1193b07058958629f9de9f37b3b",
+          "bytes": 2924084
+        },
+        "spatial": {
+          "path": "client/public/eqrequiem/worlds/stonebrunt.spatial.json.gz",
+          "sha256": "90ddbf66eb431f812ce5dc71fc3c80e807a17614594b52dec94a3fade4770923",
+          "bytes": 477196
+        },
+        "collision": {
+          "path": "client/public/eqrequiem/worlds/stonebrunt.collision.bin.gz",
+          "sha256": "41b1312b2cd3c803a023c54a70b389fd85729e7559cef5b2a36dc8b0fad56c89",
+          "bytes": 557993
+        }
+      },
+      "stats": {
+        "primitives": 97,
+        "triangles": 85807,
+        "clusters": 720,
+        "renderChunks": 97,
+        "cells": 415,
+        "portals": 0,
+        "regions": 44,
+        "objectPrototypes": 27,
+        "objectStamps": 1282,
+        "tiles": 415,
+        "collisionVertices": 41231,
+        "collisionTriangles": 81682
+      },
+      "warnings": []
+    },
+    {
+      "id": 101,
+      "shortName": "warrens",
+      "longName": "The Warrens",
+      "status": "ready",
+      "source": {
+        "path": "assets/reference/everquest_rof2/zones/warrens.glb.gz",
+        "sha256": "a2361e4ba03e6e08fa087b8e642f96392b40f45135e07ae56f7a32281ba9ad09",
+        "bytes": 1185198
+      },
+      "metadata": {
+        "path": "assets/reference/everquest_rof2/zones/warrens.json",
+        "sha256": "3f232c96e65e80928fa4b46c2e5b713d752f9022e9afcb441274c243cdaf8644",
+        "bytes": 67908
+      },
+      "authoring": {
+        "path": "shader-object/sandbox/public/shado/worlds/warrens.authoring.json",
+        "sha256": "bd2c467bd424a56b75e260a76461f63353e43ad43dd1e1f2757b328faedf8439",
+        "bytes": 130212
+      },
+      "runtime": {
+        "source": "/eqrequiem/worlds/warrens.glb.gz",
+        "scene": {
+          "path": "client/public/eqrequiem/worlds/warrens.glb.gz",
+          "sha256": "5b8a2a67d75542bf0446a671ed2138cf4e32ed5fd89fc0ca04380681529d8d1d",
+          "bytes": 1188353
+        },
+        "spatial": {
+          "path": "client/public/eqrequiem/worlds/warrens.spatial.json.gz",
+          "sha256": "e7660b520f828521b6ee9b3b95d993a79835b14c357efe34828592b82fc63ab2",
+          "bytes": 153900
+        },
+        "collision": {
+          "path": "client/public/eqrequiem/worlds/warrens.collision.bin.gz",
+          "sha256": "28d204af532aded03a0d2aff69d05f47c3b56f8eda1d195d73d2ec8b1573fc09",
+          "bytes": 156425
+        }
+      },
+      "stats": {
+        "primitives": 44,
+        "triangles": 28534,
+        "clusters": 249,
+        "renderChunks": 44,
+        "cells": 30,
+        "portals": 0,
+        "regions": 6,
+        "objectPrototypes": 27,
+        "objectStamps": 173,
+        "tiles": 30,
+        "collisionVertices": 13037,
+        "collisionTriangles": 26209
+      },
+      "warnings": []
+    }
+  ],
+  "clientScenes": [
+    {
+      "id": "character-select",
+      "shortName": "load2",
+      "longName": "Character Selection",
+      "status": "ready",
+      "source": {
+        "path": "assets/reference/everquest_rof2/zones/load2.glb.gz",
+        "sha256": "485c5d84d7318191a1169a73f2a184ec74f8323aaadad220d77fb690c54eb93b",
+        "bytes": 1533260
+      },
+      "metadata": {
+        "path": "assets/reference/everquest_rof2/zones/load2.json",
+        "sha256": "91b03ac6985d14a46455e152f144708b9de7d9c7e6f6302aee903ed7002e1942",
+        "bytes": 74686
+      },
+      "authoring": {
+        "path": "shader-object/sandbox/public/shado/worlds/load2.authoring.json",
+        "sha256": "4b9b3d5f5347c5943dc58bc54716f174f0958b5e3acf992c406b4abb0eda6939",
+        "bytes": 240286
+      },
+      "runtime": {
+        "source": "/eqrequiem/worlds/load2.glb.gz",
+        "scene": {
+          "path": "client/public/eqrequiem/worlds/load2.glb.gz",
+          "sha256": "256565614aeae41a991516d39471cb5397c591b8efb0b721a23b858047cbe683",
+          "bytes": 1545088
+        },
+        "spatial": {
+          "path": "client/public/eqrequiem/worlds/load2.spatial.json.gz",
+          "sha256": "6f233cc25e585fd8dcb7ede15e4327345520026aa3ef43d03ec1159811f34368",
+          "bytes": 340557
+        },
+        "collision": {
+          "path": "client/public/eqrequiem/worlds/load2.collision.bin.gz",
+          "sha256": "560be84679035ccfa0a1c8c8eec6c3e5cd8dc6ed2dd4ca07414f7c9403913a54",
+          "bytes": 378305
+        }
+      },
+      "stats": {
+        "primitives": 57,
+        "triangles": 60888,
+        "clusters": 507,
+        "renderChunks": 57,
+        "cells": 50,
+        "portals": 0,
+        "regions": 7,
+        "objectPrototypes": 59,
+        "objectStamps": 331,
+        "tiles": 50,
+        "collisionVertices": 37792,
+        "collisionTriangles": 60448
+      },
+      "excludedLegacyObjectIds": [
+        "actorch301",
+        "akbrazr303",
+        "ftorch302",
+        "ftorch303",
+        "genbonfire300",
+        "katchandl301"
+      ],
+      "warnings": [
+        "unresolved-legacy-object-prototypes"
+      ]
+    }
+  ],
+  "objectAssets": {
+    "status": "ready",
+    "zones": [
+      "airplane",
+      "akanon",
+      "arena",
+      "befallen",
+      "beholder",
+      "blackburrow",
+      "butcher",
+      "cauldron",
+      "cazicthule",
+      "commons",
+      "crushbone",
+      "eastkarana",
+      "ecommons",
+      "emeraldjungle",
+      "erudnext",
+      "erudnint",
+      "erudsxing",
+      "everfrost",
+      "fearplane",
+      "feerrott",
+      "felwithea",
+      "felwitheb",
+      "freporte",
+      "freportn",
+      "freportw",
+      "gfaydark",
+      "grobb",
+      "gukbottom",
+      "guktop",
+      "halas",
+      "hateplane",
+      "highkeep",
+      "hole",
+      "kaladima",
+      "kaladimb",
+      "kerraridge",
+      "kithicor",
+      "lakerathe",
+      "lavastorm",
+      "lfaydark",
+      "load2",
+      "mistmoore",
+      "najena",
+      "nektulos",
+      "neriaka",
+      "neriakb",
+      "neriakc",
+      "northkarana",
+      "nro",
+      "oasis",
+      "oggok",
+      "oot",
+      "paineel",
+      "paw",
+      "permafrost",
+      "qcat",
+      "qey2hh1",
+      "qeynos",
+      "qeynos2",
+      "qeytoqrg",
+      "qrg",
+      "rathemtn",
+      "rivervale",
+      "runnyeye",
+      "soldunga",
+      "soldungb",
+      "southkarana",
+      "stonebrunt",
+      "unrest",
+      "warrens"
+    ],
+    "objects": 950,
+    "manifest": {
+      "path": "client/public/eqrequiem/objects/manifest.json",
+      "sha256": "f02476025b2e8fd67a496f86dc017582bfba7f930ae405901efde90d168aae99",
+      "bytes": 404731
+    }
+  }
+}

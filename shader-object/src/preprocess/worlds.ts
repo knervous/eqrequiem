@@ -5,10 +5,12 @@ import { runInThisContext } from 'node:vm';
 import { gunzip, gzip } from 'node:zlib';
 import { promisify } from 'node:util';
 import {
+  buildShadoWorldLightingManifest,
   compileShadoWorld,
+  encodeShadoWorldCollision,
   importLegacyZoneMetadata,
   mergeLegacyZoneMetadata,
-  validateShadoWorldAuthoring,
+  upgradeShadoWorldAuthoring,
   type ShadoWorldCompileOptions,
   type ShadoWorldPrimitive,
 } from '../world';
@@ -22,6 +24,10 @@ export type ShadoWorldPackConfig = Omit<ShadoWorldCompileOptions, 'source'> & {
   outFile: string;
   runtimeSource?: string;
   copyInputTo?: string;
+  /** Defaults to the spatial package's sibling `<zone>.collision.bin.gz`. */
+  collisionOutFile?: string;
+  /** Defaults to the spatial package's sibling `<zone>.lighting-plan.json.gz`. */
+  lightingPlanOutFile?: string;
   /** Editable region sidecar compiled into the runtime spatial package. */
   authoringInput?: string;
   /** Original Requiem zone JSON promoted into authoring when no authored document exists. */
@@ -33,6 +39,10 @@ export type ShadoWorldPackResult = {
   name: string;
   input: string;
   outFile: string;
+  collisionOutFile: string;
+  lightingPlanOutFile: string;
+  lightingStatus: 'ready-for-bake' | 'blocked-missing-uv2';
+  lightingUv2ReadyChunkCount: number;
   primitiveCount: number;
   triangleCount: number;
   clusterCount: number;
@@ -43,6 +53,8 @@ export type ShadoWorldPackResult = {
   objectPrototypeCount: number;
   objectStampCount: number;
   tileCount: number;
+  collisionVertexCount: number;
+  collisionTriangleCount: number;
 };
 
 /** Imports a static GLB/GLB.GZ and emits reducer-friendly world spatial data. */
@@ -56,33 +68,54 @@ export async function packShadoWorld(config: ShadoWorldPackConfig): Promise<Shad
   // Spatial preprocessing never samples textures. Loading them here makes an
   // otherwise valid geometry migration fail on legacy exports with incomplete
   // image records (for example an image with neither URI nor bufferView).
-  const primitives = await importWorldPrimitives(glb, worldGlbMaterialNames(glb));
+  // This importer is product-neutral and defaults to identity. Requiem's
+  // migration caller explicitly supplies mirror-x because canonical gameplay
+  // space reflects source zone geometry while leaving metadata placements
+  // unchanged.
+  const sourceTransform = config.sourceTransform ?? 'identity';
+  const imported = await importWorldPrimitives(
+    glb,
+    worldGlbPrimitivePolicies(glb),
+    sourceTransform
+  );
+  const primitives = imported.render;
+  const collisionArtifact = encodeShadoWorldCollision(imported.collision);
+  const collisionOutFile = path.resolve(
+    process.cwd(),
+    config.collisionOutFile ?? collisionPathForSpatial(config.outFile)
+  );
+  const lightingPlanOutFile = path.resolve(
+    process.cwd(),
+    config.lightingPlanOutFile ?? lightingPlanPathForSpatial(config.outFile)
+  );
   const authoringPath = config.authoringInput
     ? path.resolve(process.cwd(), config.authoringInput)
     : undefined;
   const metadataPath = config.metadataInput
     ? path.resolve(process.cwd(), config.metadataInput)
     : undefined;
+  const authoringSource = authoringPath
+    ? JSON.parse(await fs.readFile(authoringPath, 'utf8'))
+    : undefined;
   let authoring = authoringPath
-    ? validateShadoWorldAuthoring(
-        JSON.parse(await fs.readFile(authoringPath, 'utf8')),
-        config.name
-      )
+    ? upgradeShadoWorldAuthoring(authoringSource, config.name)
     : config.metadataInput
       ? importLegacyZoneMetadata(
           JSON.parse(await fs.readFile(metadataPath!, 'utf8')),
           config.name,
           { objectSourcePrefix: config.objectSourcePrefix }
         )
-    : config.authoring;
-  if (authoringPath && metadataPath) {
-    const before = JSON.stringify(authoring);
-    authoring = mergeLegacyZoneMetadata(
-      authoring,
-      JSON.parse(await fs.readFile(metadataPath, 'utf8')),
-      config.name,
-      { objectSourcePrefix: config.objectSourcePrefix }
-    );
+      : config.authoring;
+  if (authoringPath && authoring) {
+    const before = JSON.stringify(authoringSource);
+    if (metadataPath) {
+      authoring = mergeLegacyZoneMetadata(
+        authoring,
+        JSON.parse(await fs.readFile(metadataPath, 'utf8')),
+        config.name,
+        { objectSourcePrefix: config.objectSourcePrefix }
+      );
+    }
     if (JSON.stringify(authoring) !== before) {
       authoring.revision++;
       await fs.writeFile(authoringPath, `${JSON.stringify(authoring, null, 2)}\n`);
@@ -91,16 +124,35 @@ export async function packShadoWorld(config: ShadoWorldPackConfig): Promise<Shad
   const world = compileShadoWorld(primitives, {
     name: config.name,
     source: config.runtimeSource ?? input,
+    sourceTransform,
     tileSize: config.tileSize,
     maxClusterTriangles: config.maxClusterTriangles,
     authoring,
+    collisionPrimitives: imported.collision,
+    collisionSource: path.basename(collisionOutFile),
   });
+  const lighting = buildShadoWorldLightingManifest(world, primitives);
   const outFile = path.resolve(process.cwd(), config.outFile);
   await fs.mkdir(path.dirname(outFile), { recursive: true });
   const payload = Buffer.from(`${JSON.stringify(world)}\n`);
   await fs.writeFile(
     outFile,
     outFile.endsWith('.gz') ? await gzipAsync(payload, { level: 9 }) : payload
+  );
+  await fs.mkdir(path.dirname(collisionOutFile), { recursive: true });
+  await fs.writeFile(
+    collisionOutFile,
+    collisionOutFile.endsWith('.gz')
+      ? await gzipAsync(collisionArtifact.bytes, { level: 9 })
+      : collisionArtifact.bytes
+  );
+  const lightingPayload = Buffer.from(`${JSON.stringify(lighting)}\n`);
+  await fs.mkdir(path.dirname(lightingPlanOutFile), { recursive: true });
+  await fs.writeFile(
+    lightingPlanOutFile,
+    lightingPlanOutFile.endsWith('.gz')
+      ? await gzipAsync(lightingPayload, { level: 9 })
+      : lightingPayload
   );
   if (config.copyInputTo) {
     const copyInputTo = path.resolve(process.cwd(), config.copyInputTo);
@@ -111,6 +163,10 @@ export async function packShadoWorld(config: ShadoWorldPackConfig): Promise<Shad
     name: config.name,
     input,
     outFile,
+    collisionOutFile,
+    lightingPlanOutFile,
+    lightingStatus: lighting.status,
+    lightingUv2ReadyChunkCount: lighting.chunks.filter(chunk => chunk.uv2.present).length,
     primitiveCount: primitives.length,
     triangleCount: world.triangleCount,
     clusterCount: world.clusters.radius.length,
@@ -121,13 +177,26 @@ export async function packShadoWorld(config: ShadoWorldPackConfig): Promise<Shad
     objectPrototypeCount: world.objects?.prototypes.id.length ?? 0,
     objectStampCount: world.objects?.stamps.id.length ?? 0,
     tileCount: world.tiles.x.length,
+    collisionVertexCount: world.collision.vertexCount,
+    collisionTriangleCount: world.collision.triangleCount,
   };
 }
 
+type WorldPrimitivePolicy = {
+  material: string;
+  collision: boolean;
+};
+
+type ImportedWorldPrimitives = {
+  render: ShadoWorldPrimitive[];
+  collision: ShadoWorldPrimitive[];
+};
+
 async function importWorldPrimitives(
   glb: Uint8Array,
-  sourceMaterials: ReadonlyMap<string, string>
-): Promise<ShadoWorldPrimitive[]> {
+  sourcePolicies: ReadonlyMap<string, readonly WorldPrimitivePolicy[]>,
+  sourceTransform: ShadoWorldCompileOptions['sourceTransform']
+): Promise<ImportedWorldPrimitives> {
   installNodeXMLHttpRequest();
   const BABYLON = await import('@babylonjs/core');
   await installNodeDracoDecoder();
@@ -151,8 +220,10 @@ async function importWorldPrimitives(
     container.addAllToScene();
     scene.rootNodes.forEach(node => node.computeWorldMatrix(true));
     const primitives: ShadoWorldPrimitive[] = [];
+    const collisionPrimitives: ShadoWorldPrimitive[] = [];
     for (const mesh of scene.meshes) {
       const positions = mesh.getVerticesData(BABYLON.VertexBuffer.PositionKind);
+      const lightmapUvs = mesh.getVerticesData(BABYLON.VertexBuffer.UV2Kind);
       const indices = mesh.getIndices();
       if (!positions?.length || !indices?.length) continue;
       const matrix = mesh.computeWorldMatrix(true).m;
@@ -161,7 +232,8 @@ async function importWorldPrimitives(
         const x = positions[i],
           y = positions[i + 1],
           z = positions[i + 2];
-        worldPositions[i] = x * matrix[0] + y * matrix[4] + z * matrix[8] + matrix[12];
+        const worldX = x * matrix[0] + y * matrix[4] + z * matrix[8] + matrix[12];
+        worldPositions[i] = sourceTransform === 'mirror-x' ? -worldX : worldX;
         worldPositions[i + 1] = x * matrix[1] + y * matrix[5] + z * matrix[9] + matrix[13];
         worldPositions[i + 2] = x * matrix[2] + y * matrix[6] + z * matrix[10] + matrix[14];
       }
@@ -172,18 +244,26 @@ async function importWorldPrimitives(
         const subMesh = subMeshes[subIndex];
         const count = subMesh.indexCount - (subMesh.indexCount % 3);
         if (!count) continue;
-        const material =
-          sourceMaterials.get(mesh.name) ?? materialName(mesh.material, subMesh.materialIndex);
-        primitives.push({
+        const policy = sourcePolicies.get(mesh.name)?.[subIndex];
+        const material = policy?.material ?? materialName(mesh.material, subMesh.materialIndex);
+        const primitive = {
           name: `${mesh.name || mesh.id}#${subIndex}`,
           material,
           positions: worldPositions,
           indices: Uint32Array.from(indices.slice(subMesh.indexStart, subMesh.indexStart + count)),
-        });
+          lightmapUvs: lightmapUvs ? Float32Array.from(lightmapUvs) : undefined,
+        };
+        primitives.push(primitive);
+        if (policy?.collision ?? mesh.name !== 'CLOUD_MDF') {
+          collisionPrimitives.push(primitive);
+        }
       }
     }
     if (!primitives.length) throw new Error('World GLB has no indexed triangle primitives');
-    return primitives;
+    if (!collisionPrimitives.length) {
+      throw new Error('World GLB has no collision-selected triangle primitives');
+    }
+    return { render: primitives, collision: collisionPrimitives };
   } finally {
     scene.dispose();
     engine.dispose();
@@ -200,9 +280,7 @@ let nodeDracoDecoderInstallation: Promise<void> | undefined;
 export async function installNodeDracoDecoder(): Promise<void> {
   nodeDracoDecoderInstallation ??= (async () => {
     const require = createRequire(import.meta.url);
-    const decoderModulePath = require.resolve(
-      '@babylonjs/core/Meshes/Compression/dracoDecoder.js'
-    );
+    const decoderModulePath = require.resolve('@babylonjs/core/Meshes/Compression/dracoDecoder.js');
     const dracoAssetDir = path.resolve(path.dirname(decoderModulePath), '../../assets/Draco');
     const wrapperPath = path.join(dracoAssetDir, 'draco_wasm_wrapper_gltf.js');
     const wasmPath = path.join(dracoAssetDir, 'draco_decoder_gltf.wasm');
@@ -233,9 +311,7 @@ export async function installNodeDracoDecoder(): Promise<void> {
       throw new Error(`Unable to initialize bundled Draco decoder at ${wrapperPath}`);
     }
 
-    const { DracoDecoder } = await import(
-      '@babylonjs/core/Meshes/Compression/dracoDecoder.js'
-    );
+    const { DracoDecoder } = await import('@babylonjs/core/Meshes/Compression/dracoDecoder.js');
     const wasmBinary = wasmBytes.buffer.slice(
       wasmBytes.byteOffset,
       wasmBytes.byteOffset + wasmBytes.byteLength
@@ -255,34 +331,77 @@ export async function installNodeDracoDecoder(): Promise<void> {
   await nodeDracoDecoderInstallation;
 }
 
-function worldGlbMaterialNames(bytes: Uint8Array): Map<string, string> {
+function worldGlbPrimitivePolicies(
+  bytes: Uint8Array
+): Map<string, readonly WorldPrimitivePolicy[]> {
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
   const jsonLength = view.getUint32(12, true);
   if (view.getUint32(16, true) !== GLB_JSON_CHUNK || 20 + jsonLength > bytes.byteLength) {
     throw new Error('World GLB is missing its leading JSON chunk');
   }
   const gltf = JSON.parse(
-    Buffer.from(bytes.subarray(20, 20 + jsonLength)).toString('utf8').trimEnd()
+    Buffer.from(bytes.subarray(20, 20 + jsonLength))
+      .toString('utf8')
+      .trimEnd()
   ) as {
-    nodes?: Array<{ name?: string; mesh?: number }>;
-    meshes?: Array<{ primitives?: Array<{ material?: number }> }>;
-    materials?: Array<{ name?: string }>;
+    nodes?: Array<{ name?: string; mesh?: number; extras?: Record<string, unknown> }>;
+    meshes?: Array<{
+      extras?: Record<string, unknown>;
+      primitives?: Array<{ material?: number; extras?: Record<string, unknown> }>;
+    }>;
+    materials?: Array<{ name?: string; extras?: Record<string, unknown> }>;
   };
-  const result = new Map<string, string>();
+  const result = new Map<string, readonly WorldPrimitivePolicy[]>();
   gltf.nodes?.forEach((node, nodeIndex) => {
     if (node.mesh == null) return;
-    const primitives = gltf.meshes?.[node.mesh]?.primitives ?? [];
+    const sourceMesh = gltf.meshes?.[node.mesh];
+    const primitives = sourceMesh?.primitives ?? [];
     const nodeName = node.name || `node${nodeIndex}`;
-    primitives.forEach((primitive, primitiveIndex) => {
+    const policies = primitives.map((primitive, primitiveIndex) => {
       const meshName =
         primitives.length === 1 ? nodeName : `${nodeName}_primitive${primitiveIndex}`;
-      const material = primitive.material == null
-        ? '__default'
-        : gltf.materials?.[primitive.material]?.name || `material-${primitive.material}`;
-      result.set(meshName, material);
+      const sourceMaterial =
+        primitive.material == null ? undefined : gltf.materials?.[primitive.material];
+      const material =
+        primitive.material == null
+          ? '__default'
+          : sourceMaterial?.name || `material-${primitive.material}`;
+      const extras = [node.extras, sourceMesh?.extras, primitive.extras, sourceMaterial?.extras];
+      const collision =
+        meshName !== 'CLOUD_MDF' &&
+        !extras.some(value => value?.passThrough === true) &&
+        !extras.some(value => value?.collision === false) &&
+        !extras.some(value => value?.clientPhysics === false) &&
+        !extras.some(value => Array.isArray(value?.frames) && value.frames.length > 0);
+      return { material, collision };
     });
+    if (primitives.length === 1) {
+      result.set(nodeName, policies);
+    } else {
+      policies.forEach((policy, primitiveIndex) => {
+        result.set(`${nodeName}_primitive${primitiveIndex}`, [policy]);
+      });
+    }
   });
   return result;
+}
+
+function collisionPathForSpatial(spatialPath: string): string {
+  if (!/\.spatial\.json(?:\.gz)?$/i.test(spatialPath)) {
+    throw new Error(
+      `World spatial output '${spatialPath}' must end in .spatial.json or .spatial.json.gz`
+    );
+  }
+  return spatialPath.replace(/\.spatial\.json(\.gz)?$/i, '.collision.bin$1');
+}
+
+function lightingPlanPathForSpatial(spatialPath: string): string {
+  if (!/\.spatial\.json(?:\.gz)?$/i.test(spatialPath)) {
+    throw new Error(
+      `World spatial output '${spatialPath}' must end in .spatial.json or .spatial.json.gz`
+    );
+  }
+  return spatialPath.replace(/\.spatial\.json(\.gz)?$/i, '.lighting-plan.json$1');
 }
 
 function materialName(material: any, materialIndex: number): string {
@@ -318,7 +437,9 @@ export function sanitizeWorldGlbForGeometry(bytes: Uint8Array): Uint8Array {
     const end = offset + 8 + length;
     if (end > bytes.byteLength) throw new Error('World GLB has a truncated chunk');
     if (type === GLB_JSON_CHUNK && !foundJson) {
-      const source = Buffer.from(bytes.subarray(offset + 8, end)).toString('utf8').trimEnd();
+      const source = Buffer.from(bytes.subarray(offset + 8, end))
+        .toString('utf8')
+        .trimEnd();
       const gltf = JSON.parse(source) as {
         materials?: Array<Record<string, unknown>>;
         images?: unknown[];

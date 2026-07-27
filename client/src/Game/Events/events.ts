@@ -2,9 +2,16 @@ import type * as BJS from '@babylonjs/core';
 import type { Config } from '@game/Config/types';
 import type { Entity } from '@game/Model/entity';
 import type { PlayerProfile } from '@game/Net/messages';
+import type {
+  CombatEvent,
+  DeathEvent,
+  LootWindow,
+  MerchantWindow,
+  NpcDebugState,
+} from '@game/Net/messages';
 import type { InventorySlot } from '@game/Player/player-constants';
 import type { BagState } from '@game/Player/player-inventory';
-import type { JsonCommandLink } from '@ui/components/game/stone/middle/command-link-util';
+import type { JsonCommandLink } from '@ui/components/game/chat/command-link-util';
 import mitt, { Emitter } from 'mitt';
 
 export type ChatMessage = {
@@ -37,16 +44,29 @@ export type Events = {
   playerRotation: BJS.Vector3;
   setPlayer: PlayerProfile;
   target: Entity | null;
+  autoAttack: boolean;
+  combatEvent: CombatEvent;
+  playerDeath: DeathEvent;
+  lootWindow: LootWindow | null;
+  merchantWindow: MerchantWindow | null;
+  npcDebugState: NpcDebugState;
+  entityHealth: {
+    spawnId: number;
+    currentHp: number;
+    maximumHp: number;
+  };
   playerMovement: BJS.Vector3;
   viewportChanged: number[];
   chatMessage: ChatMessage;
   toggleInventory: void;
+  toggleOptions: void;
   setMode: string;
 
   // Config
   updateConfig: keyof Config | undefined;
   updateKeybinds: void;
   updateSettings: void;
+  updateUI: void;
 
   // Action buttons
   updateHotButtons: void;

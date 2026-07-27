@@ -2,8 +2,8 @@ import fs from "node:fs";
 import * as http from "node:http";
 import { createRequire } from "node:module";
 import path from "node:path";
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react-swc";
+import { defineConfig, type Plugin } from "vite";
+import react from "@vitejs/plugin-react";
 import autoprefixer from "autoprefixer";
 import * as https from "https";
 import fetch from "node-fetch";
@@ -151,7 +151,7 @@ function serverjsTypeScriptSource(
   return null;
 }
 
-function serverjsSourcePlugin() {
+function serverjsSourcePlugin(): Plugin {
   return {
     name: "serverjs-typescript-source",
     enforce: "pre" as const,
@@ -192,7 +192,7 @@ function resolveSourceModule(root: string, relativePath: string): string | null 
   return null;
 }
 
-function subappSourcePlugin() {
+function subappSourcePlugin(): Plugin {
   return {
     name: "requiem-subapp-source",
     enforce: "pre" as const,
@@ -241,7 +241,7 @@ function subappSourcePlugin() {
   };
 }
 
-function subappStaticAssetsPlugin() {
+function subappStaticAssetsPlugin(): Plugin {
   return {
     name: "requiem-subapp-static-assets",
     async writeBundle(outputOptions: { dir?: string }) {
@@ -264,23 +264,9 @@ export default defineConfig({
     serverjsSourcePlugin(),
     babylonLiteVat2dPlugin,
     subappStaticAssetsPlugin(),
-    react({
-      tsDecorators: true,
-      swcOptions: {
-        jsc: {
-          parser: {
-            syntax: "typescript",
-            tsx: true,
-            decorators: true,
-          },
-          transform: {
-            legacyDecorator: true,
-            decoratorMetadata: false,
-          },
-        },
-      },
-    }),
+    react(),
     {
+      name: "requiem-dev-server",
       configureServer: ({ middlewares }) => {
         middlewares.use(async (req, res, next) => {
           if (req.method === "GET" && req.url) {
@@ -455,6 +441,10 @@ export default defineConfig({
     __REPO_ROOT__: JSON.stringify(repoRoot),
   },
   resolve: {
+    // This repository still contains some legacy co-located JavaScript emits.
+    // Prefer authored TypeScript for extensionless imports so stale emits cannot
+    // silently replace newer class implementations at runtime.
+    extensions: [".ts", ".tsx", ".mts", ".mjs", ".js", ".jsx", ".json"],
     dedupe: [
       "@babylonjs/addons",
       "@babylonjs/core",

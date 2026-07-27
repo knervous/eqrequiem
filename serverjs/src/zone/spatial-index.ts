@@ -14,6 +14,8 @@ interface Cell {
 export class ZoneSpatialIndex {
   private readonly entityCells = new Map<number, string>();
   private readonly sessionCells = new Map<number, string>();
+  private readonly entityPositions = new Map<number, SpatialPosition>();
+  private readonly sessionPositions = new Map<number, SpatialPosition>();
   private readonly entityBuckets = new Map<string, Set<number>>();
   private readonly sessionBuckets = new Map<string, Set<number>>();
 
@@ -24,19 +26,31 @@ export class ZoneSpatialIndex {
   }
 
   upsertEntity(entityIndex: number, position: SpatialPosition): boolean {
-    return this.upsert(entityIndex, position, this.entityCells, this.entityBuckets);
+    return this.upsert(
+      entityIndex,
+      position,
+      this.entityCells,
+      this.entityPositions,
+      this.entityBuckets,
+    );
   }
 
   upsertSession(sessionId: number, position: SpatialPosition): boolean {
-    return this.upsert(sessionId, position, this.sessionCells, this.sessionBuckets);
+    return this.upsert(
+      sessionId,
+      position,
+      this.sessionCells,
+      this.sessionPositions,
+      this.sessionBuckets,
+    );
   }
 
   removeEntity(entityIndex: number): void {
-    this.remove(entityIndex, this.entityCells, this.entityBuckets);
+    this.remove(entityIndex, this.entityCells, this.entityPositions, this.entityBuckets);
   }
 
   removeSession(sessionId: number): void {
-    this.remove(sessionId, this.sessionCells, this.sessionBuckets);
+    this.remove(sessionId, this.sessionCells, this.sessionPositions, this.sessionBuckets);
   }
 
   recipientsForEntity(entityIndex: number): number[] {
@@ -49,6 +63,25 @@ export class ZoneSpatialIndex {
     return key ? this.nearby(key, this.entityBuckets) : [];
   }
 
+  /** Exact candidates for staggered NPC perception after sparse-cell rejection. */
+  entitiesNear(position: SpatialPosition, radius: number): number[] {
+    return this.withinRadius(
+      position,
+      radius,
+      this.entityBuckets,
+      this.entityPositions,
+    );
+  }
+
+  sessionsNear(position: SpatialPosition, radius: number): number[] {
+    return this.withinRadius(
+      position,
+      radius,
+      this.sessionBuckets,
+      this.sessionPositions,
+    );
+  }
+
   get occupiedEntityCells(): number { return this.entityBuckets.size; }
   get occupiedSessionCells(): number { return this.sessionBuckets.size; }
 
@@ -56,8 +89,11 @@ export class ZoneSpatialIndex {
     id: number,
     position: SpatialPosition,
     cells: Map<number, string>,
+    positions: Map<number, SpatialPosition>,
     buckets: Map<string, Set<number>>,
   ): boolean {
+    assertFinitePosition(position);
+    positions.set(id, { x: position.x, y: position.y, z: position.z });
     const next = cellKey(this.worldToCell(position));
     const previous = cells.get(id);
     if (previous === next) return false;
@@ -69,11 +105,17 @@ export class ZoneSpatialIndex {
     return true;
   }
 
-  private remove(id: number, cells: Map<number, string>, buckets: Map<string, Set<number>>): void {
+  private remove(
+    id: number,
+    cells: Map<number, string>,
+    positions: Map<number, SpatialPosition>,
+    buckets: Map<string, Set<number>>,
+  ): void {
     const key = cells.get(id);
     if (!key) return;
     removeFromBucket(key, id, buckets);
     cells.delete(id);
+    positions.delete(id);
   }
 
   private nearby(key: string, buckets: Map<string, Set<number>>): number[] {
@@ -94,12 +136,59 @@ export class ZoneSpatialIndex {
     return result.sort((a, b) => a - b);
   }
 
+  private withinRadius(
+    position: SpatialPosition,
+    radius: number,
+    buckets: Map<string, Set<number>>,
+    positions: Map<number, SpatialPosition>,
+  ): number[] {
+    assertFinitePosition(position);
+    if (!Number.isFinite(radius) || radius < 0) {
+      throw new RangeError("invalid spatial query radius");
+    }
+    const min = this.worldToCell({
+      x: position.x - radius,
+      y: position.y - radius,
+      z: position.z - radius,
+    });
+    const max = this.worldToCell({
+      x: position.x + radius,
+      y: position.y + radius,
+      z: position.z + radius,
+    });
+    const radiusSquared = radius * radius;
+    const result: number[] = [];
+    for (let x = min.x; x <= max.x; x++) {
+      for (let y = min.y; y <= max.y; y++) {
+        for (let z = min.z; z <= max.z; z++) {
+          const bucket = buckets.get(cellKey({ x, y, z }));
+          if (!bucket) continue;
+          for (const id of bucket) {
+            const candidate = positions.get(id);
+            if (!candidate) continue;
+            const dx = candidate.x - position.x;
+            const dy = candidate.y - position.y;
+            const dz = candidate.z - position.z;
+            if (dx * dx + dy * dy + dz * dz <= radiusSquared) result.push(id);
+          }
+        }
+      }
+    }
+    return result.sort((a, b) => a - b);
+  }
+
   private worldToCell(position: SpatialPosition): Cell {
     return {
       x: Math.floor(position.x / this.cellSize),
       y: Math.floor(position.y / this.cellSize),
       z: Math.floor(position.z / this.cellSize),
     };
+  }
+}
+
+function assertFinitePosition(position: SpatialPosition): void {
+  if (![position.x, position.y, position.z].every(Number.isFinite)) {
+    throw new RangeError("spatial position contains a non-finite coordinate");
   }
 }
 

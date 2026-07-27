@@ -1,22 +1,25 @@
-import React from "react";
-import { LoginWindowComponent } from "./login-window";
-import { Box } from "@mui/material";
-import { getSplashImage } from "../../common/splash";
+import React from 'react';
+import { Box } from '@mui/material';
+import { LoginWindowComponent } from './login-window';
 
 export const LoginUIComponent: React.FC = () => {
   return (
     <Box
       sx={{
         background: `
-          radial-gradient(circle at center, rgba(0, 0, 0, 0) 30%, rgba(0, 0, 0, 0.9) 100%),
-          url(${getSplashImage()}) center / auto 100% no-repeat
-        `, // Vignette overlay + background image
-        backgroundColor: "#1a1a1a", // Very dark gray base color
-        width: "100vw",
-        height: "100vh",
-        display: "flex", // Flexbox layout
-        justifyContent: "center", // Center horizontally
-        alignItems: "center", // Center vertically
+          linear-gradient(90deg, rgba(3, 7, 8, 0.74), rgba(3, 7, 8, 0.18)),
+          radial-gradient(circle at center, rgba(0, 0, 0, 0) 22%, rgba(0, 0, 0, 0.84) 100%),
+          url("/eltania/elrador-hero-v2.webp") 64% center / cover no-repeat
+        `,
+        backgroundColor: '#070909',
+        width          : '100vw',
+        height         : '100vh',
+        minHeight      : 0,
+        padding        : '24px',
+        overflow       : 'auto',
+        display        : 'flex',
+        justifyContent : 'center',
+        alignItems     : 'center',
       }}
     >
       <LoginWindowComponent />

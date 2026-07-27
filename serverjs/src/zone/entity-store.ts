@@ -4,6 +4,7 @@ export const EntityKind = Object.freeze({
   inactive: 0,
   pc: 1,
   npc: 2,
+  corpse: 3,
 });
 
 export type EntityKind = (typeof EntityKind)[keyof typeof EntityKind];
@@ -141,6 +142,17 @@ export class Entity {
   }
   get active(): boolean { return this.kind !== EntityKind.inactive; }
 
+  becomeCorpse(): void {
+    if (this.kind !== EntityKind.npc) {
+      throw new Error("Only an NPC can become a corpse");
+    }
+    this.store.publicState.stateKind[this.index] = EntityKind.corpse;
+    this.store.privateSpeed[this.index] = 0;
+    this.velocity.set(0, 0, 0);
+    this.movementState = 0;
+    this.markDirty();
+  }
+
   get animation(): number { return this.store.publicState.stateAnimation[this.index] ?? 0; }
   set animation(value: number) {
     this.store.publicState.stateAnimation[this.index] = value;
@@ -158,6 +170,31 @@ export class Entity {
   get appearance(): number { return this.store.publicState.stateAppearance[this.index] ?? 0; }
   set appearance(value: number) {
     this.store.publicState.stateAppearance[this.index] = value;
+    this.markDirty();
+  }
+
+  get heading(): number { return this.store.publicState.stateHeading[this.index] ?? 0; }
+  set heading(value: number) {
+    const state = this.store.publicState;
+    state.stateHeading[this.index] = value;
+    const orientation = this.index * 4;
+    const halfYaw = value * 0.5;
+    state.stateOrientation[orientation] = 0;
+    state.stateOrientation[orientation + 1] = Math.sin(halfYaw);
+    state.stateOrientation[orientation + 2] = 0;
+    state.stateOrientation[orientation + 3] = Math.cos(halfYaw);
+    this.markDirty();
+  }
+
+  get currentHp(): number { return this.store.publicState.stateCurrentHp[this.index] ?? 0; }
+  set currentHp(value: number) {
+    this.store.publicState.stateCurrentHp[this.index] = Math.max(0, Math.trunc(value));
+    this.markDirty();
+  }
+
+  get maximumHp(): number { return this.store.publicState.stateMaximumHp[this.index] ?? 0; }
+  set maximumHp(value: number) {
+    this.store.publicState.stateMaximumHp[this.index] = Math.max(0, Math.trunc(value));
     this.markDirty();
   }
 
@@ -309,6 +346,8 @@ export class EntityStore {
     state.stateModelKeyOffset[index] = 0;
     state.stateModelKeyLength[index] = 0;
     state.stateHeading[index] = 0;
+    state.stateCurrentHp[index] = 0;
+    state.stateMaximumHp[index] = 0;
     this.arena.serverFlags[index] = 0;
     this.arena.combatTimer[index] = 0;
     this.arena.aggroTarget[index] = 0;

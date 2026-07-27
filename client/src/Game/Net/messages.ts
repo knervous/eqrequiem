@@ -155,6 +155,13 @@ export interface CharacterSelectEntry extends OpenMessage {
   face?: number;
   enabled?: number;
   items?: ItemInstance[];
+  appearanceSchemaVersion?: number;
+  bodyFamilyId?: string;
+  bodyComponentId?: string;
+  faceComponentId?: string;
+  presentationId?: string;
+  callingId?: string;
+  originId?: string;
 }
 export interface CharacterSelect {
   characterCount: number;
@@ -183,13 +190,20 @@ export interface CharCreate extends OpenMessage {
   deity: number;
   face: number;
   startZone: number;
-  str: number;
-  sta: number;
-  agi: number;
-  dex: number;
-  wis: number;
-  intel: number;
-  cha: number;
+  str?: number;
+  sta?: number;
+  agi?: number;
+  dex?: number;
+  wis?: number;
+  intel?: number;
+  cha?: number;
+  appearanceSchemaVersion?: number;
+  bodyFamilyId?: string;
+  bodyComponentId?: string;
+  faceComponentId?: string;
+  presentationId?: string;
+  callingId?: string;
+  originId?: string;
 }
 export const CharCreate = defineNetMessage<CharCreate>(22, "CharCreate");
 export interface EnterWorld {
@@ -212,6 +226,10 @@ export interface RequestClientZoneChange extends OpenMessage {
   zoneId?: number | string;
   instanceId?: number;
   type: ZoneChangeType;
+  x?: number;
+  y?: number;
+  z?: number;
+  heading?: number;
 }
 export const RequestClientZoneChange =
   defineNetMessage<RequestClientZoneChange>(31, "RequestClientZoneChange");
@@ -236,6 +254,11 @@ export interface Spawn extends OpenMessage {
   y: number;
   z: number;
   heading: number;
+  currentHp?: number;
+  maximumHp?: number;
+  kind?: number;
+  isNpc?: boolean;
+  isCorpse?: boolean;
   equipment?: {
     head?: number;
     chest?: number;
@@ -276,9 +299,162 @@ export const ClientPositionUpdate = defineNetMessage<ClientPositionUpdate>(
   43,
   "ClientPositionUpdate",
 );
+export interface AutoAttack {
+  enabled: boolean;
+  targetId: number;
+}
+export const AutoAttack = defineNetMessage<AutoAttack>(60, "AutoAttack");
+export interface CombatEvent {
+  tick: number;
+  attackerId: number;
+  targetId: number;
+  outcome:
+    | "started"
+    | "stopped"
+    | "hit"
+    | "miss"
+    | "out-of-range"
+    | "invalid-target";
+  swingSequence: number;
+  damage: number;
+  targetCurrentHp: number;
+  targetMaximumHp: number;
+  killed: boolean;
+}
+export const CombatEvent = defineNetMessage<CombatEvent>(61, "CombatEvent");
+export interface NpcDebugPoint {
+  x: number;
+  y: number;
+  z: number;
+}
+export interface NpcDebugState {
+  npcId: number;
+  tick: number;
+  engaged: boolean;
+  aggroTargetId: number;
+  position: NpcDebugPoint;
+  movementTarget: NpcDebugPoint;
+  moveSpeed: number;
+  hateList: {
+    entityId: number;
+    hate: number;
+    damage: number;
+    lastModifiedTick: number;
+  }[];
+  roam: {
+    suspended: boolean;
+    targetIndex: number;
+    pauseUntilMs: number;
+    path: NpcDebugPoint[];
+  } | null;
+  navigation: {
+    status:
+      | "idle"
+      | "melee"
+      | "path-pending"
+      | "following-path"
+      | "direct-fallback"
+      | "no-target";
+    requestId: number;
+    requestedAtTick: number;
+    nextRepathTick: number;
+    waypointIndex: number;
+    path: NpcDebugPoint[];
+    requestedDestination: NpcDebugPoint | null;
+    error: string | null;
+  };
+}
+export const NpcDebugState = defineNetMessage<NpcDebugState>(
+  67,
+  "NpcDebugState",
+);
+export interface DeathEvent {
+  victimId: number;
+  victimKind: "pc" | "npc";
+  killerId: number;
+  corpseId: number;
+  bindZoneId: number;
+  x: number;
+  y: number;
+  z: number;
+  heading: number;
+}
+export const DeathEvent = defineNetMessage<DeathEvent>(62, "DeathEvent");
+export interface LootRequest {
+  corpseId: number;
+}
+export const LootRequest = defineNetMessage<LootRequest>(63, "LootRequest");
+export interface LootWindow {
+  corpseId: number;
+  corpseName: string;
+  items: ItemInstance[];
+}
+export const LootWindow = defineNetMessage<LootWindow>(64, "LootWindow");
+export interface LootItem {
+  corpseId: number;
+  lootSlot: number;
+}
+export const LootItem = defineNetMessage<LootItem>(65, "LootItem");
+export interface LootError {
+  corpseId: number;
+  message: string;
+}
+export const LootError = defineNetMessage<LootError>(66, "LootError");
+export interface MerchantOpen {
+  npcId: number;
+}
+export const MerchantOpen = defineNetMessage<MerchantOpen>(68, "MerchantOpen");
+export interface MerchantWindowItem {
+  merchantSlot: number;
+  itemId: number;
+  name: string;
+  quantity: number | null;
+  unitPrice: number;
+  item: ItemInstance;
+}
+export interface MerchantSellQuote {
+  slot: number;
+  bag: number;
+  quantity: number;
+  unitPrice: number;
+  item: ItemInstance;
+}
+export interface MerchantWindow {
+  npcId: number;
+  merchantName: string;
+  currencyCopper: number;
+  items: MerchantWindowItem[];
+  sellItems: MerchantSellQuote[];
+}
+export const MerchantWindow = defineNetMessage<MerchantWindow>(
+  69,
+  "MerchantWindow",
+);
+export interface MerchantBuy {
+  npcId: number;
+  merchantSlot: number;
+  quantity: number;
+}
+export const MerchantBuy = defineNetMessage<MerchantBuy>(70, "MerchantBuy");
+export interface MerchantSell {
+  npcId: number;
+  slot: number;
+  bag: number;
+  quantity: number;
+}
+export const MerchantSell = defineNetMessage<MerchantSell>(71, "MerchantSell");
+export interface MerchantError {
+  npcId: number;
+  message: string;
+}
+export const MerchantError = defineNetMessage<MerchantError>(
+  72,
+  "MerchantError",
+);
 export interface EntityAnimation extends OpenMessage {
   spawnId: number;
-  animation: number;
+  /** Canonical EQ animation clip key such as `l01` or `p01`. */
+  animation: string;
 }
 export const EntityAnimation = defineNetMessage<EntityAnimation>(
   44,

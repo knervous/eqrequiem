@@ -2,10 +2,19 @@ import { Worker } from "node:worker_threads";
 
 import type { Logger } from "../shared/logger.js";
 import type {
+  ZoneLootAwardMessage,
+  ZoneLootWindowMessage,
+  ZoneMerchantErrorMessage,
+  ZoneMerchantIntentMessage,
+  ZoneNavPathRequestMessage,
+  ZoneNpcDebugMessage,
+  ZonePcDeathMessage,
   ZoneWorkerInboundMessage,
   ZoneWorkerOutboundMessage,
 } from "./worker-types.js";
 import type { QuestDefinition } from "./quest-types.js";
+import type { CombatEvent } from "../combat/melee-combat.js";
+import type { NpcEngagementRules } from "../ai/npc-engagement.js";
 
 interface ZoneWorkerHandle {
   worker: Worker;
@@ -42,6 +51,8 @@ export class ZoneWorkerPool {
   constructor(
     private readonly tickRateHz: number,
     private readonly workBudgetMs: number,
+    private readonly engagementRules: NpcEngagementRules,
+    private readonly devDiagnostics: boolean,
     private readonly logger: Logger,
     private readonly onSnapshot?: (
       zoneId: number,
@@ -62,6 +73,29 @@ export class ZoneWorkerPool {
       enteredSpawnIds: readonly number[],
       exitedSpawnIds: readonly number[],
     ) => void,
+    private readonly onCombatEvent?: (
+      sessionIds: readonly number[],
+      event: CombatEvent,
+    ) => void,
+    private readonly onPcDeath?: (message: ZonePcDeathMessage) => void,
+    private readonly onLootWindow?: (message: ZoneLootWindowMessage) => void,
+    private readonly onLootAward?: (message: ZoneLootAwardMessage) => void,
+    private readonly onMerchantIntent?: (
+      message: ZoneMerchantIntentMessage,
+    ) => void,
+    private readonly onMerchantError?: (
+      message: ZoneMerchantErrorMessage,
+    ) => void,
+    private readonly onNavPathRequest?: (
+      message: ZoneNavPathRequestMessage,
+    ) => void,
+    private readonly onNpcDebug?: (message: ZoneNpcDebugMessage) => void,
+    private readonly onPersistentSnapshot?: (
+      zoneId: number,
+      instanceId: number,
+      blobData: Uint8Array,
+      formatVersion: number,
+    ) => Promise<void>,
   ) {}
 
   enqueue(
@@ -88,8 +122,9 @@ export class ZoneWorkerPool {
     const handle = this.workers.get(key);
     if (!handle) return false;
     this.workers.delete(key);
+    const stopped = waitForWorkerStop(handle.worker);
     handle.worker.postMessage({ type: "shutdown" } satisfies ZoneWorkerInboundMessage);
-    await handle.worker.terminate();
+    await stopped;
     return true;
   }
 
@@ -106,13 +141,14 @@ export class ZoneWorkerPool {
   }
 
   async stopAll(): Promise<void> {
-    const terminations: Promise<number>[] = [];
+    const terminations: Promise<void>[] = [];
 
     for (const [key, handle] of this.workers.entries()) {
+      const stopped = waitForWorkerStop(handle.worker);
       handle.worker.postMessage({
         type: "shutdown",
       } satisfies ZoneWorkerInboundMessage);
-      terminations.push(handle.worker.terminate());
+      terminations.push(stopped);
       this.workers.delete(key);
     }
 
@@ -134,6 +170,8 @@ export class ZoneWorkerPool {
         workBudgetMs: this.workBudgetMs,
         questDefinitions: this.questDefinitions,
         questRevision: this.questRevision,
+        engagementRules: this.engagementRules,
+        devDiagnostics: this.devDiagnostics,
       },
     });
 
@@ -179,6 +217,70 @@ export class ZoneWorkerPool {
           message.sessionId,
           message.enteredSpawnIds,
           message.exitedSpawnIds,
+        );
+        return;
+      }
+      if (message.type === "combat_event") {
+        this.onCombatEvent?.(message.sessionIds, message.event);
+        return;
+      }
+      if (message.type === "pc_death") {
+        this.onPcDeath?.(message);
+        return;
+      }
+      if (message.type === "loot_window") {
+        this.onLootWindow?.(message);
+        return;
+      }
+      if (message.type === "loot_award") {
+        this.onLootAward?.(message);
+        return;
+      }
+      if (message.type === "merchant_intent") {
+        this.onMerchantIntent?.(message);
+        return;
+      }
+      if (message.type === "merchant_error") {
+        this.onMerchantError?.(message);
+        return;
+      }
+      if (message.type === "nav_path_request") {
+        this.onNavPathRequest?.(message);
+        return;
+      }
+      if (message.type === "npc_debug") {
+        this.onNpcDebug?.(message);
+        return;
+      }
+      if (message.type === "persistent_snapshot") {
+        const canPersist = message.blobData === undefined
+          || this.onPersistentSnapshot !== undefined;
+        const persist = message.error
+          ? Promise.reject(new Error(message.error))
+          : message.blobData && this.onPersistentSnapshot
+          ? this.onPersistentSnapshot(
+              message.zoneId,
+              message.instanceId,
+              message.blobData,
+              message.formatVersion,
+            )
+          : Promise.resolve();
+        void persist.then(
+          () => handle.worker.postMessage({
+            type: "shutdown_commit",
+            persisted: canPersist,
+          } satisfies ZoneWorkerInboundMessage),
+          (error: unknown) => {
+            this.logger.error("Zone snapshot persistence failed", {
+              zoneId: message.zoneId,
+              instanceId: message.instanceId,
+              error: error instanceof Error ? error.message : String(error),
+            });
+            handle.worker.postMessage({
+              type: "shutdown_commit",
+              persisted: false,
+            } satisfies ZoneWorkerInboundMessage);
+          },
         );
         return;
       }
@@ -248,4 +350,20 @@ function statusOf(handle: ZoneWorkerHandle): ZoneShardStatus {
     questRevision: handle.questRevision,
     questCount: handle.questCount,
   };
+}
+
+function waitForWorkerStop(worker: Worker, timeoutMs = 5_000): Promise<void> {
+  return new Promise((resolve) => {
+    let settled = false;
+    const finish = (): void => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timeout);
+      resolve();
+    };
+    worker.once("exit", finish);
+    const timeout = setTimeout(() => {
+      void worker.terminate().then(finish, finish);
+    }, timeoutMs);
+  });
 }

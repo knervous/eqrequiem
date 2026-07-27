@@ -156,20 +156,37 @@ export const useTarget = () => {
   return target;
 };
 
-export const useInventorySlot = (slot: InventorySlot, bagSlot: number) => {
-  const [item, setItem] = useState<NullableItemInstance>(Player.instance?.playerInventory.get(slot, bagSlot) ?? null);
+export const useInventorySlot = (slot: InventorySlot, bagSlot?: number) => {
+  const resolveItem = useCallback(() => {
+    const inventory = Player.instance?.playerInventory;
+    if (!inventory) return null;
+    return bagSlot === undefined
+      ? inventory.getTopLevel(slot)
+      : inventory.get(slot, bagSlot);
+  }, [slot, bagSlot]);
+  const [item, setItem] = useState<NullableItemInstance>(resolveItem);
   useEffect(() => {
     const cb = (data: { slot: number, bag?: number }) => {
-      if (data.slot !== slot || (data.bag !== undefined && data.bag !== bagSlot)) {
+      if (
+        data.slot !== slot
+        || (
+          bagSlot !== undefined
+          && data.bag !== undefined
+          && data.bag !== bagSlot
+        )
+      ) {
         return;
       }
-      setItem(Player.instance?.playerInventory.get(data.slot, data.bag) ?? null);
+      setItem(resolveItem());
     };
+    const refresh = () => setItem(resolveItem());
     emitter.on('updateInventorySlot', cb);
+    emitter.on('updateInventory', refresh);
     return () => {
       emitter.off('updateInventorySlot', cb);
+      emitter.off('updateInventory', refresh);
     };
-  }, [slot, bagSlot]);
+  }, [slot, bagSlot, resolveItem]);
   return item;
 };
 

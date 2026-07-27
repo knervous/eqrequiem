@@ -29,12 +29,52 @@ try {
         (id, name, idfile, icon, material, color, itemtype, slots, ac, bagslots,
          classes, races, stackable, stacksize, maxcharges, weight, damage, delay,
          astr, asta, adex, aagi, aint, awis, acha, hp, mana, dr, mr, cr, fr, pr,
-         haste, magic, nodrop)
+         haste, magic, nodrop, base_price, sell_rate_permille)
       SELECT id, Name, idfile, icon, material, color, itemtype, slots, ac, bagslots,
         classes, races, stackable, stacksize, maxcharges, weight, damage, delay,
         astr, asta, adex, aagi, aint, awis, acha, hp, mana, dr, mr, cr, fr, pr,
-        haste, magic, nodrop
+        haste, magic, nodrop, Price, GREATEST(0, ROUND(sellrate * 1000))
       FROM ${source}.items
+    `);
+    await database.execute(`
+      INSERT INTO merchant_catalogs (id, merchant_key, label)
+      SELECT DISTINCT merchant_id, CONCAT('merchant:', merchant_id), ''
+      FROM ${source}.npc_types WHERE merchant_id > 0
+      ON DUPLICATE KEY UPDATE merchant_key = VALUES(merchant_key)
+    `);
+    await database.execute(`
+      INSERT INTO npc_merchant_assignments
+        (npc_archetype_id, catalog_id, keeps_sold_items, greed,
+         sell_to_player_permille, buy_from_player_permille,
+         interaction_range, pricing_policy_json)
+      SELECT npc.id, npc.merchant_id, npc.keeps_sold_items, npc.greed,
+        1000 + GREATEST(0, npc.greed) * 10, 950, 20,
+        JSON_OBJECT('source', 'eqemu', 'legacyGreed', npc.greed)
+      FROM ${source}.npc_types npc
+      JOIN npc_archetypes archetype ON archetype.id = npc.id
+      JOIN merchant_catalogs catalog ON catalog.id = npc.merchant_id
+      WHERE npc.merchant_id > 0
+      ON DUPLICATE KEY UPDATE catalog_id = VALUES(catalog_id),
+        keeps_sold_items = VALUES(keeps_sold_items), greed = VALUES(greed),
+        sell_to_player_permille = VALUES(sell_to_player_permille),
+        buy_from_player_permille = VALUES(buy_from_player_permille),
+        interaction_range = VALUES(interaction_range),
+        pricing_policy_json = VALUES(pricing_policy_json)
+    `);
+    await database.execute(`
+      INSERT INTO merchant_catalog_entries
+        (catalog_id, merchant_slot, item_id, level_required,
+         classes_required, probability_permille)
+      SELECT list.merchantid, list.slot, list.item,
+        GREATEST(0, list.level_required), list.classes_required,
+        LEAST(1000, GREATEST(0, ROUND(list.probability * 10)))
+      FROM ${source}.merchantlist list
+      JOIN merchant_catalogs catalog ON catalog.id = list.merchantid
+      JOIN items item ON item.id = list.item
+      ON DUPLICATE KEY UPDATE item_id = VALUES(item_id),
+        level_required = VALUES(level_required),
+        classes_required = VALUES(classes_required),
+        probability_permille = VALUES(probability_permille)
     `);
     await database.execute(`
       INSERT IGNORE INTO npc_archetypes
@@ -45,12 +85,63 @@ try {
         JSON_OBJECT('hp', hp, 'mana', mana, 'minDamage', mindmg,
           'maxDamage', maxdmg, 'factionId', npc_faction_id, 'size', size,
           'face', face, 'helm', helmtexture, 'texture', texture,
-          'bodyType', bodytype, 'classId', class)
+          'bodyType', bodytype, 'classId', class,
+          'aggroRadius', aggroradius, 'alwaysAggro', always_aggro)
       FROM ${source}.npc_types
       ON DUPLICATE KEY UPDATE name = VALUES(name), level = VALUES(level),
         race_id = VALUES(race_id), gender = VALUES(gender),
         movement_speed = VALUES(movement_speed), model_key = VALUES(model_key),
         behavior_key = VALUES(behavior_key), properties_json = VALUES(properties_json)
+    `);
+    await database.execute(`
+      INSERT INTO npc_loot_tables
+        (id, loot_key, minimum_currency, maximum_currency, average_currency)
+      SELECT id, CONCAT('loot-table:', id), mincash, maxcash, avgcoin
+      FROM ${source}.loottable
+      ON DUPLICATE KEY UPDATE
+        minimum_currency = VALUES(minimum_currency),
+        maximum_currency = VALUES(maximum_currency),
+        average_currency = VALUES(average_currency)
+    `);
+    await database.execute(`
+      INSERT INTO npc_loot_assignments (npc_archetype_id, loot_table_id)
+      SELECT npc.id, npc.loottable_id
+      FROM ${source}.npc_types npc
+      JOIN npc_archetypes archetype ON archetype.id = npc.id
+      JOIN npc_loot_tables loot_table ON loot_table.id = npc.loottable_id
+      WHERE npc.loottable_id > 0
+      ON DUPLICATE KEY UPDATE loot_table_id = VALUES(loot_table_id)
+    `);
+    await database.execute(`
+      INSERT INTO npc_loot_table_entries
+        (loot_table_id, loot_group_id, rolls, chance_permille,
+         drop_limit, minimum_drops)
+      SELECT entry.loottable_id, entry.lootdrop_id,
+        GREATEST(0, entry.multiplier),
+        LEAST(1000, GREATEST(0, ROUND(entry.probability * 10))),
+        GREATEST(0, entry.droplimit), GREATEST(0, entry.mindrop)
+      FROM ${source}.loottable_entries entry
+      JOIN npc_loot_tables loot_table ON loot_table.id = entry.loottable_id
+      ON DUPLICATE KEY UPDATE rolls = VALUES(rolls),
+        chance_permille = VALUES(chance_permille),
+        drop_limit = VALUES(drop_limit),
+        minimum_drops = VALUES(minimum_drops)
+    `);
+    await database.execute(`
+      INSERT INTO npc_loot_group_entries
+        (loot_group_id, item_id, chance_permille, rolls,
+         minimum_quantity, maximum_quantity,
+         npc_minimum_level, npc_maximum_level)
+      SELECT entry.lootdrop_id, entry.item_id,
+        LEAST(1000, GREATEST(0, ROUND(entry.chance * 10))),
+        GREATEST(1, entry.multiplier), 1, 1,
+        GREATEST(0, entry.npc_min_level), GREATEST(0, entry.npc_max_level)
+      FROM ${source}.lootdrop_entries entry
+      JOIN items item ON item.id = entry.item_id
+      ON DUPLICATE KEY UPDATE chance_permille = VALUES(chance_permille),
+        rolls = VALUES(rolls),
+        npc_minimum_level = VALUES(npc_minimum_level),
+        npc_maximum_level = VALUES(npc_maximum_level)
     `);
     await database.execute(`
       INSERT IGNORE INTO spawn_groups (id, spawn_group_key, respawn_seconds, enabled)
@@ -156,6 +247,18 @@ try {
       JOIN ${source}.item_instances instance ON instance.id = inventory.item_instance_id
       JOIN characters player_character ON player_character.id = inventory.character_id
       WHERE inventory.slot IS NOT NULL
+    `);
+    await database.execute(`
+      INSERT INTO character_currency (character_id, carried_copper, banked_copper)
+      SELECT currency.id,
+        currency.platinum * 1000 + currency.gold * 100
+          + currency.silver * 10 + currency.copper,
+        currency.platinum_bank * 1000 + currency.gold_bank * 100
+          + currency.silver_bank * 10 + currency.copper_bank
+      FROM ${source}.character_currency currency
+      JOIN characters player_character ON player_character.id = currency.id
+      ON DUPLICATE KEY UPDATE carried_copper = VALUES(carried_copper),
+        banked_copper = VALUES(banked_copper)
     `);
   });
 

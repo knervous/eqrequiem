@@ -3,7 +3,7 @@ import BABYLON from '@bjs';
 import { FileSystem } from '@game/FileSystem/filesystem';
 import { BabylonTextureCache } from './bjs-texture-cache';
 
-const pending = {};
+const pending = new Set<string>();
 export async function swapMaterialTexture(
   material: BJS.Material,
   newTextureName: string,
@@ -20,9 +20,11 @@ export async function swapMaterialTexture(
     return null;
   }
   // console.log('Got through swapMaterialTexture', fileName, newTextureName);
-  const cacheKey = newTextureName;
+  // Frame names are not globally unique. Scope decoded and in-flight texture
+  // work to the source package that owns the material.
+  const cacheKey = `${fileName}/${newTextureName}`;
 
-  if (pending[cacheKey]) {
+  if (pending.has(cacheKey)) {
     return null;
   }
   const cached =
@@ -31,44 +33,47 @@ export async function swapMaterialTexture(
     applyToMaterial(material, cached, flipY);
     return cached;
   }
-  pending[cacheKey] = true;
+  pending.add(cacheKey);
 
-  const bytes = await FileSystem.getFileBytes(
-    `eqrequiem/textures/${fileName}`,
-    `${newTextureName}.webp`,
-  );
-
-  if (!bytes) {
-    console.warn('[ImageSwap] Failed to load texture:', newTextureName);
-    return null;
-  }
-  const blob = new Blob([bytes], { type: 'image/webp' });
-  const url = URL.createObjectURL(blob);
-  const scene = (material as any).getScene() as BJS.Scene;
-  const newTex = await new Promise<BJS.Texture>((res, rej) => {
-    const newTex = new BABYLON.Texture(
-      url,
-      scene,
-      true,
-      false,
-      undefined,
-      () => {
-        URL.revokeObjectURL(url);
-        res(newTex);
-      },
-      (msg, ex) => {
-        rej();
-        URL.revokeObjectURL(url);
-        console.error('Texture load error:', msg, ex);
-      },
+  try {
+    const bytes = await FileSystem.getFileBytes(
+      `eqrequiem/textures/${fileName}`,
+      `${newTextureName}.webp`,
     );
-    newTex.name = cacheKey;
-    BabylonTextureCache.set(cacheKey, newTex);
-    applyToMaterial(material, newTex, flipY);
-    pending[cacheKey] = false;
-  });
 
-  return newTex;
+    if (!bytes) {
+      console.warn('[ImageSwap] Failed to load texture:', newTextureName);
+      return null;
+    }
+    const blob = new Blob([bytes], { type: 'image/webp' });
+    const url = URL.createObjectURL(blob);
+    const scene = (material as any).getScene() as BJS.Scene;
+    const newTex = await new Promise<BJS.Texture>((res, rej) => {
+      const newTex = new BABYLON.Texture(
+        url,
+        scene,
+        true,
+        false,
+        undefined,
+        () => {
+          URL.revokeObjectURL(url);
+          res(newTex);
+        },
+        (msg, ex) => {
+          rej(ex ?? new Error(msg));
+          URL.revokeObjectURL(url);
+          console.error('Texture load error:', msg, ex);
+        },
+      );
+      newTex.name = cacheKey;
+      BabylonTextureCache.set(cacheKey, newTex);
+      applyToMaterial(material, newTex, flipY);
+    });
+
+    return newTex;
+  } finally {
+    pending.delete(cacheKey);
+  }
 }
 
 /** Assigns the newly loaded texture to the correct slot on Standard vs PBR materials */

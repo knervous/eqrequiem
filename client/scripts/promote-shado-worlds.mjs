@@ -12,7 +12,7 @@ const requestedZone = process.argv[2]?.toLowerCase();
 
 await fs.mkdir(outputDirectory, { recursive: true });
 const entries = await fs.readdir(sourceDirectory, { withFileTypes: true });
-const artifacts = entries
+const spatialArtifacts = entries
   .filter(
     (entry) =>
       entry.isFile() &&
@@ -23,7 +23,7 @@ const artifacts = entries
   .map((entry) => entry.name)
   .sort();
 
-if (!artifacts.length) {
+if (!spatialArtifacts.length) {
   throw new Error(
     requestedZone
       ? `No promoted spatial package found for '${requestedZone}'`
@@ -31,13 +31,30 @@ if (!artifacts.length) {
   );
 }
 
-for (const artifact of artifacts) {
-  await fs.copyFile(
-    path.join(sourceDirectory, artifact),
-    path.join(outputDirectory, artifact),
-  );
+let copied = 0;
+for (const spatial of spatialArtifacts) {
+  const zone = spatial.slice(0, -".spatial.json.gz".length);
+  const artifacts = [
+    spatial,
+    `${zone}.glb.gz`,
+    `${zone}.collision.bin.gz`,
+  ];
+  for (const artifact of artifacts) {
+    const source = path.join(sourceDirectory, artifact);
+    try {
+      await fs.copyFile(source, path.join(outputDirectory, artifact));
+      copied++;
+    } catch (error) {
+      if (artifact === spatial) throw error;
+      throw new Error(
+        `Promoted world '${zone}' is missing required artifact '${artifact}'`,
+        { cause: error },
+      );
+    }
+  }
 }
 
 console.log(
-  `Promoted ${artifacts.length} Shado world package(s) into ${outputDirectory}`,
+  `Promoted ${spatialArtifacts.length} Shado world package(s) ` +
+    `(${copied} artifacts) into ${outputDirectory}`,
 );

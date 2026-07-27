@@ -23,15 +23,15 @@ export class ZoneSessionNetView {
   get zoneId(): number {
     return new DataView(this.buffer).getUint32(this.byteOffset + 0, true);
   }
-  
+
   set zoneId(value: number) {
     new DataView(this.buffer).setUint32(this.byteOffset + 0, value, true);
   }
-  
+
   get instanceId(): number {
     return new DataView(this.buffer).getUint32(this.byteOffset + 4, true);
   }
-  
+
   set instanceId(value: number) {
     new DataView(this.buffer).setUint32(this.byteOffset + 4, value, true);
   }
@@ -72,31 +72,31 @@ export class MoveItemNetView {
   get fromSlot(): number {
     return new DataView(this.buffer).getInt32(this.byteOffset + 0, true);
   }
-  
+
   set fromSlot(value: number) {
     new DataView(this.buffer).setInt32(this.byteOffset + 0, value, true);
   }
-  
+
   get toSlot(): number {
     return new DataView(this.buffer).getInt32(this.byteOffset + 4, true);
   }
-  
+
   set toSlot(value: number) {
     new DataView(this.buffer).setInt32(this.byteOffset + 4, value, true);
   }
-  
+
   get fromBag(): number {
     return new DataView(this.buffer).getInt32(this.byteOffset + 8, true);
   }
-  
+
   set fromBag(value: number) {
     new DataView(this.buffer).setInt32(this.byteOffset + 8, value, true);
   }
-  
+
   get toBag(): number {
     return new DataView(this.buffer).getInt32(this.byteOffset + 12, true);
   }
-  
+
   set toBag(value: number) {
     new DataView(this.buffer).setInt32(this.byteOffset + 12, value, true);
   }
@@ -139,15 +139,15 @@ export class DeleteItemNetView {
   get slot(): number {
     return new DataView(this.buffer).getInt32(this.byteOffset + 0, true);
   }
-  
+
   set slot(value: number) {
     new DataView(this.buffer).setInt32(this.byteOffset + 0, value, true);
   }
-  
+
   get bag(): number {
     return new DataView(this.buffer).getInt32(this.byteOffset + 4, true);
   }
-  
+
   set bag(value: number) {
     new DataView(this.buffer).setInt32(this.byteOffset + 4, value, true);
   }
@@ -185,7 +185,7 @@ export class IntValueNetView {
   get value(): number {
     return new DataView(this.buffer).getInt32(this.byteOffset + 0, true);
   }
-  
+
   set value(value: number) {
     new DataView(this.buffer).setInt32(this.byteOffset + 0, value, true);
   }
@@ -229,29 +229,31 @@ export interface WorldEntityStateNet {
   modelKeyOffset: number;
   modelKeyLength: number;
   heading: number;
+  currentHp: number;
+  maximumHp: number;
   serverFlags: number;
   combatTimer: number;
   aggroTarget: number;
 }
 
 export class WorldEntityStateNetView {
-  static readonly STRIDE = 112;
+  static readonly STRIDE = 120;
 
   constructor(
     readonly buffer: ArrayBufferLike,
     readonly byteOffset = 0
   ) {
-    assertViewBounds(buffer, byteOffset, 112, 'WorldEntityStateNetView');
+    assertViewBounds(buffer, byteOffset, 120, 'WorldEntityStateNetView');
   }
 
   get kind(): number {
     return new DataView(this.buffer).getUint8(this.byteOffset + 0);
   }
-  
+
   set kind(value: number) {
     new DataView(this.buffer).setUint8(this.byteOffset + 0, value);
   }
-  
+
   get position(): Float32Array {
     return new Float32Array(
       this.buffer,
@@ -259,7 +261,7 @@ export class WorldEntityStateNetView {
       3
     );
   }
-  
+
   get orientation(): Float32Array {
     return new Float32Array(
       this.buffer,
@@ -267,7 +269,7 @@ export class WorldEntityStateNetView {
       4
     );
   }
-  
+
   get velocity(): Float32Array {
     return new Float32Array(
       this.buffer,
@@ -275,189 +277,205 @@ export class WorldEntityStateNetView {
       3
     );
   }
-  
+
   get animation(): number {
     return new DataView(this.buffer).getUint32(this.byteOffset + 44, true);
   }
-  
+
   set animation(value: number) {
     new DataView(this.buffer).setUint32(this.byteOffset + 44, value, true);
   }
-  
+
   get movementState(): number {
     return new DataView(this.buffer).getUint16(this.byteOffset + 48, true);
   }
-  
+
   set movementState(value: number) {
     new DataView(this.buffer).setUint16(this.byteOffset + 48, value, true);
   }
-  
+
   get appearance(): number {
     return new DataView(this.buffer).getUint16(this.byteOffset + 50, true);
   }
-  
+
   set appearance(value: number) {
     new DataView(this.buffer).setUint16(this.byteOffset + 50, value, true);
   }
-  
+
   get nameOffset(): number {
     return new DataView(this.buffer).getUint32(this.byteOffset + 52, true);
   }
-  
+
   set nameOffset(value: number) {
     new DataView(this.buffer).setUint32(this.byteOffset + 52, value, true);
   }
-  
+
   get nameLength(): number {
     return new DataView(this.buffer).getUint16(this.byteOffset + 56, true);
   }
-  
+
   set nameLength(value: number) {
     new DataView(this.buffer).setUint16(this.byteOffset + 56, value, true);
   }
-  
+
   get archetypeId(): number {
     return new DataView(this.buffer).getUint32(this.byteOffset + 60, true);
   }
-  
+
   set archetypeId(value: number) {
     new DataView(this.buffer).setUint32(this.byteOffset + 60, value, true);
   }
-  
+
   get level(): number {
     return new DataView(this.buffer).getUint16(this.byteOffset + 64, true);
   }
-  
+
   set level(value: number) {
     new DataView(this.buffer).setUint16(this.byteOffset + 64, value, true);
   }
-  
+
   get race(): number {
     return new DataView(this.buffer).getUint16(this.byteOffset + 66, true);
   }
-  
+
   set race(value: number) {
     new DataView(this.buffer).setUint16(this.byteOffset + 66, value, true);
   }
-  
+
   get gender(): number {
     return new DataView(this.buffer).getUint8(this.byteOffset + 68);
   }
-  
+
   set gender(value: number) {
     new DataView(this.buffer).setUint8(this.byteOffset + 68, value);
   }
-  
+
   get classId(): number {
     return new DataView(this.buffer).getUint8(this.byteOffset + 69);
   }
-  
+
   set classId(value: number) {
     new DataView(this.buffer).setUint8(this.byteOffset + 69, value);
   }
-  
+
   get bodyType(): number {
     return new DataView(this.buffer).getUint16(this.byteOffset + 70, true);
   }
-  
+
   set bodyType(value: number) {
     new DataView(this.buffer).setUint16(this.byteOffset + 70, value, true);
   }
-  
+
   get size(): number {
     return new DataView(this.buffer).getFloat32(this.byteOffset + 72, true);
   }
-  
+
   set size(value: number) {
     new DataView(this.buffer).setFloat32(this.byteOffset + 72, value, true);
   }
-  
+
   get face(): number {
     return new DataView(this.buffer).getUint8(this.byteOffset + 76);
   }
-  
+
   set face(value: number) {
     new DataView(this.buffer).setUint8(this.byteOffset + 76, value);
   }
-  
+
   get helm(): number {
     return new DataView(this.buffer).getUint8(this.byteOffset + 77);
   }
-  
+
   set helm(value: number) {
     new DataView(this.buffer).setUint8(this.byteOffset + 77, value);
   }
-  
+
   get chest(): number {
     return new DataView(this.buffer).getUint16(this.byteOffset + 78, true);
   }
-  
+
   set chest(value: number) {
     new DataView(this.buffer).setUint16(this.byteOffset + 78, value, true);
   }
-  
+
   get primary(): number {
     return new DataView(this.buffer).getUint32(this.byteOffset + 80, true);
   }
-  
+
   set primary(value: number) {
     new DataView(this.buffer).setUint32(this.byteOffset + 80, value, true);
   }
-  
+
   get secondary(): number {
     return new DataView(this.buffer).getUint32(this.byteOffset + 84, true);
   }
-  
+
   set secondary(value: number) {
     new DataView(this.buffer).setUint32(this.byteOffset + 84, value, true);
   }
-  
+
   get modelKeyOffset(): number {
     return new DataView(this.buffer).getUint32(this.byteOffset + 88, true);
   }
-  
+
   set modelKeyOffset(value: number) {
     new DataView(this.buffer).setUint32(this.byteOffset + 88, value, true);
   }
-  
+
   get modelKeyLength(): number {
     return new DataView(this.buffer).getUint16(this.byteOffset + 92, true);
   }
-  
+
   set modelKeyLength(value: number) {
     new DataView(this.buffer).setUint16(this.byteOffset + 92, value, true);
   }
-  
+
   get heading(): number {
     return new DataView(this.buffer).getFloat32(this.byteOffset + 96, true);
   }
-  
+
   set heading(value: number) {
     new DataView(this.buffer).setFloat32(this.byteOffset + 96, value, true);
   }
-  
+
+  get currentHp(): number {
+    return new DataView(this.buffer).getInt32(this.byteOffset + 100, true);
+  }
+
+  set currentHp(value: number) {
+    new DataView(this.buffer).setInt32(this.byteOffset + 100, value, true);
+  }
+
+  get maximumHp(): number {
+    return new DataView(this.buffer).getInt32(this.byteOffset + 104, true);
+  }
+
+  set maximumHp(value: number) {
+    new DataView(this.buffer).setInt32(this.byteOffset + 104, value, true);
+  }
+
   get serverFlags(): number {
-    return new DataView(this.buffer).getUint32(this.byteOffset + 100, true);
-  }
-  
-  set serverFlags(value: number) {
-    new DataView(this.buffer).setUint32(this.byteOffset + 100, value, true);
-  }
-  
-  get combatTimer(): number {
-    return new DataView(this.buffer).getUint32(this.byteOffset + 104, true);
-  }
-  
-  set combatTimer(value: number) {
-    new DataView(this.buffer).setUint32(this.byteOffset + 104, value, true);
-  }
-  
-  get aggroTarget(): number {
     return new DataView(this.buffer).getUint32(this.byteOffset + 108, true);
   }
-  
-  set aggroTarget(value: number) {
+
+  set serverFlags(value: number) {
     new DataView(this.buffer).setUint32(this.byteOffset + 108, value, true);
+  }
+
+  get combatTimer(): number {
+    return new DataView(this.buffer).getUint32(this.byteOffset + 112, true);
+  }
+
+  set combatTimer(value: number) {
+    new DataView(this.buffer).setUint32(this.byteOffset + 112, value, true);
+  }
+
+  get aggroTarget(): number {
+    return new DataView(this.buffer).getUint32(this.byteOffset + 116, true);
+  }
+
+  set aggroTarget(value: number) {
+    new DataView(this.buffer).setUint32(this.byteOffset + 116, value, true);
   }
 }
 
@@ -492,6 +510,8 @@ export function writeWorldEntityStateNet(
   target.modelKeyOffset = value.modelKeyOffset;
   target.modelKeyLength = value.modelKeyLength;
   target.heading = value.heading;
+  target.currentHp = value.currentHp;
+  target.maximumHp = value.maximumHp;
   target.serverFlags = value.serverFlags;
   target.combatTimer = value.combatTimer;
   target.aggroTarget = value.aggroTarget;
@@ -523,6 +543,8 @@ export function readWorldEntityStateNet(source: WorldEntityStateNetView): WorldE
     modelKeyOffset: source.modelKeyOffset,
     modelKeyLength: source.modelKeyLength,
     heading: source.heading,
+    currentHp: source.currentHp,
+    maximumHp: source.maximumHp,
     serverFlags: source.serverFlags,
     combatTimer: source.combatTimer,
     aggroTarget: source.aggroTarget,
@@ -554,26 +576,28 @@ export interface RenderSnapshotNetState {
   modelKeyOffset: number;
   modelKeyLength: number;
   heading: number;
+  currentHp: number;
+  maximumHp: number;
 }
 
 export class RenderSnapshotNetStateView {
-  static readonly STRIDE = 100;
+  static readonly STRIDE = 108;
 
   constructor(
     readonly buffer: ArrayBufferLike,
     readonly byteOffset = 0
   ) {
-    assertViewBounds(buffer, byteOffset, 100, 'RenderSnapshotNetStateView');
+    assertViewBounds(buffer, byteOffset, 108, 'RenderSnapshotNetStateView');
   }
 
   get kind(): number {
     return new DataView(this.buffer).getUint8(this.byteOffset + 0);
   }
-  
+
   set kind(value: number) {
     new DataView(this.buffer).setUint8(this.byteOffset + 0, value);
   }
-  
+
   get position(): Float32Array {
     return new Float32Array(
       this.buffer,
@@ -581,7 +605,7 @@ export class RenderSnapshotNetStateView {
       3
     );
   }
-  
+
   get orientation(): Float32Array {
     return new Float32Array(
       this.buffer,
@@ -589,7 +613,7 @@ export class RenderSnapshotNetStateView {
       4
     );
   }
-  
+
   get velocity(): Float32Array {
     return new Float32Array(
       this.buffer,
@@ -597,165 +621,181 @@ export class RenderSnapshotNetStateView {
       3
     );
   }
-  
+
   get animation(): number {
     return new DataView(this.buffer).getUint32(this.byteOffset + 44, true);
   }
-  
+
   set animation(value: number) {
     new DataView(this.buffer).setUint32(this.byteOffset + 44, value, true);
   }
-  
+
   get movementState(): number {
     return new DataView(this.buffer).getUint16(this.byteOffset + 48, true);
   }
-  
+
   set movementState(value: number) {
     new DataView(this.buffer).setUint16(this.byteOffset + 48, value, true);
   }
-  
+
   get appearance(): number {
     return new DataView(this.buffer).getUint16(this.byteOffset + 50, true);
   }
-  
+
   set appearance(value: number) {
     new DataView(this.buffer).setUint16(this.byteOffset + 50, value, true);
   }
-  
+
   get nameOffset(): number {
     return new DataView(this.buffer).getUint32(this.byteOffset + 52, true);
   }
-  
+
   set nameOffset(value: number) {
     new DataView(this.buffer).setUint32(this.byteOffset + 52, value, true);
   }
-  
+
   get nameLength(): number {
     return new DataView(this.buffer).getUint16(this.byteOffset + 56, true);
   }
-  
+
   set nameLength(value: number) {
     new DataView(this.buffer).setUint16(this.byteOffset + 56, value, true);
   }
-  
+
   get archetypeId(): number {
     return new DataView(this.buffer).getUint32(this.byteOffset + 60, true);
   }
-  
+
   set archetypeId(value: number) {
     new DataView(this.buffer).setUint32(this.byteOffset + 60, value, true);
   }
-  
+
   get level(): number {
     return new DataView(this.buffer).getUint16(this.byteOffset + 64, true);
   }
-  
+
   set level(value: number) {
     new DataView(this.buffer).setUint16(this.byteOffset + 64, value, true);
   }
-  
+
   get race(): number {
     return new DataView(this.buffer).getUint16(this.byteOffset + 66, true);
   }
-  
+
   set race(value: number) {
     new DataView(this.buffer).setUint16(this.byteOffset + 66, value, true);
   }
-  
+
   get gender(): number {
     return new DataView(this.buffer).getUint8(this.byteOffset + 68);
   }
-  
+
   set gender(value: number) {
     new DataView(this.buffer).setUint8(this.byteOffset + 68, value);
   }
-  
+
   get classId(): number {
     return new DataView(this.buffer).getUint8(this.byteOffset + 69);
   }
-  
+
   set classId(value: number) {
     new DataView(this.buffer).setUint8(this.byteOffset + 69, value);
   }
-  
+
   get bodyType(): number {
     return new DataView(this.buffer).getUint16(this.byteOffset + 70, true);
   }
-  
+
   set bodyType(value: number) {
     new DataView(this.buffer).setUint16(this.byteOffset + 70, value, true);
   }
-  
+
   get size(): number {
     return new DataView(this.buffer).getFloat32(this.byteOffset + 72, true);
   }
-  
+
   set size(value: number) {
     new DataView(this.buffer).setFloat32(this.byteOffset + 72, value, true);
   }
-  
+
   get face(): number {
     return new DataView(this.buffer).getUint8(this.byteOffset + 76);
   }
-  
+
   set face(value: number) {
     new DataView(this.buffer).setUint8(this.byteOffset + 76, value);
   }
-  
+
   get helm(): number {
     return new DataView(this.buffer).getUint8(this.byteOffset + 77);
   }
-  
+
   set helm(value: number) {
     new DataView(this.buffer).setUint8(this.byteOffset + 77, value);
   }
-  
+
   get chest(): number {
     return new DataView(this.buffer).getUint16(this.byteOffset + 78, true);
   }
-  
+
   set chest(value: number) {
     new DataView(this.buffer).setUint16(this.byteOffset + 78, value, true);
   }
-  
+
   get primary(): number {
     return new DataView(this.buffer).getUint32(this.byteOffset + 80, true);
   }
-  
+
   set primary(value: number) {
     new DataView(this.buffer).setUint32(this.byteOffset + 80, value, true);
   }
-  
+
   get secondary(): number {
     return new DataView(this.buffer).getUint32(this.byteOffset + 84, true);
   }
-  
+
   set secondary(value: number) {
     new DataView(this.buffer).setUint32(this.byteOffset + 84, value, true);
   }
-  
+
   get modelKeyOffset(): number {
     return new DataView(this.buffer).getUint32(this.byteOffset + 88, true);
   }
-  
+
   set modelKeyOffset(value: number) {
     new DataView(this.buffer).setUint32(this.byteOffset + 88, value, true);
   }
-  
+
   get modelKeyLength(): number {
     return new DataView(this.buffer).getUint16(this.byteOffset + 92, true);
   }
-  
+
   set modelKeyLength(value: number) {
     new DataView(this.buffer).setUint16(this.byteOffset + 92, value, true);
   }
-  
+
   get heading(): number {
     return new DataView(this.buffer).getFloat32(this.byteOffset + 96, true);
   }
-  
+
   set heading(value: number) {
     new DataView(this.buffer).setFloat32(this.byteOffset + 96, value, true);
+  }
+
+  get currentHp(): number {
+    return new DataView(this.buffer).getInt32(this.byteOffset + 100, true);
+  }
+
+  set currentHp(value: number) {
+    new DataView(this.buffer).setInt32(this.byteOffset + 100, value, true);
+  }
+
+  get maximumHp(): number {
+    return new DataView(this.buffer).getInt32(this.byteOffset + 104, true);
+  }
+
+  set maximumHp(value: number) {
+    new DataView(this.buffer).setInt32(this.byteOffset + 104, value, true);
   }
 }
 
@@ -790,6 +830,8 @@ export function writeRenderSnapshotNetState(
   target.modelKeyOffset = value.modelKeyOffset;
   target.modelKeyLength = value.modelKeyLength;
   target.heading = value.heading;
+  target.currentHp = value.currentHp;
+  target.maximumHp = value.maximumHp;
 }
 
 export function readRenderSnapshotNetState(source: RenderSnapshotNetStateView): RenderSnapshotNetState {
@@ -818,6 +860,8 @@ export function readRenderSnapshotNetState(source: RenderSnapshotNetStateView): 
     modelKeyOffset: source.modelKeyOffset,
     modelKeyLength: source.modelKeyLength,
     heading: source.heading,
+    currentHp: source.currentHp,
+    maximumHp: source.maximumHp,
   };
 }
 
@@ -827,23 +871,23 @@ export interface RenderSnapshotNet {
 }
 
 export class RenderSnapshotNetView {
-  static readonly STRIDE = 104;
+  static readonly STRIDE = 112;
 
   constructor(
     readonly buffer: ArrayBufferLike,
     readonly byteOffset = 0
   ) {
-    assertViewBounds(buffer, byteOffset, 104, 'RenderSnapshotNetView');
+    assertViewBounds(buffer, byteOffset, 112, 'RenderSnapshotNetView');
   }
 
   get entityId(): number {
     return new DataView(this.buffer).getUint32(this.byteOffset + 0, true);
   }
-  
+
   set entityId(value: number) {
     new DataView(this.buffer).setUint32(this.byteOffset + 0, value, true);
   }
-  
+
   get state(): RenderSnapshotNetStateView {
     return new RenderSnapshotNetStateView(this.buffer, this.byteOffset + 4);
   }
@@ -1142,8 +1186,8 @@ export function decodeIntValueNet(bytes: Uint8Array): IntValueNet | null {
 
 export const WORLD_ENTITY_STATE_NET_SCHEMA_ID = 8193;
 export const WORLD_ENTITY_STATE_NET_VERSION = 1;
-export const WORLD_ENTITY_STATE_NET_STRIDE = 112;
-export const WORLD_ENTITY_STATE_NET_SCHEMA_HASH = 0xf11b5bd67f1e2048n;
+export const WORLD_ENTITY_STATE_NET_STRIDE = 120;
+export const WORLD_ENTITY_STATE_NET_SCHEMA_HASH = 0x8d55550c9efd8ee5n;
 const WORLD_ENTITY_STATE_NET_SOA_PLANES = Object.freeze([
   { alignment: 1, scalarBytes: 1, components: 1 },
   { alignment: 4, scalarBytes: 4, components: 3 },
@@ -1171,12 +1215,15 @@ const WORLD_ENTITY_STATE_NET_SOA_PLANES = Object.freeze([
   { alignment: 4, scalarBytes: 4, components: 1 },
   { alignment: 4, scalarBytes: 4, components: 1 },
   { alignment: 4, scalarBytes: 4, components: 1 },
+  { alignment: 4, scalarBytes: 4, components: 1 },
+  { alignment: 4, scalarBytes: 4, components: 1 },
   { alignment: 4, scalarBytes: 4, components: 1 }
 ]);
 
 export const WORLD_ENTITY_STATE_NET_KINDS = Object.freeze({
   player: 1,
   npc: 2,
+  corpse: 3,
 });
 
 export class WorldEntityStateNetBatchView {
@@ -1201,7 +1248,7 @@ export class WorldEntityStateNetBatchView {
       this.count * 1
     );
   }
-  
+
   get position(): Float32Array {
     return new Float32Array(
       this.payload.buffer,
@@ -1209,7 +1256,7 @@ export class WorldEntityStateNetBatchView {
       this.count * 3
     );
   }
-  
+
   get orientation(): Float32Array {
     return new Float32Array(
       this.payload.buffer,
@@ -1217,7 +1264,7 @@ export class WorldEntityStateNetBatchView {
       this.count * 4
     );
   }
-  
+
   get velocity(): Float32Array {
     return new Float32Array(
       this.payload.buffer,
@@ -1225,7 +1272,7 @@ export class WorldEntityStateNetBatchView {
       this.count * 3
     );
   }
-  
+
   get animation(): Uint32Array {
     return new Uint32Array(
       this.payload.buffer,
@@ -1233,7 +1280,7 @@ export class WorldEntityStateNetBatchView {
       this.count * 1
     );
   }
-  
+
   get movementState(): Uint16Array {
     return new Uint16Array(
       this.payload.buffer,
@@ -1241,7 +1288,7 @@ export class WorldEntityStateNetBatchView {
       this.count * 1
     );
   }
-  
+
   get appearance(): Uint16Array {
     return new Uint16Array(
       this.payload.buffer,
@@ -1249,7 +1296,7 @@ export class WorldEntityStateNetBatchView {
       this.count * 1
     );
   }
-  
+
   get nameOffset(): Uint32Array {
     return new Uint32Array(
       this.payload.buffer,
@@ -1257,7 +1304,7 @@ export class WorldEntityStateNetBatchView {
       this.count * 1
     );
   }
-  
+
   get nameLength(): Uint16Array {
     return new Uint16Array(
       this.payload.buffer,
@@ -1265,7 +1312,7 @@ export class WorldEntityStateNetBatchView {
       this.count * 1
     );
   }
-  
+
   get archetypeId(): Uint32Array {
     return new Uint32Array(
       this.payload.buffer,
@@ -1273,7 +1320,7 @@ export class WorldEntityStateNetBatchView {
       this.count * 1
     );
   }
-  
+
   get level(): Uint16Array {
     return new Uint16Array(
       this.payload.buffer,
@@ -1281,7 +1328,7 @@ export class WorldEntityStateNetBatchView {
       this.count * 1
     );
   }
-  
+
   get race(): Uint16Array {
     return new Uint16Array(
       this.payload.buffer,
@@ -1289,7 +1336,7 @@ export class WorldEntityStateNetBatchView {
       this.count * 1
     );
   }
-  
+
   get gender(): Uint8Array {
     return new Uint8Array(
       this.payload.buffer,
@@ -1297,7 +1344,7 @@ export class WorldEntityStateNetBatchView {
       this.count * 1
     );
   }
-  
+
   get classId(): Uint8Array {
     return new Uint8Array(
       this.payload.buffer,
@@ -1305,7 +1352,7 @@ export class WorldEntityStateNetBatchView {
       this.count * 1
     );
   }
-  
+
   get bodyType(): Uint16Array {
     return new Uint16Array(
       this.payload.buffer,
@@ -1313,7 +1360,7 @@ export class WorldEntityStateNetBatchView {
       this.count * 1
     );
   }
-  
+
   get size(): Float32Array {
     return new Float32Array(
       this.payload.buffer,
@@ -1321,7 +1368,7 @@ export class WorldEntityStateNetBatchView {
       this.count * 1
     );
   }
-  
+
   get face(): Uint8Array {
     return new Uint8Array(
       this.payload.buffer,
@@ -1329,7 +1376,7 @@ export class WorldEntityStateNetBatchView {
       this.count * 1
     );
   }
-  
+
   get helm(): Uint8Array {
     return new Uint8Array(
       this.payload.buffer,
@@ -1337,7 +1384,7 @@ export class WorldEntityStateNetBatchView {
       this.count * 1
     );
   }
-  
+
   get chest(): Uint16Array {
     return new Uint16Array(
       this.payload.buffer,
@@ -1345,7 +1392,7 @@ export class WorldEntityStateNetBatchView {
       this.count * 1
     );
   }
-  
+
   get primary(): Uint32Array {
     return new Uint32Array(
       this.payload.buffer,
@@ -1353,7 +1400,7 @@ export class WorldEntityStateNetBatchView {
       this.count * 1
     );
   }
-  
+
   get secondary(): Uint32Array {
     return new Uint32Array(
       this.payload.buffer,
@@ -1361,7 +1408,7 @@ export class WorldEntityStateNetBatchView {
       this.count * 1
     );
   }
-  
+
   get modelKeyOffset(): Uint32Array {
     return new Uint32Array(
       this.payload.buffer,
@@ -1369,7 +1416,7 @@ export class WorldEntityStateNetBatchView {
       this.count * 1
     );
   }
-  
+
   get modelKeyLength(): Uint16Array {
     return new Uint16Array(
       this.payload.buffer,
@@ -1377,7 +1424,7 @@ export class WorldEntityStateNetBatchView {
       this.count * 1
     );
   }
-  
+
   get heading(): Float32Array {
     return new Float32Array(
       this.payload.buffer,
@@ -1385,27 +1432,43 @@ export class WorldEntityStateNetBatchView {
       this.count * 1
     );
   }
-  
-  get serverFlags(): Uint32Array {
-    return new Uint32Array(
+
+  get currentHp(): Int32Array {
+    return new Int32Array(
       this.payload.buffer,
       this.payload.byteOffset + netSoAPlaneOffset(WORLD_ENTITY_STATE_NET_SOA_PLANES, 24, this.count),
       this.count * 1
     );
   }
-  
-  get combatTimer(): Uint32Array {
-    return new Uint32Array(
+
+  get maximumHp(): Int32Array {
+    return new Int32Array(
       this.payload.buffer,
       this.payload.byteOffset + netSoAPlaneOffset(WORLD_ENTITY_STATE_NET_SOA_PLANES, 25, this.count),
       this.count * 1
     );
   }
-  
-  get aggroTarget(): Uint32Array {
+
+  get serverFlags(): Uint32Array {
     return new Uint32Array(
       this.payload.buffer,
       this.payload.byteOffset + netSoAPlaneOffset(WORLD_ENTITY_STATE_NET_SOA_PLANES, 26, this.count),
+      this.count * 1
+    );
+  }
+
+  get combatTimer(): Uint32Array {
+    return new Uint32Array(
+      this.payload.buffer,
+      this.payload.byteOffset + netSoAPlaneOffset(WORLD_ENTITY_STATE_NET_SOA_PLANES, 27, this.count),
+      this.count * 1
+    );
+  }
+
+  get aggroTarget(): Uint32Array {
+    return new Uint32Array(
+      this.payload.buffer,
+      this.payload.byteOffset + netSoAPlaneOffset(WORLD_ENTITY_STATE_NET_SOA_PLANES, 28, this.count),
       this.count * 1
     );
   }
@@ -1431,8 +1494,8 @@ export function viewWorldEntityStateNetBatch(bytes: Uint8Array): WorldEntityStat
 
 export const RENDER_SNAPSHOT_NET_SCHEMA_ID = 8194;
 export const RENDER_SNAPSHOT_NET_VERSION = 1;
-export const RENDER_SNAPSHOT_NET_STRIDE = 104;
-export const RENDER_SNAPSHOT_NET_SCHEMA_HASH = 0xf2227c8564c3d730n;
+export const RENDER_SNAPSHOT_NET_STRIDE = 112;
+export const RENDER_SNAPSHOT_NET_SCHEMA_HASH = 0xaa1c591c11c35918n;
 const RENDER_SNAPSHOT_NET_SOA_PLANES = Object.freeze([
   { alignment: 4, scalarBytes: 4, components: 1 },
   { alignment: 1, scalarBytes: 1, components: 1 },
@@ -1458,6 +1521,8 @@ const RENDER_SNAPSHOT_NET_SOA_PLANES = Object.freeze([
   { alignment: 4, scalarBytes: 4, components: 1 },
   { alignment: 4, scalarBytes: 4, components: 1 },
   { alignment: 2, scalarBytes: 2, components: 1 },
+  { alignment: 4, scalarBytes: 4, components: 1 },
+  { alignment: 4, scalarBytes: 4, components: 1 },
   { alignment: 4, scalarBytes: 4, components: 1 }
 ]);
 
@@ -1483,7 +1548,7 @@ export class RenderSnapshotNetBatchView {
       this.count * 1
     );
   }
-  
+
   get stateKind(): Uint8Array {
     return new Uint8Array(
       this.payload.buffer,
@@ -1491,7 +1556,7 @@ export class RenderSnapshotNetBatchView {
       this.count * 1
     );
   }
-  
+
   get statePosition(): Float32Array {
     return new Float32Array(
       this.payload.buffer,
@@ -1499,7 +1564,7 @@ export class RenderSnapshotNetBatchView {
       this.count * 3
     );
   }
-  
+
   get stateOrientation(): Float32Array {
     return new Float32Array(
       this.payload.buffer,
@@ -1507,7 +1572,7 @@ export class RenderSnapshotNetBatchView {
       this.count * 4
     );
   }
-  
+
   get stateVelocity(): Float32Array {
     return new Float32Array(
       this.payload.buffer,
@@ -1515,7 +1580,7 @@ export class RenderSnapshotNetBatchView {
       this.count * 3
     );
   }
-  
+
   get stateAnimation(): Uint32Array {
     return new Uint32Array(
       this.payload.buffer,
@@ -1523,7 +1588,7 @@ export class RenderSnapshotNetBatchView {
       this.count * 1
     );
   }
-  
+
   get stateMovementState(): Uint16Array {
     return new Uint16Array(
       this.payload.buffer,
@@ -1531,7 +1596,7 @@ export class RenderSnapshotNetBatchView {
       this.count * 1
     );
   }
-  
+
   get stateAppearance(): Uint16Array {
     return new Uint16Array(
       this.payload.buffer,
@@ -1539,7 +1604,7 @@ export class RenderSnapshotNetBatchView {
       this.count * 1
     );
   }
-  
+
   get stateNameOffset(): Uint32Array {
     return new Uint32Array(
       this.payload.buffer,
@@ -1547,7 +1612,7 @@ export class RenderSnapshotNetBatchView {
       this.count * 1
     );
   }
-  
+
   get stateNameLength(): Uint16Array {
     return new Uint16Array(
       this.payload.buffer,
@@ -1555,7 +1620,7 @@ export class RenderSnapshotNetBatchView {
       this.count * 1
     );
   }
-  
+
   get stateArchetypeId(): Uint32Array {
     return new Uint32Array(
       this.payload.buffer,
@@ -1563,7 +1628,7 @@ export class RenderSnapshotNetBatchView {
       this.count * 1
     );
   }
-  
+
   get stateLevel(): Uint16Array {
     return new Uint16Array(
       this.payload.buffer,
@@ -1571,7 +1636,7 @@ export class RenderSnapshotNetBatchView {
       this.count * 1
     );
   }
-  
+
   get stateRace(): Uint16Array {
     return new Uint16Array(
       this.payload.buffer,
@@ -1579,7 +1644,7 @@ export class RenderSnapshotNetBatchView {
       this.count * 1
     );
   }
-  
+
   get stateGender(): Uint8Array {
     return new Uint8Array(
       this.payload.buffer,
@@ -1587,7 +1652,7 @@ export class RenderSnapshotNetBatchView {
       this.count * 1
     );
   }
-  
+
   get stateClassId(): Uint8Array {
     return new Uint8Array(
       this.payload.buffer,
@@ -1595,7 +1660,7 @@ export class RenderSnapshotNetBatchView {
       this.count * 1
     );
   }
-  
+
   get stateBodyType(): Uint16Array {
     return new Uint16Array(
       this.payload.buffer,
@@ -1603,7 +1668,7 @@ export class RenderSnapshotNetBatchView {
       this.count * 1
     );
   }
-  
+
   get stateSize(): Float32Array {
     return new Float32Array(
       this.payload.buffer,
@@ -1611,7 +1676,7 @@ export class RenderSnapshotNetBatchView {
       this.count * 1
     );
   }
-  
+
   get stateFace(): Uint8Array {
     return new Uint8Array(
       this.payload.buffer,
@@ -1619,7 +1684,7 @@ export class RenderSnapshotNetBatchView {
       this.count * 1
     );
   }
-  
+
   get stateHelm(): Uint8Array {
     return new Uint8Array(
       this.payload.buffer,
@@ -1627,7 +1692,7 @@ export class RenderSnapshotNetBatchView {
       this.count * 1
     );
   }
-  
+
   get stateChest(): Uint16Array {
     return new Uint16Array(
       this.payload.buffer,
@@ -1635,7 +1700,7 @@ export class RenderSnapshotNetBatchView {
       this.count * 1
     );
   }
-  
+
   get statePrimary(): Uint32Array {
     return new Uint32Array(
       this.payload.buffer,
@@ -1643,7 +1708,7 @@ export class RenderSnapshotNetBatchView {
       this.count * 1
     );
   }
-  
+
   get stateSecondary(): Uint32Array {
     return new Uint32Array(
       this.payload.buffer,
@@ -1651,7 +1716,7 @@ export class RenderSnapshotNetBatchView {
       this.count * 1
     );
   }
-  
+
   get stateModelKeyOffset(): Uint32Array {
     return new Uint32Array(
       this.payload.buffer,
@@ -1659,7 +1724,7 @@ export class RenderSnapshotNetBatchView {
       this.count * 1
     );
   }
-  
+
   get stateModelKeyLength(): Uint16Array {
     return new Uint16Array(
       this.payload.buffer,
@@ -1667,11 +1732,27 @@ export class RenderSnapshotNetBatchView {
       this.count * 1
     );
   }
-  
+
   get stateHeading(): Float32Array {
     return new Float32Array(
       this.payload.buffer,
       this.payload.byteOffset + netSoAPlaneOffset(RENDER_SNAPSHOT_NET_SOA_PLANES, 24, this.count),
+      this.count * 1
+    );
+  }
+
+  get stateCurrentHp(): Int32Array {
+    return new Int32Array(
+      this.payload.buffer,
+      this.payload.byteOffset + netSoAPlaneOffset(RENDER_SNAPSHOT_NET_SOA_PLANES, 25, this.count),
+      this.count * 1
+    );
+  }
+
+  get stateMaximumHp(): Int32Array {
+    return new Int32Array(
+      this.payload.buffer,
+      this.payload.byteOffset + netSoAPlaneOffset(RENDER_SNAPSHOT_NET_SOA_PLANES, 26, this.count),
       this.count * 1
     );
   }

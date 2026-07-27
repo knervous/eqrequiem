@@ -8,8 +8,8 @@ export enum OpCodes {
 
     // Login
     LoginAccepted,
-    PlayEverquestRequest,
-    PlayEverquestResponse,
+    EnterRealmRequest,
+    EnterRealmResponse,
     ServerListRequest,
     ServerListResponse,
 

@@ -4,11 +4,10 @@ import GameManager from '@game/Manager/game-manager';
 import { MoveItem } from '@game/Net/messages';
 import { OpCodes } from '@game/Net/opcodes';
 import Player from '@game/Player/player';
-import { InventorySlot } from '@game/Player/player-constants';
+import { InventorySlot, InventorySlotNames } from '@game/Player/player-constants';
 import { Box } from '@mui/material';
-import { useItemImage, useSakImage } from '@ui/hooks/use-image';
 import { WorldSocket } from '@ui/net/instances';
-import { linkItemToChat } from '../stone/middle/command-link-util';
+import { linkItemToChat } from '../chat/command-link-util';
 import { FullItemEntryData } from './constants';
 import { useItemDragClone } from './hooks';
 import { ItemTooltip } from './item-tooltip';
@@ -16,7 +15,8 @@ import { ItemTooltip } from './item-tooltip';
 interface ItemButtonProps {
   scale: number;
   slot: InventorySlot;
-  bagSlot: number;
+  /** Omit for worn/carried top-level slots; pass a number for cursor/bag contents. */
+  bagSlot?: number;
   hotButton?: boolean;
   hotButtonIndex?: number;
   height?: number | string | undefined;
@@ -24,40 +24,10 @@ interface ItemButtonProps {
   insideBag?: boolean;
 }
 
-const backgroundMap: Record<number, string> = {
-  [InventorySlot.General1] : 'A_InvSlot1BG',
-  [InventorySlot.General2] : 'A_InvSlot2BG',
-  [InventorySlot.General3] : 'A_InvSlot3BG',
-  [InventorySlot.General4] : 'A_InvSlot4BG',
-  [InventorySlot.General5] : 'A_InvSlot5BG',
-  [InventorySlot.General6] : 'A_InvSlot6BG',
-  [InventorySlot.General7] : 'A_InvSlot7BG',
-  [InventorySlot.General8] : 'A_InvSlot8BG',
-  [InventorySlot.Ear1]     : 'A_InvEar1',
-  [InventorySlot.Ear2]     : 'A_InvEar2',
-  [InventorySlot.Neck]     : 'A_InvNeck',
-  [InventorySlot.Head]     : 'A_InvHead',
-  [InventorySlot.Face]     : 'A_InvFace',
-  [InventorySlot.Chest]    : 'A_InvChest',
-  [InventorySlot.Arms]     : 'A_InvArms',
-  [InventorySlot.Wrist1]   : 'A_InvWrist1',
-  [InventorySlot.Wrist2]   : 'A_InvWrist2',
-  [InventorySlot.Hands]    : 'A_InvHands',
-  [InventorySlot.Finger1]  : 'A_InvRing1',
-  [InventorySlot.Finger2]  : 'A_InvRing2',
-  [InventorySlot.Legs]     : 'A_InvLegs',
-  [InventorySlot.Feet]     : 'A_InvFeet',
-  [InventorySlot.Primary]  : 'A_InvPrimary',
-  [InventorySlot.Secondary]: 'A_InvSecondary',
-  [InventorySlot.Range]    : 'A_InvRange',
-  [InventorySlot.Ammo]     : 'A_InvAmmo',
-};
-
-const emptyInventoryBg = 'Jib_RecessedBox';
-
 export const ItemButton: React.FC<ItemButtonProps> = (props) => {
   const item = useInventorySlot(props.slot, props.bagSlot);
-  const isBag = useMemo(() => item?.bagslots ?? 0 > 0, [item]);
+  const actualBagSlot = item?.bagSlot ?? props.bagSlot ?? -1;
+  const isBag = useMemo(() => (item?.bagslots ?? 0) > 0, [item]);
   const rightClickTimeout = useRef<NodeJS.Timeout | null>(null);
   const rightClickTimeoutFinished = useRef<boolean>(false);
   const itemActionData = useMemo((): FullItemEntryData | null => {
@@ -70,11 +40,6 @@ export const ItemButton: React.FC<ItemButtonProps> = (props) => {
 
   const { elementRef, onMouseDown } =
     useItemDragClone<HTMLDivElement>(itemActionData);
-  const bgEntry = useSakImage(
-    props.insideBag ? emptyInventoryBg : backgroundMap[props.slot],
-    true,
-  );
-  const itemEntry = useItemImage(item?.icon ?? -1);
   const onClick = useCallback(
     (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
       if (e.button === 0) {
@@ -101,8 +66,8 @@ export const ItemButton: React.FC<ItemButtonProps> = (props) => {
           numberInStack: item?.stackable ? item.quantity : 1,
           fromBagSlot  : Player.instance?.hasCursorItem
             ? 0
-            : (props?.bagSlot ?? 0),
-          toBagSlot: Player.instance?.hasCursorItem ? props.bagSlot : 0,
+            : actualBagSlot,
+          toBagSlot: Player.instance?.hasCursorItem ? actualBagSlot : 0,
         });
         WorldSocket.sendMessage(OpCodes.MoveItem, MoveItem, {
           toSlot: Player.instance?.hasCursorItem
@@ -114,12 +79,12 @@ export const ItemButton: React.FC<ItemButtonProps> = (props) => {
           numberInStack: item?.stackable ? item.quantity : 1,
           fromBagSlot  : Player.instance?.hasCursorItem
             ? 0
-            : (props?.bagSlot ?? 0),
-          toBagSlot: Player.instance?.hasCursorItem ? props.bagSlot : 0,
+            : actualBagSlot,
+          toBagSlot: Player.instance?.hasCursorItem ? actualBagSlot : 0,
         });
       }
     },
-    [props.slot, props.bagSlot, item, isBag],
+    [props.slot, item, isBag, actualBagSlot],
   );
 
   const onRightClick = useCallback(
@@ -131,7 +96,7 @@ export const ItemButton: React.FC<ItemButtonProps> = (props) => {
       // Right click
       e.preventDefault();
       if (item) {
-        Player.instance?.playerInventory?.useItem(props.slot);
+        Player.instance?.playerInventory?.useItem(props.slot, actualBagSlot);
         // Handle right click action here, e.g., show context menu
         rightClickTimeout.current = setTimeout(() => {
           // Inspect item
@@ -139,7 +104,7 @@ export const ItemButton: React.FC<ItemButtonProps> = (props) => {
         }, 500);
       }
     },
-    [item, props.slot, onClick],
+    [item, props.slot, actualBagSlot, onClick],
   );
 
   const onMouseUp = useCallback(
@@ -160,49 +125,52 @@ export const ItemButton: React.FC<ItemButtonProps> = (props) => {
     <>
       <Box
         ref={elementRef}
-        className="item-button-container"
+        className={`item-button-container rq-item-slot${props.insideBag ? ' rq-item-slot--bag' : ''}`}
+        role="button"
+        tabIndex={0}
+        aria-label={item?.name ?? `Empty ${InventorySlotNames[props.slot] ?? 'inventory'} slot`}
         sx={{
-          ['&:hover']: {
-            boxShadow: '0px 0px 10px 5px inset rgba(216, 215, 208, 0.27)',
-          },
-          backgroundImage: `url(${bgEntry.image})`,
-          backgroundSize : 'cover',
-          width          : props.width ?? '100%',
-          height         : props.height ?? '100%',
+          width : props.width ?? '100%',
+          height: props.height ?? '100%',
         }}
         onClick={onClick}
         onContextMenu={onRightClick}
         onMouseDown={onMouseDown}
         onMouseUp={onMouseUp}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            elementRef.current?.click();
+          }
+        }}
       >
         {item ? (
           <ItemTooltip item={item}>
             <Box
               className="item-button"
               sx={{
-                backgroundImage: `url(${itemEntry})`,
-                backgroundSize : 'cover',
-                width          : 'calc(80%)',
-                height         : 'calc(80%)',
-                position       : 'relative',
-                left           : '10%',
-                top            : '10%',
+                width   : '100%',
+                height  : '100%',
+                position: 'relative',
               }}
             >
+              <span
+                className={`rq-item-glyph${isBag ? ' rq-item-glyph--container' : ''}`}
+                aria-hidden="true"
+              />
               {item?.stackable ? (
                 <Box
                   className="item-quantity"
                   sx={{
-                    position    : 'relative',
-                    left        : 'calc(80%)',
-                    top         : 'calc(70%)',
+                    position    : 'absolute',
+                    right       : 2,
+                    bottom      : 1,
                     textAlign   : 'center',
-                    width       : '10%',
-                    background  : 'rgba(0, 0, 0, 0.3)',
-                    p           : '1px',
-                    borderRadius: '4px',
+                    minWidth    : 14,
+                    background  : 'rgba(0, 0, 0, 0.72)',
+                    px          : '2px',
                     color       : 'white',
-                    fontSize    : 10 / props.scale,
+                    fontSize    : Math.max(8, 10 / props.scale),
                   }}
                 >
                   {item.quantity}

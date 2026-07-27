@@ -6,7 +6,6 @@ import { ItemInstance } from '@game/Net/messages';
 import { getSlotNamesFromBitmask } from '@game/Player/player-constants';
 import { Box, Stack, Tooltip, Typography } from '@mui/material';
 import { Fade } from '@mui/material';
-import { UiImageComponent } from '@ui/common/ui-image';
 import './item-tooltip.css';
 
 const itemTypeMap = {
@@ -59,40 +58,14 @@ export const ItemTooltip: React.FC<{
       }}
       sx={{ m: 0, p: 0 }}
       title={
-        <Box sx={{ width: '280px' }}>
-          <Box
-            sx={{ position: 'absolute', top: -5, width: 'calc(100% - 14px)' }}
-          >
-            <Stack direction="row">
-              <Typography
-                sx={{
-                  fontSize : '11px',
-                  color    : '#ccc',
-                  position : 'absolute',
-                  width    : '100%',
-                  textAlign: 'center',
-                }}
-              >
-                {item.name}
-              </Typography>
-              <UiImageComponent name={'A_WindowTitleLeft'} />
-              <UiImageComponent
-                crop
-                name={'A_WindowTitleMiddle'}
-                sx={{
-                  width           : '100%',
-                  backgroundRepeat: 'repeat-x',
-                  backgroundSize  : 'auto 100%',
-                }}
-              />
-              <UiImageComponent name={'A_WindowTitleRight'} />
-            </Stack>
-          </Box>
+        <Box className="rq-item-tooltip" sx={{ width: '280px' }}>
+          <Typography className="rq-item-tooltip__title">
+            {item.name}
+          </Typography>
           <Box
             className="item-tooltip"
             sx={{
-              backgroundColor: 'rgba(0, 0, 20, 0.7)',
-              padding        : '18px 10px 8px 10px',
+              padding        : '10px 12px 11px',
               color          : '#fff',
               display        : 'flex',
               flexDirection  : 'column',

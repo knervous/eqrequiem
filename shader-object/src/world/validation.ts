@@ -22,8 +22,12 @@ export function computeShadoWorldLayoutHash(world: ShadoWorldSpatialPackage): st
   };
 
   feed(world.version);
+  feed(world.sourceTransform === 'mirror-x' ? 1 : 0);
   feed(world.triangleCount);
-  [
+  feed(world.collision.vertexCount);
+  feed(world.collision.triangleCount);
+  feed(Number.parseInt(world.collision.contentHash, 16));
+  const topology: ArrayLike<number>[] = [
     world.clusterIndices,
     world.renderChunkClusters,
     world.clusters.firstIndex,
@@ -59,7 +63,14 @@ export function computeShadoWorldLayoutHash(world: ShadoWorldSpatialPackage): st
     world.objects?.stamps.phaseMask ?? [],
     world.pvs?.words ?? [],
     world.bvh.childRef,
-  ].forEach(feedArray);
+  ];
+  topology.splice(16, 0,
+    world.navigation.modifiers.region,
+    world.navigation.modifiers.area,
+    world.navigation.modifiers.flags,
+    world.navigation.modifiers.excluded
+  );
+  topology.forEach(feedArray);
   return hash.toString(16).padStart(8, '0');
 }
 
@@ -74,8 +85,20 @@ export function stampShadoWorldIntegrity(world: ShadoWorldSpatialPackage): void 
 export function validateShadoWorldPackage(world: ShadoWorldSpatialPackage): void {
   if (
     world.kind !== 'shado.world.spatial' ||
-    world.version !== 3 ||
-    world.coordinateSystem !== 'babylon-y-up'
+    world.version !== 5 ||
+    world.coordinateSystem !== 'babylon-y-up' ||
+    !['identity', 'mirror-x'].includes(world.sourceTransform) ||
+    world.navigation?.runtimeToRecast !== 'z-y-negative-x' ||
+    world.collision?.format !== 'shado-collision-v1' ||
+    !world.collision.source ||
+    !Number.isInteger(world.collision.vertexCount) ||
+    world.collision.vertexCount <= 0 ||
+    !Number.isInteger(world.collision.triangleCount) ||
+    world.collision.triangleCount <= 0 ||
+    !/^[0-9a-f]{8}$/.test(world.collision.contentHash) ||
+    !validBounds(world.bounds) ||
+    !validBounds(world.collision.bounds) ||
+    !boundsContain(world.bounds, world.collision.bounds)
   ) {
     throw new Error('Unsupported Shado world spatial package');
   }
@@ -98,6 +121,35 @@ export function validateShadoWorldPackage(world: ShadoWorldSpatialPackage): void
   sameLength('tiles.z', cellCount, world.tiles.z);
   sameLength('tiles.firstCluster', cellCount, world.tiles.firstCluster);
   sameLength('tiles.clusterCount', cellCount, world.tiles.clusterCount);
+  {
+    const modifierCount = world.navigation.modifiers.region.length;
+    [
+      world.navigation.modifiers.area,
+      world.navigation.modifiers.flags,
+      world.navigation.modifiers.excluded,
+      world.navigation.modifiers.centerX,
+      world.navigation.modifiers.centerY,
+      world.navigation.modifiers.centerZ,
+      world.navigation.modifiers.sizeX,
+      world.navigation.modifiers.sizeY,
+      world.navigation.modifiers.sizeZ,
+    ].forEach(values => sameLength('navigation modifier SoA', modifierCount, values));
+    world.navigation.modifiers.region.forEach(region => {
+      if (region < 0 || region >= world.regions.id.length) {
+        throw new Error(`Invalid Shado world navigation region reference ${region}`);
+      }
+    });
+    world.navigation.modifiers.area.forEach(area => {
+      if (!Number.isInteger(area) || area < 0 || area > 63) {
+        throw new Error(`Invalid Shado world navigation area ${area}`);
+      }
+    });
+    world.navigation.modifiers.flags.forEach(flags => {
+      if (!Number.isInteger(flags) || flags < 0 || flags > 0xffff) {
+        throw new Error(`Invalid Shado world navigation flags ${flags}`);
+      }
+    });
+  }
   const portalCount = world.portals.fromCell.length;
   sameLength('portals.toCell', portalCount, world.portals.toCell);
   sameLength('portals.dynamicStateId', portalCount, world.portals.dynamicStateId);
@@ -142,6 +194,27 @@ export function validateShadoWorldPackage(world: ShadoWorldSpatialPackage): void
       `Shado world package integrity mismatch: expected ${world.integrity.layoutHash}, got ${actual}`
     );
   }
+}
+
+function validBounds(bounds: ShadoWorldSpatialPackage['bounds'] | undefined): boolean {
+  return Boolean(
+    bounds &&
+    bounds.min?.length === 3 &&
+    bounds.max?.length === 3 &&
+    [...bounds.min, ...bounds.max].every(Number.isFinite) &&
+    bounds.min.every((value, axis) => value <= bounds.max[axis]!)
+  );
+}
+
+function boundsContain(
+  outer: ShadoWorldSpatialPackage['bounds'],
+  inner: ShadoWorldSpatialPackage['bounds']
+): boolean {
+  return outer.min.every(
+    (value, axis) =>
+      inner.min[axis]! >= value - 1e-4 &&
+      inner.max[axis]! <= outer.max[axis]! + 1e-4
+  );
 }
 
 function validateObjects(

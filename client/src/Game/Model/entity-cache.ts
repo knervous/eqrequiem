@@ -332,12 +332,15 @@ export class EntityCache {
           if (!mesh.metadata.gltf?.extras?.preserveRuntimeWinding) {
             mesh.flipFaces(true);
           }
-          const { model, variation, texNum } = mesh.metadata.gltf.extras as any;
-          let piece = mesh.metadata.gltf.extras.piece?.toLowerCase() ?? "";
+          const extras = mesh.metadata.gltf?.extras ?? {};
+          const meshModel = extras.model ?? model;
+          const variation = extras.variation ?? "";
+          const texNum = extras.texNum ?? "";
+          let piece = extras.piece?.toLowerCase() ?? "";
           let atlasIndex = 0;
           let name = mesh.material?.name?.toLowerCase() ?? "";
           if (!name) {
-            name = `${model}${piece}${variation}${texNum}`.toLowerCase();
+            name = `${meshModel}${piece}${variation}${texNum}`.toLowerCase();
           }
           const range = {
             name,
@@ -345,10 +348,15 @@ export class EntityCache {
             isRobe: false,
             isHelm: false,
             atlasArray: textureAtlas,
-            metadata: { model, piece: piece.toLowerCase(), variation, texNum },
+            metadata: {
+              model: meshModel,
+              piece: piece.toLowerCase(),
+              variation,
+              texNum,
+            },
           } as SubmeshRange;
 
-          if (isPlayerRace(model)) {
+          if (isPlayerRace(meshModel)) {
             if (name?.toLowerCase()?.startsWith("clk")) {
               atlasIndex = 1;
               range.isRobe = true;
@@ -621,6 +629,7 @@ export class EntityCache {
   }
 
   public static entityInstances = new Set<Entity>();
+  private static physicalEntityInstances = new Set<Entity>();
   private static renderObserver: BJS.Observer<BJS.Camera> | null = null;
   private static cullObserver: BJS.Observer<BJS.Scene> | null = null;
   private static observerScene: BJS.Scene | null = null;
@@ -698,9 +707,12 @@ export class EntityCache {
     });
     EntityCache.renderObserver = scene.onAfterRenderCameraObservable.add(() => {
       const now = performance.now();
-      for (const entity of EntityCache.entityInstances) {
+      // Remote entities write Shado transforms from EntityPool's sparse active
+      // set. Only locally simulated Havok entities need a frame sync here.
+      for (const entity of EntityCache.physicalEntityInstances) {
         if (entity.lifecycleDisposed || entity.isDisposed()) {
           EntityCache.entityInstances.delete(entity);
+          EntityCache.physicalEntityInstances.delete(entity);
           continue;
         }
         try {
@@ -710,19 +722,35 @@ export class EntityCache {
         }
       }
       EntityCache.nameplateLayer?.sync(
-        [...EntityCache.entityInstances].map((entity) => ({
-          id: `${entity.spawn.name}:${(entity.spawn as Spawn).spawnId ?? "player"}`,
-          text: entity.nameplateLines.join("\n"),
-          x: entity.spawnPosition.x,
-          y: entity.spawnPosition.z,
-          z:
-            entity.spawnPosition.y +
-            (4 + entity.nameplateLines.length * 1.5) * entity.spawnScale,
-          visible:
-            !entity.hidden &&
-            !entity.lifecycleDisposed &&
-            Boolean(entity.meshInstance?.actor.visibleFlag),
-        })),
+        [...EntityCache.entityInstances].map((entity) => {
+          const selected = entity.isSelected;
+          const selectionAgeMs = now - entity.selectionStartedAtMs;
+          const acquisitionBlink =
+            selected &&
+            selectionAgeMs < 560 &&
+            Math.floor(selectionAgeMs / 80) % 2 === 0;
+          const selectionPulse =
+            selected ? 0.5 + Math.sin(now / 260) * 0.5 : 0;
+          return {
+            id: `${entity.spawn.name}:${(entity.spawn as Spawn).spawnId ?? "player"}`,
+            text: entity.displayNameplateText,
+            x: entity.spawnPosition.x,
+            y: entity.spawnPosition.z,
+            z:
+              entity.spawnPosition.y +
+              (4 + entity.nameplateLines.length * 1.5) * entity.spawnScale,
+            visible:
+              !entity.hidden &&
+              !entity.lifecycleDisposed &&
+              Boolean(entity.meshInstance?.actor.visibleFlag),
+            color: selected
+              ? acquisitionBlink
+                ? "#ffffff"
+                : entity.selectionNameplateColor
+              : undefined,
+            fontSize: selected ? 14.25 + selectionPulse * 0.55 : undefined,
+          };
+        }),
       );
       const delta = performance.now() - now;
       (window as any).perf = delta;
@@ -767,11 +795,13 @@ export class EntityCache {
       throw error;
     }
     EntityCache.entityInstances.add(entity);
+    if (entity.physicsBody) EntityCache.physicalEntityInstances.add(entity);
     return entity;
   }
 
   public static unregister(entity: Entity): void {
     EntityCache.entityInstances.delete(entity);
+    EntityCache.physicalEntityInstances.delete(entity);
   }
 
   public static dispose(model: ModelKey): void {
@@ -784,8 +814,9 @@ export class EntityCache {
     EntityCache.entityVisibility?.dispose();
     EntityCache.entityVisibility = null;
     delete (globalThis as any).__requiemEntityVisibility;
-    for (const entity of [...EntityCache.entityInstances]) entity.dispose();
+    for (const entity of EntityCache.entityInstances) entity.dispose();
     EntityCache.entityInstances.clear();
+    EntityCache.physicalEntityInstances.clear();
     Entity.disposeStatics();
     if (EntityCache.renderObserver) {
       EntityCache.observerScene?.onAfterRenderCameraObservable.remove(

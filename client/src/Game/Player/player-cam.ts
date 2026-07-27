@@ -174,6 +174,61 @@ export class PlayerCamera {
   }
   leftButtonDown: boolean = false;
   rightButtonDown: boolean = false;
+
+  private pickShadoEntityAt(
+    x: number,
+    y: number,
+    predicate: (entity: Entity) => boolean = () => true,
+  ): Entity | null {
+    const scene = this.player.gameManager.scene;
+    if (!scene) return null;
+    const ray = scene.createPickingRay(
+      x,
+      y,
+      BABYLON.Matrix.Identity(),
+      scene.activeCamera ?? this.camera,
+    );
+    let selected: Entity | null = null;
+    let selectedDistance = Number.POSITIVE_INFINITY;
+    for (const entity of EntityCache.entityInstances) {
+      const actor = entity.meshInstance?.actor;
+      if (
+        !actor ||
+        !actor.visibleFlag ||
+        entity.hidden ||
+        entity.isDisposed() ||
+        !predicate(entity)
+      ) {
+        continue;
+      }
+      const centerX = actor.translation[0];
+      const centerY = actor.translation[1] + actor.translation[3] * 3;
+      const centerZ = actor.translation[2];
+      const dx = centerX - ray.origin.x;
+      const dy = centerY - ray.origin.y;
+      const dz = centerZ - ray.origin.z;
+      const projected =
+        dx * ray.direction.x +
+        dy * ray.direction.y +
+        dz * ray.direction.z;
+      if (projected < 0 || projected >= selectedDistance) continue;
+      const perpendicularSq =
+        dx * dx + dy * dy + dz * dz - projected * projected;
+      const radius = this.entityPickingRadius(entity, actor.translation[3]);
+      if (perpendicularSq <= radius * radius) {
+        selected = entity;
+        selectedDistance = projected;
+      }
+    }
+    return selected;
+  }
+
+  private entityPickingRadius(entity: Entity, actorScale: number): number {
+    return entity.spawn.isCorpse
+      ? Math.max(4, actorScale * 6)
+      : Math.max(2, actorScale * 4);
+  }
+
   public mouseInputButton(
     buttonIndex: number,
     up: boolean = false,
@@ -203,6 +258,23 @@ export class PlayerCamera {
       return;
     }
     this.player.playerMovement!.moveForward = false;
+
+    if (!up && buttonIndex === 2 && scene && !this.isLocked) {
+      const selected = this.pickShadoEntityAt(x, y);
+      if (selected?.spawn.isCorpse === true) {
+        this.player.Target = selected;
+        void this.player.playerCombat.lootTarget();
+        return;
+      }
+      if (
+        selected?.spawn.isNpc === true
+        && Number(selected.spawn.charClass) === 41
+      ) {
+        this.player.Target = selected;
+        void this.player.playerMerchant.openTarget();
+        return;
+      }
+    }
 
     if (!up && buttonIndex === 0 && scene && !this.isLocked) {
       (async () => {
@@ -266,7 +338,10 @@ export class PlayerCamera {
             if (projected < 0 || projected >= selectedDistance) continue;
             const perpendicularSq =
               dx * dx + dy * dy + dz * dz - projected * projected;
-            const radius = Math.max(1.25, actor.translation[3] * 3);
+            const radius = this.entityPickingRadius(
+              entity,
+              actor.translation[3],
+            );
             if (perpendicularSq <= radius * radius) {
               selected = entity;
               selectedDistance = projected;

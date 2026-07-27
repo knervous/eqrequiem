@@ -11,6 +11,13 @@ export interface PersistCharacter {
   lastLogin?: number;
   face?: number;
   items?: Record<string, unknown>[];
+  appearanceSchemaVersion?: number;
+  bodyFamilyId?: string;
+  bodyComponentId?: string;
+  faceComponentId?: string;
+  presentationId?: string;
+  callingId?: string;
+  originId?: string;
 }
 
 export interface PersistLoginResult {

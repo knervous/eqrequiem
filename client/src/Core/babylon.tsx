@@ -11,6 +11,7 @@ export const BabylonWrapper = ({ splash }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
     let cancelled = false;
+    let resizeObserver: ResizeObserver | null = null;
     (async () => {
       while (!canvasRef.current) {
         await sleep(50);
@@ -20,9 +21,13 @@ export const BabylonWrapper = ({ splash }) => {
         return;
       }
       await GameManager.instance.loadEngine(canvasRef.current);
-      if (cancelled) {
+      const canvas = canvasRef.current;
+      if (cancelled || !canvas) {
         return;
       }
+      GameManager.instance.resize();
+      resizeObserver = new ResizeObserver(GameManager.instance.resize);
+      resizeObserver.observe(canvas);
       window.addEventListener('resize', GameManager.instance.resize);
       window.addEventListener('keydown', GameManager.instance.keyDown);
       window.addEventListener('keyup', GameManager.instance.keyUp);
@@ -30,6 +35,7 @@ export const BabylonWrapper = ({ splash }) => {
 
     return () => {
       cancelled = true;
+      resizeObserver?.disconnect();
       window.removeEventListener('resize', GameManager.instance.resize);
       window.removeEventListener('keydown', GameManager.instance.keyDown);
       window.removeEventListener('keyup', GameManager.instance.keyUp);
@@ -69,7 +75,10 @@ export const BabylonWrapper = ({ splash }) => {
         canvasRef.current.dispatchEvent(newEvent);
         // Optionally prevent default behavior so the event isn't processed twice
         if (e.type === 'mousedown') {
-          if (![document.body, canvasRef.current].includes(document.activeElement)) {
+          if (
+            document.activeElement !== document.body &&
+            document.activeElement !== canvasRef.current
+          ) {
             document.body.focus();
             return;
           }

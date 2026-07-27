@@ -1,4 +1,5 @@
 import { addChatLine } from "@game/ChatCommands/chat-message";
+import { AnimationDefinitions } from "@game/Animation/animation-constants";
 import emitter from "@game/Events/events";
 import type GameManager from "@game/Manager/game-manager";
 import Player from "@game/Player/player";
@@ -8,14 +9,21 @@ import {
   BulkDeleteItem,
   BulkItemPacket,
   ChannelMessage,
+  CombatEvent,
+  DeathEvent,
   DeleteItem,
   DeleteSpawn,
   EntityAnimation,
   EntityPositionUpdate,
   ItemInstance,
   LevelUpdate,
+  LootError,
+  LootWindow,
+  MerchantError,
+  MerchantWindow,
   MoveItem,
   NewZone,
+  NpcDebugState,
   PlayerProfile,
 } from "./messages";
 import { OpCodes } from "./opcodes";
@@ -191,6 +199,100 @@ export class ZonePacketHandler {
         break;
     }
     emitter.emit("chatMessage", msg);
+  }
+
+  @opCodeHandler(OpCodes.CombatEvent, CombatEvent)
+  processCombatEvent(event: CombatEvent) {
+    const entity =
+      this.gameManager.ZoneManager?.EntityPool?.entities[event.targetId];
+    if (entity?.spawn) {
+      entity.spawn.currentHp = event.targetCurrentHp;
+      entity.spawn.maximumHp = event.targetMaximumHp;
+      emitter.emit("entityHealth", {
+        spawnId: event.targetId,
+        currentHp: event.targetCurrentHp,
+        maximumHp: event.targetMaximumHp,
+      });
+      if (event.outcome === "hit") {
+        if (!event.killed) {
+          entity.playAnimation(AnimationDefinitions.MinorDamage, true);
+        }
+      }
+      if (event.killed && entity.spawn.isNpc) {
+        entity.spawn.kind = 3;
+        entity.spawn.isCorpse = true;
+        entity.presentAsCorpse();
+      }
+    }
+    if (!entity && event.outcome === "hit" && Player.instance?.player) {
+      Player.instance.player.curHp = event.targetCurrentHp;
+      emitter.emit("setPlayer", Player.instance.player);
+      Player.instance.playAnimation(
+        event.killed
+          ? AnimationDefinitions.Death
+          : AnimationDefinitions.MinorDamage,
+        true,
+      );
+    }
+    Player.instance?.playerCombat.handleCombatEvent(event);
+    emitter.emit("combatEvent", event);
+  }
+
+  @opCodeHandler(OpCodes.NpcDebugState, NpcDebugState)
+  processNpcDebugState(state: NpcDebugState) {
+    emitter.emit("npcDebugState", state);
+  }
+
+  @opCodeHandler(OpCodes.DeathEvent, DeathEvent)
+  processDeathEvent(event: DeathEvent) {
+    const player = Player.instance;
+    if (!player) return;
+    player.playerCombat.reset();
+    player.Target = null;
+    player.playAnimation(AnimationDefinitions.Death, true);
+    player.setPosition(event.x, event.y, event.z);
+    player.setRotation((event.heading * Math.PI) / 256);
+    if (player.player) {
+      player.player.x = event.x;
+      player.player.y = event.y;
+      player.player.z = event.z;
+      player.player.heading = event.heading;
+      player.player.curHp = player.player.maxHp;
+      emitter.emit("setPlayer", player.player);
+    }
+    addChatLine("You have died and returned to your bind point.");
+    emitter.emit("playerDeath", event);
+  }
+
+  @opCodeHandler(OpCodes.CorpseLootWindow, LootWindow)
+  processLootWindow(window: LootWindow) {
+    emitter.emit("lootWindow", window);
+  }
+
+  @opCodeHandler(OpCodes.CorpseLootError, LootError)
+  processLootError(error: LootError) {
+    addChatLine(error.message);
+  }
+
+  @opCodeHandler(OpCodes.MerchantWindow, MerchantWindow)
+  processMerchantWindow(window: MerchantWindow) {
+    const profile = Player.instance?.player;
+    if (profile) {
+      let copper = Math.max(0, Math.trunc(window.currencyCopper));
+      profile.platinum = Math.floor(copper / 1_000);
+      copper %= 1_000;
+      profile.gold = Math.floor(copper / 100);
+      copper %= 100;
+      profile.silver = Math.floor(copper / 10);
+      profile.copper = copper % 10;
+      emitter.emit("setPlayer", profile);
+    }
+    emitter.emit("merchantWindow", window);
+  }
+
+  @opCodeHandler(OpCodes.MerchantError, MerchantError)
+  processMerchantError(error: MerchantError) {
+    addChatLine(error.message);
   }
 
   @opCodeHandler(OpCodes.MoveItem, MoveItem)

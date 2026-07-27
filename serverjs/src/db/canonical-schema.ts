@@ -91,6 +91,82 @@ const contentMigrations: Migration[] = [{
       class_id INTEGER NOT NULL, skill_id INTEGER NOT NULL, level INTEGER NOT NULL,
       cap INTEGER NOT NULL, PRIMARY KEY(class_id, skill_id, level))`,
   ],
+}, {
+  version: 7,
+  statements: () => [
+    `CREATE TABLE IF NOT EXISTS npc_loot_items (
+      npc_archetype_id BIGINT NOT NULL, item_id BIGINT NOT NULL,
+      loot_slot INTEGER NOT NULL DEFAULT 0,
+      chance_permille INTEGER NOT NULL DEFAULT 1000,
+      minimum_quantity INTEGER NOT NULL DEFAULT 1,
+      maximum_quantity INTEGER NOT NULL DEFAULT 1,
+      PRIMARY KEY(npc_archetype_id, loot_slot),
+      FOREIGN KEY(npc_archetype_id) REFERENCES npc_archetypes(id),
+      FOREIGN KEY(item_id) REFERENCES items(id))`,
+  ],
+}, {
+  version: 8,
+  statements: (database) => [
+    `CREATE TABLE IF NOT EXISTS npc_loot_tables (
+      id BIGINT PRIMARY KEY, loot_key VARCHAR(255) NOT NULL UNIQUE,
+      minimum_currency INTEGER NOT NULL DEFAULT 0,
+      maximum_currency INTEGER NOT NULL DEFAULT 0,
+      average_currency INTEGER NOT NULL DEFAULT 0)`,
+    `CREATE TABLE IF NOT EXISTS npc_loot_assignments (
+      npc_archetype_id BIGINT PRIMARY KEY, loot_table_id BIGINT NOT NULL,
+      FOREIGN KEY(npc_archetype_id) REFERENCES npc_archetypes(id),
+      FOREIGN KEY(loot_table_id) REFERENCES npc_loot_tables(id))`,
+    `CREATE TABLE IF NOT EXISTS npc_loot_table_entries (
+      loot_table_id BIGINT NOT NULL, loot_group_id BIGINT NOT NULL,
+      rolls INTEGER NOT NULL DEFAULT 1,
+      chance_permille INTEGER NOT NULL DEFAULT 1000,
+      drop_limit INTEGER NOT NULL DEFAULT 0,
+      minimum_drops INTEGER NOT NULL DEFAULT 0,
+      PRIMARY KEY(loot_table_id, loot_group_id),
+      FOREIGN KEY(loot_table_id) REFERENCES npc_loot_tables(id))`,
+    `CREATE TABLE IF NOT EXISTS npc_loot_group_entries (
+      loot_group_id BIGINT NOT NULL, item_id BIGINT NOT NULL,
+      chance_permille INTEGER NOT NULL DEFAULT 1000,
+      rolls INTEGER NOT NULL DEFAULT 1,
+      minimum_quantity INTEGER NOT NULL DEFAULT 1,
+      maximum_quantity INTEGER NOT NULL DEFAULT 1,
+      npc_minimum_level INTEGER NOT NULL DEFAULT 0,
+      npc_maximum_level INTEGER NOT NULL DEFAULT 0,
+      PRIMARY KEY(loot_group_id, item_id),
+      FOREIGN KEY(item_id) REFERENCES items(id))`,
+    createIndex(database, "npc_loot_assignment_table_idx", "npc_loot_assignments", "loot_table_id"),
+    createIndex(database, "npc_loot_table_group_idx", "npc_loot_table_entries", "loot_group_id"),
+    createIndex(database, "npc_loot_group_item_idx", "npc_loot_group_entries", "item_id"),
+  ],
+}, {
+  version: 9,
+  statements: (database) => [
+    "ALTER TABLE items ADD COLUMN base_price BIGINT NOT NULL DEFAULT 0",
+    "ALTER TABLE items ADD COLUMN sell_rate_permille INTEGER NOT NULL DEFAULT 1000",
+    `CREATE TABLE IF NOT EXISTS merchant_catalogs (
+      id BIGINT PRIMARY KEY, merchant_key VARCHAR(255) NOT NULL UNIQUE,
+      label TEXT NOT NULL DEFAULT '')`,
+    `CREATE TABLE IF NOT EXISTS merchant_catalog_entries (
+      catalog_id BIGINT NOT NULL, merchant_slot INTEGER NOT NULL,
+      item_id BIGINT NOT NULL, level_required INTEGER NOT NULL DEFAULT 0,
+      classes_required BIGINT NOT NULL DEFAULT 4294967295,
+      probability_permille INTEGER NOT NULL DEFAULT 1000,
+      PRIMARY KEY(catalog_id, merchant_slot),
+      FOREIGN KEY(catalog_id) REFERENCES merchant_catalogs(id),
+      FOREIGN KEY(item_id) REFERENCES items(id))`,
+    `CREATE TABLE IF NOT EXISTS npc_merchant_assignments (
+      npc_archetype_id BIGINT PRIMARY KEY, catalog_id BIGINT NOT NULL,
+      keeps_sold_items INTEGER NOT NULL DEFAULT 1,
+      greed INTEGER NOT NULL DEFAULT 0,
+      sell_to_player_permille INTEGER NOT NULL DEFAULT 1000,
+      buy_from_player_permille INTEGER NOT NULL DEFAULT 950,
+      interaction_range REAL NOT NULL DEFAULT 20,
+      pricing_policy_json VARCHAR(4096) NOT NULL DEFAULT '{}',
+      FOREIGN KEY(npc_archetype_id) REFERENCES npc_archetypes(id),
+      FOREIGN KEY(catalog_id) REFERENCES merchant_catalogs(id))`,
+    createIndex(database, "merchant_catalog_item_idx", "merchant_catalog_entries", "item_id"),
+    createIndex(database, "npc_merchant_catalog_idx", "npc_merchant_assignments", "catalog_id"),
+  ],
 }];
 
 const runtimeMigrations: Migration[] = [{
@@ -129,6 +205,62 @@ const runtimeMigrations: Migration[] = [{
       character_id BIGINT NOT NULL, language_id INTEGER NOT NULL, value INTEGER NOT NULL,
       PRIMARY KEY(character_id, language_id), FOREIGN KEY(character_id) REFERENCES characters(id) ON DELETE CASCADE)`,
   ],
+}, {
+  version: 3,
+  statements: () => [
+    "ALTER TABLE characters ADD COLUMN appearance_schema_version INTEGER",
+    "ALTER TABLE characters ADD COLUMN body_family_id VARCHAR(255)",
+    "ALTER TABLE characters ADD COLUMN body_component_id VARCHAR(255)",
+    "ALTER TABLE characters ADD COLUMN face_component_id VARCHAR(255)",
+    "ALTER TABLE characters ADD COLUMN presentation_id VARCHAR(255)",
+    "ALTER TABLE characters ADD COLUMN calling_id VARCHAR(255)",
+    "ALTER TABLE characters ADD COLUMN origin_id VARCHAR(255)",
+  ],
+}, {
+  version: 4,
+  statements: (database) => {
+    const id = identity(database);
+    return [
+      `CREATE TABLE IF NOT EXISTS character_currency (
+        character_id BIGINT PRIMARY KEY, carried_copper BIGINT NOT NULL DEFAULT 0,
+        banked_copper BIGINT NOT NULL DEFAULT 0,
+        FOREIGN KEY(character_id) REFERENCES characters(id) ON DELETE CASCADE)`,
+      `CREATE TABLE IF NOT EXISTS merchant_dynamic_stock (
+        npc_archetype_id BIGINT NOT NULL, zone_id BIGINT NOT NULL,
+        instance_id INTEGER NOT NULL DEFAULT 0, item_id BIGINT NOT NULL,
+        quantity INTEGER NOT NULL DEFAULT 0, updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY(npc_archetype_id, zone_id, instance_id, item_id))`,
+      `CREATE TABLE IF NOT EXISTS merchant_transactions (
+        id ${id}, character_id BIGINT NOT NULL, npc_archetype_id BIGINT NOT NULL,
+        action VARCHAR(16) NOT NULL, item_id BIGINT NOT NULL,
+        quantity INTEGER NOT NULL, copper BIGINT NOT NULL,
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY(character_id) REFERENCES characters(id) ON DELETE CASCADE)`,
+      createIndex(database, "merchant_transactions_character_idx", "merchant_transactions", "character_id, created_at"),
+    ];
+  },
+}, {
+  version: 5,
+  statements: (database) => {
+    const id = identity(database);
+    const blob = database.dialect === "postgres"
+      ? "BYTEA"
+      : database.dialect === "mysql"
+        ? "LONGBLOB"
+        : "BLOB";
+    return [
+      `CREATE TABLE IF NOT EXISTS zone_snapshots (
+        id ${id}, zone_id BIGINT NOT NULL, instance_id INTEGER NOT NULL DEFAULT 0,
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        format_version INTEGER NOT NULL, blob_data ${blob} NOT NULL)`,
+      createIndex(
+        database,
+        "zone_snapshots_latest_idx",
+        "zone_snapshots",
+        "zone_id, instance_id, created_at, id",
+      ),
+    ];
+  },
 }];
 
 export function applyCanonicalContentSchema(database: DatabaseBackend): Promise<void> {

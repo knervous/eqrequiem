@@ -61,7 +61,17 @@ const EnvSchema = z.object({
   RUNTIME_DB_URL: z.string().min(1).optional(),
   ZONE_TICK_RATE_HZ: z.coerce.number().min(1).max(1000).default(20),
   ZONE_WORK_BUDGET_MS: z.coerce.number().min(1).max(250).default(8),
+  NPC_DAMAGE_HATE_MULTIPLIER: z.coerce.number().min(0).default(1),
+  NPC_MINIMUM_DAMAGE_HATE: z.coerce.number().min(0).default(1),
+  NPC_REPATH_INTERVAL_MS: z.coerce.number().int().min(50).max(60000).default(500),
+  NPC_TARGET_REPATH_DISTANCE: z.coerce.number().min(0).max(1000).default(1.5),
+  NPC_WAYPOINT_ARRIVAL_DISTANCE: z.coerce.number().positive().max(100).default(0.75),
+  NPC_DIRECT_MOVEMENT_WHILE_PATH_PENDING: BooleanFromEnv.default(true),
   QUEST_DIR: z.string().min(1).default("./quests"),
+  NAV_MESH_DIR: z.string().min(1).default("../server/maps"),
+  WORLD_PACKAGE_DIR: z.string().min(1).default("../client/public/eqrequiem/worlds"),
+  NAV_QUERY_TIMEOUT_MS: z.coerce.number().int().min(100).max(30000).default(2000),
+  NAV_QUERY_MAX_NODES: z.coerce.number().int().min(64).max(65536).default(4096),
   FEATURE_AOI_PRIORITY: BooleanFromEnv.default(true),
   FEATURE_PERSIST_WORKER: BooleanFromEnv.default(true),
   FEATURE_NAV_WORKER: BooleanFromEnv.default(true),
@@ -99,6 +109,20 @@ export type AppEnv = {
     tickRateHz: number;
     workBudgetMs: number;
     questDir: string;
+    npcEngagement: {
+      damageHateMultiplier: number;
+      minimumDamageHate: number;
+      repathIntervalMs: number;
+      targetMovementRepathDistance: number;
+      waypointArrivalDistance: number;
+      directMovementWhilePathPending: boolean;
+    };
+  };
+  nav: {
+    meshDir: string;
+    worldPackageDir: string;
+    queryTimeoutMs: number;
+    maxNodes: number;
   };
   features: {
     aoiPriority: boolean;
@@ -150,6 +174,21 @@ export function readEnv(raw: NodeJS.ProcessEnv = process.env): AppEnv {
       tickRateHz: parsed.ZONE_TICK_RATE_HZ,
       workBudgetMs: parsed.ZONE_WORK_BUDGET_MS,
       questDir: parsed.QUEST_DIR,
+      npcEngagement: {
+        damageHateMultiplier: parsed.NPC_DAMAGE_HATE_MULTIPLIER,
+        minimumDamageHate: parsed.NPC_MINIMUM_DAMAGE_HATE,
+        repathIntervalMs: parsed.NPC_REPATH_INTERVAL_MS,
+        targetMovementRepathDistance: parsed.NPC_TARGET_REPATH_DISTANCE,
+        waypointArrivalDistance: parsed.NPC_WAYPOINT_ARRIVAL_DISTANCE,
+        directMovementWhilePathPending:
+          parsed.NPC_DIRECT_MOVEMENT_WHILE_PATH_PENDING,
+      },
+    },
+    nav: {
+      meshDir: parsed.NAV_MESH_DIR,
+      worldPackageDir: parsed.WORLD_PACKAGE_DIR,
+      queryTimeoutMs: parsed.NAV_QUERY_TIMEOUT_MS,
+      maxNodes: parsed.NAV_QUERY_MAX_NODES,
     },
     features: {
       aoiPriority: parsed.FEATURE_AOI_PRIORITY,

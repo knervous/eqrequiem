@@ -1,5 +1,5 @@
 import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react-swc'
+import react from '@vitejs/plugin-react'
 import { fileURLToPath } from 'url'
 import path from 'path'
 import fs from 'fs/promises'
@@ -53,7 +53,7 @@ const catalogObjectPlugin = {
 
 // https://vite.dev/config/
 export default defineConfig(({ command }) => ({
-  plugins: [react({ tsDecorators: true }), catalogObjectPlugin, babylonLiteVat2dPlugin],
+  plugins: [react(), catalogObjectPlugin, babylonLiteVat2dPlugin],
   resolve: {
     // Source exports are ideal for local HMR, but production must exercise the
     // transpiled package artifact. Rolldown otherwise preserves decorators in

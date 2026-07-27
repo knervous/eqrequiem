@@ -15,6 +15,13 @@ export interface BackendCharacterCreate {
   wis?: number;
   intel?: number;
   cha?: number;
+  appearanceSchemaVersion?: number;
+  bodyFamilyId?: string;
+  bodyComponentId?: string;
+  faceComponentId?: string;
+  presentationId?: string;
+  callingId?: string;
+  originId?: string;
 }
 
 export interface BackendMoveItem {
@@ -30,14 +37,50 @@ export type BackendRequest =
   | { type: "character_delete"; name: string }
   | { type: "enter_world"; name: string }
   | { type: "zone_session"; zoneId: number | string; instanceId: number }
-  | { type: "zone_change"; zoneId?: number | string; instanceId: number }
+  | {
+      type: "zone_change";
+      zoneId?: number | string;
+      instanceId: number;
+      x?: number;
+      y?: number;
+      z?: number;
+      heading?: number;
+    }
   | { type: "gm_command"; command: string; args: string[] }
+  | {
+      type: "client_update";
+      x: number;
+      y: number;
+      z: number;
+      heading: number;
+    }
   | {
       type: "channel_message";
       sender: string;
       targetName: string;
       message: string;
       channel: number;
+    }
+  | {
+      type: "auto_attack";
+      enabled: boolean;
+      targetId: number;
+    }
+  | { type: "loot_request"; corpseId: number }
+  | { type: "loot_item"; corpseId: number; lootSlot: number }
+  | { type: "merchant_open"; npcId: number }
+  | {
+      type: "merchant_buy";
+      npcId: number;
+      merchantSlot: number;
+      quantity: number;
+    }
+  | {
+      type: "merchant_sell";
+      npcId: number;
+      slot: number;
+      bag: number;
+      quantity: number;
     }
   | ({ type: "move_item" } & BackendMoveItem)
   | { type: "delete_item"; slot: number; bag: number };
@@ -51,13 +94,21 @@ export type BackendEventKind =
   | "new_zone"
   | "player_profile"
   | "zone_spawns"
+  | "render_snapshot"
   | "channel_message"
   | "level_update"
   | "add_item"
   | "bulk_items"
   | "delete_item"
   | "bulk_delete_items"
-  | "move_item";
+  | "move_item"
+  | "combat_event"
+  | "death_event"
+  | "loot_window"
+  | "loot_error"
+  | "merchant_window"
+  | "merchant_error"
+  | "npc_debug_state";
 
 export interface BackendEvent {
   type: BackendEventKind;
@@ -65,11 +116,17 @@ export interface BackendEvent {
   transport?: BackendTransport;
 }
 
+export interface BackendEventDelivery {
+  readonly sessionIds: readonly number[];
+  readonly event: BackendEvent;
+}
+
 export interface GameBackend {
   initialize(): Promise<void>;
   connect(sessionId: number): Promise<BackendEvent[]>;
   disconnect(sessionId: number): Promise<void>;
   handle(sessionId: number, request: BackendRequest): Promise<BackendEvent[]>;
+  subscribe?(listener: (delivery: BackendEventDelivery) => void): () => void;
   close(): Promise<void>;
 }
 
@@ -109,6 +166,8 @@ export interface BackendItemTemplate {
   haste?: number;
   magic?: number;
   nodrop?: number;
+  basePrice?: number;
+  sellRatePermille?: number;
 }
 
 export interface BackendZoneDefinition {

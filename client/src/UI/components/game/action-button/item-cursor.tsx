@@ -2,11 +2,9 @@ import React, { useCallback, useEffect, useRef } from 'react';
 import { useInventorySlot } from '@game/Events/event-hooks';
 import { InventorySlot } from '@game/Player/player-constants';
 import { Box } from '@mui/material';
-import { useItemImage } from '@ui/hooks/use-image';
 
 export const ItemCursor: React.FC = () => {
   const item = useInventorySlot(InventorySlot.Cursor, 0);
-  const itemEntry = useItemImage(item?.icon ?? -1);
   const elementRef = useRef<HTMLDivElement>(null);
   const mousePositionRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const updateMousePosition = useCallback((event: MouseEvent) => {
@@ -26,9 +24,8 @@ export const ItemCursor: React.FC = () => {
 
   return item ? <Box
     ref={elementRef}
+    className="rq-item-cursor"
     sx={{
-      backgroundImage: `url(${itemEntry})`,
-      backgroundSize : 'cover',
       width          : '40px',
       height         : '40px',
       position       : 'absolute',
@@ -38,6 +35,7 @@ export const ItemCursor: React.FC = () => {
       top            : mousePositionRef.current.y,
     }}
   >
+    <span className="rq-item-glyph" aria-hidden="true" />
     {item?.stackable ? (
       <Box
         sx={{

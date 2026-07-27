@@ -1,6 +1,6 @@
 import { createRoot } from 'react-dom/client';
 import { SandboxApp } from '@requiem-subapp/sandbox';
-import { ReturnToRequiem } from './return-to-requiem';
+import { ReturnToEltania } from './return-to-eltania';
 
 const basePath = '/apps/sandbox';
 window.__SHADO_SANDBOX_BASE_PATH__ = basePath;
@@ -12,7 +12,7 @@ if (!root) {
 
 createRoot(root).render(
   <>
-    <ReturnToRequiem />
+    <ReturnToEltania />
     <SandboxApp basePath={basePath} />
   </>,
 );

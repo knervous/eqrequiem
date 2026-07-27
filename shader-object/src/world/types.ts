@@ -74,14 +74,45 @@ export type ShadoWorldPrimitive = {
   material: string;
   positions: ArrayLike<number>;
   indices: ArrayLike<number>;
+  /** Optional glTF TEXCOORD_1 stream used by the offline lightmap baker. */
+  lightmapUvs?: ArrayLike<number>;
 };
 
 export type ShadoWorldCompileOptions = {
   name: string;
   source?: string;
+  /**
+   * Transform applied to the source scene and its extracted geometry before
+   * either becomes runtime Babylon Y-up world space.
+   */
+  sourceTransform?: ShadoWorldSourceTransform;
   tileSize?: number;
   maxClusterTriangles?: number;
   authoring?: ShadoWorldAuthoringDocument;
+  /** Collision-selected primitives in final runtime coordinates. */
+  collisionPrimitives?: readonly ShadoWorldPrimitive[];
+  /** Runtime URL, normally a sibling of the spatial package. */
+  collisionSource?: string;
+};
+
+export type ShadoWorldSourceTransform = 'identity' | 'mirror-x';
+
+export type ShadoWorldNavigationModifier = {
+  /** Stable authored region row supplying this build operation. */
+  region: number;
+  /** Recast area ID (0..63). */
+  area: number;
+  /** Detour polygon flags compiled for this area. */
+  flags: number;
+  /** Excluded spans are removed rather than assigned a traversable area. */
+  excluded: number;
+  /** Recast-space AABB center after the runtime-to-Recast boundary transform. */
+  centerX: number;
+  centerY: number;
+  centerZ: number;
+  sizeX: number;
+  sizeY: number;
+  sizeZ: number;
 };
 
 export type ShadoWorldBounds = {
@@ -89,14 +120,26 @@ export type ShadoWorldBounds = {
   max: WorldVec3;
 };
 
+export type ShadoWorldCollisionDescriptor = {
+  source: string;
+  format: 'shado-collision-v1';
+  vertexCount: number;
+  triangleCount: number;
+  bounds: ShadoWorldBounds;
+  /** FNV-1a hash of the uncompressed artifact bytes. */
+  contentHash: string;
+};
+
 export type ShadoWorldSpatialPackage = {
   kind: 'shado.world.spatial';
-  version: 3;
+  version: 5;
   name: string;
   /** Runtime geometry, regions, and object transforms are all Babylon Y-up. */
   coordinateSystem: 'babylon-y-up';
+  sourceTransform: ShadoWorldSourceTransform;
   source?: string;
   bounds: ShadoWorldBounds;
+  collision: ShadoWorldCollisionDescriptor;
   triangleCount: number;
   materials: string[];
   primitives: Array<{ name: string; material: number; vertexCount: number }>;
@@ -208,6 +251,25 @@ export type ShadoWorldSpatialPackage = {
     z: number[];
     firstCluster: number[];
     clusterCount: number[];
+  };
+  /**
+   * Navigation build inputs share authored identity and tile addressing with
+   * the spatial package, but remain a separate Recast/Detour product.
+   */
+  navigation: {
+    runtimeToRecast: 'z-y-negative-x';
+    modifiers: {
+      region: number[];
+      area: number[];
+      flags: number[];
+      excluded: number[];
+      centerX: number[];
+      centerY: number[];
+      centerZ: number[];
+      sizeX: number[];
+      sizeY: number[];
+      sizeZ: number[];
+    };
   };
   /** Optional conservative PVS rows. Bit N in row C means cell N may be visible from C. */
   pvs?: {
