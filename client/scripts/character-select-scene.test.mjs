@@ -27,6 +27,10 @@ const bindingsSource = await readFile(
   path.join(clientRoot, "src/Core/bindings.ts"),
   "utf8",
 );
+const environmentSource = await readFile(
+  path.join(clientRoot, "src/Game/Zone/character-select-environment.ts"),
+  "utf8",
+);
 
 function parseGlb(bytes) {
   assert.equal(bytes.toString("ascii", 0, 4), "glTF");
@@ -89,6 +93,14 @@ test("compressed GLB contains every semantic and an identity authored root", asy
       .some((primitive) => primitive.attributes.COLOR_0 !== undefined),
     "authored vertex-color variation must survive export",
   );
+});
+
+test("ambient presentation orbits the camera and owns observer cleanup", () => {
+  assert.ok(environmentSource.includes("configureAmbientOrbit()"));
+  assert.ok(environmentSource.includes("onBeforeRenderObservable.add"));
+  assert.ok(environmentSource.includes("onBeforeRenderObservable.remove"));
+  assert.ok(environmentSource.includes("orbitDurationSeconds"));
+  assert.ok(environmentSource.includes("horizontalCompositionOffset"));
 });
 
 test("Babylon activates the real payload and resolves authored poses", async () => {
@@ -163,6 +175,17 @@ test("canonical Blender source and production review are retained", async () => 
   assert.ok(report.triangles < 200_000);
   assert.ok(report.estimatedDrawGroups <= 40);
   assert.ok(report.meshCount <= 40);
+  assert.deepEqual(report.materialsMissingTextures, []);
+  assert.deepEqual(report.meshesMissingUvs, []);
+  for (const [materialName, textures] of Object.entries(
+    report.pbrTextureCoverage,
+  )) {
+    if (materialName.startsWith("CS Atmosphere ·")) continue;
+    assert.ok(
+      textures.length >= 3,
+      `${materialName} must have albedo, roughness, and normal textures`,
+    );
+  }
   assert.equal(report.negativeScaleObjects.length, 0);
   assert.deepEqual(report.unappliedModifiers, {});
   assert.ok(report.materials >= 8);

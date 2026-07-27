@@ -1,5 +1,5 @@
 import emitter from '@game/Events/events';
-import { DeleteItem, ItemInstance, type MoveItem } from '@game/Net/messages';
+import { DeleteItem, type MoveItem } from '@game/Net/messages';
 import { OpCodes } from '@game/Net/opcodes';
 import { WorldSocket } from '@ui/net/instances';
 import type Player from './player';

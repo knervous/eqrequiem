@@ -11,6 +11,7 @@ import { linkItemToChat } from '../chat/command-link-util';
 import { FullItemEntryData } from './constants';
 import { useItemDragClone } from './hooks';
 import { ItemTooltip } from './item-tooltip';
+import { ItemVisual } from './item-visual';
 
 interface ItemButtonProps {
   scale: number;
@@ -154,10 +155,7 @@ export const ItemButton: React.FC<ItemButtonProps> = (props) => {
                 position: 'relative',
               }}
             >
-              <span
-                className={`rq-item-glyph${isBag ? ' rq-item-glyph--container' : ''}`}
-                aria-hidden="true"
-              />
+              <ItemVisual isContainer={isBag} item={item} />
               {item?.stackable ? (
                 <Box
                   className="item-quantity"

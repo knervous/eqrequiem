@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef } from 'react';
 import { useInventorySlot } from '@game/Events/event-hooks';
 import { InventorySlot } from '@game/Player/player-constants';
 import { Box } from '@mui/material';
+import { ItemVisual } from './item-visual';
 
 export const ItemCursor: React.FC = () => {
   const item = useInventorySlot(InventorySlot.Cursor, 0);
@@ -35,7 +36,7 @@ export const ItemCursor: React.FC = () => {
       top            : mousePositionRef.current.y,
     }}
   >
-    <span className="rq-item-glyph" aria-hidden="true" />
+    <ItemVisual isContainer={(item.bagslots ?? 0) > 0} item={item} />
     {item?.stackable ? (
       <Box
         sx={{

@@ -42,11 +42,14 @@ import {
   UIActions,
 } from '../action-button/constants';
 import { ItemButton } from '../action-button/item-button';
+import { ItemTooltip } from '../action-button/item-tooltip';
+import { ItemVisual } from '../action-button/item-visual';
 import { BagsContainer } from '../inventory/bags-container';
 import { useDispatch, useUIContext } from '../../context';
 import { actions } from '../../../state/reducer';
 import { ParsedMessage } from '../chat/command-link';
 import type { JsonCommandLink } from '../chat/command-link-util';
+import { linkItemToChat } from '../chat/command-link-util';
 import { ChatInputSlate } from '../chat/chat-input';
 import { useDrag } from '../../../hooks/use-drag';
 import { HudWindow } from './hud-window';
@@ -64,6 +67,7 @@ const generalSlots = [
 ];
 
 const equipmentSlots = [
+  InventorySlot.Charm,
   InventorySlot.Ear1,
   InventorySlot.Head,
   InventorySlot.Face,
@@ -695,29 +699,38 @@ const formatCopper = (value: number): string => {
   ].filter(Boolean).join(' ');
 };
 
+const CoinValue: React.FC<{ value: number }> = ({ value }) => {
+  let remainder = Math.max(0, Math.trunc(value));
+  const denominations = [
+    ['platinum', 'p', Math.floor(remainder / 1_000)],
+    ['gold', 'g', Math.floor((remainder %= 1_000) / 100)],
+    ['silver', 's', Math.floor((remainder %= 100) / 10)],
+    ['copper', 'c', remainder % 10],
+  ] as const;
+  const visible = denominations.filter(([, key, amount]) =>
+    amount > 0 || (key === 'c' && denominations.every((part) => part[2] === 0)));
+  return (
+    <span className="rq-coin-value" aria-label={formatCopper(value)}>
+      {visible.map(([name, key, amount]) => (
+        <span className="rq-coin-value__part" key={key}>
+          <i className={`rq-coin rq-coin--${name}`} aria-hidden="true" />
+          <b>{amount}</b>
+        </span>
+      ))}
+    </span>
+  );
+};
+
 const Merchant: React.FC = () => {
   const merchantWindow = useEventState('merchantWindow', null);
-  const [tab, setTab] = useState<'buy' | 'sell'>('buy');
-  const [inventoryRevision, setInventoryRevision] = useState(0);
   const {
     x,
     y,
     handleMouseDown: handleDragMouseDown,
   } = useDrag(620, 180);
 
-  useEffect(() => {
-    const refresh = () => setInventoryRevision((value) => value + 1);
-    emitter.on('updateInventory', refresh);
-    emitter.on('updateInventorySlot', refresh);
-    return () => {
-      emitter.off('updateInventory', refresh);
-      emitter.off('updateInventorySlot', refresh);
-    };
-  }, []);
-
   if (!merchantWindow) return null;
-  const carried = Player.instance?.playerInventory.items()
-    .filter((item) => item.slot >= InventorySlot.General1) ?? [];
+  const sellItems = merchantWindow.sellItems ?? [];
 
   return (
     <div
@@ -726,7 +739,6 @@ const Merchant: React.FC = () => {
       role="dialog"
       aria-modal="false"
       aria-label={`Trade with ${merchantWindow.merchantName}`}
-      data-inventory-revision={inventoryRevision}
     >
       <ReliquaryPanel
         title={merchantWindow.merchantName.replaceAll('_', ' ')}
@@ -743,62 +755,103 @@ const Merchant: React.FC = () => {
           ×
         </button>
         <div className="rq-merchant__toolbar">
-          <div role="tablist" aria-label="Merchant action">
-            <button
-              role="tab"
-              aria-selected={tab === 'buy'}
-              onClick={() => setTab('buy')}
-            >
-              Buy
-            </button>
-            <button
-              role="tab"
-              aria-selected={tab === 'sell'}
-              onClick={() => setTab('sell')}
-            >
-              Sell
-            </button>
-          </div>
-          <span>{formatCopper(merchantWindow.currencyCopper)}</span>
+          <span>Carried coin</span>
+          <CoinValue value={merchantWindow.currencyCopper} />
         </div>
-        <div className="rq-merchant__items">
-          {tab === 'buy' ? merchantWindow.items.map((item) => (
-            <button
-              key={item.merchantSlot}
-              disabled={item.quantity === 0}
-              onClick={(event) => {
-                event.currentTarget.blur();
-                void Player.instance?.playerMerchant.buy(
-                  merchantWindow.npcId,
-                  item.merchantSlot,
-                );
-              }}
-            >
-              <span>{item.name.replaceAll('_', ' ')}</span>
-              <small>
-                {formatCopper(item.unitPrice)}
-                {item.quantity === null ? '' : ` · ${item.quantity} left`}
-              </small>
-            </button>
-          )) : carried.map((item) => (
-            <button
-              key={`${item.slot}:${item.bagSlot}:${item.id}`}
-              onClick={(event) => {
-                event.currentTarget.blur();
-                void Player.instance?.playerMerchant.sell(
-                  merchantWindow.npcId,
-                  item.slot,
-                  item.bagSlot,
-                );
-              }}
-            >
-              <span>{item.name.replaceAll('_', ' ')}</span>
-              <small>{item.quantity > 1 ? `×${item.quantity}` : 'Sell one'}</small>
-            </button>
-          ))}
-          {(tab === 'buy' ? merchantWindow.items.length : carried.length) === 0
-            ? <div className="rq-empty-state">Nothing is available.</div>
-            : null}
+        <div className="rq-merchant__trade">
+          <section className="rq-merchant__pane" aria-labelledby="merchant-stock">
+            <h3 id="merchant-stock">
+              <span>Merchant stock</span>
+              <small>{merchantWindow.items.length} items</small>
+            </h3>
+            <div className="rq-merchant__items">
+              {merchantWindow.items.map((entry) => (
+                <ItemTooltip item={entry.item} key={entry.merchantSlot}>
+                  <button
+                    className="rq-merchant-item"
+                    disabled={entry.quantity === 0}
+                    onClick={(event) => {
+                      event.currentTarget.blur();
+                      if (event.ctrlKey) {
+                        linkItemToChat(entry.item);
+                        return;
+                      }
+                      void Player.instance?.playerMerchant.buy(
+                        merchantWindow.npcId,
+                        entry.merchantSlot,
+                      );
+                    }}
+                  >
+                    <span className="rq-merchant-item__icon">
+                      <ItemVisual
+                        isContainer={(entry.item.bagslots ?? 0) > 0}
+                        item={entry.item}
+                      />
+                    </span>
+                    <span className="rq-merchant-item__details">
+                      <strong>{entry.name.replaceAll('_', ' ')}</strong>
+                      <small>
+                        {entry.quantity === null
+                          ? 'In stock'
+                          : `${entry.quantity} remaining`}
+                      </small>
+                    </span>
+                    <CoinValue value={entry.unitPrice} />
+                  </button>
+                </ItemTooltip>
+              ))}
+              {merchantWindow.items.length === 0
+                ? <div className="rq-empty-state">Nothing is available.</div>
+                : null}
+            </div>
+          </section>
+          <section className="rq-merchant__pane" aria-labelledby="player-goods">
+            <h3 id="player-goods">
+              <span>Your inventory</span>
+              <small>{sellItems.length} sellable</small>
+            </h3>
+            <div className="rq-merchant__items">
+              {sellItems.map((quote) => (
+                <ItemTooltip
+                  item={quote.item}
+                  key={`${quote.slot}:${quote.bag}:${quote.item.id}`}
+                >
+                  <button
+                    className="rq-merchant-item"
+                    onClick={(event) => {
+                      event.currentTarget.blur();
+                      if (event.ctrlKey) {
+                        linkItemToChat(quote.item);
+                        return;
+                      }
+                      void Player.instance?.playerMerchant.sell(
+                        merchantWindow.npcId,
+                        quote.slot,
+                        quote.bag,
+                      );
+                    }}
+                  >
+                    <span className="rq-merchant-item__icon">
+                      <ItemVisual
+                        isContainer={(quote.item.bagslots ?? 0) > 0}
+                        item={quote.item}
+                      />
+                    </span>
+                    <span className="rq-merchant-item__details">
+                      <strong>{quote.item.name.replaceAll('_', ' ')}</strong>
+                      <small>
+                        {quote.quantity > 1 ? `${quote.quantity} carried` : 'Sell one'}
+                      </small>
+                    </span>
+                    <CoinValue value={quote.unitPrice} />
+                  </button>
+                </ItemTooltip>
+              ))}
+              {sellItems.length === 0
+                ? <div className="rq-empty-state">No sellable items.</div>
+                : null}
+            </div>
+          </section>
         </div>
       </ReliquaryPanel>
     </div>
@@ -841,6 +894,15 @@ const Inventory: React.FC = () => {
           <span>Level {level} {CLASS_DATA_NAMES[player?.charClass ?? 1]}</span>
           <span>{getDeityName(player?.deity ?? 0)}</span>
           <Meter label="Health" value={player?.curHp ?? 0} max={player?.maxHp ?? 1} />
+          <div className="rq-inventory__coin">
+            <small>Carried coin</small>
+            <CoinValue value={
+              (player?.platinum ?? 0) * 1_000
+              + (player?.gold ?? 0) * 100
+              + (player?.silver ?? 0) * 10
+              + (player?.copper ?? 0)
+            } />
+          </div>
         </div>
         <div className="rq-equipment-grid">
           {equipmentSlots.map((slot) => (

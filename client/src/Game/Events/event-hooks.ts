@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { Entity } from '@game/Model/entity';
 import { PlayerProfile } from '@game/Net/messages';
 import Player from '@game/Player/player';

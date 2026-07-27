@@ -4,7 +4,6 @@
   "coordinateSystem": "babylon-y-up",
   "runtimeHandedness": "right",
   "sourceTransform": "identity",
-  "sourceCatalog": "assets/generated/eq-catalog/manifest.json",
   "sourceCatalogSha256": "2a59edd5d8b8f00384f516a0de8e6d964665c9b231adb5310a5a845f5608a384",
   "zones": [
     "airplane",

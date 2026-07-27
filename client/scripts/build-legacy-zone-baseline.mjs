@@ -793,14 +793,7 @@ async function checkBaseline(registry) {
       objectManifest.sourceTransform === "identity",
     "Object asset manifest contract changed",
   );
-  ensure(
-    objectManifest.sourceCatalog ===
-      "assets/generated/eq-catalog/manifest.json",
-    "Object source catalog path changed",
-  );
-  const catalogBytes = await fs.readFile(
-    path.join(repoRoot, objectManifest.sourceCatalog),
-  );
+  const catalogBytes = await fs.readFile(objectCatalogFile);
   ensure(
     sha256(catalogBytes) === objectManifest.sourceCatalogSha256,
     "Object source catalog checksum changed",

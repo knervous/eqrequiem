@@ -169,7 +169,7 @@ export class PlayerCombat {
 
   private playSwingAnimation(): void {
     const weaponType =
-      this.player.playerInventory.get(InventorySlot.Primary)?.itemtype;
+      this.player.playerInventory.getTopLevel(InventorySlot.Primary)?.itemtype;
     const animation = (() => {
       switch (weaponType) {
         case 1:

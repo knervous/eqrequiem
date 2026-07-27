@@ -24,7 +24,6 @@ const hashLookupTimeoutMs = Number(
 );
 const hashProviderUrl =
   process.env.VITE_HASH_PROVIDER_URL || "http://localhost:8082/hash";
-const repoRoot = path.resolve(__dirname, "..");
 const serverjsSourceRoot = path.resolve(__dirname, "../serverjs/src");
 const libraUiRoot = path.resolve(__dirname, "../serverjs/libra-ui/src");
 const sandboxRoot = path.resolve(__dirname, "../shader-object/sandbox/src");
@@ -35,10 +34,6 @@ const shadoPublicRoot = path.resolve(
 );
 const clientRequire = createRequire(path.resolve(__dirname, "package.json"));
 const clientDependencyImporter = path.resolve(__dirname, "src/main.tsx");
-const generatedCatalogObjects = path.resolve(
-  __dirname,
-  "../assets/generated/eq-catalog/objects",
-);
 const clientBrowserDependencies = new Map([
   ["@knervous/shado", path.resolve(__dirname, "../shader-object/src/index.ts")],
   [
@@ -377,45 +372,6 @@ export default defineConfig({
               return;
             }
           }
-          if (req.url?.startsWith("/eqrequiem/objects/")) {
-            const requestPath = decodeURIComponent(
-              req.url.split(/[?#]/, 1)[0].slice("/eqrequiem/objects/".length),
-            ).replace(/^\/+|\/+$/g, "");
-            const parts = requestPath.split("/");
-            const nestedAsset =
-              parts.length === 2 ? parts[1].toLowerCase() : undefined;
-            const model = (parts.length === 2 ? parts[0] : requestPath)
-              .replace(/\.glb(?:\.gz)?$/i, "");
-            if (
-              !/^[a-z0-9_-]+$/i.test(model) ||
-              (nestedAsset &&
-                nestedAsset !== "final.glb" &&
-                nestedAsset !== "shape.glb")
-            ) {
-              next();
-              return;
-            }
-            const candidates =
-              nestedAsset === "shape.glb"
-                ? ["shape.glb"]
-                : ["final.glb", "shape.glb"];
-            for (const candidate of candidates) {
-              try {
-                const bytes = await fs.promises.readFile(
-                  path.join(generatedCatalogObjects, model, candidate),
-                );
-                res.statusCode = 200;
-                res.setHeader("Content-Type", "model/gltf-binary");
-                res.setHeader("Content-Length", bytes.byteLength);
-                res.end(bytes);
-                return;
-              } catch (error) {
-                if ((error as NodeJS.ErrnoException).code !== "ENOENT") break;
-              }
-            }
-            next();
-            return;
-          }
           res.setHeader("Cross-Origin-Embedder-Policy", "require-corp");
           res.setHeader("Cross-Origin-Opener-Policy", "same-origin");
           next();
@@ -436,9 +392,6 @@ export default defineConfig({
         autoprefixer(),
       ],
     },
-  },
-  define: {
-    __REPO_ROOT__: JSON.stringify(repoRoot),
   },
   resolve: {
     // This repository still contains some legacy co-located JavaScript emits.
@@ -532,10 +485,12 @@ export default defineConfig({
     plugins: () => [serverjsSourcePlugin()],
   },
   server: {
-    https: {
-      key: fs.readFileSync("localhost.key"),
-      cert: fs.readFileSync("localhost.crt"),
-    },
+    https: process.env.VITE_LOCAL_HTTP_QA === "true"
+      ? undefined
+      : {
+        key: fs.readFileSync("localhost.key"),
+        cert: fs.readFileSync("localhost.crt"),
+      },
     port: 3500,
     proxy: {
       "^/libra(?:/|$)": {

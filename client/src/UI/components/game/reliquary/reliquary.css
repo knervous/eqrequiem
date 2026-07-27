@@ -598,6 +598,17 @@
   transform: translate(-50%, -50%);
 }
 
+.rq-item-art {
+  position: absolute;
+  inset: 5%;
+  width: 90%;
+  height: 90%;
+  filter: drop-shadow(0 2px 3px rgb(0 0 0 / 85%));
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+}
+
 .rq-item-cursor {
   border: 1px solid var(--rq-bronze);
   background: rgb(8 11 11 / 88%);
@@ -781,8 +792,8 @@
 
 .rq-merchant {
   position: relative;
-  width: min(380px, calc(100vw - 24px));
-  max-height: min(540px, calc(100vh - 24px));
+  width: min(760px, calc(100vw - 24px));
+  max-height: min(600px, calc(100vh - 24px));
   box-shadow: var(--rq-shadow);
 }
 
@@ -794,44 +805,150 @@
 
 .rq-merchant__toolbar {
   display: flex;
-  padding: 7px 8px;
+  min-height: 38px;
+  padding: 7px 12px;
   align-items: center;
   justify-content: space-between;
   border-bottom: 1px solid var(--rq-bronze-dark);
   color: var(--rq-bronze-light);
-  font: 700 10px/1 monospace;
+  font: 700 9px/1 Cinzel, Georgia, serif;
+  letter-spacing: .09em;
+  text-transform: uppercase;
 }
 
-.rq-merchant__toolbar [role="tablist"] {
+.rq-merchant__trade {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  min-height: 430px;
+}
+
+.rq-merchant__pane {
+  min-width: 0;
+}
+
+.rq-merchant__pane + .rq-merchant__pane {
+  border-left: 1px solid var(--rq-bronze-dark);
+}
+
+.rq-merchant__pane > h3 {
   display: flex;
-  gap: 4px;
+  min-height: 36px;
+  margin: 0;
+  padding: 0 10px;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgb(154 129 80 / 28%);
+  color: var(--rq-bone);
+  font-family: Cinzel, Georgia, serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
 }
 
-.rq-merchant__toolbar [role="tab"][aria-selected="true"] {
-  border-color: var(--rq-bronze-light);
-  color: #fff5da;
+.rq-merchant__pane > h3 small {
+  color: var(--rq-ash);
+  font: 500 9px/1 monospace;
+  letter-spacing: 0;
+  text-transform: none;
 }
 
 .rq-merchant__items {
   display: grid;
+  align-content: start;
   gap: 5px;
   overflow: auto;
-  max-height: 420px;
+  max-height: min(430px, calc(100vh - 156px));
   padding: 8px;
 }
 
-.rq-merchant__items > button {
-  display: flex;
-  min-height: 45px;
-  padding: 7px 10px;
+.rq-merchant-item {
+  display: grid;
+  min-height: 58px;
+  padding: 5px 8px 5px 5px;
+  grid-template-columns: 46px minmax(0, 1fr) auto;
+  gap: 8px;
   align-items: center;
-  justify-content: space-between;
   color: var(--rq-bone);
   text-align: left;
 }
 
-.rq-merchant__items small {
+.rq-merchant-item__icon {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  width: 46px;
+  height: 46px;
+  border: 1px solid rgb(154 129 80 / 40%);
+  background: radial-gradient(circle, #202a27, #080b0b 72%);
+  clip-path: polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px);
+}
+
+.rq-merchant-item__details {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+}
+
+.rq-merchant-item__details strong {
+  overflow: hidden;
+  font: 600 11px/1.25 Georgia, "Times New Roman", serif;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rq-merchant-item__details small {
   color: var(--rq-bronze-light);
+  font-size: 9px;
+}
+
+.rq-coin-value {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  align-items: center;
+  justify-content: flex-end;
+  color: var(--rq-bone);
+  font: 600 9px/1 monospace;
+  letter-spacing: 0;
+  white-space: nowrap;
+}
+
+.rq-coin-value__part {
+  display: inline-flex;
+  gap: 3px;
+  align-items: center;
+}
+
+.rq-coin-value__part b {
+  font: inherit;
+}
+
+.rq-coin {
+  display: inline-block;
+  width: 11px;
+  height: 11px;
+  border: 1px solid rgb(255 255 255 / 25%);
+  border-radius: 50%;
+  box-shadow:
+    inset 0 0 0 2px rgb(0 0 0 / 20%),
+    0 1px 2px rgb(0 0 0 / 70%);
+}
+
+.rq-coin--platinum {
+  background: radial-gradient(circle at 35% 30%, #eef8f5, #8caaa5 54%, #415552);
+}
+
+.rq-coin--gold {
+  background: radial-gradient(circle at 35% 30%, #ffe795, #bb7a22 54%, #633b13);
+}
+
+.rq-coin--silver {
+  background: radial-gradient(circle at 35% 30%, #f0eee9, #8b8d8b 54%, #444846);
+}
+
+.rq-coin--copper {
+  background: radial-gradient(circle at 35% 30%, #e9a16d, #9b4e2f 54%, #522719);
 }
 
 .rq-inventory > .rq-hud-panel__body {
@@ -874,6 +991,25 @@
   color: var(--rq-bone);
   font-family: Georgia, "Times New Roman", serif;
   font-size: 18px;
+}
+
+.rq-inventory__coin {
+  display: grid;
+  gap: 5px;
+  margin-top: 7px;
+  padding-top: 9px;
+  border-top: 1px solid rgb(154 129 80 / 22%);
+}
+
+.rq-inventory__coin small {
+  color: var(--rq-bronze-light);
+  font-size: 8px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.rq-inventory__coin .rq-coin-value {
+  justify-content: flex-start;
 }
 
 .rq-equipment-grid {
@@ -958,6 +1094,21 @@
 .rq-danger-button {
   border-color: #6b3831 !important;
   color: #cb8a7f !important;
+}
+
+@media (max-width: 720px) {
+  .rq-merchant__trade {
+    grid-template-columns: 1fr;
+  }
+
+  .rq-merchant__pane + .rq-merchant__pane {
+    border-top: 1px solid var(--rq-bronze-dark);
+    border-left: 0;
+  }
+
+  .rq-merchant__items {
+    max-height: min(210px, calc((100vh - 190px) / 2));
+  }
 }
 
 .rq-actions {

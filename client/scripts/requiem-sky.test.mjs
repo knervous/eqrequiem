@@ -28,6 +28,22 @@ const supportedZonesPath = path.join(
 const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
 const report = JSON.parse(await readFile(reportPath, "utf8"));
 const supportedZonesSource = await readFile(supportedZonesPath, "utf8");
+const skyManagerSource = await readFile(
+  path.join(clientRoot, "src/Game/Sky/sky-manager.ts"),
+  "utf8",
+);
+const zoneManagerSource = await readFile(
+  path.join(clientRoot, "src/Game/Zone/zone-manager.ts"),
+  "utf8",
+);
+const skyMaterialSource = await readFile(
+  path.join(clientRoot, "src/Game/Sky/sky-material.ts"),
+  "utf8",
+);
+const devSkySource = await readFile(
+  path.join(clientRoot, "src/UI/components/game/dev/dev-sky.tsx"),
+  "utf8",
+);
 
 const supportedZoneNames = new Set(
   [...supportedZonesSource.matchAll(
@@ -105,6 +121,23 @@ test("sky motion defaults are gentle, continuous, and independently bounded", ()
   assert.equal(bounded.celestialRate, 8);
   assert.equal(bounded.cloudLowRate, -4);
   assert.equal(bounded.starTwinkleRate, 0);
+});
+
+test("runtime uses frame-continuous celestial, cloud, and star motion controls", () => {
+  assert.ok(skyManagerSource.includes("advanceSkyHour("));
+  assert.ok(!skyManagerSource.includes("worldTick():"));
+  assert.ok(!zoneManagerSource.includes("worldTickElapsedMs"));
+  assert.ok(skyMaterialSource.includes("uStarRotationRadians"));
+  for (const setting of [
+    "dayLengthSeconds",
+    "celestialRate",
+    "cloudLowRate",
+    "cloudHighRate",
+    "starDriftRate",
+    "starTwinkleRate",
+  ]) {
+    assert.ok(devSkySource.includes(setting), `missing HUD control '${setting}'`);
+  }
 });
 
 test("biome controls are bounded and every mapped zone and preset exists", () => {

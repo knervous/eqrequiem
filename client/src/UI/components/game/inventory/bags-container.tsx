@@ -22,10 +22,10 @@ export const BagsContainer: React.FC<{scale: number}> = ({ scale }) => {
         key={slot}
         initialX={state.x}
         initialY={state.y}
-        name={Player.instance!.playerInventory.get(+slot)!.name}
+        name={Player.instance!.playerInventory.getTopLevel(+slot)!.name}
         scale={scale}
         slot={+slot}
-        slots={Player.instance!.playerInventory.get(+slot)!.bagslots}
+        slots={Player.instance!.playerInventory.getTopLevel(+slot)!.bagslots}
       />,
     );
 };

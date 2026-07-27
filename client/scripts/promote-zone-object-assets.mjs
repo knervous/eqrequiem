@@ -352,7 +352,6 @@ export async function promoteZoneObjectAssets(requestedZones = ["qeynos2"]) {
     coordinateSystem: "babylon-y-up",
     runtimeHandedness: "right",
     sourceTransform: "identity",
-    sourceCatalog: "assets/generated/eq-catalog/manifest.json",
     sourceCatalogSha256: sha256(catalogBytes),
     zones,
     objects: processed.map((object) => ({

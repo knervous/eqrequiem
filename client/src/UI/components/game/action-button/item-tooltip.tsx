@@ -78,7 +78,7 @@ export const ItemTooltip: React.FC<{
                   MAGIC
                 </Typography>
               ) : null}
-              {item.nodrop ? (
+              {Number(item.nodrop) === 0 ? (
                 <Typography sx={{ fontSize: '11px', color: 'white' }}>
                   NO DROP
                 </Typography>

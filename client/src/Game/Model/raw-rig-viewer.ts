@@ -2,22 +2,17 @@ import BABYLON from "@bjs";
 import type * as BJS from "@babylonjs/core";
 import "@babylonjs/loaders/glTF/index.js";
 
-// Injected by serverjs/libra-ui/vite.config.ts (dev-only). Lets this module
-// fetch pipeline source GLBs directly via Vite's /@fs/ static serving instead
-// of duplicating them into client/public.
-declare const __REPO_ROOT__: string;
-
-// Rig-debug tool only: loads the pipeline's source GLB directly through
+// Rig-debug tool only: loads the accepted public GLB directly through
 // Babylon's normal glTF loader and skinning, so AnimationGroups and
 // SkeletonViewer reflect the real rig — unlike the Shado/VAT runtime, which
 // bakes animation into a texture and never touches the Babylon skeleton
 // after import. Use this to check joint-to-mesh fit, at rest or animated.
 const RAW_RIG_SOURCES: Record<string, string> = {
-  hum: "assets/src/models/human_male/runtime/human_male.glb",
-  huf: "assets/src/models/human_female/runtime/human_female.glb",
-  hem: "assets/src/models/half_elf_male/runtime/half_elf_male.glb",
-  hmc: "assets/src/models/comfyui_humans/male/male_comfy_pbr_v5.glb",
-  hfc: "assets/src/models/comfyui_humans/female/female_comfy_pbr_v6.glb",
+  hum: "/eqrequiem/raw-rigs/hum.glb",
+  huf: "/eqrequiem/raw-rigs/huf.glb",
+  hem: "/eqrequiem/raw-rigs/hem.glb",
+  hmc: "/eqrequiem/raw-rigs/hmc.glb",
+  hfc: "/eqrequiem/raw-rigs/hfc.glb",
 };
 
 export function getRawRigModelKeys(): string[] {
@@ -45,11 +40,10 @@ export async function createRawRigViewer(
   options: RawRigViewerOptions = {},
 ): Promise<RawRigViewer> {
   const model = (options.model ?? "hum").toLowerCase();
-  const relativePath = RAW_RIG_SOURCES[model];
-  if (!relativePath) {
+  const url = RAW_RIG_SOURCES[model];
+  if (!url) {
     throw new Error(`No raw rig source registered for model "${model}"`);
   }
-  const url = `/@fs/${__REPO_ROOT__}/${relativePath}`;
 
   const engine = new BABYLON.Engine(canvas, true, {
     preserveDrawingBuffer: true,
