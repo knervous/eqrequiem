@@ -39,6 +39,10 @@ const entitySource = await readFile(
   path.join(clientRoot, "src/Game/Model/entity.ts"),
   "utf8",
 );
+const characterSelectSource = await readFile(
+  path.join(clientRoot, "src/Game/Zone/character-select.ts"),
+  "utf8",
+);
 
 function parseGlb(bytes) {
   assert.equal(bytes.toString("ascii", 0, 4), "glTF");
@@ -112,6 +116,8 @@ test("ambient presentation orbits the camera and owns observer cleanup", () => {
 });
 
 test("character preview is render-only and preserves its authored anchor", () => {
+  assert.ok(characterSelectSource.includes("await this.initialize()"));
+  assert.ok(characterSelectSource.includes("this.initializePromise ??="));
   assert.ok(playerSource.includes("{ renderOnly: fromCharSelect }"));
   assert.ok(entitySource.includes("this.isPlayer && !this.renderOnly"));
   assert.ok(

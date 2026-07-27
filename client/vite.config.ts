@@ -92,6 +92,10 @@ const clientBrowserDependencies = new Map([
     "@sqlite.org/sqlite-wasm/sqlite3.wasm",
     path.resolve(__dirname, "node_modules/@sqlite.org/sqlite-wasm/dist/sqlite3.wasm"),
   ],
+  [
+    "@recast-navigation/core",
+    clientRequire.resolve("@recast-navigation/core"),
+  ],
   ["drizzle-orm", path.resolve(__dirname, "node_modules/drizzle-orm/index.js")],
   [
     "drizzle-orm/mysql-core",

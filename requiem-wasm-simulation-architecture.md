@@ -6,6 +6,13 @@ This document consolidates the proposed architecture for moving Requiem's author
 
 > **Recommendation:** use Wasm as the authoritative simulation runtime, Node.js as the orchestration and networking host, and Shado as the shared schema and memory-ABI compiler. Treat WebGPU as an optional accelerator and rendering consumer rather than the backend authority.
 
+## Current-contract rule
+
+Simulation and replication define behavior in the present. Hosts, workers, and
+clients consume one current Shado ABI/package contract without runtime legacy
+compatibility modes. Schema evolution is coordinated across producers and
+consumers; durable source data is migrated or rebaked offline.
+
 ---
 
 ## 1. Target architecture

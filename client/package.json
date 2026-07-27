@@ -1,10 +1,10 @@
 {
   "name": "requiem-client",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "engines": {
-    "node": "^20.19.0 || >=22.12.0"
+    "node": "^20.19.0 || >=22.12.0 || >=24.1.0"
   },
   "scripts": {
     "net:generate": "npm --prefix ../serverjs run net:generate",
@@ -79,10 +79,10 @@
     "@mui/material": "^7.0.2",
     "@mui/x-tree-view": "^7.26.0",
     "@protobuf-ts/runtime": "^2.9.6",
-    "@recast-navigation/core": "^0.43.1",
     "@radix-ui/react-select": "^2.2.6",
     "@radix-ui/react-slot": "^1.2.4",
     "@radix-ui/react-tabs": "^1.1.13",
+    "@recast-navigation/core": "^0.43.1",
     "@sqlite.org/sqlite-wasm": "^3.53.0-build1",
     "allotment": "^1.20.4",
     "class-variance-authority": "^0.7.1",

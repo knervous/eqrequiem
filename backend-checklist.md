@@ -36,9 +36,9 @@
 
 ## 5) Entity + spawn + movement parity
 - [ ] Port spawn pool loading and respawn timers
-- [ ] Port NPC pathgrid movement and pause logic
+- [x] Port NPC pathgrid movement and pause logic
 - [x] Add client attach/detach lifecycle and zone-instance ownership
-- [ ] Port dirty-entity tracking and batched updates
+- [x] Port dirty-entity tracking and batched updates
 - [x] Send ordered zone/profile/spawn bootstrap on join
 
 ## 6) AOI/replication upgrade

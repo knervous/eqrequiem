@@ -12,6 +12,7 @@ export default class CharacterSelect {
   private _faceCam = false;
   private loadGeneration = 0;
   private disposed = false;
+  private initializePromise: Promise<void> | null = null;
 
   constructor(gameManager: GameManager) {
     this.gameManager = gameManager;
@@ -31,8 +32,13 @@ export default class CharacterSelect {
     this.environment.applyCameraPose(value);
   }
 
-  async initialize(): Promise<void> {
-    await this.environment.initialize();
+  initialize(): Promise<void> {
+    // GameManager publishes CharacterSelect before the environment GLB has
+    // finished loading. React selection effects may therefore request a model
+    // during that interval. One controller-owned promise makes every caller
+    // wait for the same semantic-anchor initialization.
+    this.initializePromise ??= this.environment.initialize();
+    return this.initializePromise;
   }
 
   public dispose() {
@@ -64,9 +70,18 @@ export default class CharacterSelect {
       false,
     );
     this.character = character;
-    const location = this.environment.characterPosition;
 
     try {
+      await this.initialize();
+      if (
+        this.disposed ||
+        generation !== this.loadGeneration ||
+        this.character !== character
+      ) {
+        character.dispose();
+        return;
+      }
+      const location = this.environment.characterPosition;
       await character.Load(
         {
           ...player,
