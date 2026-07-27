@@ -71,6 +71,15 @@ type InstanceContainer = {
   actor: RequiemEntityActor;
 };
 
+export type EntityInstanceOptions = {
+  /**
+   * Render-only entities are presentation previews, not participants in the
+   * gameplay physics world. Their authored position must never be replaced by
+   * the gameplay "find ground or move to safe point" fallback.
+   */
+  renderOnly?: boolean;
+};
+
 export class Entity extends BABYLON.TransformNode {
   public spawn: Spawn | PlayerProfile;
   public entityContainer: EntityContainer;
@@ -141,6 +150,7 @@ export class Entity extends BABYLON.TransformNode {
   private appearanceGeneration = 0;
   private visibilityOverride: boolean | null = null;
   private corpsePresentationApplied = false;
+  private readonly renderOnly: boolean;
   private readonly itemResolver?: (slot: number) => NullableItemInstance;
   public readonly ready: Promise<void>;
 
@@ -184,6 +194,7 @@ export class Entity extends BABYLON.TransformNode {
     parent: BJS.Node,
     raceEntry: RaceEntry,
     itemResolver?: (slot: number) => NullableItemInstance,
+    options: EntityInstanceOptions = {},
   ) {
     super(`entity_${spawn.name}`, scene);
     this.isPlayer = !!((spawn as PlayerProfile)?.inventoryItems ?? false);
@@ -195,6 +206,7 @@ export class Entity extends BABYLON.TransformNode {
     this.entityContainer = entityContainer;
     this.entityCache = entityCache;
     this.itemResolver = itemResolver;
+    this.renderOnly = options.renderOnly === true;
     const height = raceEntry.height ?? 6;
     let spawnScale = typeof spawn.size === "number" ? spawn.size : height;
     if (spawnScale === -1) {
@@ -208,6 +220,12 @@ export class Entity extends BABYLON.TransformNode {
     // attached weapons and to physics implementations that honor node scale.
     this.scaling.setAll(1);
     this.spawnPosition = new BABYLON.Vector3(spawn.x, spawn.y, spawn.z);
+    if (this.renderOnly) {
+      // The body reads its world transform from Shado, while held-item
+      // instances inherit from this Babylon node. Keep both representations
+      // on the same authored presentation anchor.
+      this.position.copyFrom(this.spawnPosition);
+    }
     this.playAnimation(AnimationDefinitions.Idle1);
     Entity.instantiateStatics(scene);
     this.ready = this.setup();
@@ -217,7 +235,7 @@ export class Entity extends BABYLON.TransformNode {
   private async setup() {
     // Only the locally controlled player participates in Havok. NPCs and
     // remote players are server-authoritative presentation entities.
-    if (this.isPlayer) this.setupPhysics();
+    if (this.isPlayer && !this.renderOnly) this.setupPhysics();
     // Spawn headings from EQ content use the canonical 0..512 turn scale.
     this.setRotation((Number(this.spawn.heading ?? 0) * Math.PI) / 256);
     // Create body instances and assign physics body
@@ -226,7 +244,7 @@ export class Entity extends BABYLON.TransformNode {
     if (this.disposed) return;
     await this.updateModelTextures();
     if (this.disposed) return;
-    if (this.isPlayer) this.checkBelowAndReposition();
+    if (this.isPlayer && !this.renderOnly) this.checkBelowAndReposition();
   }
 
   public get isHumanoid(): boolean {
@@ -285,6 +303,7 @@ export class Entity extends BABYLON.TransformNode {
 
   public setPosition(x: number, y: number, z: number) {
     this.spawnPosition.set(x, y, z);
+    if (this.renderOnly) this.position.copyFrom(this.spawnPosition);
     this.updateTargetRingGroundPosition();
     const physicsBody = this.physicsBody;
     if (!physicsBody) {

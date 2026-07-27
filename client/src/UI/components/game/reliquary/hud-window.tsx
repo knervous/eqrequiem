@@ -207,6 +207,21 @@ export const HudWindow: React.FC<Props> = ({
     event.currentTarget.releasePointerCapture(event.pointerId);
   };
 
+  const beginDragFromZone = (event: React.PointerEvent<HTMLDivElement>) => {
+    const target = event.target as HTMLElement;
+    if (
+      target.closest(
+        'button, a, input, textarea, select, [contenteditable="true"]',
+      )
+      || !target.closest(
+        '.rq-hud-panel__header, .rq-compass, .rq-command-deck',
+      )
+    ) {
+      return;
+    }
+    beginOperation(event, drag);
+  };
+
   const nudgeWindow = (event: React.KeyboardEvent<HTMLButtonElement>) => {
     if (locked || !event.key.startsWith('Arrow')) return;
     event.preventDefault();
@@ -262,7 +277,15 @@ export const HudWindow: React.FC<Props> = ({
       >
         <span>{label}</span>
       </button>
-      <div className="rq-hud-window__content">{children}</div>
+      <div
+        className="rq-hud-window__content"
+        onPointerDown={beginDragFromZone}
+        onPointerMove={moveWindow}
+        onPointerUp={(event) => endOperation(event, drag)}
+        onPointerCancel={(event) => endOperation(event, drag)}
+      >
+        {children}
+      </div>
       {!locked ? (
         <button
           className="rq-hud-window__resize"

@@ -89,14 +89,21 @@
 }
 
 .rq-hud-panel__header {
+  position: relative;
+  isolation: isolate;
   display: inline-flex;
   min-width: 132px;
-  height: 28px;
+  min-height: 30px;
   margin-left: 12px;
+  padding: 1px;
   align-items: center;
-  border: 1px solid var(--rq-bronze-dark);
-  border-bottom-color: var(--rq-bronze);
-  background: linear-gradient(180deg, #242b28, #111615);
+  border: 0;
+  background: linear-gradient(
+    100deg,
+    var(--rq-bronze-dark),
+    var(--rq-bronze) 70%,
+    var(--rq-bronze-dark)
+  );
   clip-path: polygon(0 6px, 7px 0, 100% 0, calc(100% - 7px) 100%, 0 100%);
   color: var(--rq-bone);
   font-family: Georgia, "Times New Roman", serif;
@@ -106,8 +113,20 @@
   text-transform: uppercase;
 }
 
+.rq-hud-panel__header::before {
+  position: absolute;
+  inset: 1px;
+  z-index: -1;
+  background: linear-gradient(180deg, #242b28, #111615);
+  clip-path: polygon(0 5px, 6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%);
+  content: "";
+}
+
 .rq-hud-panel__header span {
+  display: inline-flex;
+  min-height: 28px;
   padding: 0 22px 0 12px;
+  align-items: center;
 }
 
 .rq-hud-panel__header small {
@@ -607,6 +626,17 @@
   object-fit: contain;
   pointer-events: none;
   user-select: none;
+}
+
+.rq-item-category-art {
+  position: absolute;
+  inset: 18%;
+  width: 64%;
+  height: 64%;
+  color: var(--rq-bronze-light);
+  filter: drop-shadow(0 2px 3px rgb(0 0 0 / 85%));
+  opacity: .9;
+  pointer-events: none;
 }
 
 .rq-item-cursor {
@@ -1419,21 +1449,21 @@
 
 .rq-hud-window__handle {
   position: absolute;
-  top: -9px;
-  right: 12px;
-  left: 12px;
+  top: 2px;
+  right: 5px;
   z-index: 30;
   display: flex;
+  width: 30px;
   height: 13px;
   padding: 0;
   align-items: center;
   justify-content: center;
   border: 0;
-  border-top: 1px solid rgb(195 170 112 / 24%);
+  border: 0;
   background: transparent;
   color: transparent;
   cursor: move;
-  opacity: .35;
+  opacity: 0;
   touch-action: none;
 }
 
@@ -1457,14 +1487,20 @@
 }
 
 .rq-hud-window:hover > .rq-hud-window__handle,
-.rq-hud-window:focus-within > .rq-hud-window__handle {
-  border-top-color: rgb(195 170 112 / 62%);
+.rq-hud-window__handle:focus-visible {
   opacity: 1;
 }
 
 .rq-hud-window.is-locked > .rq-hud-window__handle {
   cursor: default;
   opacity: 0;
+}
+
+.rq-hud-window:not(.is-locked) .rq-hud-panel__header,
+.rq-hud-window:not(.is-locked) .rq-compass,
+.rq-hud-window:not(.is-locked) .rq-command-deck {
+  cursor: move;
+  user-select: none;
 }
 
 .rq-hud-window__resize {

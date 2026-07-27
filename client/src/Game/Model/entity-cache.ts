@@ -18,7 +18,7 @@ import {
   getOrCreateAssetContainerRoot,
 } from "./asset-container";
 import { loadBasisTexture } from "./basis-texture";
-import { Entity } from "./entity";
+import { Entity, type EntityInstanceOptions } from "./entity";
 import {
   createVATPickingMaterial,
   createVATShaderMaterial,
@@ -767,6 +767,7 @@ export class EntityCache {
     scene: BJS.Scene,
     parentNode?: BJS.Node,
     itemResolver?: (slot: number) => NullableItemInstance,
+    options: EntityInstanceOptions = {},
   ): Promise<Entity | null> {
     const race = spawn.race ?? 1;
     const entry = RACE_DATA[race] ?? RACE_DATA[Races.HUMAN];
@@ -785,6 +786,7 @@ export class EntityCache {
       parentNode!,
       entry,
       itemResolver,
+      options,
     );
     try {
       await entity.ready;

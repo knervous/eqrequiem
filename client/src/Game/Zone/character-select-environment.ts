@@ -210,19 +210,36 @@ export class CharacterSelectEnvironment {
       );
       findNode(container, manifest.semantics.classFx);
       const sky = findNode(container, manifest.semantics.sky);
+      const skyMeshes = new Set(
+        container.meshes.filter(
+          (mesh) => mesh === sky || mesh.isDescendantOf(sky),
+        ),
+      );
 
       for (const material of container.materials) {
         if (!(material instanceof BABYLON.PBRMaterial)) continue;
         const sourceExtras = material.metadata?.gltf?.extras;
         if (sourceExtras?.requiemUnlit === true) material.unlit = true;
         if (material.name.startsWith("CS Light ·")) material.unlit = true;
+        if (material.name.startsWith("CS Atmosphere · Sky")) {
+          // Blender's glTF exporter cannot represent vertex color driving an
+          // emissive socket. It otherwise exports a flat white emissive factor
+          // that washes the authored COLOR_0 gradient into a pale backdrop.
+          material.unlit = true;
+          material.emissiveColor.copyFrom(BABYLON.Color3.Black());
+          material.backFaceCulling = false;
+          material.twoSidedLighting = true;
+        }
       }
       for (const mesh of container.meshes) {
         mesh.isPickable = false;
         mesh.receiveShadows = false;
-        if (mesh === sky) {
+        if (skyMeshes.has(mesh)) {
           mesh.applyFog = false;
-          if (mesh.material) mesh.material.backFaceCulling = false;
+          mesh.alwaysSelectAsActiveMesh = true;
+          if (mesh.material) {
+            mesh.material.backFaceCulling = false;
+          }
         }
       }
 

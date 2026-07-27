@@ -31,6 +31,14 @@ const environmentSource = await readFile(
   path.join(clientRoot, "src/Game/Zone/character-select-environment.ts"),
   "utf8",
 );
+const playerSource = await readFile(
+  path.join(clientRoot, "src/Game/Player/player.ts"),
+  "utf8",
+);
+const entitySource = await readFile(
+  path.join(clientRoot, "src/Game/Model/entity.ts"),
+  "utf8",
+);
 
 function parseGlb(bytes) {
   assert.equal(bytes.toString("ascii", 0, 4), "glTF");
@@ -101,6 +109,22 @@ test("ambient presentation orbits the camera and owns observer cleanup", () => {
   assert.ok(environmentSource.includes("onBeforeRenderObservable.remove"));
   assert.ok(environmentSource.includes("orbitDurationSeconds"));
   assert.ok(environmentSource.includes("horizontalCompositionOffset"));
+});
+
+test("character preview is render-only and preserves its authored anchor", () => {
+  assert.ok(playerSource.includes("{ renderOnly: fromCharSelect }"));
+  assert.ok(entitySource.includes("this.isPlayer && !this.renderOnly"));
+  assert.ok(
+    entitySource.includes(
+      "if (this.renderOnly) this.position.copyFrom(this.spawnPosition)",
+    ),
+  );
+});
+
+test("authored sky is normalized as a camera-visible unlit backdrop", () => {
+  assert.ok(environmentSource.includes('startsWith("CS Atmosphere · Sky")'));
+  assert.ok(environmentSource.includes("material.emissiveColor.copyFrom"));
+  assert.ok(environmentSource.includes("mesh.alwaysSelectAsActiveMesh = true"));
 });
 
 test("Babylon activates the real payload and resolves authored poses", async () => {
