@@ -1,8 +1,6 @@
-import { supportedZones } from "@game/Constants/supportedZones";
 import { CharacterSelectEntry, PlayerProfile } from "@game/Net/messages";
 import EntityCache from "@game/Model/entity-cache";
 import Player from "@game/Player/player";
-import { CLASS_DATA_NAMES } from "../Constants/class-data";
 import type GameManager from "../Manager/game-manager";
 import { CharacterSelectEnvironment } from "./character-select-environment";
 
@@ -20,6 +18,7 @@ export default class CharacterSelect {
     this.environment = new CharacterSelectEnvironment(
       gameManager.scene!,
       gameManager.Camera!,
+      gameManager.ZoneManager?.SkyManager ?? null,
     );
     this.disposed = false;
   }
@@ -64,7 +63,7 @@ export default class CharacterSelect {
 
   public async loadModel(
     player: CharacterSelectEntry,
-    fromCharCreate = false,
+    _fromCharCreate = false,
     onLoaded: () => void = () => {},
   ) {
     const generation = ++this.loadGeneration;
@@ -132,22 +131,9 @@ export default class CharacterSelect {
       character.playerEntity.setVelocity(0, 0, 0);
       this.environment.applyCameraPose(this.faceCam);
       character.playIdle();
-      if (!fromCharCreate) {
-        const className =
-          typeof player?.charClass === "number"
-            ? CLASS_DATA_NAMES[player.charClass]
-            : "";
-        const zoneName =
-          typeof player?.zone === "number"
-            ? supportedZones[player.zone]?.longName
-            : undefined;
-        await character.UpdateNameplate(
-          [
-            `${player?.name || "Soandso"} [Level ${player?.level} ${className || ""}]`,
-            zoneName ?? "Unknown Zone",
-          ].filter(Boolean),
-        );
-      }
+      // Class-specific visual effects can attach to the authored ClassFx
+      // anchor later; identity and equipped-item presentation are owned by the
+      // normal entity renderer.
     } catch (err) {
       if (this.character === character) this.character = null;
       character.dispose();

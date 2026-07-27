@@ -78,6 +78,11 @@ export type EntityInstanceOptions = {
    * the gameplay "find ground or move to safe point" fallback.
    */
   renderOnly?: boolean;
+  /**
+   * Additional scale applied only by presentation callers. Gameplay size
+   * remains sourced from the spawn/race contract.
+   */
+  presentationScale?: number;
 };
 
 export class Entity extends BABYLON.TransformNode {
@@ -212,7 +217,13 @@ export class Entity extends BABYLON.TransformNode {
     if (spawnScale === -1) {
       spawnScale = height;
     }
-    const finalScale = spawnScale / height;
+    const presentationScale = options.presentationScale ?? 1;
+    if (!Number.isFinite(presentationScale) || presentationScale <= 0) {
+      throw new Error(
+        `Invalid entity presentation scale: ${presentationScale}`,
+      );
+    }
+    const finalScale = (spawnScale / height) * presentationScale;
 
     this.spawnScale = finalScale; // Use spawn scale if available, otherwise default to 1.5
     // Body rendering, attachments, and physics each consume spawnScale

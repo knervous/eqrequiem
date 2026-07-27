@@ -159,15 +159,19 @@ function serverjsSourcePlugin(): Plugin {
       if (clientDependency) return clientDependency;
       const serverSource = serverjsTypeScriptSource(source, importer);
       if (serverSource) return serverSource;
+      const isLinkedBrowserSource =
+        isSourceWithin(importer, serverjsSourceRoot) ||
+        isSourceWithin(importer, shaderObjectSourceRoot);
       if (
         !isBareModuleImport(source) ||
-        !isSourceWithin(importer, shaderObjectSourceRoot)
+        !isLinkedBrowserSource
       ) {
         return null;
       }
       // The production host installs client/package.json only. Shado's linked
-      // TypeScript source therefore needs package imports resolved from the
-      // client graph, while Vite still owns ESM conditions and CJS interop.
+      // TypeScript and ServerJS-authored browser modules therefore need bare
+      // imports resolved from the client graph, while Vite still owns ESM
+      // conditions and CommonJS interop.
       return this.resolve(source, clientDependencyImporter, { skipSelf: true });
     },
   };

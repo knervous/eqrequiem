@@ -1,6 +1,7 @@
 import type * as BJS from "@babylonjs/core";
 import BABYLON from "@bjs";
 import { FileSystem } from "@game/FileSystem/filesystem";
+import type DayNightSkyManager from "@game/Sky/sky-manager";
 
 type SemanticNode =
   | BJS.TransformNode
@@ -123,10 +124,16 @@ export class CharacterSelectEnvironment {
   private orbitRadius = 1;
   private orbitHeight = 0;
   private bodyPoseActive = true;
+  private readonly runtimeSky: DayNightSkyManager | null;
 
-  constructor(scene: BJS.Scene, camera: BJS.UniversalCamera) {
+  constructor(
+    scene: BJS.Scene,
+    camera: BJS.UniversalCamera,
+    runtimeSky: DayNightSkyManager | null = null,
+  ) {
     this.scene = scene;
     this.camera = camera;
+    this.runtimeSky = runtimeSky;
     this.previous = {
       clearColor: scene.clearColor.clone(),
       ambientColor: scene.ambientColor.clone(),
@@ -249,6 +256,16 @@ export class CharacterSelectEnvironment {
       this.container = container;
       this.applyAtmosphere(manifest);
       this.createLights(manifest);
+      if (this.runtimeSky) {
+        await this.runtimeSky.createSky("requiem-sky", true);
+        if (this.runtimeSky.skyContainer) {
+          // The embedded gradient is a resilient fallback. The owned analytic
+          // sky supplies the production dome, two independently moving cloud
+          // layers, celestial bodies, and stars when its contract resolves.
+          sky.setEnabled(false);
+          this.runtimeSky.setTimeOfDay(15.25);
+        }
+      }
       this.configureAmbientOrbit();
       this.applyCameraPose(false);
     } catch (error) {
@@ -280,6 +297,7 @@ export class CharacterSelectEnvironment {
       this.orbitObserver = null;
     }
     this.camera.lockedTarget = null;
+    this.runtimeSky?.dispose();
     for (const light of this.lights) light.dispose();
     this.lights = [];
     this.container?.dispose();
@@ -320,13 +338,14 @@ export class CharacterSelectEnvironment {
     this.orbitAngle = Math.atan2(offsetZ, offsetX);
     this.orbitHeight = position.y;
     this.orbitObserver = this.scene.onBeforeRenderObservable.add(() => {
+      const deltaMilliseconds = this.scene.getEngine().getDeltaTime();
+      this.runtimeSky?.tick(deltaMilliseconds);
       if (!this.bodyPoseActive || !this.manifest) return;
       const duration = Math.max(
         30,
         this.manifest.camera.orbitDurationSeconds,
       );
-      const deltaSeconds =
-        this.scene.getEngine().getDeltaTime() / 1000;
+      const deltaSeconds = deltaMilliseconds / 1000;
       this.orbitAngle =
         (this.orbitAngle + (Math.PI * 2 * deltaSeconds) / duration) %
         (Math.PI * 2);

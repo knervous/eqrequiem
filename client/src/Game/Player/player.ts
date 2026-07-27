@@ -316,7 +316,10 @@ export default class Player {
       (slot) =>
         this.playerInventory.get(slot as InventorySlot, -1) ??
         this.playerInventory.get(slot as InventorySlot, 0),
-      { renderOnly: fromCharSelect },
+      {
+        renderOnly: fromCharSelect,
+        presentationScale: fromCharSelect ? 0.9 : 1,
+      },
     );
     if (this.disposed || generation !== this.loadGeneration) {
       playerEntity?.dispose();

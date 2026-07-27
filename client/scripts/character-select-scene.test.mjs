@@ -126,6 +126,13 @@ test("character preview is render-only and preserves its authored anchor", () =>
   );
   assert.ok(playerSource.includes("{ renderOnly: fromCharSelect }"));
   assert.ok(entitySource.includes("this.isPlayer && !this.renderOnly"));
+  assert.ok(playerSource.includes("presentationScale: fromCharSelect ? 0.9 : 1"));
+  assert.ok(
+    entitySource.includes(
+      "await this.instantiateNameplate([this.spawn.name.replaceAll",
+    ),
+  );
+  assert.ok(!entitySource.includes("if (this.renderOnly) return;"));
   assert.ok(
     entitySource.includes(
       "if (this.renderOnly) this.position.copyFrom(this.spawnPosition)",
@@ -137,6 +144,10 @@ test("authored sky is normalized as a camera-visible unlit backdrop", () => {
   assert.ok(environmentSource.includes('startsWith("CS Atmosphere · Sky")'));
   assert.ok(environmentSource.includes("material.emissiveColor.copyFrom"));
   assert.ok(environmentSource.includes("mesh.alwaysSelectAsActiveMesh = true"));
+  assert.ok(environmentSource.includes(
+    'this.runtimeSky.createSky("requiem-sky", true)',
+  ));
+  assert.ok(environmentSource.includes("this.runtimeSky?.tick("));
 });
 
 test("Babylon activates the real payload and resolves authored poses", async () => {
