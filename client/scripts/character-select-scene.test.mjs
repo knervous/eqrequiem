@@ -124,7 +124,7 @@ test("character preview is render-only and preserves its authored anchor", () =>
         "this.initializePromise = this.environment.initialize()",
       ),
   );
-  assert.ok(playerSource.includes("{ renderOnly: fromCharSelect }"));
+  assert.ok(playerSource.includes("renderOnly: fromCharSelect"));
   assert.ok(entitySource.includes("this.isPlayer && !this.renderOnly"));
   assert.ok(playerSource.includes("presentationScale: fromCharSelect ? 0.9 : 1"));
   assert.ok(
