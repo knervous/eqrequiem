@@ -15,6 +15,7 @@ import type {
 } from '../types';
 import { EMPTY_UPLOAD_STATS } from '../types';
 import { BindingAlloc } from '../utils/binding-alloc';
+import { registerIncludesOnEngine } from '../includes/register';
 import { ShadoSchemaBuilder } from '../schema/ShadoSchemaBuilder';
 import { genericASModuleSource } from '../asc/generic';
 import { buildOpsForParent } from '../asc/ops';
@@ -171,6 +172,8 @@ export abstract class Shado {
   protected _structArrayCount: Record<string, number> = {};
   protected _structArraySlots: Record<string, Shado[]> = {};
   protected _structArrayUnsubs: Record<string, Array<() => void>> = {};
+  /** @deprecated Kept for subclasses compiled against the 1.0.x API. */
+  protected _structArrayIndex: Record<string, Map<Shado, number>> = {};
   private _dirtyFlagValue = 1;
   private _structDirtyFlags: Record<string, Uint8Array> = {};
 
@@ -1015,7 +1018,8 @@ export abstract class Shado {
    */
   public static registerIncludes(this: ShadoBaseCtor, engine?: any) {
     if (!engine) {
-      throw new Error('Shado.registerIncludes(engine) now requires an initialized renderer engine.');
+      registerIncludesOnEngine((this as any).getSchema());
+      return;
     }
     getShadoRendererAdapter(engine).registerSchema?.((this as any).getSchema());
   }
@@ -1330,6 +1334,7 @@ export abstract class Shado {
     const child = this._makeThinChild<T>(field, meta.ctor, count);
 
     (this._structArraySlots[field] ||= [])[count] = child as any;
+    (this._structArrayIndex[field] ||= new Map()).set(child as any, count);
 
     this._structVersion++;
     this.syncStructArrayHeaderFields();
@@ -1390,11 +1395,14 @@ export abstract class Shado {
 
     const slots = (this._structArraySlots[field] ||= []);
     slots.length = nextCount;
+    const index = (this._structArrayIndex[field] ||= new Map());
+    index.clear();
     for (let i = 0; i < slots.length; i++) {
       const child = slots[i];
       if (!child) continue;
       (child as any)._baseF = seg.offF + i * strideF;
       (child as any)._sidecarIndex = i;
+      index.set(child, i);
     }
 
     this._arena.markDirty?.();
@@ -1432,6 +1440,7 @@ export abstract class Shado {
     this._arena.write(seg.offF + to * strideF, src, strideF);
 
     const slots = (this._structArraySlots[field] ||= []);
+    const index = (this._structArrayIndex[field] ||= new Map());
     const child = slots[from];
     slots[to] = child;
     if (child) {
@@ -1440,6 +1449,7 @@ export abstract class Shado {
       for (const key of Object.keys(child as any)) {
         if (key.startsWith('__live_')) delete (child as any)[key];
       }
+      index.set(child, to);
     }
     this._ensureStructDirtyCapacity(field, count)[to] = 1;
 
@@ -1471,7 +1481,9 @@ export abstract class Shado {
     const strideF = meta.schema.headerFloatCount | 0;
     const seg = this._structSeg[field];
     const slots = (this._structArraySlots[field] ||= []);
+    const indexMap = (this._structArrayIndex[field] ||= new Map());
     const removed = slots[removeIndex];
+    if (removed) indexMap.delete(removed);
 
     if (mode === 'stable') {
       const dirtyFlags = this._ensureStructDirtyCapacity(field, count);
@@ -1487,6 +1499,7 @@ export abstract class Shado {
           for (const key of Object.keys(child as any)) {
             if (key.startsWith('__live_')) delete (child as any)[key];
           }
+          indexMap.set(child, i - 1);
         }
         dirtyFlags[i - 1] = 1;
       }
@@ -1504,6 +1517,7 @@ export abstract class Shado {
           for (const key of Object.keys(moved as any)) {
             if (key.startsWith('__live_')) delete (moved as any)[key];
           }
+          indexMap.set(moved, removeIndex);
         }
         this._ensureStructDirtyCapacity(field, count)[removeIndex] = 1;
       }

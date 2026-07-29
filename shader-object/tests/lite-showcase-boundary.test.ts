@@ -29,7 +29,9 @@ describe('Babylon Lite sandbox boundary', () => {
       path.join(root, 'sandbox/src/App.tsx'),
       'utf8'
     );
-    expect(source).toContain("return getRoutePath() === '/' ? 'lite' : 'babylonjs'");
+    expect(source).toContain(
+      "return getRoutePath(basePath) === '/' ? 'lite' : 'babylonjs'"
+    );
     expect(source).toContain("await import('./LitePlayground')");
   });
 });

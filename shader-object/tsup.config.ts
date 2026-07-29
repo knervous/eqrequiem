@@ -391,8 +391,9 @@ export default defineConfig({
     'world/index': 'src/world/index.ts',
     cli: 'src/cli.ts',
   },
-  // rollup-plugin-dts cannot run against typescript 7 (tsgo); NO_DTS=1 skips
-  // declaration output so the JS bundles can still build.
+  // NO_DTS=1 remains useful for fast local JS-only builds. Release builds
+  // keep declaration output enabled and pin TypeScript to the compatible 5.7
+  // toolchain in package.json.
   dts: process.env.NO_DTS === '1' ? false : true,
   format: devBuild ? ['esm'] : ['esm', 'cjs'],
   sourcemap: devBuild ? 'inline' : true,

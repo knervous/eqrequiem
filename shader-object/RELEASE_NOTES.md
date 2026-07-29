@@ -1,5 +1,40 @@
 # Release notes
 
+## 1.1.0 — 2026-07-29
+
+- Added a renderer-neutral core and adapter boundary with explicit
+  `@knervous/shado/core`, `@knervous/shado/renderer`, and
+  `@knervous/shado/lite` entry points. The typed renderer gate dynamically
+  selects Babylon Lite or full Babylon.js without eagerly loading both
+  renderer graphs.
+- Added the native Babylon Lite WebGPU path, including packed storage buffers,
+  shader registration, thin-instance containers, and VAT materials built only
+  on public Lite APIs.
+- Moved per-instance visibility, compact visible indices, dirty state, and
+  culling data into structure-of-arrays sidecars. Storage-buffer and
+  data-texture uploads now scale with dirty pages and visible instances without
+  replacing `Mesh.render` or invoking private draw methods.
+- Added the world packaging and runtime APIs: spatial compilation, compressed
+  artifacts, collision acceleration data, authored regions and portals,
+  lighting plans, validation, visibility reducers, worker culling, and the
+  `shado pack world` CLI workflow.
+- Added world authoring and runtime examples to the sandbox, including the
+  region editor, streamed render chunks, object rendering, collision queries,
+  lighting plans, and 10k/20k/100k visibility scenarios.
+- Hardened WebGPU uploads and shaders for padded layouts, packed float values,
+  visibility indirection, VAT sampling, and MSDF nameplates. Native
+  thin-instance accessors now preserve decorated fields and synchronize hosted
+  visibility state.
+- Improved compressed runtime fetch validation and model/world preprocessing,
+  including clear failures for HTML fallbacks or invalid gzip payloads.
+- Preserved the 1.0 public surface while widening renderer support. Legacy
+  showcase UI aliases, the protected struct index map, no-argument shader
+  include registration, and the published `ShadoActor` packed layout remain
+  available.
+- Validated the release with 138 Jest tests, nine Chromium browser scenarios,
+  declaration/API comparison against published 1.0.5, package and sandbox
+  production builds, clean installs, and packed-package checks.
+
 ## 1.0.4 — 2026-07-20
 
 - Replaced showcase shader source rewriting with typed, named

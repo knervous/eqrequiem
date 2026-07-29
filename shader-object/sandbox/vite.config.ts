@@ -38,6 +38,18 @@ export default defineConfig(({ command }) => ({
             replacement: path.resolve(__dirname, '../src/showcase/index.ts'),
           },
           {
+            find: '@knervous/shado/renderer',
+            replacement: path.resolve(__dirname, '../src/renderer/index.ts'),
+          },
+          {
+            find: '@knervous/shado/lite',
+            replacement: path.resolve(__dirname, '../src/lite/index.ts'),
+          },
+          {
+            find: '@knervous/shado/core',
+            replacement: path.resolve(__dirname, '../src/core/index.ts'),
+          },
+          {
             find: /^@knervous\/shado$/,
             replacement: path.resolve(__dirname, '../src/index.ts'),
           },

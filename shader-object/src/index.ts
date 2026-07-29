@@ -35,4 +35,4 @@ export * from './showcase/EqShowcase';
 export * from './showcase/ShadoVatShowcaseUi';
 export * from './showcase/ShadoShowcaseEnvironment';
 
-export const VERSION = '1.0.5';
+export const VERSION = '1.1.0';

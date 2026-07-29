@@ -157,11 +157,15 @@ test('compiles storage-backed WGSL with and without VAT on a WebGPU device', asy
 test('runs the primary Babylon Lite + Shado storage path', async () => {
   const browser = await chromium.launch({
     headless: true,
+    channel: 'chromium',
     args: ['--enable-unsafe-webgpu'],
   });
   const page = await browser.newPage();
   const errors: string[] = [];
   page.on('pageerror', error => errors.push(error.message));
+  page.on('console', message => {
+    if (message.type() === 'error') errors.push(message.text());
+  });
   try {
     await page.goto('http://127.0.0.1:4177/?renderer=lite');
     await expect
@@ -179,15 +183,24 @@ test('runs the primary Babylon Lite + Shado storage path', async () => {
         { timeout: 15_000 }
       )
       .toBeGreaterThan(0);
+    await expect
+      .poll(
+        () =>
+          page.evaluate(
+            () => ((globalThis as any).__shadoLite?.controller.stats.instances as number) ?? 0
+          ),
+        { timeout: 45_000 }
+      )
+      .toBe(3);
     const state = await page.evaluate(() => {
       const runtime = (globalThis as any).__shadoLite;
       return {
-        instances: runtime.actors.instanceCount,
-        visible: runtime.actors.getVisibleCount(),
+        instances: runtime.controller.stats.instances,
+        visible: runtime.controller.stats.visible,
         drawCalls: runtime.engine.drawCallCount,
       };
     });
-    expect(state).toMatchObject({ instances: 324, visible: 324 });
+    expect(state).toMatchObject({ instances: 3, visible: 3 });
     expect(state.drawCalls).toBeGreaterThan(0);
     expect(errors).toEqual([]);
   } finally {
@@ -261,18 +274,32 @@ test('loads a processed world and exposes the world editor diagnostics', async (
   );
   await page.getByRole('button', { name: 'Move region' }).click();
   const beforeX = await page.evaluate(
-    () => window.__shadoWorldRegions?.document.regions[0]?.center[0]
+    () =>
+      window.__shadoWorldRegions?.document.regions.find(region => region.id === 'semantic')
+        ?.center[0]
   );
   await page.getByRole('button', { name: 'Move X positive' }).click();
   await expect
-    .poll(() => page.evaluate(() => window.__shadoWorldRegions?.document.regions[0]?.center[0]))
+    .poll(() =>
+      page.evaluate(
+        () =>
+          window.__shadoWorldRegions?.document.regions.find(region => region.id === 'semantic')
+            ?.center[0]
+      )
+    )
     .toBe((beforeX ?? 0) + 1);
   await page.getByText('Phase and metadata').click();
   await page.getByLabel('Metadata JSON').fill('{"event":"browser-test"}');
   await page.getByRole('button', { name: 'Apply changes' }).click();
   await expect(page.getByRole('option', { name: 'Test volume · trigger' })).toHaveCount(1);
   await expect
-    .poll(() => page.evaluate(() => window.__shadoWorldRegions?.document.regions[0]?.metadata))
+    .poll(() =>
+      page.evaluate(
+        () =>
+          window.__shadoWorldRegions?.document.regions.find(region => region.id === 'semantic')
+            ?.metadata
+      )
+    )
     .toEqual({ event: 'browser-test' });
   await page.getByText('Display and runtime diagnostics').click();
   await expect(page.getByRole('checkbox', { name: 'Cluster bounds' })).not.toBeChecked();

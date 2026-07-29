@@ -1,6 +1,6 @@
 {
   "name": "@knervous/shado",
-  "version": "1.0.5",
+  "version": "1.1.0",
   "description": "Packed GPU struct schemas + Babylon include emitters with optional AssemblyScript kernels",
   "license": "MIT",
   "author": "knervous",
@@ -54,9 +54,7 @@
     "./lite": {
       "source": "./src/lite/index.ts",
       "types": "./dist/lite/index.d.ts",
-      "import": "./dist/lite/index.js",
-      "require": "./dist/lite/index.cjs",
-      "default": "./dist/lite/index.js"
+      "import": "./dist/lite/index.js"
     },
     "./renderer": {
       "source": "./src/renderer/index.ts",
@@ -170,10 +168,10 @@
     "rimraf": "^6.0.0",
     "terser": "^5.44.0",
     "tsup": "^8.5.1",
-    "typescript": "^7.0.2"
+    "typescript": "5.7.3"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=18"
   },
   "scripts": {
     "clean": "rimraf dist",

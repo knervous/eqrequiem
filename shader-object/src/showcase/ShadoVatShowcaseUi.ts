@@ -10,6 +10,9 @@ export type ShadoVatShowcaseUiHandle = {
   dispose(): void;
 };
 
+/** @deprecated Use ShadoVatShowcaseUiHandle. */
+export type EqShowcaseUiHandle = ShadoVatShowcaseUiHandle;
+
 export type ShadoVatShowcaseUiDiagnostics = {
   renderBackend: 'WebGPU' | 'WebGL2';
   storageBackend: 'StorageBuffer' | 'DataTexture';
@@ -469,4 +472,5 @@ export function createShadoVatShowcaseUi(
   };
 }
 
-/** Product-neutral public name used by the Babylon developer showcase. */
+/** @deprecated Use createShadoVatShowcaseUi. */
+export const createEqShowcaseUi = createShadoVatShowcaseUi;

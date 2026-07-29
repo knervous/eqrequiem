@@ -48,6 +48,14 @@ export function installThinAccessors(Ctor: any) {
 
   for (const f of schema.fields) {
     if (f.type?.arrayOf || f.type?.structOf) continue; // only plain fields here
+    let descriptorOwner = proto;
+    let existingDescriptor: PropertyDescriptor | undefined;
+    while (descriptorOwner && !existingDescriptor) {
+      existingDescriptor = Object.getOwnPropertyDescriptor(descriptorOwner, f.name);
+      descriptorOwner = Object.getPrototypeOf(descriptorOwner);
+    }
+    // A decorated custom accessor owns its own arena/sidecar synchronization.
+    if (existingDescriptor?.get || existingDescriptor?.set) continue;
     const offF = (f.headerFloatOffset ?? 0) | 0;
     const lenF = f.headerFloatSize ?? floatStrideOf(f.type);
 
@@ -55,6 +63,12 @@ export function installThinAccessors(Ctor: any) {
       const kind = f.type; // "f32" | "i32" | "u32"
       Object.defineProperty(proto, f.name, {
         get() {
+          if (f.name === 'visibleIndex' && this._host && this._sidecarIndex !== undefined) {
+            return this._sidecarIndex;
+          }
+          if (f.name === 'visibleFlag' && this._host && this._sidecarIndex !== undefined) {
+            return this._host.getVisibilityFlag?.(this._sidecarIndex) ?? 1;
+          }
           const b = (this._baseF + offF) * 4;
           switch (kind) {
             case 'f32':
@@ -66,6 +80,9 @@ export function installThinAccessors(Ctor: any) {
           }
         },
         set(v: number) {
+          if (f.name === 'visibleIndex' && this._host && this._sidecarIndex !== undefined) {
+            v = this._sidecarIndex;
+          }
           const b = (this._baseF + offF) * 4;
           switch (kind) {
             case 'f32':
@@ -79,6 +96,9 @@ export function installThinAccessors(Ctor: any) {
               break;
           }
           this._markDirty(offF, 1);
+          if (f.name === 'visibleFlag' && this._host && this._sidecarIndex !== undefined) {
+            this._host.setVisibilityFlag?.(this._sidecarIndex, v !== 0);
+          }
         },
         enumerable: true,
       });

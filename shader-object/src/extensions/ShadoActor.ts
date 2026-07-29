@@ -8,37 +8,21 @@ export class ShadoActor extends Shado {
   /** World-space orientation quaternion (x, y, z, w). */
   @field('vec4') rotation!: Float32Array;
   @field('vec4') color!: Float32Array;
+  /** Compatibility field retained at its stable 1.0.x packed offset. */
+  @field('i32') visibleIndex!: number;
   @field('u32') nameIndex!: number;
   @field('f32') nameWorldPerEM!: number;
   @field('f32') nameLiftWorld!: number;
   @field('vec4') nameplateColor!: Float32Array;
   @field('vec4') animationBuffer!: Float32Array;
+  /** Compatibility field retained at its stable 1.0.x packed offset. */
+  @field('i32') visibleFlag!: number;
   @field('f32') padding1!: number;
   @field('f32') padding2!: number;
   @field('f32') padding3!: number;
 
   private readonly _worldPerEM = 0.16;
   private readonly _yLiftWorld = 2.4;
-
-  /** Compatibility view over the container's visibility SoA plane. */
-  public get visibleFlag(): number {
-    const host = (this as any)._host;
-    const index = (this as any)._sidecarIndex;
-    return host?.getVisibilityFlag?.(index) ?? 1;
-  }
-  public set visibleFlag(value: number) {
-    const host = (this as any)._host;
-    const index = (this as any)._sidecarIndex;
-    host?.setVisibilityFlag?.(index, value !== 0);
-  }
-
-  /** The durable actor slot; draw-order indirection now lives in a SoA plane. */
-  public get visibleIndex(): number {
-    return (this as any)._sidecarIndex ?? -1;
-  }
-  public set visibleIndex(_value: number) {
-    // Kept as a no-op for source compatibility with actor initializers.
-  }
 
   constructor(engine: any) {
     super(engine, true);
