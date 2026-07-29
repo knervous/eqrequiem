@@ -30,6 +30,14 @@ export class PlayerCamera {
   constructor(player: Player, camera: BJS.UniversalCamera) {
     this.player = player;
     this.camera = camera;
+    const materialPreview =
+      import.meta.env.VITE_LOCAL_DEV === "true" &&
+      new URLSearchParams(window.location.search).has("materialPreview");
+    if (materialPreview) {
+      // Keep local clean-room palette reviews readable even when pointer lock
+      // is unavailable in an automated/browser capture session.
+      this.cameraPitch = -0.58;
+    }
     this.cameraLight =
       (player.gameManager.scene?.getLightByName(
         "playerLight",
@@ -47,7 +55,7 @@ export class PlayerCamera {
 
     this.cameraLight.radius = 100;
     this.cameraLight.diffuse = new BABYLON.Color3(1.0, 0.85, 0.6);
-    this.cameraLight.intensity = 1200;
+    this.cameraLight.intensity = materialPreview ? 220 : 1200;
     this.cameraLight.specular = new BABYLON.Color3(0, 0, 0);
     this.cameraLight.range = 100.0;
     this.bindInputEvents();

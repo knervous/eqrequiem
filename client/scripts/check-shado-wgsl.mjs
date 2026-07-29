@@ -77,9 +77,16 @@ async function preprocess(pair, defines = []) {
 }
 
 try {
-  const { RequiemEntityActor, RequiemEntityContainer } =
-    await server.ssrLoadModule("/src/Game/Model/shado-entity-pool.ts");
+  const {
+    RequiemEntityActor,
+    RequiemEntityContainer,
+    assertRequiemReducerAbi,
+  } = await server.ssrLoadModule("/src/Game/Model/shado-entity-pool.ts");
   await server.ssrLoadModule("/src/Game/Model/entity-material.ts");
+
+  // Exercise the same reducer/schema contract checked during entity-pool
+  // initialization at character select.
+  assertRequiemReducerAbi();
 
   const register = (schema) => {
     for (const field of Object.values(schema.structArrays)) {
@@ -113,7 +120,9 @@ try {
 
     for (const [name, pair] of Object.entries({ visible, picking })) {
       if (
-        !pair.vertexCode.includes("var<storage, read> requiemEntityContainerBuf")
+        !pair.vertexCode.includes(
+          "var<storage, read> requiemEntityContainerBuf",
+        )
       ) {
         throw new Error(
           `${name}/${influencers} shader did not retain Requiem storage backing`,

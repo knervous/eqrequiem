@@ -58,7 +58,7 @@ export class ShadoWorldSceneLayer {
     scene: BJS.Scene,
     zoneContainer: BJS.TransformNode,
   ): Promise<ShadoWorldSceneLayer> {
-    const sourceUrl = sourceSceneUrl(world, spatialUrl);
+    const sourceUrl = materialPreviewSceneUrl(world, spatialUrl);
     const bytes = await fetchShadoBytes(sourceUrl);
     const blobUrl = URL.createObjectURL(
       new Blob([bytes], { type: "model/gltf-binary" }),
@@ -142,10 +142,16 @@ export class ShadoWorldSceneLayer {
  * own authored policy.
  */
 function applyWorldMaterialPolicy(materials: readonly BJS.Material[]): void {
+  const materialPreview =
+    import.meta.env.VITE_LOCAL_DEV === "true" &&
+    new URLSearchParams(window.location.search).has("materialPreview");
   for (const material of materials) {
     material.backFaceCulling = false;
     if (material instanceof BABYLON.PBRMaterial) {
       material.twoSidedLighting = true;
+      // A clean-room material review needs to expose the embedded albedo
+      // rather than tinting it with an unfinished zone light/sky setup.
+      material.unlit = materialPreview;
     }
   }
 }
@@ -158,6 +164,26 @@ function sourceSceneUrl(world: ShadoWorldSpatialPackage, spatialUrl: string): st
     return world.source;
   }
   return spatialUrl.replace(/\.spatial\.json\.gz(?:[?#].*)?$/i, ".glb.gz");
+}
+
+function materialPreviewSceneUrl(
+  world: ShadoWorldSpatialPackage,
+  spatialUrl: string,
+): string {
+  const requestedZone = new URLSearchParams(window.location.search)
+    .get("materialPreview")
+    ?.toLowerCase();
+  if (
+    import.meta.env.VITE_LOCAL_DEV === "true" &&
+    requestedZone === world.name.toLowerCase()
+  ) {
+    const zone = encodeURIComponent(world.name.toLowerCase());
+    return (
+      `${import.meta.env.BASE_URL}eqrequiem/worlds/` +
+      `${zone}.material-preview.glb.gz?revision=${WORLD_PACKAGE_REVISION}`
+    );
+  }
+  return sourceSceneUrl(world, spatialUrl);
 }
 
 function packageArtifactUrl(source: string, spatialUrl: string): string {

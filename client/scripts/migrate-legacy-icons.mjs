@@ -17,6 +17,7 @@ import {
   createPocContactSheet,
   generateMasters,
   generateNewMasters,
+  summarizeGenerationFailures,
 } from './icon-ai/sdcpp-client.mjs';
 import { IconContextDatabase } from './icon-ai/icon-context.mjs';
 import { SdCppServer } from './icon-ai/sdcpp-server.mjs';
@@ -42,7 +43,7 @@ Usage:
     [--size 256|384|512] [--master-size 64|128|256|512] [--steps N] [--ids ID,ID]
   node scripts/migrate-legacy-icons.mjs vary [--output DIR] [--limit N] [--strength 0.34]
   node scripts/migrate-legacy-icons.mjs poc [--output DIR] [--limit N] [--strength 0.34]
-    [--size 384] [--master-size 256] [--steps 12]
+    [--size 384] [--master-size 256] [--steps 12] [--force true|false]
   node scripts/migrate-legacy-icons.mjs all [--output DIR] [--database FILE]
     [--size 384] [--master-size 256] [--steps 12] [--seed-offset N]
   node scripts/migrate-legacy-icons.mjs passthrough [--output DIR]
@@ -76,6 +77,30 @@ function parseArguments(argv) {
     index += 1;
   }
   return { command, options };
+}
+
+function integerOption(options, key, fallback, { minimum, maximum, allowed = null }) {
+  if (options[key] === undefined) return fallback;
+  const value = Number(options[key]);
+  if (
+    !Number.isInteger(value) ||
+    value < minimum ||
+    value > maximum ||
+    (allowed && !allowed.includes(value))
+  ) {
+    const expected = allowed
+      ? allowed.join('|')
+      : `an integer from ${minimum} to ${maximum}`;
+    throw new Error(`Invalid --${key}=${options[key]}; expected ${expected}`);
+  }
+  return value;
+}
+
+function booleanOption(options, key, fallback = false) {
+  if (options[key] === undefined) return fallback;
+  if (options[key] === 'true') return true;
+  if (options[key] === 'false') return false;
+  throw new Error(`Invalid --${key}=${options[key]}; expected true|false`);
 }
 
 async function sourceSheets(inputDirectory) {
@@ -204,40 +229,84 @@ async function run() {
     return;
   }
   if (command === 'generate' || command === 'vary' || command === 'poc' || command === 'all') {
+    if (
+      command === 'all' &&
+      (options.ids !== undefined ||
+        options.limit !== undefined ||
+        options.force !== undefined)
+    ) {
+      throw new Error(
+        'The all command always resumes the closed collection; use poc with --ids to force slots',
+      );
+    }
+    const externalServer = Boolean(process.env.SDCPP_URL);
     const server =
-      command === 'poc' || command === 'all'
+      (command === 'poc' || command === 'all') && !externalServer
         ? new SdCppServer({ quiet: command === 'all' })
         : null;
-    if (server) {
-      console.log('starting loopback sd.cpp server and loading the local checkpoint');
-      await server.start();
-      process.env.SDCPP_URL = server.baseUrl;
+    const ids = options.ids
+      ? new Set(options.ids.split(',').map((id) => id.trim()).filter(Boolean))
+      : null;
+    if (ids) {
+      const availableIds = new Set(
+        manifest.sheets.flatMap((sheet) =>
+          sheet.entries.filter((entry) => !entry.blank).map((entry) => entry.id),
+        ),
+      );
+      const unknownIds = [...ids].filter((id) => !availableIds.has(id));
+      if (unknownIds.length > 0) {
+        throw new Error(`Unknown or blank icon IDs: ${unknownIds.join(', ')}`);
+      }
     }
-    const ids = options.ids ? new Set(options.ids.split(',').filter(Boolean)) : null;
+    const force = booleanOption(options, 'force');
+    if (force && !ids) {
+      throw new Error('--force true requires an explicit closed --ids list');
+    }
     let completed;
     let contextDatabase;
     try {
       const common = {
         outputRoot,
         manifest,
-        limit: options.limit ? Number(options.limit) : command === 'poc' ? 4 : Infinity,
+        limit: integerOption(
+          options,
+          'limit',
+          command === 'poc' ? (ids?.size ?? 4) : Number.MAX_SAFE_INTEGER,
+          { minimum: 1, maximum: 6_396 },
+        ),
         generationSize: options.size
-          ? Number(options.size)
+          ? integerOption(options, 'size', 384, {
+              minimum: 256,
+              maximum: 1024,
+              allowed: [256, 384, 512, 768, 1024],
+            })
           : command === 'poc'
             ? 384
             : command === 'all'
               ? 384
               : 512,
-        masterSize: options['master-size'] ? Number(options['master-size']) : 256,
+        masterSize: integerOption(options, 'master-size', 256, {
+          minimum: 64,
+          maximum: 1024,
+          allowed: [64, 128, 256, 512, 1024],
+        }),
         steps: options.steps
-          ? Number(options.steps)
+          ? integerOption(options, 'steps', 12, { minimum: 1, maximum: 150 })
           : command === 'poc'
             ? 12
             : command === 'all'
               ? 12
               : 24,
         ids,
+        force,
       };
+      if (server) {
+        console.log('starting loopback sd.cpp server and loading the local checkpoint');
+        await server.start();
+        process.env.SDCPP_URL = server.baseUrl;
+      } else if (externalServer && (command === 'poc' || command === 'all')) {
+        console.log(`using external sd.cpp server at ${process.env.SDCPP_URL}`);
+      }
       if (command === 'vary') {
         completed = await generateMasters({
           ...common,
@@ -248,8 +317,14 @@ async function run() {
           path.resolve(options.database ?? defaultContextDatabase),
         );
         if (command === 'all') {
-          const firstSeedOffset = options['seed-offset'] ? Number(options['seed-offset']) : 0;
-          const passes = options.passes ? Number(options.passes) : 4;
+          const firstSeedOffset = integerOption(options, 'seed-offset', 0, {
+            minimum: 0,
+            maximum: 1_000_000,
+          });
+          const passes = integerOption(options, 'passes', 4, {
+            minimum: 1,
+            maximum: 100,
+          });
           for (let pass = 0; pass < passes; pass += 1) {
             const seedOffset = firstSeedOffset + pass * 5;
             console.log(`generation pass ${pass + 1}/${passes}, seed offset ${seedOffset}`);
@@ -270,8 +345,11 @@ async function run() {
           completed = await generateNewMasters({
             ...common,
             contextDatabase,
-            continueOnError: false,
-            seedOffset: options['seed-offset'] ? Number(options['seed-offset']) : 0,
+            continueOnError: command === 'poc',
+            seedOffset: integerOption(options, 'seed-offset', 0, {
+              minimum: 0,
+              maximum: 1_000_000,
+            }),
           });
         }
       }
@@ -290,21 +368,30 @@ async function run() {
           {
             createdAt: new Date().toISOString(),
             seedOffset: options['seed-offset'] ? Number(options['seed-offset']) : 0,
+            summary: summarizeGenerationFailures(completed.failures),
             failures: completed.failures,
           },
           null,
           2,
         )}\n`,
       );
-      throw new Error(
-        `${completed.failures.length} icons failed this pass; details saved to ${failurePath}`,
+      if (command === 'all' || command === 'poc') {
+        throw new Error(
+          `${completed.failures.length} icons failed transparent-output validation; ` +
+            `details saved to ${failurePath}`,
+        );
+      }
+      console.warn(
+        `${completed.failures.length} POC icons failed; details saved to ${failurePath}`,
       );
     }
     if (command === 'poc') {
       const contactSheet = await createPocContactSheet({
         outputRoot,
         manifest,
-        limit: options.limit ? Number(options.limit) : 4,
+        limit: options.limit ? Number(options.limit) : (ids?.size ?? 4),
+        ids,
+        masterSize: options['master-size'] ? Number(options['master-size']) : 256,
       });
       console.log(`POC contact sheet ${contactSheet}`);
     }

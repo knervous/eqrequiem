@@ -10,6 +10,7 @@ import {
   preprocessZoneSceneGlb,
   promoteZoneObjectAssets,
 } from "./promote-zone-object-assets.mjs";
+import { bakeZoneMaterialPalette } from "./material-ai/zone-material-palette.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(here, "../..");
@@ -414,10 +415,16 @@ async function stageZone(zone, stagingRoot, shado) {
       sourceTransform: "mirror-x",
     });
     const copiedScene = await fs.readFile(scene);
+    const unpackedScene = sourceExtension.endsWith(".gz")
+      ? gunzipSync(copiedScene)
+      : copiedScene;
+    const palette = await bakeZoneMaterialPalette({
+      repoRoot,
+      zone: zone.shortName,
+      sourceGlb: unpackedScene,
+    });
     const runtimeScene = preprocessZoneSceneGlb(
-      sourceExtension.endsWith(".gz")
-        ? gunzipSync(copiedScene)
-        : copiedScene,
+      palette.bytes,
       zone.shortName,
     );
     await fs.writeFile(

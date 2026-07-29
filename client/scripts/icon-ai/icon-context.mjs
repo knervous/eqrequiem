@@ -3,6 +3,8 @@ import path from 'node:path';
 
 const GENERIC_PREFIX = /^(?:small|large|fabled|summoned:\s*|issued|test\s*)/i;
 const TEST_NAME = /\((?:test|gm)\)|\btest\b/i;
+const ANACHRONISTIC_NAME =
+  /\b(?:assault|battery|camera|circuit|computer|cyber|diesel|electronic|engine|firearm|grenade|gun|laser|machine|motor|phone|pistol|plastic|radio|revolver|rifle|robot|rocket|rubber|shotgun|sneaker|steam(?:punk)?|television|vehicle|zipper)\b/i;
 const EQUIPMENT_SLOTS = [
   'charm',
   'ear',
@@ -82,7 +84,12 @@ export class IconContextDatabase {
       ...new Set(
         records
           .map((record) => String(record.name).trim())
-          .filter((name) => name && !TEST_NAME.test(name))
+          .filter(
+            (name) =>
+              name &&
+              !TEST_NAME.test(name) &&
+              !ANACHRONISTIC_NAME.test(name),
+          )
           .map((name) => name.replace(GENERIC_PREFIX, '').trim()),
       ),
     ].slice(0, 12);
@@ -98,13 +105,15 @@ export class IconContextDatabase {
     const equipmentSlots = [...slotCounts.entries()]
       .sort((first, second) => second[1] - first[1] || first[0].localeCompare(second[0]))
       .map(([name, count]) => ({ name, count }));
+    const dominantSlot = equipmentSlots[0]?.name ?? null;
     return {
       iconId,
       recordCount: records.length,
       itemNames: usefulNames,
       imageNames,
       equipmentSlots,
-      dominantSlot: equipmentSlots[0]?.name ?? null,
+      dominantSlot,
+      dominantConcept: dominantConcept(usefulNames, dominantSlot, records.length),
       records: records.slice(0, 24),
     };
   }
@@ -114,31 +123,119 @@ export class IconContextDatabase {
   }
 }
 
-export function promptFromContext(context) {
-  const concept = dominantConcept(context.itemNames, context.dominantSlot);
-  const namingCue = context.itemNames[0];
+export function promptFromContext(
+  context,
+  {
+    retryReason = null,
+    backgroundStrategy =
+      process.env.ICON_AI_BACKGROUND_STRATEGY ?? 'local-model',
+  } = {},
+) {
+  const concept =
+    context.dominantConcept ??
+    dominantConcept(context.itemNames, context.dominantSlot, context.recordCount);
+  const chromaKey = chromaKeyForContext(context, concept);
+  const pairedConcept = concept.startsWith('pair of ');
+  const namingCues = positiveNameCues(context.itemNames, concept);
+  const usesChroma = backgroundStrategy === 'chroma';
+  if (!usesChroma && backgroundStrategy !== 'local-model') {
+    throw new Error(`Unknown icon background strategy: ${backgroundStrategy}`);
+  }
+  const retryInstruction =
+    retryReason === 'chroma'
+      ? usesChroma
+        ? `correction: flat solid ${chromaKey.name} only, no backdrop or gradient`
+        : 'correction: plain uniform neutral field only, no card or gradient'
+      : retryReason === 'subjects'
+        ? pairedConcept
+          ? `correction: one matched pair only, exactly two pieces`
+          : `correction: exactly one object, no duplicate or alternate`
+        : retryReason === 'edge'
+          ? 'correction: smaller complete object, wide empty margin on every side'
+          : null;
   return [
-    `exactly one original high fantasy medieval ${concept}`,
-    'isolated on a perfectly flat solid vivid chroma green background, RGB 0 255 0',
-    'the same empty green background touches all four image edges',
-    'green remains visible through every opening and negative space in the object',
-    `one complete ${concept}, one design, no duplicate variants`,
-    'object centered with generous empty green margin',
-    'isolated inventory object only, never worn or held by a person, body, hand, or mannequin',
-    context.dominantSlot ? `equipment placement: ${context.dominantSlot} slot` : null,
-    namingCue ? `positive naming cue from item metadata: ${namingCue}` : null,
-    'create one wholly new object rather than copying an existing icon',
-    'three-quarter product view',
-    'hand-painted dark fantasy game art',
-    'crisp silhouette and controlled highlights',
-    'no text, no presentation tile, no card, no frame, no floor, no cast shadow, no scenery',
+    retryInstruction,
+    `original pre-industrial medieval high-fantasy ${concept} from Elrador`,
+    usesChroma
+      ? `isolated on flat solid chroma ${chromaKey.name} ${chromaKey.hex}; field reaches every edge and opening`
+      : 'isolated cutout on a featureless bright light-gray field; field reaches every edge and opening',
+    'no floor, frame, card, backdrop, gradient, or cast shadow',
+    namingCues.length > 0
+      ? `one unified design inspired by: ${namingCues.join('; ')}`
+      : 'one unified design',
+    pairedConcept
+      ? compositionForPair(concept)
+      : 'exactly one complete object',
+    context.dominantSlot ? `${context.dominantSlot} equipment slot` : null,
+    `weathered ${materialsForConcept(concept)}`,
+    concept === 'finger ring'
+      ? 'intact solid gemstone and metal, no transparent damage or missing facets'
+      : null,
+    'wholly new textured painterly classic dark-fantasy object art, subdued medieval palette',
+    'crisp readable silhouette, centered with wide empty margin, never worn or held',
+    usesChroma
+      ? `no chroma ${chromaKey.name} on object`
+      : null,
   ]
     .filter(Boolean)
     .join(', ');
 }
 
+function compositionForPair(concept) {
+  if (concept === 'pair of gauntlets') {
+    return [
+      'exactly two separate five-fingered armored gloves',
+      'each glove has one cuff, one palm, and five visible articulated metal fingers',
+      'parallel side by side, never crossed or overlapping',
+      'no limbs, weapons, tools, handles, shields, chest armor, or props',
+    ].join('; ');
+  }
+  if (concept === 'pair of boots') {
+    return [
+      'exactly two complete separate medieval boots',
+      'both boots fully visible from cuff to toe',
+      'clear empty gap between their silhouettes, never overlapping',
+      'no feet, legs, wearer, weapons, tools, or props',
+    ].join('; ');
+  }
+  return (
+    `one complete matched pair, exactly two separate empty ${concept.replace('pair of ', '')}, ` +
+    'side by side, no limbs, weapons, tools, handles, or props'
+  );
+}
+
+function materialsForConcept(concept) {
+  if (concept === 'finger ring') return 'aged precious metal and cut gemstone';
+  if (concept.includes('gauntlet')) return 'forged metal plates and weathered leather';
+  if (concept.includes('boots')) return 'weathered leather and forged metal fittings';
+  if (concept === 'face mask') return 'carved bone, dark wood, or tarnished metal';
+  if (concept === 'necklace') return 'aged metal, leather, beads, bone, and gemstone';
+  if (concept === 'magical orb') {
+    return 'rough faceted dark crystal, carved stone, and restrained dim inner magic';
+  }
+  return 'wood, leather, cloth, bone, stone, glass, crystal, and forged metal';
+}
+
+export function chromaKeyForContext(
+  context,
+  concept = dominantConcept(
+    context.itemNames,
+    context.dominantSlot,
+    context.recordCount,
+  ),
+) {
+  const description = positiveNameCues(context.itemNames, concept).join(' ');
+  const conflictsWithGreen =
+    /\b(?:acid|bile|emerald|forest|green|jade|moss|nature|poison|slime|swamp|venom|verdant)\b/i.test(
+      description,
+    );
+  return conflictsWithGreen
+    ? { name: 'magenta', hex: '#ff00ff' }
+    : { name: 'green', hex: '#00ff00' };
+}
+
 const CONCEPTS = [
-  ['face mask', /\b(mask|visage|goggles)\b/i],
+  ['face mask', /\b(mask|visage)\b/i],
   ['necklace', /\b(necklace|choker|gorget|beads|pendant|amulet|torque)\b/i],
   ['finger ring', /\b(ring|band|seal)\b/i],
   ['pair of gauntlets', /\b(gauntlets?|gloves?|fists?|talons?)\b/i],
@@ -157,11 +254,20 @@ const CONCEPTS = [
   ['book', /\b(book|tome|grimoire|codex)\b/i],
   ['scroll', /\b(scroll|parchment)\b/i],
   ['potion bottle', /\b(potion|elixir|tonic|vial|flask)\b/i],
+  ['magical orb', /\b(orb|globe|sphere)\b/i],
   ['gemstone', /\b(gem|diamond|ruby|emerald|sapphire|crystal)\b/i],
   ['key', /\bkey\b/i],
 ];
 
-function dominantConcept(names, dominantSlot = null) {
+function positiveNameCues(names, concept) {
+  const matcher = CONCEPTS.find(([name]) => name === concept)?.[1];
+  const matchingNames = matcher
+    ? names.filter((name) => matcher.test(name))
+    : names;
+  return (matchingNames.length > 0 ? matchingNames : names).slice(0, 3);
+}
+
+function dominantConcept(names, dominantSlot = null, recordCount = 0) {
   let selected = ['medieval fantasy artifact', null];
   let highest = 0;
   for (const candidate of CONCEPTS) {
@@ -171,8 +277,12 @@ function dominantConcept(names, dominantSlot = null) {
       highest = score;
     }
   }
-  if (highest === 0 && dominantSlot && SLOT_CONCEPTS[dominantSlot]) {
-    return SLOT_CONCEPTS[dominantSlot];
+  const minimumEvidence = names.length >= 6 ? 2 : 1;
+  if (recordCount > 500 && highest < 3) return 'medieval magical artifact';
+  if (highest < minimumEvidence) {
+    return dominantSlot && SLOT_CONCEPTS[dominantSlot]
+      ? SLOT_CONCEPTS[dominantSlot]
+      : 'medieval fantasy artifact';
   }
   return selected[0];
 }

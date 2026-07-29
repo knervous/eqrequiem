@@ -25,3 +25,6 @@ assets/generated/eq-catalog/
 .local/stable-diffusion.cpp/
 build/stable-diffusion.cpp/
 artifacts/generated-icons/
+
+# Local material-review packages are generated on demand and exceed Git host limits.
+client/public/eqrequiem/worlds/*.material-preview.glb.gz

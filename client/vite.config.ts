@@ -460,6 +460,7 @@ export default defineConfig({
         requiem: path.resolve(__dirname, "index.html"),
         libra: path.resolve(__dirname, "apps/libra/index.html"),
         sandbox: path.resolve(__dirname, "apps/sandbox/index.html"),
+        fx: path.resolve(__dirname, "fx/index.html"),
       },
       output: {
         codeSplitting: {

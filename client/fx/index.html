@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Requiem FX Proving Ground</title>
+  </head>
+  <body>
+    <canvas id="fx-canvas"></canvas>
+    <aside class="fx-panel">
+      <div class="fx-kicker">Requiem · WebGPU FX</div>
+      <h1>Grass &amp; Water</h1>
+      <div class="fx-status" id="fx-status" data-state="loading">
+        Compiling native WGSL…
+      </div>
+      <div class="fx-controls">
+        <label>
+          Wind
+          <input id="wind-strength" type="range" min="0" max="0.55" step="0.01" value="0.23" />
+        </label>
+        <label>
+          Waves
+          <input id="wave-strength" type="range" min="0" max="1.8" step="0.05" value="1" />
+        </label>
+        <label>
+          Ripples
+          <input id="ripple-strength" type="range" min="0" max="0.1" step="0.005" value="0.035" />
+        </label>
+      </div>
+      <div class="fx-metrics" id="fx-metrics">Waiting for first frame…</div>
+    </aside>
+    <script type="module" src="/src/fx/proving-ground.ts"></script>
+  </body>
+</html>

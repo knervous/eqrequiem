@@ -2,9 +2,10 @@
 // Built at development/build time through @knervous/shado's `shado asc build` bin.
 // Runtime code must only instantiate the resulting debug/release artifacts.
 
-// Visibility and draw-order indirection are SoA sidecars owned by Shado.
-// The logical fields occupy 30 floats, then the generated GPU struct rounds
-// the record up to a vec4-aligned 32-float/128-byte stride.
+// Visibility and draw-order indirection are SoA sidecars owned by Shado, with
+// compatibility mirrors retained in the packed actor record. The reducer only
+// consumes translation and the vec4-aligned 32-float/128-byte actor stride;
+// all other field offsets are owned by Shado's generated schema.
 const ACTOR_STRIDE_BYTES: usize = 128;
 const ACTOR_TRANSLATION_OFFSET: usize = 0;
 

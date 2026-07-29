@@ -209,6 +209,9 @@ export async function repackSheets({
   if (!['masters', 'slices'].includes(from)) {
     throw new Error(`Repack source must be "masters" or "slices"; received ${from}`);
   }
+  if (!['png', 'webp'].includes(format)) {
+    throw new Error(`Repack format must be "png" or "webp"; received ${format}`);
+  }
   const repackedDirectory = path.join(outputRoot, 'repacked');
   await mkdir(repackedDirectory, { recursive: true });
   const results = [];

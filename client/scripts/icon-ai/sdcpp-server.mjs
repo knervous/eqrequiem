@@ -52,6 +52,12 @@ export class SdCppServer {
     port = 7860,
     quiet = false,
   } = {}) {
+    if (!['127.0.0.1', 'localhost', '::1'].includes(host)) {
+      throw new Error(`Managed sd-server must bind to loopback, received: ${host}`);
+    }
+    if (!Number.isInteger(port) || port < 1 || port > 65_535) {
+      throw new Error(`Invalid sd-server port: ${port}`);
+    }
     this.binary = binary;
     this.model = model;
     this.host = host;
@@ -63,6 +69,9 @@ export class SdCppServer {
   }
 
   async start({ timeoutMs = 300_000 } = {}) {
+    if (this.child && this.child.exitCode === null) {
+      throw new Error('Managed sd-server is already running');
+    }
     if (!(await exists(this.binary))) throw new Error(`sd-server is not built: ${this.binary}`);
     if (!(await exists(this.model))) throw new Error(`Local model not found: ${this.model}`);
     this.child = spawn(

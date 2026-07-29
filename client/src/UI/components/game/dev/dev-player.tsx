@@ -10,6 +10,7 @@ import {
   Select,
   MenuItem,
   Button,
+  TextField,
   Typography,
   Slider,
 } from '@mui/material';
@@ -25,6 +26,11 @@ export const DevPlayer: React.FC = () => {
   const [anim, setAnim] = useState(player?.currentAnimation || '');
   const [collision, setCollision] = useState(true);
   const [gravity, setGravity] = useState(true);
+  const [reviewPosition, setReviewPosition] = useState({
+    x: '-275',
+    y: '8',
+    z: '392',
+  });
   const onSpeed = (e: React.ChangeEvent<HTMLInputElement>) => {
     const v = +e.target.value;
     setSpeed(v);
@@ -64,6 +70,15 @@ export const DevPlayer: React.FC = () => {
     player.setGravity(checked);
   };
 
+  const teleportForReview = () => {
+    const x = Number(reviewPosition.x);
+    const y = Number(reviewPosition.y);
+    const z = Number(reviewPosition.z);
+    if ([x, y, z].every(Number.isFinite)) {
+      player.setPosition(x, y, z);
+    }
+  };
+
   return (
     <Box p={0} sx={{ '*': { color: 'white!important' } }}>
       <Stack spacing={2}>
@@ -95,6 +110,29 @@ export const DevPlayer: React.FC = () => {
             control={<Checkbox size="small" checked={gravity} onChange={toggleGravity}/>} 
             label="Gravity"
           />
+        </Stack>
+
+        <Stack direction="row" spacing={1} alignItems="center">
+          {(['x', 'y', 'z'] as const).map((axis) => (
+            <TextField
+              key={axis}
+              label={axis.toUpperCase()}
+              size="small"
+              type="number"
+              value={reviewPosition[axis]}
+              onChange={(event) =>
+                setReviewPosition((position) => ({
+                  ...position,
+                  [axis]: event.target.value,
+                }))
+              }
+              inputProps={{ 'aria-label': `Review ${axis.toUpperCase()}` }}
+              sx={{ width: 88 }}
+            />
+          ))}
+          <Button size="small" variant="outlined" onClick={teleportForReview}>
+            Teleport
+          </Button>
         </Stack>
 
         <Stack direction="row" spacing={1} alignItems="center">

@@ -101,25 +101,20 @@ async function loadRequiemEntityReducer(): Promise<ArrayBuffer> {
   return reducerArtifact;
 }
 
-function assertRequiemReducerAbi(): void {
+export function assertRequiemReducerAbi(): void {
   const schema = RequiemEntityActor.getSchema();
-  const expected = new Map<string, number>([
-    ["translation", 0],
-    ["entityId", 27],
-    ["appearanceCount", 30],
-  ]);
   if (schema.headerFloatCount !== 32) {
     throw new Error(
       `Requiem reducer ABI expected 32 actor floats, got ${schema.headerFloatCount}`,
     );
   }
-  for (const [name, offset] of expected) {
-    const field = schema.fields.find((candidate) => candidate.name === name);
-    if (field?.headerFloatOffset !== offset) {
-      throw new Error(
-        `Requiem reducer ABI mismatch for ${name}: expected ${offset}, got ${field?.headerFloatOffset}`,
-      );
-    }
+  const translation = schema.fields.find(
+    (candidate) => candidate.name === "translation",
+  );
+  if (translation?.headerFloatOffset !== 0) {
+    throw new Error(
+      `Requiem reducer ABI mismatch for translation: expected 0, got ${translation?.headerFloatOffset}`,
+    );
   }
 }
 

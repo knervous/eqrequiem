@@ -1,4 +1,4 @@
-import { access, mkdir, readFile, rename, writeFile } from 'node:fs/promises';
+import { access, mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import sharp from 'sharp';
 import { sha256 } from './sprite-pipeline.mjs';
@@ -139,41 +139,46 @@ export async function promoteGeneratedCollection({
   if (await exists(stagingRoot)) throw new Error(`Staging directory already exists: ${stagingRoot}`);
   await mkdir(stagingRoot, { recursive: true });
 
-  const entries = [];
-  for (const [index, icon] of audit.valid.entries()) {
-    const fileName = `${icon.entry.atlasIconId}.webp`;
-    const publicBuffer = await sharp(icon.masterBuffer)
-      .webp({ lossless: true, effort: 6 })
-      .toBuffer();
-    await writeFile(path.join(stagingRoot, fileName), publicBuffer);
-    entries.push({
-      icon: icon.entry.atlasIconId,
-      file: fileName,
-      sourceId: icon.entry.id,
-      sourceHash: icon.outputHash,
-      publicHash: sha256(publicBuffer),
-    });
-    if ((index + 1) % 250 === 0) {
-      console.log(`prepared ${index + 1}/${audit.valid.length} public icons`);
+  try {
+    const entries = [];
+    for (const [index, icon] of audit.valid.entries()) {
+      const fileName = `${icon.entry.atlasIconId}.webp`;
+      const publicBuffer = await sharp(icon.masterBuffer)
+        .webp({ lossless: true, effort: 6 })
+        .toBuffer();
+      await writeFile(path.join(stagingRoot, fileName), publicBuffer);
+      entries.push({
+        icon: icon.entry.atlasIconId,
+        file: fileName,
+        sourceId: icon.entry.id,
+        sourceHash: icon.outputHash,
+        publicHash: sha256(publicBuffer),
+      });
+      if ((index + 1) % 250 === 0) {
+        console.log(`prepared ${index + 1}/${audit.valid.length} public icons`);
+      }
     }
-  }
 
-  const publicManifest = {
-    schemaVersion: PUBLIC_SCHEMA_VERSION,
-    createdAt: new Date().toISOString(),
-    version,
-    recipeVersion: audit.recipeVersion,
-    masterSize,
-    format: 'lossless webp',
-    addressing: 'SQLite item.icon',
-    iconCount: entries.length,
-    blankSourceSlots: audit.blank,
-    entries,
-  };
-  await writeFile(
-    path.join(stagingRoot, 'manifest.json'),
-    `${JSON.stringify(publicManifest, null, 2)}\n`,
-  );
-  await rename(stagingRoot, targetRoot);
-  return { targetRoot, iconCount: entries.length };
+    const publicManifest = {
+      schemaVersion: PUBLIC_SCHEMA_VERSION,
+      createdAt: new Date().toISOString(),
+      version,
+      recipeVersion: audit.recipeVersion,
+      masterSize,
+      format: 'lossless webp',
+      addressing: 'SQLite item.icon',
+      iconCount: entries.length,
+      blankSourceSlots: audit.blank,
+      entries,
+    };
+    await writeFile(
+      path.join(stagingRoot, 'manifest.json'),
+      `${JSON.stringify(publicManifest, null, 2)}\n`,
+    );
+    await rename(stagingRoot, targetRoot);
+    return { targetRoot, iconCount: entries.length };
+  } catch (error) {
+    await rm(stagingRoot, { recursive: true, force: true });
+    throw error;
+  }
 }

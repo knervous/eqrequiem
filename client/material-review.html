@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Qeynos2 Material Review</title>
+    <style>
+      html, body, #material-review {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        overflow: hidden;
+        background: #171b18;
+      }
+      #material-review {
+        display: block;
+        touch-action: none;
+      }
+      .review-label {
+        position: fixed;
+        left: 24px;
+        bottom: 22px;
+        z-index: 2;
+        padding: 10px 14px;
+        border: 1px solid #9d8150;
+        background: rgba(12, 15, 13, 0.86);
+        color: #e8dfc9;
+        font: 600 13px/1.2 ui-monospace, monospace;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="material-review"></canvas>
+    <div class="review-label" id="review-label">Loading Qeynos2…</div>
+    <script type="module" src="/src/subapps/material-review-main.ts"></script>
+  </body>
+</html>
