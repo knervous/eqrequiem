@@ -22,11 +22,22 @@ import {
 } from '../render/ShadoAsyncPicking';
 import type { ShadoConcreteCtor } from '../types';
 
+/**
+ * Controls the amount of dual-quaternion VAT work performed per vertex.
+ *
+ * - `full`: all influences with interpolation between animation frames.
+ * - `medium`: all influences sampled at one animation frame.
+ * - `low`: the dominant influence sampled at one animation frame.
+ * - `rigid`: disables VAT and renders the source mesh in its rest pose.
+ */
+export type ShadoVatQualityTier = 'full' | 'medium' | 'low' | 'rigid';
+
 export interface ShadoMaterialOptions<TActor extends ShadoActor = ShadoActor> {
   defines?: string[];
   logOnCompile?: boolean;
   picking?: boolean | ShadoInstanceAsyncPickingOptions<TActor>;
   useVat?: boolean;
+  vatQuality?: ShadoVatQualityTier;
   /** Additional application-owned textures exposed to generated shaders. */
   textures?: Record<string, Texture>;
 }
@@ -67,7 +78,8 @@ export class ShadoMaterial<T extends Shado> extends BABYLON.ShaderMaterial {
     const useStorageWGSL = isWebGPU && (shado.constructor as any).backingPreference === 'storage';
     const shaderIo = (shado.constructor as ShadoConcreteCtor).shaderIO(engine);
     const name = mesh?.name ?? shado.getSchema()?.name ?? 'Shado';
-    const useVat = opts?.useVat ?? true;
+    const vatQuality = opts?.vatQuality ?? 'full';
+    const useVat = (opts?.useVat ?? true) && vatQuality !== 'rigid';
 
     // ── Detect bone influencers and set attributes/defines ───────────────────
     const influencers = useVat ? (mesh.numBoneInfluencers ?? (mesh.skeleton ? 4 : 0)) : 0;
@@ -78,6 +90,12 @@ export class ShadoMaterial<T extends Shado> extends BABYLON.ShaderMaterial {
 
     const defines = new Set<string>(opts?.defines ?? []);
     if (influencers > 0) defines.add('USE_BONES');
+    if (useVat && (vatQuality === 'medium' || vatQuality === 'low')) {
+      defines.add('SHADO_VAT_SINGLE_FRAME');
+    }
+    if (useVat && vatQuality === 'low') {
+      defines.add('SHADO_VAT_DOMINANT_BONE');
+    }
 
     // ── Decide texture features from current mesh material ───────────────────
     const tex = pickCommonTextures(mesh.material);
@@ -196,8 +214,7 @@ export class ShadoMaterial<T extends Shado> extends BABYLON.ShaderMaterial {
         this._vat?.bindMaterial(this);
         this.setFloat('bakedVertexAnimationTime', this._timeSec);
       }
-      const visibleCount =
-        (shado as any).getVisibleCount?.() ?? (shado as any).visibleCount ?? 0;
+      const visibleCount = (shado as any).getVisibleCount?.() ?? (shado as any).visibleCount ?? 0;
       mesh.forcedInstanceCount = Math.max(0, visibleCount | 0);
       mesh.isVisible = mesh.forcedInstanceCount > 0;
     };

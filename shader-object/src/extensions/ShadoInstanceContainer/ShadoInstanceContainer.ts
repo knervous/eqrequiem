@@ -2,7 +2,7 @@ import { BABYLON } from '../../babylon';
 import { ASCExtension, Shado } from '../../core/Shado';
 import { ShadoInstanceSoA } from '../../core/ShadoInstanceSoA';
 import { gpuStruct, field } from '../../decorators';
-import { ShadoMaterial } from '../../materials/ShadoMaterial';
+import { ShadoMaterial, type ShadoVatQualityTier } from '../../materials/ShadoMaterial';
 import type { ShadoInstanceAsyncPickingOptions } from '../../render/ShadoAsyncPicking';
 import { ShadoActor } from '../ShadoActor';
 import { NameplateData } from '../NameplateData';
@@ -36,6 +36,8 @@ import type { GPUUploadStats } from '../../types';
 
 export type ShadoInstanceContainerOptions = {
   vat?: 'auto' | 'bake' | 'none';
+  /** Vertex-animation quality tier. `rigid` skips VAT generation and sampling. */
+  vatQuality?: ShadoVatQualityTier;
   animationRanges?: Array<{ from: number; to: number }>;
   migrateTextures?: 'share' | 'move' | 'clone' | 'none';
   replaceMaterial?: boolean;
@@ -90,6 +92,13 @@ export type ShadoInstanceWGSLHooks = Readonly<{
 }>;
 
 export type InstanceNameSource = readonly string[] | ((index: number) => string);
+
+export type AddInstancesOptions = {
+  /** Skip the default random clip when the caller assigns animation state. */
+  playRandomAnimation?: boolean;
+  /** Defer nameplate publication until a larger mutation finishes. */
+  rebuildNameplates?: boolean;
+};
 
 function installSolidColorTextures(scene: Scene, meshes: Mesh[]): Texture[] {
   const materials = new Set<any>();
@@ -181,6 +190,12 @@ export class ShadoInstanceContainer<T extends ShadoActor> extends Shado {
   public get visibilityFlags(): Uint8Array {
     return this._instanceSoA.visibilityFlags;
   }
+  public get visibilityVersion(): number {
+    return this._instanceSoA.version;
+  }
+  public get activeCullingMode(): 'wasm-simd' | 'cpu' {
+    return typeof this.ops?.frustumMarkSoA === 'function' ? 'wasm-simd' : 'cpu';
+  }
   public get actorDirtyFlags(): Uint8Array {
     return this._instanceSoA.dirtyFlags;
   }
@@ -206,7 +221,9 @@ export class ShadoInstanceContainer<T extends ShadoActor> extends Shado {
 
   public set nameplates(nameplates: NameplateData | undefined) {
     this._nameplates = nameplates;
-    if (nameplates) this._visibleIndexTexture.enableVisibilityFlags();
+    if (nameplates && !nameplates.visibilityCompacted) {
+      this._visibleIndexTexture.enableVisibilityFlags();
+    }
   }
   private _nameplates?: NameplateData;
 
@@ -320,14 +337,15 @@ export class ShadoInstanceContainer<T extends ShadoActor> extends Shado {
 
   /** Turns the one-byte WASM/CPU sidecar into coalesced actor AoS upload ranges. */
   private _applyActorDirtyPass(): void {
+    const bounds = this._instanceSoA.dirtyActorBounds;
+    if (!bounds) return;
     const flags = this._instanceSoA.dirtyFlags;
-    if (!flags.length) return;
     const seg = this._structSeg.instances;
     const strideF = this.getSchema().structArrays.instances?.schema.headerFloatCount ?? 0;
     if (!seg || !strideF) return;
     let runStart = -1;
-    for (let i = 0; i <= flags.length; i++) {
-      if (i < flags.length && flags[i]) {
+    for (let i = bounds.start; i <= bounds.end; i++) {
+      if (i < bounds.end && flags[i]) {
         if (runStart < 0) runStart = i;
         continue;
       }
@@ -378,7 +396,8 @@ export class ShadoInstanceContainer<T extends ShadoActor> extends Shado {
     skeleton: Skeleton | null | undefined,
     opts: ShadoInstanceContainerOptions = {}
   ): Promise<ShadoMaterial<any>> {
-    const useVat = opts.vat !== 'none';
+    const vatQuality = opts.vatQuality ?? 'full';
+    const useVat = opts.vat !== 'none' && vatQuality !== 'rigid';
     const generatedColorTextures = installSolidColorTextures(scene, meshes);
     const { sources, byId } = collectSourcesFromMeshes(meshes);
     let atlas;
@@ -487,6 +506,7 @@ export class ShadoInstanceContainer<T extends ShadoActor> extends Shado {
       logOnCompile: opts.logOnCompile,
       picking: opts.picking,
       useVat,
+      vatQuality,
       textures: opts.materialTextures,
     });
     if (this.vat) som.vatDQ = this.vat;
@@ -656,10 +676,16 @@ export function frustumMarkSoA(
     this.updateFrustumFromCamera(camera);
 
     this._instanceSoA.ensureCapacity(this._children.length);
-    const frustumMarkSoA = this.ops?.frustumMarkSoA;
-    if (!frustumMarkSoA) {
+    const wasmOps = this.ops;
+    if (!wasmOps) {
       this.frustumCullCPU(camera, baseRadius, maxDistance);
       return;
+    }
+    const frustumMarkSoA = wasmOps.frustumMarkSoA;
+    if (typeof frustumMarkSoA !== 'function') {
+      throw new Error(
+        `${this.constructor.name} WASM module is missing required frustumMarkSoA export`
+      );
     }
 
     const camPos = camera.globalPosition ?? camera.position;
@@ -749,7 +775,11 @@ export function frustumMarkSoA(
     return idxs;
   }
 
-  public addInstance(suppressRebuild?: boolean, name?: string): T {
+  public addInstance(
+    suppressRebuild?: boolean,
+    name?: string,
+    playRandomAnimation = true
+  ): T {
     const ch = this.addStructToArray<T>('instances');
 
     ch.initialize();
@@ -761,7 +791,7 @@ export function frustumMarkSoA(
         : Math.floor(this._nameplates.nameCount() * Math.random())
       : -1;
 
-    ch.playRandomAnimation(this.vat?.clips ?? []);
+    if (playRandomAnimation) ch.playRandomAnimation(this.vat?.clips ?? []);
 
     this._children.push(ch);
     this._instanceSoA.ensureCapacity(this._children.length);
@@ -771,14 +801,34 @@ export function frustumMarkSoA(
     return ch;
   }
 
-  public addInstances(n: number, names?: InstanceNameSource) {
-    this.reserveInstances(this._children.length + Math.max(0, n | 0));
-    const created: T[] = [];
-    for (let i = 0; i < n; i++) {
+  public addInstances(
+    n: number,
+    names?: InstanceNameSource,
+    options: AddInstancesOptions = {}
+  ) {
+    const amount = Math.max(0, n | 0);
+    if (!amount) return [];
+    this.reserveInstances(this._children.length + amount);
+    const created = this.appendStructsToArray<T>('instances', amount);
+    for (let i = 0; i < amount; i++) {
+      const ch = created[i];
+      ch.initialize();
       const name = typeof names === 'function' ? names(i) : names?.[i];
-      created.push(this.addInstance(true, name));
+      ch.nameIndex = this._nameplates
+        ? name
+          ? this._nameplates.addName(name)
+          : Math.floor(this._nameplates.nameCount() * Math.random())
+        : -1;
+      if (options.playRandomAnimation !== false) {
+        ch.playRandomAnimation(this.vat?.clips ?? []);
+      }
+      this._children.push(ch);
     }
-    this._nameplates?.rebuildStreams(this._children);
+    this._instanceSoA.ensureCapacity(this._children.length);
+    this._refreshViewsIfGrown();
+    if (options.rebuildNameplates !== false) {
+      this._nameplates?.rebuildStreams(this._children);
+    }
     return created;
   }
 
@@ -1080,6 +1130,7 @@ void main(void) {
   #endif
 
   // Many exporters leave garbage in unused lanes; renormalize
+  #ifndef SHADO_VAT_DOMINANT_BONE
   float wsum = bw0.x + bw0.y + bw0.z + bw0.w;
   #ifdef BONES8
     wsum += bw1.x + bw1.y + bw1.z + bw1.w;
@@ -1089,17 +1140,39 @@ void main(void) {
   #ifdef BONES8
     bw1 /= wsum;
   #endif
+  #endif
 
   vec4 r0 = vec4(0.0), d0 = vec4(0.0); float s0 = 0.0;
+  #ifndef SHADO_VAT_SINGLE_FRAME
   vec4 r1 = vec4(0.0), d1 = vec4(0.0); float s1 = 0.0;
+  #endif
 
+  #ifdef SHADO_VAT_DOMINANT_BONE
+  int dominantIndex = bi0.x;
+  float dominantWeight = bw0.x;
+  if (bw0.y > dominantWeight) { dominantIndex = bi0.y; dominantWeight = bw0.y; }
+  if (bw0.z > dominantWeight) { dominantIndex = bi0.z; dominantWeight = bw0.z; }
+  if (bw0.w > dominantWeight) { dominantIndex = bi0.w; dominantWeight = bw0.w; }
+  #ifdef BONES8
+    if (bw1.x > dominantWeight) { dominantIndex = bi1.x; dominantWeight = bw1.x; }
+    if (bw1.y > dominantWeight) { dominantIndex = bi1.y; dominantWeight = bw1.y; }
+    if (bw1.z > dominantWeight) { dominantIndex = bi1.z; dominantWeight = bw1.z; }
+    if (bw1.w > dominantWeight) { dominantIndex = bi1.w; }
+  #endif
+  fetchBoneDQScale(dominantIndex, frame0, r0, d0, s0);
+  #ifndef SHADO_VAT_SINGLE_FRAME
+    fetchBoneDQScale(dominantIndex, frame1, r1, d1, s1);
+  #endif
+  #else
   for (int k=0;k<4;++k) {
     int idx = (k==0)?bi0.x:(k==1)?bi0.y:(k==2)?bi0.z:bi0.w;
     float w = (k==0)?bw0.x:(k==1)?bw0.y:(k==2)?bw0.z:bw0.w;
     if (w <= 0.0) continue;
     vec4 ar, ad; float as;
     fetchBoneDQScale(idx, frame0, ar, ad, as); accumDQAligned(r0,d0,ar,ad,w); s0 += as*w;
+    #ifndef SHADO_VAT_SINGLE_FRAME
     fetchBoneDQScale(idx, frame1, ar, ad, as); accumDQAligned(r1,d1,ar,ad,w); s1 += as*w;
+    #endif
   }
 
   #ifdef BONES8
@@ -1109,12 +1182,19 @@ void main(void) {
     if (w <= 0.0) continue;
     vec4 ar, ad; float as;
     fetchBoneDQScale(idx, frame0, ar, ad, as); accumDQAligned(r0,d0,ar,ad,w); s0 += as*w;
+    #ifndef SHADO_VAT_SINGLE_FRAME
     fetchBoneDQScale(idx, frame1, ar, ad, as); accumDQAligned(r1,d1,ar,ad,w); s1 += as*w;
+    #endif
   }
+  #endif
   #endif
 
   // Normalize per-frame blends and enforce qr * qd = 0
   dqNormalizeConsistent(r0, d0);
+  #ifdef SHADO_VAT_SINGLE_FRAME
+  vec4 r = r0, d = d0;
+  float boneScale = s0;
+  #else
   dqNormalizeConsistent(r1, d1);
 
   // Time hemisphere align, then mix and renormalize
@@ -1126,6 +1206,7 @@ void main(void) {
   dqNormalizeConsistent(r, d);
 
   float boneScale = mix(s0, s1, lerpT);
+  #endif
   if (!uDQHasScale) boneScale = 1.0;
 
   vec3 skinned = dqTransformPoint(r, d, position * boneScale);
@@ -1365,6 +1446,7 @@ fn main(input: VertexInputs) -> FragmentInputs {
   var boneWeights1 = vertexInputs.matricesWeightsExtra;
 #endif
 
+  #ifndef SHADO_VAT_DOMINANT_BONE
   var weightSum =
     boneWeights0.x + boneWeights0.y + boneWeights0.z + boneWeights0.w;
 #ifdef BONES8
@@ -1376,9 +1458,49 @@ fn main(input: VertexInputs) -> FragmentInputs {
 #ifdef BONES8
   boneWeights1 = boneWeights1 / weightSum;
 #endif
+  #endif
 
   var dq0 = ShadoDQScale(vec4f(0.0), vec4f(0.0), 0.0);
+  #ifndef SHADO_VAT_SINGLE_FRAME
   var dq1 = ShadoDQScale(vec4f(0.0), vec4f(0.0), 0.0);
+  #endif
+  #ifdef SHADO_VAT_DOMINANT_BONE
+  var dominantBoneIndex = boneIndices0.x;
+  var dominantBoneWeight = boneWeights0.x;
+  if (boneWeights0.y > dominantBoneWeight) {
+    dominantBoneIndex = boneIndices0.y;
+    dominantBoneWeight = boneWeights0.y;
+  }
+  if (boneWeights0.z > dominantBoneWeight) {
+    dominantBoneIndex = boneIndices0.z;
+    dominantBoneWeight = boneWeights0.z;
+  }
+  if (boneWeights0.w > dominantBoneWeight) {
+    dominantBoneIndex = boneIndices0.w;
+    dominantBoneWeight = boneWeights0.w;
+  }
+  #ifdef BONES8
+  if (boneWeights1.x > dominantBoneWeight) {
+    dominantBoneIndex = boneIndices1.x;
+    dominantBoneWeight = boneWeights1.x;
+  }
+  if (boneWeights1.y > dominantBoneWeight) {
+    dominantBoneIndex = boneIndices1.y;
+    dominantBoneWeight = boneWeights1.y;
+  }
+  if (boneWeights1.z > dominantBoneWeight) {
+    dominantBoneIndex = boneIndices1.z;
+    dominantBoneWeight = boneWeights1.z;
+  }
+  if (boneWeights1.w > dominantBoneWeight) {
+    dominantBoneIndex = boneIndices1.w;
+  }
+  #endif
+  dq0 = Shado_fetchBoneDQScale(dominantBoneIndex, frame0);
+  #ifndef SHADO_VAT_SINGLE_FRAME
+  dq1 = Shado_fetchBoneDQScale(dominantBoneIndex, frame1);
+  #endif
+  #else
   for (var lane = 0; lane < 4; lane = lane + 1) {
     let weight = boneWeights0[lane];
     if (weight > 0.0) {
@@ -1388,11 +1510,13 @@ fn main(input: VertexInputs) -> FragmentInputs {
         Shado_fetchBoneDQScale(boneIndex, frame0),
         weight
       );
+      #ifndef SHADO_VAT_SINGLE_FRAME
       dq1 = Shado_accumulateDQ(
         dq1,
         Shado_fetchBoneDQScale(boneIndex, frame1),
         weight
       );
+      #endif
     }
   }
 #ifdef BONES8
@@ -1405,16 +1529,22 @@ fn main(input: VertexInputs) -> FragmentInputs {
         Shado_fetchBoneDQScale(boneIndex, frame0),
         weight
       );
+      #ifndef SHADO_VAT_SINGLE_FRAME
       dq1 = Shado_accumulateDQ(
         dq1,
         Shado_fetchBoneDQScale(boneIndex, frame1),
         weight
       );
+      #endif
     }
   }
 #endif
+  #endif
 
   dq0 = Shado_normalizeDQ(dq0);
+  #ifdef SHADO_VAT_SINGLE_FRAME
+  var blendedDQ = dq0;
+  #else
   dq1 = Shado_alignDQ(Shado_normalizeDQ(dq1), dq0.real);
   var blendedDQ = ShadoDQScale(
     mix(dq0.real, dq1.real, frameLerp),
@@ -1422,6 +1552,7 @@ fn main(input: VertexInputs) -> FragmentInputs {
     mix(dq0.scale, dq1.scale, frameLerp)
   );
   blendedDQ = Shado_normalizeDQ(blendedDQ);
+  #endif
 
   var boneScale = blendedDQ.scale;
   if (uniforms.uDQHasScale == 0) {

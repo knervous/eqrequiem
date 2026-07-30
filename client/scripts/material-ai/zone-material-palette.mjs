@@ -16,6 +16,8 @@ import {
 
 export const PALETTE_SCHEMA = "eltania.zone-material-palette";
 export const PALETTE_VERSION = 1;
+export const RUNTIME_TEXTURE_SIZE = 512;
+export const RUNTIME_WEBP_QUALITY = 82;
 
 export function paletteRoot(repoRoot, zone) {
   return path.join(
@@ -43,6 +45,44 @@ async function exists(file) {
   }
 }
 
+function closePeriodicEdges(data, info) {
+  const stride = info.width * info.channels;
+  for (let y = 0; y < info.height; y++) {
+    const first = y * stride;
+    const last = first + (info.width - 1) * info.channels;
+    data.copy(data, last, first, first + info.channels);
+  }
+  data.copy(data, (info.height - 1) * stride, 0, stride);
+}
+
+export async function resizeRuntimeTexture(
+  input,
+  size = RUNTIME_TEXTURE_SIZE,
+  quality = RUNTIME_WEBP_QUALITY,
+) {
+  const resized = await sharp(input)
+    .resize(size, size, { fit: "fill", kernel: "lanczos3" })
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  closePeriodicEdges(resized.data, resized.info);
+  const quantized = await sharp(resized.data, {
+    raw: resized.info,
+  })
+    .webp({
+      quality,
+      effort: 6,
+      smartSubsample: true,
+    })
+    .toBuffer();
+  const repaired = await sharp(quantized)
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  closePeriodicEdges(repaired.data, repaired.info);
+  return sharp(repaired.data, { raw: repaired.info })
+    .webp({ lossless: true, effort: 6 })
+    .toBuffer();
+}
+
 export async function readPaletteManifest(repoRoot, zone) {
   const file = paletteManifestPath(repoRoot, zone);
   if (!(await exists(file))) return null;
@@ -57,11 +97,7 @@ export async function readPaletteManifest(repoRoot, zone) {
   return { file, manifest };
 }
 
-export async function extractPaletteSources({
-  repoRoot,
-  zone,
-  sourceGlb,
-}) {
+export async function extractPaletteSources({ repoRoot, zone, sourceGlb }) {
   const loaded = await readPaletteManifest(repoRoot, zone);
   if (!loaded) throw new Error(`No material palette is authored for ${zone}`);
   const document = parseGlb(sourceGlb);
@@ -122,6 +158,8 @@ export async function bakeZoneMaterialPalette({
   zone,
   sourceGlb,
   requireEnabled = false,
+  runtimeTextureSize = null,
+  includePbrTextures = true,
 }) {
   const loaded = await readPaletteManifest(repoRoot, zone);
   if (!loaded || !loaded.manifest.enabled) {
@@ -151,8 +189,8 @@ export async function bakeZoneMaterialPalette({
       );
     }
     const replacement = path.join(paletteRoot(repoRoot, zone), entry.output);
-    const input = await fs.readFile(replacement);
-    const metadata = await sharp(input).metadata();
+    let input = await fs.readFile(replacement);
+    let metadata = await sharp(input).metadata();
     if (
       metadata.format !== "webp" ||
       !metadata.width ||
@@ -164,12 +202,16 @@ export async function bakeZoneMaterialPalette({
         `${entry.id} replacement must be a square power-of-two WebP texture`,
       );
     }
+    if (runtimeTextureSize && metadata.width !== runtimeTextureSize) {
+      input = await resizeRuntimeTexture(input, runtimeTextureSize);
+      metadata = await sharp(input).metadata();
+    }
     overrides.push({
       imageName: entry.image,
       bytes: input,
       mimeType: "image/webp",
     });
-    if (entry.pbr) {
+    if (entry.pbr && includePbrTextures) {
       const readChannel = async (relativeFile, label) => {
         const file = path.join(paletteRoot(repoRoot, zone), relativeFile);
         const channelInput = await fs.readFile(file);
@@ -199,10 +241,11 @@ export async function bakeZoneMaterialPalette({
         ),
         extraShader: entry.extraShader ?? null,
       });
-    } else if (entry.extraShader) {
+    } else if (entry.extraShader || entry.pbr?.roughness !== undefined) {
       channels.push({
         imageName: entry.image,
         extraShader: entry.extraShader,
+        roughness: entry.pbr?.roughness,
       });
     }
   }
@@ -250,7 +293,9 @@ export async function verifyBakedPalette({
       continue;
     }
     const dimensions = await Promise.all(
-      indices.map(async (index) => sharp(embeddedImage(after, index)).metadata()),
+      indices.map(async (index) =>
+        sharp(embeddedImage(after, index)).metadata(),
+      ),
     );
     if (
       dimensions.some(

@@ -22,6 +22,8 @@ export * from './utils/embedded-proxy';
 export * from './utils/binding-alloc';
 export * from './utils/glsl-wgsl';
 export * from './renderer';
+export * from './render-data';
+export * from './storage';
 
 // Extensions
 export * from './extensions';
@@ -35,4 +37,4 @@ export * from './showcase/EqShowcase';
 export * from './showcase/ShadoVatShowcaseUi';
 export * from './showcase/ShadoShowcaseEnvironment';
 
-export const VERSION = '1.1.0';
+export const VERSION = '1.2.0';

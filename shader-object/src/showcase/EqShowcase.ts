@@ -135,6 +135,22 @@ function decodeBase64Bytes(value: string): Uint8Array<ArrayBuffer> {
   return bytes;
 }
 
+function hasWasmFunctionExport(bytes: BufferSource, name: string): boolean {
+  try {
+    const module = new WebAssembly.Module(bytes);
+    return WebAssembly.Module.exports(module).some(
+      candidate => candidate.kind === 'function' && candidate.name === name
+    );
+  } catch {
+    return false;
+  }
+}
+
+function yieldToBrowserFrame(): Promise<void> {
+  if (typeof globalThis.requestAnimationFrame !== 'function') return Promise.resolve();
+  return new Promise(resolve => globalThis.requestAnimationFrame(() => resolve()));
+}
+
 function nameFor(model: EqShowcaseModel, instanceNumber = 1): string {
   if (model.catalog === 'babylon') return `${model.label} ${instanceNumber}`;
   const value = fantasyNames.nameByRace(model.nameRace, {
@@ -530,9 +546,23 @@ export function createEqShowcase(
   let cullingRange = 600;
   let reducerAverageMs = 0;
   const cullingModule = decodeBase64Bytes(SHOWCASE_CULLING_WASM_BASE64);
-  const cullingMode: EqShowcaseStats['cullingMode'] = WebAssembly.validate(cullingModule.buffer)
-    ? 'wasm-simd'
-    : 'cpu';
+  const hasBundledSoACulling =
+    WebAssembly.validate(cullingModule.buffer) &&
+    hasWasmFunctionExport(cullingModule, 'frustumMarkSoA');
+  let cullingMode: EqShowcaseStats['cullingMode'] = 'cpu';
+  const instanceCapacityHint = Math.max(
+    0,
+    Math.floor(options.instanceCapacityHint ?? 1_000_000)
+  );
+  const additionFrameBudgetMs = Math.max(1, options.additionFrameBudgetMs ?? 8);
+  const cullingIntervalMs = 1000 / Math.max(1, options.cullingHz ?? 15);
+  const maxVisibleNameplates = Math.max(
+    0,
+    Math.floor(options.maxVisibleNameplates ?? 8192)
+  );
+  let visibilityDirty = true;
+  let lastReducerAt = Number.NEGATIVE_INFINITY;
+  let additionInProgress = false;
   let placementSerial = models.length;
   let init: Promise<void> | undefined;
   const stats: EqShowcaseStats = {
@@ -642,16 +672,30 @@ export function createEqShowcase(
       // module instances. Bridge before initialization so every shader created
       // below is registered directly into the host engine's live stores.
       bridgeBabylonShaderStores(B);
-      await ContainerClass.initialize(scene.getEngine(), {
+      const initialized = await ContainerClass.initialize(scene.getEngine(), {
         backend: scene.getEngine().isWebGPU ? 'storage' : 'datatex',
         wasm:
-          cullingMode === 'wasm-simd'
+          hasBundledSoACulling
             ? { mode: 'precompiled', module: cullingModule.buffer }
             : false,
         extra: ActorClass,
         logShaderCode: false,
         logAscCode: false,
       });
+      if (!initialized) throw new Error(`${ContainerClass.name}.initialize failed`);
+      if (hasBundledSoACulling) {
+        const compiledModule = (ContainerClass as any).compiledWasmModule;
+        if (
+          !compiledModule ||
+          !WebAssembly.Module.exports(compiledModule).some(
+            candidate =>
+              candidate.kind === 'function' && candidate.name === 'frustumMarkSoA'
+          )
+        ) {
+          throw new Error('Showcase WASM initialized without required frustumMarkSoA export');
+        }
+        cullingMode = 'wasm-simd';
+      }
       if (options.fontAsset) {
         await NameplateData.initialize(scene.getEngine(), {
           backend: scene.getEngine().isWebGPU ? 'storage' : 'datatex',
@@ -753,6 +797,7 @@ export function createEqShowcase(
       let nameplateLayer: any;
       if (options.fontAsset) {
         nameplates = new NameplateData(scene.getEngine(), options.fontAsset);
+        nameplates.enableVisibilityCompaction(maxVisibleNameplates);
         container.nameplates = nameplates;
       }
       let pool: LoadedPool | undefined;
@@ -808,6 +853,7 @@ export function createEqShowcase(
         nextInstanceNumber: 2,
       };
       pools.set(model.code, pool);
+      visibilityDirty = true;
       if (!selectedRef) selectActor(pool, actor);
       failed.delete(model.code);
       publish({ current: undefined, lastError: undefined });
@@ -905,6 +951,7 @@ export function createEqShowcase(
         let nameplateLayer: any;
         if (options.fontAsset) {
           nameplates = new NameplateData(scene.getEngine(), options.fontAsset);
+          nameplates.enableVisibilityCompaction(maxVisibleNameplates);
           container.nameplates = nameplates;
         }
         let pool: LoadedPool | undefined;
@@ -948,6 +995,7 @@ export function createEqShowcase(
           nextInstanceNumber: 2,
         };
         pools.set(model.code, pool);
+        visibilityDirty = true;
         if (!selectedRef) selectActor(pool, actor);
         failed.delete(model.code);
         publish({ current: undefined, lastError: undefined });
@@ -1032,6 +1080,7 @@ export function createEqShowcase(
         let nameplateLayer: any;
         if (options.fontAsset) {
           nameplates = new NameplateData(scene.getEngine(), options.fontAsset);
+          nameplates.enableVisibilityCompaction(maxVisibleNameplates);
           container.nameplates = nameplates;
         }
         let pool: LoadedPool | undefined;
@@ -1077,6 +1126,7 @@ export function createEqShowcase(
           nextInstanceNumber: 2,
         };
         pools.set(model.code, pool);
+        visibilityDirty = true;
         failed.delete(model.code);
         if (!selectedRef) selectActor(pool, actor);
         publish({ current: undefined, lastError: undefined });
@@ -1183,25 +1233,103 @@ export function createEqShowcase(
     },
     async addRandom(count = 1) {
       if (!pools.size) await loadAny(models[0]);
-      const touched = new Set<LoadedPool>();
-      for (let i = 0; i < count; i++) {
-        const pool = [...pools.values()][Math.floor(Math.random() * pools.size)];
-        const actorName = nameFor(pool.model, pool.nextInstanceNumber++);
-        const actor = pool.container.addInstance(true, actorName);
-        (actor as any).__showcaseName = actorName;
-        const serial = placementSerial++;
-        const angle = serial * 2.399963229728653;
-        const radius = 10 + Math.sqrt(serial) * 5.2;
-        setActorTransform(actor, pool.model, 0, 1, pool.groundOffset);
-        actor.translation[0] = Math.cos(angle) * radius + (Math.random() - 0.5) * 2.5;
-        actor.translation[2] = Math.sin(angle) * radius + (Math.random() - 0.5) * 2.5;
-        actor.emitHeaderDirty();
-        setRandomAnimation(pool.container, actor, pool.model);
-        touched.add(pool);
-        if (!selectedRef) selectActor(pool, actor);
+      if (additionInProgress) {
+        throw new Error('A showcase actor addition is already in progress');
       }
-      for (const pool of touched) pool.nameplates?.rebuildStreams(pool.container.children);
-      publish();
+      const amount = Math.max(0, Math.floor(count));
+      if (!amount) return;
+
+      additionInProgress = true;
+      const poolList = [...pools.values()];
+      const choices =
+        poolList.length <= 0xffff ? new Uint16Array(amount) : new Uint32Array(amount);
+      const totals = new Uint32Array(poolList.length);
+      for (let i = 0; i < amount; i++) {
+        const poolIndex = Math.floor(Math.random() * poolList.length);
+        choices[i] = poolIndex;
+        totals[poolIndex]++;
+      }
+
+      // Scale additions reserve the configured resident ceiling once across
+      // loaded pools. Storage buffers allocate that capacity but upload only
+      // live ranges, so later additions publish new tails without reallocation.
+      const perPoolHint =
+        amount >= 10_000 && instanceCapacityHint > 0
+          ? Math.ceil(instanceCapacityHint / poolList.length)
+          : 0;
+      for (let poolIndex = 0; poolIndex < poolList.length; poolIndex++) {
+        if (!totals[poolIndex]) continue;
+        const pool = poolList[poolIndex];
+        pool.container.reserveInstances(
+          Math.max(pool.container.instanceCount + totals[poolIndex], perPoolHint)
+        );
+      }
+
+      const touched = new Set<LoadedPool>();
+      let cursor = 0;
+      let frameStartedAt = performance.now();
+      publish({ current: `Adding ${amount.toLocaleString()} actors` });
+      try {
+        while (cursor < amount) {
+          const end = Math.min(amount, cursor + 256);
+          const namesByPool = Array.from({ length: poolList.length }, () => [] as string[]);
+          for (let i = cursor; i < end; i++) {
+            const pool = poolList[choices[i]];
+            namesByPool[choices[i]].push(
+              nameFor(pool.model, pool.nextInstanceNumber++)
+            );
+          }
+
+          const actorsByPool: any[][] = Array.from(
+            { length: poolList.length },
+            () => []
+          );
+          for (let poolIndex = 0; poolIndex < poolList.length; poolIndex++) {
+            const names = namesByPool[poolIndex];
+            if (!names.length) continue;
+            const pool = poolList[poolIndex];
+            actorsByPool[poolIndex] = pool.container.addInstances(names.length, names, {
+              playRandomAnimation: false,
+              rebuildNameplates: false,
+            });
+            touched.add(pool);
+          }
+
+          const actorCursors = new Uint32Array(poolList.length);
+          for (let i = cursor; i < end; i++) {
+            const poolIndex = choices[i];
+            const pool = poolList[poolIndex];
+            const actor = actorsByPool[poolIndex][actorCursors[poolIndex]++];
+            const actorName = namesByPool[poolIndex][actorCursors[poolIndex] - 1];
+            (actor as any).__showcaseName = actorName;
+            const serial = placementSerial++;
+            const angle = serial * 2.399963229728653;
+            const radius = 10 + Math.sqrt(serial) * 5.2;
+            setActorTransform(actor, pool.model, 0, 1, pool.groundOffset);
+            actor.translation[0] =
+              Math.cos(angle) * radius + (Math.random() - 0.5) * 2.5;
+            actor.translation[2] =
+              Math.sin(angle) * radius + (Math.random() - 0.5) * 2.5;
+            actor.emitHeaderDirty();
+            setRandomAnimation(pool.container, actor, pool.model);
+            if (!selectedRef) selectActor(pool, actor);
+          }
+          cursor = end;
+
+          if (performance.now() - frameStartedAt >= additionFrameBudgetMs) {
+            await yieldToBrowserFrame();
+            if (disposed) return;
+            frameStartedAt = performance.now();
+          }
+        }
+        for (const pool of touched) {
+          pool.nameplates?.rebuildStreams(pool.container.children);
+        }
+        visibilityDirty = true;
+        publish({ current: undefined });
+      } finally {
+        additionInProgress = false;
+      }
     },
     removeRandom() {
       const candidates = [...pools.values()].filter(pool => pool.container.instanceCount > 0);
@@ -1215,6 +1343,7 @@ export function createEqShowcase(
           notifySelection();
         }
         pool.nameplates?.rebuildStreams(pool.container.children);
+        visibilityDirty = true;
       }
       publish();
     },
@@ -1237,16 +1366,27 @@ export function createEqShowcase(
         }
       }
       placementSerial += moved;
+      visibilityDirty = true;
       notifySelection();
       publish();
     },
     setCullingRange(distance) {
       cullingRange = Number.isFinite(distance) ? Math.max(0, distance) : 600;
+      visibilityDirty = true;
       publish();
     },
     setNameplatesEnabled(enabled) {
       nameplatesEnabled = enabled;
-      for (const pool of pools.values()) pool.nameplateLayer?.setEnabled(enabled);
+      for (const pool of pools.values()) {
+        pool.nameplateLayer?.setEnabled(enabled);
+        if (!enabled) {
+          pool.nameplates?.updateVisibleActors(
+            pool.container.children,
+            new Uint32Array(0)
+          );
+        }
+      }
+      visibilityDirty = true;
     },
     setSelectedName(name) {
       if (!selectedRef) return;
@@ -1302,6 +1442,7 @@ export function createEqShowcase(
         actor.rotation.set([0, Math.sin(yaw * 0.5), 0, Math.cos(yaw * 0.5)]);
       }
       actor.emitHeaderDirty();
+      visibilityDirty = true;
       notifySelection();
     },
     setSelectedPublished(name, value) {
@@ -1332,6 +1473,7 @@ export function createEqShowcase(
       selectedRef.actor.translation[0] = ray.origin.x + ray.direction.x * distance;
       selectedRef.actor.translation[2] = ray.origin.z + ray.direction.z * distance;
       selectedRef.actor.emitHeaderDirty();
+      visibilityDirty = true;
       notifySelection();
     },
     subscribeSelection(listener) {
@@ -1370,22 +1512,36 @@ export function createEqShowcase(
     } else {
       selectionRing.setEnabled(false);
     }
-    const reducerStartedAt = performance.now();
-    let visible = 0;
-    for (const pool of pools.values()) {
-      if (options.reduceVisibility) {
-        options.reduceVisibility(pool.container, camera, 3.5, cullingRange);
-      } else {
-        pool.container.frustumCull(camera, 3.5, cullingRange);
+    const now = performance.now();
+    if (
+      !additionInProgress &&
+      (visibilityDirty || now - lastReducerAt >= cullingIntervalMs)
+    ) {
+      const reducerStartedAt = now;
+      let visible = 0;
+      for (const pool of pools.values()) {
+        if (options.reduceVisibility) {
+          options.reduceVisibility(pool.container, camera, 3.5, cullingRange);
+        } else {
+          pool.container.frustumCull(camera, 3.5, cullingRange);
+        }
+        pool.nameplates?.updateVisibleActors(
+          pool.container.children,
+          nameplatesEnabled ? pool.container.visibleActorIndices : new Uint32Array(0)
+        );
+        visible += pool.container.visibleCount;
       }
-      visible += pool.container.visibleCount;
+      const reducerMs = performance.now() - reducerStartedAt;
+      reducerAverageMs =
+        reducerAverageMs === 0
+          ? reducerMs
+          : reducerAverageMs + (reducerMs - reducerAverageMs) * 0.08;
+      stats.reducerMs = reducerMs;
+      stats.reducerAverageMs = reducerAverageMs;
+      lastReducerAt = now;
+      visibilityDirty = false;
+      if (visible !== stats.visible) publish({ visible });
     }
-    const reducerMs = performance.now() - reducerStartedAt;
-    reducerAverageMs =
-      reducerAverageMs === 0 ? reducerMs : reducerAverageMs + (reducerMs - reducerAverageMs) * 0.08;
-    stats.reducerMs = reducerMs;
-    stats.reducerAverageMs = reducerAverageMs;
-    if (visible !== stats.visible) publish({ visible });
   });
   scene.onDisposeObservable.add(() => {
     scene.onBeforeRenderObservable.remove(observer);

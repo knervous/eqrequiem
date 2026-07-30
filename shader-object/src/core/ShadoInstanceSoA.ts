@@ -13,6 +13,9 @@ export class ShadoInstanceSoA {
   private countValue = 0;
   private visibleCountValue = 0;
   private versionValue = 0;
+  private dirtyCountValue = 0;
+  private dirtyMinValue = Number.MAX_SAFE_INTEGER;
+  private dirtyMaxValue = -1;
   private publishedVisibleCount = 0;
   private publishedVisibleIndices = new Uint32Array(0);
   private hasPublishedVisibility = false;
@@ -40,6 +43,13 @@ export class ShadoInstanceSoA {
   }
   public get version(): number {
     return this.versionValue;
+  }
+  public get hasDirtyActors(): boolean {
+    return this.dirtyCountValue > 0;
+  }
+  public get dirtyActorBounds(): { start: number; end: number } | undefined {
+    if (!this.dirtyCountValue) return undefined;
+    return { start: this.dirtyMinValue, end: this.dirtyMaxValue + 1 };
   }
   public get visibleIndicesPtr(): number {
     this.refreshWasmViews();
@@ -104,9 +114,14 @@ export class ShadoInstanceSoA {
     this.visibilityValue.set(visibility);
     this.dirtyValue.set(dirty);
     this.cullingValue.set(culling);
+    this.recountDirty();
   }
 
   public ensureCapacity(count: number): void {
+    // The owner's actor arena and these sidecars share one WebAssembly.Memory.
+    // Repacking the actor arena may therefore detach these cached views even
+    // when the sidecar already has enough logical capacity.
+    this.refreshWasmViews();
     const nextCount = Math.max(0, count | 0);
     if (nextCount > this.capacityValue) {
       let capacity = Math.max(4, this.capacityValue);
@@ -115,6 +130,9 @@ export class ShadoInstanceSoA {
     }
     if (nextCount > this.countValue) {
       this.dirtyValue.fill(1, this.countValue, nextCount);
+      this.dirtyCountValue += nextCount - this.countValue;
+      this.dirtyMinValue = Math.min(this.dirtyMinValue, this.countValue);
+      this.dirtyMaxValue = Math.max(this.dirtyMaxValue, nextCount - 1);
     }
     this.countValue = nextCount;
     this.visibleCountValue = Math.min(this.visibleCountValue, nextCount);
@@ -122,6 +140,7 @@ export class ShadoInstanceSoA {
 
   /** Reserve sidecar capacity without changing the logical actor count. */
   public reserve(count: number): void {
+    this.refreshWasmViews();
     const required = Math.max(0, count | 0);
     if (required <= this.capacityValue) return;
     let capacity = Math.max(4, this.capacityValue);
@@ -136,6 +155,7 @@ export class ShadoInstanceSoA {
   }
 
   public appendVisible(actorIndex: number): void {
+    this.refreshWasmViews();
     const index = actorIndex | 0;
     if (index < 0 || index >= this.countValue) {
       throw new RangeError(`Visible actor index ${index} is outside 0..${this.countValue - 1}`);
@@ -146,6 +166,7 @@ export class ShadoInstanceSoA {
 
   /** Call after a WASM pass has populated the planes. */
   public finishVisibilityPass(visibleCount: number): void {
+    this.refreshWasmViews();
     const nextCount = Math.max(0, Math.min(this.countValue, visibleCount | 0));
     this.visibleCountValue = nextCount;
     let changed = !this.hasPublishedVisibility || nextCount !== this.publishedVisibleCount;
@@ -174,6 +195,7 @@ export class ShadoInstanceSoA {
     visibleIndices: ArrayLike<number>,
     cullingFlags?: ArrayLike<number>
   ): void {
+    this.refreshWasmViews();
     // Clear only the previously compacted set. External worker results should
     // make main-thread application scale with rendered membership, not arena
     // capacity.
@@ -198,11 +220,23 @@ export class ShadoInstanceSoA {
   }
 
   public setDirty(index: number, dirty = true): void {
+    this.refreshWasmViews();
     if (index < 0 || index >= this.countValue) return;
-    this.dirtyValue[index] = dirty ? 1 : 0;
+    const value = dirty ? 1 : 0;
+    if (this.dirtyValue[index] === value) return;
+    this.dirtyValue[index] = value;
+    if (value) {
+      this.dirtyCountValue++;
+      this.dirtyMinValue = Math.min(this.dirtyMinValue, index);
+      this.dirtyMaxValue = Math.max(this.dirtyMaxValue, index);
+    } else {
+      this.dirtyCountValue--;
+      if (!this.dirtyCountValue) this.resetDirtyBounds();
+    }
   }
 
   public setVisibility(index: number, visible: boolean): void {
+    this.refreshWasmViews();
     if (index < 0 || index >= this.countValue) return;
     const value = visible ? 1 : 0;
     if (this.visibilityValue[index] === value) return;
@@ -211,19 +245,24 @@ export class ShadoInstanceSoA {
   }
 
   public clearDirty(): void {
+    this.refreshWasmViews();
+    if (!this.dirtyCountValue) return;
     this.dirtyValue.fill(0, 0, this.countValue);
+    this.dirtyCountValue = 0;
+    this.resetDirtyBounds();
   }
 
   public removeSwap(index: number): void {
+    this.refreshWasmViews();
     const last = this.countValue - 1;
     if (index < 0 || index > last) return;
     if (index !== last) {
       this.visibilityValue[index] = this.visibilityValue[last];
-      this.dirtyValue[index] = 1;
+      this.setDirty(index, true);
       this.cullingValue[index] = this.cullingValue[last];
     }
     this.visibilityValue[last] = 0;
-    this.dirtyValue[last] = 0;
+    this.setDirty(last, false);
     this.cullingValue[last] = 0;
     this.countValue = last;
     this.visibleCountValue = Math.min(this.visibleCountValue, last);
@@ -263,6 +302,22 @@ export class ShadoInstanceSoA {
     this.visibilityValue.set(oldVisibility);
     this.dirtyValue.set(oldDirty);
     this.cullingValue.set(oldCulling);
+  }
+
+  private resetDirtyBounds(): void {
+    this.dirtyMinValue = Number.MAX_SAFE_INTEGER;
+    this.dirtyMaxValue = -1;
+  }
+
+  private recountDirty(): void {
+    this.dirtyCountValue = 0;
+    this.resetDirtyBounds();
+    for (let i = 0; i < this.countValue; i++) {
+      if (!this.dirtyValue[i]) continue;
+      this.dirtyCountValue++;
+      this.dirtyMinValue = Math.min(this.dirtyMinValue, i);
+      this.dirtyMaxValue = i;
+    }
   }
 
   private refreshWasmViews(): void {

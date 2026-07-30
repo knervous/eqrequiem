@@ -225,10 +225,13 @@ export class ZoneManager {
     }
     this.registerAnimatedTextures(this.shadoWorldScene.renderMeshes);
     this.attachStaticWorldPhysics(this.shadoWorldScene.collisionMesh);
+    const bakedWorldLighting =
+      this.shadoWorldScene.usesBakedWorldLighting;
     await this.skyManager.createSky(
       "requiem-sky",
-      this.disableWorldEnv,
+      this.disableWorldEnv || bakedWorldLighting,
       this.zoneName,
+      bakedWorldLighting,
     );
     this.parent.setLoading(false);
     await this.loadZoneMetadata(generation);
@@ -286,12 +289,14 @@ export class ZoneManager {
         console.log("Got metadata", metadata);
         console.log("Version: ", metadata.version);
         console.log("Current zone", this.CurrentZone);
-        this.lightManager.loadLights(
-          this.lightContainer!,
-          this.parent.scene!,
-          metadata.lights,
-          this.zoneName,
-        );
+        if (!this.shadoWorldScene?.usesBakedWorldLighting) {
+          this.lightManager.loadLights(
+            this.lightContainer!,
+            this.parent.scene!,
+            metadata.lights,
+            this.zoneName,
+          );
+        }
         setTimeout(() => {
           if (generation !== this.loadGeneration) return;
           this.GameManager.scene?.textures.forEach((t) => {
@@ -363,6 +368,8 @@ export class ZoneManager {
     this.skyManager.tick(delta);
     this.shadoWorldObjects?.tick(delta);
     this.entityPool?.process(delta);
-    this.lightManager.updateLights(delta);
+    if (!this.shadoWorldScene?.usesBakedWorldLighting) {
+      this.lightManager.updateLights(delta);
+    }
   }
 }

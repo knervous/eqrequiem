@@ -1342,6 +1342,50 @@ export abstract class Shado {
     return child;
   }
 
+  /**
+   * Append several child structs while updating capacity, count, and WASM
+   * header fields only once. Callers still initialize the returned thin
+   * children, but avoid per-actor repacks and header synchronization.
+   */
+  public appendStructsToArray<T extends Shado = Shado>(field: string, amount: number): T[] {
+    if (this._isDisposed) throw new Error('appendStructsToArray on disposed object');
+
+    const appendCount = Math.max(0, amount | 0);
+    if (!appendCount) return [];
+    const schema = this.getSchema();
+    const meta = schema.structArrays[field];
+    if (!meta) {
+      throw new Error(`'${field}' is not a struct var-array on ${schema.name}`);
+    }
+
+    const start = (this._structArrayCount[field] || 0) | 0;
+    const end = start + appendCount;
+    const strideF = meta.schema.headerFloatCount | 0;
+    this.reserveStructArray(field, end);
+
+    const seg = this._structSeg[field];
+    seg.lenF = end * strideF;
+    this._structArrayCount[field] = end;
+    this._ensureStructDirtyCapacity(field, end).fill(1, start, end);
+
+    const children: T[] = [];
+    children.length = appendCount;
+    const slots = (this._structArraySlots[field] ||= []);
+    const index = (this._structArrayIndex[field] ||= new Map());
+    slots.length = end;
+    for (let offset = 0; offset < appendCount; offset++) {
+      const childIndex = start + offset;
+      const child = this._makeThinChild<T>(field, meta.ctor, childIndex);
+      slots[childIndex] = child as any;
+      index.set(child as any, childIndex);
+      children[offset] = child;
+    }
+
+    this._structVersion++;
+    this.syncStructArrayHeaderFields();
+    return children;
+  }
+
   public reserveStructArray(field: string, count: number): void {
     if (this._isDisposed) return;
 

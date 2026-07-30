@@ -74,6 +74,14 @@ export type EqShowcaseOptions = {
   bakeWorkerUrl?: string;
   /** Maximum GLBs baked in parallel. Defaults to available CPU capacity, capped at four. */
   bakeConcurrency?: number;
+  /** Resident actor capacity reserved across loaded pools for scale runs. Defaults to one million. */
+  instanceCapacityHint?: number;
+  /** Main-thread mutation budget before a large addition yields to rendering. Defaults to 8 ms. */
+  additionFrameBudgetMs?: number;
+  /** Visibility reducer cadence while the camera moves. Defaults to 15 Hz. */
+  cullingHz?: number;
+  /** Maximum actor labels scattered into visible glyph streams. Defaults to 8192. */
+  maxVisibleNameplates?: number;
   /** Optional world-aware reducer which replaces the default actor-only frustum pass. */
   reduceVisibility?: (
     container: ShadoInstanceContainer<any>,

@@ -18,6 +18,7 @@ export class ShadoWorldSceneLayer {
     private readonly sourceContainer: BJS.AssetContainer,
     private readonly runtimeRoot: BJS.TransformNode,
     private readonly chunks: BJS.Mesh[],
+    public readonly usesBakedWorldLighting: boolean,
   ) {}
 
   get renderMeshes(): readonly BJS.Mesh[] {
@@ -58,7 +59,7 @@ export class ShadoWorldSceneLayer {
     scene: BJS.Scene,
     zoneContainer: BJS.TransformNode,
   ): Promise<ShadoWorldSceneLayer> {
-    const sourceUrl = materialPreviewSceneUrl(world, spatialUrl);
+    const sourceUrl = sourceSceneUrl(world, spatialUrl);
     const bytes = await fetchShadoBytes(sourceUrl);
     const blobUrl = URL.createObjectURL(
       new Blob([bytes], { type: "model/gltf-binary" }),
@@ -85,7 +86,18 @@ export class ShadoWorldSceneLayer {
       throw error;
     }
     sourceContainer.addAllToScene();
-    applyWorldMaterialPolicy(sourceContainer.materials);
+    const worldSources = sourceContainer.meshes.filter(
+      (mesh) => mesh.getTotalVertices() > 0 && mesh.name !== "CLOUD_MDF",
+    );
+    const usesBakedWorldLighting =
+      worldSources.length > 0 &&
+      worldSources.every((mesh) =>
+        mesh.isVerticesDataPresent(BABYLON.VertexBuffer.ColorKind),
+      );
+    applyWorldMaterialPolicy(
+      sourceContainer.materials,
+      usesBakedWorldLighting,
+    );
 
     const runtimeRoot = new BABYLON.TransformNode(
       `ShadoWorldRoot:${world.name}`,
@@ -117,6 +129,7 @@ export class ShadoWorldSceneLayer {
         sourceContainer,
         runtimeRoot,
         chunks,
+        usesBakedWorldLighting,
       );
       console.info(
         `[ZoneManager] Loaded promoted world scene ${world.name}: ` +
@@ -141,7 +154,10 @@ export class ShadoWorldSceneLayer {
  * prototype/object materials are loaded by a different layer and retain their
  * own authored policy.
  */
-function applyWorldMaterialPolicy(materials: readonly BJS.Material[]): void {
+function applyWorldMaterialPolicy(
+  materials: readonly BJS.Material[],
+  usesBakedWorldLighting: boolean,
+): void {
   const materialPreview =
     import.meta.env.VITE_LOCAL_DEV === "true" &&
     new URLSearchParams(window.location.search).has("materialPreview");
@@ -151,7 +167,7 @@ function applyWorldMaterialPolicy(materials: readonly BJS.Material[]): void {
       material.twoSidedLighting = true;
       // A clean-room material review needs to expose the embedded albedo
       // rather than tinting it with an unfinished zone light/sky setup.
-      material.unlit = materialPreview;
+      material.unlit = materialPreview || usesBakedWorldLighting;
     }
   }
 }
@@ -164,26 +180,6 @@ function sourceSceneUrl(world: ShadoWorldSpatialPackage, spatialUrl: string): st
     return world.source;
   }
   return spatialUrl.replace(/\.spatial\.json\.gz(?:[?#].*)?$/i, ".glb.gz");
-}
-
-function materialPreviewSceneUrl(
-  world: ShadoWorldSpatialPackage,
-  spatialUrl: string,
-): string {
-  const requestedZone = new URLSearchParams(window.location.search)
-    .get("materialPreview")
-    ?.toLowerCase();
-  if (
-    import.meta.env.VITE_LOCAL_DEV === "true" &&
-    requestedZone === world.name.toLowerCase()
-  ) {
-    const zone = encodeURIComponent(world.name.toLowerCase());
-    return (
-      `${import.meta.env.BASE_URL}eqrequiem/worlds/` +
-      `${zone}.material-preview.glb.gz?revision=${WORLD_PACKAGE_REVISION}`
-    );
-  }
-  return sourceSceneUrl(world, spatialUrl);
 }
 
 function packageArtifactUrl(source: string, spatialUrl: string): string {
@@ -222,6 +218,10 @@ function createRenderChunks(
     // The source primitive remains authoritative until render streams also
     // become a dedicated package artifact.
     clone.material = source.material;
+    clone.useVertexColors = source.isVerticesDataPresent(
+      BABYLON.VertexBuffer.ColorKind,
+    );
+    clone.hasVertexAlpha = false;
     if (meshName === "CLOUD_MDF") {
       clone.metadata = { ...clone.metadata, shadoAlwaysDisabled: true };
       clone.setEnabled(false);

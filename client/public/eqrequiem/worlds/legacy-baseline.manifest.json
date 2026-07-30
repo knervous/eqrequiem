@@ -93,6 +93,11 @@
         "source": "/eqrequiem/worlds/qeynos2.glb.gz",
         "scene": {
           "path": "client/public/eqrequiem/worlds/qeynos2.glb.gz",
+          "sha256": "917fe0b24550b90cc9ca277ba7344b49925278068e55733fa30a84e1ea6a14f8",
+          "bytes": 26829963
+        },
+        "legacyScene": {
+          "path": "client/public/eqrequiem/worlds/qeynos2.glb.leg.gz",
           "sha256": "ac084cb524577aceab77817e9e1163d49a8d2899dc7feb8ac98ccf78f1118d6c",
           "bytes": 2140136
         },

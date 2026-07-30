@@ -26,4 +26,17 @@ describe('MSDF nameplate visibility shaders', () => {
     expect(shaders.vertexGLSL).toContain('uShadoVisibleIndexTexWidth');
     expect(shaders.vertexGLSL).not.toContain('ShadoActor_visibleFlag_OFF');
   });
+
+  it('omits per-resident visibility reads for compact visible-only glyph streams', () => {
+    const shaders = makeMSDFTextShaders({
+      useVisibilityTexture: false,
+      useActorVisibility: false,
+    });
+
+    expect(shaders.vertexGLSL).toContain('int ownerVisible = 1;');
+    expect(shaders.vertexWGSL).toContain('let ownerVisible = 1;');
+    expect(shaders.vertexGLSL).not.toContain('visibleFlag_OFF');
+    expect(shaders.vertexWGSL).not.toContain('visibleFlag_OFF');
+    expect(shaders.vertexGLSL).not.toContain('uShadoVisibilityFlags');
+  });
 });

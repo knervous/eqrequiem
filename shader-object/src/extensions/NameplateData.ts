@@ -15,6 +15,9 @@ export class NameplateData extends Shado {
   private _pool = new NamePool();
   private _lut?: FontGlyphLUT;
   private _streams?: NameplateStreams;
+  private _visibilityCompacted = false;
+  private _maxVisibleOwners = Number.MAX_SAFE_INTEGER;
+  private _visibleOwners = new Uint32Array(0);
 
   constructor(engine: any, fontAsset: any) {
     super(engine);
@@ -43,9 +46,61 @@ export class NameplateData extends Shado {
     return this._pool.get(i);
   }
 
+  /**
+   * Publish glyphs only for compact visible actor membership. This prevents
+   * resident crowds from allocating, uploading, and drawing every hidden
+   * label. The actor owner IDs remain durable actor indices.
+   */
+  public enableVisibilityCompaction(maxVisibleOwners = Number.MAX_SAFE_INTEGER): void {
+    this._visibilityCompacted = true;
+    this._maxVisibleOwners = Math.max(0, Math.floor(maxVisibleOwners));
+    this._visibleOwners = new Uint32Array(0);
+  }
+
+  public get visibilityCompacted(): boolean {
+    return this._visibilityCompacted;
+  }
+
   public rebuildStreams(children: Array<{ nameIndex: number }>) {
     if (!this._streams) return;
-    const { glyphGid, glyphOwner, glyphOfs2 } = this._streams.build(children);
+    const owners = this._visibilityCompacted ? this._visibleOwners : undefined;
+    this.publishStreams(children, owners);
+  }
+
+  /**
+   * Scatter visible actor names into compact glyph streams. Returns false when
+   * membership is unchanged, keeping static-camera frames allocation-free.
+   */
+  public updateVisibleActors(
+    children: Array<{ nameIndex: number }>,
+    visibleActors: ArrayLike<number>
+  ): boolean {
+    if (!this._visibilityCompacted) return false;
+    const count = Math.min(visibleActors.length, this._maxVisibleOwners);
+    let changed = count !== this._visibleOwners.length;
+    if (!changed) {
+      for (let i = 0; i < count; i++) {
+        if (this._visibleOwners[i] !== (Number(visibleActors[i]) >>> 0)) {
+          changed = true;
+          break;
+        }
+      }
+    }
+    if (!changed) return false;
+
+    const owners = new Uint32Array(count);
+    for (let i = 0; i < count; i++) owners[i] = Number(visibleActors[i]) >>> 0;
+    this._visibleOwners = owners;
+    this.publishStreams(children, owners);
+    return true;
+  }
+
+  private publishStreams(
+    children: Array<{ nameIndex: number }>,
+    owners?: ArrayLike<number>
+  ): void {
+    if (!this._streams) return;
+    const { glyphGid, glyphOwner, glyphOfs2 } = this._streams.build(children, owners);
     this.setVarArray('glyphGid', glyphGid);
     this.setVarArray('glyphOwner', glyphOwner);
     this.setVarArray('glyphOfs2', glyphOfs2);
@@ -199,13 +254,17 @@ class NameplateStreams {
       glyphBase?: number;
       glyphCount?: number;
       emitHeaderDirty?: () => void;
-    }>
+    }>,
+    owners?: ArrayLike<number>
   ) {
     const gidList: number[] = [];
     const ownerList: number[] = [];
     const ofsList: number[] = [];
 
-    for (let owner = 0; owner < children.length; owner++) {
+    const ownerCount = owners?.length ?? children.length;
+    for (let ownerOffset = 0; ownerOffset < ownerCount; ownerOffset++) {
+      const owner = owners ? Number(owners[ownerOffset]) | 0 : ownerOffset;
+      if (owner < 0 || owner >= children.length) continue;
       const name = this.pool.get(children[owner].nameIndex);
 
       const localGids: number[] = [];

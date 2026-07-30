@@ -36,6 +36,7 @@
     "world:promote": "node scripts/promote-shado-worlds.mjs",
     "world:objects:promote": "node scripts/promote-zone-object-assets.mjs",
     "world:minimap:bake": "node scripts/bake-zone-minimap.mjs",
+    "world:lighting:bake": "node scripts/lighting/bake-zone-lighting.mjs",
     "item:icons:promote": "node scripts/promote-item-icons.mjs",
     "icon-ai:migrate": "node scripts/migrate-legacy-icons.mjs",
     "icon-ai:audit": "node scripts/migrate-legacy-icons.mjs audit",

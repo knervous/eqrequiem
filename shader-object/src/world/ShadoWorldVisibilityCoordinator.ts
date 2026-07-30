@@ -77,6 +77,10 @@ export type ShadoWorldVisibilityCoordinatorOptions = {
   entityVisibilityWorker?: 'auto' | 'disabled' | 'required';
   /** Test/host override for constructing the persistent worker. */
   workerFactory?: (source: string) => ShadoVisibilityWorkerPort;
+  /** Retain entity-indexed reason flags, or publish compact visible IDs only. */
+  worldObjectVisibilityFlags?: 'full' | 'compact-only';
+  /** Optional worker request cadence. Omit or set to zero for legacy every-call requests. */
+  worldObjectVisibilityHz?: number;
 };
 
 export type ShadoVisibilityReducibleContainer = {
@@ -101,11 +105,18 @@ export class ShadoWorldVisibilityCoordinator {
   private entityZ = new Float32Array(0);
   private entityRadius = new Float32Array(0);
   private lastWorldObjectVisibility: ShadoWorldObjectVisibilityResult | null = null;
+  private cameraEpoch = 0;
+  private cellEpoch = 0;
+  private policyEpoch = 0;
+  private lastCameraSignature = 0;
+  private lastCellSignature = 0;
+  private lastPolicySignature = 0;
 
   private constructor(
     public readonly world: ShadoWorldSpatialPackage,
     private readonly reducer: ShadoWorldReducer,
-    private worldObjectWorker: ShadoEntityVisibilityWorker | null
+    private worldObjectWorker: ShadoEntityVisibilityWorker | null,
+    private readonly worldObjectMinimumIntervalMs: number
   ) {
     world.tiles.x.forEach((x, cell) => {
       this.tileByCoordinate.set(`${x},${world.tiles.z[cell]}`, cell);
@@ -133,6 +144,7 @@ export class ShadoWorldVisibilityCoordinator {
       try {
         worker = await ShadoEntityVisibilityWorker.create(world, {
           capacity: stamps.id.length,
+          publishFlags: options.worldObjectVisibilityFlags !== 'compact-only',
           workerFactory: options.workerFactory,
         });
         worker.projection.load({
@@ -156,7 +168,8 @@ export class ShadoWorldVisibilityCoordinator {
         'Entity visibility worker is required but SharedArrayBuffer or Worker is unavailable'
       );
     }
-    return new ShadoWorldVisibilityCoordinator(world, reducer, worker);
+    const hz = Math.max(0, options.worldObjectVisibilityHz ?? 0);
+    return new ShadoWorldVisibilityCoordinator(world, reducer, worker, hz > 0 ? 1000 / hz : 0);
   }
 
   public get worldObjectVisibilityMode(): 'worker' | 'synchronous' {
@@ -297,7 +310,17 @@ export class ShadoWorldVisibilityCoordinator {
     if (this.worldObjectWorker) {
       try {
         const latest = this.worldObjectWorker.acquireLatest();
-        this.worldObjectWorker.request(planes, frame.cellFlags, options);
+        if (this.worldObjectMinimumIntervalMs > 0) {
+          this.updateVisibilityEpochs(planes, frame.cellFlags, options);
+          this.worldObjectWorker.requestScheduled(planes, frame.cellFlags, options, {
+            cameraEpoch: this.cameraEpoch,
+            cellEpoch: this.cellEpoch,
+            policyEpoch: this.policyEpoch,
+            minimumIntervalMs: this.worldObjectMinimumIntervalMs,
+          });
+        } else {
+          this.worldObjectWorker.request(planes, frame.cellFlags, options);
+        }
         if (latest) {
           this.lastWorldObjectVisibility = this.groupWorldObjectVisibility(latest);
         }
@@ -366,7 +389,9 @@ export class ShadoWorldVisibilityCoordinator {
     const byPrototype = Array.from({ length: objects.prototypes.id.length }, () => [] as number[]);
     for (const stamp of reduced.visibleIndices) {
       if (!stamps.enabled[stamp] || !(stamps.phaseMask[stamp] & activePhaseMask)) {
-        reduced.flags[stamp] &= ~ShadoVisibilityBits.Visible;
+        if (stamp < reduced.flags.length) {
+          reduced.flags[stamp] &= ~ShadoVisibilityBits.Visible;
+        }
         continue;
       }
       visible.push(stamp);
@@ -408,8 +433,53 @@ export class ShadoWorldVisibilityCoordinator {
     this.entityZ = new Float32Array(capacity);
     this.entityRadius = new Float32Array(capacity);
   }
+
+  private updateVisibilityEpochs(
+    planes: ArrayLike<number>,
+    cellFlags: ArrayLike<number>,
+    options: ShadoEntityVisibilityOptions & { activePhaseMask?: number }
+  ): void {
+    const cameraSignature = hashNumbers(planes, 24);
+    if (cameraSignature !== this.lastCameraSignature) {
+      this.lastCameraSignature = cameraSignature;
+      this.cameraEpoch++;
+    }
+    const cellSignature = hashNumbers(cellFlags, cellFlags.length);
+    if (cellSignature !== this.lastCellSignature) {
+      this.lastCellSignature = cellSignature;
+      this.cellEpoch++;
+    }
+    const policySignature = hashNumbers(
+      [
+        options.camera[0],
+        options.camera[1],
+        options.camera[2],
+        options.maxDistance ?? 0,
+        options.outsideWorldVisible === false ? 0 : 1,
+        options.activePhaseMask ?? 0xffffffff,
+      ],
+      6
+    );
+    if (policySignature !== this.lastPolicySignature) {
+      this.lastPolicySignature = policySignature;
+      this.policyEpoch++;
+    }
+  }
 }
 
 function maskPasses(mask: ArrayLike<number> | undefined, cell: number): boolean {
   return mask === undefined || (cell < mask.length && Number(mask[cell]) !== 0);
+}
+
+function hashNumbers(values: ArrayLike<number>, count: number): number {
+  let hash = 2166136261;
+  const limit = Math.min(values.length, count);
+  const scratch = new DataView(new ArrayBuffer(4));
+  for (let index = 0; index < limit; index++) {
+    scratch.setFloat32(0, Number(values[index] ?? 0), true);
+    const bits = scratch.getUint32(0, true);
+    hash ^= bits;
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
 }

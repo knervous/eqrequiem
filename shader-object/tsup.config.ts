@@ -382,6 +382,8 @@ export default defineConfig({
     'core/index': 'src/core/index.ts',
     'lite/index': 'src/lite/index.ts',
     'renderer/index': 'src/renderer/index.ts',
+    'render-data/index': 'src/render-data/index.ts',
+    'storage/index': 'src/storage/index.ts',
     'showcase/index': 'src/showcase/index.ts',
     'asc/index': 'src/asc/index.ts',
     'msdf/index': 'src/msdf/index.ts',

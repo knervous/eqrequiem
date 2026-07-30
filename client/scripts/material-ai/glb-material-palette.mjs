@@ -4,8 +4,7 @@ const GLB_MAGIC = 0x46546c67;
 const JSON_CHUNK = 0x4e4f534a;
 const BIN_CHUNK = 0x004e4942;
 
-const sha256 = (bytes) =>
-  createHash("sha256").update(bytes).digest("hex");
+const sha256 = (bytes) => createHash("sha256").update(bytes).digest("hex");
 
 function ensure(condition, message) {
   if (!condition) throw new Error(message);
@@ -104,18 +103,20 @@ export function baseColorBindings(document) {
     const imageIndex = textureImageIndex(texture);
     const image = json.images?.[imageIndex];
     const sampler = json.samplers?.[texture.sampler];
-    return [{
-      materialIndex,
-      materialName: material.name ?? `material-${materialIndex}`,
-      textureIndex: baseColor.index,
-      textureName: texture.name ?? `texture-${baseColor.index}`,
-      imageIndex,
-      imageName: image?.name ?? `image-${imageIndex}`,
-      texCoord: baseColor.texCoord ?? 0,
-      wrapS: sampler?.wrapS ?? 10497,
-      wrapT: sampler?.wrapT ?? 10497,
-      alphaMode: material.alphaMode ?? "OPAQUE",
-    }];
+    return [
+      {
+        materialIndex,
+        materialName: material.name ?? `material-${materialIndex}`,
+        textureIndex: baseColor.index,
+        textureName: texture.name ?? `texture-${baseColor.index}`,
+        imageIndex,
+        imageName: image?.name ?? `image-${imageIndex}`,
+        texCoord: baseColor.texCoord ?? 0,
+        wrapS: sampler?.wrapS ?? 10497,
+        wrapT: sampler?.wrapT ?? 10497,
+        alphaMode: material.alphaMode ?? "OPAQUE",
+      },
+    ];
   });
 }
 
@@ -129,11 +130,110 @@ function accessorBytes(document, accessorIndex) {
   return document.binary.subarray(start, start + view.byteLength);
 }
 
+const ACCESSOR_COMPONENTS = {
+  SCALAR: 1,
+  VEC2: 2,
+  VEC3: 3,
+  VEC4: 4,
+  MAT2: 4,
+  MAT3: 9,
+  MAT4: 16,
+};
+
+const COMPONENT_BYTES = {
+  5120: 1,
+  5121: 1,
+  5122: 2,
+  5123: 2,
+  5125: 4,
+  5126: 4,
+};
+
+function readComponent(view, offset, componentType) {
+  if (componentType === 5120) return view.getInt8(offset);
+  if (componentType === 5121) return view.getUint8(offset);
+  if (componentType === 5122) return view.getInt16(offset, true);
+  if (componentType === 5123) return view.getUint16(offset, true);
+  if (componentType === 5125) return view.getUint32(offset, true);
+  if (componentType === 5126) return view.getFloat32(offset, true);
+  throw new Error(`Unsupported glTF accessor component type ${componentType}`);
+}
+
+function normalizeComponent(value, componentType) {
+  if (componentType === 5120) return Math.max(value / 127, -1);
+  if (componentType === 5121) return value / 255;
+  if (componentType === 5122) return Math.max(value / 32767, -1);
+  if (componentType === 5123) return value / 65535;
+  if (componentType === 5125) return value / 4294967295;
+  return value;
+}
+
+/**
+ * Decode an accessor without disturbing the source GLB. This deliberately
+ * returns plain arrays because material audits favor clarity over hot-path
+ * allocation behavior.
+ */
+export function accessorValues(document, accessorIndex) {
+  const accessor = document.json.accessors?.[accessorIndex];
+  ensure(accessor, `GLB has no accessor at index ${accessorIndex}`);
+  ensure(
+    accessor.sparse === undefined,
+    `Sparse accessor ${accessorIndex} is not supported by the material audit`,
+  );
+  const componentCount = ACCESSOR_COMPONENTS[accessor.type];
+  const componentBytes = COMPONENT_BYTES[accessor.componentType];
+  ensure(componentCount, `Accessor ${accessorIndex} has invalid type`);
+  ensure(componentBytes, `Accessor ${accessorIndex} has invalid component type`);
+  if (accessor.bufferView === undefined) {
+    return Array.from({ length: accessor.count }, () =>
+      Array(componentCount).fill(0),
+    );
+  }
+  const bufferView = document.json.bufferViews?.[accessor.bufferView];
+  ensure(bufferView, `Accessor ${accessorIndex} has no buffer view`);
+  ensure(
+    (bufferView.buffer ?? 0) === 0,
+    `Accessor ${accessorIndex} is not in buffer 0`,
+  );
+  const packedStride = componentCount * componentBytes;
+  const stride = bufferView.byteStride ?? packedStride;
+  ensure(
+    stride >= packedStride,
+    `Accessor ${accessorIndex} has an invalid byte stride`,
+  );
+  const start = (bufferView.byteOffset ?? 0) + (accessor.byteOffset ?? 0);
+  const required =
+    start + Math.max(0, accessor.count - 1) * stride + packedStride;
+  ensure(
+    required <= document.binary.byteLength,
+    `Accessor ${accessorIndex} exceeds the GLB binary chunk`,
+  );
+  const view = new DataView(
+    document.binary.buffer,
+    document.binary.byteOffset,
+    document.binary.byteLength,
+  );
+  return Array.from({ length: accessor.count }, (_, elementIndex) =>
+    Array.from({ length: componentCount }, (__, componentIndex) => {
+      const value = readComponent(
+        view,
+        start + elementIndex * stride + componentIndex * componentBytes,
+        accessor.componentType,
+      );
+      return accessor.normalized
+        ? normalizeComponent(value, accessor.componentType)
+        : value;
+    }),
+  );
+}
+
 export function geometrySignature(document) {
   const primitives = [];
   const accessors = new Set();
   for (const [meshIndex, mesh] of (document.json.meshes ?? []).entries()) {
-    for (const [primitiveIndex, primitive] of (mesh.primitives ?? []).entries()) {
+    for (const [primitiveIndex, primitive] of (
+      mesh.primitives ?? []
+    ).entries()) {
       const attributes = Object.fromEntries(
         Object.entries(primitive.attributes ?? {}).sort(([a], [b]) =>
           a.localeCompare(b),
@@ -151,11 +251,13 @@ export function geometrySignature(document) {
       });
     }
   }
-  const accessorRecords = [...accessors].sort((a, b) => a - b).map((index) => ({
-    index,
-    descriptor: document.json.accessors[index],
-    bytes: sha256(accessorBytes(document, index)),
-  }));
+  const accessorRecords = [...accessors]
+    .sort((a, b) => a - b)
+    .map((index) => ({
+      index,
+      descriptor: document.json.accessors[index],
+      bytes: sha256(accessorBytes(document, index)),
+    }));
   return sha256(Buffer.from(JSON.stringify({ primitives, accessorRecords })));
 }
 
@@ -163,16 +265,20 @@ export function uvSignature(document) {
   const uvAccessors = new Set();
   for (const mesh of document.json.meshes ?? []) {
     for (const primitive of mesh.primitives ?? []) {
-      for (const [semantic, index] of Object.entries(primitive.attributes ?? {})) {
+      for (const [semantic, index] of Object.entries(
+        primitive.attributes ?? {},
+      )) {
         if (semantic.startsWith("TEXCOORD_")) uvAccessors.add(index);
       }
     }
   }
-  const records = [...uvAccessors].sort((a, b) => a - b).map((index) => ({
-    index,
-    descriptor: document.json.accessors[index],
-    bytes: sha256(accessorBytes(document, index)),
-  }));
+  const records = [...uvAccessors]
+    .sort((a, b) => a - b)
+    .map((index) => ({
+      index,
+      descriptor: document.json.accessors[index],
+      bytes: sha256(accessorBytes(document, index)),
+    }));
   return sha256(Buffer.from(JSON.stringify(records)));
 }
 
@@ -182,7 +288,10 @@ export function appendImageOverrides(document, overrides) {
   let byteLength = document.binary.byteLength;
   for (const override of overrides) {
     const indices = imageIndicesNamed(document, override.imageName);
-    ensure(indices.length, `No embedded image is named '${override.imageName}'`);
+    ensure(
+      indices.length,
+      `No embedded image is named '${override.imageName}'`,
+    );
     const padding = paddedLength(byteLength) - byteLength;
     if (padding) {
       chunks.push(Buffer.alloc(padding));
@@ -206,6 +315,72 @@ export function appendImageOverrides(document, overrides) {
   const binary = Buffer.concat(chunks);
   json.buffers[0].byteLength = binary.byteLength;
   return { json, binary };
+}
+
+export function appendVertexColorOverrides(document, colorsByMesh) {
+  const json = structuredClone(document.json);
+  const chunks = [Buffer.from(document.binary)];
+  let byteLength = document.binary.byteLength;
+  let applied = 0;
+  for (const mesh of json.meshes ?? []) {
+    const colors = colorsByMesh.get(mesh.name);
+    if (!colors) continue;
+    ensure(
+      mesh.primitives?.length === 1,
+      `Baked vertex lighting requires one primitive for mesh '${mesh.name}'`,
+    );
+    const primitive = mesh.primitives[0];
+    const positionAccessor = json.accessors?.[primitive.attributes?.POSITION];
+    ensure(positionAccessor, `Mesh '${mesh.name}' has no position accessor`);
+    ensure(
+      colors.length === positionAccessor.count * 4,
+      `Mesh '${mesh.name}' requires ${positionAccessor.count * 4} color values, ` +
+        `got ${colors.length}`,
+    );
+    const padding = paddedLength(byteLength) - byteLength;
+    if (padding) {
+      chunks.push(Buffer.alloc(padding));
+      byteLength += padding;
+    }
+    const payload = Buffer.alloc(colors.length * 4);
+    for (let index = 0; index < colors.length; index++) {
+      payload.writeFloatLE(colors[index], index * 4);
+    }
+    const bufferView = json.bufferViews.length;
+    json.bufferViews.push({
+      buffer: 0,
+      byteOffset: byteLength,
+      byteLength: payload.byteLength,
+      name: `baked-lighting:${mesh.name}`,
+      target: 34962,
+    });
+    chunks.push(payload);
+    byteLength += payload.byteLength;
+    const accessor = json.accessors.length;
+    json.accessors.push({
+      bufferView,
+      byteOffset: 0,
+      componentType: 5126,
+      count: positionAccessor.count,
+      type: "VEC4",
+      min: [0, 0, 0, 1],
+      max: [1, 1, 1, 1],
+      name: `baked-lighting:${mesh.name}`,
+    });
+    primitive.attributes.COLOR_0 = accessor;
+    applied++;
+  }
+  const binary = Buffer.concat(chunks);
+  json.buffers[0].byteLength = binary.byteLength;
+  json.asset.extras = {
+    ...json.asset.extras,
+    eltaniaBakedLighting: {
+      mode: "vertex-rgb-static",
+      version: 1,
+      dynamicWorldLights: false,
+    },
+  };
+  return { json, binary, applied };
 }
 
 export function appendMaterialChannels(document, channels) {
@@ -239,7 +414,10 @@ export function appendMaterialChannels(document, channels) {
       (binding) =>
         binding.imageName.toLowerCase() === channel.imageName.toLowerCase(),
     );
-    ensure(bindings.length, `No material uses '${channel.imageName}' as base color`);
+    ensure(
+      bindings.length,
+      `No material uses '${channel.imageName}' as base color`,
+    );
     const baseTexture = json.textures[bindings[0].textureIndex];
     const sampler = baseTexture?.sampler;
 
@@ -287,6 +465,13 @@ export function appendMaterialChannels(document, channels) {
           index: metallicRoughnessTexture,
           texCoord: binding.texCoord,
         };
+      }
+      if (channel.roughness !== undefined) {
+        material.pbrMetallicRoughness ??= {};
+        material.pbrMetallicRoughness.metallicFactor = 0;
+        material.pbrMetallicRoughness.roughnessFactor = channel.roughness;
+        delete material.pbrMetallicRoughness.metallicRoughnessTexture;
+        delete material.normalTexture;
       }
     }
   }

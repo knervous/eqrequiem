@@ -299,6 +299,7 @@ export default class DayNightSkyManager {
     name: string,
     noWorldEnv: boolean = false,
     zoneName: string = "",
+    bakedWorldLighting: boolean = false,
   ): Promise<void> {
     this.dispose();
     this.#scene = this.parent.GameManager.scene!;
@@ -409,13 +410,15 @@ export default class DayNightSkyManager {
       this.#worldEnv.intensity = 0.1;
     }
 
-    this.#sun = new BABYLON.DirectionalLight(
-      "sun",
-      BABYLON.Vector3.Down(),
-      this.#scene,
-    );
-    this.#sun.shadowMinZ = 0;
-    this.#sun.shadowMaxZ = 10000;
+    if (!bakedWorldLighting) {
+      this.#sun = new BABYLON.DirectionalLight(
+        "sun",
+        BABYLON.Vector3.Down(),
+        this.#scene,
+      );
+      this.#sun.shadowMinZ = 0;
+      this.#sun.shadowMaxZ = 10000;
+    }
     this.#updateAppearance();
   }
 
@@ -717,7 +720,7 @@ export default class DayNightSkyManager {
   }
 
   #updateAppearance(): void {
-    if (!this.#manifest || !this.#scene || !this.#sun) return;
+    if (!this.#manifest || !this.#scene) return;
     const biome = this.#resolvedBiome();
     const baseState = this.#blendedState();
     const state = this.#biomeAdjustedState(baseState, biome);
@@ -763,15 +766,17 @@ export default class DayNightSkyManager {
       biome.saturation,
       biome.exposure,
     );
-    this.#sun.diffuse = sunColor;
-    this.#sun.intensity =
-      state.sunIntensity * Math.max(0.06, Math.max(0, sunDirection.y));
-    this.#sun.direction.copyFrom(sunDirection).scaleInPlace(-1);
-    this.#sun.position.copyFrom(
-      this.#domeRoot!.position.add(
-        sunDirection.scale(this.#manifest.sun.lightDistance),
-      ),
-    );
+    if (this.#sun) {
+      this.#sun.diffuse = sunColor;
+      this.#sun.intensity =
+        state.sunIntensity * Math.max(0.06, Math.max(0, sunDirection.y));
+      this.#sun.direction.copyFrom(sunDirection).scaleInPlace(-1);
+      this.#sun.position.copyFrom(
+        this.#domeRoot!.position.add(
+          sunDirection.scale(this.#manifest.sun.lightDistance),
+        ),
+      );
+    }
     this.#sunMaterial?.emissiveColor.copyFrom(sunColor);
     for (const material of this.#materials.values()) {
       setRequiemAtmosphereState(material, {

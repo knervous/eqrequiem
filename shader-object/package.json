@@ -1,6 +1,6 @@
 {
   "name": "@knervous/shado",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Packed GPU struct schemas + Babylon include emitters with optional AssemblyScript kernels",
   "license": "MIT",
   "author": "knervous",
@@ -23,6 +23,8 @@
     "!**/.DS_Store",
     "README.md",
     "BABYLON_RENDERER_STRATEGY.md",
+    "SHADO_RENDER_DATA_SCALING.md",
+    "OPFS_DEFERRED_STORAGE_SLABS.md",
     "RELEASE_NOTES.md",
     "LICENSE"
   ],
@@ -62,6 +64,20 @@
       "import": "./dist/renderer/index.js",
       "require": "./dist/renderer/index.cjs",
       "default": "./dist/renderer/index.js"
+    },
+    "./render-data": {
+      "source": "./src/render-data/index.ts",
+      "types": "./dist/render-data/index.d.ts",
+      "import": "./dist/render-data/index.js",
+      "require": "./dist/render-data/index.cjs",
+      "default": "./dist/render-data/index.js"
+    },
+    "./storage": {
+      "source": "./src/storage/index.ts",
+      "types": "./dist/storage/index.d.ts",
+      "import": "./dist/storage/index.js",
+      "require": "./dist/storage/index.cjs",
+      "default": "./dist/storage/index.js"
     },
     "./showcase": {
       "source": "./src/showcase/index.ts",
@@ -187,15 +203,24 @@
     "build:showcase-culling": "npm run build && node scripts/build-showcase-culling-wasm.mjs",
     "build:world-reducer": "node dist/cli.js asc build --config world/shado.config.mjs",
     "benchmark:vat-kernel": "npm run build:vat-kernel && node scripts/benchmark-vat-kernel.mjs",
+    "benchmark:actor-projection": "npm run build && node bench/actor-projection-bench.mjs",
+    "benchmark:instance-addition": "npm run build && node bench/instance-addition-bench.mjs",
+    "benchmark:webgpu-upload": "node bench/webgpu-upload-bench.mjs",
+    "benchmark:webgpu-scatter": "npm run build && node bench/webgpu-scatter-pipeline-bench.mjs",
+    "benchmark:lite-scatter": "npm run build && node bench/webgpu-lite-scatter-bench.mjs",
+    "benchmark:million-integration": "node bench/million-actor-integration-bench.mjs",
+    "benchmark:opfs-slabs": "npm run build && node bench/opfs-deferred-slab-bench.mjs",
+    "benchmark:five-million-opfs": "node bench/five-million-opfs-integration-bench.mjs",
     "postbuild": "chmod +x dist/cli.js",
     "dev": "cross-env DEV=true tsup --watch",
-    "prepublishOnly": "npm run build",
+    "prepublishOnly": "npm run release:check",
     "asbuild:debug": "asb --target debug",
     "asbuild:release": "asb --target release",
     "asbuild": "npm run asbuild:debug && npm run asbuild:release",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "test:browser": "npm run build && playwright test",
     "pack:check": "npm pack --dry-run --ignore-scripts",
+    "release:check": "npm run typecheck && npm test -- --runInBand && npm run build && npm run pack:check",
     "test:dq": "node --experimental-vm-modules node_modules/jest/bin/jest.js dq-transform",
     "test:barbarian": "node --experimental-vm-modules node_modules/jest/bin/jest.js barbarian-integration",
     "test:dq-shader": "node --experimental-vm-modules node_modules/jest/bin/jest.js barbarian-dq-shader",

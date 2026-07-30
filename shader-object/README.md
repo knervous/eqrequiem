@@ -54,9 +54,11 @@ or for a deliberately GLSL-authored compatibility material.
 
 ## Babylon Lite
 
-The native Lite path uses only public storage, shader-material, scene callback,
-and thin-instance APIs. It does not replace mesh functions or call private draw
-methods.
+The default native Lite path uses public storage, shader-material, scene
+callback, and thin-instance APIs. It does not replace mesh functions or call
+private draw methods. Projected compute scatter uses one isolated,
+feature-detected compatibility bridge because Lite currently keeps its generic
+WebGPU device and storage handles opaque.
 
 ```ts
 import {
@@ -76,10 +78,80 @@ actors.addInstances(1_000);
 createShadoLiteMaterial(engine, scene, mesh, actors);
 ```
 
+The lossless legacy arena is the default. Opt in to the first packed
+transform/appearance projection when the actor batch has stable world bounds:
+
+```ts
+const projected = createShadoLiteMaterial(engine, scene, mesh, actors, {
+  projection: {
+    encoding: 'packed',
+    domain: {
+      origin: [-64, -64, -64],
+      extent: [128, 128, 128],
+      scaleRange: [0, 8],
+    },
+  },
+});
+```
+
+Packed positions and scale clamp to this domain, so re-home actors before they
+leave it. Use `encoding: 'split-f32'` as the exact-value component-stream
+control. Projection mode enables adaptive struct-span compute scatter by
+default. It shares the full-Babylon delta ABI and falls back to one complete
+affected-stream write if Lite's runtime handles are unavailable. Set
+`computeScatter: false` to force that fallback.
+
+Enable `computeScatterGPUTiming` to collect timestamp-query results, then
+inspect actual publication work and timing:
+
+```ts
+projected.getLastProjectionPublication();
+projected.getLastProjectionGPUTiming();
+```
+
 Assign the material before adding `mesh` to a Lite scene. Use
 `@knervous/shado/renderer` to select Lite or full Babylon.js before importing
 renderer-specific features. See [BABYLON_RENDERER_STRATEGY.md](./BABYLON_RENDERER_STRATEGY.md)
 for the application loading contract.
+
+For implementation status, upload benchmarks, and the WebGPU-first ECS/SoA
+roadmap, see
+[SHADO_RENDER_DATA_SCALING.md](./SHADO_RENDER_DATA_SCALING.md).
+For actor populations larger than the active renderer/simulation working set,
+see the bounded
+[OPFS deferred storage slab proof](./OPFS_DEFERRED_STORAGE_SLABS.md).
+
+## Full Babylon compute scatter
+
+Full Babylon exposes public compute and storage-buffer APIs, so random sparse
+projection updates can be scattered on the GPU:
+
+```ts
+import { BabylonActorProjectionPipeline } from '@knervous/shado/babylon';
+
+const projection = new BabylonActorProjectionPipeline(engine, {
+  encoding: 'packed',
+  domain: {
+    origin: [-64, -64, -64],
+    extent: [128, 128, 128],
+    scaleRange: [0, 8],
+  },
+});
+
+projection.bind(material);
+await projection.publishWhenReady(actors.children, {
+  dirtyFlags: actors.getStructDirtyFlags('instances'),
+});
+actors.clearStructDirtyFlags('instances');
+```
+
+`publishWhenReady()` compiles/warm-ups whole-row and encoded-field-span kernels
+and is suitable for loading or asynchronous update code. The planner scatters
+only packed position/scale or rotation words when that costs less than a full
+transform row. Use synchronous `publish()` in frame code after warm-up. If a
+kernel is unexpectedly unavailable, it safely falls back to one full
+affected-stream write. Enable Babylon's GPU timing measurements to read the
+last per-stream scatter duration from `getLastGPUTiming()`.
 
 ## Published controls
 
@@ -187,6 +259,7 @@ then transfers packing work to a worker:
 ```ts
 await actors.attachMeshes(scene, meshes, skeleton, {
   vat: 'bake',
+  vatQuality: 'full', // medium, low, or rigid can back separate LOD draw bins
   vatOptions: {
     execution: 'worker',
     yieldEveryFrames: 6,
@@ -196,6 +269,10 @@ await actors.attachMeshes(scene, meshes, skeleton, {
   },
 });
 ```
+
+`full` blends weighted bone influences across two frames. `medium` keeps the
+weighted blend but samples one frame, `low` samples one dominant bone at one
+frame, and `rigid` skips VAT generation and renders the rest mesh.
 
 Use `detectScale: true` (the default) for unknown content. Disable it only when
 the source rig is known to contain rigid bone transforms.
@@ -244,6 +321,9 @@ search-and-replace.
 - `@knervous/shado/core` — renderer-neutral schemas, arenas, and packed runtime.
 - `@knervous/shado/lite` — native Babylon Lite storage and instanced rendering.
 - `@knervous/shado/renderer` — typed renderer and feature gates.
+- `@knervous/shado/render-data` — projected actor codecs, upload plans, and
+  compute-scatter WGSL.
+- `@knervous/shado/storage` — bounded deferred-storage slabs backed by OPFS.
 - `@knervous/shado/asc` — optional AssemblyScript compilation helpers.
 - `@knervous/shado/msdf` — MSDF shader registration and nameplate helpers.
 - `@knervous/shado/render` — lean dynamic-entity containers, renderers, atlases,
@@ -273,7 +353,8 @@ npm run build
 npm run dev
 ```
 
-See [RELEASE_NOTES.md](./RELEASE_NOTES.md) for the 1.0 release and upgrade notes.
+See [RELEASE_NOTES.md](./RELEASE_NOTES.md) for release history and upgrade
+notes.
 
 ## License
 

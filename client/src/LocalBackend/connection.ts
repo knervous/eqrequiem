@@ -6,8 +6,22 @@ export interface LocalBackendInfo {
   contentVersion: string;
 }
 
-let activeConnection: LocalBackendConnection | null = null;
-let closeGate: Promise<void> = Promise.resolve();
+interface LocalBackendLifecycleState {
+  activeConnection: LocalBackendConnection | null;
+  closeGate: Promise<void>;
+}
+
+// Symbol.for() keeps this lease shared across Vite HMR module revisions. Module-local
+// state allowed an old and a newly evaluated connection module to open the same
+// OPFS SAH pool concurrently.
+const lifecycleKey = Symbol.for("eltania.local-backend.lifecycle");
+const lifecycleHost = globalThis as typeof globalThis & {
+  [lifecycleKey]?: LocalBackendLifecycleState;
+};
+const lifecycle = (lifecycleHost[lifecycleKey] ??= {
+  activeConnection: null,
+  closeGate: Promise.resolve(),
+});
 
 export class LocalBackendConnection {
   private worker: Worker | null = null;
@@ -15,22 +29,23 @@ export class LocalBackendConnection {
   private rejectConnect: ((error: Error) => void) | null = null;
   private lifecycleGeneration = 0;
   private packetHandler:
-    | ((opcode: number, payload: Uint8Array) => void)
-    | null = null;
+    ((opcode: number, payload: Uint8Array) => void) | null = null;
 
-  async connect(options: { refreshContent?: boolean } = {}): Promise<LocalBackendInfo> {
+  async connect(
+    options: { refreshContent?: boolean } = {},
+  ): Promise<LocalBackendInfo> {
     if (this.worker) throw new Error("Local backend is already connected");
     const generation = ++this.lifecycleGeneration;
-    await closeGate;
+    await lifecycle.closeGate;
     if (generation !== this.lifecycleGeneration) {
       throw new Error("Local backend connection was closed during startup");
     }
-    if (activeConnection && activeConnection !== this) {
+    if (lifecycle.activeConnection && lifecycle.activeConnection !== this) {
       throw new Error(
         "Local backend storage is already in use by another connection",
       );
     }
-    activeConnection = this;
+    lifecycle.activeConnection = this;
 
     let worker: Worker;
     try {
@@ -39,7 +54,9 @@ export class LocalBackendConnection {
         { type: "module" },
       );
     } catch (error) {
-      if (activeConnection === this) activeConnection = null;
+      if (lifecycle.activeConnection === this) {
+        lifecycle.activeConnection = null;
+      }
       throw error;
     }
     this.worker = worker;
@@ -121,7 +138,9 @@ export class LocalBackendConnection {
     this.worker = null;
     this.packetHandler = null;
     if (!worker) {
-      if (activeConnection === this) activeConnection = null;
+      if (lifecycle.activeConnection === this) {
+        lifecycle.activeConnection = null;
+      }
       return Promise.resolve();
     }
 
@@ -134,14 +153,19 @@ export class LocalBackendConnection {
         worker.removeEventListener("message", onClosed);
         worker.removeEventListener("error", finish);
         worker.terminate();
-        if (activeConnection === this) activeConnection = null;
+        if (lifecycle.activeConnection === this) {
+          lifecycle.activeConnection = null;
+        }
         this.closePromise = null;
         resolve();
       };
       const onClosed = (event: MessageEvent<LocalBackendMessage>) => {
         if (event.data.type === "closed") finish();
       };
-      const timeout = setTimeout(finish, 1_000);
+      // Backend shutdown may encode and persist active zone snapshots before
+      // SQLite can close. Keep a bounded escape hatch, but do not routinely
+      // terminate the Worker in the middle of that write.
+      const timeout = setTimeout(finish, 15_000);
       worker.addEventListener("message", onClosed);
       worker.addEventListener("error", finish, { once: true });
       try {
@@ -150,7 +174,7 @@ export class LocalBackendConnection {
         finish();
       }
     });
-    closeGate = this.closePromise;
+    lifecycle.closeGate = this.closePromise;
     const rejectConnect = this.rejectConnect;
     this.rejectConnect = null;
     rejectConnect?.(new Error("Local backend connection was closed"));

@@ -36,6 +36,27 @@ describe('ShadoInstanceSoA', () => {
     expect(soa.dirtyFlags.reduce((sum, value) => sum + value, 0)).toBe(1);
   });
 
+  it('tracks dirty membership and bounds without a million-actor clean-frame scan', () => {
+    const soa = new ShadoInstanceSoA();
+    soa.ensureCapacity(1_000_000);
+
+    expect(soa.hasDirtyActors).toBe(true);
+    expect(soa.dirtyActorBounds).toEqual({ start: 0, end: 1_000_000 });
+
+    soa.clearDirty();
+    expect(soa.hasDirtyActors).toBe(false);
+    expect(soa.dirtyActorBounds).toBeUndefined();
+
+    soa.setDirty(17);
+    soa.setDirty(999_999);
+    expect(soa.dirtyActorBounds).toEqual({ start: 17, end: 1_000_000 });
+
+    soa.clearDirty();
+    expect(soa.dirtyFlags[17]).toBe(0);
+    expect(soa.dirtyFlags[999_999]).toBe(0);
+    expect(soa.dirtyActorBounds).toBeUndefined();
+  });
+
   it('versions direct visibility changes for a separate GPU upload pass', () => {
     const soa = new ShadoInstanceSoA();
     soa.ensureCapacity(2);
@@ -114,5 +135,48 @@ describe('ShadoInstanceSoA', () => {
     expect(soa.visibleActorIndices[0]).toBe(49_999);
     expect(soa.visibilityFlags[49_999]).toBe(1);
     expect(soa.frustumPlanes.buffer).toBe(memory.buffer);
+  });
+
+  it('refreshes a reserved sidecar after its owner grows shared WASM memory', () => {
+    const memory = new WebAssembly.Memory({ initial: 1 });
+    let cursor = 64;
+    const allocator = {
+      memory,
+      alloc(bytes: number) {
+        const ptr = cursor;
+        cursor = (cursor + bytes + 7) & ~7;
+        const missing = cursor - memory.buffer.byteLength;
+        if (missing > 0) memory.grow(Math.ceil(missing / 65_536));
+        return ptr;
+      },
+    };
+    const firstPool = new ShadoInstanceSoA();
+    firstPool.attachWasm(allocator);
+    firstPool.reserve(32_768);
+    firstPool.ensureCapacity(128);
+    firstPool.clearDirty();
+
+    // Simulate the host actor arena allocating from the same memory after the
+    // sidecar was reserved. Exercise each mutator's own detached-view guard,
+    // including ensureCapacity's no-allocation fast path.
+    memory.grow(1);
+    expect(() => firstPool.ensureCapacity(256)).not.toThrow();
+    expect(firstPool.dirtyFlags[255]).toBe(1);
+
+    memory.grow(1);
+    expect(() => firstPool.applyVisibilityPass(Uint32Array.from([7, 255]))).not.toThrow();
+    expect(Array.from(firstPool.visibleActorIndices)).toEqual([7, 255]);
+
+    memory.grow(1);
+    expect(() => firstPool.clearDirty()).not.toThrow();
+    expect(firstPool.dirtyFlags[255]).toBe(0);
+
+    memory.grow(1);
+    expect(() => firstPool.setDirty(7)).not.toThrow();
+    expect(firstPool.dirtyFlags[7]).toBe(1);
+
+    memory.grow(1);
+    expect(() => firstPool.removeSwap(7)).not.toThrow();
+    expect(firstPool.count).toBe(255);
   });
 });

@@ -127,6 +127,8 @@ export type MSDFTextShaderOptions = {
   nameplateStructName?: string;
   useActorBillboardFlag?: boolean;
   useVisibilityTexture?: boolean;
+  /** Read the durable actor visibility field when no sidecar texture is used. */
+  useActorVisibility?: boolean;
 };
 
 function normalizeOptions(
@@ -143,6 +145,8 @@ function normalizeOptions(
     nameplateStructName: options.nameplateStructName ?? 'NameplateData',
     useActorBillboardFlag: options.useActorBillboardFlag ?? false,
     useVisibilityTexture: options.useVisibilityTexture ?? true,
+    useActorVisibility:
+      options.useActorVisibility ?? !(options.useVisibilityTexture ?? true),
   };
 }
 
@@ -162,7 +166,9 @@ function applySchemaNames(source: string, options: Required<MSDFTextShaderOption
     ivec2(owner % uShadoVisibleIndexTexWidth, owner / uShadoVisibleIndexTexWidth),
     0
   ).r > 0.5 ? 1 : 0;`
-        : 'int ownerVisible = ShadoInstanceContainer_fetch(ownerBase + ShadoActor_visibleFlag_OFF) > 0.5 ? 1 : 0;'
+        : options.useActorVisibility
+          ? 'int ownerVisible = ShadoInstanceContainer_fetch(ownerBase + ShadoActor_visibleFlag_OFF) > 0.5 ? 1 : 0;'
+          : 'int ownerVisible = 1;'
     )
     .replaceAll(
       '/*SHADO_MSDF_VISIBILITY_DECL_WGSL*/',
@@ -181,7 +187,9 @@ function applySchemaNames(source: string, options: Required<MSDFTextShaderOption
       0
     ).r > 0.5
   );`
-        : 'let ownerVisible = select(0, 1, ShadoInstanceContainer_fetchI32(ownerBase + ShadoActor_visibleFlag_OFF) != 0);'
+        : options.useActorVisibility
+          ? 'let ownerVisible = select(0, 1, ShadoInstanceContainer_fetchI32(ownerBase + ShadoActor_visibleFlag_OFF) != 0);'
+          : 'let ownerVisible = 1;'
     )
     .replaceAll(
       '/*SHADO_MSDF_BILLBOARD_FLAG_GLSL*/',
@@ -518,10 +526,15 @@ export function createMSDFNameplateLayer(
   const actorStructName = actorSchema?.name ?? 'ShadoActor';
   const useActorBillboardFlag =
     actorSchema?.fields?.some(field => field.name === 'billboardFlag') ?? false;
-  const useVisibilityTexture = options.visibilitySource !== 'actor';
+  const useCompactedVisibility = nameplates.visibilityCompacted;
+  const useVisibilityTexture = options.visibilitySource !== 'actor' && !useCompactedVisibility;
+  const useActorVisibility = options.visibilitySource === 'actor';
   const useStorageWGSL =
     engine.isWebGPU && (actors.constructor as any).backingPreference === 'storage';
-  if (!useVisibilityTexture && !actorSchema?.fields?.some(field => field.name === 'visibleFlag')) {
+  if (
+    useActorVisibility &&
+    !actorSchema?.fields?.some(field => field.name === 'visibleFlag')
+  ) {
     throw new Error(
       `MSDF actor visibility requires ${actorSchema?.name ?? 'actor schema'}.visibleFlag`
     );
@@ -536,6 +549,7 @@ export function createMSDFNameplateLayer(
     nameplateStructName,
     useActorBillboardFlag,
     useVisibilityTexture,
+    useActorVisibility,
   });
   const actorShaderIO = getShaderIO(actors, engine);
   const nameplateShaderIO = getShaderIO(nameplates, engine);
@@ -690,32 +704,32 @@ export function createMSDFNameplateLayer(
     });
   };
 
-  let allocatedGlyphInstances = -1;
+  let allocatedGlyphCapacity = 0;
   const updateInstanceCount = () => {
     const glyphCount = nameplates.glyphCount();
     if (glyphCount <= 0) {
-      if (allocatedGlyphInstances !== 0) {
-        mesh.thinInstanceSetBuffer('matrix', null);
-        allocatedGlyphInstances = 0;
-      }
+      mesh.thinInstanceCount = 0;
       mesh.isVisible = false;
       logRenderState('no glyphs');
       return;
     }
 
-    if (allocatedGlyphInstances !== glyphCount) {
+    if (allocatedGlyphCapacity < glyphCount) {
       // Use Babylon's supported thin-instance path rather than overriding
       // Mesh.render(). forcedInstanceCount alone does not provide the world0-
       // world3 attributes that ShaderMaterial enables for thin instances on
       // WebGPU, leaving the nameplate draw without a valid vertex layout.
-      const matrices = new Float32Array(glyphCount * 16);
+      let capacity = Math.max(4, allocatedGlyphCapacity);
+      while (capacity < glyphCount) capacity *= 2;
+      const matrices = new Float32Array(capacity * 16);
       const identity = BABYLON.Matrix.IdentityReadOnly.m;
-      for (let instance = 0; instance < glyphCount; instance++) {
+      for (let instance = 0; instance < capacity; instance++) {
         matrices.set(identity, instance * 16);
       }
       mesh.thinInstanceSetBuffer('matrix', matrices, 16, true);
-      allocatedGlyphInstances = glyphCount;
+      allocatedGlyphCapacity = capacity;
     }
+    mesh.thinInstanceCount = glyphCount;
     actors.commit();
     nameplates.commit();
     actors.bindMaterial?.(material);

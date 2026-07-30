@@ -23,15 +23,52 @@ export type ShadoVatShowcaseUiDiagnostics = {
   };
 };
 
+export type ShadoVatShowcaseDeferredStorageSnapshot = {
+  supported: boolean;
+  enabled: boolean;
+  busy: boolean;
+  coldInstances: number;
+  logicalByteLength: number;
+  residentByteLength: number;
+  hotInstanceLimit: number;
+  progress?: number;
+  message?: string;
+  error?: string;
+};
+
+/**
+ * Optional sandbox capability for routing population overflow into cold slabs.
+ * Kept renderer-neutral so the full and Lite showcases use the same controls.
+ */
+export type ShadoVatShowcaseDeferredStorage = {
+  snapshot(): ShadoVatShowcaseDeferredStorageSnapshot;
+  setEnabled(enabled: boolean): Promise<void>;
+  addRandom(count: number): Promise<void>;
+  removeRandom(): Promise<void>;
+};
+
+export type ShadoVatShowcaseUiOptions = {
+  deferredStorage?: ShadoVatShowcaseDeferredStorage;
+};
+
 const CONTROL_CSS = [
-  'width:100%', 'box-sizing:border-box', 'padding:7px 9px',
-  'border:1px solid rgba(145,170,199,.3)', 'border-radius:7px',
-  'background:#111c2b', 'color:#f5e9c8', 'font:11px system-ui',
+  'width:100%',
+  'box-sizing:border-box',
+  'padding:7px 9px',
+  'border:1px solid rgba(145,170,199,.3)',
+  'border-radius:7px',
+  'background:#111c2b',
+  'color:#f5e9c8',
+  'font:11px system-ui',
 ].join(';');
 
 const BUTTON_CSS = [
-  'padding:7px 8px', 'border:1px solid rgba(214,173,92,.4)', 'border-radius:8px',
-  'background:rgba(214,173,92,.1)', 'color:#f5e9c8', 'cursor:pointer',
+  'padding:7px 8px',
+  'border:1px solid rgba(214,173,92,.4)',
+  'border-radius:8px',
+  'background:rgba(214,173,92,.1)',
+  'color:#f5e9c8',
+  'cursor:pointer',
   'font:650 11px system-ui',
 ].join(';');
 
@@ -39,28 +76,138 @@ const BUTTON_CSS = [
 export function createShadoVatShowcaseUi(
   canvas: HTMLCanvasElement,
   controller: EqShowcaseController,
-  diagnostics?: ShadoVatShowcaseUiDiagnostics
+  diagnostics?: ShadoVatShowcaseUiDiagnostics,
+  options: ShadoVatShowcaseUiOptions = {}
 ): ShadoVatShowcaseUiHandle {
   const parent = canvas.parentElement ?? document.body;
   if (getComputedStyle(parent).position === 'static') parent.style.position = 'relative';
 
   const root = document.createElement('aside');
   root.dataset.eqShowcase = 'controls';
+  root.dataset.mobileOpen = 'false';
+  root.dataset.mobilePanel = 'roster';
   root.style.cssText = [
-    'position:absolute', 'inset:12px 12px 12px auto', 'z-index:30', 'width:360px',
-    'max-width:calc(100vw - 24px)', 'height:calc(100vh - 24px)',
-    'display:grid', 'grid-template-rows:minmax(0,1fr) minmax(0,1fr)', 'gap:10px',
-    'color:#f5e9c8', 'font:12px/1.4 Inter,system-ui,sans-serif',
+    'position:absolute',
+    'inset:12px 12px 12px auto',
+    'z-index:30',
+    'width:360px',
+    'max-width:calc(100vw - 24px)',
+    'height:calc(100vh - 24px)',
+    'display:grid',
+    'grid-template-rows:minmax(0,1fr) minmax(0,1fr)',
+    'gap:10px',
+    'color:#f5e9c8',
+    'font:12px/1.4 Inter,system-ui,sans-serif',
   ].join(';');
 
+  const responsiveStyle = document.createElement('style');
+  responsiveStyle.dataset.role = 'shado-showcase-responsive-style';
+  responsiveStyle.textContent = `
+    [data-role="showcase-mobile-launcher"],
+    [data-role="showcase-mobile-bar"] { display: none; }
+    @media (max-width: 700px) {
+      [data-eq-showcase="controls"] {
+        inset: auto 8px 8px 8px !important;
+        width: auto !important;
+        max-width: none !important;
+        height: min(68dvh, 560px) !important;
+        grid-template-rows: auto minmax(0, 1fr) !important;
+        gap: 7px !important;
+        opacity: 0;
+        pointer-events: none;
+        transform: translateY(calc(100% + 18px));
+        transition: transform .2s ease, opacity .16s ease;
+      }
+      [data-eq-showcase="controls"][data-mobile-open="true"] {
+        opacity: 1;
+        pointer-events: auto;
+        transform: translateY(0);
+      }
+      [data-role="showcase-mobile-launcher"] {
+        display: block;
+        position: absolute;
+        right: 10px;
+        bottom: 10px;
+        z-index: 31;
+        min-width: 104px;
+        min-height: 44px;
+      }
+      [data-eq-showcase="controls"][data-mobile-open="true"] + [data-role="showcase-mobile-launcher"] {
+        display: none;
+      }
+      [data-role="showcase-mobile-bar"] {
+        display: grid;
+        grid-template-columns: 1fr 1fr auto;
+        gap: 6px;
+        padding: 6px;
+        border: 1px solid rgba(255,255,255,.16);
+        border-radius: 12px;
+        background: rgba(9,17,30,.97);
+        box-shadow: 0 12px 30px rgba(0,0,0,.35);
+      }
+      [data-role="showcase-mobile-bar"] button {
+        min-height: 38px;
+      }
+      [data-eq-showcase="controls"][data-mobile-panel="roster"] [data-role="selected-panel"],
+      [data-eq-showcase="controls"][data-mobile-panel="selected"] [data-role="roster-panel"] {
+        display: none;
+      }
+      [data-eq-showcase="controls"] section {
+        padding: 11px !important;
+        border-radius: 12px !important;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+      }
+      [data-eq-showcase="controls"] button,
+      [data-eq-showcase="controls"] input:not([type="range"]),
+      [data-eq-showcase="controls"] select {
+        min-height: 40px;
+        font-size: 13px !important;
+      }
+      [data-eq-showcase="controls"] input[type="text"],
+      [data-eq-showcase="controls"] input[type="number"],
+      [data-eq-showcase="controls"] select {
+        font-size: 16px !important;
+      }
+      [data-role="showcase-diagnostics"] {
+        left: 8px !important;
+        top: 50px !important;
+        min-width: 0 !important;
+        max-width: calc(100vw - 16px);
+        padding: 7px 9px !important;
+        font-size: 9px !important;
+      }
+    }
+    @media (max-width: 420px) {
+      [data-eq-showcase="controls"] {
+        height: min(72dvh, 600px) !important;
+      }
+      [data-eq-showcase="controls"] [data-role="buttons"] {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+      }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      [data-eq-showcase="controls"] { transition: none !important; }
+    }`;
+  parent.appendChild(responsiveStyle);
+
   const panelCss = [
-    'min-height:0', 'overflow:auto', 'padding:13px',
-    'border:1px solid rgba(255,255,255,.16)', 'border-radius:14px',
+    'min-height:0',
+    'overflow:auto',
+    'padding:13px',
+    'border:1px solid rgba(255,255,255,.16)',
+    'border-radius:14px',
     'background:linear-gradient(155deg,rgba(9,17,30,.96),rgba(25,34,48,.91))',
-    'box-shadow:0 18px 50px rgba(0,0,0,.35)', 'backdrop-filter:blur(14px)',
+    'box-shadow:0 18px 50px rgba(0,0,0,.35)',
+    'backdrop-filter:blur(14px)',
   ].join(';');
 
   root.innerHTML = `
+    <nav data-role="showcase-mobile-bar" aria-label="Showcase control panels">
+      <button type="button" data-mobile-panel-target="roster" aria-pressed="true" style="${BUTTON_CSS}">Crowd</button>
+      <button type="button" data-mobile-panel-target="selected" aria-pressed="false" style="${BUTTON_CSS}">Selected</button>
+      <button type="button" data-role="showcase-mobile-close" aria-label="Close controls" style="${BUTTON_CSS}">✕</button>
+    </nav>
     <section data-role="roster-panel" style="${panelCss}">
       <header style="display:flex;justify-content:space-between;align-items:start;gap:10px;margin-bottom:10px">
         <div>
@@ -82,9 +229,18 @@ export function createShadoVatShowcaseUi(
 
       <div data-role="buttons" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px"></div>
 
+      <div data-role="deferred-storage" style="display:none;margin-top:9px;padding:9px;border:1px solid rgba(125,211,252,.24);border-radius:10px;background:rgba(14,116,144,.08)">
+        <label style="display:flex;align-items:center;gap:8px;color:#d6e5f6;font:650 10px system-ui;cursor:pointer">
+          <input data-role="deferred-storage-toggle" type="checkbox" style="width:17px;height:17px;accent-color:#38bdf8">
+          <span>OPFS cold slab backing</span>
+        </label>
+        <div data-role="deferred-storage-detail" aria-live="polite" style="margin-top:5px;color:#8fa6bc;font:10px/1.4 ui-monospace,monospace"></div>
+        <button data-role="deferred-storage-add-5m" style="${BUTTON_CSS};display:none;width:100%;margin-top:7px;border-color:rgba(125,211,252,.42);background:rgba(14,165,233,.12)">Add 5,000,000 total-tier actors</button>
+      </div>
+
       <label style="display:grid;grid-template-columns:auto minmax(80px,1fr) 58px;align-items:center;gap:7px;margin-top:9px;color:#bdc9d8;font:600 10px system-ui">
         <span data-role="culling-label">WASM culling</span>
-        <input data-role="culling-range" type="range" min="0" max="1200" step="25" value="600" style="width:100%;accent-color:#d6ad5c">
+        <input data-role="culling-range" type="range" min="0" max="2200" step="25" value="600" style="width:100%;accent-color:#d6ad5c">
         <input data-role="culling-number" type="number" min="0" max="4000" step="25" value="600" aria-label="Culling distance in meters" style="${CONTROL_CSS};padding:4px 5px;text-align:right">
       </label>
 
@@ -147,6 +303,45 @@ export function createShadoVatShowcaseUi(
     </section>`;
   parent.appendChild(root);
 
+  const mobileLauncher = document.createElement('button');
+  mobileLauncher.type = 'button';
+  mobileLauncher.dataset.role = 'showcase-mobile-launcher';
+  mobileLauncher.setAttribute('aria-expanded', 'false');
+  mobileLauncher.textContent = 'VAT controls';
+  mobileLauncher.style.cssText =
+    BUTTON_CSS + ';background:rgba(9,17,30,.96);box-shadow:0 10px 28px rgba(0,0,0,.4)';
+  parent.appendChild(mobileLauncher);
+  const setMobileOpen = (open: boolean) => {
+    root.dataset.mobileOpen = String(open);
+    mobileLauncher.setAttribute('aria-expanded', String(open));
+  };
+  mobileLauncher.onclick = () => setMobileOpen(true);
+  root.querySelector<HTMLButtonElement>('[data-role=showcase-mobile-close]')!.onclick = () =>
+    setMobileOpen(false);
+  for (const tab of Array.from(
+    root.querySelectorAll<HTMLButtonElement>('[data-mobile-panel-target]')
+  )) {
+    tab.onclick = () => {
+      const panel = tab.dataset.mobilePanelTarget === 'selected' ? 'selected' : 'roster';
+      root.dataset.mobilePanel = panel;
+      for (const candidate of Array.from(
+        root.querySelectorAll<HTMLButtonElement>('[data-mobile-panel-target]')
+      )) {
+        candidate.setAttribute(
+          'aria-pressed',
+          String(candidate.dataset.mobilePanelTarget === panel)
+        );
+      }
+    };
+  }
+  const onRootKeyDown = (event: KeyboardEvent) => {
+    if (event.key === 'Escape' && root.dataset.mobileOpen === 'true') {
+      setMobileOpen(false);
+      mobileLauncher.focus();
+    }
+  };
+  root.addEventListener('keydown', onRootKeyDown);
+
   const modelPills = new Map<string, HTMLButtonElement>();
   const modelList = root.querySelector<HTMLElement>('[data-role=models]')!;
   const babylonModelList = root.querySelector<HTMLElement>('[data-role=babylon-models]')!;
@@ -156,11 +351,19 @@ export function createShadoVatShowcaseUi(
     pill.textContent = model.custom ? `✦ ${model.label}` : model.label;
     pill.title = model.sourceUrl
       ? `${model.sourceUrl} · load and VAT-bake on demand`
-      : model.custom ? `${model.label} · dropped GLB` : `Bake ${model.label} on demand`;
-    pill.style.cssText = 'padding:3px 6px;border:1px solid rgba(174,190,210,.28);border-radius:999px;background:rgba(174,190,210,.07);color:#cbd4df;cursor:pointer;font:600 9px system-ui';
+      : model.custom
+        ? `${model.label} · dropped GLB`
+        : `Bake ${model.label} on demand`;
+    pill.style.cssText =
+      'padding:3px 6px;border:1px solid rgba(174,190,210,.28);border-radius:999px;background:rgba(174,190,210,.07);color:#cbd4df;cursor:pointer;font:600 9px system-ui';
     pill.onclick = () => {
       pill.disabled = true;
-      controller.loadModel(model.code).catch(console.error).finally(() => { pill.disabled = false; });
+      controller
+        .loadModel(model.code)
+        .catch(console.error)
+        .finally(() => {
+          pill.disabled = false;
+        });
     };
     modelPills.set(model.code, pill);
     (model.catalog === 'babylon' ? babylonModelList : modelList).appendChild(pill);
@@ -170,10 +373,16 @@ export function createShadoVatShowcaseUi(
   const runButton = (button: HTMLButtonElement, action: () => void | Promise<void>) => {
     button.onclick = () => {
       button.disabled = true;
-      Promise.resolve(action()).catch(console.error).finally(() => { button.disabled = false; });
+      Promise.resolve(action())
+        .catch(console.error)
+        .finally(() => {
+          button.disabled = false;
+        });
     };
   };
-  runButton(root.querySelector<HTMLButtonElement>('[data-role=load-all]')!, () => controller.loadAll());
+  runButton(root.querySelector<HTMLButtonElement>('[data-role=load-all]')!, () =>
+    controller.loadAll()
+  );
   const buttons = root.querySelector<HTMLElement>('[data-role=buttons]')!;
   const addButton = (label: string, action: () => void | Promise<void>) => {
     const button = document.createElement('button');
@@ -182,18 +391,84 @@ export function createShadoVatShowcaseUi(
     runButton(button, action);
     buttons.appendChild(button);
   };
-  addButton('Add 10', () => controller.addRandom(10));
-  addButton('Add 1,000', () => controller.addRandom(1000));
-  addButton('Remove', () => controller.removeRandom());
+  const deferredStorage = options.deferredStorage;
+  const addRandom = (count: number) =>
+    deferredStorage?.snapshot().enabled
+      ? deferredStorage.addRandom(count)
+      : controller.addRandom(count);
+  const removeRandom = () =>
+    deferredStorage?.snapshot().enabled
+      ? deferredStorage.removeRandom()
+      : controller.removeRandom();
+  addButton('Add 10', () => addRandom(10));
+  addButton('Add 1,000', () => addRandom(1000));
+  addButton('Add 10,000', () => addRandom(10000));
+  addButton('Add 100,000', () => addRandom(100000));
+  addButton('Remove', removeRandom);
   addButton('Shuffle', () => controller.shuffle());
   let namesVisible = true;
-  addButton('Names', () => { namesVisible = !namesVisible; controller.setNameplatesEnabled(namesVisible); });
+  addButton('Names', () => {
+    namesVisible = !namesVisible;
+    controller.setNameplatesEnabled(namesVisible);
+  });
+
+  const deferredStorageRoot = root.querySelector<HTMLElement>('[data-role=deferred-storage]')!;
+  const deferredStorageToggle = root.querySelector<HTMLInputElement>(
+    '[data-role=deferred-storage-toggle]'
+  )!;
+  const deferredStorageDetail = root.querySelector<HTMLElement>(
+    '[data-role=deferred-storage-detail]'
+  )!;
+  const deferredStorageAdd5m = root.querySelector<HTMLButtonElement>(
+    '[data-role=deferred-storage-add-5m]'
+  )!;
+  const formatBytes = (bytes: number) =>
+    bytes >= 1024 * 1024
+      ? `${(bytes / 1024 / 1024).toFixed(bytes >= 100 * 1024 * 1024 ? 0 : 1)} MiB`
+      : `${(bytes / 1024).toFixed(1)} KiB`;
+  const renderDeferredStorage = () => {
+    if (!deferredStorage) return;
+    const snapshot = deferredStorage.snapshot();
+    deferredStorageRoot.style.display = 'block';
+    deferredStorageToggle.checked = snapshot.enabled;
+    deferredStorageToggle.disabled = snapshot.busy || !snapshot.supported;
+    deferredStorageAdd5m.style.display = snapshot.enabled ? 'block' : 'none';
+    deferredStorageAdd5m.disabled = snapshot.busy;
+    const progress =
+      snapshot.progress === undefined ? '' : ` · ${Math.round(snapshot.progress * 100)}%`;
+    deferredStorageDetail.style.color = snapshot.error ? '#ffac9f' : '#8fa6bc';
+    deferredStorageDetail.textContent = !snapshot.supported
+      ? 'Unavailable: this browser does not expose OPFS workers.'
+      : snapshot.error
+        ? snapshot.error
+        : snapshot.busy
+          ? `${snapshot.message ?? 'Updating cold slabs'}${progress}`
+          : snapshot.enabled
+            ? `${snapshot.coldInstances.toLocaleString()} cold · ${formatBytes(snapshot.logicalByteLength)} logical · ${formatBytes(snapshot.residentByteLength)} mapped · hot cap ${snapshot.hotInstanceLimit.toLocaleString()}`
+            : snapshot.coldInstances > 0
+              ? `Off · ${snapshot.coldInstances.toLocaleString()} cold rows retained`
+              : 'Off · large additions currently stay resident';
+  };
+  if (deferredStorage) {
+    renderDeferredStorage();
+    deferredStorageToggle.onchange = () => {
+      deferredStorageToggle.disabled = true;
+      void deferredStorage
+        .setEnabled(deferredStorageToggle.checked)
+        .catch(console.error)
+        .finally(renderDeferredStorage);
+    };
+    runButton(deferredStorageAdd5m, async () => {
+      await deferredStorage.addRandom(5_000_000);
+      renderDeferredStorage();
+    });
+  }
 
   const cullingRange = root.querySelector<HTMLInputElement>('[data-role=culling-range]')!;
   const cullingNumber = root.querySelector<HTMLInputElement>('[data-role=culling-number]')!;
   const setCulling = (value: number) => {
     const next = Math.max(0, Math.min(4000, Number.isFinite(value) ? value : 600));
-    cullingRange.value = String(Math.min(1200, next));
+    cullingRange.value = String(Math.min(2200, next));
     cullingNumber.value = String(next);
     controller.setCullingRange(next);
   };
@@ -204,9 +479,13 @@ export function createShadoVatShowcaseUi(
   const selectedEmpty = root.querySelector<HTMLElement>('[data-role=selected-empty]')!;
   const selectedForm = root.querySelector<HTMLElement>('[data-role=selected-form]')!;
   const selectedName = root.querySelector<HTMLInputElement>('[data-role=selected-name]')!;
-  const selectedAnimation = root.querySelector<HTMLSelectElement>('[data-role=selected-animation]')!;
+  const selectedAnimation = root.querySelector<HTMLSelectElement>(
+    '[data-role=selected-animation]'
+  )!;
   const selectedSpeed = root.querySelector<HTMLInputElement>('[data-role=selected-speed]')!;
-  const selectedSpeedValue = root.querySelector<HTMLOutputElement>('[data-role=selected-speed-value]')!;
+  const selectedSpeedValue = root.querySelector<HTMLOutputElement>(
+    '[data-role=selected-speed-value]'
+  )!;
   const selectedFacing = root.querySelector<HTMLInputElement>('[data-role=selected-facing]')!;
   const selectedScale = root.querySelector<HTMLInputElement>('[data-role=selected-scale]')!;
   const publishedFields = root.querySelector<HTMLElement>('[data-role=published-fields]')!;
@@ -214,9 +493,10 @@ export function createShadoVatShowcaseUi(
   for (const input of Array.from(root.querySelectorAll<HTMLInputElement>('[data-transform]'))) {
     const property = input.dataset.transform!;
     transformInputs.set(property, input);
-    input.onchange = () => controller.setSelectedTransform({
-      [property]: Number(input.value),
-    } as EqShowcaseTransformPatch);
+    input.onchange = () =>
+      controller.setSelectedTransform({
+        [property]: Number(input.value),
+      } as EqShowcaseTransformPatch);
   }
   selectedName.onchange = () => controller.setSelectedName(selectedName.value);
   selectedAnimation.onchange = () => controller.setSelectedAnimation(selectedAnimation.value);
@@ -241,13 +521,15 @@ export function createShadoVatShowcaseUi(
     if (!selection.published.length) return;
     const heading = document.createElement('div');
     heading.textContent = 'APPEARANCE & EQUIPMENT';
-    heading.style.cssText = 'font:700 9px system-ui;letter-spacing:.12em;color:#8495aa;margin:10px 0 5px';
+    heading.style.cssText =
+      'font:700 9px system-ui;letter-spacing:.12em;color:#8495aa;margin:10px 0 5px';
     const grid = document.createElement('div');
     grid.style.cssText = 'display:grid;gap:6px';
     for (const property of selection.published) {
       const label = document.createElement('label');
       label.title = property.description ?? '';
-      label.style.cssText = 'display:grid;grid-template-columns:90px 1fr;align-items:center;gap:8px;color:#b9c6d6;font:10px system-ui';
+      label.style.cssText =
+        'display:grid;grid-template-columns:90px 1fr;align-items:center;gap:8px;color:#b9c6d6;font:10px system-ui';
       const caption = document.createElement('span');
       caption.textContent = property.label;
       const select = document.createElement('select');
@@ -261,7 +543,8 @@ export function createShadoVatShowcaseUi(
         element.selected = option.value === property.value;
         select.appendChild(element);
       }
-      select.onchange = () => controller.setSelectedPublished(property.name, JSON.parse(select.value));
+      select.onchange = () =>
+        controller.setSelectedPublished(property.name, JSON.parse(select.value));
       label.append(caption, select);
       grid.appendChild(label);
     }
@@ -278,13 +561,15 @@ export function createShadoVatShowcaseUi(
     selectedName.value = selection.name;
     const animationSignature = selection.animations.map(animation => animation.name).join('\u0000');
     if (selectedAnimation.dataset.signature !== animationSignature) {
-      selectedAnimation.replaceChildren(...selection.animations.map(animation => {
-        const option = document.createElement('option');
-        option.value = animation.name;
-        option.textContent = animation.label;
-        option.title = animation.name;
-        return option;
-      }));
+      selectedAnimation.replaceChildren(
+        ...selection.animations.map(animation => {
+          const option = document.createElement('option');
+          option.value = animation.name;
+          option.textContent = animation.label;
+          option.title = animation.name;
+          return option;
+        })
+      );
       selectedAnimation.dataset.signature = animationSignature;
     }
     selectedAnimation.value = selection.animation;
@@ -336,7 +621,8 @@ export function createShadoVatShowcaseUi(
   const fileInput = root.querySelector<HTMLInputElement>('[data-role=glb-input]')!;
   const dropState = root.querySelector<HTMLElement>('[data-role=glb-state]')!;
   const showDropState = (message: string, tone: 'busy' | 'success' | 'error') => {
-    dropState.style.color = tone === 'error' ? '#ffac9f' : tone === 'success' ? '#9ee6bd' : '#efd28e';
+    dropState.style.color =
+      tone === 'error' ? '#ffac9f' : tone === 'success' ? '#9ee6bd' : '#efd28e';
     dropState.textContent = message;
   };
   const setDragging = (active: boolean) => {
@@ -358,8 +644,10 @@ export function createShadoVatShowcaseUi(
       }
     }
     showDropState(
-      failures.length ? `${loaded} added · ${failures[0]}` : `${loaded} model${loaded === 1 ? '' : 's'} added`,
-      failures.length ? 'error' : 'success',
+      failures.length
+        ? `${loaded} added · ${failures[0]}`
+        : `${loaded} model${loaded === 1 ? '' : 's'} added`,
+      failures.length ? 'error' : 'success'
     );
   };
   dropZone.onclick = () => fileInput.click();
@@ -370,10 +658,18 @@ export function createShadoVatShowcaseUi(
     }
   };
   fileInput.onchange = () => {
-    void ingestFiles(Array.from(fileInput.files ?? [])).finally(() => { fileInput.value = ''; });
+    void ingestFiles(Array.from(fileInput.files ?? [])).finally(() => {
+      fileInput.value = '';
+    });
   };
-  dropZone.ondragover = event => { event.preventDefault(); setDragging(true); };
-  dropZone.ondragenter = event => { event.preventDefault(); setDragging(true); };
+  dropZone.ondragover = event => {
+    event.preventDefault();
+    setDragging(true);
+  };
+  dropZone.ondragenter = event => {
+    event.preventDefault();
+    setDragging(true);
+  };
   dropZone.ondragleave = event => {
     if (!dropZone.contains(event.relatedTarget as Node | null)) setDragging(false);
   };
@@ -388,9 +684,11 @@ export function createShadoVatShowcaseUi(
   const error = root.querySelector<HTMLElement>('[data-role=error]')!;
   const update = (stats: EqShowcaseStats) => {
     for (const model of controller.models) ensureModelPill(model);
+    const coldInstances = deferredStorage?.snapshot().coldInstances ?? 0;
+    const totalInstances = stats.instances + coldInstances;
     status.style.display = stats.current ? 'block' : 'none';
     status.textContent = stats.current ?? '';
-    perf.innerHTML = `${stats.instances} instances<br>${stats.visible} visible<br>${stats.cullingMode === 'wasm-simd' ? 'WASM SIMD' : 'CPU'}`;
+    perf.innerHTML = `${totalInstances.toLocaleString()} total<br>${stats.instances.toLocaleString()} hot · ${stats.visible.toLocaleString()} visible<br>${stats.cullingMode === 'wasm-simd' ? 'WASM SIMD' : 'CPU'}`;
     root.querySelector<HTMLElement>('[data-role=culling-label]')!.textContent =
       stats.cullingMode === 'wasm-simd' ? 'WASM culling' : 'CPU culling';
     const loaded = new Set(stats.loadedCodes);
@@ -401,11 +699,12 @@ export function createShadoVatShowcaseUi(
       pill.style.color = active ? '#fff0c9' : '#cbd4df';
     }
     if (document.activeElement !== cullingRange && document.activeElement !== cullingNumber) {
-      cullingRange.value = String(Math.min(1200, stats.cullingRange));
+      cullingRange.value = String(Math.min(2200, stats.cullingRange));
       cullingNumber.value = String(stats.cullingRange);
     }
     error.style.display = stats.lastError ? 'block' : 'none';
     error.textContent = stats.lastError ?? '';
+    renderDeferredStorage();
   };
   update(controller.stats);
 
@@ -415,18 +714,31 @@ export function createShadoVatShowcaseUi(
   const fps = document.createElement('div');
   fps.dataset.role = 'showcase-diagnostics';
   fps.style.cssText = [
-    'position:absolute', 'left:16px', 'top:58px', 'z-index:30', 'min-width:220px',
-    'padding:10px 12px', 'border:1px solid rgba(125,211,252,.3)', 'border-radius:10px',
-    'background:rgba(7,15,25,.88)', 'box-shadow:0 12px 30px rgba(0,0,0,.28)',
-    'backdrop-filter:blur(10px)', 'color:#d6e5f6', 'font:11px/1.45 ui-monospace,monospace',
-    'font-variant-numeric:tabular-nums', 'pointer-events:none',
+    'position:absolute',
+    'left:16px',
+    'top:58px',
+    'z-index:30',
+    'min-width:220px',
+    'padding:10px 12px',
+    'border:1px solid rgba(125,211,252,.3)',
+    'border-radius:10px',
+    'background:rgba(7,15,25,.88)',
+    'box-shadow:0 12px 30px rgba(0,0,0,.28)',
+    'backdrop-filter:blur(10px)',
+    'color:#d6e5f6',
+    'font:11px/1.45 ui-monospace,monospace',
+    'font-variant-numeric:tabular-nums',
+    'pointer-events:none',
   ].join(';');
   parent.appendChild(fps);
   const tick = (now: number) => {
     frames++;
     if (now - last >= 500) {
       const stats = controller.stats;
-      const measuredFps = frames * 1000 / (now - last);
+      renderDeferredStorage();
+      const coldInstances = deferredStorage?.snapshot().coldInstances ?? 0;
+      const totalInstances = stats.instances + coldInstances;
+      const measuredFps = (frames * 1000) / (now - last);
       const timing = diagnostics?.sample();
       const rawFps = timing?.fps ?? measuredFps;
       const frameMs = timing?.frameMs ?? 1000 / Math.max(1, measuredFps);
@@ -443,7 +755,8 @@ export function createShadoVatShowcaseUi(
         </div>
         <div style="margin:5px 0 6px;color:#94a3b8">VAT · SoA · ${backing}</div>
         <div style="display:grid;grid-template-columns:1fr auto;gap:2px 14px">
-          <span>Visible</span><b>${stats.visible} / ${stats.instances}</b>
+          <span>Visible / hot / total</span><b>${stats.visible.toLocaleString()} / ${stats.instances.toLocaleString()} / ${totalInstances.toLocaleString()}</b>
+          ${coldInstances ? `<span>OPFS cold</span><b style="color:#7dd3fc">${coldInstances.toLocaleString()}</b>` : ''}
           <span>Cull</span><b style="color:#fde68a">${culling} · ${stats.cullingRange}m</b>
           <span>Reducer</span><b>${stats.reducerMs.toFixed(3)} ms <span style="color:#64748b">(${stats.reducerAverageMs.toFixed(3)} avg)</span></b>
           ${stats.vatActorsPerModel ? `<span>VAT/model limit</span><b style="color:#86efac">${stats.vatActorsPerModel.toLocaleString()}</b>` : ''}
@@ -466,7 +779,10 @@ export function createShadoVatShowcaseUi(
       canvas.removeEventListener('pointerdown', onCanvasPointerDown, true);
       canvas.removeEventListener('pointermove', onCanvasPointerMove, true);
       canvas.removeEventListener('pointerup', onCanvasPointerUp, true);
+      root.removeEventListener('keydown', onRootKeyDown);
       root.remove();
+      mobileLauncher.remove();
+      responsiveStyle.remove();
       fps.remove();
     },
   };

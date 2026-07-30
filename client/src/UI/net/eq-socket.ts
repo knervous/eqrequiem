@@ -350,11 +350,16 @@ export class EqSocket {
     this.opCodeHandlers[opCode] = handler;
   }
 
-  public close(scheduleReconnect: boolean = true) {
+  public close(scheduleReconnect: boolean = true): Promise<void> {
     this.isConnected = false;
-    void this.connectingLocalBackend?.close();
+    const backendClosures: Promise<void>[] = [];
+    if (this.connectingLocalBackend) {
+      backendClosures.push(this.connectingLocalBackend.close());
+    }
     this.connectingLocalBackend = null;
-    void this.localBackend?.close();
+    if (this.localBackend) {
+      backendClosures.push(this.localBackend.close());
+    }
     this.localBackend = null;
     this.datagramWriter?.releaseLock();
     this.controlWriter?.releaseLock();
@@ -369,6 +374,7 @@ export class EqSocket {
       this.clearReconnectTimer();
       this.onClose?.();
     }
+    return Promise.allSettled(backendClosures).then(() => undefined);
   }
 
   // ——— private helpers ———

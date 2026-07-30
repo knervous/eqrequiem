@@ -120,6 +120,25 @@ describe('WebGPU shader safety', () => {
     expect(processed.fragmentCode).not.toContain('moduleSource');
   });
 
+  it('preprocesses the medium and low VAT quality tiers into smaller vertex paths', async () => {
+    const container = new ShadoInstanceContainer<TestClass>(engine);
+    const pair = container.generateWGSLPair();
+
+    const medium = await preprocessWGSL(engine, pair, ['#define SHADO_VAT_SINGLE_FRAME']);
+    expect(medium.vertexCode).not.toContain('dq1 = Shado_accumulateDQ');
+    expect(medium.vertexCode).not.toContain('mix(dq0.real, dq1.real');
+    expect(medium.vertexCode).toContain('var blendedDQ = dq0');
+
+    const low = await preprocessWGSL(engine, pair, [
+      '#define SHADO_VAT_SINGLE_FRAME',
+      '#define SHADO_VAT_DOMINANT_BONE',
+    ]);
+    expect(low.vertexCode).toContain('dominantBoneIndex');
+    expect(low.vertexCode).toContain('dq0 = Shado_fetchBoneDQScale(dominantBoneIndex, frame0)');
+    expect(low.vertexCode).not.toContain('for (var lane = 0');
+    expect(low.vertexCode).not.toContain('dq1');
+  });
+
   it('registers storage shaders in Babylon’s WGSL shader store', () => {
     const container = new ShadoInstanceContainer<TestClass>(engine);
     const names = container.getShaderNames();
@@ -171,9 +190,7 @@ describe('WebGPU shader safety', () => {
     expect(processed.fragmentCode).toContain('textureSampleLevel');
 
     const peer = new ShadoDynamicEntityContainer(engine);
-    expect(container.getShaderNamesForRenderMode()).toEqual(
-      peer.getShaderNamesForRenderMode()
-    );
+    expect(container.getShaderNamesForRenderMode()).toEqual(peer.getShaderNamesForRenderMode());
 
     for (const mode of [
       { geometry: 'plane' as const, billboard: true },
@@ -182,9 +199,7 @@ describe('WebGPU shader safety', () => {
     ]) {
       container.configureRenderMode(mode);
       const variant = await preprocessWGSL(engine, container.generateWGSLPair());
-      expect(variant.vertexCode).toContain(
-        'var<storage, read> shadoDynamicEntityContainerBuf'
-      );
+      expect(variant.vertexCode).toContain('var<storage, read> shadoDynamicEntityContainerBuf');
       expect(variant.fragmentCode).toContain('textureSampleLevel');
     }
   });

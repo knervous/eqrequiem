@@ -162,6 +162,7 @@ export class LeanPassPlayground {
     panel.verticalAlignment = GUI.Control.VERTICAL_ALIGNMENT_TOP;
     panel.spacing = 8;
     ui.addControl(panel);
+    const panelButtons: GUI.Button[] = [];
 
     const label = new GUI.TextBlock('lean-pass-counts', '');
     label.height = '28px';
@@ -186,10 +187,12 @@ export class LeanPassPlayground {
       button.cornerRadius = 4;
       button.onPointerClickObservable.add(handler);
       panel.addControl(button);
+      panelButtons.push(button);
       return button;
     };
 
     makeButton('Add 1,000', () => addEntities(1000));
+    makeButton('Add 10,000', () => addEntities(10000));
     makeButton('Move 500', () => moveSubset(500));
     makeButton('Remove 250', () => removeEntities(250));
     makeButton('Clear', () => {
@@ -203,6 +206,24 @@ export class LeanPassPlayground {
     });
     makeButton('Inspector', () => {
       void ShowInspector(scene, {});
+    });
+
+    const mobileLayout = window.matchMedia('(max-width: 700px)');
+    const applyResponsiveLayout = () => {
+      const mobile = mobileLayout.matches;
+      panel.width = `${Math.max(190, Math.min(270, canvas.clientWidth - 24))}px`;
+      panel.top = mobile ? '58px' : '16px';
+      panel.left = mobile ? '12px' : '16px';
+      label.fontSize = mobile ? 13 : 14;
+      perfLabel.fontSize = mobile ? 12 : 13;
+      for (const button of panelButtons) button.height = mobile ? '44px' : '34px';
+    };
+    applyResponsiveLayout();
+    mobileLayout.addEventListener('change', applyResponsiveLayout);
+    window.addEventListener('resize', applyResponsiveLayout);
+    scene.onDisposeObservable.add(() => {
+      mobileLayout.removeEventListener('change', applyResponsiveLayout);
+      window.removeEventListener('resize', applyResponsiveLayout);
     });
 
     const updateLabels = () => {

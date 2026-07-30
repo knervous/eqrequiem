@@ -81,6 +81,25 @@ test("only one connection can own OPFS storage at a time", async () => {
   const contender = new LocalBackendConnection();
 
   await assert.rejects(contender.connect(), /already in use/);
-  assert.equal(FakeWorker.instances.filter((worker) => !worker.terminated).length, 1);
+  assert.equal(
+    FakeWorker.instances.filter((worker) => !worker.terminated).length,
+    1,
+  );
+  await owner.close();
+});
+
+test("the OPFS ownership lease survives an HMR module reevaluation", async () => {
+  const owner = new LocalBackendConnection();
+  await owner.connect();
+  const revisedModule = await import(
+    `../src/LocalBackend/connection.ts?hmr-test=${Date.now()}`
+  );
+  const contender = new revisedModule.LocalBackendConnection();
+
+  await assert.rejects(contender.connect(), /already in use/);
+  assert.equal(
+    FakeWorker.instances.filter((worker) => !worker.terminated).length,
+    1,
+  );
   await owner.close();
 });

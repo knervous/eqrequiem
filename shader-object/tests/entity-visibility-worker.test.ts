@@ -39,11 +39,16 @@ describe('Shado amortized entity-visibility worker', () => {
       },
       2
     );
+    const control = new Int32Array(buffer, layout.controlOffset, 16);
+    const revisionBeforeMove = Atomics.load(control, ShadoVisibilityWorkerControl.SpatialRevision);
     projection.setEntity(1, 20, 21, 22, 3);
 
     expect(projection.count).toBe(3);
     expect(Array.from(projection.positionX.subarray(0, 3))).toEqual([1, 20, 3]);
     expect(Array.from(projection.radius.subarray(0, 3))).toEqual([2, 3, 2]);
+    expect(Atomics.load(control, ShadoVisibilityWorkerControl.SpatialRevision)).toBe(
+      revisionBeforeMove + 1
+    );
     expect(() => {
       projection.count = 9;
     }).toThrow(/reserved capacity/);
@@ -94,6 +99,65 @@ describe('Shado amortized entity-visibility worker', () => {
 
     worker.dispose();
     expect(port.terminated).toBe(true);
+  });
+
+  it('supports compact-only publication and epoch-scheduled request reuse', async () => {
+    const port = new FakeVisibilityWorker();
+    const worker = await ShadoEntityVisibilityWorker.create(world(), {
+      capacity: 4,
+      publishFlags: false,
+      workerFactory: () => port,
+    });
+    worker.projection.load({
+      count: 2,
+      positionX: [1, 2],
+      positionY: [0, 0],
+      positionZ: [0, 0],
+    });
+    const planes = new Float32Array(24);
+    const options = { camera: [0, 0, 0] as [number, number, number] };
+
+    expect(
+      worker.requestScheduled(planes, [0xff], options, {
+        cameraEpoch: 1,
+        cellEpoch: 1,
+        minimumIntervalMs: 10,
+        nowMs: 0,
+      })
+    ).toBe(1);
+    expect(
+      worker.requestScheduled(planes, [0xff], options, {
+        cameraEpoch: 1,
+        cellEpoch: 1,
+        minimumIntervalMs: 10,
+        nowMs: 20,
+      })
+    ).toBeNull();
+    expect(
+      worker.requestScheduled(planes, [0xff], options, {
+        cameraEpoch: 2,
+        cellEpoch: 1,
+        minimumIntervalMs: 10,
+        nowMs: 5,
+      })
+    ).toBeNull();
+    expect(
+      worker.requestScheduled(planes, [0xff], options, {
+        cameraEpoch: 2,
+        cellEpoch: 1,
+        minimumIntervalMs: 10,
+        nowMs: 10,
+      })
+    ).toBe(2);
+
+    port.completeNext();
+    port.completeNext();
+    const result = worker.acquireLatest();
+    expect(result?.generation).toBe(2);
+    expect(result?.flags).toHaveLength(0);
+    expect(worker.layout.flagsCapacity).toBe(1);
+    expect(worker.stats.scheduledSkips).toBe(2);
+    worker.dispose();
   });
 
   it('is the coordinator default for packaged world objects', async () => {
@@ -246,15 +310,15 @@ class FakeVisibilityWorker {
     const phaseMask = new Uint32Array(buffer, layout.phaseMaskOffset, layout.capacity);
     const output = 1 - Atomics.load(control, ShadoVisibilityWorkerControl.PublishedOutputBuffer);
     const indices = new Uint32Array(buffer, layout.visibleIndicesOffsets[output], layout.capacity);
-    const flags = new Uint8Array(buffer, layout.flagsOffsets[output], layout.capacity);
-    flags.fill(0, 0, count);
+    const flags = new Uint8Array(buffer, layout.flagsOffsets[output], layout.flagsCapacity);
+    if (layout.flagsCapacity === layout.capacity) flags.fill(0, 0, count);
     let visible = 0;
     for (let i = 0; i < count; i++) {
       if (positionX[i] < 0 || !enabled[i] || !(phaseMask[i] & request.activePhaseMask)) {
         continue;
       }
       indices[visible++] = i;
-      flags[i] = 0xff;
+      if (layout.flagsCapacity === layout.capacity) flags[i] = 0xff;
     }
     Atomics.store(
       control,
@@ -268,7 +332,7 @@ class FakeVisibilityWorker {
       output === 0
         ? ShadoVisibilityWorkerControl.ResultEntityCount0
         : ShadoVisibilityWorkerControl.ResultEntityCount1,
-      count
+      layout.flagsCapacity === layout.capacity ? count : 0
     );
     Atomics.store(control, ShadoVisibilityWorkerControl.PublishedOutputBuffer, output);
     Atomics.store(control, ShadoVisibilityWorkerControl.CompletedGeneration, request.generation);

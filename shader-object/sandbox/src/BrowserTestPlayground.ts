@@ -2,6 +2,8 @@ import * as BABYLON from '@babylonjs/core';
 import { ShadoInstanceSoA, VATBuilder } from '@knervous/shado';
 import { deserializeShadoModel } from '@knervous/shado/preprocess/runtime';
 import { ShadoEntityVisibilityWorker } from '@knervous/shado/world';
+import { runMillionActorIntegrationBenchmark } from './MillionActorIntegrationBenchmark';
+import { runFiveMillionOpfsIntegrationBenchmark } from './FiveMillionOpfsIntegrationBenchmark';
 
 type BrowserTestState = {
   status: 'running' | 'passed' | 'failed';
@@ -34,7 +36,11 @@ export class BrowserTestPlayground {
             ? runRuntimeVatBake(scene)
             : scenario === 'visibility-worker'
               ? await runVisibilityWorkerScale()
-              : await runPreprocessedScale();
+              : scenario === 'million-actor-integration'
+                ? await runMillionActorIntegrationBenchmark()
+                : scenario === 'five-million-opfs-integration'
+                  ? await runFiveMillionOpfsIntegrationBenchmark()
+                  : await runPreprocessedScale();
         window.__shadoBrowserTest = { status: 'passed', scenario, result };
       } catch (error) {
         window.__shadoBrowserTest = {
@@ -89,6 +95,9 @@ async function runVisibilityWorkerScale(): Promise<Record<string, unknown>> {
       completedGeneration: result.generation,
       requestMs,
       workerDurationMs: result.workerDurationMs,
+      flagsLength: result.flags.length,
+      firstFlag: result.flags[0],
+      lastFlag: result.flags[result.flags.length - 1],
       crossOriginIsolated,
     };
   } finally {

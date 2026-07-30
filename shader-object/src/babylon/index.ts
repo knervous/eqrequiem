@@ -45,5 +45,6 @@ export function peekBABYLON(): typeof BABYLON_CORE {
 }
 
 export * from './adapter';
+export * from './BabylonActorProjectionPipeline';
 export * from '@babylonjs/core';
 export type * from '@babylonjs/core';

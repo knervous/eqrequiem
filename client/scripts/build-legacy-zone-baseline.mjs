@@ -10,7 +10,10 @@ import {
   preprocessZoneSceneGlb,
   promoteZoneObjectAssets,
 } from "./promote-zone-object-assets.mjs";
-import { bakeZoneMaterialPalette } from "./material-ai/zone-material-palette.mjs";
+import {
+  bakeZoneMaterialPalette,
+  RUNTIME_TEXTURE_SIZE,
+} from "./material-ai/zone-material-palette.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(here, "../..");
@@ -22,18 +25,12 @@ const clientWorldScenesFile = path.join(
   repoRoot,
   "client/src/Game/Constants/client-world-scenes.ts",
 );
-const sourceRoot = path.join(
-  repoRoot,
-  "assets/reference/everquest_rof2/zones",
-);
+const sourceRoot = path.join(repoRoot, "assets/reference/everquest_rof2/zones");
 const sandboxRoot = path.join(
   repoRoot,
   "shader-object/sandbox/public/shado/worlds",
 );
-const publicWorldRoot = path.join(
-  repoRoot,
-  "client/public/eqrequiem/worlds",
-);
+const publicWorldRoot = path.join(repoRoot, "client/public/eqrequiem/worlds");
 const objectCatalogFile = path.join(
   repoRoot,
   "assets/generated/eq-catalog/manifest.json",
@@ -57,8 +54,7 @@ if (checkOnly && dryRun) {
   throw new Error("--check and --dry-run cannot be combined");
 }
 
-const sha256 = (bytes) =>
-  createHash("sha256").update(bytes).digest("hex");
+const sha256 = (bytes) => createHash("sha256").update(bytes).digest("hex");
 
 function relativeFile(file) {
   const relative = path.relative(repoRoot, file);
@@ -109,7 +105,10 @@ async function glbDocument(file) {
     `${relativeFile(file)} has no valid JSON chunk`,
   );
   return JSON.parse(
-    bytes.subarray(20, 20 + jsonLength).toString("utf8").trimEnd(),
+    bytes
+      .subarray(20, 20 + jsonLength)
+      .toString("utf8")
+      .trimEnd(),
   );
 }
 
@@ -136,10 +135,7 @@ async function loadWorldRegistry() {
   if (
     !supportedZones.length ||
     supportedZones.some(
-      (zone) =>
-        !Number.isInteger(zone.id) ||
-        !zone.shortName ||
-        !zone.longName,
+      (zone) => !Number.isInteger(zone.id) || !zone.shortName || !zone.longName,
     )
   ) {
     throw new Error("Supported-zone registry contains an invalid entry");
@@ -156,13 +152,11 @@ async function loadWorldRegistry() {
   ) {
     throw new Error("Supported-zone registry contains duplicate short names");
   }
-  const clientScenes = sceneModule.requiredClientWorldScenes.map(
-    (scene) => ({
-      ...scene,
-      shortName: scene.shortName.toLowerCase(),
-      excludeUnresolvedObjects: true,
-    }),
-  );
+  const clientScenes = sceneModule.requiredClientWorldScenes.map((scene) => ({
+    ...scene,
+    shortName: scene.shortName.toLowerCase(),
+    excludeUnresolvedObjects: true,
+  }));
   if (
     clientScenes.some(
       (scene) => !scene.id || !scene.shortName || !scene.longName,
@@ -192,27 +186,23 @@ async function inspectInputs(zones) {
   const excludedLegacyObjects = new Map();
   for (const zone of zones) {
     const source = await sourceSceneFor(zone.shortName);
-    const metadataFile = path.join(
-      sourceRoot,
-      `${zone.shortName}.json`,
-    );
+    const metadataFile = path.join(sourceRoot, `${zone.shortName}.json`);
     const authoringFile = path.join(
       sandboxRoot,
       `${zone.shortName}.authoring.json`,
     );
-    const metadata = await exists(metadataFile)
+    const metadata = (await exists(metadataFile))
       ? JSON.parse(await fs.readFile(metadataFile, "utf8"))
       : undefined;
-    const authoring = await exists(authoringFile)
+    const authoring = (await exists(authoringFile))
       ? JSON.parse(await fs.readFile(authoringFile, "utf8"))
       : undefined;
     const legacyObjectIds = Object.keys(metadata?.objects ?? {});
     const authoredObjectIds =
       authoring?.objects?.prototypes?.map((prototype) => prototype.id) ?? [];
-    const objectIds = [...new Set([
-      ...legacyObjectIds,
-      ...authoredObjectIds,
-    ])].sort();
+    const objectIds = [
+      ...new Set([...legacyObjectIds, ...authoredObjectIds]),
+    ].sort();
     const unresolvedObjectIds = objectIds.filter((id) => {
       const asset = catalogObjects.get(id);
       return !asset?.source;
@@ -222,7 +212,7 @@ async function inspectInputs(zones) {
       const sourceFile = catalogObjects.get(id)?.source;
       if (
         sourceFile &&
-        (!path.isAbsolute(sourceFile) || !await exists(sourceFile))
+        (!path.isAbsolute(sourceFile) || !(await exists(sourceFile)))
       ) {
         unavailableObjectIds.push(id);
       }
@@ -285,9 +275,7 @@ function preflightSummary(inspected) {
       id: scene.id,
       shortName: scene.shortName,
       source: scene.source ? relativeFile(scene.source) : null,
-      metadata: scene.metadataFile
-        ? relativeFile(scene.metadataFile)
-        : null,
+      metadata: scene.metadataFile ? relativeFile(scene.metadataFile) : null,
       excludedLegacyObjects: scene.unresolvedObjectIds,
     })),
     unresolvedReadyObjects: [...inspected.unresolvedReadyObjects]
@@ -331,10 +319,7 @@ async function stageZone(zone, stagingRoot, shado) {
   const sourceExtension = zone.source.toLowerCase().endsWith(".glb.gz")
     ? ".glb.gz"
     : ".glb";
-  const authoring = path.join(
-    stagingRoot,
-    `${zone.shortName}.authoring.json`,
-  );
+  const authoring = path.join(stagingRoot, `${zone.shortName}.authoring.json`);
   if (zone.authoringFile) {
     await fs.copyFile(zone.authoringFile, authoring);
   } else {
@@ -342,10 +327,7 @@ async function stageZone(zone, stagingRoot, shado) {
     await fs.writeFile(authoring, `${JSON.stringify(document, null, 2)}\n`);
   }
   let metadataInput = zone.metadataFile;
-  if (
-    zone.excludeUnresolvedObjects &&
-    zone.unresolvedObjectIds.length
-  ) {
+  if (zone.excludeUnresolvedObjects && zone.unresolvedObjectIds.length) {
     const excluded = new Set(zone.unresolvedObjectIds);
     const document = JSON.parse(await fs.readFile(authoring, "utf8"));
     const prototypes = document.objects?.prototypes ?? [];
@@ -363,30 +345,19 @@ async function stageZone(zone, stagingRoot, shado) {
       document.objects.prototypes = filteredPrototypes;
       document.objects.stamps = filteredStamps;
       document.revision++;
-      await fs.writeFile(
-        authoring,
-        `${JSON.stringify(document, null, 2)}\n`,
-      );
+      await fs.writeFile(authoring, `${JSON.stringify(document, null, 2)}\n`);
     }
     if (zone.metadataFile) {
-      const metadata = JSON.parse(
-        await fs.readFile(zone.metadataFile, "utf8"),
-      );
+      const metadata = JSON.parse(await fs.readFile(zone.metadataFile, "utf8"));
       for (const id of excluded) delete metadata.objects?.[id];
       metadataInput = path.join(
         stagingRoot,
         `${zone.shortName}.legacy-filtered.json`,
       );
-      await fs.writeFile(
-        metadataInput,
-        `${JSON.stringify(metadata)}\n`,
-      );
+      await fs.writeFile(metadataInput, `${JSON.stringify(metadata)}\n`);
     }
   }
-  const spatial = path.join(
-    stagingRoot,
-    `${zone.shortName}.spatial.json.gz`,
-  );
+  const spatial = path.join(stagingRoot, `${zone.shortName}.spatial.json.gz`);
   const collision = path.join(
     stagingRoot,
     `${zone.shortName}.collision.bin.gz`,
@@ -395,10 +366,7 @@ async function stageZone(zone, stagingRoot, shado) {
     stagingRoot,
     `${zone.shortName}.lighting-plan.json.gz`,
   );
-  const scene = path.join(
-    stagingRoot,
-    `${zone.shortName}${sourceExtension}`,
-  );
+  const scene = path.join(stagingRoot, `${zone.shortName}${sourceExtension}`);
   try {
     const result = await shado.packShadoWorld({
       name: zone.shortName,
@@ -406,8 +374,7 @@ async function stageZone(zone, stagingRoot, shado) {
       outFile: spatial,
       collisionOutFile: collision,
       lightingPlanOutFile: lightingPlan,
-      runtimeSource:
-        `${runtimeWorldPrefix}/${zone.shortName}${sourceExtension}`,
+      runtimeSource: `${runtimeWorldPrefix}/${zone.shortName}${sourceExtension}`,
       copyInputTo: scene,
       authoringInput: authoring,
       metadataInput,
@@ -422,11 +389,10 @@ async function stageZone(zone, stagingRoot, shado) {
       repoRoot,
       zone: zone.shortName,
       sourceGlb: unpackedScene,
+      runtimeTextureSize: RUNTIME_TEXTURE_SIZE,
+      includePbrTextures: false,
     });
-    const runtimeScene = preprocessZoneSceneGlb(
-      palette.bytes,
-      zone.shortName,
-    );
+    const runtimeScene = preprocessZoneSceneGlb(palette.bytes, zone.shortName);
     await fs.writeFile(
       scene,
       sourceExtension.endsWith(".gz")
@@ -437,8 +403,7 @@ async function stageZone(zone, stagingRoot, shado) {
       zone,
       status: "ready",
       files: { authoring, scene, spatial, collision, lightingPlan },
-      runtimeSource:
-        `${runtimeWorldPrefix}/${zone.shortName}${sourceExtension}`,
+      runtimeSource: `${runtimeWorldPrefix}/${zone.shortName}${sourceExtension}`,
       stats: packStats(result),
     };
   } catch (error) {
@@ -453,10 +418,7 @@ async function stageZone(zone, stagingRoot, shado) {
 async function promoteStagedZone(staged) {
   const sandboxFiles = Object.values(staged.files);
   for (const source of sandboxFiles) {
-    await fs.copyFile(
-      source,
-      path.join(sandboxRoot, path.basename(source)),
-    );
+    await fs.copyFile(source, path.join(sandboxRoot, path.basename(source)));
   }
   for (const source of [
     staged.files.scene,
@@ -507,18 +469,9 @@ async function buildZoneManifest(staged) {
     };
   }
   const promoted = {
-    authoring: path.join(
-      sandboxRoot,
-      path.basename(staged.files.authoring),
-    ),
-    scene: path.join(
-      publicWorldRoot,
-      path.basename(staged.files.scene),
-    ),
-    spatial: path.join(
-      publicWorldRoot,
-      path.basename(staged.files.spatial),
-    ),
+    authoring: path.join(sandboxRoot, path.basename(staged.files.authoring)),
+    scene: path.join(publicWorldRoot, path.basename(staged.files.scene)),
+    spatial: path.join(publicWorldRoot, path.basename(staged.files.spatial)),
     collision: path.join(
       publicWorldRoot,
       path.basename(staged.files.collision),
@@ -544,8 +497,7 @@ async function buildZoneManifest(staged) {
       lightingPlan: await descriptor(promoted.lightingPlan),
     },
     stats: staged.stats,
-    ...(zone.excludeUnresolvedObjects &&
-    zone.unresolvedObjectIds.length
+    ...(zone.excludeUnresolvedObjects && zone.unresolvedObjectIds.length
       ? { excludedLegacyObjectIds: zone.unresolvedObjectIds }
       : {}),
     warnings,
@@ -555,12 +507,9 @@ async function buildZoneManifest(staged) {
 async function writeBaseline(zones, clientScenes, objectAssets) {
   const counts = {
     ready: zones.filter((zone) => zone.status === "ready").length,
-    missingSource: zones.filter(
-      (zone) => zone.status === "missing-source",
-    ).length,
-    packFailed: zones.filter(
-      (zone) => zone.status === "pack-failed",
-    ).length,
+    missingSource: zones.filter((zone) => zone.status === "missing-source")
+      .length,
+    packFailed: zones.filter((zone) => zone.status === "pack-failed").length,
   };
   const baseline = {
     kind: "requiem.legacy-zone-baseline",
@@ -568,8 +517,7 @@ async function writeBaseline(zones, clientScenes, objectAssets) {
     coordinateSystem: "babylon-y-up",
     sourceTransform: "mirror-x",
     runtimeSceneContract: "babylon-rhs-y-up-v4",
-    supportedZoneRegistry:
-      "client/src/Game/Constants/supportedZones.ts",
+    supportedZoneRegistry: "client/src/Game/Constants/supportedZones.ts",
     requiredClientWorldRegistry:
       "client/src/Game/Constants/client-world-scenes.ts",
     sourceRoot: "assets/reference/everquest_rof2/zones",
@@ -580,10 +528,7 @@ async function writeBaseline(zones, clientScenes, objectAssets) {
     clientScenes,
     objectAssets,
   };
-  await fs.writeFile(
-    baselineFile,
-    `${JSON.stringify(baseline, null, 2)}\n`,
-  );
+  await fs.writeFile(baselineFile, `${JSON.stringify(baseline, null, 2)}\n`);
   return baseline;
 }
 
@@ -615,12 +560,11 @@ async function validateDescriptor(value, label) {
 async function checkBaseline(registry) {
   const baseline = JSON.parse(await fs.readFile(baselineFile, "utf8"));
   ensure(
-      baseline.kind === "requiem.legacy-zone-baseline" &&
-      baseline.version === 4,
+    baseline.kind === "requiem.legacy-zone-baseline" && baseline.version === 4,
     "Unsupported legacy-zone baseline manifest",
   );
   ensure(
-      baseline.coordinateSystem === "babylon-y-up" &&
+    baseline.coordinateSystem === "babylon-y-up" &&
       baseline.sourceTransform === "mirror-x" &&
       baseline.runtimeSceneContract === "babylon-rhs-y-up-v4",
     "Legacy-zone baseline coordinate contract changed",
@@ -655,10 +599,7 @@ async function checkBaseline(registry) {
       `${entry.registry} registry changed at '${expected.shortName}'`,
     );
     const currentSource = await sourceSceneFor(zone.shortName);
-    const currentMetadata = path.join(
-      sourceRoot,
-      `${zone.shortName}.json`,
-    );
+    const currentMetadata = path.join(sourceRoot, `${zone.shortName}.json`);
     if (zone.status === "missing-source") {
       ensure(
         !currentSource,
@@ -666,10 +607,7 @@ async function checkBaseline(registry) {
       );
       ensure(zone.source === null, `${zone.shortName} source must be null`);
     } else {
-      ensure(
-        currentSource,
-        `Source scene disappeared for '${zone.shortName}'`,
-      );
+      ensure(currentSource, `Source scene disappeared for '${zone.shortName}'`);
       ensure(
         relativeFile(currentSource) === zone.source.path,
         `Source scene selection changed for '${zone.shortName}'`,
@@ -685,10 +623,7 @@ async function checkBaseline(registry) {
         relativeFile(currentMetadata) === zone.metadata.path,
         `Metadata selection changed for '${zone.shortName}'`,
       );
-      await validateDescriptor(
-        zone.metadata,
-        `${zone.shortName} metadata`,
-      );
+      await validateDescriptor(zone.metadata, `${zone.shortName} metadata`);
     } else {
       ensure(
         zone.metadata === null,
@@ -744,10 +679,7 @@ async function checkBaseline(registry) {
         ? { lightingPlan: zone.runtime.lightingPlan }
         : {}),
     })) {
-      const sandboxFile = path.join(
-        sandboxRoot,
-        path.basename(artifact.path),
-      );
+      const sandboxFile = path.join(sandboxRoot, path.basename(artifact.path));
       const sandboxArtifact = await descriptor(sandboxFile);
       ensure(
         sandboxArtifact.sha256 === artifact.sha256 &&
@@ -777,9 +709,8 @@ async function checkBaseline(registry) {
     missingSource: baseline.zones.filter(
       (zone) => zone.status === "missing-source",
     ).length,
-    packFailed: baseline.zones.filter(
-      (zone) => zone.status === "pack-failed",
-    ).length,
+    packFailed: baseline.zones.filter((zone) => zone.status === "pack-failed")
+      .length,
   };
   ensure(
     JSON.stringify(actualCounts) === JSON.stringify(baseline.counts),
@@ -805,10 +736,7 @@ async function checkBaseline(registry) {
     sha256(catalogBytes) === objectManifest.sourceCatalogSha256,
     "Object source catalog checksum changed",
   );
-  const readyWorlds = [
-    ...baseline.zones,
-    ...baseline.clientScenes,
-  ]
+  const readyWorlds = [...baseline.zones, ...baseline.clientScenes]
     .filter((zone) => zone.status === "ready")
     .map((zone) => zone.shortName)
     .sort();
@@ -817,8 +745,7 @@ async function checkBaseline(registry) {
     "Object asset manifest world set changed",
   );
   ensure(
-    JSON.stringify(baseline.objectAssets.zones) ===
-      JSON.stringify(readyWorlds),
+    JSON.stringify(baseline.objectAssets.zones) === JSON.stringify(readyWorlds),
     "Baseline object world set changed",
   );
   ensure(
@@ -827,8 +754,7 @@ async function checkBaseline(registry) {
   );
   for (const object of objectManifest.objects) {
     ensure(
-      object.source ===
-        `/eqrequiem/objects/${object.id}/final.glb.gz`,
+      object.source === `/eqrequiem/objects/${object.id}/final.glb.gz`,
       `Object '${object.id}' runtime URL changed`,
     );
     const file = path.join(
@@ -867,20 +793,18 @@ async function buildBaseline(inspected) {
     repoRoot,
     "shader-object/dist/preprocess/index.js",
   );
-  const worldModule = path.join(
-    repoRoot,
-    "shader-object/dist/world/index.js",
-  );
-  if (!await exists(preprocessModule) || !await exists(worldModule)) {
+  const worldModule = path.join(repoRoot, "shader-object/dist/world/index.js");
+  if (!(await exists(preprocessModule)) || !(await exists(worldModule))) {
     throw new Error(
       "Shader Object is not built; run `npm --prefix client run world:baseline`",
     );
   }
-  const [{ packShadoWorld }, { createShadoWorldAuthoring }] =
-    await Promise.all([
+  const [{ packShadoWorld }, { createShadoWorldAuthoring }] = await Promise.all(
+    [
       import(pathToFileURL(preprocessModule).href),
       import(pathToFileURL(worldModule).href),
-    ]);
+    ],
+  );
   await fs.mkdir(sandboxRoot, { recursive: true });
   await fs.mkdir(publicWorldRoot, { recursive: true });
   const stagingRoot = await fs.mkdtemp(

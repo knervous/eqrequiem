@@ -11,9 +11,11 @@ import {
   extractPaletteSources,
   paletteRoot,
   readPaletteManifest,
+  RUNTIME_TEXTURE_SIZE,
   verifyBakedPalette,
 } from "./zone-material-palette.mjs";
 import {
+  accessorValues,
   baseColorBindings,
   embeddedImage,
   parseGlb,
@@ -27,8 +29,7 @@ const DEFAULT_SERVER = "http://127.0.0.1:7860";
 const RECIPE_VERSION = 1;
 const SAMPLER = "euler a";
 
-const sha256 = (bytes) =>
-  createHash("sha256").update(bytes).digest("hex");
+const sha256 = (bytes) => createHash("sha256").update(bytes).digest("hex");
 
 function parseArguments(arguments_) {
   const options = {};
@@ -52,9 +53,8 @@ function parseArguments(arguments_) {
 }
 
 function integerOption(options, name, fallback) {
-  const value = options[name] === undefined
-    ? fallback
-    : Number.parseInt(options[name], 10);
+  const value =
+    options[name] === undefined ? fallback : Number.parseInt(options[name], 10);
   if (!Number.isInteger(value) || value <= 0) {
     throw new Error(`--${name} must be a positive integer`);
   }
@@ -62,9 +62,7 @@ function integerOption(options, name, fallback) {
 }
 
 function numberOption(options, name, fallback) {
-  const value = options[name] === undefined
-    ? fallback
-    : Number(options[name]);
+  const value = options[name] === undefined ? fallback : Number(options[name]);
   if (!Number.isFinite(value)) {
     throw new Error(`--${name} must be numeric`);
   }
@@ -96,7 +94,9 @@ async function sourceScene(zone) {
 
 function deterministicSeed(entry, attempt = 0) {
   const value = createHash("sha256")
-    .update(`${entry.sourceSha256}:${entry.id}:material-recipe-${RECIPE_VERSION}`)
+    .update(
+      `${entry.sourceSha256}:${entry.id}:material-recipe-${RECIPE_VERSION}`,
+    )
     .digest()
     .readUInt32LE(0);
   return ((value & 0x7fffffff) + attempt * 104729) & 0x7fffffff;
@@ -106,20 +106,26 @@ function materialFamily(manifest, entry) {
   if (!entry.family) return null;
   const family = manifest.families?.[entry.family];
   if (!family) {
-    throw new Error(`${entry.id} references unknown material family '${entry.family}'`);
+    throw new Error(
+      `${entry.id} references unknown material family '${entry.family}'`,
+    );
   }
   return family;
 }
 
 function generationModeFor(manifest, entry) {
-  return entry.generationMode ??
+  return (
+    entry.generationMode ??
     materialFamily(manifest, entry)?.generationMode ??
     manifest.generationMode ??
-    "txt2img-clean-room";
+    "txt2img-clean-room"
+  );
 }
 
 function postProcessFor(manifest, entry) {
-  return entry.postProcess ?? materialFamily(manifest, entry)?.postProcess ?? null;
+  return (
+    entry.postProcess ?? materialFamily(manifest, entry)?.postProcess ?? null
+  );
 }
 
 function composedPrompt(manifest, entry) {
@@ -168,8 +174,14 @@ async function requestMaterial({
     usesInitImage ? "/sdapi/v1/img2img" : "/sdapi/v1/txt2img",
     baseUrl,
   );
-  if (!["127.0.0.1", "localhost", "::1"].includes(endpoint.hostname)) {
-    throw new Error(`Refusing non-loopback diffusion server: ${endpoint.hostname}`);
+  if (
+    !["127.0.0.1", "localhost", "::1"].includes(endpoint.hostname) &&
+    process.env.SDCPP_ALLOW_REMOTE !== "true"
+  ) {
+    throw new Error(
+      `Refusing non-loopback diffusion server: ${endpoint.hostname}; ` +
+        "set SDCPP_ALLOW_REMOTE=true for a trusted LAN worker",
+    );
   }
   const prompt = composedPrompt(manifest, entry);
   const negativePrompt = composedNegativePrompt(manifest, entry);
@@ -187,17 +199,19 @@ async function requestMaterial({
         ...(usesInitImage
           ? {
               init_images: [
-                (await sharp(source)
-                  .resize(generationSize, generationSize, {
-                    fit: "fill",
-                    kernel: sharp.kernel.lanczos3,
-                  })
-                  .png()
-                  .toBuffer()).toString("base64"),
+                (
+                  await sharp(source)
+                    .resize(generationSize, generationSize, {
+                      fit: "fill",
+                      kernel: sharp.kernel.lanczos3,
+                    })
+                    .png()
+                    .toBuffer()
+                ).toString("base64"),
               ],
-      denoising_strength:
-        entry.denoiseStrength ??
-        materialFamily(manifest, entry)?.denoiseStrength,
+              denoising_strength:
+                entry.denoiseStrength ??
+                materialFamily(manifest, entry)?.denoiseStrength,
             }
           : {}),
         prompt,
@@ -232,10 +246,7 @@ async function requestMaterial({
     "base64",
   );
   const metadata = await sharp(raw).metadata();
-  if (
-    metadata.width !== generationSize ||
-    metadata.height !== generationSize
-  ) {
+  if (metadata.width !== generationSize || metadata.height !== generationSize) {
     throw new Error(
       `Local sd.cpp returned ${metadata.width}x${metadata.height}, ` +
         `expected ${generationSize}x${generationSize}`,
@@ -264,9 +275,7 @@ function seededRandom(key) {
 
 function colorVariation(base, random, range = 18) {
   return base.map((value) =>
-    Math.max(0, Math.min(255, Math.round(
-      value + (random() * 2 - 1) * range,
-    ))),
+    Math.max(0, Math.min(255, Math.round(value + (random() * 2 - 1) * range))),
   );
 }
 
@@ -274,13 +283,14 @@ export async function proceduralMaterialGuide(entry, size) {
   const random = seededRandom(`eltania:${entry.id}:procedural-guide-v4`);
   if (entry.id === "grass-terrain" || entry.id === "fieldstone-path") {
     const grass = [];
-    const bladeCount = Math.round(size * size / 58);
+    const bladeCount = Math.round((size * size) / 58);
     for (let index = 0; index < bladeCount; index++) {
       const x = random() * size;
       const y = random() * size;
       const pathCenter =
-        size * 0.5 + Math.sin(y / size * Math.PI * 2) * size * 0.025;
-      const onPath = entry.id === "fieldstone-path" &&
+        size * 0.5 + Math.sin((y / size) * Math.PI * 2) * size * 0.025;
+      const onPath =
+        entry.id === "fieldstone-path" &&
         Math.abs(x - pathCenter) < size * 0.15;
       if (onPath) continue;
       const length = size * (0.002 + random() * 0.007);
@@ -292,27 +302,28 @@ export async function proceduralMaterialGuide(entry, size) {
       );
       grass.push(
         `<line x1="${x}" y1="${y}" ` +
-        `x2="${x + Math.cos(angle) * length}" ` +
-        `y2="${y + Math.sin(angle) * length}" ` +
-        `stroke="rgb(${r},${g},${b})" ` +
-        `stroke-width="${0.5 + random() * 1.3}" stroke-linecap="round"/>`,
+          `x2="${x + Math.cos(angle) * length}" ` +
+          `y2="${y + Math.sin(angle) * length}" ` +
+          `stroke="rgb(${r},${g},${b})" ` +
+          `stroke-width="${0.5 + random() * 1.3}" stroke-linecap="round"/>`,
       );
     }
-    const path = entry.id === "fieldstone-path"
-      ? `<path d="M ${size * 0.35} -20 ` +
-        `C ${size * 0.39} ${size * 0.25}, ${size * 0.31} ${size * 0.5}, ${size * 0.37} ${size * 0.75} ` +
-        `C ${size * 0.41} ${size * 0.9}, ${size * 0.36} ${size}, ${size * 0.36} ${size + 20} ` +
-        `L ${size * 0.65} ${size + 20} ` +
-        `C ${size * 0.62} ${size * 0.75}, ${size * 0.69} ${size * 0.5}, ${size * 0.63} ${size * 0.25} ` +
-        `C ${size * 0.6} ${size * 0.1}, ${size * 0.66} 0, ${size * 0.65} -20 Z" ` +
-        `fill="#70533a"/>`
-      : "";
+    const path =
+      entry.id === "fieldstone-path"
+        ? `<path d="M ${size * 0.35} -20 ` +
+          `C ${size * 0.39} ${size * 0.25}, ${size * 0.31} ${size * 0.5}, ${size * 0.37} ${size * 0.75} ` +
+          `C ${size * 0.41} ${size * 0.9}, ${size * 0.36} ${size}, ${size * 0.36} ${size + 20} ` +
+          `L ${size * 0.65} ${size + 20} ` +
+          `C ${size * 0.62} ${size * 0.75}, ${size * 0.69} ${size * 0.5}, ${size * 0.63} ${size * 0.25} ` +
+          `C ${size * 0.6} ${size * 0.1}, ${size * 0.66} 0, ${size * 0.65} -20 Z" ` +
+          `fill="#70533a"/>`
+        : "";
     const pathDetails = [];
     if (entry.id === "fieldstone-path") {
       for (let index = 0; index < 52; index++) {
         const y = random() * size;
         const center =
-          size * 0.5 + Math.sin(y / size * Math.PI * 2) * size * 0.025;
+          size * 0.5 + Math.sin((y / size) * Math.PI * 2) * size * 0.025;
         const x = center + (random() - 0.5) * size * 0.2;
         const rx = size * (0.012 + random() * 0.025);
         const ry = size * (0.008 + random() * 0.018);
@@ -329,20 +340,20 @@ export async function proceduralMaterialGuide(entry, size) {
         );
         pathDetails.push(
           `<ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${ry}" ` +
-          `transform="rotate(${random() * 90} ${x} ${y})" ` +
-          `fill="rgb(${r},${g},${b})"/>`,
+            `transform="rotate(${random() * 90} ${x} ${y})" ` +
+            `fill="rgb(${r},${g},${b})"/>`,
         );
       }
       for (let index = 0; index < 1800; index++) {
         const y = random() * size;
         const center =
-          size * 0.5 + Math.sin(y / size * Math.PI * 2) * size * 0.025;
+          size * 0.5 + Math.sin((y / size) * Math.PI * 2) * size * 0.025;
         const x = center + (random() - 0.5) * size * 0.25;
         const radius = 0.4 + random() * 1.6;
         const [r, g, b] = colorVariation([99, 74, 49], random, 28);
         pathDetails.push(
           `<circle cx="${x}" cy="${y}" r="${radius}" ` +
-          `fill="rgb(${r},${g},${b})"/>`,
+            `fill="rgb(${r},${g},${b})"/>`,
         );
       }
     }
@@ -370,8 +381,8 @@ export async function proceduralMaterialGuide(entry, size) {
         );
         elements.push(
           `<rect x="${x}" y="${row * rowHeight + 5}" ` +
-          `width="${width - 7}" height="${rowHeight - 9}" rx="5" ` +
-          `fill="rgb(${r},${g},${b})"/>`,
+            `width="${width - 7}" height="${rowHeight - 9}" rx="5" ` +
+            `fill="rgb(${r},${g},${b})"/>`,
         );
         x += width;
       }
@@ -384,7 +395,12 @@ export async function proceduralMaterialGuide(entry, size) {
         const cy = (row + 0.5 + (random() - 0.5) * 0.45) * cell;
         const rx = cell * (0.34 + random() * 0.3);
         const ry = cell * (0.3 + random() * 0.28);
-        const palette = [[61, 70, 73], [87, 91, 84], [100, 83, 65], [72, 82, 66]];
+        const palette = [
+          [61, 70, 73],
+          [87, 91, 84],
+          [100, 83, 65],
+          [72, 82, 66],
+        ];
         const [r, g, b] = colorVariation(
           palette[Math.floor(random() * palette.length)],
           random,
@@ -392,8 +408,8 @@ export async function proceduralMaterialGuide(entry, size) {
         );
         elements.push(
           `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" ` +
-          `transform="rotate(${random() * 50 - 25} ${cx} ${cy})" ` +
-          `fill="rgb(${r},${g},${b})"/>`,
+            `transform="rotate(${random() * 50 - 25} ${cx} ${cy})" ` +
+            `fill="rgb(${r},${g},${b})"/>`,
         );
       }
     }
@@ -412,18 +428,16 @@ export async function proceduralMaterialGuide(entry, size) {
         );
         elements.push(
           `<rect x="${cx - step * 0.48}" y="${cy - step * 0.17}" ` +
-          `width="${step * 0.96}" height="${step * 0.34}" rx="3" ` +
-          `transform="rotate(${angle} ${cx} ${cy})" ` +
-          `fill="rgb(${r},${g},${b})"/>`,
+            `width="${step * 0.96}" height="${step * 0.34}" rx="3" ` +
+            `transform="rotate(${angle} ${cx} ${cy})" ` +
+            `fill="rgb(${r},${g},${b})"/>`,
         );
       }
     }
   } else {
     throw new Error(`No procedural guide recipe exists for ${entry.id}`);
   }
-  const background = entry.id === "herringbone-brick"
-    ? "#9d896c"
-    : "#c9b990";
+  const background = entry.id === "herringbone-brick" ? "#9d896c" : "#c9b990";
   const svg = Buffer.from(
     `<svg width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg">` +
       `<rect width="100%" height="100%" fill="${background}"/>` +
@@ -445,7 +459,9 @@ export async function proceduralMaterialGuide(entry, size) {
   }
   return sharp(data, {
     raw: { width: size, height: size, channels: info.channels },
-  }).png().toBuffer();
+  })
+    .png()
+    .toBuffer();
 }
 
 function blendPair(buffer, a, b, weight) {
@@ -467,7 +483,7 @@ function byte(value) {
 function enforceC1Horizontal(buffer, size, channels) {
   for (let y = 0; y < size; y++) {
     for (let channel = 0; channel < 3; channel++) {
-      const left = (y * size) * channels + channel;
+      const left = y * size * channels + channel;
       const leftInner = (y * size + 1) * channels + channel;
       const right = (y * size + size - 1) * channels + channel;
       const rightInner = (y * size + size - 2) * channels + channel;
@@ -545,7 +561,9 @@ export async function enforcePeriodicEdges(
   enforceC1Horizontal(data, size, channels);
   return sharp(data, {
     raw: { width: size, height: size, channels },
-  }).webp({ lossless: true, effort: 6 }).toBuffer();
+  })
+    .webp({ lossless: true, effort: 6 })
+    .toBuffer();
 }
 
 function rmse(sum, samples) {
@@ -566,12 +584,12 @@ export async function seamMetrics(input) {
   let verticalSamples = 0;
   for (let y = 0; y < height; y++) {
     for (let channel = 0; channel < 3; channel++) {
-      const left = data[(y * width) * channels + channel];
+      const left = data[y * width * channels + channel];
       const leftInner = data[(y * width + 1) * channels + channel];
       const right = data[(y * width + width - 1) * channels + channel];
       const rightInner = data[(y * width + width - 2) * channels + channel];
       horizontal += (left - right) ** 2;
-      horizontalGradient += ((leftInner - left) - (right - rightInner)) ** 2;
+      horizontalGradient += (leftInner - left - (right - rightInner)) ** 2;
       horizontalSamples++;
     }
   }
@@ -582,7 +600,7 @@ export async function seamMetrics(input) {
       const bottom = data[((height - 1) * width + x) * channels + channel];
       const bottomInner = data[((height - 2) * width + x) * channels + channel];
       vertical += (top - bottom) ** 2;
-      verticalGradient += ((topInner - top) - (bottom - bottomInner)) ** 2;
+      verticalGradient += (topInner - top - (bottom - bottomInner)) ** 2;
       verticalSamples++;
     }
   }
@@ -596,30 +614,16 @@ export async function seamMetrics(input) {
 
 function closeDataMapEdges(data, size, channels) {
   for (let y = 0; y < size; y++) {
-    blendPair(
-      data,
-      (y * size) * channels,
-      (y * size + size - 1) * channels,
-      1,
-    );
+    blendPair(data, y * size * channels, (y * size + size - 1) * channels, 1);
   }
   for (let x = 0; x < size; x++) {
-    blendPair(
-      data,
-      x * channels,
-      ((size - 1) * size + x) * channels,
-      1,
-    );
+    blendPair(data, x * channels, ((size - 1) * size + x) * channels, 1);
   }
 }
 
 export async function derivePbrChannels(
   input,
-  {
-    normalStrength = 2,
-    roughness = 0.86,
-    roughnessVariation = 0.08,
-  } = {},
+  { normalStrength = 2, roughness = 0.86, roughnessVariation = 0.08 } = {},
 ) {
   const { data: height, info } = await sharp(input)
     .greyscale()
@@ -637,10 +641,8 @@ export async function derivePbrChannels(
     for (let x = 0; x < width; x++) {
       const left = (x - 1 + width) % width;
       const right = (x + 1) % width;
-      const dx =
-        (height[y * width + right] - height[y * width + left]) / 255;
-      const dy =
-        (height[bottom * width + x] - height[top * width + x]) / 255;
+      const dx = (height[y * width + right] - height[y * width + left]) / 255;
+      const dy = (height[bottom * width + x] - height[top * width + x]) / 255;
       let nx = -dx * normalStrength;
       let ny = -dy * normalStrength;
       let nz = 1;
@@ -656,10 +658,7 @@ export async function derivePbrChannels(
       const luminance = height[y * width + x] / 255;
       const localRoughness = Math.max(
         0,
-        Math.min(
-          1,
-          roughness + (0.5 - luminance) * roughnessVariation * 2,
-        ),
+        Math.min(1, roughness + (0.5 - luminance) * roughnessVariation * 2),
       );
       metallicRoughness[target] = 255;
       metallicRoughness[target + 1] = byte(localRoughness * 255);
@@ -671,7 +670,9 @@ export async function derivePbrChannels(
   const encode = (data) =>
     sharp(data, {
       raw: { width, height: width, channels: 3 },
-    }).webp({ lossless: true, effort: 6 }).toBuffer();
+    })
+      .webp({ lossless: true, effort: 6 })
+      .toBuffer();
   const [normalMap, metallicRoughnessMap] = await Promise.all([
     encode(normal),
     encode(metallicRoughness),
@@ -682,11 +683,7 @@ export async function derivePbrChannels(
 export async function sourceCorrelation(source, generated) {
   const [a, b] = await Promise.all(
     [source, generated].map((input) =>
-      sharp(input)
-        .resize(64, 64, { fit: "fill" })
-        .greyscale()
-        .raw()
-        .toBuffer(),
+      sharp(input).resize(64, 64, { fit: "fill" }).greyscale().raw().toBuffer(),
     ),
   );
   let meanA = 0;
@@ -742,20 +739,30 @@ async function generate({ zone, options }) {
     "size",
     loaded.manifest.generationSize,
   );
-  const requestedSteps = options.steps === undefined
-    ? null
-    : integerOption(options, "steps", loaded.manifest.steps);
+  const requestedSteps =
+    options.steps === undefined
+      ? null
+      : integerOption(options, "steps", loaded.manifest.steps);
   const outputSize = integerOption(
     options,
     "output-size",
     loaded.manifest.outputSize,
   );
-  const limit = integerOption(options, "limit", loaded.manifest.materials.length);
-  const requestedAttempt = options.attempt === undefined
-    ? null
-    : integerOption(options, "attempt", 1) - 1;
+  const limit = integerOption(
+    options,
+    "limit",
+    loaded.manifest.materials.length,
+  );
+  const requestedAttempt =
+    options.attempt === undefined
+      ? null
+      : integerOption(options, "attempt", 1) - 1;
   const requestedIds = options.ids
-    ? new Set(String(options.ids).split(",").map((id) => id.trim()))
+    ? new Set(
+        String(options.ids)
+          .split(",")
+          .map((id) => id.trim()),
+      )
     : null;
   const baseUrl = options.server ?? process.env.SDCPP_URL ?? DEFAULT_SERVER;
   let completed = 0;
@@ -764,14 +771,12 @@ async function generate({ zone, options }) {
       entry.enabled === false ||
       completed >= limit ||
       (requestedIds && !requestedIds.has(entry.id))
-    ) continue;
+    )
+      continue;
     const attempt = requestedAttempt ?? (entry.attempt ?? 1) - 1;
     const family = materialFamily(loaded.manifest, entry);
     const steps =
-      requestedSteps ??
-      entry.steps ??
-      family?.steps ??
-      loaded.manifest.steps;
+      requestedSteps ?? entry.steps ?? family?.steps ?? loaded.manifest.steps;
     const generationMode = generationModeFor(loaded.manifest, entry);
     const denoiseStrength =
       entry.denoiseStrength ?? family?.denoiseStrength ?? null;
@@ -781,40 +786,46 @@ async function generate({ zone, options }) {
     if (sha256(source) !== entry.sourceSha256) {
       throw new Error(`${entry.id} source hash does not match palette.json`);
     }
-    const recipeHash = sha256(Buffer.from(JSON.stringify({
-      recipeVersion: RECIPE_VERSION,
-      sourceSha256: entry.sourceSha256,
-      family: entry.family ?? null,
-      familyRecipe: family,
-      prompt: composedPrompt(loaded.manifest, entry),
-      negativePrompt: composedNegativePrompt(loaded.manifest, entry),
-      generationMode,
-      proceduralGuideVersion:
-        generationMode === "img2img-procedural-guide" ? 4 : null,
-      generationSize,
-      outputSize,
-      steps,
-      cfgScale: loaded.manifest.cfgScale,
-      denoiseStrength,
-      repairBand: loaded.manifest.repairBand,
-      periodicRepairVersion: 2,
-      sharpenSigma: loaded.manifest.sharpenSigma,
-      postProcess,
-      pbr: entry.pbr ?? null,
-      attempt,
-    })));
+    const recipeHash = sha256(
+      Buffer.from(
+        JSON.stringify({
+          recipeVersion: RECIPE_VERSION,
+          sourceSha256: entry.sourceSha256,
+          family: entry.family ?? null,
+          familyRecipe: family,
+          prompt: composedPrompt(loaded.manifest, entry),
+          negativePrompt: composedNegativePrompt(loaded.manifest, entry),
+          generationMode,
+          proceduralGuideVersion:
+            generationMode === "img2img-procedural-guide" ? 4 : null,
+          generationSize,
+          outputSize,
+          steps,
+          cfgScale: loaded.manifest.cfgScale,
+          denoiseStrength,
+          repairBand: loaded.manifest.repairBand,
+          periodicRepairVersion: 2,
+          sharpenSigma: loaded.manifest.sharpenSigma,
+          postProcess,
+          pbr: entry.pbr ?? null,
+          attempt,
+        }),
+      ),
+    );
     const output = path.join(root, entry.output);
     const metadataFile = path.join(root, "metadata", `${entry.id}.json`);
     if (!options.force) {
       try {
         const metadata = JSON.parse(await fs.readFile(metadataFile, "utf8"));
-        if (await generatedArtifactSetIsCurrent({
-          root,
-          entry,
-          output,
-          metadata,
-          recipeHash,
-        })) {
+        if (
+          await generatedArtifactSetIsCurrent({
+            root,
+            entry,
+            output,
+            metadata,
+            recipeHash,
+          })
+        ) {
           console.log(`resumed ${entry.id}`);
           completed++;
           continue;
@@ -829,7 +840,12 @@ async function generate({ zone, options }) {
     if (generationMode === "img2img-procedural-guide") {
       initImage = await proceduralMaterialGuide(entry, generationSize);
       guideSha256 = sha256(initImage);
-      const guideFile = path.join(root, "generated", "guides", `${entry.id}.png`);
+      const guideFile = path.join(
+        root,
+        "generated",
+        "guides",
+        `${entry.id}.png`,
+      );
       await fs.mkdir(path.dirname(guideFile), { recursive: true });
       await fs.writeFile(guideFile, initImage);
     }
@@ -847,17 +863,17 @@ async function generate({ zone, options }) {
               `raw for ${entry.id}`,
           );
         } else {
-        generated = {
-          raw: retainedRaw,
-          prompt: composedPrompt(loaded.manifest, entry),
-          negativePrompt: composedNegativePrompt(loaded.manifest, entry),
-          seed: deterministicSeed(entry, attempt),
-          inferenceMs: null,
-          serverInfo: null,
-          generationMode,
-          reusedRaw: true,
-        };
-        console.log(`reprocessing retained raw for ${entry.id}`);
+          generated = {
+            raw: retainedRaw,
+            prompt: composedPrompt(loaded.manifest, entry),
+            negativePrompt: composedNegativePrompt(loaded.manifest, entry),
+            seed: deterministicSeed(entry, attempt),
+            inferenceMs: null,
+            serverInfo: null,
+            generationMode,
+            reusedRaw: true,
+          };
+          console.log(`reprocessing retained raw for ${entry.id}`);
         }
       } catch (error) {
         if (error?.code !== "ENOENT") throw error;
@@ -929,47 +945,54 @@ async function generate({ zone, options }) {
       ]);
     }
     await fs.mkdir(path.dirname(metadataFile), { recursive: true });
-    await fs.writeFile(metadataFile, `${JSON.stringify({
-      schema: "eltania.zone-material-generation",
-      version: 1,
-      recipeVersion: RECIPE_VERSION,
-      recipeHash,
-      zone,
-      id: entry.id,
-      image: entry.image,
-      semantic: entry.semantic,
-      sourceSha256: entry.sourceSha256,
-      rawSha256: sha256(generated.raw),
-      outputSha256: sha256(repaired),
-      prompt: generated.prompt,
-      negativePrompt: generated.negativePrompt,
-      seed: generated.seed,
-      parameters: {
-        generationSize,
-        outputSize,
-        steps,
-        cfgScale: loaded.manifest.cfgScale,
-        sampler: SAMPLER,
-        denoiseStrength,
-        repairBand: loaded.manifest.repairBand,
-        sharpenSigma: loaded.manifest.sharpenSigma,
-        postProcess,
-        attempt: attempt + 1,
-        inferenceMs: generated.inferenceMs,
-      },
-      seamMetrics: metrics,
-      cleanRoomSourceCorrelation: correlation,
-      proceduralGuideSha256: guideSha256,
-      channels: channels
-        ? {
-            normalSha256: sha256(channels.normal),
-            metallicRoughnessSha256: sha256(channels.metallicRoughness),
-          }
-        : null,
-      reusedRetainedRaw: generated.reusedRaw ?? false,
-      generationMode: generated.generationMode,
-      serverInfo: generated.serverInfo,
-    }, null, 2)}\n`);
+    await fs.writeFile(
+      metadataFile,
+      `${JSON.stringify(
+        {
+          schema: "eltania.zone-material-generation",
+          version: 1,
+          recipeVersion: RECIPE_VERSION,
+          recipeHash,
+          zone,
+          id: entry.id,
+          image: entry.image,
+          semantic: entry.semantic,
+          sourceSha256: entry.sourceSha256,
+          rawSha256: sha256(generated.raw),
+          outputSha256: sha256(repaired),
+          prompt: generated.prompt,
+          negativePrompt: generated.negativePrompt,
+          seed: generated.seed,
+          parameters: {
+            generationSize,
+            outputSize,
+            steps,
+            cfgScale: loaded.manifest.cfgScale,
+            sampler: SAMPLER,
+            denoiseStrength,
+            repairBand: loaded.manifest.repairBand,
+            sharpenSigma: loaded.manifest.sharpenSigma,
+            postProcess,
+            attempt: attempt + 1,
+            inferenceMs: generated.inferenceMs,
+          },
+          seamMetrics: metrics,
+          cleanRoomSourceCorrelation: correlation,
+          proceduralGuideSha256: guideSha256,
+          channels: channels
+            ? {
+                normalSha256: sha256(channels.normal),
+                metallicRoughnessSha256: sha256(channels.metallicRoughness),
+              }
+            : null,
+          reusedRetainedRaw: generated.reusedRaw ?? false,
+          generationMode: generated.generationMode,
+          serverInfo: generated.serverInfo,
+        },
+        null,
+        2,
+      )}\n`,
+    );
     console.log(`passed ${entry.id}: ${JSON.stringify(metrics)}`);
     completed++;
   }
@@ -977,7 +1000,9 @@ async function generate({ zone, options }) {
 }
 
 async function tiledPreview(input, size) {
-  const tile = await sharp(input).resize(size / 2, size / 2).toBuffer();
+  const tile = await sharp(input)
+    .resize(size / 2, size / 2)
+    .toBuffer();
   return sharp({
     create: {
       width: size,
@@ -985,15 +1010,18 @@ async function tiledPreview(input, size) {
       channels: 3,
       background: "#111111",
     },
-  }).composite([
-    { input: tile, left: 0, top: 0 },
-    { input: tile, left: size / 2, top: 0 },
-    { input: tile, left: 0, top: size / 2 },
-    { input: tile, left: size / 2, top: size / 2 },
-  ]).png().toBuffer();
+  })
+    .composite([
+      { input: tile, left: 0, top: 0 },
+      { input: tile, left: size / 2, top: 0 },
+      { input: tile, left: 0, top: size / 2 },
+      { input: tile, left: size / 2, top: size / 2 },
+    ])
+    .png()
+    .toBuffer();
 }
 
-function suggestedMaterialFamily(imageName) {
+function baseSuggestedMaterialFamily(imageName) {
   const name = imageName.toLowerCase();
   if (/cloud/.test(name)) return "sky";
   if (/falls|fount|^w1$|wafl/.test(name)) return "water";
@@ -1010,9 +1038,15 @@ function suggestedMaterialFamily(imageName) {
   if (/sign|crest|gateban/.test(name)) return "signage";
   if (/jam/.test(name)) return "plaster-trim";
   if (/door/.test(name)) return "door-and-trim";
+  if (/^11temcar$/.test(name)) return "interior-decor";
+  if (/^16irnsn/.test(name)) return "signage";
+  if (/^16cab$/.test(name)) return "timber";
   if (
-    /11prist|11temcar|16cab|16celina|16irnsn|16jwall|monk|sneed|theif/.test(name)
-  ) return "shop-display";
+    /11prist|11temcar|16cab|16celina|16irnsn|16jwall|monk|sneed|theif/.test(
+      name,
+    )
+  )
+    return "shop-display";
   if (/11gold|11side|11wall|cotushbn|silfist/.test(name)) {
     return "ornamental";
   }
@@ -1023,9 +1057,191 @@ function suggestedMaterialFamily(imageName) {
   return "special";
 }
 
+const rounded = (value) => Math.round(value * 10000) / 10000;
+
+function triangleArea3(a, b, c) {
+  const ab = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
+  const ac = [c[0] - a[0], c[1] - a[1], c[2] - a[2]];
+  const cross = [
+    ab[1] * ac[2] - ab[2] * ac[1],
+    ab[2] * ac[0] - ab[0] * ac[2],
+    ab[0] * ac[1] - ab[1] * ac[0],
+  ];
+  return Math.hypot(...cross) / 2;
+}
+
+function triangleArea2(a, b, c) {
+  return (
+    Math.abs(
+      (b[0] - a[0]) * (c[1] - a[1]) -
+        (b[1] - a[1]) * (c[0] - a[0]),
+    ) / 2
+  );
+}
+
+function primitiveMaterialUsage(document, mesh, primitive, binding) {
+  const uvAccessor = primitive.attributes?.[`TEXCOORD_${binding.texCoord}`];
+  const positionAccessor = primitive.attributes?.POSITION;
+  if (uvAccessor === undefined || positionAccessor === undefined) {
+    return {
+      mesh: mesh.name ?? "unnamed-mesh",
+      material: binding.materialName,
+      issue: "missing-position-or-requested-uv",
+    };
+  }
+  const uvs = accessorValues(document, uvAccessor);
+  const positions = accessorValues(document, positionAccessor);
+  const indices =
+    primitive.indices === undefined
+      ? positions.map((_, index) => [index])
+      : accessorValues(document, primitive.indices);
+  const uvMin = [Infinity, Infinity];
+  const uvMax = [-Infinity, -Infinity];
+  for (const uv of uvs) {
+    for (let axis = 0; axis < 2; axis++) {
+      uvMin[axis] = Math.min(uvMin[axis], uv[axis]);
+      uvMax[axis] = Math.max(uvMax[axis], uv[axis]);
+    }
+  }
+  let worldArea = 0;
+  let uvArea = 0;
+  let degenerateUvTriangles = 0;
+  const triangleCount = Math.floor(indices.length / 3);
+  for (let triangle = 0; triangle < triangleCount; triangle++) {
+    const a = indices[triangle * 3][0];
+    const b = indices[triangle * 3 + 1][0];
+    const c = indices[triangle * 3 + 2][0];
+    worldArea += triangleArea3(positions[a], positions[b], positions[c]);
+    const area = triangleArea2(uvs[a], uvs[b], uvs[c]);
+    uvArea += area;
+    if (area < 1e-8) degenerateUvTriangles++;
+  }
+  const uvSpan = uvMax.map((value, axis) => value - uvMin[axis]);
+  const repeatedAxes = [
+    ...(uvSpan[0] > 1.05 ? ["x"] : []),
+    ...(uvSpan[1] > 1.05 ? ["y"] : []),
+  ];
+  return {
+    mesh: mesh.name ?? "unnamed-mesh",
+    material: binding.materialName,
+    vertexCount: positions.length,
+    triangleCount,
+    uvMin: uvMin.map(rounded),
+    uvMax: uvMax.map(rounded),
+    uvSpan: uvSpan.map(rounded),
+    repeatedAxes,
+    worldArea: rounded(worldArea),
+    uvArea: rounded(uvArea),
+    worldUnitsPerUv:
+      uvArea > 1e-8 ? rounded(Math.sqrt(worldArea / uvArea)) : null,
+    degenerateUvTriangles,
+  };
+}
+
+function materialUsageByImage(document) {
+  const bindingsByMaterial = new Map(
+    baseColorBindings(document).map((binding) => [
+      binding.materialIndex,
+      binding,
+    ]),
+  );
+  const usages = new Map();
+  for (const mesh of document.json.meshes ?? []) {
+    for (const primitive of mesh.primitives ?? []) {
+      const binding = bindingsByMaterial.get(primitive.material);
+      if (!binding) continue;
+      const key = binding.imageName.toLowerCase();
+      const current = usages.get(key) ?? [];
+      current.push(primitiveMaterialUsage(document, mesh, primitive, binding));
+      usages.set(key, current);
+    }
+  }
+  return usages;
+}
+
+function summarizedMaterialUsage(primitives, wrapModes) {
+  const valid = primitives.filter((primitive) => !primitive.issue);
+  const repeatedAxes = new Set(
+    valid.flatMap((primitive) => primitive.repeatedAxes),
+  );
+  const uvMin = [0, 1].map((axis) =>
+    Math.min(...valid.map((primitive) => primitive.uvMin[axis])),
+  );
+  const uvMax = [0, 1].map((axis) =>
+    Math.max(...valid.map((primitive) => primitive.uvMax[axis])),
+  );
+  const issues = primitives
+    .filter((primitive) => primitive.issue)
+    .map((primitive) => `${primitive.mesh}: ${primitive.issue}`);
+  const samplerRepeats = [...wrapModes].every(
+    (mode) => mode === "10497/10497",
+  );
+  if (repeatedAxes.size && !samplerRepeats) {
+    issues.push("UVs repeat but the source sampler does not repeat on both axes");
+  }
+  for (const primitive of valid) {
+    if (
+      primitive.triangleCount > 0 &&
+      primitive.degenerateUvTriangles / primitive.triangleCount > 0.1
+    ) {
+      issues.push(
+        `${primitive.mesh}: ${primitive.degenerateUvTriangles}/` +
+          `${primitive.triangleCount} triangles have degenerate UVs`,
+      );
+    }
+  }
+  return {
+    primitiveCount: primitives.length,
+    uvMin: valid.length ? uvMin.map(rounded) : null,
+    uvMax: valid.length ? uvMax.map(rounded) : null,
+    maxUvSpan: valid.length
+      ? [0, 1].map((axis) =>
+          rounded(
+            Math.max(...valid.map((primitive) => primitive.uvSpan[axis])),
+          ),
+        )
+      : null,
+    repeatedAxes: [...repeatedAxes],
+    tileability:
+      repeatedAxes.size === 2
+        ? "xy"
+        : repeatedAxes.has("x")
+          ? "x"
+          : repeatedAxes.has("y")
+            ? "y"
+            : "none",
+    issues,
+    primitives,
+  };
+}
+
+function suggestedMaterialFamily(record) {
+  const base = baseSuggestedMaterialFamily(record.imageName);
+  // A scene-like shelf texture cannot survive broad repeated wall UVs. These
+  // legacy names describe shop buildings, not necessarily unique display
+  // panels, so geometry usage wins over the filename heuristic.
+  if (
+    base === "shop-display" &&
+    record.usage.repeatedAxes.length > 0
+  ) {
+    return "building-facade";
+  }
+  // Large continuous meshes need a quiet repeatable substrate. The old
+  // ornamental heuristic turned whole buildings into oversized decorative
+  // panels because it never considered the UV footprint.
+  if (
+    base === "ornamental" &&
+    Math.max(...(record.usage.maxUvSpan ?? [0, 0])) > 8
+  ) {
+    return "building-facade";
+  }
+  return base;
+}
+
 async function inventory({ zone }) {
   const source = await sourceScene(zone);
   const document = parseGlb(source.glb);
+  const usageByImage = materialUsageByImage(document);
   const grouped = new Map();
   for (const binding of baseColorBindings(document)) {
     const key = binding.imageName.toLowerCase();
@@ -1057,7 +1273,7 @@ async function inventory({ zone }) {
     const safeName = current.imageName.replaceAll(/[^a-zA-Z0-9._-]/g, "_");
     const sourceOutput = path.join(extractedDirectory, `${safeName}.webp`);
     await sharp(bytes).webp({ lossless: true, effort: 6 }).toFile(sourceOutput);
-    records.push({
+    const record = {
       imageName: current.imageName,
       imageIndices: [...current.imageIndices],
       materialNames: [...current.materialNames],
@@ -1068,19 +1284,31 @@ async function inventory({ zone }) {
       wrapModes: [...current.wrapModes],
       texCoords: [...current.texCoords],
       sourceSha256: sha256(bytes),
-      suggestedFamily: suggestedMaterialFamily(current.imageName),
+      usage: summarizedMaterialUsage(
+        usageByImage.get(current.imageName.toLowerCase()) ?? [],
+        current.wrapModes,
+      ),
       source: path.relative(repoRoot, sourceOutput).split(path.sep).join("/"),
-    });
+    };
+    record.suggestedFamily = suggestedMaterialFamily(record);
+    records.push(record);
   }
   const output = path.join(root, "material-inventory.json");
-  await fs.writeFile(output, `${JSON.stringify({
-    schema: "eltania.zone-material-inventory",
-    version: 1,
-    zone,
-    sourceSceneSha256: sha256(source.glb),
-    materialCount: records.length,
-    records,
-  }, null, 2)}\n`);
+  await fs.writeFile(
+    output,
+    `${JSON.stringify(
+      {
+        schema: "eltania.zone-material-inventory",
+        version: 1,
+        zone,
+        sourceSceneSha256: sha256(source.glb),
+        materialCount: records.length,
+        records,
+      },
+      null,
+      2,
+    )}\n`,
+  );
 
   const columns = 6;
   const cell = 128;
@@ -1118,7 +1346,10 @@ async function inventory({ zone }) {
       channels: 3,
       background: "#0c0e0c",
     },
-  }).composite(composites).png().toFile(atlas);
+  })
+    .composite(composites)
+    .png()
+    .toFile(atlas);
   console.log(`inventoried ${records.length} geometry material images`);
   console.log(atlas);
   return { records, output, atlas };
@@ -1158,13 +1389,12 @@ async function bootstrap({ zone }) {
       sourceDimensions: [record.width, record.height],
       attempt: 1,
       generationMode: "txt2img-clean-room",
-      tileability: "xy",
+      tileability: record.usage.tileability,
       output: `generated/all/${safeName}.webp`,
       ...(family.extraShader ? { extraShader: family.extraShader } : {}),
       pbr: {
         normal: `generated/all/pbr/${safeName}-normal.webp`,
-        metallicRoughness:
-          `generated/all/pbr/${safeName}-metallic-roughness.webp`,
+        metallicRoughness: `generated/all/pbr/${safeName}-metallic-roughness.webp`,
         normalStrength: family.normalStrength,
         normalScale: family.normalScale,
         roughness: family.roughness,
@@ -1214,12 +1444,15 @@ async function review({ zone, options = {} }) {
   if (!loaded) throw new Error(`No material palette is authored for ${zone}`);
   const root = paletteRoot(repoRoot, zone);
   const requestedIds = options.ids
-    ? new Set(String(options.ids).split(",").map((id) => id.trim()))
+    ? new Set(
+        String(options.ids)
+          .split(",")
+          .map((id) => id.trim()),
+      )
     : null;
   const candidates = loaded.manifest.materials.filter(
     (entry) =>
-      entry.enabled !== false &&
-      (!requestedIds || requestedIds.has(entry.id)),
+      entry.enabled !== false && (!requestedIds || requestedIds.has(entry.id)),
   );
   const rows = [];
   for (const entry of candidates) {
@@ -1230,7 +1463,8 @@ async function review({ zone, options = {} }) {
       if (error?.code !== "ENOENT") throw error;
     }
   }
-  if (!rows.length) throw new Error(`No generated ${zone} materials are reviewable`);
+  if (!rows.length)
+    throw new Error(`No generated ${zone} materials are reviewable`);
   const cell = rows.length > 8 ? 128 : 256;
   const header = rows.length > 8 ? 28 : 44;
   const panel = cell * 2;
@@ -1278,9 +1512,8 @@ async function review({ zone, options = {} }) {
         },
       );
     }
-    const suffix = rows.length > pageSize
-      ? `-page-${Math.floor(start / pageSize) + 1}`
-      : "";
+    const suffix =
+      rows.length > pageSize ? `-page-${Math.floor(start / pageSize) + 1}` : "";
     const output = path.join(
       root,
       "review",
@@ -1294,7 +1527,10 @@ async function review({ zone, options = {} }) {
         channels: 3,
         background: "#0c0e0c",
       },
-    }).composite(composites).png().toFile(output);
+    })
+      .composite(composites)
+      .png()
+      .toFile(output);
     outputs.push(output);
   }
   return outputs;
@@ -1328,6 +1564,8 @@ async function runtimePreview({ zone }) {
     zone,
     sourceGlb: source.glb,
     requireEnabled: true,
+    runtimeTextureSize: RUNTIME_TEXTURE_SIZE,
+    includePbrTextures: false,
   });
   const runtime = preprocessZoneSceneGlb(baked.bytes, zone);
   const stored = gzipSync(runtime, { level: 9 });
@@ -1395,7 +1633,9 @@ async function verify({ zone, bakedBytes }) {
   }
   result.ok = result.failures.length === 0;
   if (!result.ok) {
-    throw new Error(`Palette verification failed: ${result.failures.join("; ")}`);
+    throw new Error(
+      `Palette verification failed: ${result.failures.join("; ")}`,
+    );
   }
   console.log(`verified geometry ${result.geometrySignature}`);
   console.log(`verified UVs      ${result.uvSignature}`);
@@ -1432,7 +1672,9 @@ async function main() {
     return;
   }
   if (command === "generate") {
-    console.log(`generated or resumed ${await generate({ zone, options })} materials`);
+    console.log(
+      `generated or resumed ${await generate({ zone, options })} materials`,
+    );
     return;
   }
   if (command === "bake") {

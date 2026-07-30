@@ -11,3 +11,5 @@ export * from './ShadoInstanceSoA';
 export * from './Shado';
 export { Shado as ShaderObject } from './Shado';
 export * from '../renderer';
+export * from '../render-data';
+export * from '../storage';

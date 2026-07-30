@@ -97,9 +97,16 @@ export class ShadoLiteInstanceContainer<T extends ShadoActor = ShadoActor> exten
 
   public addInstances(count: number): T[] {
     const amount = Math.max(0, count | 0);
+    if (!amount) return [];
     this.reserveInstances(this.actors.length + amount);
-    const created: T[] = [];
-    for (let i = 0; i < amount; i++) created.push(this.addInstance(true));
+    const created = this.appendStructsToArray<T>('instances', amount);
+    for (const actor of created) {
+      actor.initialize();
+      this.actors.push(actor);
+    }
+    this.instancesCount = this.actors.length;
+    this.instanceSoA.ensureCapacity(this.actors.length);
+    this._refreshViewsIfGrown();
     this.showAll();
     return created;
   }
@@ -135,4 +142,3 @@ export class ShadoLiteInstanceContainer<T extends ShadoActor = ShadoActor> exten
     this.visibleCount = this.instanceSoA.visibleCount;
   }
 }
-

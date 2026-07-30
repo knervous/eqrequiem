@@ -96,4 +96,8 @@ engine.
 
 Babylon Lite integrations use public storage, shader-material, scene callback,
 and thin-instance APIs. Shado does not replace mesh render methods or call
-private draw methods.
+private draw methods. The optional projected compute-scatter path is the one
+exception: until Lite publishes generic compute and native storage handles,
+Shado contains a feature-detected bridge to the runtime device, frame encoder,
+and storage buffer. Failure to resolve that bridge falls back to a full
+affected projection-stream write.

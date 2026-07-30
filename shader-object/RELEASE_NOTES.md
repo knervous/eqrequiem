@@ -1,5 +1,57 @@
 # Release notes
 
+## 1.2.0 — 2026-07-30
+
+Shado 1.2 focuses on instance-scale bandwidth, bounded residency, and measured
+WebGPU execution while preserving the 1.x actor and renderer contracts.
+
+- Added renderer-neutral actor projection streams with split transform and
+  appearance storage, optional 16-byte quantized transforms, packed color,
+  dirty-index synchronization, shape-aware upload plans, and adaptive direct,
+  compute-scatter, or full-buffer publication.
+- Added production WebGPU compute scatter to the full Babylon.js and Babylon
+  Lite pipelines. Scatter batches follow changed struct spans instead of
+  copying whole instance rows, share one WGSL ABI across renderers, and expose
+  timestamp-query pipeline timing for benchmark validation.
+- Improved high-count CPU behavior with bulk instance reservation/addition,
+  structure-of-arrays visibility sidecars, compact visible-index publication,
+  and worker/WASM culling paths that avoid recurring main-thread actor walks.
+  Reserved sidecars now refresh after actor-arena WASM growth, preventing
+  detached dirty/visibility views and partial batches near one million actors.
+  WebGL2 retains the established data-texture/direct-upload fallback after the
+  WebGPU optimization decision.
+- Added `@knervous/shado/render-data` and `@knervous/shado/storage` package
+  entry points. `DeferredStorageSlabStore` provides fixed-stride, bounded OPFS
+  working-set slabs, explicit leases, predictive prefetch, sparse dirty-page
+  snapshots, batched writeback, one durability sync, and direct
+  `SharedArrayBuffer` mapping when cross-origin isolated.
+- Added one-million live and five-million cold-backed integration gates that
+  combine packed GPU transforms, cell-first WASM visibility, compact IDs, and
+  a real half-float dual-quaternion VAT draw. The promoted 5M/1M-hot/8k-visible
+  run sustained 60.03 FPS with 11.47 ms frame-work p95, 9.67 ms VAT GPU p95,
+  and zero OPFS operations during measured frames.
+- Added the OPFS cold-tier option to both sandbox renderer paths. Its 20k hot
+  cap routes population overflow to quantized cold rows, reports
+  visible/hot/cold/total and logical/mapped bytes independently, and provides
+  an interactive five-million-actor action without allocating five million JS
+  actor objects.
+- Made the shared showcase controls mobile responsive with a closable bottom
+  drawer, Crowd/Selected tabs, touch-sized controls, iOS-safe form fields,
+  responsive renderer navigation, and mobile layouts for the world editor and
+  lean-pass controls.
+- Preserved the published 1.x `ShadoActor` field layout, legacy showcase
+  aliases, renderer-neutral Lite boundary, no-argument include registration,
+  and protected child-index behavior.
+- Validated 1.2.0 with 175 Jest behavior tests and 18 Chromium integration
+  scenarios, including real OPFS persistence, full/Lite shaped scatter,
+  sparse projected publication, VAT compilation, 100k worker visibility, 1M
+  live rendering, 5M cold backing, and mobile control behavior.
+
+No migration is required for existing 1.x consumers. WebGPU applications can
+adopt projected/scatter pipelines incrementally; WebGL2 behavior is unchanged.
+OPFS remains a deferred cold tier and requires application-owned spatial
+indexing and promotion policy before cold rows enter simulation or rendering.
+
 ## 1.1.0 — 2026-07-29
 
 - Added a renderer-neutral core and adapter boundary with explicit

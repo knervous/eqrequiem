@@ -19,6 +19,10 @@ export const ShadoVisibilityWorkerControl = {
   WorkerState: 8,
   ResultEntityCount0: 9,
   ResultEntityCount1: 10,
+  CandidateCount: 11,
+  HierarchyRebuildMicros: 12,
+  CopiedInputBytes: 13,
+  PublishedFlagBytes: 14,
 } as const;
 
 export type ShadoEntityVisibilityWorkerLayout = {
@@ -33,6 +37,7 @@ export type ShadoEntityVisibilityWorkerLayout = {
   phaseMaskOffset: number;
   visibleIndicesOffsets: readonly [number, number];
   flagsOffsets: readonly [number, number];
+  flagsCapacity: number;
 };
 
 export type ShadoEntityVisibilityWorkerResult = {
@@ -40,6 +45,10 @@ export type ShadoEntityVisibilityWorkerResult = {
   visibleIndices: Uint32Array;
   flags: Uint8Array;
   workerDurationMs: number;
+  candidateCount: number;
+  hierarchyRebuildMs: number;
+  copiedInputBytes: number;
+  publishedFlagBytes: number;
 };
 
 export type ShadoEntityVisibilityWorkerStats = {
@@ -48,6 +57,11 @@ export type ShadoEntityVisibilityWorkerStats = {
   workerDurationMs: number;
   inFlight: boolean;
   hasPendingRequest: boolean;
+  candidateCount: number;
+  hierarchyRebuildMs: number;
+  copiedInputBytes: number;
+  publishedFlagBytes: number;
+  scheduledSkips: number;
   error: string | null;
 };
 
@@ -75,14 +89,22 @@ export type ShadoVisibilityWorkerPort = {
 
 export type ShadoEntityVisibilityWorkerOptions = {
   capacity: number;
+  /** Publish entity-indexed reason flags. Compact-only mode avoids the full-size copy. */
+  publishFlags?: boolean;
   workerFactory?: (source: string) => ShadoVisibilityWorkerPort;
 };
 
+export type ShadoEntityVisibilitySchedule = {
+  cameraEpoch: number;
+  cellEpoch: number;
+  policyEpoch?: number;
+  minimumIntervalMs?: number;
+  nowMs?: number;
+  force?: boolean;
+};
+
 export type ShadoEntityVisibilityWorkerWorld = {
-  tiles: Pick<
-    ShadoWorldSpatialPackage['tiles'],
-    'x' | 'z' | 'size' | 'originX' | 'originZ'
-  >;
+  tiles: Pick<ShadoWorldSpatialPackage['tiles'], 'x' | 'z' | 'size' | 'originX' | 'originZ'>;
 };
 
 /**
@@ -137,6 +159,7 @@ export class ShadoEntityVisibilityProjection {
     this.positionY[index] = y;
     this.positionZ[index] = z;
     this.radius[index] = Math.max(0, radius);
+    this.markSpatialChange();
   }
 
   public setEntityPolicy(index: number, enabled: boolean, phaseMask = 0xffffffff): void {
@@ -195,6 +218,9 @@ export class ShadoEntityVisibilityWorker {
   private consumedGeneration = 0;
   private disposed = false;
   private error: string | null = null;
+  private lastScheduledSignature = '';
+  private lastScheduledAt = Number.NEGATIVE_INFINITY;
+  private scheduledSkips = 0;
 
   private constructor(
     private readonly worker: ShadoVisibilityWorkerPort,
@@ -209,8 +235,8 @@ export class ShadoEntityVisibilityWorker {
       new Uint32Array(buffer, layout.visibleIndicesOffsets[1], layout.capacity),
     ];
     this.flags = [
-      new Uint8Array(buffer, layout.flagsOffsets[0], layout.capacity),
-      new Uint8Array(buffer, layout.flagsOffsets[1], layout.capacity),
+      new Uint8Array(buffer, layout.flagsOffsets[0], layout.flagsCapacity),
+      new Uint8Array(buffer, layout.flagsOffsets[1], layout.flagsCapacity),
     ];
     worker.addEventListener('message', event => this.handleWorkerMessage(event.data));
     worker.addEventListener('error', event => {
@@ -235,7 +261,10 @@ export class ShadoEntityVisibilityWorker {
         'SharedArrayBuffer is unavailable; visibility offload requires cross-origin isolation'
       );
     }
-    const layout = createShadoEntityVisibilityWorkerLayout(options.capacity);
+    const layout = createShadoEntityVisibilityWorkerLayout(
+      options.capacity,
+      options.publishFlags !== false
+    );
     const buffer = new SharedArrayBuffer(layout.byteLength);
     const workerFactory = options.workerFactory ?? createBrowserWorker;
     const worker = workerFactory(SHADO_ENTITY_VISIBILITY_WORKER_SOURCE);
@@ -263,6 +292,7 @@ export class ShadoEntityVisibilityWorker {
         type: 'init',
         buffer,
         layout,
+        publishFlags: layout.flagsCapacity === layout.capacity,
         wasmBytes: wasmBuffer,
         tiles: {
           x: world.tiles.x,
@@ -322,6 +352,40 @@ export class ShadoEntityVisibilityWorker {
   }
 
   /**
+   * Issues visibility work only when an input epoch changes and the configured
+   * interval has elapsed. Callers keep rendering the last complete generation.
+   */
+  public requestScheduled(
+    planes: ArrayLike<number>,
+    cellFlags: ArrayLike<number>,
+    options: ShadoEntityVisibilityOptions & {
+      activePhaseMask?: number;
+      radiusScale?: number;
+    },
+    schedule: ShadoEntityVisibilitySchedule
+  ): number | null {
+    const spatialEpoch = Atomics.load(this.control, ShadoVisibilityWorkerControl.SpatialRevision);
+    const signature = [
+      schedule.cameraEpoch,
+      schedule.cellEpoch,
+      schedule.policyEpoch ?? 0,
+      spatialEpoch,
+    ].join(':');
+    const now = schedule.nowMs ?? performance.now();
+    const minimumIntervalMs = Math.max(0, schedule.minimumIntervalMs ?? 0);
+    if (
+      !schedule.force &&
+      (signature === this.lastScheduledSignature || now - this.lastScheduledAt < minimumIntervalMs)
+    ) {
+      this.scheduledSkips++;
+      return null;
+    }
+    this.lastScheduledSignature = signature;
+    this.lastScheduledAt = now;
+    return this.request(planes, cellFlags, options);
+  }
+
+  /**
    * Acquires the latest complete shared output without waiting.
    *
    * Returned views are valid for immediate consumption. Do not retain them
@@ -353,6 +417,14 @@ export class ShadoEntityVisibilityWorker {
       flags: this.flags[output].subarray(0, entityCount),
       workerDurationMs:
         Atomics.load(this.control, ShadoVisibilityWorkerControl.WorkerDurationMicros) / 1000,
+      candidateCount: Atomics.load(this.control, ShadoVisibilityWorkerControl.CandidateCount),
+      hierarchyRebuildMs:
+        Atomics.load(this.control, ShadoVisibilityWorkerControl.HierarchyRebuildMicros) / 1000,
+      copiedInputBytes: Atomics.load(this.control, ShadoVisibilityWorkerControl.CopiedInputBytes),
+      publishedFlagBytes: Atomics.load(
+        this.control,
+        ShadoVisibilityWorkerControl.PublishedFlagBytes
+      ),
     };
   }
 
@@ -370,6 +442,15 @@ export class ShadoEntityVisibilityWorker {
         Atomics.load(this.control, ShadoVisibilityWorkerControl.WorkerDurationMicros) / 1000,
       inFlight: this.inFlight,
       hasPendingRequest: this.pendingRequest !== null,
+      candidateCount: Atomics.load(this.control, ShadoVisibilityWorkerControl.CandidateCount),
+      hierarchyRebuildMs:
+        Atomics.load(this.control, ShadoVisibilityWorkerControl.HierarchyRebuildMicros) / 1000,
+      copiedInputBytes: Atomics.load(this.control, ShadoVisibilityWorkerControl.CopiedInputBytes),
+      publishedFlagBytes: Atomics.load(
+        this.control,
+        ShadoVisibilityWorkerControl.PublishedFlagBytes
+      ),
+      scheduledSkips: this.scheduledSkips,
       error: this.error,
     };
   }
@@ -409,7 +490,8 @@ export class ShadoEntityVisibilityWorker {
 }
 
 export function createShadoEntityVisibilityWorkerLayout(
-  requestedCapacity: number
+  requestedCapacity: number,
+  publishFlags = true
 ): ShadoEntityVisibilityWorkerLayout {
   const capacity = Math.max(1, requestedCapacity | 0);
   let offset = CONTROL_LENGTH * Int32Array.BYTES_PER_ELEMENT;
@@ -428,7 +510,8 @@ export function createShadoEntityVisibilityWorkerLayout(
   const enabledOffset = take(capacity, 1);
   const phaseMaskOffset = take(indices, 4);
   const visibleIndicesOffsets = [take(indices, 4), take(indices, 4)] as const;
-  const flagsOffsets = [take(capacity, 1), take(capacity, 1)] as const;
+  const flagsCapacity = publishFlags ? capacity : 1;
+  const flagsOffsets = [take(flagsCapacity, 1), take(flagsCapacity, 1)] as const;
   return {
     byteLength: offset,
     capacity,
@@ -441,6 +524,7 @@ export function createShadoEntityVisibilityWorkerLayout(
     phaseMaskOffset,
     visibleIndicesOffsets,
     flagsOffsets,
+    flagsCapacity,
   };
 }
 
@@ -501,7 +585,7 @@ async function createState(message) {
     offset => new Uint32Array(buffer, offset, layout.capacity)
   );
   const sharedFlags = layout.flagsOffsets.map(
-    offset => new Uint8Array(buffer, offset, layout.capacity)
+    offset => new Uint8Array(buffer, offset, layout.flagsCapacity)
   );
   const minX = tiles.x.length ? Math.min(...tiles.x) : 0;
   const maxX = tiles.x.length ? Math.max(...tiles.x) : 0;
@@ -529,11 +613,13 @@ async function createState(message) {
     phaseMask,
     sharedIndices,
     sharedFlags,
+    publishFlags: message.publishFlags,
     tiles,
     gridWidth,
     gridHeight,
     gridMinX: minX,
     gridMinZ: minZ,
+    tileLookup,
     tileLookupPtr: alloc(tileLookup),
     descriptorPtr: wasm.alloc(88) >>> 0,
     planesPtr: wasm.alloc(24 * 4) >>> 0,
@@ -545,6 +631,11 @@ async function createState(message) {
     radiusPtr: 0,
     outputPtr: 0,
     flagsPtr: 0,
+    hierarchyRevision: -1,
+    hierarchyCount: -1,
+    cellOffsets: new Uint32Array(tiles.x.length + 2),
+    binMembers: new Uint32Array(layout.capacity),
+    candidateIds: new Uint32Array(layout.capacity),
   };
 }
 
@@ -561,27 +652,100 @@ function ensureCapacity(count) {
   state.flagsPtr = state.wasm.alloc(capacity) >>> 0;
 }
 
+function locateCell(x, z) {
+  if (!state.tiles.x.length || !(state.tiles.size > 0)) return -1;
+  const tileX = Math.floor((x - state.tiles.originX) / state.tiles.size);
+  const tileZ = Math.floor((z - state.tiles.originZ) / state.tiles.size);
+  const localX = tileX - state.gridMinX;
+  const localZ = tileZ - state.gridMinZ;
+  if (
+    localX < 0 || localX >= state.gridWidth ||
+    localZ < 0 || localZ >= state.gridHeight
+  ) return -1;
+  return state.tileLookup[localZ * state.gridWidth + localX];
+}
+
+function rebuildHierarchy(count, revision) {
+  const bucketCount = state.tiles.x.length + 1;
+  const outsideBucket = bucketCount - 1;
+  const counts = new Uint32Array(bucketCount);
+  for (let entity = 0; entity < count; entity++) {
+    const cell = locateCell(state.positions[0][entity], state.positions[2][entity]);
+    counts[cell < 0 ? outsideBucket : cell]++;
+  }
+  state.cellOffsets[0] = 0;
+  for (let bucket = 0; bucket < bucketCount; bucket++) {
+    state.cellOffsets[bucket + 1] = state.cellOffsets[bucket] + counts[bucket];
+  }
+  const cursors = state.cellOffsets.slice(0, bucketCount);
+  for (let entity = 0; entity < count; entity++) {
+    const cell = locateCell(state.positions[0][entity], state.positions[2][entity]);
+    const bucket = cell < 0 ? outsideBucket : cell;
+    state.binMembers[cursors[bucket]++] = entity;
+  }
+  state.hierarchyRevision = revision;
+  state.hierarchyCount = count;
+}
+
+function prepareCandidateIds(count, message) {
+  // Full reason flags require visiting every entity. Compact-only consumers can
+  // skip whole cells before copying positions into private WASM memory.
+  if (state.publishFlags || !state.tiles.x.length) {
+    for (let entity = 0; entity < count; entity++) state.candidateIds[entity] = entity;
+    return count;
+  }
+  let candidateCount = 0;
+  const requiredCellBits = 0x71;
+  for (let cell = 0; cell < state.tiles.x.length; cell++) {
+    if ((message.cellFlags[cell] & requiredCellBits) !== requiredCellBits) continue;
+    const start = state.cellOffsets[cell];
+    const end = state.cellOffsets[cell + 1];
+    state.candidateIds.set(state.binMembers.subarray(start, end), candidateCount);
+    candidateCount += end - start;
+  }
+  if (message.outsideWorldVisible) {
+    const outsideBucket = state.tiles.x.length;
+    const start = state.cellOffsets[outsideBucket];
+    const end = state.cellOffsets[outsideBucket + 1];
+    state.candidateIds.set(state.binMembers.subarray(start, end), candidateCount);
+    candidateCount += end - start;
+  }
+  return candidateCount;
+}
+
 function reduce(message) {
   const started = performance.now();
   const count = Math.max(0, Atomics.load(state.control, 3));
-  ensureCapacity(count);
+  const revision = Atomics.load(state.control, 6);
+  let hierarchyRebuildMs = 0;
+  if (
+    !state.publishFlags &&
+    state.tiles.x.length &&
+    (revision !== state.hierarchyRevision || count !== state.hierarchyCount)
+  ) {
+    const rebuildStarted = performance.now();
+    rebuildHierarchy(count, revision);
+    hierarchyRebuildMs = performance.now() - rebuildStarted;
+  }
+  const candidateCount = prepareCandidateIds(count, message);
+  ensureCapacity(candidateCount);
   const memory = state.wasm.memory.buffer;
-  new Float32Array(memory, state.xPtr, count).set(state.positions[0].subarray(0, count));
-  new Float32Array(memory, state.yPtr, count).set(state.positions[1].subarray(0, count));
-  new Float32Array(memory, state.zPtr, count).set(state.positions[2].subarray(0, count));
-  const wasmRadius = new Float32Array(memory, state.radiusPtr, count);
-  if (message.radiusScale === 1) {
-    wasmRadius.set(state.radius.subarray(0, count));
-  } else {
-    for (let i = 0; i < count; i++) {
-      wasmRadius[i] = state.radius[i] * message.radiusScale;
-    }
+  const wasmX = new Float32Array(memory, state.xPtr, candidateCount);
+  const wasmY = new Float32Array(memory, state.yPtr, candidateCount);
+  const wasmZ = new Float32Array(memory, state.zPtr, candidateCount);
+  const wasmRadius = new Float32Array(memory, state.radiusPtr, candidateCount);
+  for (let local = 0; local < candidateCount; local++) {
+    const entity = state.candidateIds[local];
+    wasmX[local] = state.positions[0][entity];
+    wasmY[local] = state.positions[1][entity];
+    wasmZ[local] = state.positions[2][entity];
+    wasmRadius[local] = state.radius[entity] * message.radiusScale;
   }
   new Float32Array(memory, state.planesPtr, 24).set(message.planes);
   new Uint8Array(memory, state.cellFlagsPtr, state.tiles.x.length).set(message.cellFlags);
   const descriptor = new DataView(memory, state.descriptorPtr, 88);
   [
-    count, state.xPtr, state.yPtr, state.zPtr, state.radiusPtr, state.planesPtr,
+    candidateCount, state.xPtr, state.yPtr, state.zPtr, state.radiusPtr, state.planesPtr,
     state.cellFlagsPtr, state.tileLookupPtr,
   ].forEach((value, index) => descriptor.setUint32(index * 4, value >>> 0, true));
   descriptor.setInt32(32, state.gridWidth, true);
@@ -597,27 +761,34 @@ function reduce(message) {
   descriptor.setUint32(80, state.outputPtr, true);
   descriptor.setUint32(84, state.flagsPtr, true);
   const wasmVisibleCount = state.wasm.reduceEntityVisibility(state.descriptorPtr);
-  if (wasmVisibleCount < 0 || wasmVisibleCount > count) {
+  if (wasmVisibleCount < 0 || wasmVisibleCount > candidateCount) {
     throw new Error('WASM visibility reducer returned invalid count ' + wasmVisibleCount);
   }
   const output = 1 - Atomics.load(state.control, 2);
   const wasmIndices = new Uint32Array(memory, state.outputPtr, wasmVisibleCount);
-  const wasmFlags = new Uint8Array(memory, state.flagsPtr, count);
+  const wasmFlags = new Uint8Array(memory, state.flagsPtr, candidateCount);
+  if (state.publishFlags) {
+    state.sharedFlags[output].set(wasmFlags, 0);
+  }
   let visibleCount = 0;
   for (let i = 0; i < wasmVisibleCount; i++) {
-    const entity = wasmIndices[i];
+    const local = wasmIndices[i];
+    const entity = state.candidateIds[local];
     if (
       !state.enabled[entity] ||
       !(state.phaseMask[entity] & message.activePhaseMask)
     ) {
-      wasmFlags[entity] &= 0x7f;
+      if (state.publishFlags) state.sharedFlags[output][entity] &= 0x7f;
       continue;
     }
     state.sharedIndices[output][visibleCount++] = entity;
   }
-  state.sharedFlags[output].set(wasmFlags, 0);
   Atomics.store(state.control, output === 0 ? 4 : 5, visibleCount);
-  Atomics.store(state.control, output === 0 ? 9 : 10, count);
+  Atomics.store(state.control, output === 0 ? 9 : 10, state.publishFlags ? count : 0);
+  Atomics.store(state.control, 11, candidateCount);
+  Atomics.store(state.control, 12, Math.max(0, Math.round(hierarchyRebuildMs * 1000)));
+  Atomics.store(state.control, 13, candidateCount * 16);
+  Atomics.store(state.control, 14, state.publishFlags ? count : 0);
   Atomics.store(state.control, 7, Math.max(0, Math.round((performance.now() - started) * 1000)));
   Atomics.store(state.control, 2, output);
   Atomics.store(state.control, 1, message.generation);

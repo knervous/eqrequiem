@@ -56,10 +56,7 @@ import {
   type ShadoPublishedProperty,
   type ShadoPublishedScalar,
 } from '@knervous/shado/core';
-import {
-  ShadoActor,
-  ShadoLiteInstanceContainer,
-} from '@knervous/shado/lite';
+import { ShadoActor, ShadoLiteInstanceContainer } from '@knervous/shado/lite';
 import { fetchShadoBytes } from '@knervous/shado/preprocess/runtime';
 import {
   BABYLON_SHOWCASE_MODELS,
@@ -73,6 +70,7 @@ import {
   type EqShowcaseStats,
   type EqShowcaseTransformPatch,
 } from '@knervous/shado/showcase';
+import { createShowcaseOpfsBacking } from './ShowcaseOpfsBacking';
 
 export interface LitePlaygroundHandle {
   dispose(): void;
@@ -160,7 +158,8 @@ class LiteHierarchyInstances {
     private readonly publishAppearance = false
   ) {
     const rootInverse = mat4Invert(root.worldMatrix);
-    if (!rootInverse) throw new Error(`Model hierarchy "${root.name}" has a singular root transform.`);
+    if (!rootInverse)
+      throw new Error(`Model hierarchy "${root.name}" has a singular root transform.`);
     this.bindings = meshes.map(mesh => {
       const meshInverse = mat4Invert(mesh.worldMatrix);
       if (!meshInverse) throw new Error(`Mesh "${mesh.name}" has a singular world transform.`);
@@ -272,7 +271,7 @@ function actorMatrixPlacement(
   if (initial) {
     const columns = 3;
     actor.translation.set([
-      (serial % columns - 1) * 8,
+      ((serial % columns) - 1) * 8,
       -1,
       (Math.floor(serial / columns) - 0.5) * 8,
       scale,
@@ -294,14 +293,18 @@ function actorMatrixPlacement(
 }
 
 function chooseClips(groups: readonly NonNullable<AssetContainer['animationGroups']>[number][]) {
-  const safe = groups.filter(group => AMBIENT_CLIP.test(group.name) && !UNSAFE_CLIP.test(group.name));
+  const safe = groups.filter(
+    group => AMBIENT_CLIP.test(group.name) && !UNSAFE_CLIP.test(group.name)
+  );
   return [...safe, ...groups.filter(group => !safe.includes(group))].slice(0, MAX_BAKED_CLIPS);
 }
 
 function setRandomAnimation(actor: LiteActor, clips: Record<string, VatClip>): void {
   const entries = Object.entries(clips);
   const safe = entries.filter(([name]) => AMBIENT_CLIP.test(name) && !UNSAFE_CLIP.test(name));
-  const [name, clip] = (safe.length ? safe : entries)[Math.floor(Math.random() * (safe.length || entries.length))] ?? [];
+  const [name, clip] =
+    (safe.length ? safe : entries)[Math.floor(Math.random() * (safe.length || entries.length))] ??
+    [];
   if (!name || !clip) {
     actor.animationBuffer.set([0, 0, 0, 1]);
   } else {
@@ -343,7 +346,7 @@ async function loadLiteAsset(
       if (mesh.skeleton?.boneCount !== sharedVat.boneCount) {
         throw new Error(
           `Head mesh "${mesh.name}" has ${mesh.skeleton?.boneCount ?? 0} joints; ` +
-          `the body VAT has ${sharedVat.boneCount}.`
+            `the body VAT has ${sharedVat.boneCount}.`
         );
       }
       vatHandles.push(attachVat(engine, mesh, sharedVat));
@@ -363,9 +366,7 @@ async function loadLiteAsset(
   // VAT owns playback now; do not retain Lite's CPU skeleton tick in the scene.
   container.animationGroups = [];
   addToScene(scene, container);
-  const root = container.entities.find(
-    (entity): entity is SceneNode => 'worldMatrix' in entity
-  );
+  const root = container.entities.find((entity): entity is SceneNode => 'worldMatrix' in entity);
   if (!root || !meshes.length) throw new Error('Loaded model contains no renderable hierarchy.');
   return {
     container,
@@ -459,17 +460,14 @@ function liteArmorLayers(
   atlas: readonly string[],
   modelCode: string
 ): [number, number, number, number] {
-  const match = materialName.toLowerCase().match(
-    /^([a-z]{3})(ch|ua|fa|lg|hn|ft)(\d{2})(\d{2})$/
-  );
+  const match = materialName.toLowerCase().match(/^([a-z]{3})(ch|ua|fa|lg|hn|ft)(\d{2})(\d{2})$/);
   if (!match) return [-1, -1, -1, -1];
   const [, , piece, , sourceTexture] = match;
   const model = modelCode.toLowerCase();
   return [0, 1, 2, 3].map(armorClass => {
     for (let texture = Number(sourceTexture); texture >= 0; texture--) {
       const name =
-        `${model}${piece}${String(armorClass).padStart(2, '0')}` +
-        String(texture).padStart(2, '0');
+        `${model}${piece}${String(armorClass).padStart(2, '0')}` + String(texture).padStart(2, '0');
       const layer = atlas.indexOf(name);
       if (layer >= 0) return layer;
     }
@@ -501,16 +499,19 @@ function attachLiteArmorMaterials(
       writeUbo(data, offsets) {
         data.set(layerSet, (offsets.get('eqArmorLayers') ?? 0) / 4);
       },
-      getSamplers: () => [{
-        texture: 'eqArmorAtlas',
-        sampler: 'eqArmorSampler',
-        textureType: 'texture_2d_array<f32>',
-      } as any],
+      getSamplers: () => [
+        {
+          texture: 'eqArmorAtlas',
+          sampler: 'eqArmorSampler',
+          textureType: 'texture_2d_array<f32>',
+        } as any,
+      ],
       bindTextures: out => out.push({ texture: atlas }),
       getActiveTextures: out => out.push(atlas),
-      getCustomCode: shaderType => shaderType === 'fragment'
-        ? {
-            CUSTOM_FRAGMENT_UPDATE_DIFFUSE: `
+      getCustomCode: shaderType =>
+        shaderType === 'fragment'
+          ? {
+              CUSTOM_FRAGMENT_UPDATE_DIFFUSE: `
 let eqArmorClass = clamp(i32(round((1.0 - input.vInstanceColor.r) * 1024.0)), 0, 3);
 let eqArmorLayer = i32(material.eqArmorLayers[eqArmorClass]);
 if (eqArmorLayer >= 0) {
@@ -524,8 +525,8 @@ if (eqArmorLayer >= 0) {
   baseColor = eqArmorSurface.rgb;
   alpha = eqArmorSurface.a * material.materialAlpha;
 }`,
-          }
-        : null,
+            }
+          : null,
     };
     material.plugins = [...(material.plugins ?? []), plugin];
     attached++;
@@ -544,9 +545,10 @@ function mergeClips(assets: readonly LoadedAsset[]): Record<string, VatClip> {
 }
 
 function actorClip(pool: LitePool, actor: LiteActor): [string, VatClip] | undefined {
-  return Object.entries(pool.clips).find(([, clip]) =>
-    Math.abs(clip.fromRow - actor.animationBuffer[0]) < 0.01 &&
-    Math.abs(clip.fromRow + clip.frameCount - 1 - actor.animationBuffer[1]) < 0.01
+  return Object.entries(pool.clips).find(
+    ([, clip]) =>
+      Math.abs(clip.fromRow - actor.animationBuffer[0]) < 0.01 &&
+      Math.abs(clip.fromRow + clip.frameCount - 1 - actor.animationBuffer[1]) < 0.01
   );
 }
 
@@ -576,35 +578,17 @@ function projectLiteNameplate(
   const x = actor.translation[0];
   const scale = Number.isFinite(actor.translation[3]) ? actor.translation[3] : 1;
   const storedLift = Number(actor.nameLiftWorld);
-  const nameLift = Number.isFinite(storedLift)
-    ? storedLift
-    : pool.model.kind === 'npc'
-      ? 2.5
-      : 3.4;
-  const y =
-    actor.translation[1] +
-    Math.max(1.8, nameLift * scale);
+  const nameLift = Number.isFinite(storedLift) ? storedLift : pool.model.kind === 'npc' ? 2.5 : 3.4;
+  const y = actor.translation[1] + Math.max(1.8, nameLift * scale);
   const z = actor.translation[2];
   const clipX =
-    viewProjection[0] * x +
-    viewProjection[4] * y +
-    viewProjection[8] * z +
-    viewProjection[12];
+    viewProjection[0] * x + viewProjection[4] * y + viewProjection[8] * z + viewProjection[12];
   const clipY =
-    viewProjection[1] * x +
-    viewProjection[5] * y +
-    viewProjection[9] * z +
-    viewProjection[13];
+    viewProjection[1] * x + viewProjection[5] * y + viewProjection[9] * z + viewProjection[13];
   const clipZ =
-    viewProjection[2] * x +
-    viewProjection[6] * y +
-    viewProjection[10] * z +
-    viewProjection[14];
+    viewProjection[2] * x + viewProjection[6] * y + viewProjection[10] * z + viewProjection[14];
   const clipW =
-    viewProjection[3] * x +
-    viewProjection[7] * y +
-    viewProjection[11] * z +
-    viewProjection[15];
+    viewProjection[3] * x + viewProjection[7] * y + viewProjection[11] * z + viewProjection[15];
   if (clipW <= 0) return undefined;
   const ndcX = clipX / clipW;
   const ndcY = clipY / clipW;
@@ -663,11 +647,9 @@ async function createLiteShowcase(
   let disposed = false;
   let namesEnabled = true;
   enableMaterialPlugins(scene);
-  const maxVatTextureDimension =
-    (engine as EngineContext & { _device: GPUDevice })._device.limits.maxTextureDimension2D;
-  const vatActorsPerModel = Math.floor(
-    (maxVatTextureDimension * maxVatTextureDimension) / 2
-  );
+  const maxVatTextureDimension = (engine as EngineContext & { _device: GPUDevice })._device.limits
+    .maxTextureDimension2D;
+  const vatActorsPerModel = Math.floor((maxVatTextureDimension * maxVatTextureDimension) / 2);
   const nameplateLayer = document.createElement('div');
   nameplateLayer.dataset.role = 'shado-lite-nameplates';
   nameplateLayer.style.cssText =
@@ -773,11 +755,7 @@ async function createLiteShowcase(
     for (const listener of selectionListeners) listener(value);
   };
 
-  const addActor = (
-    pool: LitePool,
-    initial = false,
-    deferPublish = false
-  ): LiteActor => {
+  const addActor = (pool: LitePool, initial = false, deferPublish = false): LiteActor => {
     const actor = pool.actors.addInstance(true) as LiteActor;
     actor.__showcaseName = `${pool.model.label} ${pool.nextInstanceNumber++}`;
     actorMatrixPlacement(actor, pool.model, placementSerial++, initial);
@@ -810,14 +788,16 @@ async function createLiteShowcase(
       const sources = await modelSources(model);
       const assets: LoadedAsset[] = [];
       for (const [index, source] of sources.entries()) {
-        assets.push(await loadLiteAsset(
-          engine,
-          scene,
-          source,
-          index === 0 && model.kind === 'pc',
-          index > 0 ? assets[0]?.bakedVat[0] : undefined,
-          !model.custom && !model.sourceUrl
-        ));
+        assets.push(
+          await loadLiteAsset(
+            engine,
+            scene,
+            source,
+            index === 0 && model.kind === 'pc',
+            index > 0 ? assets[0]?.bakedVat[0] : undefined,
+            !model.custom && !model.sourceUrl
+          )
+        );
       }
       if (model.kind === 'pc' && !model.custom && !model.sourceUrl) {
         const armor = await loadLiteArmorAtlas(engine, model.code);
@@ -875,7 +855,8 @@ async function createLiteShowcase(
       return snapshot();
     },
     loadAll: () => loadList(models.filter(model => model.catalog !== 'babylon')),
-    loadKind: kind => loadList(models.filter(model => model.kind === kind && model.catalog !== 'babylon')),
+    loadKind: kind =>
+      loadList(models.filter(model => model.kind === kind && model.catalog !== 'babylon')),
     async loadModel(code) {
       const model = models.find(candidate => candidate.code === code);
       if (!model) throw new Error(`Unknown showcase model: ${code}`);
@@ -887,7 +868,11 @@ async function createLiteShowcase(
         throw new Error('Only binary glTF 2.0 (.glb) files are supported.');
       }
       const label = filename.replace(/\.glb$/i, '').trim() || 'Dropped model';
-      const slug = label.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'model';
+      const slug =
+        label
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-|-$/g, '') || 'model';
       let code = `drop-${slug}`;
       for (let suffix = 2; models.some(model => model.code === code); suffix++) {
         code = `drop-${slug}-${suffix}`;
@@ -1046,15 +1031,21 @@ async function createLiteShowcase(
   ground.material = groundMaterial;
   addToScene(scene, ground);
 
-  const ui = createShadoVatShowcaseUi(canvas, controller, {
-    renderBackend: 'WebGPU',
-    storageBackend: 'StorageBuffer',
-    sample: () => ({
-      fps: lastDeltaMs > 0 ? 1000 / lastDeltaMs : 0,
-      frameMs: lastDeltaMs,
-      gpuMs: engine.gpuFrameTimeMs || undefined,
-    }),
-  });
+  const opfsBacking = createShowcaseOpfsBacking(controller);
+  const ui = createShadoVatShowcaseUi(
+    canvas,
+    controller,
+    {
+      renderBackend: 'WebGPU',
+      storageBackend: 'StorageBuffer',
+      sample: () => ({
+        fps: lastDeltaMs > 0 ? 1000 / lastDeltaMs : 0,
+        frameMs: lastDeltaMs,
+        gpuMs: engine.gpuFrameTimeMs || undefined,
+      }),
+    },
+    { deferredStorage: opfsBacking }
+  );
 
   let lastDeltaMs = 16.67;
   onBeforeRender(scene, deltaMs => {
@@ -1116,8 +1107,7 @@ async function createLiteShowcase(
         Math.max(1, rect.width) / Math.max(1, rect.height)
       );
       const projections: LiteNameplateProjection[] = [];
-      let nameplateBudget =
-        totalVisible <= 250 ? totalVisible : totalVisible <= 1000 ? 64 : 24;
+      let nameplateBudget = totalVisible <= 250 ? totalVisible : totalVisible <= 1000 ? 64 : 24;
       if (selected && selected.pool.visibleActors.includes(selected.actor)) {
         const projection = projectLiteNameplate(
           selected.pool,
@@ -1158,14 +1148,9 @@ async function createLiteShowcase(
     }
 
     if (selected) {
-      const selectedArmorClass = String(
-        liteActorArmorClass(selected.actor)
-      );
+      const selectedArmorClass = String(liteActorArmorClass(selected.actor));
       const selectedArmorMaterials = String(
-        selected.pool.assets.reduce(
-          (count, asset) => count + (asset.armorMaterialCount ?? 0),
-          0
-        )
+        selected.pool.assets.reduce((count, asset) => count + (asset.armorMaterialCount ?? 0), 0)
       );
       if (nameplateLayer.dataset.selectedArmorClass !== selectedArmorClass) {
         nameplateLayer.dataset.selectedArmorClass = selectedArmorClass;
@@ -1187,13 +1172,8 @@ async function createLiteShowcase(
 
     const reducerMs = performance.now() - started;
     reducerAverageMs =
-      reducerAverageMs === 0
-        ? reducerMs
-        : reducerAverageMs + (reducerMs - reducerAverageMs) * 0.08;
-    if (
-      stats.visible !== totalVisible ||
-      Math.abs(stats.reducerMs - reducerMs) > 0.05
-    ) {
+      reducerAverageMs === 0 ? reducerMs : reducerAverageMs + (reducerMs - reducerAverageMs) * 0.08;
+    if (stats.visible !== totalVisible || Math.abs(stats.reducerMs - reducerMs) > 0.05) {
       publish({
         visible: totalVisible,
         reducerMs,
@@ -1231,6 +1211,7 @@ async function createLiteShowcase(
       canvas.removeEventListener('pointerup', onPick);
       nameplateLayer.remove();
       ui.dispose();
+      void opfsBacking.dispose();
       controller.dispose();
       disposePicker(picker);
     },

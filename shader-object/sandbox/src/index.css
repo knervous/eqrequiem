@@ -413,6 +413,85 @@ button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
+@media (max-width: 700px) {
+  body,
+  .app-container {
+    height: 100dvh;
+  }
+
+  .backend-toggle {
+    top: 6px;
+    right: 6px;
+    bottom: auto;
+    left: 6px;
+    max-width: none;
+    overflow-x: auto;
+    padding: 4px;
+    border-radius: 10px;
+    scrollbar-width: none;
+    overscroll-behavior-x: contain;
+  }
+
+  .backend-toggle::-webkit-scrollbar {
+    display: none;
+  }
+
+  .backend-toggle a,
+  .backend-toggle button {
+    flex: 0 0 auto;
+    min-height: 38px;
+    box-sizing: border-box;
+  }
+
+  .backend-toggle__route {
+    display: none;
+  }
+
+  .backend-toggle__status {
+    flex: 0 0 auto;
+    font-size: 10px;
+  }
+
+  .backend-toggle__error {
+    flex: 0 0 min(70vw, 280px);
+    max-width: none;
+  }
+
+  .world-editor-panel {
+    top: 54px;
+    right: 8px;
+    bottom: 8px;
+    left: 8px;
+    box-sizing: border-box;
+    width: auto;
+    max-height: none;
+    padding: 12px;
+    border-radius: 10px;
+    overscroll-behavior: contain;
+  }
+
+  .world-editor-toolbar,
+  .world-editor-modebar {
+    flex-wrap: wrap;
+  }
+
+  .world-editor-toolbar button,
+  .world-editor-import,
+  .world-editor-apply,
+  .world-editor-modebar button,
+  .world-editor-nudges button {
+    min-height: 40px;
+  }
+
+  .world-editor-field > input,
+  .world-editor-field > select,
+  .world-editor-snap input,
+  .world-editor-vec3 input {
+    min-height: 40px;
+    font-size: 16px;
+  }
+}
+
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;

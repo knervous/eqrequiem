@@ -9,6 +9,7 @@ import {
   type ShadoVatShowcaseStats,
 } from '@knervous/shado';
 import { createMsdfNameplateLayer } from '@knervous/shado/msdf';
+import { createShowcaseOpfsBacking } from './ShowcaseOpfsBacking';
 
 export class Playground {
   public static async CreateScene(
@@ -23,8 +24,12 @@ export class Playground {
     engineInstrumentation.captureGPUFrameTime = true;
 
     const camera = new BABYLON.ArcRotateCamera(
-      'eq-showcase-camera', -Math.PI / 2, 0.78, 54,
-      new BABYLON.Vector3(0, 1.4, 0), scene
+      'eq-showcase-camera',
+      -Math.PI / 2,
+      0.78,
+      54,
+      new BABYLON.Vector3(0, 1.4, 0),
+      scene
     );
     camera.attachControl(canvas, true);
     camera.lowerRadiusLimit = 8;
@@ -39,7 +44,9 @@ export class Playground {
 
     createShadoShowcaseEnvironment(BABYLON, scene);
 
-    const fontDefinition = await fetch('https://assets.babylonjs.com/fonts/roboto-regular.json').then(r => r.text());
+    const fontDefinition = await fetch(
+      'https://assets.babylonjs.com/fonts/roboto-regular.json'
+    ).then(r => r.text());
     const fontAsset = new FontAsset(
       fontDefinition,
       'https://assets.babylonjs.com/fonts/roboto-regular.png',
@@ -64,20 +71,29 @@ export class Playground {
     // keeps animation/VAT diagnostics inspectable without affecting the shared
     // online Playground module or the production library API.
     (globalThis as any).__shadoShowcase = controller;
-    ui = createShadoVatShowcaseUi(canvas, controller, {
-      renderBackend: engine.isWebGPU ? 'WebGPU' : 'WebGL2',
-      storageBackend: engine.isWebGPU ? 'StorageBuffer' : 'DataTexture',
-      sample: () => {
-        const gpuNanoseconds = engineInstrumentation.gpuFrameTimeCounter.current;
-        return {
-          fps: engine.getFps(),
-          frameMs: engine.getDeltaTime(),
-          gpuMs: gpuNanoseconds > 0 ? gpuNanoseconds / 1_000_000 : undefined,
-        };
+    const opfsBacking = createShowcaseOpfsBacking(controller);
+    ui = createShadoVatShowcaseUi(
+      canvas,
+      controller,
+      {
+        renderBackend: engine.isWebGPU ? 'WebGPU' : 'WebGL2',
+        storageBackend: engine.isWebGPU ? 'StorageBuffer' : 'DataTexture',
+        sample: () => {
+          const gpuNanoseconds = engineInstrumentation.gpuFrameTimeCounter.current;
+          return {
+            fps: engine.getFps(),
+            frameMs: engine.getDeltaTime(),
+            gpuMs: gpuNanoseconds > 0 ? gpuNanoseconds / 1_000_000 : undefined,
+          };
+        },
       },
-    });
+      {
+        deferredStorage: opfsBacking,
+      }
+    );
     scene.onDisposeObservable.add(() => {
       ui?.dispose();
+      void opfsBacking.dispose();
       engineInstrumentation.dispose();
     });
     return scene;

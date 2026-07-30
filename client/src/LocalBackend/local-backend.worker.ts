@@ -66,46 +66,60 @@ async function initialize(
       force: refreshContent,
     },
   );
-  const backend = createOfflineGameBackend(
-    database,
-    supportedZones,
-    "file:/eqrequiem-content.sqlite3?vfs=eqrequiem-opfs",
-    {
-      devDiagnostics: import.meta.env.DEV,
-      findPath: (() => {
-        const navigation = new BrowserNavService({
-          qeynos2: qeynos2NavMeshUrl,
-        });
-        return (request) => navigation.findPath(request);
-      })(),
-      createZoneKernel: async () => {
-        const response = await fetch(zoneSimulationWasmUrl);
-        if (!response.ok) {
-          throw new Error(
-            `Unable to fetch offline movement kernel (${response.status} ${response.statusText})`,
-          );
-        }
-        return ZoneSimulationKernel.instantiate(await response.arrayBuffer());
+  let adapter: GameBackendPacketAdapter | undefined;
+  try {
+    const backend = createOfflineGameBackend(
+      database,
+      supportedZones,
+      "file:/eqrequiem-content.sqlite3?vfs=eqrequiem-opfs",
+      {
+        devDiagnostics: import.meta.env.DEV,
+        findPath: (() => {
+          const navigation = new BrowserNavService({
+            qeynos2: qeynos2NavMeshUrl,
+          });
+          return (request) => navigation.findPath(request);
+        })(),
+        createZoneKernel: async () => {
+          const response = await fetch(zoneSimulationWasmUrl);
+          if (!response.ok) {
+            throw new Error(
+              `Unable to fetch offline movement kernel (${response.status} ${response.statusText})`,
+            );
+          }
+          return ZoneSimulationKernel.instantiate(await response.arrayBuffer());
+        },
       },
-    },
-  );
-  await backend.initialize();
-  const adapter = new GameBackendPacketAdapter(backend);
-  adapter.onPacket((sessionIds, packet) => {
-    if (sessionIds.includes(SESSION_ID)) {
+    );
+    await backend.initialize();
+    adapter = new GameBackendPacketAdapter(backend);
+    adapter.onPacket((sessionIds, packet) => {
+      if (sessionIds.includes(SESSION_ID)) {
+        post({ type: "packet", ...packet });
+      }
+    });
+    for (const packet of await adapter.connect(SESSION_ID)) {
       post({ type: "packet", ...packet });
     }
-  });
-  for (const packet of await adapter.connect(SESSION_ID)) {
-    post({ type: "packet", ...packet });
+    post({
+      type: "ready",
+      storage: database.storage,
+      sqliteVersion: database.sqliteVersion,
+      contentVersion: OFFLINE_SEED_VERSION,
+    });
+    return adapter;
+  } catch (error) {
+    try {
+      if (adapter) await adapter.close(SESSION_ID);
+      else await database.close();
+    } catch (closeError) {
+      console.error(
+        "[local-backend] Failed to close SQLite after initialization error",
+        closeError,
+      );
+    }
+    throw error;
   }
-  post({
-    type: "ready",
-    storage: database.storage,
-    sqliteVersion: database.sqliteVersion,
-    contentVersion: OFFLINE_SEED_VERSION,
-  });
-  return adapter;
 }
 
 function post(message: LocalBackendMessage): void {
