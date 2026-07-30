@@ -97,6 +97,35 @@ export async function readPaletteManifest(repoRoot, zone) {
   return { file, manifest };
 }
 
+function stablePoolIndex(value, length) {
+  let hash = 2_166_136_261;
+  for (let index = 0; index < value.length; index++) {
+    hash ^= value.charCodeAt(index);
+    hash = Math.imul(hash, 16_777_619);
+  }
+  return (hash >>> 0) % length;
+}
+
+function runtimeMaterialEntry(manifest, entry) {
+  const pool = manifest.families?.[entry.family]?.runtimeMaterialPool;
+  if (!Array.isArray(pool) || pool.length === 0) return entry;
+  const selectedId = pool[stablePoolIndex(entry.id, pool.length)];
+  const selected = manifest.materials.find(
+    (candidate) => candidate.id === selectedId,
+  );
+  if (!selected) {
+    throw new Error(
+      `${entry.family} runtime material pool references missing '${selectedId}'`,
+    );
+  }
+  if (selected.family !== entry.family) {
+    throw new Error(
+      `${entry.family} runtime material '${selectedId}' belongs to ${selected.family}`,
+    );
+  }
+  return selected;
+}
+
 export async function extractPaletteSources({ repoRoot, zone, sourceGlb }) {
   const loaded = await readPaletteManifest(repoRoot, zone);
   if (!loaded) throw new Error(`No material palette is authored for ${zone}`);
@@ -188,7 +217,11 @@ export async function bakeZoneMaterialPalette({
           `(${sourceHash} != ${entry.sourceSha256})`,
       );
     }
-    const replacement = path.join(paletteRoot(repoRoot, zone), entry.output);
+    const runtimeEntry = runtimeMaterialEntry(loaded.manifest, entry);
+    const replacement = path.join(
+      paletteRoot(repoRoot, zone),
+      runtimeEntry.output,
+    );
     let input = await fs.readFile(replacement);
     let metadata = await sharp(input).metadata();
     if (
@@ -211,7 +244,7 @@ export async function bakeZoneMaterialPalette({
       bytes: input,
       mimeType: "image/webp",
     });
-    if (entry.pbr && includePbrTextures) {
+    if (runtimeEntry.pbr && includePbrTextures) {
       const readChannel = async (relativeFile, label) => {
         const file = path.join(paletteRoot(repoRoot, zone), relativeFile);
         const channelInput = await fs.readFile(file);
@@ -230,22 +263,25 @@ export async function bakeZoneMaterialPalette({
           mimeType: "image/webp",
         };
       };
-      const normal = await readChannel(entry.pbr.normal, "normal map");
-      normal.scale = entry.pbr.normalScale ?? 1;
+      const normal = await readChannel(runtimeEntry.pbr.normal, "normal map");
+      normal.scale = runtimeEntry.pbr.normalScale ?? 1;
       channels.push({
         imageName: entry.image,
         normal,
         metallicRoughness: await readChannel(
-          entry.pbr.metallicRoughness,
+          runtimeEntry.pbr.metallicRoughness,
           "metallic/roughness map",
         ),
-        extraShader: entry.extraShader ?? null,
+        extraShader: runtimeEntry.extraShader ?? null,
       });
-    } else if (entry.extraShader || entry.pbr?.roughness !== undefined) {
+    } else if (
+      runtimeEntry.extraShader ||
+      runtimeEntry.pbr?.roughness !== undefined
+    ) {
       channels.push({
         imageName: entry.image,
-        extraShader: entry.extraShader,
-        roughness: entry.pbr?.roughness,
+        extraShader: runtimeEntry.extraShader,
+        roughness: runtimeEntry.pbr?.roughness,
       });
     }
   }

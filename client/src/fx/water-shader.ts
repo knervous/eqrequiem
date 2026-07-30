@@ -33,15 +33,17 @@ fn wave(
 
 @vertex
 fn main(input: VertexInputs) -> FragmentInputs {
-  let p = vertexInputs.position.xz;
+  let p = vertexInputs.uv * 8.0;
   let a = wave(p, vec2f(0.94, 0.34), 0.52, 0.82, 0.19);
   let b = wave(p, vec2f(-0.38, 0.92), 0.91, -0.61, 0.085);
   let c = wave(p, vec2f(0.71, -0.70), 1.67, 0.43, 0.036);
   let combined = (a + b + c) * uniforms.uWaveStrength;
 
   var displaced = vertexInputs.position;
-  displaced.y += combined.x;
-  let localNormal = normalize(vec3f(-combined.y, 1.0, -combined.z));
+  displaced += normalize(vertexInputs.normal) * combined.x;
+  let localNormal = normalize(
+    vertexInputs.normal + vec3f(-combined.y, 0.0, -combined.z)
+  );
   let worldPosition = uniforms.world * vec4f(displaced, 1.0);
 
   vertexOutputs.position = uniforms.worldViewProjection * vec4f(displaced, 1.0);

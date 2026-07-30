@@ -27,55 +27,32 @@ const hashProviderUrl =
 const serverjsSourceRoot = path.resolve(__dirname, "../serverjs/src");
 const libraUiRoot = path.resolve(__dirname, "../serverjs/libra-ui/src");
 const sandboxRoot = path.resolve(__dirname, "../shader-object/sandbox/src");
-const shaderObjectSourceRoot = path.resolve(__dirname, "../shader-object/src");
+const shaderObjectRoot = path.resolve(__dirname, "../shader-object");
+const shaderObjectSourceRoot = path.join(shaderObjectRoot, "src");
 const shadoPublicRoot = path.resolve(
   __dirname,
   "../shader-object/sandbox/public/shado",
 );
 const clientRequire = createRequire(path.resolve(__dirname, "package.json"));
 const clientDependencyImporter = path.resolve(__dirname, "src/main.tsx");
-const clientBrowserDependencies = new Map([
-  ["@knervous/shado", path.resolve(__dirname, "../shader-object/src/index.ts")],
-  [
-    "@knervous/shado/world",
-    path.resolve(__dirname, "../shader-object/src/world/index.ts"),
-  ],
-  [
-    "@knervous/shado/render",
-    path.resolve(__dirname, "../shader-object/src/render/index.ts"),
-  ],
-  [
-    "@knervous/shado/renderer",
-    path.resolve(__dirname, "../shader-object/src/renderer/index.ts"),
-  ],
-  [
-    "@knervous/shado/babylon",
-    path.resolve(__dirname, "../shader-object/src/babylon/index.ts"),
-  ],
-  [
-    "@knervous/shado/core",
-    path.resolve(__dirname, "../shader-object/src/core/index.ts"),
-  ],
-  [
-    "@knervous/shado/lite",
-    path.resolve(__dirname, "../shader-object/src/lite/index.ts"),
-  ],
-  [
-    "@knervous/shado/showcase",
-    path.resolve(__dirname, "../shader-object/src/showcase/index.ts"),
-  ],
-  [
-    "@knervous/shado/msdf",
-    path.resolve(__dirname, "../shader-object/src/msdf/index.ts"),
-  ],
-  [
-    "@knervous/shado/preprocess",
-    path.resolve(__dirname, "../shader-object/src/preprocess/index.ts"),
-  ],
-  [
-    "@knervous/shado/preprocess/runtime",
-    path.resolve(__dirname, "../shader-object/src/preprocess/runtime.ts"),
-  ],
+const shadoPackage = JSON.parse(
+  fs.readFileSync(path.join(shaderObjectRoot, "package.json"), "utf8"),
+) as {
+  name: string;
+  exports: Record<string, { source?: string }>;
+};
+const shadoSourceEntrypoints = Object.entries(shadoPackage.exports).flatMap(
+  ([subpath, conditions]) => {
+    if (!conditions.source) return [];
+    const moduleId =
+      subpath === "."
+        ? shadoPackage.name
+        : `${shadoPackage.name}/${subpath.slice(2)}`;
+    return [[moduleId, path.resolve(shaderObjectRoot, conditions.source)] as const];
+  },
+);
+const clientBrowserDependencies = new Map<string, string>([
+  ...shadoSourceEntrypoints,
   [
     "@babylonjs/core",
     path.resolve(__dirname, "src/bjs/core-runtime.ts"),

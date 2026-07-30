@@ -40,3 +40,15 @@ test("water uses bounded directional waves and analytic normal slopes", async ()
   assert.match(shader, /fresnel/);
   assert.doesNotMatch(shader, /RenderTargetTexture|ReflectionProbe|ComputeShader/);
 });
+
+test("zone geometry consumes shader metadata instead of legacy frame swapping", async () => {
+  const [zoneManager, zoneFx] = await Promise.all([
+    readSource("src/Game/Zone/zone-manager.ts"),
+    readSource("src/fx/zone-geometry-fx.ts"),
+  ]);
+  assert.match(zoneManager, /ZoneGeometryFx\.attach/);
+  assert.doesNotMatch(zoneManager, /swapMaterialTexture|registerAnimatedTextures/);
+  assert.match(zoneFx, /eltania\?\.extraShader/);
+  assert.match(zoneFx, /createGrassForSurface/);
+  assert.match(zoneFx, /surface\.material = waterMaterial/);
+});

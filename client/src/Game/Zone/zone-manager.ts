@@ -1,11 +1,12 @@
 import type * as BJS from "@babylonjs/core";
 import BABYLON from "@bjs";
+import ObjectCache from "@/Game/Model/object-cache";
+import { ZoneGeometryFx } from "@/fx/zone-geometry-fx";
 import { supportedZones } from "@game/Constants/supportedZones";
 import emitter, { ChatMessage } from "@game/Events/events";
 import { FileSystem } from "@game/FileSystem/filesystem";
 import { LightManager } from "@game/Lights/light-manager";
 import type GameManager from "@game/Manager/game-manager";
-import { swapMaterialTexture } from "@game/Model/bjs-utils";
 import EntityCache from "@game/Model/entity-cache";
 import { Spawns } from "@game/Net/messages";
 import { RegionManager } from "@game/Regions/region-manager";
@@ -15,7 +16,6 @@ import { ShadoWorldObjectLayer } from "./shado-world-object-layer";
 import { ShadoWorldSceneLayer } from "./shado-world-scene-layer";
 import { Grid } from "./zone-grid";
 import { ZoneMetadata } from "./zone-types";
-import ObjectCache from "@/Game/Model/object-cache";
 
 export class ZoneManager {
   get RegionManager(): RegionManager {
@@ -50,6 +50,7 @@ export class ZoneManager {
   private zoneObjects: ObjectCache | null = null;
   private shadoWorldObjects: ShadoWorldObjectLayer | null = null;
   private shadoWorldScene: ShadoWorldSceneLayer | null = null;
+  private zoneGeometryFx: ZoneGeometryFx | null = null;
 
   private disableWorldEnv: boolean = false;
   public zoneName = "";
@@ -62,13 +63,6 @@ export class ZoneManager {
   }
   private parent: GameManager;
 
-  private animatedTextures: Array<{
-    mesh: BJS.AbstractMesh;
-    frames: string[];
-    delayMs: number;
-    elapsedMs: number;
-    frame: number;
-  }> = [];
   private loadGeneration = 0;
 
   constructor(parent: GameManager) {
@@ -101,6 +95,8 @@ export class ZoneManager {
     // Dispose promoted layers before their nodes are traversed below.
     this.shadoWorldObjects?.dispose();
     this.shadoWorldObjects = null;
+    this.zoneGeometryFx?.dispose();
+    this.zoneGeometryFx = null;
     this.shadoWorldScene?.dispose();
     this.shadoWorldScene = null;
     // Clean up resources if needed.
@@ -124,7 +120,6 @@ export class ZoneManager {
       this.grid.dispose();
       this.grid = null;
     }
-    this.animatedTextures = [];
     this.zoneObjects?.disposeAll();
     this.regionManager.dispose();
     this.lightManager.dispose();
@@ -223,7 +218,10 @@ export class ZoneManager {
       this.shadoWorldScene = null;
       return;
     }
-    this.registerAnimatedTextures(this.shadoWorldScene.renderMeshes);
+    this.zoneGeometryFx = ZoneGeometryFx.attach(
+      this.shadoWorldScene.renderMeshes,
+      this.parent.scene,
+    );
     this.attachStaticWorldPhysics(this.shadoWorldScene.collisionMesh);
     const bakedWorldLighting =
       this.shadoWorldScene.usesBakedWorldLighting;
@@ -235,27 +233,6 @@ export class ZoneManager {
     );
     this.parent.setLoading(false);
     await this.loadZoneMetadata(generation);
-  }
-
-  private registerAnimatedTextures(meshes: readonly BJS.AbstractMesh[]): void {
-    const materials = new Set<BJS.Material>();
-    for (const mesh of meshes) {
-      const material = mesh.material;
-      if (!material || materials.has(material)) continue;
-      materials.add(material);
-      const extras = material.metadata?.gltf?.extras;
-      if (!extras?.frames?.length || !extras?.animationDelay) {
-        material.freeze();
-        continue;
-      }
-      this.animatedTextures.push({
-        mesh,
-        frames: extras.frames,
-        delayMs: extras.animationDelay * 2,
-        elapsedMs: 0,
-        frame: 0,
-      });
-    }
   }
 
   private attachStaticWorldPhysics(zoneMesh: BJS.Mesh): void {
@@ -353,18 +330,7 @@ export class ZoneManager {
       return;
     }
     const delta = this.parent.scene?.getEngine().getDeltaTime() ?? 0;
-    for (const animation of this.animatedTextures) {
-      if (animation.mesh.isDisposed()) continue;
-      animation.elapsedMs += delta;
-      if (animation.elapsedMs < animation.delayMs) continue;
-      animation.elapsedMs %= animation.delayMs;
-      animation.frame = (animation.frame + 1) % animation.frames.length;
-      swapMaterialTexture(
-        animation.mesh.material!,
-        animation.frames[animation.frame],
-        true,
-      );
-    }
+    this.zoneGeometryFx?.tick(delta, this.parent.scene?.activeCamera ?? null);
     this.skyManager.tick(delta);
     this.shadoWorldObjects?.tick(delta);
     this.entityPool?.process(delta);

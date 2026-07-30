@@ -167,6 +167,54 @@ async function decodeGeneratedImage(result, expectedSize, operation) {
   return rawBuffer;
 }
 
+const TRANSPORT_RETRY_DELAYS_MS = [1_500, 4_000, 10_000];
+
+async function postGeneration(url, payload, timeoutMs) {
+  let lastError;
+  for (
+    let transportAttempt = 0;
+    transportAttempt <= TRANSPORT_RETRY_DELAYS_MS.length;
+    transportAttempt += 1
+  ) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      return await fetch(url, {
+        method: 'POST',
+        // sd-server closes completed generation sockets on some Windows
+        // builds without making that lifecycle clear to undici. Do not reuse
+        // a stale keep-alive connection for the next long-running request.
+        headers: {
+          'content-type': 'application/json',
+          connection: 'close',
+        },
+        body: JSON.stringify(payload),
+        signal: controller.signal,
+      });
+    } catch (error) {
+      lastError = error;
+    } finally {
+      clearTimeout(timer);
+    }
+    if (transportAttempt < TRANSPORT_RETRY_DELAYS_MS.length) {
+      const delay = TRANSPORT_RETRY_DELAYS_MS[transportAttempt];
+      const diagnostic = [
+        lastError?.message,
+        lastError?.cause?.code,
+        lastError?.cause?.message,
+      ]
+        .filter(Boolean)
+        .join(': ');
+      console.warn(
+        `sd.cpp transport retry ${transportAttempt + 1}/` +
+          `${TRANSPORT_RETRY_DELAYS_MS.length} in ${delay}ms (${diagnostic})`,
+      );
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
+  }
+  throw lastError;
+}
+
 export class SdCppImg2ImgClient {
   constructor({
     baseUrl = process.env.SDCPP_URL ?? 'http://127.0.0.1:7860',
@@ -198,15 +246,12 @@ export class SdCppImg2ImgClient {
       .resize(generationSize, generationSize, { fit: 'fill', kernel: sharp.kernel.lanczos3 })
       .png()
       .toBuffer();
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), this.timeoutMs);
     const startedAt = performance.now();
     let response;
     try {
-      response = await fetch(this.url, {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
+      response = await postGeneration(
+        this.url,
+        {
           init_images: [source.toString('base64')],
           prompt,
           negative_prompt: DEFAULT_NEGATIVE_PROMPT,
@@ -219,15 +264,13 @@ export class SdCppImg2ImgClient {
           seed,
           batch_size: 1,
           n_iter: 1,
-        }),
-        signal: controller.signal,
-      });
+        },
+        this.timeoutMs,
+      );
     } catch (error) {
       throw new Error(`Local sd.cpp img2img request failed at ${this.url}: ${error.message}`, {
         cause: error,
       });
-    } finally {
-      clearTimeout(timer);
     }
     if (!response.ok) {
       const diagnostic = (await response.text()).slice(0, 1_000);
@@ -263,15 +306,12 @@ export class SdCppImg2ImgClient {
     attempt = 0,
   }) {
     const seed = (deterministicSeed(entry) + attempt * 104_729) & 0x7fffffff;
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), this.timeoutMs);
     const startedAt = performance.now();
     let response;
     try {
-      response = await fetch(new URL('/sdapi/v1/txt2img', this.url), {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
+      response = await postGeneration(
+        new URL('/sdapi/v1/txt2img', this.url),
+        {
           prompt,
           negative_prompt: negativePrompt,
           width: generationSize,
@@ -281,13 +321,11 @@ export class SdCppImg2ImgClient {
           sampler_name: SAMPLER_NAME,
           seed,
           batch_size: 1,
-        }),
-        signal: controller.signal,
-      });
+        },
+        this.timeoutMs,
+      );
     } catch (error) {
       throw new Error(`Local sd.cpp txt2img request failed: ${error.message}`, { cause: error });
-    } finally {
-      clearTimeout(timer);
     }
     if (!response.ok) {
       throw new Error(`sd.cpp txt2img returned HTTP ${response.status}: ${(await response.text()).slice(0, 1_000)}`);
