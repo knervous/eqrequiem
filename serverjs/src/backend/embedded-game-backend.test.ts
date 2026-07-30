@@ -34,6 +34,40 @@ const sword: BackendItemTemplate = {
 };
 
 describe("embedded game backend", () => {
+  it("does not reinterpret a corrupt schema probe as a legacy database", async () => {
+    let mutations = 0;
+    let closed = false;
+    const corruption = new Error(
+      "SQLITE_CORRUPT: database disk image is malformed",
+    );
+    const database = {
+      dialect: "sqlite" as const,
+      query: async () => {
+        throw corruption;
+      },
+      execute: async () => {
+        mutations++;
+        return { rows: [], affectedRows: 0 };
+      },
+      transaction: async () => {
+        throw new Error("transaction must not start after corruption");
+      },
+      close: async () => {
+        closed = true;
+      },
+    };
+    const backend = new EmbeddedGameBackend(database, {
+      items: [],
+      gearSets: {},
+      zones: [],
+    });
+
+    await assert.rejects(backend.initialize(), corruption);
+    assert.equal(mutations, 0);
+    await backend.close();
+    assert.equal(closed, true);
+  });
+
   it("runs the same character, zone, command, and inventory API on SQLite", async () => {
     const database = new SqliteBackend();
     const backend = new EmbeddedGameBackend(database, {

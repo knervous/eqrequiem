@@ -152,11 +152,7 @@ export class EmbeddedGameBackend implements GameBackend {
   private readonly createZoneKernel: ZoneKernelFactory | undefined;
   private readonly embeddedZoneOptions: Omit<
     EmbeddedZoneRuntimeOptions,
-    | "zoneId"
-    | "instanceId"
-    | "initialSnapshot"
-    | "zoneKey"
-    | "publishNpcDebug"
+    "zoneId" | "instanceId" | "initialSnapshot" | "zoneKey" | "publishNpcDebug"
   >;
   private readonly devDiagnostics: boolean;
 
@@ -1182,10 +1178,14 @@ export class EmbeddedGameBackend implements GameBackend {
       : null;
     if (!route || !definition || !character) {
       return [
-        event("merchant_error", {
-          npcId: request.npcId,
-          message: "That merchant cannot be used from here.",
-        }, "control-stream"),
+        event(
+          "merchant_error",
+          {
+            npcId: request.npcId,
+            message: "That merchant cannot be used from here.",
+          },
+          "control-stream",
+        ),
       ];
     }
     try {
@@ -1224,12 +1224,17 @@ export class EmbeddedGameBackend implements GameBackend {
       return events;
     } catch (error) {
       return [
-        event("merchant_error", {
-          npcId: request.npcId,
-          message: error instanceof MerchantTransactionError
-            ? error.message
-            : "Unable to complete that merchant transaction.",
-        }, "control-stream"),
+        event(
+          "merchant_error",
+          {
+            npcId: request.npcId,
+            message:
+              error instanceof MerchantTransactionError
+                ? error.message
+                : "Unable to complete that merchant transaction.",
+          },
+          "control-stream",
+        ),
       ];
     }
   }
@@ -1336,7 +1341,8 @@ export class EmbeddedGameBackend implements GameBackend {
         spawn.heading = radiansToEqHeading(state.heading);
         spawn.currentHp = state.currentHp;
         spawn.maximumHp = state.maximumHp;
-        if (state.kind === EntityKind.corpse) spawn.name = corpseName(spawn.name);
+        if (state.kind === EntityKind.corpse)
+          spawn.name = corpseName(spawn.name);
       }
       runtime.joinPlayer({
         sessionId,
@@ -1546,57 +1552,57 @@ export class EmbeddedGameBackend implements GameBackend {
     const created = this.zoneSnapshotRepository
       .latest(zoneId, instanceId)
       .catch(() => null)
-      .then((stored) => EmbeddedZoneRuntime.create(
-        definitions,
-        createZoneKernel,
-        (sessionIds, payload) => {
-        const delivery: BackendEventDelivery = {
-          sessionIds,
-          event: event("render_snapshot", { payload }, "control-stream"),
-        };
-        for (const listener of this.listeners) listener(delivery);
-        },
-        (sessionIds, combat) => {
-        const delivery: BackendEventDelivery = {
-          sessionIds,
-          event: event("combat_event", { ...combat }, "control-stream"),
-        };
-        for (const listener of this.listeners) listener(delivery);
-        },
-        (sessionId, death) => {
-        const delivery: BackendEventDelivery = {
-          sessionIds: [sessionId],
-          event: event("death_event", { ...death }, "control-stream"),
-        };
-        for (const listener of this.listeners) listener(delivery);
-        void this.handleEmbeddedDeath(sessionId, death);
-        },
-        10,
-        {
-          ...this.embeddedZoneOptions,
-          zoneId,
-          instanceId,
-          zoneKey,
-          ...(stored
-            ? { initialSnapshot: stored.snapshot }
-            : {}),
-          ...(this.devDiagnostics
-            ? {
-                publishNpcDebug: (sessionIds, diagnostic) => {
-                const delivery: BackendEventDelivery = {
-                  sessionIds,
-                  event: event(
-                    "npc_debug_state",
-                    { ...diagnostic },
-                    "datagram",
-                  ),
-                };
-                for (const listener of this.listeners) listener(delivery);
-                },
-              }
-            : {}),
-        },
-      ));
+      .then((stored) =>
+        EmbeddedZoneRuntime.create(
+          definitions,
+          createZoneKernel,
+          (sessionIds, payload) => {
+            const delivery: BackendEventDelivery = {
+              sessionIds,
+              event: event("render_snapshot", { payload }, "control-stream"),
+            };
+            for (const listener of this.listeners) listener(delivery);
+          },
+          (sessionIds, combat) => {
+            const delivery: BackendEventDelivery = {
+              sessionIds,
+              event: event("combat_event", { ...combat }, "control-stream"),
+            };
+            for (const listener of this.listeners) listener(delivery);
+          },
+          (sessionId, death) => {
+            const delivery: BackendEventDelivery = {
+              sessionIds: [sessionId],
+              event: event("death_event", { ...death }, "control-stream"),
+            };
+            for (const listener of this.listeners) listener(delivery);
+            void this.handleEmbeddedDeath(sessionId, death);
+          },
+          10,
+          {
+            ...this.embeddedZoneOptions,
+            zoneId,
+            instanceId,
+            zoneKey,
+            ...(stored ? { initialSnapshot: stored.snapshot } : {}),
+            ...(this.devDiagnostics
+              ? {
+                  publishNpcDebug: (sessionIds, diagnostic) => {
+                    const delivery: BackendEventDelivery = {
+                      sessionIds,
+                      event: event(
+                        "npc_debug_state",
+                        { ...diagnostic },
+                        "datagram",
+                      ),
+                    };
+                    for (const listener of this.listeners) listener(delivery);
+                  },
+                }
+              : {}),
+          },
+        ),
+      );
     this.zoneRuntimes.set(key, created);
     void created.catch(() => {
       if (this.zoneRuntimes.get(key) === created) {
@@ -1823,8 +1829,10 @@ export class EmbeddedGameBackend implements GameBackend {
           "SELECT value FROM app_meta WHERE key = 'schema_version' LIMIT 1",
         )
       ).rows[0]?.value;
-    } catch {
-      // A pre-canonical offline database is intentionally replaced below.
+    } catch (error) {
+      // Only absence of the canonical marker identifies a legacy/new database.
+      // Corruption, I/O, and locking failures must retain their real meaning.
+      if (!isMissingAppMetaTable(error)) throw error;
     }
     if (version === EMBEDDED_SCHEMA_VERSION) {
       return;
@@ -1838,28 +1846,38 @@ export class EmbeddedGameBackend implements GameBackend {
     }
     if (version === "3") {
       await this.database.execute("PRAGMA foreign_keys = OFF");
-      for (const table of CONTENT_TABLES) {
-        await this.database.execute(`DROP TABLE IF EXISTS ${table}`);
+      try {
+        await this.database.transaction(async (transaction) => {
+          for (const table of CONTENT_TABLES) {
+            await transaction.execute(`DROP TABLE IF EXISTS ${table}`);
+          }
+          await transaction.execute(
+            "UPDATE app_meta SET value = ? WHERE key = 'schema_version'",
+            [EMBEDDED_SCHEMA_VERSION],
+          );
+        });
+      } finally {
+        await this.database.execute("PRAGMA foreign_keys = ON");
       }
-      await this.database.execute("PRAGMA foreign_keys = ON");
-      await this.database.execute(
-        "UPDATE app_meta SET value = ? WHERE key = 'schema_version'",
-        [EMBEDDED_SCHEMA_VERSION],
-      );
       return;
     }
     await this.database.execute("PRAGMA foreign_keys = OFF");
-    for (const table of RESET_TABLES) {
-      await this.database.execute(`DROP TABLE IF EXISTS ${table}`);
+    try {
+      await this.database.transaction(async (transaction) => {
+        for (const table of RESET_TABLES) {
+          await transaction.execute(`DROP TABLE IF EXISTS ${table}`);
+        }
+        await transaction.execute(
+          "CREATE TABLE app_meta (key VARCHAR(64) PRIMARY KEY, value TEXT NOT NULL)",
+        );
+        await transaction.execute(
+          "INSERT INTO app_meta (key, value) VALUES ('schema_version', ?)",
+          [EMBEDDED_SCHEMA_VERSION],
+        );
+      });
+    } finally {
+      await this.database.execute("PRAGMA foreign_keys = ON");
     }
-    await this.database.execute("PRAGMA foreign_keys = ON");
-    await this.database.execute(
-      "CREATE TABLE app_meta (key VARCHAR(64) PRIMARY KEY, value TEXT NOT NULL)",
-    );
-    await this.database.execute(
-      "INSERT INTO app_meta (key, value) VALUES ('schema_version', ?)",
-      [EMBEDDED_SCHEMA_VERSION],
-    );
   }
 
   private async guestAccountId(): Promise<number> {
@@ -1902,7 +1920,11 @@ function mutationEvent(mutation: {
   item?: Record<string, unknown>;
 }): BackendEvent {
   return mutation.kind === "delete"
-    ? event("delete_item", { slot: mutation.slot, bag: mutation.bag }, "control-stream")
+    ? event(
+        "delete_item",
+        { slot: mutation.slot, bag: mutation.bag },
+        "control-stream",
+      )
     : event("add_item", mutation.item ?? {}, "control-stream");
 }
 
@@ -1928,6 +1950,21 @@ function timestamp(value: string | number | null): number {
 }
 
 const EMBEDDED_SCHEMA_VERSION = "6";
+
+function isMissingAppMetaTable(error: unknown): boolean {
+  const message = String(
+    (error as { message?: unknown })?.message ?? error,
+  ).toLowerCase();
+  return (
+    message.includes("no such table: app_meta") ||
+    (message.includes("relation") &&
+      message.includes("app_meta") &&
+      message.includes("does not exist")) ||
+    (message.includes("table") &&
+      message.includes("app_meta") &&
+      message.includes("doesn't exist"))
+  );
+}
 
 const CONTENT_TABLES = [
   "npc_merchant_assignments",
