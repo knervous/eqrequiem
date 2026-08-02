@@ -2,6 +2,12 @@ import { Shado } from '../core/Shado';
 import { field, gpuStruct } from '../decorators';
 import type { DQClipInfo } from './VATBuilder/VATBuilder';
 
+/** Base material lighting available to each actor without a custom shader hook. */
+export enum ShadoLightingMode {
+  Unlit = 0,
+  Lambert = 1,
+}
+
 @gpuStruct({ name: 'ShadoActor' })
 export class ShadoActor extends Shado {
   @field('vec4') translation!: Float32Array;
@@ -21,6 +27,21 @@ export class ShadoActor extends Shado {
   @field('f32') padding2!: number;
   @field('f32') padding3!: number;
 
+  /**
+   * Per-instance lighting selection. This intentionally occupies the first
+   * reserved 1.0.x padding word so enabling lighting does not change the actor
+   * ABI or the offsets of fields added by subclasses.
+   */
+  public get lightingMode(): ShadoLightingMode {
+    return this.padding1 === ShadoLightingMode.Lambert
+      ? ShadoLightingMode.Lambert
+      : ShadoLightingMode.Unlit;
+  }
+  public set lightingMode(value: ShadoLightingMode) {
+    this.padding1 =
+      value === ShadoLightingMode.Lambert ? ShadoLightingMode.Lambert : ShadoLightingMode.Unlit;
+  }
+
   private readonly _worldPerEM = 0.16;
   private readonly _yLiftWorld = 2.4;
 
@@ -39,7 +60,7 @@ export class ShadoActor extends Shado {
     this.nameplateColor = new Float32Array([1.0, 1.0, 1.0, 1.0]);
     this.animationBuffer = new Float32Array([0, 0, 0, 60]);
     this.visibleFlag = 1;
-    this.padding1 = 0;
+    this.lightingMode = ShadoLightingMode.Unlit;
     this.padding2 = 0;
     this.padding3 = 0;
   }

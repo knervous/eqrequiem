@@ -16,6 +16,21 @@ import { swapMaterialTexture } from "./bjs-utils";
 
 type ModelKey = string;
 
+function setMaterialLightingPolicy(
+  material: BJS.Material,
+  bakedLighting: boolean,
+): void {
+  if (material instanceof BABYLON.MultiMaterial) {
+    material.subMaterials.forEach((subMaterial) => {
+      if (subMaterial) setMaterialLightingPolicy(subMaterial, bakedLighting);
+    });
+  } else if (material instanceof BABYLON.PBRMaterial) {
+    material.unlit = bakedLighting;
+  } else if (material instanceof BABYLON.StandardMaterial) {
+    material.disableLighting = bakedLighting;
+  }
+}
+
 type ContainerData = {
   container: BJS.AssetContainer;
   hasAnimations: boolean;
@@ -375,10 +390,17 @@ export default class ObjectCache {
     source: string,
     scene: BJS.Scene,
     matrixData: Float32Array,
+    colorData: Float32Array,
+    bakedLighting: boolean,
   ): Promise<BJS.Mesh[]> {
     if (matrixData.length % 16 !== 0) {
       throw new Error(
         `[ObjectCache] Promoted batch '${model}' has ${matrixData.length} matrix values`,
+      );
+    }
+    if (colorData.length !== (matrixData.length / 16) * 4) {
+      throw new Error(
+        `[ObjectCache] Promoted batch '${model}' has ${colorData.length} color values`,
       );
     }
 
@@ -431,14 +453,19 @@ export default class ObjectCache {
     }
 
     for (const mesh of renderMeshes) {
+      if (mesh.material) {
+        setMaterialLightingPolicy(mesh.material, bakedLighting);
+      }
       if (!hasInstances) {
         mesh.setEnabled(false);
         mesh.alwaysSelectAsActiveMesh = false;
         mesh.thinInstanceSetBuffer("matrix", null);
+        mesh.thinInstanceSetBuffer("color", null);
         continue;
       }
 
       mesh.thinInstanceSetBuffer("matrix", matrixData, 16, false);
+      mesh.thinInstanceSetBuffer("color", colorData, 4, false);
       mesh.thinInstanceRefreshBoundingInfo(true, false, false);
       mesh.alwaysSelectAsActiveMesh = true;
       mesh.setEnabled(true);

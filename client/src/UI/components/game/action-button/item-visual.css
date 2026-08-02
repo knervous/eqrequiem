@@ -1,0 +1,12 @@
+.rq-item-sprite {
+  overflow: hidden;
+}
+
+.rq-item-sprite__sheet {
+  position: absolute;
+  width: 640%;
+  height: 640%;
+  max-width: none;
+  pointer-events: none;
+  user-select: none;
+}

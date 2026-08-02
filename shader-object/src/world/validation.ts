@@ -1,8 +1,16 @@
 import type { ShadoWorldSpatialPackage } from './types';
 
 const CELL_FIELDS = [
-  'kind', 'minX', 'minY', 'minZ', 'maxX', 'maxY', 'maxZ',
-  'firstCluster', 'clusterCount', 'phaseMask',
+  'kind',
+  'minX',
+  'minY',
+  'minZ',
+  'maxX',
+  'maxY',
+  'maxZ',
+  'firstCluster',
+  'clusterCount',
+  'phaseMask',
 ] as const;
 
 /** Deterministic checksum for the package's index topology and reducer-facing layout. */
@@ -19,6 +27,15 @@ export function computeShadoWorldLayoutHash(world: ShadoWorldSpatialPackage): st
   const feedArray = (values: ArrayLike<number>) => {
     feed(values.length);
     for (let i = 0; i < values.length; i++) feed(Number(values[i]));
+  };
+  const float = new Float32Array(1);
+  const bits = new Uint32Array(float.buffer);
+  const feedFloatArray = (values: ArrayLike<number>) => {
+    feed(values.length);
+    for (let index = 0; index < values.length; index++) {
+      float[0] = Number(values[index]);
+      feed(bits[0]!);
+    }
   };
 
   feed(world.version);
@@ -64,13 +81,34 @@ export function computeShadoWorldLayoutHash(world: ShadoWorldSpatialPackage): st
     world.pvs?.words ?? [],
     world.bvh.childRef,
   ];
-  topology.splice(16, 0,
+  topology.splice(
+    16,
+    0,
     world.navigation.modifiers.region,
     world.navigation.modifiers.area,
     world.navigation.modifiers.flags,
     world.navigation.modifiers.excluded
   );
   topology.forEach(feedArray);
+  const stampIrradiance = world.objects?.stamps.irradianceR
+    ? [
+        world.objects.stamps.irradianceR,
+        world.objects.stamps.irradianceG!,
+        world.objects.stamps.irradianceB!,
+        world.objects.stamps.irradianceA!,
+      ]
+    : [];
+  stampIrradiance.forEach(feedFloatArray);
+  if (world.grass) {
+    [
+      world.grass.cells.x,
+      world.grass.cells.z,
+      world.grass.cells.firstPlacement,
+      world.grass.cells.placementCount,
+    ].forEach(feedArray);
+    Object.values(world.grass.placements).forEach(feedFloatArray);
+    if (world.grass.coverage) world.grass.coverage.words.forEach(feed);
+  }
   return hash.toString(16).padStart(8, '0');
 }
 
@@ -88,6 +126,10 @@ export function validateShadoWorldPackage(world: ShadoWorldSpatialPackage): void
     world.version !== 5 ||
     world.coordinateSystem !== 'babylon-y-up' ||
     !['identity', 'mirror-x'].includes(world.sourceTransform) ||
+    (world.lighting !== undefined &&
+      (!['dynamic', 'hybrid', 'baked'].includes(world.lighting.mode) ||
+        !['material-tint', 'baked-irradiance'].includes(world.lighting.vertexColors) ||
+        (world.lighting.mode === 'baked' && world.lighting.vertexColors !== 'baked-irradiance'))) ||
     world.navigation?.runtimeToRecast !== 'z-y-negative-x' ||
     world.collision?.format !== 'shado-collision-v1' ||
     !world.collision.source ||
@@ -110,11 +152,20 @@ export function validateShadoWorldPackage(world: ShadoWorldSpatialPackage): void
     }
   };
   [
-    world.clusters.centerX, world.clusters.centerY, world.clusters.centerZ,
-    world.clusters.coneX, world.clusters.coneY, world.clusters.coneZ,
-    world.clusters.coneCutoff, world.clusters.firstIndex, world.clusters.indexCount,
-    world.clusters.primitive, world.clusters.materialPacket, world.clusters.renderChunk,
-    world.clusters.lodParent, world.clusters.cellId,
+    world.clusters.centerX,
+    world.clusters.centerY,
+    world.clusters.centerZ,
+    world.clusters.coneX,
+    world.clusters.coneY,
+    world.clusters.coneZ,
+    world.clusters.coneCutoff,
+    world.clusters.firstIndex,
+    world.clusters.indexCount,
+    world.clusters.primitive,
+    world.clusters.materialPacket,
+    world.clusters.renderChunk,
+    world.clusters.lodParent,
+    world.clusters.cellId,
   ].forEach(values => sameLength('cluster SoA', clusterCount, values));
   CELL_FIELDS.forEach(field => sameLength(`cell.${field}`, cellCount, world.cells[field]));
   sameLength('tiles.x', cellCount, world.tiles.x);
@@ -155,15 +206,25 @@ export function validateShadoWorldPackage(world: ShadoWorldSpatialPackage): void
   sameLength('portals.dynamicStateId', portalCount, world.portals.dynamicStateId);
   sameLength('portals.flags', portalCount, world.portals.flags);
   const regionCount = world.regions.id.length;
-  [world.regions.name, world.regions.kind, world.regions.enabled,
-    world.regions.centerX, world.regions.centerY, world.regions.centerZ,
-    world.regions.sizeX, world.regions.sizeY, world.regions.sizeZ,
-    world.regions.phaseMask, world.regions.tags, world.regions.metadata]
-    .forEach(values => sameLength('region SoA', regionCount, values));
+  [
+    world.regions.name,
+    world.regions.kind,
+    world.regions.enabled,
+    world.regions.centerX,
+    world.regions.centerY,
+    world.regions.centerZ,
+    world.regions.sizeX,
+    world.regions.sizeY,
+    world.regions.sizeZ,
+    world.regions.phaseMask,
+    world.regions.tags,
+    world.regions.metadata,
+  ].forEach(values => sameLength('region SoA', regionCount, values));
   if (new Set(world.regions.id).size !== regionCount) {
     throw new Error('Invalid duplicate Shado world region IDs');
   }
   if (world.objects) validateObjects(world.objects, cellCount, sameLength);
+  if (world.grass) validateGrass(world.grass, sameLength);
   if (world.renderChunkClusters.length !== clusterCount) {
     throw new Error('Invalid Shado world render-chunk references');
   }
@@ -175,12 +236,19 @@ export function validateShadoWorldPackage(world: ShadoWorldSpatialPackage): void
     referenced[cluster] = 1;
   }
   for (const cell of world.clusters.cellId) {
-    if (cell < 0 || cell >= cellCount) throw new Error(`Invalid Shado world cell reference ${cell}`);
+    if (cell < 0 || cell >= cellCount)
+      throw new Error(`Invalid Shado world cell reference ${cell}`);
   }
   const bvhSlots = world.bvh.nodeCount * 4;
-  [world.bvh.childMinX, world.bvh.childMinY, world.bvh.childMinZ,
-    world.bvh.childMaxX, world.bvh.childMaxY, world.bvh.childMaxZ,
-    world.bvh.childRef].forEach(values => sameLength('BVH4 lanes', bvhSlots, values));
+  [
+    world.bvh.childMinX,
+    world.bvh.childMinY,
+    world.bvh.childMinZ,
+    world.bvh.childMaxX,
+    world.bvh.childMaxY,
+    world.bvh.childMaxZ,
+    world.bvh.childRef,
+  ].forEach(values => sameLength('BVH4 lanes', bvhSlots, values));
   if (world.pvs) {
     const expectedWords = cellCount * world.pvs.wordsPerRow;
     sameLength('PVS words', expectedWords, world.pvs.words);
@@ -193,6 +261,81 @@ export function validateShadoWorldPackage(world: ShadoWorldSpatialPackage): void
     throw new Error(
       `Shado world package integrity mismatch: expected ${world.integrity.layoutHash}, got ${actual}`
     );
+  }
+}
+
+function validateGrass(
+  grass: NonNullable<ShadoWorldSpatialPackage['grass']>,
+  sameLength: (label: string, expected: number, values: { length: number }) => void
+): void {
+  if (grass.version !== 1 || !Number.isFinite(grass.cellSize) || grass.cellSize <= 0) {
+    throw new Error('Invalid Shado world grass package header');
+  }
+  const cellCount = grass.cells.x.length;
+  [grass.cells.z, grass.cells.firstPlacement, grass.cells.placementCount].forEach(values =>
+    sameLength('grass cell SoA', cellCount, values)
+  );
+  const placementCount = grass.placements.positionX.length;
+  Object.values(grass.placements).forEach(values =>
+    sameLength('grass placement SoA', placementCount, values)
+  );
+  let nextPlacement = 0;
+  for (let cell = 0; cell < cellCount; cell++) {
+    if (
+      !Number.isInteger(grass.cells.x[cell]) ||
+      !Number.isInteger(grass.cells.z[cell]) ||
+      grass.cells.firstPlacement[cell] !== nextPlacement ||
+      !Number.isInteger(grass.cells.placementCount[cell]) ||
+      grass.cells.placementCount[cell] <= 0
+    ) {
+      throw new Error(`Invalid Shado world grass cell ${cell}`);
+    }
+    nextPlacement += grass.cells.placementCount[cell];
+  }
+  if (nextPlacement !== placementCount) {
+    throw new Error('Invalid Shado world grass placement ranges');
+  }
+  if (grass.coverage) {
+    const { resolution, wordsPerCell, words } = grass.coverage;
+    if (
+      !Number.isInteger(resolution) ||
+      resolution <= 0 ||
+      resolution > 128 ||
+      !Number.isInteger(wordsPerCell) ||
+      wordsPerCell !== Math.ceil((resolution * resolution) / 32)
+    ) {
+      throw new Error('Invalid Shado world grass coverage header');
+    }
+    sameLength('grass coverage words', cellCount * wordsPerCell, words);
+    if (words.some(word => !Number.isInteger(word) || word < 0 || word > 0xffff_ffff)) {
+      throw new Error('Invalid Shado world grass coverage words');
+    }
+  }
+  for (let placement = 0; placement < placementCount; placement++) {
+    const finite = [
+      grass.placements.positionX[placement],
+      grass.placements.positionY[placement],
+      grass.placements.positionZ[placement],
+      grass.placements.yaw[placement],
+      grass.placements.width[placement],
+      grass.placements.height[placement],
+      grass.placements.phase[placement],
+      grass.placements.stiffness[placement],
+      grass.placements.colorVariation[placement],
+    ].every(Number.isFinite);
+    if (
+      !finite ||
+      grass.placements.width[placement] <= 0 ||
+      grass.placements.height[placement] <= 0 ||
+      grass.placements.phase[placement] < 0 ||
+      grass.placements.phase[placement] > 1 ||
+      grass.placements.stiffness[placement] < 0 ||
+      grass.placements.stiffness[placement] > 1 ||
+      grass.placements.colorVariation[placement] < 0 ||
+      grass.placements.colorVariation[placement] > 1
+    ) {
+      throw new Error(`Invalid Shado world grass placement ${placement}`);
+    }
   }
 }
 
@@ -211,9 +354,7 @@ function boundsContain(
   inner: ShadoWorldSpatialPackage['bounds']
 ): boolean {
   return outer.min.every(
-    (value, axis) =>
-      inner.min[axis]! >= value - 1e-4 &&
-      inner.max[axis]! <= outer.max[axis]! + 1e-4
+    (value, axis) => inner.min[axis]! >= value - 1e-4 && inner.max[axis]! <= outer.max[axis]! + 1e-4
   );
 }
 
@@ -235,13 +376,42 @@ function validateObjects(
   }
   const stampCount = objects.stamps.id.length;
   [
-    objects.stamps.prototype, objects.stamps.enabled,
-    objects.stamps.positionX, objects.stamps.positionY, objects.stamps.positionZ,
-    objects.stamps.rotationX, objects.stamps.rotationY, objects.stamps.rotationZ,
-    objects.stamps.scaleX, objects.stamps.scaleY, objects.stamps.scaleZ,
-    objects.stamps.radius, objects.stamps.cellId, objects.stamps.phaseMask,
-    objects.stamps.tags, objects.stamps.metadata,
+    objects.stamps.prototype,
+    objects.stamps.enabled,
+    objects.stamps.positionX,
+    objects.stamps.positionY,
+    objects.stamps.positionZ,
+    objects.stamps.rotationX,
+    objects.stamps.rotationY,
+    objects.stamps.rotationZ,
+    objects.stamps.scaleX,
+    objects.stamps.scaleY,
+    objects.stamps.scaleZ,
+    objects.stamps.radius,
+    objects.stamps.cellId,
+    objects.stamps.phaseMask,
+    objects.stamps.tags,
+    objects.stamps.metadata,
   ].forEach(values => sameLength('object stamp SoA', stampCount, values));
+  const irradiance = [
+    objects.stamps.irradianceR,
+    objects.stamps.irradianceG,
+    objects.stamps.irradianceB,
+    objects.stamps.irradianceA,
+  ];
+  if (irradiance.some(Boolean)) {
+    if (!irradiance.every(Boolean)) {
+      throw new Error('Incomplete Shado world object stamp irradiance');
+    }
+    irradiance.forEach(values => sameLength('object stamp irradiance', stampCount, values!));
+    if (
+      irradiance.some(values =>
+        values!.some(value => !Number.isFinite(value) || value < 0 || value > 1)
+      )
+    ) {
+      throw new Error('Invalid Shado world object stamp irradiance');
+    }
+  }
   if (new Set(objects.stamps.id).size !== stampCount) {
     throw new Error('Invalid duplicate Shado world object stamp IDs');
   }

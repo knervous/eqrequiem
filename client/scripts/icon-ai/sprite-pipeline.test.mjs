@@ -688,6 +688,23 @@ test('only current transparent txt2img masters can be atomically promoted by ico
     parameters: { recipeVersion: TEXT_GENERATION_RECIPE, finalSize: 256 },
     context: { sqliteIconId: 500 },
   });
+  const repackedPath = path.join(outputRoot, 'repacked', 'dragitem1.webp');
+  await mkdir(path.dirname(repackedPath), { recursive: true });
+  await sharp({
+    create: {
+      width: 256,
+      height: 256,
+      channels: 4,
+      background: { r: 0, g: 0, b: 0, alpha: 0 },
+    },
+  })
+    .composite([{
+      input: await sharp(masterBuffer).resize(40, 40).webp().toBuffer(),
+      left: 0,
+      top : 0,
+    }])
+    .webp({ lossless: true })
+    .toFile(repackedPath);
 
   const audit = await auditGeneratedCollection({ outputRoot, manifest });
   assert.equal(audit.promotable, true);
@@ -702,10 +719,50 @@ test('only current transparent txt2img masters can be atomically promoted by ico
   );
   assert.equal(publicManifest.addressing, 'SQLite item.icon');
   assert.equal(publicManifest.entries[0].icon, 500);
+  assert.equal(publicManifest.spriteCount, 1);
+  assert.deepEqual(publicManifest.entries[0].sprite, {
+    file  : 'sprites/dragitem1.webp',
+    left  : 0,
+    top   : 0,
+    width : 40,
+    height: 40,
+  });
   assert.equal(
     (await sharp(path.join(promoted.targetRoot, '500.webp')).metadata()).hasAlpha,
     true,
   );
+  assert.equal(
+    (await sharp(path.join(promoted.targetRoot, 'sprites', 'dragitem1.webp')).metadata()).width,
+    256,
+  );
+
+  const partialManifest = {
+    sheets: [{
+      sheetId: 'dragitem1',
+      entries: [
+        entry,
+        {
+          ...entry,
+          id         : 'dragitem1-01',
+          atlasIconId: 501,
+          sourceHash : 'b'.repeat(64),
+        },
+      ],
+    }],
+  };
+  const partial = await promoteGeneratedCollection({
+    outputRoot,
+    manifest: partialManifest,
+    publicItemsRoot,
+    version: 'v2',
+    allowPartial: true,
+  });
+  const partialPublicManifest = JSON.parse(
+    await readFile(path.join(partial.targetRoot, 'manifest.json'), 'utf8'),
+  );
+  assert.equal(partial.iconCount, 1);
+  assert.equal(partialPublicManifest.partial, true);
+  assert.equal(partialPublicManifest.omittedIconCount, 1);
 });
 
 test('sd.cpp client maps a deterministic loopback img2img request', async () => {

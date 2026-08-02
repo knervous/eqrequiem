@@ -10,6 +10,8 @@ import {
   Sword,
   Wheat,
 } from 'lucide-react';
+import { generatedItemSprite } from './item-sprite';
+import './item-visual.css';
 
 const catalogIconUrl = (idfile: string): string | null => {
   const key = idfile.trim().toLowerCase();
@@ -19,7 +21,7 @@ const catalogIconUrl = (idfile: string): string | null => {
 };
 
 const generatedIconUrl = (icon: number): string | null =>
-  Number.isInteger(icon) && icon >= 500
+  generatedItemSprite(icon)
     ? `/eltania/items/icons/v1/${icon}.webp`
     : null;
 
@@ -36,23 +38,47 @@ export const ItemVisual: React.FC<{
   item: ItemInstance;
   isContainer?: boolean;
 }> = ({ item, isContainer = false }) => {
+  const sprite = generatedItemSprite(item.icon);
   const urls = itemVisualUrls(item);
-  const urlsKey = urls.join('|');
+  const candidates = [
+    urls[0] ? { type: 'image' as const, url: urls[0] } : null,
+    sprite ? { type: 'sprite' as const, url: sprite.url, sprite } : null,
+    urls[1] ? { type: 'image' as const, url: urls[1] } : null,
+  ].filter((candidate): candidate is NonNullable<typeof candidate> => Boolean(candidate));
+  const candidatesKey = candidates.map(({ type, url }) => `${type}:${url}`).join('|');
   const [imageIndex, setImageIndex] = useState(0);
-  const url = urls[imageIndex];
+  const candidate = candidates[imageIndex];
 
-  useEffect(() => setImageIndex(0), [urlsKey]);
+  useEffect(() => setImageIndex(0), [candidatesKey]);
 
-  if (url) {
+  if (candidate?.type === 'image') {
     return (
       <img
         alt=""
         aria-hidden="true"
         className="rq-item-art"
         draggable={false}
-        src={url}
+        src={candidate.url}
         onError={() => setImageIndex((index) => index + 1)}
       />
+    );
+  }
+
+  if (candidate?.type === 'sprite') {
+    return (
+      <span aria-hidden="true" className="rq-item-art rq-item-sprite">
+        <img
+          alt=""
+          className="rq-item-sprite__sheet"
+          draggable={false}
+          src={candidate.url}
+          style={{
+            left: `${candidate.sprite.column * -100}%`,
+            top : `${candidate.sprite.row * -100}%`,
+          }}
+          onError={() => setImageIndex((index) => index + 1)}
+        />
+      </span>
     );
   }
 

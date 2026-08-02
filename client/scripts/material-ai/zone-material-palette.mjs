@@ -11,6 +11,7 @@ import {
   parseGlb,
   serializeGlb,
   sha256,
+  surfaceContractSignature,
   uvSignature,
 } from "./glb-material-palette.mjs";
 
@@ -45,14 +46,65 @@ async function exists(file) {
   }
 }
 
-function closePeriodicEdges(data, info) {
-  const stride = info.width * info.channels;
-  for (let y = 0; y < info.height; y++) {
-    const first = y * stride;
-    const last = first + (info.width - 1) * info.channels;
-    data.copy(data, last, first, first + info.channels);
+function byte(value) {
+  return Math.max(0, Math.min(255, Math.round(value)));
+}
+
+function enforceC1Horizontal(data, info) {
+  const { width, height, channels } = info;
+  for (let y = 0; y < height; y++) {
+    for (let channel = 0; channel < Math.min(3, channels); channel++) {
+      const left = y * width * channels + channel;
+      const leftInner = (y * width + 1) * channels + channel;
+      const right = (y * width + width - 1) * channels + channel;
+      const rightInner = (y * width + width - 2) * channels + channel;
+      const edge = (data[left] + data[right]) / 2;
+      const difference = data[leftInner] - data[rightInner];
+      data[left] = byte(edge);
+      data[right] = byte(edge);
+      data[leftInner] = byte(edge + difference / 2);
+      data[rightInner] = byte(edge - difference / 2);
+    }
   }
-  data.copy(data, (info.height - 1) * stride, 0, stride);
+}
+
+function enforceC1Vertical(data, info) {
+  const { width, height, channels } = info;
+  for (let x = 0; x < width; x++) {
+    for (let channel = 0; channel < Math.min(3, channels); channel++) {
+      const top = x * channels + channel;
+      const topInner = (width + x) * channels + channel;
+      const bottom = ((height - 1) * width + x) * channels + channel;
+      const bottomInner = ((height - 2) * width + x) * channels + channel;
+      const edge = (data[top] + data[bottom]) / 2;
+      const difference = data[topInner] - data[bottomInner];
+      data[top] = byte(edge);
+      data[bottom] = byte(edge);
+      data[topInner] = byte(edge + difference / 2);
+      data[bottomInner] = byte(edge - difference / 2);
+    }
+  }
+}
+
+function closePeriodicEdges(data, info) {
+  enforceC1Horizontal(data, info);
+  enforceC1Vertical(data, info);
+  enforceC1Horizontal(data, info);
+}
+
+function renormalizeTangentNormals(data, info) {
+  for (let offset = 0; offset < data.length; offset += info.channels) {
+    let x = data[offset] / 127.5 - 1;
+    let y = data[offset + 1] / 127.5 - 1;
+    let z = data[offset + 2] / 127.5 - 1;
+    const length = Math.hypot(x, y, z) || 1;
+    x /= length;
+    y /= length;
+    z /= length;
+    data[offset] = byte((x * 0.5 + 0.5) * 255);
+    data[offset + 1] = byte((y * 0.5 + 0.5) * 255);
+    data[offset + 2] = byte((z * 0.5 + 0.5) * 255);
+  }
 }
 
 export async function resizeRuntimeTexture(
@@ -83,6 +135,110 @@ export async function resizeRuntimeTexture(
     .toBuffer();
 }
 
+export async function resizeRuntimeDataTexture(
+  input,
+  size = RUNTIME_TEXTURE_SIZE,
+  { tangentNormal = false } = {},
+) {
+  const resized = await sharp(input)
+    .resize(size, size, { fit: "fill", kernel: "lanczos3" })
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  if (tangentNormal) renormalizeTangentNormals(resized.data, resized.info);
+  closePeriodicEdges(resized.data, resized.info);
+  return sharp(resized.data, { raw: resized.info })
+    .webp({ lossless: true, effort: 6 })
+    .toBuffer();
+}
+
+function rmse(sum, samples) {
+  return Math.sqrt(sum / samples) / 255;
+}
+
+/** Measure both value and first-derivative continuity at a periodic image edge. */
+export async function periodicSeamMetrics(input) {
+  const { data, info } = await sharp(input)
+    .removeAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  const { width, height, channels } = info;
+  let horizontal = 0;
+  let vertical = 0;
+  let horizontalGradient = 0;
+  let verticalGradient = 0;
+  let horizontalSamples = 0;
+  let verticalSamples = 0;
+  for (let y = 0; y < height; y++) {
+    for (let channel = 0; channel < Math.min(3, channels); channel++) {
+      const left = data[y * width * channels + channel];
+      const leftInner = data[(y * width + 1) * channels + channel];
+      const right = data[(y * width + width - 1) * channels + channel];
+      const rightInner = data[(y * width + width - 2) * channels + channel];
+      horizontal += (left - right) ** 2;
+      horizontalGradient += (leftInner - left - (right - rightInner)) ** 2;
+      horizontalSamples++;
+    }
+  }
+  for (let x = 0; x < width; x++) {
+    for (let channel = 0; channel < Math.min(3, channels); channel++) {
+      const top = data[x * channels + channel];
+      const topInner = data[(width + x) * channels + channel];
+      const bottom = data[((height - 1) * width + x) * channels + channel];
+      const bottomInner = data[((height - 2) * width + x) * channels + channel];
+      vertical += (top - bottom) ** 2;
+      verticalGradient += (topInner - top - (bottom - bottomInner)) ** 2;
+      verticalSamples++;
+    }
+  }
+  return {
+    edgeRmseX: rmse(horizontal, horizontalSamples),
+    edgeRmseY: rmse(vertical, verticalSamples),
+    gradientRmseX: rmse(horizontalGradient, horizontalSamples),
+    gradientRmseY: rmse(verticalGradient, verticalSamples),
+  };
+}
+
+export async function centeredBannerCompositionMetrics(input) {
+  const { data, info } = await sharp(input)
+    .resize(64, 64, { fit: "fill", kernel: "lanczos3" })
+    .removeAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  let centerSaturation = 0;
+  let centerSamples = 0;
+  let sideSaturation = 0;
+  let sideSamples = 0;
+  for (let y = 0; y < info.height; y++) {
+    for (let x = 0; x < info.width; x++) {
+      const normalizedX = (x + 0.5) / info.width;
+      const center = normalizedX >= 0.4 && normalizedX <= 0.6;
+      const side = normalizedX <= 0.3 || normalizedX >= 0.7;
+      if (!center && !side) continue;
+      const offset = (y * info.width + x) * info.channels;
+      const red = data[offset];
+      const green = data[offset + 1];
+      const blue = data[offset + 2];
+      const maximum = Math.max(red, green, blue);
+      const saturation =
+        maximum === 0 ? 0 : (maximum - Math.min(red, green, blue)) / maximum;
+      if (center) {
+        centerSaturation += saturation;
+        centerSamples++;
+      } else {
+        sideSaturation += saturation;
+        sideSamples++;
+      }
+    }
+  }
+  centerSaturation /= centerSamples;
+  sideSaturation /= sideSamples;
+  return {
+    centerSaturation,
+    sideSaturation,
+    saturationDelta: centerSaturation - sideSaturation,
+  };
+}
+
 export async function readPaletteManifest(repoRoot, zone) {
   const file = paletteManifestPath(repoRoot, zone);
   if (!(await exists(file))) return null;
@@ -106,7 +262,7 @@ function stablePoolIndex(value, length) {
   return (hash >>> 0) % length;
 }
 
-function runtimeMaterialEntry(manifest, entry) {
+export function runtimeMaterialEntry(manifest, entry) {
   const pool = manifest.families?.[entry.family]?.runtimeMaterialPool;
   if (!Array.isArray(pool) || pool.length === 0) return entry;
   const selectedId = pool[stablePoolIndex(entry.id, pool.length)];
@@ -123,7 +279,26 @@ function runtimeMaterialEntry(manifest, entry) {
       `${entry.family} runtime material '${selectedId}' belongs to ${selected.family}`,
     );
   }
+  if (!isRuntimePaletteEntry(selected)) {
+    throw new Error(
+      `${entry.family} runtime material '${selectedId}' is not a production candidate`,
+    );
+  }
   return selected;
+}
+
+/**
+ * Generation status is review state, not documentation. Only explicitly
+ * approved candidates may replace a source-zone image in a runtime package.
+ * Authoring-only materials are embedded by Blender and never override legacy
+ * image bindings here.
+ */
+export function isRuntimePaletteEntry(entry) {
+  return (
+    entry.enabled !== false &&
+    entry.authoringOnly !== true &&
+    entry.status === "production-candidate"
+  );
 }
 
 export async function extractPaletteSources({ repoRoot, zone, sourceGlb }) {
@@ -133,7 +308,9 @@ export async function extractPaletteSources({ repoRoot, zone, sourceGlb }) {
   const sourceDirectory = path.join(paletteRoot(repoRoot, zone), "source");
   await fs.mkdir(sourceDirectory, { recursive: true });
   const extracted = [];
-  for (const entry of loaded.manifest.materials) {
+  for (const entry of loaded.manifest.materials.filter(
+    (material) => !material.authoringOnly,
+  )) {
     const indices = imageIndicesNamed(document, entry.image);
     if (!indices.length) {
       throw new Error(`${zone} has no image named '${entry.image}'`);
@@ -161,7 +338,9 @@ export async function extractPaletteSources({ repoRoot, zone, sourceGlb }) {
   }
   const bindings = baseColorBindings(document).filter((binding) =>
     loaded.manifest.materials.some(
-      (entry) => entry.image.toLowerCase() === binding.imageName.toLowerCase(),
+      (entry) =>
+        !entry.authoringOnly &&
+        entry.image.toLowerCase() === binding.imageName.toLowerCase(),
     ),
   );
   const audit = {
@@ -204,8 +383,7 @@ export async function bakeZoneMaterialPalette({
   const before = parseGlb(sourceGlb);
   const overrides = [];
   const channels = [];
-  for (const entry of loaded.manifest.materials) {
-    if (entry.enabled === false) continue;
+  for (const entry of loaded.manifest.materials.filter(isRuntimePaletteEntry)) {
     const sourceIndices = imageIndicesNamed(before, entry.image);
     if (!sourceIndices.length) {
       throw new Error(`${zone} has no image named '${entry.image}'`);
@@ -247,8 +425,20 @@ export async function bakeZoneMaterialPalette({
     if (runtimeEntry.pbr && includePbrTextures) {
       const readChannel = async (relativeFile, label) => {
         const file = path.join(paletteRoot(repoRoot, zone), relativeFile);
-        const channelInput = await fs.readFile(file);
-        const channelMetadata = await sharp(channelInput).metadata();
+        let channelInput = await fs.readFile(file);
+        let channelMetadata = await sharp(channelInput).metadata();
+        if (
+          runtimeTextureSize &&
+          (channelMetadata.width !== runtimeTextureSize ||
+            channelMetadata.height !== runtimeTextureSize)
+        ) {
+          channelInput = await resizeRuntimeDataTexture(
+            channelInput,
+            runtimeTextureSize,
+            { tangentNormal: label === "normal map" },
+          );
+          channelMetadata = await sharp(channelInput).metadata();
+        }
         if (
           channelMetadata.format !== "webp" ||
           channelMetadata.width !== metadata.width ||
@@ -320,9 +510,10 @@ export async function verifyBakedPalette({
   if (uvSignature(before) !== uvSignature(after)) {
     failures.push("UV signature changed");
   }
-  for (const entry of loaded.manifest.materials.filter(
-    (material) => material.enabled !== false,
-  )) {
+  if (surfaceContractSignature(before) !== surfaceContractSignature(after)) {
+    failures.push("portable material surface contract changed");
+  }
+  for (const entry of loaded.manifest.materials.filter(isRuntimePaletteEntry)) {
     const indices = imageIndicesNamed(after, entry.image);
     if (!indices.length) {
       failures.push(`${entry.id} image binding is missing`);
@@ -333,15 +524,40 @@ export async function verifyBakedPalette({
         sharp(embeddedImage(after, index)).metadata(),
       ),
     );
+    const expectedWidth = dimensions[0]?.width;
+    const expectedHeight = dimensions[0]?.height;
     if (
+      !expectedWidth ||
+      expectedWidth !== expectedHeight ||
+      (expectedWidth & (expectedWidth - 1)) !== 0 ||
       dimensions.some(
         (metadata) =>
-          metadata.width !== loaded.manifest.outputSize ||
-          metadata.height !== loaded.manifest.outputSize,
+          metadata.format !== "webp" ||
+          metadata.width !== expectedWidth ||
+          metadata.height !== expectedHeight,
       )
     ) {
-      failures.push(`${entry.id} was not baked at the configured output size`);
+      failures.push(
+        `${entry.id} base color is not one square power-of-two WebP size`,
+      );
     }
+    const repeatedX = entry.tileability?.includes("x");
+    const repeatedY = entry.tileability?.includes("y");
+    const checkSeams = async (bytes, label) => {
+      if (!repeatedX && !repeatedY) return;
+      const metrics = await periodicSeamMetrics(bytes);
+      if (
+        (repeatedX &&
+          (metrics.edgeRmseX > loaded.manifest.maxEdgeRmse ||
+            metrics.gradientRmseX > loaded.manifest.maxGradientRmse)) ||
+        (repeatedY &&
+          (metrics.edgeRmseY > loaded.manifest.maxEdgeRmse ||
+            metrics.gradientRmseY > loaded.manifest.maxGradientRmse))
+      ) {
+        failures.push(`${entry.id} ${label} failed baked seam thresholds`);
+      }
+    };
+    await checkSeams(embeddedImage(after, indices[0]), "base color");
     if (entry.pbr) {
       for (const kind of ["normal", "metallic-roughness"]) {
         const channelIndices = imageIndicesNamed(
@@ -356,11 +572,16 @@ export async function verifyBakedPalette({
           embeddedImage(after, channelIndices[0]),
         ).metadata();
         if (
-          channelMetadata.width !== loaded.manifest.outputSize ||
-          channelMetadata.height !== loaded.manifest.outputSize
+          channelMetadata.format !== "webp" ||
+          channelMetadata.width !== expectedWidth ||
+          channelMetadata.height !== expectedHeight
         ) {
           failures.push(`${entry.id} ${kind} map has invalid dimensions`);
         }
+        await checkSeams(
+          embeddedImage(after, channelIndices[0]),
+          `${kind} map`,
+        );
       }
       for (const binding of baseColorBindings(after).filter(
         (candidate) =>
@@ -369,13 +590,25 @@ export async function verifyBakedPalette({
         const material = after.json.materials[binding.materialIndex];
         if (!material.normalTexture) {
           failures.push(`${entry.id} material normal binding is missing`);
+        } else if (
+          (material.normalTexture.texCoord ?? 0) !== binding.texCoord
+        ) {
+          failures.push(`${entry.id} material normal UV binding changed`);
         }
         if (
           !material.pbrMetallicRoughness?.metallicRoughnessTexture ||
-          material.pbrMetallicRoughness.metallicFactor !== 0
+          material.pbrMetallicRoughness.metallicFactor !== 0 ||
+          material.pbrMetallicRoughness.roughnessFactor !== 1
         ) {
           failures.push(
             `${entry.id} material metallic/roughness binding is missing`,
+          );
+        } else if (
+          (material.pbrMetallicRoughness.metallicRoughnessTexture.texCoord ??
+            0) !== binding.texCoord
+        ) {
+          failures.push(
+            `${entry.id} material metallic/roughness UV binding changed`,
           );
         }
       }

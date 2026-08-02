@@ -52,6 +52,7 @@ const COLORS: Record<ShadoWorldRegionKind, BABYLON.Color3> = {
   'zone-line': new BABYLON.Color3(1, 0.75, 0.05),
   audio: new BABYLON.Color3(0.75, 0.25, 1),
   trigger: new BABYLON.Color3(1, 0.25, 0.65),
+  fx: new BABYLON.Color3(0.25, 1, 0.8),
   semantic: new BABYLON.Color3(0.9, 0.9, 0.9),
 };
 

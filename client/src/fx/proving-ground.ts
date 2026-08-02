@@ -5,6 +5,7 @@ import {
   createGrassPatch,
   createWaterMaterial,
 } from "./index";
+import { bindZoneShaderLighting } from "./zone-shader-lighting";
 import "./proving-ground.css";
 
 const canvas = document.querySelector<HTMLCanvasElement>("#fx-canvas");
@@ -101,6 +102,7 @@ water.position.x = waterBed.position.x;
 water.freezeWorldMatrix();
 const waterMaterial = createWaterMaterial(scene);
 water.material = waterMaterial;
+bindZoneShaderLighting(scene, [grassMaterial, waterMaterial]);
 
 const divider = BABYLON.MeshBuilder.CreateBox(
   "StoneDivider",
@@ -140,6 +142,7 @@ scene.onBeforeRenderObservable.add(() => {
   grassMaterial.setFloat("uTime", elapsedSeconds);
   waterMaterial.setFloat("uTime", elapsedSeconds);
   waterMaterial.setVector3("uEyePosition", camera.globalPosition);
+  bindZoneShaderLighting(scene, [grassMaterial, waterMaterial]);
   metricAccumulator += engine.getDeltaTime();
   if (metricAccumulator >= 500) {
     metricAccumulator = 0;

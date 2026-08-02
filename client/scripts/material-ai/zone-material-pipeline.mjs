@@ -93,9 +93,15 @@ async function sourceScene(zone) {
 }
 
 function deterministicSeed(entry, attempt = 0) {
+  const sourceKey =
+    entry.sourceSha256 ??
+    (entry.authoringOnly ? `authoring-only:${entry.id}` : null);
+  if (!sourceKey) {
+    throw new Error(`${entry.id} has no deterministic material source key`);
+  }
   const value = createHash("sha256")
     .update(
-      `${entry.sourceSha256}:${entry.id}:material-recipe-${RECIPE_VERSION}`,
+      `${sourceKey}:${entry.id}:material-recipe-${RECIPE_VERSION}`,
     )
     .digest()
     .readUInt32LE(0);
@@ -434,10 +440,68 @@ export async function proceduralMaterialGuide(entry, size) {
         );
       }
     }
+  } else if (entry.id === "garden-herbaceous-bed") {
+    const palette = [
+      [62, 90, 54],
+      [78, 105, 64],
+      [93, 111, 75],
+      [47, 73, 45],
+    ];
+    for (let index = 0; index < Math.round((size * size) / 85); index++) {
+      const cx = random() * size;
+      const cy = random() * size;
+      const leafColor = colorVariation(
+        palette[Math.floor(random() * palette.length)],
+        random,
+        12,
+      );
+      const radius = size * (0.004 + random() * 0.009);
+      const angle = random() * 180;
+      elements.push(
+        `<ellipse cx="${cx}" cy="${cy}" rx="${radius * 1.8}" ` +
+          `ry="${radius * 0.62}" transform="rotate(${angle} ${cx} ${cy})" ` +
+          `fill="rgb(${leafColor.join(",")})"/>`,
+      );
+      if (random() < 0.055) {
+        const flower = random() < 0.55 ? [128, 139, 173] : [183, 174, 132];
+        elements.push(
+          `<circle cx="${cx}" cy="${cy}" r="${radius * 0.42}" ` +
+            `fill="rgb(${flower.join(",")})"/>`,
+        );
+      }
+    }
+  } else if (entry.id === "garden-clipped-hedge") {
+    const palette = [
+      [39, 76, 43],
+      [52, 91, 49],
+      [66, 100, 54],
+      [74, 105, 63],
+    ];
+    for (let index = 0; index < Math.round((size * size) / 62); index++) {
+      const cx = random() * size;
+      const cy = random() * size;
+      const leafColor = colorVariation(
+        palette[Math.floor(random() * palette.length)],
+        random,
+        10,
+      );
+      const radius = size * (0.0035 + random() * 0.0065);
+      elements.push(
+        `<ellipse cx="${cx}" cy="${cy}" rx="${radius * 1.9}" ` +
+          `ry="${radius * 0.72}" ` +
+          `transform="rotate(${random() * 180} ${cx} ${cy})" ` +
+          `fill="rgb(${leafColor.join(",")})"/>`,
+      );
+    }
   } else {
     throw new Error(`No procedural guide recipe exists for ${entry.id}`);
   }
-  const background = entry.id === "herringbone-brick" ? "#9d896c" : "#c9b990";
+  const backgrounds = {
+    "herringbone-brick": "#9d896c",
+    "garden-herbaceous-bed": "#283725",
+    "garden-clipped-hedge": "#294a2c",
+  };
+  const background = backgrounds[entry.id] ?? "#c9b990";
   const svg = Buffer.from(
     `<svg width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg">` +
       `<rect width="100%" height="100%" fill="${background}"/>` +
@@ -612,12 +676,12 @@ export async function seamMetrics(input) {
   };
 }
 
-function closeDataMapEdges(data, size, channels) {
-  for (let y = 0; y < size; y++) {
-    blendPair(data, y * size * channels, (y * size + size - 1) * channels, 1);
+function closeDataMapEdges(data, width, height, channels) {
+  for (let y = 0; y < height; y++) {
+    blendPair(data, y * width * channels, (y * width + width - 1) * channels, 1);
   }
-  for (let x = 0; x < size; x++) {
-    blendPair(data, x * channels, ((size - 1) * size + x) * channels, 1);
+  for (let x = 0; x < width; x++) {
+    blendPair(data, x * channels, ((height - 1) * width + x) * channels, 1);
   }
 }
 
@@ -630,14 +694,11 @@ export async function derivePbrChannels(
     .raw()
     .toBuffer({ resolveWithObject: true });
   const { width, height: imageHeight } = info;
-  if (width !== imageHeight) {
-    throw new Error("PBR channel derivation requires a square base color");
-  }
-  const normal = Buffer.alloc(width * width * 3);
-  const metallicRoughness = Buffer.alloc(width * width * 3);
-  for (let y = 0; y < width; y++) {
-    const top = (y - 1 + width) % width;
-    const bottom = (y + 1) % width;
+  const normal = Buffer.alloc(width * imageHeight * 3);
+  const metallicRoughness = Buffer.alloc(width * imageHeight * 3);
+  for (let y = 0; y < imageHeight; y++) {
+    const top = (y - 1 + imageHeight) % imageHeight;
+    const bottom = (y + 1) % imageHeight;
     for (let x = 0; x < width; x++) {
       const left = (x - 1 + width) % width;
       const right = (x + 1) % width;
@@ -665,11 +726,11 @@ export async function derivePbrChannels(
       metallicRoughness[target + 2] = 0;
     }
   }
-  closeDataMapEdges(normal, width, 3);
-  closeDataMapEdges(metallicRoughness, width, 3);
+  closeDataMapEdges(normal, width, imageHeight, 3);
+  closeDataMapEdges(metallicRoughness, width, imageHeight, 3);
   const encode = (data) =>
     sharp(data, {
-      raw: { width, height: width, channels: 3 },
+      raw: { width, height: imageHeight, channels: 3 },
     })
       .webp({ lossless: true, effort: 6 })
       .toBuffer();
@@ -781,16 +842,38 @@ async function generate({ zone, options }) {
     const denoiseStrength =
       entry.denoiseStrength ?? family?.denoiseStrength ?? null;
     const postProcess = postProcessFor(loaded.manifest, entry);
-    const sourceFile = path.join(root, "source", `${entry.id}.webp`);
-    const source = await fs.readFile(sourceFile);
-    if (sha256(source) !== entry.sourceSha256) {
-      throw new Error(`${entry.id} source hash does not match palette.json`);
+    const authoringOnly = entry.authoringOnly === true;
+    if (
+      authoringOnly &&
+      ![
+        "txt2img-clean-room",
+        "txt2img",
+        "img2img-procedural-guide",
+      ].includes(generationMode)
+    ) {
+      throw new Error(
+        `${entry.id} is authoring-only and must use clean-room txt2img ` +
+          "or an original procedural guide",
+      );
     }
+    let source = null;
+    if (!authoringOnly) {
+      const sourceFile = path.join(root, "source", `${entry.id}.webp`);
+      source = await fs.readFile(sourceFile);
+      if (sha256(source) !== entry.sourceSha256) {
+        throw new Error(`${entry.id} source hash does not match palette.json`);
+      }
+    }
+    const sourceKey =
+      entry.sourceSha256 ??
+      (authoringOnly ? `authoring-only:${zone}:${entry.id}` : null);
     const recipeHash = sha256(
       Buffer.from(
         JSON.stringify({
           recipeVersion: RECIPE_VERSION,
-          sourceSha256: entry.sourceSha256,
+          sourceSha256: entry.sourceSha256 ?? null,
+          sourceKey,
+          authoringOnly,
           family: entry.family ?? null,
           familyRecipe: family,
           prompt: composedPrompt(loaded.manifest, entry),
@@ -901,7 +984,9 @@ async function generate({ zone, options }) {
       brightness: postProcess?.brightness ?? 1,
     });
     const metrics = await seamMetrics(repaired);
-    const correlation = await sourceCorrelation(source, repaired);
+    const correlation = source
+      ? await sourceCorrelation(source, repaired)
+      : null;
     if (
       metrics.edgeRmseX > loaded.manifest.maxEdgeRmse ||
       metrics.edgeRmseY > loaded.manifest.maxEdgeRmse ||
@@ -913,6 +998,7 @@ async function generate({ zone, options }) {
       );
     }
     if (
+      source &&
       generated.generationMode !== "img2img" &&
       correlation > loaded.manifest.maxSourceCorrelation
     ) {
@@ -957,7 +1043,8 @@ async function generate({ zone, options }) {
           id: entry.id,
           image: entry.image,
           semantic: entry.semantic,
-          sourceSha256: entry.sourceSha256,
+          sourceSha256: entry.sourceSha256 ?? null,
+          authoringOnly,
           rawSha256: sha256(generated.raw),
           outputSha256: sha256(repaired),
           prompt: generated.prompt,
@@ -1360,11 +1447,15 @@ async function bootstrap({ zone }) {
   const loaded = await readPaletteManifest(repoRoot, zone);
   if (!loaded) throw new Error(`No material palette is authored for ${zone}`);
   const existingImages = new Set(
-    loaded.manifest.materials.map((entry) => entry.image.toLowerCase()),
+    loaded.manifest.materials
+      .filter((entry) => !entry.authoringOnly)
+      .map((entry) => entry.image.toLowerCase()),
   );
   const automaticByImage = new Map(
     loaded.manifest.materials
-      .filter((entry) => entry.id.startsWith("legacy-"))
+      .filter(
+        (entry) => !entry.authoringOnly && entry.id.startsWith("legacy-"),
+      )
       .map((entry) => [entry.image.toLowerCase(), entry]),
   );
   const additions = [];
@@ -1486,12 +1577,18 @@ async function review({ zone, options = {} }) {
     ];
     for (const [index, entry] of page.entries()) {
       const top = header + index * rowHeight;
-      const source = path.join(root, "source", `${entry.id}.webp`);
+      const source = entry.authoringOnly
+        ? null
+        : path.join(root, "source", `${entry.id}.webp`);
       const output = path.join(root, entry.output);
-      const description = `${(entry.semantic ?? entry.family ?? entry.id).toUpperCase()}  //  ${entry.image}`;
+      const description =
+        `${(entry.semantic ?? entry.family ?? entry.id).toUpperCase()}  //  ` +
+        `${entry.authoringOnly ? "NEW AUTHORING MATERIAL" : entry.image}`;
       composites.push(
         {
-          input: await sharp(source).resize(panel, panel).png().toBuffer(),
+          input: source
+            ? await sharp(source).resize(panel, panel).png().toBuffer()
+            : labelSvg(panel, panel, "CLEAN-ROOM\nNO LEGACY SOURCE"),
           left: 0,
           top,
         },

@@ -50,10 +50,7 @@ export class ShadoWorldObjectLayer {
 
   tick(deltaMs: number): void {
     this.elapsedMs += deltaMs;
-    if (
-      this.elapsedMs < WORLD_VISIBILITY_INTERVAL_MS ||
-      this.updatePending
-    ) {
+    if (this.elapsedMs < WORLD_VISIBILITY_INTERVAL_MS || this.updatePending) {
       return;
     }
     this.elapsedMs %= WORLD_VISIBILITY_INTERVAL_MS;
@@ -100,6 +97,8 @@ export class ShadoWorldObjectLayer {
             revisionedObjectSource(batch.source),
             this.scene,
             batch.matrices,
+            batch.colors,
+            this.world.lighting?.mode === "baked",
           );
           this.visibleStampRows.set(batch.prototype, batch.stampIndices);
         } catch (error) {
@@ -131,7 +130,6 @@ function revisionedObjectSource(source: string): string {
   const path = hash >= 0 ? source.slice(0, hash) : source;
   const separator = path.includes("?") ? "&" : "?";
   return (
-    `${path}${separator}revision=${WORLD_OBJECT_PACKAGE_REVISION}` +
-    suffix
+    `${path}${separator}revision=${WORLD_OBJECT_PACKAGE_REVISION}` + suffix
   );
 }

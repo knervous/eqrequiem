@@ -12,6 +12,41 @@ export interface LibraColumnMeta {
 
 export type LibraRow = Record<string, unknown>
 
+export interface ZoneWorkspaceSpawn {
+  id: number
+  zoneId: number
+  spawnGroupId: number
+  spawnGroupKey: string
+  x: number
+  y: number
+  z: number
+  heading: number
+  enabled: boolean
+  respawnSeconds: number
+  npcArchetypeId: number | null
+  npcName: string | null
+}
+
+export interface ZoneWorkspace {
+  requestId: string
+  zone: LibraRow
+  spawns: ZoneWorkspaceSpawn[]
+  asset: {
+    coordinateContract: 'babylon-runtime-identity'
+    authoringPreview: string
+    runtimePackage: string
+  }
+}
+
+export interface CreateZoneSpawnInput {
+  x: number
+  y: number
+  z: number
+  heading: number
+  npcArchetypeId: number
+  respawnSeconds: number
+}
+
 export interface ValidationIssue {
   code: string
   severity: 'warning' | 'error'

@@ -44,6 +44,14 @@ const devSkySource = await readFile(
   path.join(clientRoot, "src/UI/components/game/dev/dev-sky.tsx"),
   "utf8",
 );
+const bindingsSource = await readFile(
+  path.join(clientRoot, "src/Core/bindings.ts"),
+  "utf8",
+);
+const babylonRuntimeSource = await readFile(
+  path.join(clientRoot, "src/bjs/index.ts"),
+  "utf8",
+);
 
 const supportedZoneNames = new Set(
   [...supportedZonesSource.matchAll(
@@ -63,7 +71,7 @@ const requiredBiomes = [
 ];
 
 test("sky manifest has the production semantic and biome contract", () => {
-  assert.equal(manifest.version, 2);
+  assert.equal(manifest.version, 3);
   assert.equal(manifest.defaultBiome, "temperate");
   assert.ok(manifest.biomeTransitionMs >= 250);
   assert.ok(manifest.biomeTransitionMs <= 2000);
@@ -72,6 +80,18 @@ test("sky manifest has the production semantic and biome contract", () => {
   const layerNames = Object.values(manifest.layers);
   assert.equal(new Set(layerNames).size, layerNames.length);
   assert.equal(manifest.environment.visibleSkyContributesDiffuse, false);
+  assert.deepEqual(Object.keys(manifest.textures), [
+    "cloudField",
+    "starField",
+    "sunPhotosphere",
+    "moonSurface",
+  ]);
+  for (const texturePath of Object.values(manifest.textures)) {
+    assert.ok(
+      bindingsSource.includes(`"eqrequiem/sky/${texturePath}"`),
+      `sky texture is not routed as a bundled asset: ${texturePath}`,
+    );
+  }
 });
 
 test("low and high clouds have independent production controls", () => {
@@ -85,6 +105,8 @@ test("low and high clouds have independent production controls", () => {
 
   for (const cloud of [low, high]) {
     assert.ok(cloud.scale > 0);
+    assert.ok(Number.isInteger(cloud.textureScale));
+    assert.ok(cloud.textureScale >= 1 && cloud.textureScale <= 3);
     assert.ok(cloud.coverage > 0 && cloud.coverage < 1);
     assert.ok(cloud.softness > 0);
     assert.ok(cloud.detail >= 0 && cloud.detail <= 1);
@@ -128,6 +150,24 @@ test("runtime uses frame-continuous celestial, cloud, and star motion controls",
   assert.ok(!skyManagerSource.includes("worldTick():"));
   assert.ok(!zoneManagerSource.includes("worldTickElapsedMs"));
   assert.ok(skyMaterialSource.includes("uStarRotationRadians"));
+  assert.ok(skyMaterialSource.includes("uCloudTexture"));
+  assert.ok(skyMaterialSource.includes("uCloudTextureScale"));
+  assert.ok(skyMaterialSource.includes("cloudSphericalUV(shapedDirection)"));
+  assert.ok(
+    !skyMaterialSource.includes("uCloudScale * 0.42"),
+    "authored texture tiling must not inherit procedural noise scale",
+  );
+  assert.ok(skyMaterialSource.includes("uStarTexture"));
+  assert.ok(skyManagerSource.includes("sunPhotosphere"));
+  assert.ok(skyManagerSource.includes("WORLD_SUN_LIGHT_SATURATION = 0.38"));
+  assert.ok(skyManagerSource.includes("this.#sun.diffuse = worldSunColor"));
+  assert.ok(
+    skyManagerSource.includes("this.#sunMaterial?.emissiveColor.copyFrom(sunColor)"),
+    "the atmospheric sun disk should retain the authored full-chroma color",
+  );
+  assert.ok(skyManagerSource.includes('BABYLON.loadFeature("discBuilder")'));
+  assert.ok(babylonRuntimeSource.includes("discBuilder: async ()"));
+  assert.ok(babylonRuntimeSource.includes("builder.RegisterDiscBuilder()"));
   for (const setting of [
     "dayLengthSeconds",
     "celestialRate",
@@ -167,8 +207,8 @@ test("biome controls are bounded and every mapped zone and preset exists", () =>
   }
 });
 
-test("Blender build report and compressed runtime geometry match manifest v2", async () => {
-  assert.equal(report.assetVersion, manifest.version);
+test("Blender geometry and generated runtime textures match manifest", async () => {
+  assert.equal(report.assetVersion, 2);
   assert.deepEqual(report.biomes, requiredBiomes);
   assert.equal(report.geometryContract.reflectionLighting, "separate");
 
@@ -200,4 +240,9 @@ test("Blender build report and compressed runtime geometry match manifest v2", a
       `missing exported semantic node '${semanticName}'`,
     );
   }
+  await Promise.all(
+    Object.values(manifest.textures).map((texturePath) =>
+      readFile(path.join(clientRoot, "public/eqrequiem/sky", texturePath)),
+    ),
+  );
 });

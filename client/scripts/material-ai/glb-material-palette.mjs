@@ -183,7 +183,10 @@ export function accessorValues(document, accessorIndex) {
   const componentCount = ACCESSOR_COMPONENTS[accessor.type];
   const componentBytes = COMPONENT_BYTES[accessor.componentType];
   ensure(componentCount, `Accessor ${accessorIndex} has invalid type`);
-  ensure(componentBytes, `Accessor ${accessorIndex} has invalid component type`);
+  ensure(
+    componentBytes,
+    `Accessor ${accessorIndex} has invalid component type`,
+  );
   if (accessor.bufferView === undefined) {
     return Array.from({ length: accessor.count }, () =>
       Array(componentCount).fill(0),
@@ -282,6 +285,44 @@ export function uvSignature(document) {
   return sha256(Buffer.from(JSON.stringify(records)));
 }
 
+/**
+ * Hash the portable surface behavior that a palette image replacement must
+ * preserve. PBR detail channels and Requiem extras are deliberately excluded:
+ * those are authored by the palette bake itself.
+ */
+export function surfaceContractSignature(document) {
+  const json = document.json;
+  const records = (json.materials ?? []).map((material, materialIndex) => {
+    const baseColorTexture = material.pbrMetallicRoughness?.baseColorTexture;
+    const texture = baseColorTexture
+      ? json.textures?.[baseColorTexture.index]
+      : null;
+    const sampler = texture ? json.samplers?.[texture.sampler] : null;
+    return {
+      materialIndex,
+      name: material.name ?? null,
+      alphaMode: material.alphaMode ?? "OPAQUE",
+      alphaCutoff: material.alphaCutoff ?? 0.5,
+      doubleSided: material.doubleSided ?? false,
+      emissiveFactor: material.emissiveFactor ?? [0, 0, 0],
+      emissiveTexture: material.emissiveTexture ?? null,
+      baseColorFactor: material.pbrMetallicRoughness?.baseColorFactor ?? [
+        1, 1, 1, 1,
+      ],
+      baseColorTexCoord: baseColorTexture?.texCoord ?? 0,
+      baseColorTransform:
+        baseColorTexture?.extensions?.KHR_texture_transform ?? null,
+      sampler: {
+        magFilter: sampler?.magFilter ?? null,
+        minFilter: sampler?.minFilter ?? null,
+        wrapS: sampler?.wrapS ?? 10497,
+        wrapT: sampler?.wrapT ?? 10497,
+      },
+    };
+  });
+  return sha256(Buffer.from(JSON.stringify(records)));
+}
+
 export function appendImageOverrides(document, overrides) {
   const json = structuredClone(document.json);
   const chunks = [Buffer.from(document.binary)];
@@ -326,48 +367,101 @@ export function appendVertexColorOverrides(document, colorsByMesh) {
     const colors = colorsByMesh.get(mesh.name);
     if (!colors) continue;
     ensure(
-      mesh.primitives?.length === 1,
-      `Baked vertex lighting requires one primitive for mesh '${mesh.name}'`,
+      mesh.primitives?.length > 0,
+      `Mesh '${mesh.name}' has no primitives for baked vertex lighting`,
     );
-    const primitive = mesh.primitives[0];
-    const positionAccessor = json.accessors?.[primitive.attributes?.POSITION];
-    ensure(positionAccessor, `Mesh '${mesh.name}' has no position accessor`);
+    const positionAccessors = mesh.primitives.map(
+      (primitive) => json.accessors?.[primitive.attributes?.POSITION],
+    );
     ensure(
-      colors.length === positionAccessor.count * 4,
-      `Mesh '${mesh.name}' requires ${positionAccessor.count * 4} color values, ` +
+      positionAccessors.every(Boolean),
+      `Mesh '${mesh.name}' has a primitive without a position accessor`,
+    );
+    const positionCount = positionAccessors.reduce(
+      (total, accessor) => total + accessor.count,
+      0,
+    );
+    ensure(
+      colors.length === positionCount * 4,
+      `Mesh '${mesh.name}' requires ${positionCount * 4} color values, ` +
         `got ${colors.length}`,
     );
-    const padding = paddedLength(byteLength) - byteLength;
-    if (padding) {
-      chunks.push(Buffer.alloc(padding));
-      byteLength += padding;
+    let colorOffset = 0;
+    for (const [primitiveIndex, primitive] of mesh.primitives.entries()) {
+      const positionAccessor = positionAccessors[primitiveIndex];
+      const primitiveColorCount = positionAccessor.count * 4;
+      const primitiveColors = colors.slice(
+        colorOffset,
+        colorOffset + primitiveColorCount,
+      );
+      colorOffset += primitiveColorCount;
+      const streamName =
+        mesh.primitives.length === 1
+          ? `baked-lighting:${mesh.name}`
+          : `baked-lighting:${mesh.name}:${primitiveIndex}`;
+      const existingAccessor = json.accessors?.[primitive.attributes?.COLOR_0];
+      const existingView = json.bufferViews?.[existingAccessor?.bufferView];
+      const existingStride = existingView?.byteStride ?? 16;
+      if (
+        existingAccessor?.componentType === 5126 &&
+        existingAccessor.type === "VEC4" &&
+        existingAccessor.count === positionAccessor.count &&
+        existingView?.buffer === 0 &&
+        existingStride === 16 &&
+        !existingAccessor.sparse
+      ) {
+        const baseOffset =
+          (existingView.byteOffset ?? 0) + (existingAccessor.byteOffset ?? 0);
+        ensure(
+          baseOffset + existingAccessor.count * existingStride <=
+            chunks[0].byteLength,
+          `Existing COLOR_0 for mesh '${mesh.name}' primitive ${primitiveIndex} exceeds its binary buffer`,
+        );
+        for (let vertex = 0; vertex < existingAccessor.count; vertex++) {
+          for (let component = 0; component < 4; component++) {
+            chunks[0].writeFloatLE(
+              primitiveColors[vertex * 4 + component],
+              baseOffset + vertex * existingStride + component * 4,
+            );
+          }
+        }
+        existingAccessor.min = [0, 0, 0, 1];
+        existingAccessor.max = [1, 1, 1, 1];
+        existingAccessor.name = streamName;
+        continue;
+      }
+      const padding = paddedLength(byteLength) - byteLength;
+      if (padding) {
+        chunks.push(Buffer.alloc(padding));
+        byteLength += padding;
+      }
+      const payload = Buffer.alloc(primitiveColors.length * 4);
+      for (let index = 0; index < primitiveColors.length; index++) {
+        payload.writeFloatLE(primitiveColors[index], index * 4);
+      }
+      const bufferView = json.bufferViews.length;
+      json.bufferViews.push({
+        buffer: 0,
+        byteOffset: byteLength,
+        byteLength: payload.byteLength,
+        name: streamName,
+        target: 34962,
+      });
+      chunks.push(payload);
+      byteLength += payload.byteLength;
+      const accessor = json.accessors.length;
+      json.accessors.push({
+        bufferView,
+        byteOffset: 0,
+        componentType: 5126,
+        count: positionAccessor.count,
+        type: "VEC4",
+        min: [0, 0, 0, 1],
+        max: [1, 1, 1, 1],
+        name: streamName,
+      });
+      primitive.attributes.COLOR_0 = accessor;
     }
-    const payload = Buffer.alloc(colors.length * 4);
-    for (let index = 0; index < colors.length; index++) {
-      payload.writeFloatLE(colors[index], index * 4);
-    }
-    const bufferView = json.bufferViews.length;
-    json.bufferViews.push({
-      buffer: 0,
-      byteOffset: byteLength,
-      byteLength: payload.byteLength,
-      name: `baked-lighting:${mesh.name}`,
-      target: 34962,
-    });
-    chunks.push(payload);
-    byteLength += payload.byteLength;
-    const accessor = json.accessors.length;
-    json.accessors.push({
-      bufferView,
-      byteOffset: 0,
-      componentType: 5126,
-      count: positionAccessor.count,
-      type: "VEC4",
-      min: [0, 0, 0, 1],
-      max: [1, 1, 1, 1],
-      name: `baked-lighting:${mesh.name}`,
-    });
-    primitive.attributes.COLOR_0 = accessor;
     applied++;
   }
   const binary = Buffer.concat(chunks);
@@ -459,7 +553,10 @@ export function appendMaterialChannels(document, channels) {
       }
       if (metallicRoughnessTexture !== null) {
         material.pbrMetallicRoughness ??= {};
-        material.pbrMetallicRoughness.metallicFactor = 0;
+        // glTF multiplies the metallic texture's B channel by this factor.
+        // Keep it at one so an authored metallic mask is not silently disabled;
+        // dielectric maps already carry zero in their B channel.
+        material.pbrMetallicRoughness.metallicFactor = 1;
         material.pbrMetallicRoughness.roughnessFactor = 1;
         material.pbrMetallicRoughness.metallicRoughnessTexture = {
           index: metallicRoughnessTexture,

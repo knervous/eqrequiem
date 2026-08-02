@@ -157,6 +157,12 @@
     margin-top: 14px;
 }
 
+.rq-character-create__choices--races {
+    max-height: min(300px, 31vh);
+    padding-right: 4px;
+    overflow-y: auto;
+}
+
 .rq-character-create__choice {
     min-height: 38px;
     padding: 8px 10px;

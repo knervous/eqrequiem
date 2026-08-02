@@ -18,6 +18,7 @@ export type RequiemSkyPalette = {
 export type RequiemCloudVisualState = {
   offset: BJS.Vector2;
   scale: number;
+  textureScale: number;
   coverage: number;
   softness: number;
   detail: number;
@@ -32,6 +33,11 @@ export type RequiemAtmosphereState = {
   sunDirection: BJS.Vector3;
   haze: number;
   sunGlow: number;
+};
+
+export type RequiemSkyTextures = {
+  cloudField: BJS.BaseTexture;
+  starField: BJS.BaseTexture;
 };
 
 const layerIds: Record<RequiemSkyLayer, number> = {
@@ -71,6 +77,7 @@ uniform vec2 uCloudOffset;
 uniform float uStarStrength;
 uniform float uCloudOpacity;
 uniform float uCloudScale;
+uniform float uCloudTextureScale;
 uniform float uCloudCoverage;
 uniform float uCloudSoftness;
 uniform float uCloudDetail;
@@ -126,6 +133,27 @@ float fbmDetail(vec3 p, float detailAmount) {
   return mix(broad, detail, detailAmount);
 }
 
+vec2 sphericalUV(vec3 direction) {
+  return vec2(
+    atan(direction.z, direction.x) / 6.28318530718 + 0.5,
+    asin(clamp(direction.y, -1.0, 1.0)) / 3.14159265359 + 0.5
+  );
+}
+
+vec2 cloudSphericalUV(vec3 direction) {
+  return vec2(
+    atan(direction.z, direction.x) / 6.28318530718 + 0.5,
+    clamp(
+      asin(clamp(direction.y, 0.0, 1.0)) / 1.57079632679,
+      0.0,
+      1.0
+    )
+  );
+}
+
+uniform sampler2D uCloudTexture;
+uniform sampler2D uStarTexture;
+
 vec3 skyGradient(float elevation) {
   // Follow the original two-stage low→mid→high blend, but overlap each eased
   // range so neither a color stop nor its derivative creates a visible band.
@@ -177,6 +205,10 @@ void main() {
     );
     float horizonFade = smoothstep(-0.03, 0.25, direction.y);
     vec3 starColor = mix(vec3(0.68, 0.78, 1.0), vec3(1.0, 0.84, 0.62), hash31(starCell + 19.7));
+    vec3 generatedStars = texture2D(
+      uStarTexture,
+      sphericalUV(starDirection)
+    ).rgb;
     float sunFacing = max(dot(direction, normalize(uSunDirection)), 0.0);
     float sunHalo = pow(sunFacing, 48.0) * 0.22 + pow(sunFacing, 512.0) * 1.25;
     float horizonHaze = 1.0 - smoothstep(0.0, 0.48, abs(direction.y));
@@ -185,6 +217,7 @@ void main() {
     gl_FragColor = vec4(
       gradient
         + starColor * star * twinkle * uStarStrength * horizonFade
+        + generatedStars * uStarStrength * horizonFade * twinkle * 1.35
         + uHorizonColor * sunHalo * uSunGlow,
       1.0
     );
@@ -213,6 +246,22 @@ void main() {
     cloudPosition += warp * uCloudWarp;
     float broad = fbm(cloudPosition);
     float density = fbmDetail(cloudPosition, uCloudDetail);
+    // Texture tiling is deliberately independent from procedural noise scale.
+    // Integer azimuth tiling keeps the spherical seam closed, while the lower
+    // elevation frequency gives the authored cloud fronts a world-sized read.
+    vec2 cloudUV = fract(
+      cloudSphericalUV(shapedDirection)
+        * vec2(uCloudTextureScale, uCloudTextureScale * 0.58)
+        + uCloudOffset * 0.14
+        + vec2(layerPhase * 0.017)
+    );
+    vec3 generatedCloudColor = texture2D(uCloudTexture, cloudUV).rgb;
+    float generatedCloud = smoothstep(
+      0.16,
+      0.58,
+      dot(generatedCloudColor, vec3(0.2126, 0.7152, 0.0722))
+    );
+    density = mix(density, generatedCloud, lowLayer ? 0.72 : 0.56);
     if (!lowLayer) {
       float strands = fbm(vec3(
         cloudPosition.x * 0.42,
@@ -222,8 +271,8 @@ void main() {
       density = mix(density, density * strands * 1.42, 0.58);
     }
     float cloud = smoothstep(
-      uCloudCoverage,
-      uCloudCoverage + max(0.035, uCloudSoftness),
+      uCloudCoverage - max(0.018, uCloudSoftness * 0.5),
+      uCloudCoverage + max(0.018, uCloudSoftness * 0.5),
       density
     );
     float skyFade = smoothstep(-0.10, 0.16, direction.y);
@@ -233,7 +282,10 @@ void main() {
       pow(sunFacing, lowLayer ? 18.0 : 10.0)
       * (1.0 - cloud)
       * uCloudLightStrength;
-    float shade = mix(lowLayer ? 0.58 : 0.74, 1.06, broad);
+    float authoredShade = mix(0.82, 1.08, generatedCloud);
+    float shade =
+      mix(lowLayer ? 0.58 : 0.74, 1.06, broad)
+      * mix(1.0, authoredShade, lowLayer ? 0.38 : 0.24);
     vec3 litCloud = uCloudColor * shade;
     litCloud += mix(uCloudColor, vec3(1.0, 0.93, 0.78), 0.58) * silverLining;
     gl_FragColor = vec4(litCloud, alpha);
@@ -254,6 +306,7 @@ export const createRequiemSkyMaterial = (
   name: string,
   scene: BJS.Scene,
   layer: RequiemSkyLayer,
+  textures: RequiemSkyTextures,
 ): BJS.ShaderMaterial => {
   const transparent = layer !== "dome";
   const material = new BABYLON.ShaderMaterial(
@@ -275,6 +328,7 @@ export const createRequiemSkyMaterial = (
         "uStarStrength",
         "uCloudOpacity",
         "uCloudScale",
+        "uCloudTextureScale",
         "uCloudCoverage",
         "uCloudSoftness",
         "uCloudDetail",
@@ -287,6 +341,7 @@ export const createRequiemSkyMaterial = (
         "uHaze",
         "uSunGlow",
       ],
+      samplers: ["uCloudTexture", "uStarTexture"],
       needAlphaBlending: transparent,
       shaderLanguage: BABYLON.ShaderLanguage.GLSL,
     },
@@ -302,6 +357,7 @@ export const createRequiemSkyMaterial = (
   material.setFloat("uStarStrength", 0);
   material.setFloat("uCloudOpacity", 0);
   material.setFloat("uCloudScale", 3);
+  material.setFloat("uCloudTextureScale", 1);
   material.setFloat("uCloudCoverage", 0.5);
   material.setFloat("uCloudSoftness", 0.2);
   material.setFloat("uCloudDetail", 0.3);
@@ -313,6 +369,8 @@ export const createRequiemSkyMaterial = (
   material.setVector3("uSunDirection", BABYLON.Vector3.Up());
   material.setFloat("uHaze", 0.2);
   material.setFloat("uSunGlow", 0);
+  material.setTexture("uCloudTexture", textures.cloudField);
+  material.setTexture("uStarTexture", textures.starField);
   return material;
 };
 
@@ -344,6 +402,7 @@ export const setRequiemCloudState = (
 ): void => {
   material.setVector2("uCloudOffset", state.offset);
   material.setFloat("uCloudScale", state.scale);
+  material.setFloat("uCloudTextureScale", state.textureScale);
   material.setFloat("uCloudCoverage", state.coverage);
   material.setFloat("uCloudSoftness", state.softness);
   material.setFloat("uCloudDetail", state.detail);

@@ -27,6 +27,32 @@ function quad(x: number, material: string) {
   };
 }
 
+function joinedQuads(xs: readonly number[], material: string) {
+  const positions: number[] = [];
+  const indices: number[] = [];
+  xs.forEach(x => {
+    const vertex = positions.length / 3;
+    positions.push(x, 0, 0, x + 1, 0, 0, x + 1, 1, 0, x, 1, 0);
+    indices.push(vertex, vertex + 1, vertex + 2, vertex, vertex + 2, vertex + 3);
+  });
+  return {
+    name: 'joined-quads',
+    material,
+    positions: new Float32Array(positions),
+    indices: new Uint32Array(indices),
+  };
+}
+
+function grassGround(size = 32) {
+  return {
+    name: 'grass-ground',
+    material: 'grass1',
+    extraShader: 'grass',
+    positions: new Float32Array([0, 0, 0, size, 0, 0, size, 0, size, 0, 0, size]),
+    indices: new Uint32Array([0, 2, 1, 0, 3, 2]),
+  };
+}
+
 describe('Shado world spatial compiler', () => {
   it('builds bounded clusters, tile/material packets, and a quantized BVH4', () => {
     const world = compileShadoWorld([quad(0, 'stone'), quad(20, 'wood')], {
@@ -40,6 +66,10 @@ describe('Shado world spatial compiler', () => {
     expect(world.name).toBe('qey2hh1');
     expect(world.coordinateSystem).toBe('babylon-y-up');
     expect(world.sourceTransform).toBe('identity');
+    expect(world.lighting).toEqual({
+      mode: 'dynamic',
+      vertexColors: 'material-tint',
+    });
     expect(world.navigation.runtimeToRecast).toBe('z-y-negative-x');
     expect(world.collision).toMatchObject({
       source: 'qey2hh1.collision.bin.gz',
@@ -64,11 +94,48 @@ describe('Shado world spatial compiler', () => {
     expect(() => validateShadoWorldPackage(world)).not.toThrow();
   });
 
+  it('partitions triangles before clustering and emits primitive/cell render chunks', () => {
+    const world = compileShadoWorld([joinedQuads([0, 40], 'stone')], {
+      name: 'spatial-first',
+      tileSize: 32,
+      maxClusterTriangles: 128,
+    });
+
+    expect(world.tiles.x).toEqual([0, 1]);
+    expect(world.clusters.radius).toHaveLength(2);
+    expect(world.renderChunks.primitive).toEqual([0, 0]);
+    expect(world.renderChunks.clusterRefCount).toEqual([1, 1]);
+    expect(world.clusters.renderChunk).toEqual([0, 1]);
+  });
+
+  it('offline-converts tagged grass surfaces into deterministic placement cells', () => {
+    const options = {
+      name: 'grass-world',
+      grass: {
+        cellSize: 24,
+        density: 0.1,
+        maxPlacements: 64,
+        maxPlacementsPerPrimitive: 64,
+      },
+    } as const;
+    const first = compileShadoWorld([grassGround()], options);
+    const second = compileShadoWorld([grassGround()], options);
+
+    expect(first.grass?.version).toBe(1);
+    expect(first.grass?.cellSize).toBe(24);
+    expect(first.grass?.placements.positionX).toHaveLength(64);
+    expect(first.grass?.cells.x.length).toBeGreaterThan(1);
+    expect(first.grass?.cells.placementCount.reduce((sum, count) => sum + count, 0)).toBe(64);
+    expect(first.grass?.coverage?.resolution).toBe(32);
+    expect(first.grass?.coverage?.words).toHaveLength(
+      first.grass!.cells.x.length * first.grass!.coverage!.wordsPerCell
+    );
+    expect(second.grass).toEqual(first.grass);
+    expect(() => validateShadoWorldPackage(first)).not.toThrow();
+  });
+
   it('encodes, hashes, and decodes the current dedicated collision artifact', () => {
-    const artifact = encodeShadoWorldCollision([
-      quad(0, 'stone'),
-      quad(0, 'duplicate-material'),
-    ]);
+    const artifact = encodeShadoWorldCollision([quad(0, 'stone'), quad(0, 'duplicate-material')]);
     const descriptor = {
       source: 'collision-test.collision.bin.gz',
       ...artifact.descriptor,
@@ -88,15 +155,36 @@ describe('Shado world spatial compiler', () => {
   });
 
   it('rejects historical package layouts instead of entering compatibility mode', () => {
-    const historical = structuredClone(compileShadoWorld([quad(0, 'stone')], {
-      name: 'historical',
-    })) as { version: number };
+    const historical = structuredClone(
+      compileShadoWorld([quad(0, 'stone')], {
+        name: 'historical',
+      })
+    ) as { version: number };
     historical.version = 4;
     expect(() =>
-      validateShadoWorldPackage(
-        historical as Parameters<typeof validateShadoWorldPackage>[0]
-      )
+      validateShadoWorldPackage(historical as Parameters<typeof validateShadoWorldPackage>[0])
     ).toThrow(/Unsupported/);
+  });
+
+  it('uses explicit lighting authority instead of inferring a bake from vertex colors', () => {
+    const dynamic = compileShadoWorld([quad(0, 'stone')], {
+      name: 'dynamic-lighting',
+    });
+    expect(dynamic.lighting?.mode).toBe('dynamic');
+
+    const baked = compileShadoWorld([quad(0, 'stone')], {
+      name: 'baked-lighting',
+      runtimeLighting: {
+        mode: 'baked',
+        vertexColors: 'baked-irradiance',
+      },
+    });
+    expect(baked.lighting?.mode).toBe('baked');
+    expect(() => validateShadoWorldPackage(baked)).not.toThrow();
+
+    baked.lighting = { mode: 'baked', vertexColors: 'material-tint' };
+    stampShadoWorldIntegrity(baked);
+    expect(() => validateShadoWorldPackage(baked)).toThrow(/Unsupported/);
   });
 
   it('validates authoring sidecars, supports GLB extras, and compiles region SoA metadata', () => {
@@ -117,8 +205,9 @@ describe('Shado world spatial compiler', () => {
       },
     });
     expect(validateShadoWorldAuthoring(authoring, 'qey2hh1')).toBe(authoring);
-    expect(authoringFromGltfExtras(shadoWorldAuthoringExtras(authoring), 'qey2hh1'))
-      .toEqual(authoring);
+    expect(authoringFromGltfExtras(shadoWorldAuthoringExtras(authoring), 'qey2hh1')).toEqual(
+      authoring
+    );
 
     const world = compileShadoWorld([quad(0, 'stone')], {
       name: 'qey2hh1',
@@ -128,11 +217,13 @@ describe('Shado world spatial compiler', () => {
     expect(world.regions.kind).toEqual(['water']);
     expect(world.regions.centerZ).toEqual([8]);
     expect(world.regions.tags).toEqual([['outdoor', 'swim']]);
-    expect(world.regions.metadata).toEqual([{
-      damagePerSecond: 0,
-      sound: 'river',
-      navigation: { area: 3, flags: 5, excluded: false },
-    }]);
+    expect(world.regions.metadata).toEqual([
+      {
+        damagePerSecond: 0,
+        sound: 'river',
+        navigation: { area: 3, flags: 5, excluded: false },
+      },
+    ]);
     expect(world.navigation.modifiers).toEqual({
       region: [0],
       area: [3],
@@ -155,34 +246,42 @@ describe('Shado world spatial compiler', () => {
         objects: {
           tree: [
             {
-              x: 0.5, y: 2, z: 0,
-              rotateX: 12, rotateY: 90, rotateZ: -7,
+              x: 0.5,
+              y: 2,
+              z: 0,
+              rotateX: 12,
+              rotateY: 90,
+              rotateZ: -7,
               scale: 2,
             },
             { x: -100, y: 0, z: 0, rotateX: 0, rotateY: 0, rotateZ: 0, scale: 1 },
           ],
         },
-        regions: [{
-          minVertex: [0, 0, 0],
-          maxVertex: [4, 2, 4],
-          center: [2, 1, 2],
-          regionType: 1,
-          zoneLineInfo: null,
-        }],
+        regions: [
+          {
+            minVertex: [0, 0, 0],
+            maxVertex: [4, 2, 4],
+            center: [2, 1, 2],
+            regionType: 1,
+            zoneLineInfo: null,
+          },
+        ],
       },
       'legacy',
       { objectSourcePrefix: '/objects', defaultObjectBoundsRadius: 3 }
     );
-    expect(authoring.objects.prototypes).toEqual([{
-      id: 'tree',
-      source: '/objects/tree/final.glb.gz',
-      boundsRadius: 3,
-      metadata: {
-        legacyModel: 'tree',
-        sourceCoordinateSystem: 'requiem-y-up',
-        generatedAsset: 'final.glb.gz',
+    expect(authoring.objects.prototypes).toEqual([
+      {
+        id: 'tree',
+        source: '/objects/tree/final.glb.gz',
+        boundsRadius: 3,
+        metadata: {
+          legacyModel: 'tree',
+          sourceCoordinateSystem: 'requiem-y-up',
+          generatedAsset: 'final.glb.gz',
+        },
       },
-    }]);
+    ]);
     expect(authoring.objects.stamps[0]).toMatchObject({
       position: [0.5, 2, 0],
       rotationDegrees: [12, 90, -7],
@@ -209,8 +308,7 @@ describe('Shado world spatial compiler', () => {
     expect(world.objects?.stamps.cellId).toEqual([0, -1]);
 
     const planes = new Float32Array([
-      1, 0, 0, 10, -1, 0, 0, 10, 0, 1, 0, 10,
-      0, -1, 0, 10, 0, 0, 1, 10, 0, 0, -1, 10,
+      1, 0, 0, 10, -1, 0, 0, 10, 0, 1, 0, 10, 0, -1, 0, 10, 0, 0, 1, 10, 0, 0, -1, 10,
     ]);
     const coordinator = await ShadoWorldVisibilityCoordinator.create(world);
     const frame = coordinator.reduceWorld(planes, [0.5, 2, 0]);
@@ -224,13 +322,20 @@ describe('Shado world spatial compiler', () => {
     expect(batch.source).toBe('/objects/tree/final.glb.gz');
     expect(Array.from(batch.stampIndices)).toEqual([0]);
     expect(Array.from(batch.matrices.slice(12, 16))).toEqual([0.5, 2, 0, 1]);
+    expect(Array.from(batch.colors)).toEqual([1, 1, 1, 1]);
   });
 
   it('preserves source-space placement and yaw with non-uniform scale', () => {
     const source = {
-      x: -11, y: 22, z: -33,
-      rotateX: 14, rotateY: -27, rotateZ: 39,
-      scale: 4, scaleX: 1.5, scaleZ: 2.5,
+      x: -11,
+      y: 22,
+      z: -33,
+      rotateX: 14,
+      rotateY: -27,
+      rotateZ: 39,
+      scale: 4,
+      scaleX: 1.5,
+      scaleZ: 2.5,
     };
     expect(legacyZoneObjectTransformToBabylon(source)).toEqual({
       position: [-11, 22, -33],
@@ -240,46 +345,53 @@ describe('Shado world spatial compiler', () => {
   });
 
   it('merges newly discovered metadata stamps without overwriting editor changes', () => {
-    const initial = importLegacyZoneMetadata({
-      objects: {
-        tree: [{ x: -1, y: 2, z: 3, rotateY: 10, scale: 1 }],
+    const initial = importLegacyZoneMetadata(
+      {
+        objects: {
+          tree: [{ x: -1, y: 2, z: 3, rotateY: 10, scale: 1 }],
+        },
       },
-    }, 'merge');
+      'merge'
+    );
     initial.objects.stamps[0].position = [77, 88, 99];
-    const merged = mergeLegacyZoneMetadata(initial, {
-      objects: {
-        tree: [
-          { x: -1, y: 2, z: 3, rotateY: 10, scale: 1 },
-          { x: -4, y: 5, z: 6, rotateY: 20, scale: 2 },
-        ],
-        rock: [{ x: -7, y: 8, z: 9, rotateY: 0, scale: 1 }],
+    const merged = mergeLegacyZoneMetadata(
+      initial,
+      {
+        objects: {
+          tree: [
+            { x: -1, y: 2, z: 3, rotateY: 10, scale: 1 },
+            { x: -4, y: 5, z: 6, rotateY: 20, scale: 2 },
+          ],
+          rock: [{ x: -7, y: 8, z: 9, rotateY: 0, scale: 1 }],
+        },
       },
-    }, 'merge');
+      'merge'
+    );
 
     expect(merged.objects.prototypes.map(item => item.id)).toEqual(['tree', 'rock']);
-    expect(merged.objects.stamps.map(item => item.id)).toEqual([
-      'tree-0', 'rock-0', 'tree-1',
-    ]);
+    expect(merged.objects.stamps.map(item => item.id)).toEqual(['tree-0', 'rock-0', 'tree-1']);
     expect(merged.objects.stamps[0].position).toEqual([77, 88, 99]);
-    expect(merged.objects.stamps.find(item => item.id === 'tree-1')?.position)
-      .toEqual([-4, 5, 6]);
-    expect(merged.objects.prototypes[0].source).toBe(
-      '/eqrequiem/objects/tree/final.glb.gz'
-    );
+    expect(merged.objects.stamps.find(item => item.id === 'tree-1')?.position).toEqual([-4, 5, 6]);
+    expect(merged.objects.prototypes[0].source).toBe('/eqrequiem/objects/tree/final.glb.gz');
   });
 
   it('removes the superseded authoring reflection exactly once', () => {
-    const initial = importLegacyZoneMetadata({
-      objects: {
-        tree: [{ x: -11, y: 22, z: -33, rotateY: -27, scale: 1 }],
+    const initial = importLegacyZoneMetadata(
+      {
+        objects: {
+          tree: [{ x: -11, y: 22, z: -33, rotateY: -27, scale: 1 }],
+        },
+        regions: [
+          {
+            minVertex: [-4, 0, 0],
+            maxVertex: [0, 2, 4],
+            center: [-2, 1, 2],
+            regionType: 1,
+          },
+        ],
       },
-      regions: [{
-        minVertex: [-4, 0, 0],
-        maxVertex: [0, 2, 4],
-        center: [-2, 1, 2],
-        regionType: 1,
-      }],
-    }, 'upgrade');
+      'upgrade'
+    );
     initial.objects.stamps[0].position[0] *= -1;
     initial.objects.stamps[0].rotationDegrees[1] *= -1;
     delete initial.objects.stamps[0].metadata.transformContract;
@@ -291,22 +403,24 @@ describe('Shado world spatial compiler', () => {
     const upgraded = mergeLegacyZoneMetadata(initial, {}, 'upgrade');
     expect(upgraded.objects.stamps[0].position).toEqual([-11, 22, -33]);
     expect(upgraded.objects.stamps[0].rotationDegrees).toEqual([0, -27, 0]);
-    expect(upgraded.objects.stamps[0].metadata.transformContract)
-      .toBe('requiem-y-up-v2');
-    expect(upgraded.objects.stamps[0].metadata.positionMirroredAtPreprocess)
-      .toBeUndefined();
+    expect(upgraded.objects.stamps[0].metadata.transformContract).toBe('requiem-y-up-v2');
+    expect(upgraded.objects.stamps[0].metadata.positionMirroredAtPreprocess).toBeUndefined();
     expect(upgraded.regions[0].center).toEqual([-2, 1, 2]);
-    expect(upgraded.regions[0].metadata.transformContract)
-      .toBe('requiem-y-up-v2');
+    expect(upgraded.regions[0].metadata.transformContract).toBe('requiem-y-up-v2');
   });
 
   it('rejects duplicate region IDs before preprocessing', () => {
     const authoring = createShadoWorldAuthoring('qey2hh1');
     const region = {
-      id: 'duplicate', name: 'Duplicate', kind: 'semantic' as const, enabled: true,
+      id: 'duplicate',
+      name: 'Duplicate',
+      kind: 'semantic' as const,
+      enabled: true,
       center: [0, 0, 0] as [number, number, number],
       size: [1, 1, 1] as [number, number, number],
-      phaseMask: 1, tags: [], metadata: {},
+      phaseMask: 1,
+      tags: [],
+      metadata: {},
     };
     authoring.regions.push(region, structuredClone(region));
     expect(() => validateShadoWorldAuthoring(authoring)).toThrow(/duplicate stable ID/);
@@ -382,11 +496,12 @@ describe('Shado world spatial compiler', () => {
 
   it('intersects loaded, phase, and portal reachability masks before geometry and actors', async () => {
     const world = compileShadoWorld([quad(0, 'stone'), quad(20, 'stone')], {
-      name: 'policy-masks', tileSize: 16, maxClusterTriangles: 2,
+      name: 'policy-masks',
+      tileSize: 16,
+      maxClusterTriangles: 2,
     });
     const planes = new Float32Array([
-      1, 0, 0, 100, -1, 0, 0, 100, 0, 1, 0, 100,
-      0, -1, 0, 100, 0, 0, 1, 100, 0, 0, -1, 100,
+      1, 0, 0, 100, -1, 0, 0, 100, 0, 1, 0, 100, 0, -1, 0, 100, 0, 0, 1, 100, 0, 0, -1, 100,
     ]);
     const coordinator = await ShadoWorldVisibilityCoordinator.create(world);
     const frame = coordinator.reduceWorld(planes, [1, 0, 0], {
@@ -420,11 +535,12 @@ describe('Shado world spatial compiler', () => {
 
   it('compacts 20k entity visibility results inside the WASM reducer', async () => {
     const world = compileShadoWorld([quad(0, 'stone')], {
-      name: 'scale', tileSize: 16, maxClusterTriangles: 2,
+      name: 'scale',
+      tileSize: 16,
+      maxClusterTriangles: 2,
     });
     const planes = new Float32Array([
-      1, 0, 0, 100, -1, 0, 0, 100, 0, 1, 0, 100,
-      0, -1, 0, 100, 0, 0, 1, 100, 0, 0, -1, 100,
+      1, 0, 0, 100, -1, 0, 0, 100, 0, 1, 0, 100, 0, -1, 0, 100, 0, 0, 1, 100, 0, 0, -1, 100,
     ]);
     const coordinator = await ShadoWorldVisibilityCoordinator.create(world);
     const frame = coordinator.reduceWorld(planes, [1, 0, 0]);

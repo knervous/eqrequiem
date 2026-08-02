@@ -1,4 +1,6 @@
 export * from './types';
+export * from './fx';
+export * from './grass';
 export * from './authoring';
 export * from './compiler';
 export * from './collision';

@@ -1,0 +1,53 @@
+{
+  "schema": "eltania.sky-texture-generation",
+  "version": 1,
+  "generator": "Mac-local stable-diffusion.cpp",
+  "generationSize": 384,
+  "outputSize": 512,
+  "steps": 20,
+  "assets": [
+    {
+      "id": "cloud-field",
+      "file": "cloud-field.webp",
+      "generator": "OpenAI built-in image generation",
+      "generationSize": 1254,
+      "outputSize": 1024,
+      "prompt": "Production-quality seamless cloud-density texture for a real-time fantasy game sky shader: a horizonless, orthographic neutral-grayscale atmospheric field with broad softly self-shadowed cumulus banks, fragmented vapor clusters, feathered wispy cirrus, thin translucent veils, naturally eroded gaps, multi-scale wind-shaped structure, no focal center, no directional light, and no baked sky color.",
+      "refinementPrompt": "Change only the edge topology so the texture tiles seamlessly in both axes; preserve the photorealistic grayscale cloud structure, broad dark gaps, diffuse internal shading, and all horizonless density-mask constraints.",
+      "postProcess": "Project periodic-edge repair, 1024px resize, grayscale normalization, lossless WebP",
+      "sha256": "d2935502edeb2f47b2b4ba105db4573e4311a6a51a88773663f695d177c0217f"
+    },
+    {
+      "id": "star-field",
+      "file": "star-field.webp",
+      "prompt": "seamless tileable natural night star field texture, deep charcoal navy-black sky, many tiny sharp stars with realistic variation in brightness and color, very faint milky stellar dust, restrained medieval high-fantasy night atmosphere, flat celestial texture filling the frame",
+      "negativePrompt": "text, letters, logo, watermark, frame, border, landscape, horizon, building, character, spaceship, satellite, science fiction, modern object, cartoon, vector art, oversaturated, blurry, moon, sun, planet, large nebula, galaxy spiral, constellation lines, giant stars",
+      "seed": 1405217402,
+      "strength": 0.18,
+      "sampler": "euler a",
+      "inferenceMs": 6745,
+      "sha256": "e0aee099b117d8d42ae94564ded0cef156ba4ffed9a34627e33f25fca6870566"
+    },
+    {
+      "id": "sun-photosphere",
+      "file": "sun-photosphere.webp",
+      "prompt": "astronomical telescope photograph of a single realistic solar photosphere, perfectly centered full circular sun disc, bright warm pale gold surface with restrained amber granulation, turbulent luminous convection cells and subtle natural prominences, isolated on pure black, flat symmetrical front view occupying seventy percent of the frame, medieval high-fantasy natural sky asset",
+      "negativePrompt": "text, letters, logo, watermark, frame, border, landscape, horizon, building, character, spaceship, satellite, science fiction, modern object, cartoon, vector art, oversaturated, blurry, multiple suns, face, symbol, rays reaching frame edge, lens flare, clouds, planet, Jupiter, Saturn, stripes, bands, sphere shading, basket weave, herringbone, zigzag pattern",
+      "seed": 1826529409,
+      "sampler": "euler a",
+      "inferenceMs": 20303,
+      "sha256": "9e726eb3338370d990f18db1e8c6a4defa1d5b12cb68c1cc6b79bcc8b4e00626"
+    },
+    {
+      "id": "moon-surface",
+      "file": "moon-surface.webp",
+      "prompt": "single realistic full moon, perfectly centered circular lunar disc, detailed silver blue-gray cratered stone surface, restrained natural maria and highlands, isolated on pure black, symmetrical orthographic front view with empty margins, medieval high-fantasy natural sky asset",
+      "negativePrompt": "text, letters, logo, watermark, frame, border, landscape, horizon, building, character, spaceship, satellite, science fiction, modern object, cartoon, vector art, oversaturated, blurry, crescent, multiple moons, face, symbol, planet rings, clouds, stars, bubbles, glass spheres, balloons, soap film",
+      "seed": 2129248815,
+      "strength": 0.48,
+      "sampler": "euler a",
+      "inferenceMs": 12045,
+      "sha256": "465d8a86c4d5025cd4c63c21aefe40aac3785ab69a0e0b4809498418f5005625"
+    }
+  ]
+}

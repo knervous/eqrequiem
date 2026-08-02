@@ -11,7 +11,34 @@ export type ShadoWorldRegionKind =
   | 'zone-line'
   | 'audio'
   | 'trigger'
+  | 'fx'
   | 'semantic';
+
+export type ShadoWorldFxCullProfile = 'near-detail' | 'mid-atmosphere' | 'far-landmark' | 'always';
+
+export type ShadoWorldFxPattern = {
+  version: 1;
+  /** Runtime factory key such as `grass`, `light-rays`, or `wind-volume`. */
+  effect: string;
+  placement: 'point' | 'volume' | 'surface';
+  culling: {
+    profile: ShadoWorldFxCullProfile;
+    /** Optional profile override in final Babylon world units. */
+    maxDistance?: number;
+    /** Width of the shader/LOD transition before hard culling. */
+    fadeDistance?: number;
+    /** Optional reducer cadence override. */
+    updateHz?: number;
+    outsideWorldVisible?: boolean;
+  };
+  budget?: {
+    qualityTier?: 'low' | 'medium' | 'high' | 'ultra';
+    maximumInstances?: number;
+    maximumDraws?: number;
+  };
+  /** Effect-owned payload kept off the reducer's hot SoA planes. */
+  parameters?: Record<string, unknown>;
+};
 
 export type ShadoWorldAuthoringRegion = {
   /** Durable identity used by scripts, diffs, and replacement operations. */
@@ -72,10 +99,52 @@ export type ShadoWorldAuthoringDocument = {
 export type ShadoWorldPrimitive = {
   name: string;
   material: string;
+  /** Optional material-authored runtime role retained by headless preprocessing. */
+  extraShader?: string;
   positions: ArrayLike<number>;
   indices: ArrayLike<number>;
   /** Optional glTF TEXCOORD_1 stream used by the offline lightmap baker. */
   lightmapUvs?: ArrayLike<number>;
+};
+
+export type ShadoWorldGrassCompileOptions = {
+  cellSize?: number;
+  density?: number;
+  maxPlacements?: number;
+  maxPlacementsPerPrimitive?: number;
+  minimumUpNormal?: number;
+  minHeight?: number;
+  maxHeight?: number;
+  bladeWidth?: number;
+  seed?: number;
+};
+
+export type ShadoWorldGrassPackage = {
+  version: 1;
+  cellSize: number;
+  cells: {
+    x: number[];
+    z: number[];
+    firstPlacement: number[];
+    placementCount: number[];
+  };
+  placements: {
+    positionX: number[];
+    positionY: number[];
+    positionZ: number[];
+    yaw: number[];
+    width: number[];
+    height: number[];
+    phase: number[];
+    stiffness: number[];
+    colorVariation: number[];
+  };
+  /** Fixed-resolution authored-surface mask, including topmost non-grass blockers. */
+  coverage?: {
+    resolution: number;
+    wordsPerCell: number;
+    words: number[];
+  };
 };
 
 export type ShadoWorldCompileOptions = {
@@ -88,6 +157,10 @@ export type ShadoWorldCompileOptions = {
   sourceTransform?: ShadoWorldSourceTransform;
   tileSize?: number;
   maxClusterTriangles?: number;
+  /** Offline proximity-grass conversion. Set false to omit tagged grass. */
+  grass?: ShadoWorldGrassCompileOptions | false;
+  /** Explicit runtime lighting authority. Vertex-color presence is never used to infer this. */
+  runtimeLighting?: ShadoWorldRuntimeLighting;
   authoring?: ShadoWorldAuthoringDocument;
   /** Collision-selected primitives in final runtime coordinates. */
   collisionPrimitives?: readonly ShadoWorldPrimitive[];
@@ -96,6 +169,12 @@ export type ShadoWorldCompileOptions = {
 };
 
 export type ShadoWorldSourceTransform = 'identity' | 'mirror-x';
+
+export type ShadoWorldRuntimeLighting = {
+  mode: 'dynamic' | 'hybrid' | 'baked';
+  /** Declares the semantic role of COLOR_0 instead of guessing from its presence. */
+  vertexColors: 'material-tint' | 'baked-irradiance';
+};
 
 export type ShadoWorldNavigationModifier = {
   /** Stable authored region row supplying this build operation. */
@@ -141,6 +220,8 @@ export type ShadoWorldSpatialPackage = {
   bounds: ShadoWorldBounds;
   collision: ShadoWorldCollisionDescriptor;
   triangleCount: number;
+  /** Runtime lighting policy authored by the packer; never inferred from mesh attributes. */
+  lighting?: ShadoWorldRuntimeLighting;
   materials: string[];
   primitives: Array<{ name: string; material: number; vertexCount: number }>;
   clusterIndices: number[];
@@ -236,6 +317,11 @@ export type ShadoWorldSpatialPackage = {
       scaleX: number[];
       scaleY: number[];
       scaleZ: number[];
+      /** Optional offline-baked irradiance, one linear RGBA value per stamp. */
+      irradianceR?: number[];
+      irradianceG?: number[];
+      irradianceB?: number[];
+      irradianceA?: number[];
       radius: number[];
       cellId: number[];
       phaseMask: number[];
@@ -243,6 +329,8 @@ export type ShadoWorldSpatialPackage = {
       metadata: Record<string, unknown>[];
     };
   };
+  /** Offline-converted static grass placements grouped into proximity cells. */
+  grass?: ShadoWorldGrassPackage;
   tiles: {
     size: number;
     originX: number;

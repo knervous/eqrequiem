@@ -103,7 +103,14 @@ function setView(name) {
   if (!current) throw new Error('Load a reference GLB before choosing a view')
   const directions = {
     front: new BABYLON.Vector3(0, 0.08, -1),
+    frontTop: new BABYLON.Vector3(0, 1.55, -1),
+    left: new BABYLON.Vector3(-1, 0.08, 0),
+    leftTop: new BABYLON.Vector3(-1, 1.55, 0),
     side: new BABYLON.Vector3(-1, 0.08, 0),
+    back: new BABYLON.Vector3(0, 0.08, 1),
+    backTop: new BABYLON.Vector3(0, 1.55, 1),
+    right: new BABYLON.Vector3(1, 0.08, 0),
+    rightTop: new BABYLON.Vector3(1, 1.55, 0),
     threeQuarter: new BABYLON.Vector3(-1, 0.55, -1),
   }
   const direction = directions[name]
@@ -118,7 +125,9 @@ function setView(name) {
   camera.setTarget(center)
 
   const aspect = engine.getRenderWidth() / engine.getRenderHeight()
-  const up = BABYLON.Vector3.Up()
+  const up = Math.abs(direction.y) > 0.9
+    ? new BABYLON.Vector3(0, 0, direction.z < 0 ? 1 : -1)
+    : BABYLON.Vector3.Up()
   const right = BABYLON.Vector3.Cross(up, direction).normalize()
   const projectedWidth = Math.abs(right.x) * size.x
     + Math.abs(right.y) * size.y

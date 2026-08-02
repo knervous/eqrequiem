@@ -27,6 +27,13 @@ const featureLoaders = {
     v2.RegisterPhysicsV2PhysicsEngineComponent();
     return { ...joined, ...v2 };
   },
+  discBuilder: async () => {
+    const builder = await import(
+      "@babylonjs/core/Meshes/Builders/discBuilder.pure.js"
+    );
+    builder.RegisterDiscBuilder();
+    return builder;
+  },
   gradientMaterial: () =>
     import("@babylonjs/materials/gradient/gradientMaterial"),
   serializers: () => import("@babylonjs/serializers"),

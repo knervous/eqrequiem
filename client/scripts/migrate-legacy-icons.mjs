@@ -46,12 +46,14 @@ Usage:
     [--size 384] [--master-size 256] [--steps 12] [--force true|false]
   node scripts/migrate-legacy-icons.mjs all [--output DIR] [--database FILE]
     [--size 384] [--master-size 256] [--steps 12] [--seed-offset N]
+    [--passes N] [--allow-partial true|false]
   node scripts/migrate-legacy-icons.mjs passthrough [--output DIR]
   node scripts/migrate-legacy-icons.mjs repack [--input DIR] [--output DIR]
     [--format png|webp] [--from masters|slices]
   node scripts/migrate-legacy-icons.mjs verify [--input DIR] [--output DIR]
   node scripts/migrate-legacy-icons.mjs audit [--output DIR] [--master-size 256]
   node scripts/migrate-legacy-icons.mjs promote [--output DIR] [--public DIR] [--version v1]
+    [--allow-partial true|false]
 
 Workflow:
   1. Put dragitemN.webp/png sheets in --input.
@@ -219,6 +221,7 @@ async function run() {
       publicItemsRoot: path.resolve(options.public ?? defaultPublicItems),
       version: options.version ?? 'v1',
       masterSize: options['master-size'] ? Number(options['master-size']) : 256,
+      allowPartial: booleanOption(options, 'allow-partial'),
     });
     console.log(`promoted ${result.iconCount} icons atomically to ${result.targetRoot}`);
     return;
@@ -259,6 +262,10 @@ async function run() {
       }
     }
     const force = booleanOption(options, 'force');
+    const allowPartial = booleanOption(options, 'allow-partial');
+    if (allowPartial && command !== 'all') {
+      throw new Error('--allow-partial true is supported only by all or promote');
+    }
     if (force && !ids) {
       throw new Error('--force true requires an explicit closed --ids list');
     }
@@ -375,14 +382,15 @@ async function run() {
           2,
         )}\n`,
       );
-      if (command === 'all' || command === 'poc') {
+      if ((command === 'all' || command === 'poc') && !(command === 'all' && allowPartial)) {
         throw new Error(
           `${completed.failures.length} icons failed transparent-output validation; ` +
             `details saved to ${failurePath}`,
         );
       }
       console.warn(
-        `${completed.failures.length} POC icons failed; details saved to ${failurePath}`,
+        `${completed.failures.length} icons remain unresolved; ` +
+          'publishing the accepted first-pass set because partial promotion was requested',
       );
     }
     if (command === 'poc') {
@@ -410,6 +418,7 @@ async function run() {
         publicItemsRoot: path.resolve(options.public ?? defaultPublicItems),
         version: options.version ?? 'v1',
         masterSize: options['master-size'] ? Number(options['master-size']) : 256,
+        allowPartial,
       });
       console.log(`promoted ${result.iconCount} icons atomically to ${result.targetRoot}`);
     }

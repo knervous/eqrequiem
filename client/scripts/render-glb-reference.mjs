@@ -59,7 +59,7 @@ Options:
   --output reference.png
   --pose pos
   --pose-fraction 0.5
-  --front-axis -z|+z|-x|+x
+  --front-axis -z|+z|-x|+x|-xz|+xz|-x+z|+x-z|-xz-high
   --focus full|head|hands|feet
   --audit-animation-samples 9 --max-span-ratio 1.5 --min-edge-ratio 0.25
   --max-edge-ratio 4 --max-p99-edge-ratio 2 --max-extreme-edge-fraction 0.0015

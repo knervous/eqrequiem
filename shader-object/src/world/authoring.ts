@@ -8,7 +8,7 @@ import {
 
 const REGION_KINDS = new Set([
   'visibility-cell', 'streaming', 'water', 'lava', 'safe',
-  'zone-line', 'audio', 'trigger', 'semantic',
+  'zone-line', 'audio', 'trigger', 'fx', 'semantic',
 ]);
 
 export function createShadoWorldAuthoring(world: string): ShadoWorldAuthoringDocument {

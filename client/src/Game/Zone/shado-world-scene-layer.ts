@@ -4,13 +4,20 @@ import { fetchShadoBytes } from "@knervous/shado/preprocess/runtime";
 import {
   decodeShadoWorldCollision,
   deserializeShadoWorld,
+  ShadoVisibilityBits,
   ShadoWorldVisibilityCoordinator,
   type ShadoWorldSpatialPackage,
 } from "@knervous/shado/world";
+import {
+  flattenWorldFrustumPlanes,
+  WORLD_VISIBILITY_INTERVAL_MS,
+} from "./world-visibility-policy";
 
-const WORLD_PACKAGE_REVISION = "babylon-rhs-y-up-v4";
+const WORLD_PACKAGE_REVISION = "babylon-rhs-y-up-v5-hybrid-lighting-2x-v3";
 
 export class ShadoWorldSceneLayer {
+  private elapsedMs = WORLD_VISIBILITY_INTERVAL_MS;
+
   private constructor(
     public readonly world: ShadoWorldSpatialPackage,
     public readonly coordinator: ShadoWorldVisibilityCoordinator,
@@ -23,6 +30,44 @@ export class ShadoWorldSceneLayer {
 
   get renderMeshes(): readonly BJS.Mesh[] {
     return this.chunks;
+  }
+
+  tick(deltaMs: number): void {
+    this.elapsedMs += Math.max(0, deltaMs);
+    if (this.elapsedMs < WORLD_VISIBILITY_INTERVAL_MS) return;
+    this.elapsedMs %= WORLD_VISIBILITY_INTERVAL_MS;
+
+    const scene = this.runtimeRoot.getScene();
+    const camera = scene.activeCamera;
+    if (!camera) return;
+    scene.updateTransformMatrix(true);
+    const planes = flattenWorldFrustumPlanes(
+      BABYLON.Frustum.GetPlanes(scene.getTransformMatrix()),
+    );
+    const position = camera.globalPosition;
+    const frame = this.coordinator.reduceWorld(planes, [
+      position.x,
+      position.y,
+      position.z,
+    ]);
+    for (let chunk = 0; chunk < this.chunks.length; chunk++) {
+      const renderMesh = this.chunks[chunk]!;
+      if (renderMesh.metadata?.shadoAlwaysDisabled === true) {
+        renderMesh.setEnabled(false);
+        continue;
+      }
+      const first = this.world.renderChunks.firstClusterRef[chunk]!;
+      const count = this.world.renderChunks.clusterRefCount[chunk]!;
+      let visible = false;
+      for (let ref = first; ref < first + count; ref++) {
+        const cluster = this.world.renderChunkClusters[ref]!;
+        if (frame.clusterFlags[cluster] & ShadoVisibilityBits.Visible) {
+          visible = true;
+          break;
+        }
+      }
+      renderMesh.setEnabled(visible);
+    }
   }
 
   static async load(
@@ -86,14 +131,7 @@ export class ShadoWorldSceneLayer {
       throw error;
     }
     sourceContainer.addAllToScene();
-    const worldSources = sourceContainer.meshes.filter(
-      (mesh) => mesh.getTotalVertices() > 0 && mesh.name !== "CLOUD_MDF",
-    );
-    const usesBakedWorldLighting =
-      worldSources.length > 0 &&
-      worldSources.every((mesh) =>
-        mesh.isVerticesDataPresent(BABYLON.VertexBuffer.ColorKind),
-      );
+    const usesBakedWorldLighting = world.lighting?.mode === "baked";
     applyWorldMaterialPolicy(
       sourceContainer.materials,
       usesBakedWorldLighting,
@@ -212,17 +250,43 @@ function createRenderChunks(
     const clone = source.clone(`ShadoWorldChunk:${chunk}`, source.parent, true);
     if (!clone) throw new Error(`Unable to clone promoted primitive '${meshName}'`);
     clone.makeGeometryUnique();
+    const first = world.renderChunks.firstClusterRef[chunk]!;
+    const count = world.renderChunks.clusterRefCount[chunk]!;
+    const clusterIds = world.renderChunkClusters.slice(first, first + count);
+    const compacted = compactGeometry(
+      source,
+      indicesForClusters(world, clusterIds),
+    );
+    for (const [kind, stream] of compacted.streams) {
+      clone.setVerticesData(kind, stream.data, false, stream.size);
+    }
+    clone.setIndices(compacted.indices);
+    clone.subMeshes = [];
+    clone.material =
+      source
+        .getScene()
+        .materials.find(
+          (material) =>
+            material.name === world.materials[world.renderChunks.material[chunk]!],
+        ) ?? source.material;
+    new BABYLON.SubMesh(
+      0,
+      0,
+      clone.getTotalVertices(),
+      0,
+      compacted.indices.length,
+      clone,
+    );
     clone.isPickable = true;
     clone.collisionMask = 0x0000dad1;
     clone.alwaysSelectAsActiveMesh = false;
-    // The source primitive remains authoritative until render streams also
-    // become a dedicated package artifact.
-    clone.material = source.material;
     clone.useVertexColors = source.isVerticesDataPresent(
       BABYLON.VertexBuffer.ColorKind,
     );
     clone.hasVertexAlpha = false;
-    if (meshName === "CLOUD_MDF") {
+    const boundaryOnly =
+      clone.material?.metadata?.gltf?.extras?.boundary === true;
+    if (meshName === "CLOUD_MDF" || boundaryOnly) {
       clone.metadata = { ...clone.metadata, shadoAlwaysDisabled: true };
       clone.setEnabled(false);
     }
@@ -233,6 +297,57 @@ function createRenderChunks(
     if (source.getTotalVertices() > 0) source.setEnabled(false);
   });
   return chunks;
+}
+
+function indicesForClusters(
+  world: ShadoWorldSpatialPackage,
+  clusterIds: readonly number[],
+): number[] {
+  const indices: number[] = [];
+  for (const cluster of clusterIds) {
+    const first = world.clusters.firstIndex[cluster]!;
+    const count = world.clusters.indexCount[cluster]!;
+    indices.push(...world.clusterIndices.slice(first, first + count));
+  }
+  return indices;
+}
+
+function compactGeometry(
+  source: BJS.Mesh,
+  sourceIndices: readonly number[],
+): {
+  indices: Uint32Array;
+  streams: Map<string, { data: Float32Array; size: number }>;
+} {
+  const sourceToLocal = new Map<number, number>();
+  const referenced: number[] = [];
+  const indices = Uint32Array.from(sourceIndices, (sourceIndex) => {
+    let local = sourceToLocal.get(sourceIndex);
+    if (local === undefined) {
+      local = referenced.length;
+      referenced.push(sourceIndex);
+      sourceToLocal.set(sourceIndex, local);
+    }
+    return local;
+  });
+  const streams = new Map<
+    string,
+    { data: Float32Array; size: number }
+  >();
+  for (const kind of source.getVerticesDataKinds()) {
+    const sourceData = source.getVerticesData(kind);
+    const size = source.getVertexBuffer(kind)?.getSize() ?? 0;
+    if (!sourceData || !size) continue;
+    const data = new Float32Array(referenced.length * size);
+    referenced.forEach((sourceIndex, localIndex) => {
+      for (let component = 0; component < size; component++) {
+        data[localIndex * size + component] =
+          sourceData[sourceIndex * size + component]!;
+      }
+    });
+    streams.set(kind, { data, size });
+  }
+  return { indices, streams };
 }
 
 function validateRenderChunks(

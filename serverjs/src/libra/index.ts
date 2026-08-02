@@ -7,6 +7,11 @@ import type { DbService } from "../db/index.js";
 import { DatabaseInspector, quoteIdentifier } from "../db/introspection.js";
 import type { Logger } from "../shared/logger.js";
 import type { ZoneShardStatus } from "../zone/worker-pool.js";
+import {
+  createZoneSpawn,
+  loadZoneWorkspace,
+  type CreateZoneSpawnInput,
+} from "./zone-content-editor.js";
 
 type DbTarget = "content" | "runtime";
 type JsonObject = Record<string, unknown>;
@@ -135,6 +140,8 @@ export class LibraService {
             "GET /libra/health",
             "GET /libra/meta/tables|columns",
             "GET /libra/content/zones|npcs",
+            "GET /libra/content/zones/:zoneId/workspace",
+            "POST /libra/content/zones/:zoneId/spawns",
             "GET|POST|PUT|DELETE /libra/data",
             "GET|POST|DELETE /libra/shards",
             "GET|POST /libra/quests",
@@ -205,6 +212,35 @@ export class LibraService {
           [search, search],
         )).rows;
         this.writeJson(response, 200, { requestId, count: rows.length, rows });
+        return;
+      }
+      const zoneWorkspaceMatch = path.match(/^\/libra\/content\/zones\/(\d+)\/workspace$/);
+      if (request.method === "GET" && zoneWorkspaceMatch) {
+        const zoneId = Number(zoneWorkspaceMatch[1]);
+        const workspace = await loadZoneWorkspace(this.database("content"), zoneId);
+        this.writeJson(response, 200, { requestId, ...workspace });
+        return;
+      }
+      const zoneSpawnMatch = path.match(/^\/libra\/content\/zones\/(\d+)\/spawns$/);
+      if (request.method === "POST" && zoneSpawnMatch) {
+        for (const table of ["spawn_groups", "spawn_group_members", "spawn_points"]) {
+          this.assertWriteAllowed("content", table);
+        }
+        const zoneId = Number(zoneSpawnMatch[1]);
+        const body = await readJsonBody(request);
+        const input = readCreateZoneSpawnInput(body);
+        const audit = {
+          requestId,
+          actor,
+          remoteAddress,
+          method: request.method,
+          dbTarget: "content" as const,
+          table: "spawn_points",
+        };
+        const spawn = await this.audited(audit, { zoneId, ...input }, null, () =>
+          createZoneSpawn(this.database("content"), zoneId, input)
+        );
+        this.writeJson(response, 201, { requestId, ok: true, spawn });
         return;
       }
       if (request.method === "GET" && path === "/libra/content/npcs") {
@@ -447,6 +483,32 @@ async function readJsonBody(request: IncomingMessage): Promise<JsonObject> {
 function asObject(value: unknown): JsonObject {
   if (typeof value !== "object" || value === null || Array.isArray(value)) throw new Error("expected JSON object");
   return value as JsonObject;
+}
+
+function readCreateZoneSpawnInput(body: JsonObject): CreateZoneSpawnInput {
+  const input: CreateZoneSpawnInput = {
+    x: readJsonNumber(body, "x"),
+    y: readJsonNumber(body, "y"),
+    z: readJsonNumber(body, "z"),
+    npcArchetypeId: readJsonNumber(body, "npcArchetypeId"),
+  };
+  if (body.heading !== undefined) input.heading = readJsonNumber(body, "heading");
+  if (body.respawnSeconds !== undefined) {
+    input.respawnSeconds = readJsonNumber(body, "respawnSeconds");
+  }
+  if (body.spawnGroupKey !== undefined) {
+    if (typeof body.spawnGroupKey !== "string") throw new Error("spawnGroupKey must be a string");
+    input.spawnGroupKey = body.spawnGroupKey;
+  }
+  return input;
+}
+
+function readJsonNumber(body: JsonObject, name: string): number {
+  const value = body[name];
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    throw new Error(`${name} must be a finite number`);
+  }
+  return value;
 }
 
 function readHeader(request: IncomingMessage, header: string): string | null {

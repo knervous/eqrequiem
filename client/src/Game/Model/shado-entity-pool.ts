@@ -10,6 +10,7 @@ import type * as BJS from "@babylonjs/core";
 import {
   ShadoActor,
   ShadoInstanceContainer,
+  ShadoLightingMode,
   field,
   gpuStruct,
 } from "@knervous/shado";
@@ -30,6 +31,7 @@ export class RequiemEntityActor extends ShadoActor {
 
   public override initialize(): void {
     super.initialize();
+    this.lightingMode = ShadoLightingMode.Lambert;
     this.entityId = 0;
     this.stateFlags = 0;
     this.appearanceOffset = 0;
@@ -221,6 +223,10 @@ export class ShadoEntityPool {
     // addInstance() already initializes new records. Reinitialize only a
     // recycled slot whose previous actor state must be cleared.
     if (reusable !== undefined) actor.initialize();
+    // Keep the live client render policy explicit at acquisition time. This
+    // also protects new slots if a generated/container initializer bypasses
+    // the subclass default in a future ABI revision.
+    actor.lightingMode = ShadoLightingMode.Lambert;
     actor.entityId = entityId >>> 0;
     actor.stateFlags = REQUIEM_ACTOR_ACTIVE;
     // Entity setup is asynchronous (nameplate, appearance and held-item data).

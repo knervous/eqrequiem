@@ -37,7 +37,7 @@ export function ZonesPage() {
                 <TableCell>{String(zone.name)}</TableCell>
                 <TableCell>{String(zone.spawn_count)}</TableCell>
                 <TableCell>{Number(zone.safe_x).toFixed(1)}, {Number(zone.safe_y).toFixed(1)}, {Number(zone.safe_z).toFixed(1)}</TableCell>
-                <TableCell><Button asChild size='sm' variant='outline'><Link to={`/editor?section=world-zones&table=zones`}>Edit</Link></Button></TableCell>
+                <TableCell><Button asChild size='sm' variant='outline'><Link to={`/zones/${String(zone.id)}`}>Open</Link></Button></TableCell>
               </TableRow>
             ))}
           </TableBody>

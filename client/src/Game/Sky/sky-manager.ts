@@ -39,6 +39,7 @@ type SkyKeyframe = {
 
 type CloudDefinition = {
   scale: number;
+  textureScale: number;
   coverage: number;
   rate: VectorTuple;
   softness: number;
@@ -76,6 +77,12 @@ type RequiemSkyManifest = {
   version: number;
   asset: string;
   runtimeScale: number;
+  textures: {
+    cloudField: string;
+    starField: string;
+    sunPhotosphere: string;
+    moonSurface: string;
+  };
   layers: {
     root: string;
     visualDome: string;
@@ -133,6 +140,12 @@ const lerpNumber = (start: number, end: number, amount: number): number =>
   start + (end - start) * amount;
 
 const clamp01 = (value: number): number => Math.max(0, Math.min(1, value));
+
+// Keep sunrise/sunset visually expressive in the atmosphere without using
+// that same extreme chroma as the PBR key light. Highly saturated red light
+// collapses blue stone, gray fieldstone, wood, and foliage toward one salmon
+// response even when their embedded albedo bindings are correct.
+const WORLD_SUN_LIGHT_SATURATION = 0.38;
 
 const copyBiome = (biome: SkyBiomeDefinition): ResolvedBiomeState => ({
   ...biome,
@@ -251,6 +264,10 @@ export default class DayNightSkyManager {
   #moonMesh: BJS.AbstractMesh | null = null;
   #sunMaterial: BJS.StandardMaterial | null = null;
   #moonMaterial: BJS.StandardMaterial | null = null;
+  #cloudTexture: BJS.Texture | null = null;
+  #starTexture: BJS.Texture | null = null;
+  #sunTexture: BJS.Texture | null = null;
+  #moonTexture: BJS.Texture | null = null;
   #materials = new Map<RequiemSkyLayer, BJS.ShaderMaterial>();
   #cloudLowOffset = BABYLON.Vector2.Zero();
   #cloudHighOffset = BABYLON.Vector2.Zero();
@@ -311,7 +328,7 @@ export default class DayNightSkyManager {
     );
     if (
       !manifest ||
-      manifest.version !== 2 ||
+      manifest.version !== 3 ||
       manifest.keyframes.length < 2 ||
       !manifest.biomes[manifest.defaultBiome]
     ) {
@@ -319,6 +336,23 @@ export default class DayNightSkyManager {
       return;
     }
     this.#manifest = manifest;
+    const textures = await Promise.all([
+      this.#loadTexture(manifest.textures.cloudField, true),
+      this.#loadTexture(manifest.textures.starField, true),
+      this.#loadTexture(manifest.textures.sunPhotosphere, false),
+      this.#loadTexture(manifest.textures.moonSurface, false),
+    ]);
+    if (textures.some((texture) => !texture)) {
+      console.error("[SkyManager] Generated sky texture contract failed");
+      this.dispose();
+      return;
+    }
+    [
+      this.#cloudTexture,
+      this.#starTexture,
+      this.#sunTexture,
+      this.#moonTexture,
+    ] = textures as [BJS.Texture, BJS.Texture, BJS.Texture, BJS.Texture];
     this.scale = manifest.runtimeScale;
     const requestedBiome =
       manifest.zoneBiomes[zoneName.toLowerCase()] ?? manifest.defaultBiome;
@@ -345,7 +379,10 @@ export default class DayNightSkyManager {
       return;
     }
 
-    await BABYLON.loadFeature("gltf");
+    await Promise.all([
+      BABYLON.loadFeature("gltf"),
+      BABYLON.loadFeature("discBuilder"),
+    ]);
     const sky = await BABYLON.LoadAssetContainerAsync(
       new Uint8Array(bytes),
       this.#scene,
@@ -431,6 +468,10 @@ export default class DayNightSkyManager {
       `requiem-sky-${layer}`,
       this.#scene!,
       layer,
+      {
+        cloudField: this.#cloudTexture!,
+        starField: this.#starTexture!,
+      },
     );
     mesh.material = material;
     previous?.dispose();
@@ -439,6 +480,10 @@ export default class DayNightSkyManager {
 
   #configureCelestialMeshes(): void {
     const manifest = this.#manifest!;
+    this.#convertCelestialSphereToDisc(this.#sunMesh!, 0.034);
+    this.#convertCelestialSphereToDisc(this.#moonMesh!, 0.026);
+    this.#sunTexture!.hasAlpha = true;
+    this.#moonTexture!.hasAlpha = true;
     this.#sunMaterial = new BABYLON.StandardMaterial(
       "requiem-sky-sun",
       this.#scene!,
@@ -446,6 +491,10 @@ export default class DayNightSkyManager {
     this.#sunMaterial.disableLighting = true;
     this.#sunMaterial.backFaceCulling = false;
     this.#sunMaterial.emissiveColor = color(manifest.sun.noonColor);
+    this.#sunMaterial.diffuseTexture = this.#sunTexture;
+    this.#sunMaterial.emissiveTexture = this.#sunTexture;
+    this.#sunMaterial.opacityTexture = this.#sunTexture;
+    this.#sunMaterial.useAlphaFromDiffuseTexture = true;
     this.#sunMesh!.material?.dispose();
     this.#sunMesh!.material = this.#sunMaterial;
 
@@ -456,8 +505,70 @@ export default class DayNightSkyManager {
     this.#moonMaterial.disableLighting = true;
     this.#moonMaterial.backFaceCulling = false;
     this.#moonMaterial.emissiveColor = color(manifest.moon.color);
+    this.#moonMaterial.diffuseTexture = this.#moonTexture;
+    this.#moonMaterial.emissiveTexture = this.#moonTexture;
+    this.#moonMaterial.opacityTexture = this.#moonTexture;
+    this.#moonMaterial.useAlphaFromDiffuseTexture = true;
     this.#moonMesh!.material?.dispose();
     this.#moonMesh!.material = this.#moonMaterial;
+  }
+
+  #convertCelestialSphereToDisc(
+    mesh: BJS.AbstractMesh,
+    radius: number,
+  ): void {
+    if (!(mesh instanceof BABYLON.Mesh)) {
+      throw new Error(`Celestial semantic '${mesh.name}' is not a mesh`);
+    }
+    BABYLON.VertexData.CreateDisc({
+      radius,
+      tessellation: 64,
+      sideOrientation: BABYLON.Mesh.DOUBLESIDE,
+    }).applyToMesh(mesh, true);
+    mesh.billboardMode = BABYLON.AbstractMesh.BILLBOARDMODE_ALL;
+    mesh.refreshBoundingInfo();
+  }
+
+  async #loadTexture(
+    relativeFile: string,
+    repeat: boolean,
+  ): Promise<BJS.Texture | null> {
+    const bytes = await FileSystem.getFileBytes("eqrequiem/sky", relativeFile);
+    if (!bytes || !this.#scene) {
+      console.error(`[SkyManager] Missing generated sky texture: ${relativeFile}`);
+      return null;
+    }
+    const url = URL.createObjectURL(
+      new Blob([bytes], { type: "image/webp" }),
+    );
+    return new Promise((resolve) => {
+      const texture = new BABYLON.Texture(
+        url,
+        this.#scene!,
+        false,
+        false,
+        undefined,
+        () => {
+          URL.revokeObjectURL(url);
+          texture.name = `requiem-sky:${relativeFile}`;
+          texture.wrapU = repeat
+            ? BABYLON.Texture.WRAP_ADDRESSMODE
+            : BABYLON.Texture.CLAMP_ADDRESSMODE;
+          texture.wrapV = texture.wrapU;
+          resolve(texture);
+        },
+        (message, exception) => {
+          URL.revokeObjectURL(url);
+          texture.dispose();
+          console.error(
+            `[SkyManager] Failed generated sky texture ${relativeFile}:`,
+            message,
+            exception,
+          );
+          resolve(null);
+        },
+      );
+    });
   }
 
   tick(delta: number): void {
@@ -518,6 +629,7 @@ export default class DayNightSkyManager {
       {
         offset: this.#cloudLowOffset,
         scale: low.scale * biome.clouds.low.scaleMultiplier,
+        textureScale: low.textureScale,
         coverage: clamp01(
           low.coverage + biome.clouds.low.coverageOffset,
         ),
@@ -533,6 +645,7 @@ export default class DayNightSkyManager {
       {
         offset: this.#cloudHighOffset,
         scale: high.scale * biome.clouds.high.scaleMultiplier,
+        textureScale: high.textureScale,
         coverage: clamp01(
           high.coverage + biome.clouds.high.coverageOffset,
         ),
@@ -766,8 +879,14 @@ export default class DayNightSkyManager {
       biome.saturation,
       biome.exposure,
     );
+    const worldSunColor = this.#adjustColor(
+      sunColor,
+      [1, 1, 1],
+      WORLD_SUN_LIGHT_SATURATION,
+      1,
+    );
     if (this.#sun) {
-      this.#sun.diffuse = sunColor;
+      this.#sun.diffuse = worldSunColor;
       this.#sun.intensity =
         state.sunIntensity * Math.max(0.06, Math.max(0, sunDirection.y));
       this.#sun.direction.copyFrom(sunDirection).scaleInPlace(-1);
@@ -815,6 +934,10 @@ export default class DayNightSkyManager {
     }
     this.#sunMaterial?.dispose();
     this.#moonMaterial?.dispose();
+    this.#cloudTexture?.dispose();
+    this.#starTexture?.dispose();
+    this.#sunTexture?.dispose();
+    this.#moonTexture?.dispose();
 
     this.#camera = null;
     this.#scene = null;
@@ -826,6 +949,10 @@ export default class DayNightSkyManager {
     this.#moonMesh = null;
     this.#sunMaterial = null;
     this.#moonMaterial = null;
+    this.#cloudTexture = null;
+    this.#starTexture = null;
+    this.#sunTexture = null;
+    this.#moonTexture = null;
     this.#materials.clear();
     this.skyContainer = null;
     this.#cloudLowOffset.setAll(0);

@@ -125,10 +125,15 @@ export async function promoteGeneratedCollection({
   publicItemsRoot,
   version = 'v1',
   masterSize = 256,
+  allowPartial = false,
 }) {
   if (!/^v[1-9]\d*$/.test(version)) throw new Error(`Invalid public icon version: ${version}`);
   const audit = await auditGeneratedCollection({ outputRoot, manifest, masterSize });
-  assertPromotable(audit);
+  if (allowPartial) {
+    if (audit.valid.length === 0) throw new Error('Partial promotion has no valid icons to publish');
+  } else {
+    assertPromotable(audit);
+  }
 
   const iconsRoot = path.join(publicItemsRoot, 'icons');
   const targetRoot = path.join(iconsRoot, version);
@@ -140,6 +145,34 @@ export async function promoteGeneratedCollection({
   await mkdir(stagingRoot, { recursive: true });
 
   try {
+    const spriteRoot = path.join(stagingRoot, 'sprites');
+    const spriteFiles = new Map();
+    const sprites = [];
+    await mkdir(spriteRoot, { recursive: true });
+    for (const sheet of manifest.sheets) {
+      const sourcePath = path.join(outputRoot, 'repacked', `${sheet.sheetId}.webp`);
+      if (!(await exists(sourcePath))) continue;
+      const spriteBuffer = await readFile(sourcePath);
+      const metadata = await sharp(spriteBuffer).metadata();
+      const spriteWidth = sheet.layout?.width ?? 256;
+      const spriteHeight = sheet.layout?.height ?? 256;
+      if (
+        metadata.width !== spriteWidth ||
+        metadata.height !== spriteHeight ||
+        metadata.hasAlpha !== true
+      ) {
+        throw new Error(`Invalid public sprite geometry or alpha: ${sourcePath}`);
+      }
+      const fileName = `${sheet.sheetId}.webp`;
+      await writeFile(path.join(spriteRoot, fileName), spriteBuffer);
+      spriteFiles.set(sheet.sheetId, `sprites/${fileName}`);
+      sprites.push({
+        sheet: sheet.sheetNumber,
+        file : `sprites/${fileName}`,
+        hash : sha256(spriteBuffer),
+      });
+    }
+
     const entries = [];
     for (const [index, icon] of audit.valid.entries()) {
       const fileName = `${icon.entry.atlasIconId}.webp`;
@@ -153,6 +186,15 @@ export async function promoteGeneratedCollection({
         sourceId: icon.entry.id,
         sourceHash: icon.outputHash,
         publicHash: sha256(publicBuffer),
+        sprite: spriteFiles.has(icon.entry.sheetId)
+          ? {
+            file  : spriteFiles.get(icon.entry.sheetId),
+            left  : icon.entry.left,
+            top   : icon.entry.top,
+            width : icon.entry.width,
+            height: icon.entry.height,
+          }
+          : null,
       });
       if ((index + 1) % 250 === 0) {
         console.log(`prepared ${index + 1}/${audit.valid.length} public icons`);
@@ -169,6 +211,21 @@ export async function promoteGeneratedCollection({
       addressing: 'SQLite item.icon',
       iconCount: entries.length,
       blankSourceSlots: audit.blank,
+      partial: !audit.promotable,
+      omittedIconCount: audit.failures.length,
+      missingIconBehavior: audit.promotable
+        ? null
+        : 'client falls back to the packed compatibility cell, idfile catalog image, or category glyph',
+      spriteLayout: {
+        width       : 256,
+        height      : 256,
+        cellSize    : 40,
+        columns     : 6,
+        rows        : 6,
+        iconOrdering: 'column-major SQLite item.icon; canonical sheet cells are top-left row-major',
+      },
+      spriteCount: sprites.length,
+      sprites,
       entries,
     };
     await writeFile(

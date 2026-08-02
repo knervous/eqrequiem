@@ -93,8 +93,8 @@
         "source": "/eqrequiem/worlds/qeynos2.glb.gz",
         "scene": {
           "path": "client/public/eqrequiem/worlds/qeynos2.glb.gz",
-          "sha256": "817b84d475c69984d63b937ba5356a054b34a028dac1e3d8eac8e7961a7dd75f",
-          "bytes": 25647407
+          "sha256": "6410193a2041522a1ba7096d1d04d1845759ff1ba4c3d534b3769b66030295f1",
+          "bytes": 23078292
         },
         "legacyScene": {
           "path": "client/public/eqrequiem/worlds/qeynos2.glb.leg.gz",
@@ -103,28 +103,37 @@
         },
         "spatial": {
           "path": "client/public/eqrequiem/worlds/qeynos2.spatial.json.gz",
-          "sha256": "8868c7091b619d276086f278a39d75498cad09f1ae76aa49e09be8b1050ce711",
-          "bytes": 107262
+          "sha256": "44a7f3969665286898828b0e019f88f175ebf10a12f11c3e0bbde4adbacc1e0c",
+          "bytes": 3656044
         },
         "collision": {
           "path": "client/public/eqrequiem/worlds/qeynos2.collision.bin.gz",
-          "sha256": "d25e4006706ad796124acc7d7e81440e413875867f86763dcbc32c5e6414bf20",
-          "bytes": 89686
+          "sha256": "ea85210b13003639557c96ea094688338251ce2bda3f5331f9e774f9443a5890",
+          "bytes": 238153
+        },
+        "lightingPlan": {
+          "path": "client/public/eqrequiem/worlds/qeynos2.lighting-plan.json.gz",
+          "sha256": "8ce29f3b4550b41967cbddda0e4e3a04bbf72b431921fc884aaed58162eb0b98",
+          "bytes": 173324
         }
       },
       "stats": {
-        "primitives": 136,
-        "triangles": 19470,
-        "clusters": 252,
-        "renderChunks": 136,
-        "cells": 22,
+        "primitives": 530,
+        "triangles": 41434,
+        "clusters": 6324,
+        "renderChunks": 6296,
+        "cells": 3492,
         "portals": 0,
         "regions": 20,
         "objectPrototypes": 48,
         "objectStamps": 480,
-        "tiles": 22,
-        "collisionVertices": 8085,
-        "collisionTriangles": 16038
+        "grassCells": 6087,
+        "grassPlacements": 38618,
+        "tiles": 3492,
+        "collisionVertices": 20190,
+        "collisionTriangles": 33585,
+        "lightingStatus": "blocked-missing-uv2",
+        "lightingUv2ReadyChunks": 0
       },
       "warnings": []
     },
@@ -4018,8 +4027,8 @@
     "objects": 950,
     "manifest": {
       "path": "client/public/eqrequiem/objects/manifest.json",
-      "sha256": "f02476025b2e8fd67a496f86dc017582bfba7f930ae405901efde90d168aae99",
-      "bytes": 404731
+      "sha256": "2254706cd792b046c3752d932ecf952d5a4fc006d3deda497a62381d4e21a691",
+      "bytes": 413682
     }
   }
 }

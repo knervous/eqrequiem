@@ -9,6 +9,7 @@ import { NullEngine } from "@babylonjs/core/Engines/nullEngine.js";
 import { LoadAssetContainerAsync } from "@babylonjs/core/Loading/sceneLoader.js";
 import { Scene } from "@babylonjs/core/scene.js";
 import "@babylonjs/loaders/glTF/index.js";
+import { validateShadoWorldPackage } from "../../shader-object/dist/world/index.js";
 
 const repoRoot = path.resolve(import.meta.dirname, "../..");
 const baselinePath = path.join(
@@ -42,6 +43,7 @@ for (const world of worlds) {
       fs.readFile(path.join(repoRoot, world.runtime.spatial.path)),
     ]);
     const spatial = JSON.parse(gunzipSync(spatialCompressed).toString("utf8"));
+    validateShadoWorldPackage(spatial);
     assert.equal(
       spatial.sourceTransform,
       "mirror-x",
@@ -60,8 +62,13 @@ for (const world of worlds) {
     );
     assert.equal(
       renderMeshes.length,
+      world.stats.primitives,
+      `${world.shortName}: source primitive count differs from the baseline`,
+    );
+    assert.equal(
+      spatial.renderChunks.primitive.length,
       world.stats.renderChunks,
-      `${world.shortName}: runtime primitive count differs from the baseline`,
+      `${world.shortName}: spatial render-batch count differs from the baseline`,
     );
     const indexCount = renderMeshes.reduce(
       (count, mesh) => count + mesh.getIndices().length,
@@ -77,6 +84,76 @@ for (const world of worlds) {
       assert.ok(
         Number.isFinite(determinant) && determinant > 0,
         `${world.shortName}/${mesh.name}: invalid determinant ${determinant}`,
+      );
+    }
+    if (spatial.lighting) {
+      for (
+        let chunk = 0;
+        chunk < spatial.renderChunks.primitive.length;
+        chunk++
+      ) {
+        const first = spatial.renderChunks.firstClusterRef[chunk];
+        const count = spatial.renderChunks.clusterRefCount[chunk];
+        const cells = new Set(
+          spatial.renderChunkClusters
+            .slice(first, first + count)
+            .map((cluster) => spatial.clusters.cellId[cluster]),
+        );
+        assert.equal(
+          cells.size,
+          1,
+          `${world.shortName}: render batch ${chunk} crosses spatial cells`,
+        );
+      }
+    }
+    if (world.shortName === "qeynos2") {
+      assert.deepEqual(
+        spatial.lighting,
+        { mode: "hybrid", vertexColors: "baked-irradiance" },
+        "qeynos2: runtime lighting authority is not metadata-baked irradiance with dynamic sky/player lighting",
+      );
+      assert.ok(
+        renderMeshes.every(
+          (mesh) => (mesh.getVerticesData("color")?.length ?? 0) > 0,
+        ),
+        "qeynos2: baked geometry irradiance stream is incomplete",
+      );
+      for (const channel of [
+        spatial.objects?.stamps.irradianceR,
+        spatial.objects?.stamps.irradianceG,
+        spatial.objects?.stamps.irradianceB,
+        spatial.objects?.stamps.irradianceA,
+      ]) {
+        assert.equal(
+          channel?.length,
+          spatial.objects.stamps.id.length,
+          "qeynos2: baked object irradiance channel is incomplete",
+        );
+      }
+      assert.equal(
+        spatial.tiles.size,
+        32,
+        "qeynos2: render-cell size differs from the postprocess policy",
+      );
+      assert.equal(
+        spatial.grass?.version,
+        1,
+        "qeynos2: promoted grass package is missing",
+      );
+      assert.equal(
+        spatial.grass.cellSize,
+        24,
+        "qeynos2: grass cell size differs from the proximity policy",
+      );
+      assert.equal(
+        spatial.grass.placements.positionX.length,
+        world.stats.grassPlacements,
+        "qeynos2: grass placement count differs from the baseline",
+      );
+      assert.equal(
+        spatial.grass.cells.x.length,
+        world.stats.grassCells,
+        "qeynos2: grass cell count differs from the baseline",
       );
     }
     const runtimeBounds = boundsOfMeshes(renderMeshes);

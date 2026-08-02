@@ -7,7 +7,6 @@ import type { ShadoInstanceAsyncPickingOptions } from '../../render/ShadoAsyncPi
 import { ShadoActor } from '../ShadoActor';
 import { NameplateData } from '../NameplateData';
 import type {
-  Camera,
   Plane,
   Material,
   Scene,
@@ -33,6 +32,29 @@ import {
 } from './mesh-data';
 import { VisibleIndexTexture } from './VisibleIndexTexture';
 import type { GPUUploadStats } from '../../types';
+
+/**
+ * Minimal cross-runtime camera contract used by instance culling.
+ *
+ * Consumers may load a compatible Babylon version from a different package
+ * location. Depending on Babylon's nominal Camera class here would reject
+ * those cameras even though culling only reads these values.
+ */
+export interface ShadoFrustumCamera {
+  getScene(): {
+    getTransformMatrix(): unknown;
+  };
+  readonly globalPosition?: {
+    readonly x: number;
+    readonly y: number;
+    readonly z: number;
+  };
+  readonly position: {
+    readonly x: number;
+    readonly y: number;
+    readonly z: number;
+  };
+}
 
 export type ShadoInstanceContainerOptions = {
   vat?: 'auto' | 'bake' | 'none';
@@ -646,7 +668,7 @@ export function frustumMarkSoA(
   };
 
   // Call this each frame *only if* the frustum changed (or just call it; it's cheap).
-  public updateFrustumFromCamera(camera: Camera) {
+  public updateFrustumFromCamera(camera: ShadoFrustumCamera) {
     const planes: Plane[] =
       (this as any)._bjsFrustumPlanes ??
       ((this as any)._bjsFrustumPlanes = Array.from(
@@ -654,7 +676,9 @@ export function frustumMarkSoA(
         () => new BABYLON.Plane(0, 0, 0, 0)
       ));
 
-    const vp = camera.getScene().getTransformMatrix();
+    const vp = camera.getScene().getTransformMatrix() as Parameters<
+      typeof BABYLON.Frustum.GetPlanesToRef
+    >[0];
     BABYLON.Frustum.GetPlanesToRef(vp, planes);
 
     const out = this._instanceSoA.frustumPlanes;
@@ -668,7 +692,7 @@ export function frustumMarkSoA(
     }
   }
 
-  public frustumCull(camera: Camera, baseRadius: number, maxDistance = 0) {
+  public frustumCull(camera: ShadoFrustumCamera, baseRadius: number, maxDistance = 0) {
     if (!camera) {
       return;
     }
@@ -705,7 +729,7 @@ export function frustumMarkSoA(
     this._setLegacyVisibleCount(visibleCount);
   }
 
-  public frustumCullCPU(camera: Camera, baseRadius: number, maxDistance = 0) {
+  public frustumCullCPU(camera: ShadoFrustumCamera, baseRadius: number, maxDistance = 0) {
     const planes: Plane[] =
       (this as any)._bjsFrustumPlanes ??
       ((this as any)._bjsFrustumPlanes = Array.from(
@@ -869,6 +893,7 @@ precision highp int;
 
 varying vec2 vUV;
 varying vec4 vColor;
+varying vec3 vShadoLighting;
 flat varying int   vPage;
 flat varying vec4  vRect;
 
@@ -892,6 +917,7 @@ void main() {
   // if (c.a <= 0.001) discard;
   vec4 surface = c * vColor;
   ${hooks.fragmentSurface ?? ''}
+  surface.rgb *= vShadoLighting;
   gl_FragColor = surface;
 }
 `;
@@ -902,11 +928,17 @@ precision highp float;
 precision highp int;
 
 attribute vec3 position;
+#ifdef SHADO_HAS_NORMAL
+attribute vec3 normal;
+#endif
 attribute vec2 uv;
 attribute vec4 aMeta;
 attribute vec4  aRect;
 
 uniform mat4 worldViewProjection;
+uniform vec3 uShadoLightDirection;
+uniform vec3 uShadoLightColor;
+uniform vec3 uShadoAmbientColor;
 
 #include<${ShadoInstanceContainer._instanceName}>
 #include<${ShadoInstanceContainer._instanceName}Offsets>
@@ -929,6 +961,7 @@ int Shado_visibleActorIndex(int drawIndex) {
 
 varying vec2 vUV;
 varying vec4 vColor;
+varying vec3 vShadoLighting;
 flat varying int   vPage;
 flat varying vec4  vRect;
 
@@ -950,6 +983,16 @@ void main(void) {
   vec3 scaled = position * T.w;
   vec3 p = scaled + 2.0 * cross(qv, cross(qv, scaled) + inst.rotation.w * scaled) + T.xyz;
   gl_Position = worldViewProjection * vec4(p, 1.0);
+  vec3 localNormal = vec3(0.0, 1.0, 0.0);
+#ifdef SHADO_HAS_NORMAL
+  localNormal = normal;
+#endif
+  vec3 worldNormal = localNormal +
+    2.0 * cross(qv, cross(qv, localNormal) + inst.rotation.w * localNormal);
+  float lambert = max(dot(normalize(worldNormal), uShadoLightDirection), 0.0);
+  vShadoLighting = inst.padding1 > 0.5
+    ? uShadoAmbientColor + uShadoLightColor * lambert
+    : vec3(1.0);
   ${hooks.vertexAfterPosition ?? ''}
   vColor = shadoColor;
 }
@@ -966,6 +1009,9 @@ precision highp float;
 precision highp int;
 
 attribute vec3 position;
+#ifdef SHADO_HAS_NORMAL
+attribute vec3 normal;
+#endif
 attribute vec2 uv;
 
 attribute vec4 matricesIndices;
@@ -979,6 +1025,9 @@ attribute vec4 matricesWeightsExtra;
 #endif
 
 uniform mat4 worldViewProjection;
+uniform vec3 uShadoLightDirection;
+uniform vec3 uShadoLightColor;
+uniform vec3 uShadoAmbientColor;
 uniform float bakedVertexAnimationTime;
 
 uniform sampler2D uDQAtlas;
@@ -1009,6 +1058,7 @@ int Shado_visibleActorIndex(int drawIndex) {
 
 varying vec2 vUV;
 varying vec4 vColor;
+varying vec3 vShadoLighting;
 flat varying int   vPage;
 flat varying vec4  vRect;
 
@@ -1216,6 +1266,18 @@ void main(void) {
   vec3 scaled = skinned * T.w;
   vec3 p = scaled + 2.0 * cross(qv, cross(qv, scaled) + inst.rotation.w * scaled) + T.xyz;
   gl_Position = worldViewProjection * vec4(p, 1.0);
+  vec3 localNormal = vec3(0.0, 1.0, 0.0);
+  #ifdef SHADO_HAS_NORMAL
+    localNormal = normal;
+  #endif
+  vec3 skinnedNormal = localNormal +
+    2.0 * cross(r.xyz, cross(r.xyz, localNormal) + r.w * localNormal);
+  vec3 worldNormal = skinnedNormal +
+    2.0 * cross(qv, cross(qv, skinnedNormal) + inst.rotation.w * skinnedNormal);
+  float lambert = max(dot(normalize(worldNormal), uShadoLightDirection), 0.0);
+  vShadoLighting = inst.padding1 > 0.5
+    ? uShadoAmbientColor + uShadoLightColor * lambert
+    : vec3(1.0);
   ${hooks.vertexAfterPosition ?? ''}
   vColor = shadoColor;
 }
@@ -1233,11 +1295,17 @@ void main(void) {
 
     const declarations = `
 attribute position: vec3f;
+#ifdef SHADO_HAS_NORMAL
+attribute normal: vec3f;
+#endif
 attribute uv: vec2f;
 attribute aMeta: vec4f;
 attribute aRect: vec4f;
 
 uniform worldViewProjection: mat4x4f;
+uniform uShadoLightDirection: vec3f;
+uniform uShadoLightColor: vec3f;
+uniform uShadoAmbientColor: vec3f;
 
 #include<${actorName}>
 #include<${includeName}Storage>
@@ -1246,6 +1314,7 @@ var<storage, read> uShadoVisibleIndices: array<u32>;
 
 varying vUV: vec2f;
 varying vColor: vec4f;
+varying vShadoLighting: vec3f;
 flat varying vPage: i32;
 flat varying vRect: vec4f;
 
@@ -1263,6 +1332,7 @@ fn Shado_rotatePoint(q: vec4f, point: vec3f) -> vec3f {
     const fs = `
 varying vUV: vec2f;
 varying vColor: vec4f;
+varying vShadoLighting: vec3f;
 flat varying vPage: i32;
 flat varying vRect: vec4f;
 
@@ -1291,6 +1361,7 @@ fn main(input: FragmentInputs) -> FragmentOutputs {
   let atlasColor = mix(vec4f(1.0), atlasSample, hasAtlasRect);
   var surface = atlasColor * fragmentInputs.vColor;
   ${hooks.fragmentSurface ?? ''}
+  surface.rgb = surface.rgb * fragmentInputs.vShadoLighting;
   fragmentOutputs.color = surface;
 }
 `;
@@ -1315,6 +1386,17 @@ fn main(input: VertexInputs) -> FragmentInputs {
   let scaled = vertexInputs.position * translation.w;
   let worldPosition = Shado_rotatePoint(inst.rotation, scaled) + translation.xyz;
   vertexOutputs.position = uniforms.worldViewProjection * vec4f(worldPosition, 1.0);
+  var localNormal = vec3f(0.0, 1.0, 0.0);
+#ifdef SHADO_HAS_NORMAL
+  localNormal = vertexInputs.normal;
+#endif
+  let worldNormal = Shado_rotatePoint(inst.rotation, localNormal);
+  let lambert = max(dot(normalize(worldNormal), uniforms.uShadoLightDirection), 0.0);
+  vertexOutputs.vShadoLighting = select(
+    vec3f(1.0),
+    uniforms.uShadoAmbientColor + uniforms.uShadoLightColor * lambert,
+    inst.padding1 > 0.5
+  );
   ${hooks.vertexAfterPosition ?? ''}
   vertexOutputs.vColor = shadoColor;
 }
@@ -1566,6 +1648,18 @@ fn main(input: VertexInputs) -> FragmentInputs {
   let scaled = skinned * translation.w;
   let worldPosition = Shado_rotatePoint(inst.rotation, scaled) + translation.xyz;
   vertexOutputs.position = uniforms.worldViewProjection * vec4f(worldPosition, 1.0);
+  var localNormal = vec3f(0.0, 1.0, 0.0);
+#ifdef SHADO_HAS_NORMAL
+  localNormal = vertexInputs.normal;
+#endif
+  let skinnedNormal = Shado_rotatePoint(blendedDQ.real, localNormal);
+  let worldNormal = Shado_rotatePoint(inst.rotation, skinnedNormal);
+  let lambert = max(dot(normalize(worldNormal), uniforms.uShadoLightDirection), 0.0);
+  vertexOutputs.vShadoLighting = select(
+    vec3f(1.0),
+    uniforms.uShadoAmbientColor + uniforms.uShadoLightColor * lambert,
+    inst.padding1 > 0.5
+  );
   ${hooks.vertexAfterPosition ?? ''}
   vertexOutputs.vColor = shadoColor;
 }

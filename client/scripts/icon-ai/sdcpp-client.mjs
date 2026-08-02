@@ -237,6 +237,7 @@ export class SdCppImg2ImgClient {
     sourcePath,
     entry,
     prompt = DEFAULT_PROMPT,
+    negativePrompt = DEFAULT_NEGATIVE_PROMPT,
     strength = 0.34,
     generationSize = 512,
     steps = 24,
@@ -254,7 +255,7 @@ export class SdCppImg2ImgClient {
         {
           init_images: [source.toString('base64')],
           prompt,
-          negative_prompt: DEFAULT_NEGATIVE_PROMPT,
+          negative_prompt: negativePrompt,
           width: generationSize,
           height: generationSize,
           steps,
@@ -285,7 +286,7 @@ export class SdCppImg2ImgClient {
     return {
       rawBuffer,
       prompt,
-      negativePrompt: DEFAULT_NEGATIVE_PROMPT,
+      negativePrompt,
       seed,
       strength,
       generationSize,

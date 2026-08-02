@@ -11,6 +11,7 @@
     "world:baseline": "npm --prefix client run world:baseline",
     "world:baseline:dry-run": "npm --prefix client run world:baseline:dry-run",
     "world:baseline:check": "npm --prefix client run world:baseline:check",
+    "world:authoring:promote": "npm --prefix client run world:authoring:promote --",
     "material-ai:zone": "npm --prefix client run material-ai:zone --",
     "material-ai:test": "npm --prefix client run material-ai:test",
     "fx:check": "npm --prefix client run fx:check",

@@ -22,6 +22,14 @@ const gzipAsync = promisify(gzip);
 export type ShadoWorldPackConfig = Omit<ShadoWorldCompileOptions, 'source'> & {
   input: string;
   outFile: string;
+  /** Handedness used by the headless GLB importer. Defaults to Babylon's left. */
+  inputHandedness?: 'left' | 'right';
+  /**
+   * Transform applied while importing geometry. Defaults to `sourceTransform`.
+   * Set this to identity when repacking an already-canonical runtime scene but
+   * retaining its migration-origin sourceTransform metadata.
+   */
+  inputTransform?: ShadoWorldCompileOptions['sourceTransform'];
   runtimeSource?: string;
   copyInputTo?: string;
   /** Defaults to the spatial package's sibling `<zone>.collision.bin.gz`. */
@@ -52,6 +60,8 @@ export type ShadoWorldPackResult = {
   regionCount: number;
   objectPrototypeCount: number;
   objectStampCount: number;
+  grassCellCount: number;
+  grassPlacementCount: number;
   tileCount: number;
   collisionVertexCount: number;
   collisionTriangleCount: number;
@@ -73,10 +83,12 @@ export async function packShadoWorld(config: ShadoWorldPackConfig): Promise<Shad
   // space reflects source zone geometry while leaving metadata placements
   // unchanged.
   const sourceTransform = config.sourceTransform ?? 'identity';
+  const inputTransform = config.inputTransform ?? sourceTransform;
   const imported = await importWorldPrimitives(
     glb,
     worldGlbPrimitivePolicies(glb),
-    sourceTransform
+    inputTransform,
+    config.inputHandedness === 'right'
   );
   const primitives = imported.render;
   const collisionArtifact = encodeShadoWorldCollision(imported.collision);
@@ -176,6 +188,8 @@ export async function packShadoWorld(config: ShadoWorldPackConfig): Promise<Shad
     regionCount: world.regions.id.length,
     objectPrototypeCount: world.objects?.prototypes.id.length ?? 0,
     objectStampCount: world.objects?.stamps.id.length ?? 0,
+    grassCellCount: world.grass?.cells.x.length ?? 0,
+    grassPlacementCount: world.grass?.placements.positionX.length ?? 0,
     tileCount: world.tiles.x.length,
     collisionVertexCount: world.collision.vertexCount,
     collisionTriangleCount: world.collision.triangleCount,
@@ -185,6 +199,7 @@ export async function packShadoWorld(config: ShadoWorldPackConfig): Promise<Shad
 type WorldPrimitivePolicy = {
   material: string;
   collision: boolean;
+  extraShader?: string;
 };
 
 type ImportedWorldPrimitives = {
@@ -195,7 +210,8 @@ type ImportedWorldPrimitives = {
 async function importWorldPrimitives(
   glb: Uint8Array,
   sourcePolicies: ReadonlyMap<string, readonly WorldPrimitivePolicy[]>,
-  sourceTransform: ShadoWorldCompileOptions['sourceTransform']
+  sourceTransform: ShadoWorldCompileOptions['sourceTransform'],
+  inputRightHanded = false
 ): Promise<ImportedWorldPrimitives> {
   installNodeXMLHttpRequest();
   const BABYLON = await import('@babylonjs/core');
@@ -209,6 +225,7 @@ async function importWorldPrimitives(
     lockstepMaxSteps: 1,
   });
   const scene = new BABYLON.Scene(engine);
+  scene.useRightHandedSystem = inputRightHanded;
   const url = `data:model/gltf-binary;base64,${Buffer.from(glb).toString('base64')}`;
   try {
     BABYLON.SceneLoader.OnPluginActivatedObservable.addOnce((plugin: any) => {
@@ -249,6 +266,7 @@ async function importWorldPrimitives(
         const primitive = {
           name: `${mesh.name || mesh.id}#${subIndex}`,
           material,
+          extraShader: policy?.extraShader,
           positions: worldPositions,
           indices: Uint32Array.from(indices.slice(subMesh.indexStart, subMesh.indexStart + count)),
           lightmapUvs: lightmapUvs ? Float32Array.from(lightmapUvs) : undefined,
@@ -367,13 +385,16 @@ function worldGlbPrimitivePolicies(
           ? '__default'
           : sourceMaterial?.name || `material-${primitive.material}`;
       const extras = [node.extras, sourceMesh?.extras, primitive.extras, sourceMaterial?.extras];
+      const extraShader = extras
+        .map(value => extraShaderFromExtras(value))
+        .find((value): value is string => Boolean(value));
       const collision =
         meshName !== 'CLOUD_MDF' &&
         !extras.some(value => value?.passThrough === true) &&
         !extras.some(value => value?.collision === false) &&
         !extras.some(value => value?.clientPhysics === false) &&
         !extras.some(value => Array.isArray(value?.frames) && value.frames.length > 0);
-      return { material, collision };
+      return { material, collision, extraShader };
     });
     if (primitives.length === 1) {
       result.set(nodeName, policies);
@@ -384,6 +405,15 @@ function worldGlbPrimitivePolicies(
     }
   });
   return result;
+}
+
+function extraShaderFromExtras(
+  extras: Record<string, unknown> | undefined
+): string | undefined {
+  const eltania = extras?.eltania;
+  if (!eltania || typeof eltania !== 'object' || Array.isArray(eltania)) return undefined;
+  const value = (eltania as Record<string, unknown>).extraShader;
+  return typeof value === 'string' && value.trim() ? value.trim() : undefined;
 }
 
 function collisionPathForSpatial(spatialPath: string): string {

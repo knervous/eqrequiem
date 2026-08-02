@@ -55,10 +55,23 @@ export function normalizeCharacterName(value: string): string | null {
 }
 
 export function baseCharacterStats(race: number, charClass: number): CharacterBaseStats | null {
+  return characterStats(race, charClass, true);
+}
+
+function characterStats(
+  race: number,
+  charClass: number,
+  enforceLegacyCompatibility: boolean,
+): CharacterBaseStats | null {
   const racial = RACE_STATS[race];
   const classStats = CLASS_STATS[charClass];
   const raceIndex = RACE_INDEX.get(race);
-  if (!racial || !classStats || raceIndex === undefined || !CLASS_RACES[charClass - 1]?.[raceIndex]) return null;
+  if (
+    !racial ||
+    !classStats ||
+    raceIndex === undefined ||
+    (enforceLegacyCompatibility && !CLASS_RACES[charClass - 1]?.[raceIndex])
+  ) return null;
   return {
     str: racial[0]! + classStats[0]!, sta: racial[1]! + classStats[1]!,
     agi: racial[2]! + classStats[2]!, dex: racial[3]! + classStats[3]!,
@@ -69,7 +82,14 @@ export function baseCharacterStats(race: number, charClass: number): CharacterBa
 
 export function resolveCharacterStats(character: BackendCharacterCreate): CharacterBaseStats | null {
   if (!validEltaniaCharacterProjection(character)) return null;
-  const base = baseCharacterStats(character.race, character.charClass);
+  // A versioned composition was already checked against the stable
+  // body-family/calling contract. The numeric class/race matrix is only an
+  // authority for unversioned legacy requests.
+  const base = characterStats(
+    character.race,
+    character.charClass,
+    character.appearanceSchemaVersion === undefined,
+  );
   if (!base) return null;
   const keys = ["str", "sta", "agi", "dex", "wis", "intel", "cha"] as const;
   const supplied = keys.every(key => Number.isFinite(character[key]));

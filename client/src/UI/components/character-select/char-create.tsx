@@ -34,7 +34,9 @@ export const CharacterCreate: React.FC<CharacterCreateProps> = ({ setView }) => 
   const [draft, setDraft] = useState(defaultEltaniaCharacterDraft);
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState('');
-  const bodyFamily = eltaniaCharacterContract.bodyFamilies[0];
+  const bodyFamily = eltaniaCharacterContract.bodyFamilies.find(
+    (family) => family.id === draft.bodyFamilyId,
+  ) ?? eltaniaCharacterContract.bodyFamilies[0];
   const calling = eltaniaCharacterContract.callings[0];
   const origin = eltaniaCharacterContract.origins[0];
   const validName = isValidEltaniaCharacterName(draft.name);
@@ -68,6 +70,31 @@ export const CharacterCreate: React.FC<CharacterCreateProps> = ({ setView }) => 
     }));
   }, []);
 
+  const setBodyFamily = useCallback((bodyFamilyId: string) => {
+    const nextFamily = eltaniaCharacterContract.bodyFamilies.find(
+      (family) => family.id === bodyFamilyId,
+    );
+    if (!nextFamily) return;
+    setDraft((current) => {
+      const currentFamily = eltaniaCharacterContract.bodyFamilies.find(
+        (family) => family.id === current.bodyFamilyId,
+      );
+      const currentGender = currentFamily?.components.find(
+        (component) => component.id === current.bodyComponentId,
+      )?.gender;
+      const nextComponent = nextFamily.components.find(
+        (component) => component.gender === currentGender,
+      ) ?? nextFamily.components[0];
+      return {
+        ...current,
+        bodyFamilyId   : nextFamily.id,
+        bodyComponentId: nextComponent.id,
+        faceComponentId: nextFamily.faces[0].id,
+        presentationId : nextComponent.presentationId,
+      };
+    });
+  }, []);
+
   const createCharacter = useCallback(() => {
     if (!validName || submitting) {
       return;
@@ -98,7 +125,27 @@ export const CharacterCreate: React.FC<CharacterCreateProps> = ({ setView }) => 
       >
         <div className="rq-character-create__section">
           <div className="rq-character-create__heading">
-            <span>Body family</span>
+            <span>Race</span>
+            <strong>{bodyFamily.label}</strong>
+          </div>
+          <div className="rq-character-create__choices rq-character-create__choices--races">
+            {eltaniaCharacterContract.bodyFamilies.map((family) => (
+              <button
+                aria-pressed={draft.bodyFamilyId === family.id}
+                className="rq-character-create__choice"
+                key={family.id}
+                type="button"
+                onClick={() => setBodyFamily(family.id)}
+              >
+                {family.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="rq-character-create__section">
+          <div className="rq-character-create__heading">
+            <span>Body</span>
             <strong>{bodyFamily.label}</strong>
           </div>
           <div className="rq-character-create__choices">
@@ -213,6 +260,10 @@ export const CharacterCreate: React.FC<CharacterCreateProps> = ({ setView }) => 
           <div>
             <dt>Origin</dt>
             <dd>{origin.label}</dd>
+          </div>
+          <div>
+            <dt>Race</dt>
+            <dd>{bodyFamily.label}</dd>
           </div>
           <div>
             <dt>Appearance</dt>

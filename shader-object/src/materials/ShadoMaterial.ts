@@ -53,6 +53,9 @@ export class ShadoMaterial<T extends Shado> extends BABYLON.ShaderMaterial {
 
   private _effect: Effect | null = null;
   private _vat?: VATBuilder;
+  private readonly _lightDirection = BABYLON.Vector3.Zero();
+  private readonly _lightColor = BABYLON.Vector3.Zero();
+  private readonly _ambientColor = BABYLON.Vector3.Zero();
   public get effect() {
     return this._effect;
   }
@@ -84,11 +87,13 @@ export class ShadoMaterial<T extends Shado> extends BABYLON.ShaderMaterial {
     // ── Detect bone influencers and set attributes/defines ───────────────────
     const influencers = useVat ? (mesh.numBoneInfluencers ?? (mesh.skeleton ? 4 : 0)) : 0;
     const attributes = ['position', 'uv', 'aMeta', 'aRect'];
+    if (mesh.isVerticesDataPresent('normal')) attributes.push('normal');
     for (const kind of mesh.getVerticesDataKinds()) {
       if (kind.startsWith('a') && !attributes.includes(kind)) attributes.push(kind);
     }
 
     const defines = new Set<string>(opts?.defines ?? []);
+    if (mesh.isVerticesDataPresent('normal')) defines.add('SHADO_HAS_NORMAL');
     if (influencers > 0) defines.add('USE_BONES');
     if (useVat && (vatQuality === 'medium' || vatQuality === 'low')) {
       defines.add('SHADO_VAT_SINGLE_FRAME');
@@ -106,8 +111,14 @@ export class ShadoMaterial<T extends Shado> extends BABYLON.ShaderMaterial {
     // ── Uniforms & samplers ──────────────────────────────────────────────────
 
     const uniforms = useStorageWGSL
-      ? ['worldViewProjection']
-      : ['worldViewProjection', ...shaderIo.uniforms];
+      ? ['worldViewProjection', 'uShadoLightDirection', 'uShadoLightColor', 'uShadoAmbientColor']
+      : [
+          'worldViewProjection',
+          'uShadoLightDirection',
+          'uShadoLightColor',
+          'uShadoAmbientColor',
+          ...shaderIo.uniforms,
+        ];
     if ('visibleActorIndices' in (shado as any) && !useStorageWGSL) {
       uniforms.push('uShadoVisibleIndexTexWidth');
     }
@@ -210,6 +221,7 @@ export class ShadoMaterial<T extends Shado> extends BABYLON.ShaderMaterial {
       shado.syncGpu((engine as any).frameId ?? 0);
       shado.bindMaterial(this);
       this.setTexture('uAtlasArray', atlas.texture);
+      this.bindBaseLighting();
       if (useVat) {
         this._vat?.bindMaterial(this);
         this.setFloat('bakedVertexAnimationTime', this._timeSec);
@@ -248,6 +260,43 @@ export class ShadoMaterial<T extends Shado> extends BABYLON.ShaderMaterial {
   }
   public setTimeSeconds(t: number) {
     this._timeSec = t;
+  }
+
+  /** Bind one scene directional light to the base per-instance Lambert path. */
+  private bindBaseLighting(): void {
+    const lights = ((this.shadoScene as any).lights ?? []).filter(
+      (light: any) => light?.isEnabled?.() ?? true
+    );
+    const directional =
+      lights.find((light: any) => light?.getClassName?.() === 'DirectionalLight') ??
+      lights.find((light: any) => light?.getClassName?.() === 'HemisphericLight');
+    const isHemispheric = directional?.getClassName?.() === 'HemisphericLight';
+    const sourceDirection = directional?.direction ?? { x: -0.45, y: -1, z: 0.35 };
+    let x = Number(sourceDirection.x) || 0;
+    let y = Number(sourceDirection.y) || 0;
+    let z = Number(sourceDirection.z) || 0;
+    if (!isHemispheric) {
+      x = -x;
+      y = -y;
+      z = -z;
+    }
+    const inverseLength = 1 / Math.max(Math.hypot(x, y, z), 1e-8);
+    this._lightDirection.set(x * inverseLength, y * inverseLength, z * inverseLength);
+    this.setVector3('uShadoLightDirection', this._lightDirection);
+
+    const diffuse = directional?.diffuse ?? { r: 1, g: 1, b: 1 };
+    const intensity = Number.isFinite(directional?.intensity) ? directional.intensity : 0.8;
+    this._lightColor.set(diffuse.r * intensity, diffuse.g * intensity, diffuse.b * intensity);
+    this.setVector3('uShadoLightColor', this._lightColor);
+
+    const ambient = (this.shadoScene as any).ambientColor;
+    const hasAmbient = ambient && Math.max(ambient.r, ambient.g, ambient.b) > 1e-6;
+    this._ambientColor.set(
+      hasAmbient ? ambient.r : 0.2,
+      hasAmbient ? ambient.g : 0.2,
+      hasAmbient ? ambient.b : 0.2
+    );
+    this.setVector3('uShadoAmbientColor', this._ambientColor);
   }
 
   public setAsyncPicking<TActor extends ShadoActor>(

@@ -4,7 +4,10 @@ import type {
   LibraMetaTablesResponse,
   LibraRow,
   LibraValidateResponse,
+  CreateZoneSpawnInput,
   QuestCatalogStatus,
+  ZoneWorkspace,
+  ZoneWorkspaceSpawn,
   ZoneShard,
 } from '@libra/libra/types'
 
@@ -61,6 +64,20 @@ export async function searchZones(search = ''): Promise<{ count: number; rows: L
 
 export async function searchNpcs(search = ''): Promise<{ count: number; rows: LibraRow[] }> {
   return libraFetch(`/libra/content/npcs?search=${encodeURIComponent(search)}&limit=500`)
+}
+
+export async function getZoneWorkspace(zoneId: number): Promise<ZoneWorkspace> {
+  return libraFetch(`/libra/content/zones/${zoneId}/workspace`)
+}
+
+export async function createZoneSpawn(
+  zoneId: number,
+  input: CreateZoneSpawnInput,
+): Promise<{ requestId: string; ok: boolean; spawn: ZoneWorkspaceSpawn }> {
+  return libraFetch(`/libra/content/zones/${zoneId}/spawns`, {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
 }
 
 export async function createContentRow(table: string, row: LibraRow): Promise<{ requestId: string; ok: boolean }> {

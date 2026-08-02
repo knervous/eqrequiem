@@ -7,6 +7,7 @@ import type {
 import { stampShadoWorldIntegrity, validateShadoWorldPackage } from './validation';
 import { validateShadoWorldAuthoring } from './authoring';
 import { encodeShadoWorldCollision } from './collision';
+import { compileShadoWorldGrass } from './grass';
 
 const LEAF_BIT = 0x80000000;
 const EMPTY_REF = 0xffffffff;
@@ -18,6 +19,8 @@ type Triangle = {
   y: number;
   z: number;
   morton: number;
+  tileX: number;
+  tileZ: number;
 };
 type Cluster = Bounds & {
   primitive: number;
@@ -63,33 +66,42 @@ export function compileShadoWorld(
     const primitiveBounds = boundsOfPositions(primitive.positions);
     for (const triangle of triangles) {
       triangle.morton = mortonForPoint(triangle.x, triangle.y, triangle.z, primitiveBounds);
+      triangle.tileX = Math.floor((triangle.x - originX) / tileSize);
+      triangle.tileZ = Math.floor((triangle.z - originZ) / tileSize);
     }
-    triangles.sort((a, b) => a.morton - b.morton);
-    for (let start = 0; start < triangles.length; start += maxTriangles) {
-      const group = triangles.slice(start, start + maxTriangles);
-      const indices = group.flatMap(triangle => triangle.indices);
-      const bounds = boundsOfIndices(primitive.positions, indices);
-      const center: WorldVec3 = [
-        (bounds.min[0] + bounds.max[0]) * 0.5,
-        (bounds.min[1] + bounds.max[1]) * 0.5,
-        (bounds.min[2] + bounds.max[2]) * 0.5,
-      ];
-      const tileX = Math.floor((center[0] - originX) / tileSize);
-      const tileZ = Math.floor((center[2] - originZ) / tileSize);
-      clusters.push({
-        ...bounds,
-        primitive: primitiveId,
-        material: materialIds.get(primitive.material || '__default')!,
-        indices,
-        center,
-        radius: radiusOfIndices(primitive.positions, indices, center),
-        cone: normalCone(primitive.positions, group),
-        tileX,
-        tileZ,
-        cellId: 0,
-        packet: 0,
-        renderChunk: 0,
-      });
+    const trianglesByTile = new Map<string, Triangle[]>();
+    for (const triangle of triangles) {
+      const key = `${triangle.tileX},${triangle.tileZ}`;
+      const tileTriangles = trianglesByTile.get(key) ?? [];
+      tileTriangles.push(triangle);
+      trianglesByTile.set(key, tileTriangles);
+    }
+    for (const tileTriangles of trianglesByTile.values()) {
+      tileTriangles.sort((a, b) => a.morton - b.morton);
+      for (let start = 0; start < tileTriangles.length; start += maxTriangles) {
+        const group = tileTriangles.slice(start, start + maxTriangles);
+        const indices = group.flatMap(triangle => triangle.indices);
+        const bounds = boundsOfIndices(primitive.positions, indices);
+        const center: WorldVec3 = [
+          (bounds.min[0] + bounds.max[0]) * 0.5,
+          (bounds.min[1] + bounds.max[1]) * 0.5,
+          (bounds.min[2] + bounds.max[2]) * 0.5,
+        ];
+        clusters.push({
+          ...bounds,
+          primitive: primitiveId,
+          material: materialIds.get(primitive.material || '__default')!,
+          indices,
+          center,
+          radius: radiusOfIndices(primitive.positions, indices, center),
+          cone: normalCone(primitive.positions, group),
+          tileX: group[0].tileX,
+          tileZ: group[0].tileZ,
+          cellId: 0,
+          packet: 0,
+          renderChunk: 0,
+        });
+      }
     }
   });
 
@@ -135,10 +147,9 @@ export function compileShadoWorld(
     unionBounds(clusters.filter(cluster => cluster.cellId === cell))
   );
   const compiledObjects = compileObjects(authoring, tileIds, originX, originZ, tileSize);
+  const grass = compileShadoWorldGrass(primitives, options.grass);
   const navigationModifiers = compileNavigationModifiers(authoring);
-  const collision = encodeShadoWorldCollision(
-    options.collisionPrimitives ?? primitives
-  );
+  const collision = encodeShadoWorldCollision(options.collisionPrimitives ?? primitives);
 
   const clusterIndices: number[] = [];
   const firstIndex: number[] = [];
@@ -153,14 +164,20 @@ export function compileShadoWorld(
   const renderChunkMaterial: number[] = [];
   const renderChunkFirst: number[] = [];
   const renderChunkCount: number[] = [];
-  const clustersByPrimitive = new Map<number, number[]>();
+  const clustersByPrimitiveCell = new Map<string, number[]>();
   clusters.forEach((cluster, id) => {
-    const ids = clustersByPrimitive.get(cluster.primitive) ?? [];
+    const key = `${cluster.primitive},${cluster.cellId}`;
+    const ids = clustersByPrimitiveCell.get(key) ?? [];
     ids.push(id);
-    clustersByPrimitive.set(cluster.primitive, ids);
+    clustersByPrimitiveCell.set(key, ids);
   });
-  for (const primitive of [...clustersByPrimitive.keys()].sort((a, b) => a - b)) {
-    const ids = clustersByPrimitive.get(primitive)!;
+  const chunkGroups = [...clustersByPrimitiveCell.values()].sort((a, b) => {
+    const clusterA = clusters[a[0]];
+    const clusterB = clusters[b[0]];
+    return clusterA.cellId - clusterB.cellId || clusterA.primitive - clusterB.primitive;
+  });
+  for (const ids of chunkGroups) {
+    const primitive = clusters[ids[0]].primitive;
     const chunk = renderChunkPrimitive.length;
     renderChunkPrimitive.push(primitive);
     renderChunkMaterial.push(clusters[ids[0]].material);
@@ -192,6 +209,10 @@ export function compileShadoWorld(
       ...collision.descriptor,
     },
     triangleCount,
+    lighting: options.runtimeLighting ?? {
+      mode: 'dynamic',
+      vertexColors: 'material-tint',
+    },
     materials,
     primitives: primitives.map(primitive => ({
       name: primitive.name,
@@ -263,6 +284,7 @@ export function compileShadoWorld(
       metadata: authoring?.regions.map(region => ({ ...region.metadata })) ?? [],
     },
     objects: compiledObjects,
+    grass,
     tiles: {
       size: tileSize,
       originX,
@@ -314,19 +336,21 @@ function compileNavigationModifiers(
     if (!Number.isInteger(flags) || flags < 0 || flags > 0xffff) {
       throw new Error(`Region '${region.id}' navigation flags must be an unsigned 16-bit integer`);
     }
-    return [{
-      region: index,
-      area,
-      flags,
-      excluded: Number(excluded),
-      // Requiem runtime (x, y, z) -> Recast (z, y, -x).
-      centerX: region.center[2],
-      centerY: region.center[1],
-      centerZ: -region.center[0],
-      sizeX: region.size[2],
-      sizeY: region.size[1],
-      sizeZ: region.size[0],
-    }];
+    return [
+      {
+        region: index,
+        area,
+        flags,
+        excluded: Number(excluded),
+        // Requiem runtime (x, y, z) -> Recast (z, y, -x).
+        centerX: region.center[2],
+        centerY: region.center[1],
+        centerZ: -region.center[0],
+        sizeX: region.size[2],
+        sizeY: region.size[1],
+        sizeZ: region.size[0],
+      },
+    ];
   });
 }
 
@@ -379,8 +403,8 @@ function compileObjects(
       scaleX: stamps.map(stamp => stamp.scale[0]),
       scaleY: stamps.map(stamp => stamp.scale[1]),
       scaleZ: stamps.map(stamp => stamp.scale[2]),
-      radius: stamps.map((stamp, index) =>
-        prototypes[stampPrototype[index]].boundsRadius * Math.max(...stamp.scale)
+      radius: stamps.map(
+        (stamp, index) => prototypes[stampPrototype[index]].boundsRadius * Math.max(...stamp.scale)
       ),
       cellId,
       phaseMask: stamps.map(stamp => stamp.phaseMask),
@@ -526,6 +550,8 @@ function trianglesForPrimitive(primitive: ShadoWorldPrimitive): Triangle[] {
       y: centroidAxis(primitive.positions, a, b, c, 1),
       z: centroidAxis(primitive.positions, a, b, c, 2),
       morton: 0,
+      tileX: 0,
+      tileZ: 0,
     });
   }
   return out;

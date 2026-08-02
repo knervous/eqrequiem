@@ -299,7 +299,20 @@ async function run() {
   center.y = bounds.min.y + height * focusSpec.centerY
   const focusWidth = width * focusSpec.width
   const focusHeight = height * focusSpec.height
-  const halfHeight = Math.max(focusHeight * 0.58, (focusWidth / aspect) * 0.58)
+  // A three-quarter orthographic view projects depth into screen width. The
+  // old axis-aligned fit cropped cube-like props even though their world-space
+  // bounds were valid. A raised three-quarter view also projects part of the
+  // horizontal footprint into screen height.
+  const diagonalView = frontAxis.includes('xz')
+  const raisedView = frontAxis.endsWith('-high')
+  const projectedWidth = diagonalView ? Math.hypot(focusWidth, depth) : focusWidth
+  const projectedHeight = raisedView
+    ? focusHeight + Math.max(width, depth) * 0.38
+    : focusHeight
+  const halfHeight = Math.max(
+    projectedHeight * 0.58,
+    (projectedWidth / aspect) * 0.58,
+  )
   const halfWidth = halfHeight * aspect
   const distance = Math.max(width, height, depth) * 3 + 1
 
@@ -308,6 +321,11 @@ async function run() {
     '+z': new BABYLON.Vector3(0, 0, 1),
     '-x': new BABYLON.Vector3(-1, 0, 0),
     '+x': new BABYLON.Vector3(1, 0, 0),
+    '-xz': new BABYLON.Vector3(-1, 0, -1).normalize(),
+    '+xz': new BABYLON.Vector3(1, 0, 1).normalize(),
+    '-x+z': new BABYLON.Vector3(-1, 0, 1).normalize(),
+    '+x-z': new BABYLON.Vector3(1, 0, -1).normalize(),
+    '-xz-high': new BABYLON.Vector3(-1, 0.52, -1).normalize(),
   }
   const direction = directions[frontAxis]
   if (!direction) throw new Error(`Unsupported front axis: ${frontAxis}`)

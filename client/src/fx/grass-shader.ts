@@ -1,23 +1,38 @@
 import BABYLON from "@bjs";
 import type * as BJS from "@babylonjs/core";
+import { ZONE_SHADER_LIGHTING_UNIFORMS } from "./zone-shader-lighting";
 
 export const REQUIEM_GRASS_SHADER = "requiemGrass";
 
 export const grassVertexWGSL = /* wgsl */ `
 attribute position: vec3f;
-attribute normal: vec3f;
 attribute uv: vec2f;
+#ifdef INSTANCES
+attribute world0: vec4f;
+attribute world1: vec4f;
+attribute world2: vec4f;
+attribute world3: vec4f;
+attribute grassData: vec4f;
+#endif
 
 uniform world: mat4x4f;
-uniform worldViewProjection: mat4x4f;
+uniform viewProjection: mat4x4f;
 uniform uTime: f32;
 uniform uWindDirection: vec2f;
 uniform uWindStrength: f32;
+uniform uFocusPosition: vec3f;
+uniform uFadeInStart: f32;
+uniform uFadeInEnd: f32;
+uniform uFadeStart: f32;
+uniform uFadeEnd: f32;
+uniform uDensityFadeStart: f32;
+uniform uDensityFadeEnd: f32;
+uniform uMinimumDensity: f32;
 
 varying vUV: vec2f;
-varying vWorldPosition: vec3f;
-varying vWorldNormal: vec3f;
-varying vBladeVariation: f32;
+varying vVisibility: f32;
+varying vRandomPhase: f32;
+varying vBladeAccent: f32;
 
 fn grassHash(p: vec2f) -> f32 {
   let h = dot(p, vec2f(127.1, 311.7));
@@ -26,47 +41,109 @@ fn grassHash(p: vec2f) -> f32 {
 
 @vertex
 fn main(input: VertexInputs) -> FragmentInputs {
-  let root = floor(vertexInputs.position.xz * 2.0) * 0.5;
-  let variation = grassHash(root);
+  var instanceWorld = mat4x4f(
+    vec4f(1.0, 0.0, 0.0, 0.0),
+    vec4f(0.0, 1.0, 0.0, 0.0),
+    vec4f(0.0, 0.0, 1.0, 0.0),
+    vec4f(0.0, 0.0, 0.0, 1.0)
+  );
+  var randomPhase = grassHash(floor(vertexInputs.position.xz * 2.0) * 0.5);
+  var stiffness = 0.5;
+  var accent = grassHash(vertexInputs.position.xz + vec2f(19.7, -7.3));
+#ifdef INSTANCES
+  instanceWorld = mat4x4f(
+    vertexInputs.world0,
+    vertexInputs.world1,
+    vertexInputs.world2,
+    vertexInputs.world3
+  );
+  randomPhase = vertexInputs.grassData.x;
+  stiffness = vertexInputs.grassData.y;
+  accent = vertexInputs.grassData.w;
+#endif
+  let rootPosition = uniforms.world * instanceWorld[3];
+  let root = rootPosition.xz;
+  let distanceToFocus = distance(root, uniforms.uFocusPosition.xz);
+  let fadeIn = smoothstep(
+    uniforms.uFadeInStart,
+    uniforms.uFadeInEnd,
+    distanceToFocus
+  );
+  let fadeOut = 1.0 - smoothstep(
+    uniforms.uFadeStart,
+    uniforms.uFadeEnd,
+    distanceToFocus
+  );
+  let visibility = fadeIn * fadeOut;
+  vertexOutputs.vUV = vertexInputs.uv;
+  vertexOutputs.vVisibility = visibility;
+  vertexOutputs.vRandomPhase = randomPhase;
+  vertexOutputs.vBladeAccent = accent;
+  let densityDistance = smoothstep(
+    uniforms.uDensityFadeStart,
+    uniforms.uDensityFadeEnd,
+    distanceToFocus
+  );
+  let densityThreshold = mix(1.0, uniforms.uMinimumDensity, densityDistance);
+  if (
+    distanceToFocus <= uniforms.uFadeInStart ||
+    distanceToFocus >= uniforms.uFadeEnd ||
+    randomPhase > densityThreshold
+  ) {
+    vertexOutputs.position = vec4f(2.0, 2.0, 2.0, 1.0);
+    return vertexOutputs;
+  }
+
   let tipWeight = vertexInputs.uv.y * vertexInputs.uv.y;
   let windDirection = normalize(uniforms.uWindDirection + vec2f(0.0001, 0.0001));
   let broadWave = sin(
     dot(root, windDirection * 0.34)
-      + uniforms.uTime * (1.35 + variation * 0.22)
+      + uniforms.uTime * (1.35 + randomPhase * 0.22)
   );
   let gust = sin(
     dot(root, vec2f(-0.21, 0.27))
       - uniforms.uTime * 0.73
-      + variation * 6.2831853
+      + randomPhase * 6.2831853
   );
-  let bend = windDirection
-    * (broadWave * 0.72 + gust * 0.28)
+  let flexibility = mix(1.2, 0.38, stiffness);
+  let windWave = 0.56 + (broadWave * 0.68 + gust * 0.32) * 0.44;
+  let perpendicularWind = vec2f(-windDirection.y, windDirection.x);
+  var bend = windDirection
+    * windWave
     * uniforms.uWindStrength
+    * flexibility
+    * tipWeight;
+  bend += perpendicularWind
+    * gust
+    * uniforms.uWindStrength
+    * 0.1
+    * flexibility
     * tipWeight;
 
-  var localPosition = vertexInputs.position;
-  localPosition.x += bend.x;
-  localPosition.z += bend.y;
-  localPosition.y -= length(bend) * 0.075 * tipWeight;
+  let instancePosition = instanceWorld * vec4f(vertexInputs.position, 1.0);
+  var worldPosition = uniforms.world * instancePosition;
+  worldPosition.x += bend.x;
+  worldPosition.z += bend.y;
+  worldPosition.y -= length(bend) * 0.075 * tipWeight;
 
-  let worldPosition = uniforms.world * vec4f(localPosition, 1.0);
-  vertexOutputs.position = uniforms.worldViewProjection * vec4f(localPosition, 1.0);
-  vertexOutputs.vUV = vertexInputs.uv;
-  vertexOutputs.vWorldPosition = worldPosition.xyz;
-  vertexOutputs.vWorldNormal = normalize((uniforms.world * vec4f(vertexInputs.normal, 0.0)).xyz);
-  vertexOutputs.vBladeVariation = variation;
+  vertexOutputs.position = uniforms.viewProjection * worldPosition;
 }
 `;
 
 export const grassFragmentWGSL = /* wgsl */ `
 varying vUV: vec2f;
-varying vWorldPosition: vec3f;
-varying vWorldNormal: vec3f;
-varying vBladeVariation: f32;
+varying vVisibility: f32;
+varying vRandomPhase: f32;
+varying vBladeAccent: f32;
 
 uniform uBaseColor: vec3f;
-uniform uTipColor: vec3f;
-uniform uSunDirection: vec3f;
+uniform uColorVariance: f32;
+uniform uZoneDaylightFactor: f32;
+
+fn grassDitherHash(p: vec2f) -> f32 {
+  return fract(sin(dot(p, vec2f(91.7, 271.9))) * 43758.5453);
+}
+
 @fragment
 fn main(input: FragmentInputs) -> FragmentOutputs {
   let centered = abs(fragmentInputs.vUV.x - 0.5) * 2.0;
@@ -74,20 +151,32 @@ fn main(input: FragmentInputs) -> FragmentOutputs {
   if (centered > bladeHalfWidth || fragmentInputs.vUV.y < 0.015) {
     discard;
   }
+  if (
+    grassDitherHash(
+      vec2f(
+        fragmentInputs.vRandomPhase * 31.7,
+        fragmentInputs.vRandomPhase * 67.3
+      )
+    ) > fragmentInputs.vVisibility
+  ) {
+    discard;
+  }
 
-  let normal = normalize(fragmentInputs.vWorldNormal);
-  let wrappedDiffuse = clamp(
-    (dot(normal, normalize(uniforms.uSunDirection)) + 0.45) / 1.45,
-    0.0,
-    1.0
+  let rootShade = mix(0.78, 1.0, smoothstep(0.0, 0.42, fragmentInputs.vUV.y));
+  let signedVariation = fragmentInputs.vBladeAccent * 2.0 - 1.0;
+  let brightness = 1.0 + signedVariation * uniforms.uColorVariance;
+  let subtleHue = vec3f(
+    1.0 - signedVariation * uniforms.uColorVariance * 0.22,
+    1.0 + signedVariation * uniforms.uColorVariance * 0.16,
+    1.0 - signedVariation * uniforms.uColorVariance * 0.12
   );
-  let rootShade = mix(0.48, 1.0, smoothstep(0.0, 0.38, fragmentInputs.vUV.y));
-  let variation = mix(0.78, 1.15, fragmentInputs.vBladeVariation);
-  let color = mix(
-    uniforms.uBaseColor,
-    uniforms.uTipColor,
-    fragmentInputs.vUV.y * 0.72
-  ) * mix(0.58, 1.0, wrappedDiffuse) * rootShade * variation;
+  let tipLift = mix(0.94, 1.04, smoothstep(0.1, 1.0, fragmentInputs.vUV.y));
+  let color = uniforms.uBaseColor
+    * subtleHue
+    * brightness
+    * rootShade
+    * tipLift
+    * uniforms.uZoneDaylightFactor;
 
   fragmentOutputs.color = vec4f(color, 1.0);
 }
@@ -100,10 +189,18 @@ export function registerGrassShader(): void {
 }
 
 export type GrassMaterialOptions = {
+  name?: string;
   windDirection?: BJS.Vector2;
   windStrength?: number;
   baseColor?: BJS.Color3;
-  tipColor?: BJS.Color3;
+  colorVariance?: number;
+  fadeInStart?: number;
+  fadeInEnd?: number;
+  fadeStart?: number;
+  fadeEnd?: number;
+  densityFadeStart?: number;
+  densityFadeEnd?: number;
+  minimumDensity?: number;
 };
 
 export function createGrassMaterial(
@@ -112,23 +209,31 @@ export function createGrassMaterial(
 ): BJS.ShaderMaterial {
   registerGrassShader();
   const material = new BABYLON.ShaderMaterial(
-    "RequiemGrassMaterial",
+    options.name ?? "RequiemGrassMaterial",
     scene,
     {
       vertex: REQUIEM_GRASS_SHADER,
       fragment: REQUIEM_GRASS_SHADER,
     },
     {
-      attributes: ["position", "normal", "uv"],
+      attributes: ["position", "uv", "grassData"],
       uniforms: [
         "world",
-        "worldViewProjection",
+        "viewProjection",
         "uTime",
         "uWindDirection",
         "uWindStrength",
+        "uFocusPosition",
+        "uFadeInStart",
+        "uFadeInEnd",
+        "uFadeStart",
+        "uFadeEnd",
+        "uDensityFadeStart",
+        "uDensityFadeEnd",
+        "uMinimumDensity",
         "uBaseColor",
-        "uTipColor",
-        "uSunDirection",
+        "uColorVariance",
+        ...ZONE_SHADER_LIGHTING_UNIFORMS,
       ],
       shaderLanguage: BABYLON.ShaderLanguage.WGSL,
     },
@@ -142,12 +247,19 @@ export function createGrassMaterial(
   material.setFloat("uWindStrength", options.windStrength ?? 0.23);
   material.setColor3(
     "uBaseColor",
-    options.baseColor ?? new BABYLON.Color3(0.075, 0.19, 0.055),
+    // Midpoint of the grass surface's base/highlight palette. Blade-level
+    // variance stays bounded around this value so cards blend into terrain.
+    options.baseColor ?? BABYLON.Color3.FromHexString("#52743B"),
   );
-  material.setColor3(
-    "uTipColor",
-    options.tipColor ?? new BABYLON.Color3(0.31, 0.46, 0.12),
-  );
-  material.setVector3("uSunDirection", new BABYLON.Vector3(0.35, 0.86, 0.38));
+  material.setFloat("uColorVariance", options.colorVariance ?? 0.12);
+  material.setVector3("uFocusPosition", BABYLON.Vector3.Zero());
+  material.setFloat("uFadeInStart", options.fadeInStart ?? -1);
+  material.setFloat("uFadeInEnd", options.fadeInEnd ?? 0);
+  material.setFloat("uFadeStart", options.fadeStart ?? 104);
+  material.setFloat("uFadeEnd", options.fadeEnd ?? 132);
+  material.setFloat("uDensityFadeStart", options.densityFadeStart ?? 58);
+  material.setFloat("uDensityFadeEnd", options.densityFadeEnd ?? 118);
+  material.setFloat("uMinimumDensity", options.minimumDensity ?? 0.42);
+  material.needAlphaBlending = () => false;
   return material;
 }

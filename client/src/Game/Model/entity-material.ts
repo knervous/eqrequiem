@@ -9,6 +9,7 @@ const VS_GL = `
 
     // Attributes
     attribute vec3 position;
+    attribute vec3 normal;
     attribute vec2 uv;
     attribute vec2 submeshData;
 
@@ -17,6 +18,9 @@ const VS_GL = `
     flat varying int vAtlasIndex;
     varying vec2 vUV;
     varying vec3 vTint;
+    varying vec3 vWorldNormal;
+    varying vec3 vWorldPosition;
+    flat varying float vLightingEnabled;
     flat varying float vSelected;
     varying float vSelectionPulse;
 
@@ -60,6 +64,7 @@ const VS_GL = `
         }
         int sourceIndex = requiemVisibleActorIndex(drawIndex);
         RequiemEntityActorHeader actor = RequiemEntityContainer_instances_get(sourceIndex);
+        vLightingEnabled = actor.padding1 > 0.5 ? 1.0 : 0.0;
         vSelected = (actor.stateFlags & uint(2)) != uint(0) ? 1.0 : 0.0;
         vSelectionPulse =
           0.5 + 0.5 * sin(bakedVertexAnimationTime * 4.0);
@@ -117,7 +122,13 @@ const VS_GL = `
               qv,
               cross(qv, scaled) + actor.rotation.w * scaled
             );
-            gl_Position = worldViewProjection * vec4(rotated + actor.translation.xyz, 1.0);
+            vWorldPosition = rotated + actor.translation.xyz;
+            vec3 skinnedNormal = normalize((finalWorld * vec4(normal, 0.0)).xyz);
+            vWorldNormal = normalize(skinnedNormal + 2.0 * cross(
+              qv,
+              cross(qv, skinnedNormal) + actor.rotation.w * skinnedNormal
+            ));
+            gl_Position = worldViewProjection * vec4(vWorldPosition, 1.0);
         }
     }
 `;
@@ -132,6 +143,9 @@ const FS_GL = `
     flat varying int vSlice;
     flat varying int vAtlasIndex;
     varying vec3 vTint;
+    varying vec3 vWorldNormal;
+    varying vec3 vWorldPosition;
+    flat varying float vLightingEnabled;
     flat varying float vSelected;
     varying float vSelectionPulse;
 
@@ -139,6 +153,12 @@ const FS_GL = `
     uniform highp sampler2DArray uAtlasArray;
     uniform highp sampler2DArray uCloakAtlasArray;
     uniform highp sampler2DArray uHelmAtlasArray;
+    uniform vec3 uShadoLightDirection;
+    uniform vec3 uShadoLightColor;
+    uniform vec3 uShadoAmbientColor;
+    uniform vec3 uShadoPlayerLightPosition;
+    uniform vec3 uShadoPlayerLightColor;
+    uniform float uShadoPlayerLightRange;
 
     void main() {
       // never branch on vAtlasIndex
@@ -153,9 +173,19 @@ const FS_GL = `
       float m2 = vAtlasIndex == 2 ? 1.0 : 0.0;
 
       vec4 base = c0 * m0 + c1 * m1 + c2 * m2;
+      vec3 normal = normalize(vWorldNormal);
+      float skyLambert = max(dot(normal, uShadoLightDirection), 0.0);
+      vec3 toPlayer = uShadoPlayerLightPosition - vWorldPosition;
+      float playerDistance = length(toPlayer);
+      vec3 playerDirection = toPlayer / max(playerDistance, 0.0001);
+      float playerLambert = max(dot(normal, playerDirection), 0.0);
+      float playerFalloff = max(0.0, 1.0 - playerDistance / max(uShadoPlayerLightRange, 0.0001));
+      vec3 lighting = uShadoAmbientColor + uShadoLightColor * skyLambert +
+        uShadoPlayerLightColor * (playerLambert * playerFalloff * playerFalloff);
+      lighting = mix(vec3(1.0), lighting, vLightingEnabled);
       float targetGlow = vSelected * (0.05 + vSelectionPulse * 0.045);
       vec3 targetTint = vec3(1.0, 0.78, 0.24);
-      gl_FragColor = vec4(base.rgb * vTint + targetTint * targetGlow, 1.0);
+      gl_FragColor = vec4(base.rgb * vTint * lighting + targetTint * targetGlow, 1.0);
     }
 `;
 
@@ -316,12 +346,16 @@ fn requiemRotate(q: vec4f, point: vec3f) -> vec3f {
 
 const VS_WGSL = `
 attribute position: vec3f;
+attribute normal: vec3f;
 attribute uv: vec2f;
 attribute submeshData: vec2f;
 flat varying vSlice: i32;
 flat varying vAtlasIndex: i32;
 varying vUV: vec2f;
 varying vTint: vec3f;
+varying vWorldNormal: vec3f;
+varying vWorldPosition: vec3f;
+flat varying vLightingEnabled: f32;
 flat varying vSelected: f32;
 varying vSelectionPulse: f32;
 uniform worldViewProjection: mat4x4f;
@@ -343,6 +377,7 @@ fn main(input: VertexInputs) -> FragmentInputs {
 
   let sourceIndex = i32(uShadoVisibleIndices[drawIndex]);
   let actor = RequiemEntityContainer_instances_get(sourceIndex);
+  vertexOutputs.vLightingEnabled = select(0.0, 1.0, actor.padding1 > 0.5);
   vertexOutputs.vSelected = select(
     0.0,
     1.0,
@@ -366,6 +401,9 @@ fn main(input: VertexInputs) -> FragmentInputs {
   let skinned = (influence * vec4f(vertexInputs.position, 1.0)).xyz;
   let scaled = skinned * actor.translation.w;
   let worldPosition = requiemRotate(actor.rotation, scaled) + actor.translation.xyz;
+  let skinnedNormal = normalize((influence * vec4f(vertexInputs.normal, 0.0)).xyz);
+  vertexOutputs.vWorldNormal = normalize(requiemRotate(actor.rotation, skinnedNormal));
+  vertexOutputs.vWorldPosition = worldPosition;
   vertexOutputs.position = uniforms.worldViewProjection * vec4f(worldPosition, 1.0);
 }
 `;
@@ -375,6 +413,9 @@ flat varying vSlice: i32;
 flat varying vAtlasIndex: i32;
 varying vUV: vec2f;
 varying vTint: vec3f;
+varying vWorldNormal: vec3f;
+varying vWorldPosition: vec3f;
+flat varying vLightingEnabled: f32;
 flat varying vSelected: f32;
 varying vSelectionPulse: f32;
 var uAtlasArraySampler: sampler;
@@ -383,6 +424,12 @@ var uCloakAtlasArraySampler: sampler;
 var uCloakAtlasArray: texture_2d_array<f32>;
 var uHelmAtlasArraySampler: sampler;
 var uHelmAtlasArray: texture_2d_array<f32>;
+uniform uShadoLightDirection: vec3f;
+uniform uShadoLightColor: vec3f;
+uniform uShadoAmbientColor: vec3f;
+uniform uShadoPlayerLightPosition: vec3f;
+uniform uShadoPlayerLightColor: vec3f;
+uniform uShadoPlayerLightRange: f32;
 
 @fragment
 fn main(input: FragmentInputs) -> FragmentOutputs {
@@ -406,12 +453,26 @@ fn main(input: FragmentInputs) -> FragmentOutputs {
   let m1 = select(0.0, 1.0, fragmentInputs.vAtlasIndex == 1);
   let m2 = select(0.0, 1.0, fragmentInputs.vAtlasIndex == 2);
   let base = c0 * m0 + c1 * m1 + c2 * m2;
+  let normal = normalize(fragmentInputs.vWorldNormal);
+  let skyLambert = max(dot(normal, uniforms.uShadoLightDirection), 0.0);
+  let toPlayer = uniforms.uShadoPlayerLightPosition - fragmentInputs.vWorldPosition;
+  let playerDistance = length(toPlayer);
+  let playerDirection = toPlayer / max(playerDistance, 0.0001);
+  let playerLambert = max(dot(normal, playerDirection), 0.0);
+  let playerFalloff = max(
+    0.0,
+    1.0 - playerDistance / max(uniforms.uShadoPlayerLightRange, 0.0001)
+  );
+  let lit = uniforms.uShadoAmbientColor +
+    uniforms.uShadoLightColor * skyLambert +
+    uniforms.uShadoPlayerLightColor * (playerLambert * playerFalloff * playerFalloff);
+  let lighting = mix(vec3f(1.0), lit, fragmentInputs.vLightingEnabled);
   let targetGlow =
     fragmentInputs.vSelected *
     (0.05 + fragmentInputs.vSelectionPulse * 0.045);
   let targetTint = vec3f(1.0, 0.78, 0.24);
   fragmentOutputs.color = vec4f(
-    base.rgb * fragmentInputs.vTint + targetTint * targetGlow,
+    base.rgb * fragmentInputs.vTint * lighting + targetTint * targetGlow,
     1.0
   );
 }
@@ -482,7 +543,75 @@ BABYLON.ShaderStore.ShadersStoreWGSL["vatPickingFragmentShader"] = PICK_FS_WGSL;
 // ShaderMaterial appends the active skeleton's matricesIndices/Weights streams
 // in isReady(). Listing them here as well produces duplicate WebGPU vertex
 // descriptors for the same generated shader locations.
-const VAT_ATTRIBUTES = ["position", "uv", "submeshData"];
+const VAT_ATTRIBUTES = ["position", "normal", "uv", "submeshData"];
+
+const actorLightDirection = new BABYLON.Vector3(0.4, 0.82, 0.4);
+const actorLightColor = new BABYLON.Vector3(0.8, 0.8, 0.8);
+const actorAmbientColor = new BABYLON.Vector3(0.2, 0.2, 0.2);
+const actorPlayerLightPosition = BABYLON.Vector3.Zero();
+const actorPlayerLightColor = BABYLON.Vector3.Zero();
+const actorWhite = BABYLON.Color3.White();
+const actorDefaultAmbient = new BABYLON.Color3(0.2, 0.2, 0.2);
+
+function bindActorLighting(scene: BJS.Scene, effect: BJS.Effect): void {
+  const enabledLights = scene.lights.filter((light) => light.isEnabled());
+  const sun = enabledLights.find(
+    (light) => light.getClassName() === "DirectionalLight",
+  ) as BJS.DirectionalLight | undefined;
+  const hemisphere = enabledLights.find(
+    (light) => light.getClassName() === "HemisphericLight",
+  ) as BJS.HemisphericLight | undefined;
+  const sourceDirection = sun?.direction ?? hemisphere?.direction;
+  if (sourceDirection) {
+    actorLightDirection.copyFrom(sourceDirection);
+    if (sun) actorLightDirection.scaleInPlace(-1);
+    actorLightDirection.normalize();
+  }
+  const sky = sun ?? hemisphere;
+  const skyIntensity = Number.isFinite(sky?.intensity) ? sky!.intensity : 0.8;
+  const skyDiffuse = sky?.diffuse ?? actorWhite;
+  actorLightColor.set(
+    skyDiffuse.r * skyIntensity,
+    skyDiffuse.g * skyIntensity,
+    skyDiffuse.b * skyIntensity,
+  );
+
+  const ambient = scene.ambientColor;
+  const ambientBase =
+    Math.max(ambient.r, ambient.g, ambient.b) > 1e-6
+      ? ambient
+      : actorDefaultAmbient;
+  const hemiIntensity = hemisphere?.intensity ?? 0;
+  const hemiDiffuse = hemisphere?.diffuse ?? actorWhite;
+  actorAmbientColor.set(
+    ambientBase.r + hemiDiffuse.r * hemiIntensity,
+    ambientBase.g + hemiDiffuse.g * hemiIntensity,
+    ambientBase.b + hemiDiffuse.b * hemiIntensity,
+  );
+
+  const playerLight = scene.getLightByName(
+    "playerLight",
+  ) as BJS.PointLight | null;
+  if (playerLight?.isEnabled()) {
+    actorPlayerLightPosition.copyFrom(playerLight.getAbsolutePosition());
+    const strength = Math.min(2, Math.max(0, playerLight.intensity / 1200));
+    actorPlayerLightColor.set(
+      playerLight.diffuse.r * strength,
+      playerLight.diffuse.g * strength,
+      playerLight.diffuse.b * strength,
+    );
+  } else {
+    actorPlayerLightPosition.set(0, 0, 0);
+    actorPlayerLightColor.set(0, 0, 0);
+  }
+
+  effect.setVector3("uShadoLightDirection", actorLightDirection);
+  effect.setVector3("uShadoLightColor", actorLightColor);
+  effect.setVector3("uShadoAmbientColor", actorAmbientColor);
+  effect.setVector3("uShadoPlayerLightPosition", actorPlayerLightPosition);
+  effect.setVector3("uShadoPlayerLightColor", actorPlayerLightColor);
+  effect.setFloat("uShadoPlayerLightRange", playerLight?.range ?? 1);
+}
 
 export function createVATShaderMaterial(
   scene: BJS.Scene,
@@ -510,6 +639,12 @@ export function createVATShaderMaterial(
         "uShadoVisibleCount",
         "bakedVertexAnimationTextureSizeInverted",
         "bakedVertexAnimationTime",
+        "uShadoLightDirection",
+        "uShadoLightColor",
+        "uShadoAmbientColor",
+        "uShadoPlayerLightPosition",
+        "uShadoPlayerLightColor",
+        "uShadoPlayerLightRange",
         ...(useStorageWGSL
           ? []
           : ["uShadoVisibleIndexTexWidth", ...shadoIo.uniforms]),
@@ -577,6 +712,7 @@ export function createVATShaderMaterial(
     effect.setInt("uSubmeshCount", submeshCount);
     effect.setInt("uInstanceCount", (mesh as BJS.Mesh).thinInstanceCount);
     effect.setInt("uShadoVisibleCount", visibleCount);
+    bindActorLighting(scene, effect);
 
     if (vatTexture) {
       effect.setVector2(

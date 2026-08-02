@@ -5,7 +5,6 @@ import { ZoneGeometryFx } from "@/fx/zone-geometry-fx";
 import { supportedZones } from "@game/Constants/supportedZones";
 import emitter, { ChatMessage } from "@game/Events/events";
 import { FileSystem } from "@game/FileSystem/filesystem";
-import { LightManager } from "@game/Lights/light-manager";
 import type GameManager from "@game/Manager/game-manager";
 import EntityCache from "@game/Model/entity-cache";
 import { Spawns } from "@game/Net/messages";
@@ -22,11 +21,6 @@ export class ZoneManager {
     return this.regionManager;
   }
 
-  get LightManager(): LightManager {
-    return this.lightManager;
-  }
-  private lightManager: LightManager;
-
   get SkyManager(): DayNightSkyManager {
     return this.skyManager;
   }
@@ -38,7 +32,6 @@ export class ZoneManager {
   }
   private zoneContainer: BJS.TransformNode | null = null;
   private objectContainer: BJS.TransformNode | null = null;
-  private lightContainer: BJS.TransformNode | null = null;
   private entityContainerNode: BJS.TransformNode | null = null;
   public grid: Grid | null = null;
 
@@ -69,7 +62,6 @@ export class ZoneManager {
     this.parent = parent;
     this.zoneContainer = null;
     this.regionManager = new RegionManager(this.GameManager);
-    this.lightManager = new LightManager();
     this.skyManager = new DayNightSkyManager(this);
     this.zoneContainer =
       this.parent.scene?.getTransformNodeByName("ZoneContainer") ??
@@ -77,9 +69,6 @@ export class ZoneManager {
     this.objectContainer =
       this.parent.scene?.getTransformNodeByName("ZoneObjectContainer") ??
       new BABYLON.TransformNode("ZoneObjectContainer", this.parent.scene);
-    this.lightContainer =
-      this.parent.scene?.getTransformNodeByName("LightContainer") ??
-      new BABYLON.TransformNode("LightContainer", this.parent.scene);
     this.entityContainerNode =
       this.parent.scene?.getTransformNodeByName("EntityContainer") ??
       new BABYLON.TransformNode("EntityContainer", this.parent.scene);
@@ -122,12 +111,10 @@ export class ZoneManager {
     }
     this.zoneObjects?.disposeAll();
     this.regionManager.dispose();
-    this.lightManager.dispose();
     this.skyManager.dispose();
     if (destroy) {
       this.zoneContainer?.dispose();
       this.objectContainer?.dispose();
-      this.lightContainer?.dispose();
       this.entityContainerNode?.dispose();
     }
     if (this.tickObservable) {
@@ -150,7 +137,7 @@ export class ZoneManager {
     const presentedName =
       normalizedZoneName === "qeynos" || normalizedZoneName === "qeynos2"
         ? "Southern Reach"
-        : longName ?? "Unknown Reach";
+        : (longName ?? "Unknown Reach");
     const msg: ChatMessage = {
       message: `You have entered ${presentedName}`,
       chanNum: 0,
@@ -221,15 +208,18 @@ export class ZoneManager {
     this.zoneGeometryFx = ZoneGeometryFx.attach(
       this.shadoWorldScene.renderMeshes,
       this.parent.scene,
+      this.shadoWorldScene.world,
+      this.shadoWorldScene.coordinator,
     );
     this.attachStaticWorldPhysics(this.shadoWorldScene.collisionMesh);
-    const bakedWorldLighting =
-      this.shadoWorldScene.usesBakedWorldLighting;
+    // Authored local light/AO values are baked into static geometry and
+    // promoted objects. Keep the real sky rig alive so daylight still changes
+    // those PBR surfaces and actors; player lights are the other permitted
+    // dynamic-light authority.
     await this.skyManager.createSky(
       "requiem-sky",
-      this.disableWorldEnv || bakedWorldLighting,
+      this.disableWorldEnv,
       this.zoneName,
-      bakedWorldLighting,
     );
     this.parent.setLoading(false);
     await this.loadZoneMetadata(generation);
@@ -266,14 +256,6 @@ export class ZoneManager {
         console.log("Got metadata", metadata);
         console.log("Version: ", metadata.version);
         console.log("Current zone", this.CurrentZone);
-        if (!this.shadoWorldScene?.usesBakedWorldLighting) {
-          this.lightManager.loadLights(
-            this.lightContainer!,
-            this.parent.scene!,
-            metadata.lights,
-            this.zoneName,
-          );
-        }
         setTimeout(() => {
           if (generation !== this.loadGeneration) return;
           this.GameManager.scene?.textures.forEach((t) => {
@@ -287,8 +269,6 @@ export class ZoneManager {
             }
           });
         }, 2000);
-
-        // this.bakeZoneVertexColors(metadata.lights);
       } catch (e) {
         console.log("Error parsing zone metadata", e);
       }
@@ -297,10 +277,9 @@ export class ZoneManager {
     if (generation !== this.loadGeneration) return;
   }
 
-  private async instantiateWorldObjects(
-    generation: number,
-  ): Promise<void> {
-    if (!this.zoneObjects || !this.parent.scene || !this.shadoWorldScene) return;
+  private async instantiateWorldObjects(generation: number): Promise<void> {
+    if (!this.zoneObjects || !this.parent.scene || !this.shadoWorldScene)
+      return;
     try {
       this.shadoWorldObjects = await ShadoWorldObjectLayer.fromWorld(
         this.shadoWorldScene.world,
@@ -330,12 +309,16 @@ export class ZoneManager {
       return;
     }
     const delta = this.parent.scene?.getEngine().getDeltaTime() ?? 0;
-    this.zoneGeometryFx?.tick(delta, this.parent.scene?.activeCamera ?? null);
+    this.shadoWorldScene?.tick(delta);
+    // Update the Babylon sky lights before custom zone ShaderMaterials bind
+    // them so specialized grass/water stays in lockstep with the day cycle.
     this.skyManager.tick(delta);
+    this.zoneGeometryFx?.tick(
+      delta,
+      this.parent.scene?.activeCamera ?? null,
+      this.parent.player?.playerEntity?.getAbsolutePosition() ?? null,
+    );
     this.shadoWorldObjects?.tick(delta);
     this.entityPool?.process(delta);
-    if (!this.shadoWorldScene?.usesBakedWorldLighting) {
-      this.lightManager.updateLights(delta);
-    }
   }
 }

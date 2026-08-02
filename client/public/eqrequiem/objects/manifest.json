@@ -387,20 +387,58 @@
     {
       "id": "barrel3",
       "source": "/eqrequiem/objects/barrel3/final.glb.gz",
-      "sourceSha256": "9483b16b0441c16a3dd1e0f9108c00559425569a6a6ee6b253114a65b4a983a6",
-      "contentSha256": "90522b68ec9337b3b97250b234ca20db25521d05761f268eee2a91f712a41b27",
-      "compressedSha256": "0068d2ebb1283a972ad1e02d8db3129b7da613f42377588904a6bc5f31e7b1ea",
-      "bytes": 27560,
-      "compressedBytes": 24090
+      "sourceSha256": "188b1dae953f09e28ddd339f185b9714a27de0d9d54af0f5409fab641d598229",
+      "contentSha256": "10149a82e2a4a252695211479a23d9d0f77d2bc5a9c530e016ee282cdb20ce61",
+      "compressedSha256": "feff2965a980e05eb1e38d5b478f7cb9ffc0eb1a596129bac496b9a5eb73d6b8",
+      "bytes": 163168,
+      "compressedBytes": 121078,
+      "replacement": {
+        "passId": "qeynos2-object-pass-01",
+        "route": "procedural",
+        "candidate": "assets/src/world/objects/replacements/procedural/barrel3/final.glb",
+        "candidateSha256": "188b1dae953f09e28ddd339f185b9714a27de0d9d54af0f5409fab641d598229",
+        "generatedFinal": "assets/generated/object-replacements/qeynos2-object-pass-01/barrel3/final.glb",
+        "generatedFinalSha256": "728d7470cc8f110f65e102b91441c28449ea844fc0c68a1decf3806b823dc24e",
+        "validation": "assets/generated/object-replacements/qeynos2-object-pass-01/barrel3/validation.json",
+        "priorSourceSha256": "9483b16b0441c16a3dd1e0f9108c00559425569a6a6ee6b253114a65b4a983a6",
+        "priorContentSha256": "90522b68ec9337b3b97250b234ca20db25521d05761f268eee2a91f712a41b27",
+        "legacyFit": {
+          "scale": 0.975869081074554,
+          "translation": [
+            -0.033963918685913086,
+            -0.000186920166015625,
+            -0.028821706771850586
+          ]
+        }
+      }
     },
     {
       "id": "barrel4",
       "source": "/eqrequiem/objects/barrel4/final.glb.gz",
-      "sourceSha256": "345f72a5e75fd54572182f0a7e04fd23c919eee1bc807a036b42deed868a860b",
-      "contentSha256": "dc3c6addbc1ade7e5fa0b09ef673d81b995551b04d3c60f57216a59ae1305753",
-      "compressedSha256": "41e354d5d30560e7a22555d4da2116efb17f0bf31fee01c10ff308288708e897",
-      "bytes": 20112,
-      "compressedBytes": 16669
+      "sourceSha256": "11886b822b20ab35517b119eac2ce7c2f52c07d397108b7ed1563fe58af05f61",
+      "contentSha256": "c24fb963b1e3728cc894194182489d1d9c6b03c2f8ac68aac63c9d39fba9f80e",
+      "compressedSha256": "5da26c6c5be956ca70ad9be385fc9419940ce4bc8ca68f2a6d9a2647c2b8b378",
+      "bytes": 2003760,
+      "compressedBytes": 1984254,
+      "replacement": {
+        "passId": "qeynos2-object-pass-02-01",
+        "route": "stablegen",
+        "candidate": "assets/src/world/objects/replacements/stablegen/barrel4/final.glb",
+        "candidateSha256": "11886b822b20ab35517b119eac2ce7c2f52c07d397108b7ed1563fe58af05f61",
+        "generatedFinal": "assets/generated/object-replacements/qeynos2-object-pass-02-01/barrel4/final.glb",
+        "generatedFinalSha256": "d82f0273243072fcce72f5d00de4627763af99c3fd2e9f09345f59dea034e009",
+        "validation": "assets/generated/object-replacements/qeynos2-object-pass-02-01/barrel4/validation.json",
+        "priorSourceSha256": "345f72a5e75fd54572182f0a7e04fd23c919eee1bc807a036b42deed868a860b",
+        "priorContentSha256": "dc3c6addbc1ade7e5fa0b09ef673d81b995551b04d3c60f57216a59ae1305753",
+        "legacyFit": {
+          "scale": 0.9790259513696525,
+          "translation": [
+            -0.033963918685913086,
+            -0.000186920166015625,
+            -0.028821706771850586
+          ]
+        }
+      }
     },
     {
       "id": "barrelonside",
@@ -1224,11 +1262,30 @@
     {
       "id": "cart",
       "source": "/eqrequiem/objects/cart/final.glb.gz",
-      "sourceSha256": "9d54d8e1bc889681ddedb4a0e0f07ce2453fef7464550dc60fe7586a79811d04",
-      "contentSha256": "f0d8e90c079f14c17bd99f9e189c1d0e2d722b67199723bbc0a90f604432c2fa",
-      "compressedSha256": "6ac3cda3bb830e54ff373609b7d3622e10cd886b192ca496a2fcf266b1c668c0",
-      "bytes": 44776,
-      "compressedBytes": 34485
+      "sourceSha256": "8643488da1dddbb7a3f2a02839bbe6afbb6ce1de95a09166be20809d0f39709a",
+      "contentSha256": "0063c1ddffe9c96f4da5cb90a8871dd22cb3c15bd1868d086ebd0495ef182901",
+      "compressedSha256": "15265e071d2096038d97b4fc31cb5fce887c6040f8ec6acd758886263ebb9a53",
+      "bytes": 2041448,
+      "compressedBytes": 2011181,
+      "replacement": {
+        "passId": "qeynos2-object-pass-02-01",
+        "route": "stablegen",
+        "candidate": "assets/src/world/objects/replacements/stablegen/cart/final.glb",
+        "candidateSha256": "8643488da1dddbb7a3f2a02839bbe6afbb6ce1de95a09166be20809d0f39709a",
+        "generatedFinal": "assets/generated/object-replacements/qeynos2-object-pass-02-01/cart/final.glb",
+        "generatedFinalSha256": "17a0bcfa56e2ab10209c653ce261865355a5e015877e1cafd68d620380809f80",
+        "validation": "assets/generated/object-replacements/qeynos2-object-pass-02-01/cart/validation.json",
+        "priorSourceSha256": "9d54d8e1bc889681ddedb4a0e0f07ce2453fef7464550dc60fe7586a79811d04",
+        "priorContentSha256": "f0d8e90c079f14c17bd99f9e189c1d0e2d722b67199723bbc0a90f604432c2fa",
+        "legacyFit": {
+          "scale": 6.93900900773424,
+          "translation": [
+            -2.471016765905227,
+            2.802081952731502,
+            0.13963775103511855
+          ]
+        }
+      }
     },
     {
       "id": "caulcol1",
@@ -1485,29 +1542,86 @@
     {
       "id": "chair",
       "source": "/eqrequiem/objects/chair/final.glb.gz",
-      "sourceSha256": "b815e9ec78f9cb29f55db8cbc5125ce55c76e2f823f3a326652c8fcf5af3208d",
-      "contentSha256": "acaee9f4e8ac64e374d9d2dcc2246bc44c2b38941893d4d6e372dab8eb2dcaca",
-      "compressedSha256": "f0353652e99d0248b04b23ced048db4d43db1d83b29fce722ea53951f0fdb13d",
-      "bytes": 28712,
-      "compressedBytes": 22704
+      "sourceSha256": "8992e2ba4861d7fee13bdebabe86f157dc8d8eddd06234f3693465cd6e7927e6",
+      "contentSha256": "1f881e10a86b86292353e46ce1484acc9b563519ef272d17a2a548fa748f702f",
+      "compressedSha256": "c0e7cc67728e2b9486de03b56e777b88ebc6de329f3ba7ca3db3a84ff8cfb91b",
+      "bytes": 1703560,
+      "compressedBytes": 1672070,
+      "replacement": {
+        "passId": "qeynos2-object-pass-01",
+        "route": "polyhaven",
+        "candidate": "assets/src/world/objects/replacements/polyhaven/chair/final.glb",
+        "candidateSha256": "8992e2ba4861d7fee13bdebabe86f157dc8d8eddd06234f3693465cd6e7927e6",
+        "generatedFinal": "assets/generated/object-replacements/qeynos2-object-pass-01/chair/final.glb",
+        "generatedFinalSha256": "f200708eaacd2f82e33059075f4e3c228e33bf8c64f3d978346a7f9b6d6f2c06",
+        "validation": "assets/generated/object-replacements/qeynos2-object-pass-01/chair/validation.json",
+        "priorSourceSha256": "b815e9ec78f9cb29f55db8cbc5125ce55c76e2f823f3a326652c8fcf5af3208d",
+        "priorContentSha256": "acaee9f4e8ac64e374d9d2dcc2246bc44c2b38941893d4d6e372dab8eb2dcaca",
+        "legacyFit": {
+          "scale": 3.106271224383742,
+          "translation": [
+            0.19221884624629013,
+            -0.028568601347521098,
+            -0.05244260439759463
+          ]
+        }
+      }
     },
     {
       "id": "chair2",
       "source": "/eqrequiem/objects/chair2/final.glb.gz",
-      "sourceSha256": "a7114802b212bb4de57d089c2cd0c9bf7ad4f9a754fcfe434312c9415b15cca1",
-      "contentSha256": "6d24724f98aa7a3901dfd86d58c0512ac6a4492e0aa98cb2c9a9519e63de5e9f",
-      "compressedSha256": "5ea69c288c7f576cceb40a110de3a5fa742f3fd43c0366264f531104af7348f8",
-      "bytes": 13392,
-      "compressedBytes": 9735
+      "sourceSha256": "a2e95d8be00618d3dd7f07eeab81de82073ce9368eda5e254032cb29df122614",
+      "contentSha256": "d80b2690a05ae6ace34f3b72ebd36690f8bdf44b5f5fc387da85ebd757c4fd22",
+      "compressedSha256": "6e1e66c8db0781e64205d76e7f9a6a3ed5ee8d01f7f29181688ce171f11ef178",
+      "bytes": 1682736,
+      "compressedBytes": 1613279,
+      "replacement": {
+        "passId": "qeynos2-object-pass-02-01",
+        "route": "stablegen",
+        "candidate": "assets/src/world/objects/replacements/stablegen/chair2/final.glb",
+        "candidateSha256": "a2e95d8be00618d3dd7f07eeab81de82073ce9368eda5e254032cb29df122614",
+        "generatedFinal": "assets/generated/object-replacements/qeynos2-object-pass-02-01/chair2/final.glb",
+        "generatedFinalSha256": "a0c6adf85479ad29e32365e603a32ce36751237ef945e676af47d3d667fe4472",
+        "validation": "assets/generated/object-replacements/qeynos2-object-pass-02-01/chair2/validation.json",
+        "priorSourceSha256": "a7114802b212bb4de57d089c2cd0c9bf7ad4f9a754fcfe434312c9415b15cca1",
+        "priorContentSha256": "6d24724f98aa7a3901dfd86d58c0512ac6a4492e0aa98cb2c9a9519e63de5e9f",
+        "legacyFit": {
+          "scale": 0.9856996097203069,
+          "translation": [
+            0.4760807156562805,
+            -0.09956622123718262,
+            -0.0008714786588913036
+          ]
+        }
+      }
     },
     {
       "id": "chair2d",
       "source": "/eqrequiem/objects/chair2d/final.glb.gz",
-      "sourceSha256": "ab95c9e445a79279919364f727442f37b59f38ed0e1db28eb5b430d00feed37b",
-      "contentSha256": "159536cb8f881eda0618911e259eb5d31da16cf89350eb3ad5fd169cb83fecfc",
-      "compressedSha256": "97abca0f1877651d8bc4760c08df9d6e7c63099be54c5a77ef28267a9cb9d2eb",
-      "bytes": 17324,
-      "compressedBytes": 13700
+      "sourceSha256": "033ee316f96f8715522e69031482db58a3c544d996b73aa391d8462ad46f8601",
+      "contentSha256": "6556616b0514bba6c5436ddd444f2f1b4fa7e99fea9beecf59a6ebc839908b47",
+      "compressedSha256": "9dbb26fdfb4b70ff8940007e83f7a832b800d555795360cd5b12c28dd5786618",
+      "bytes": 1853164,
+      "compressedBytes": 1781361,
+      "replacement": {
+        "passId": "qeynos2-object-pass-02-01",
+        "route": "stablegen",
+        "candidate": "assets/src/world/objects/replacements/stablegen/chair2d/final.glb",
+        "candidateSha256": "033ee316f96f8715522e69031482db58a3c544d996b73aa391d8462ad46f8601",
+        "generatedFinal": "assets/generated/object-replacements/qeynos2-object-pass-02-01/chair2d/final.glb",
+        "generatedFinalSha256": "3ca49f88756432d88595129faba6a5dac38506f9be1df9b6158336a3faf54f80",
+        "validation": "assets/generated/object-replacements/qeynos2-object-pass-02-01/chair2d/validation.json",
+        "priorSourceSha256": "ab95c9e445a79279919364f727442f37b59f38ed0e1db28eb5b430d00feed37b",
+        "priorContentSha256": "159536cb8f881eda0618911e259eb5d31da16cf89350eb3ad5fd169cb83fecfc",
+        "legacyFit": {
+          "scale": 1.0000955722557796,
+          "translation": [
+            0.4760807156562805,
+            -0.09956622123718262,
+            -0.0008714795169575367
+          ]
+        }
+      }
     },
     {
       "id": "chair3",
@@ -6885,11 +6999,30 @@
     {
       "id": "recttable",
       "source": "/eqrequiem/objects/recttable/final.glb.gz",
-      "sourceSha256": "635e1674fee281a18e8d74eb1247c6f5d71ba80a8c037693ea30179a9e883c2f",
-      "contentSha256": "69935e94d11cc6926f2a18f0d278466a3c68548fb12565da85417cf3d9f7b39c",
-      "compressedSha256": "8b3312e0b16fa3c9914d568b212f75c940cca2c984190f13d824ca946b33a3dd",
-      "bytes": 18940,
-      "compressedBytes": 16172
+      "sourceSha256": "3ecbcbed218e931b77a9c8a731416b7ea499b519a9e472ef2199550fb6310cd3",
+      "contentSha256": "feed3ad54fb2ca9e1400828b46a0a8c71c7fe0742cb06f435e3308161fe9341b",
+      "compressedSha256": "b9814ebb3ecde90d394c591b813d592ff611af0faf433866f994644481aafedd",
+      "bytes": 1779476,
+      "compressedBytes": 1762748,
+      "replacement": {
+        "passId": "qeynos2-object-pass-01",
+        "route": "polyhaven",
+        "candidate": "assets/src/world/objects/replacements/polyhaven/recttable/final.glb",
+        "candidateSha256": "3ecbcbed218e931b77a9c8a731416b7ea499b519a9e472ef2199550fb6310cd3",
+        "generatedFinal": "assets/generated/object-replacements/qeynos2-object-pass-01/recttable/final.glb",
+        "generatedFinalSha256": "002d6869ed5a2aed7dd3f909fdc0caecb32ca137df74ebc2b3cae65f30546c00",
+        "validation": "assets/generated/object-replacements/qeynos2-object-pass-01/recttable/validation.json",
+        "priorSourceSha256": "635e1674fee281a18e8d74eb1247c6f5d71ba80a8c037693ea30179a9e883c2f",
+        "priorContentSha256": "69935e94d11cc6926f2a18f0d278466a3c68548fb12565da85417cf3d9f7b39c",
+        "legacyFit": {
+          "scale": 4.096188074284931,
+          "translation": [
+            0.08211591215163633,
+            -0.04083101254712416,
+            -0.01769697609713902
+          ]
+        }
+      }
     },
     {
       "id": "redwood",
@@ -7911,11 +8044,30 @@
     {
       "id": "tree1",
       "source": "/eqrequiem/objects/tree1/final.glb.gz",
-      "sourceSha256": "9b5eb25d8a3c651fc1dd40cc37fa9f6044ed310c1b9f080895c690d08c8b6d83",
-      "contentSha256": "6f4ec3b21a80d1e29ea985d4177a8771c5230e9596850e248cc0d317a0639718",
-      "compressedSha256": "3bbe56fcc3a60c2097a5ff4bdf95a29f437ef0c1affb34e4029db6165914afcf",
-      "bytes": 27784,
-      "compressedBytes": 25122
+      "sourceSha256": "281eb1d6ee0cc7892683b2b18c0532e8294e4946e75bd47f18630a46e12d7078",
+      "contentSha256": "a73730f6d22d3e4a83b8141c6fe52f671cd9445ce90650e33d09b6d4ae54d270",
+      "compressedSha256": "3db0fa6b076826527e93129a963ce42b8e7b2dcbd9fbcc94581037f56dcd3053",
+      "bytes": 202916,
+      "compressedBytes": 117043,
+      "replacement": {
+        "passId": "qeynos2-object-pass-01",
+        "route": "procedural",
+        "candidate": "assets/src/world/objects/replacements/procedural/tree1/final.glb",
+        "candidateSha256": "281eb1d6ee0cc7892683b2b18c0532e8294e4946e75bd47f18630a46e12d7078",
+        "generatedFinal": "assets/generated/object-replacements/qeynos2-object-pass-01/tree1/final.glb",
+        "generatedFinalSha256": "bb50eaa5570992423d9f645df996f5789db398c07d9c88e187bf6de7236a2bc6",
+        "validation": "assets/generated/object-replacements/qeynos2-object-pass-01/tree1/validation.json",
+        "priorSourceSha256": "9b5eb25d8a3c651fc1dd40cc37fa9f6044ed310c1b9f080895c690d08c8b6d83",
+        "priorContentSha256": "6f4ec3b21a80d1e29ea985d4177a8771c5230e9596850e248cc0d317a0639718",
+        "legacyFit": {
+          "scale": 0.988734530687635,
+          "translation": [
+            1.4106532331766413,
+            -0.5306048393249512,
+            1.2728607175556241
+          ]
+        }
+      }
     },
     {
       "id": "tree10",
@@ -8627,6 +8779,32 @@
       "compressedSha256": "84375310d23a078bcb505fe4b308599702db001b15d7343a08a8086e3bdf074e",
       "bytes": 21724,
       "compressedBytes": 20747
+    }
+  ],
+  "replacementPasses": [
+    {
+      "passId": "qeynos2-object-pass-01",
+      "manifest": "assets/src/world/objects/replacements/qeynos2-pass-01.json",
+      "manifestSha256": "72aca922c136abbdf17f663f551c56fe603f7177717193671296bcd6500a5935",
+      "promoted": [
+        "barrel3",
+        "chair",
+        "recttable",
+        "tree1"
+      ],
+      "backup": "assets/generated/object-replacements/qeynos2-object-pass-01/backup"
+    },
+    {
+      "passId": "qeynos2-object-pass-02-01",
+      "manifest": "assets/src/world/objects/replacements/qeynos2-pass-02-01.json",
+      "manifestSha256": "9e93f64a5005a43304843bffa90219dda5c56e9e797f7e9cb1ef244fd169aeca",
+      "promoted": [
+        "barrel4",
+        "cart",
+        "chair2",
+        "chair2d"
+      ],
+      "backup": "assets/generated/object-replacements/qeynos2-object-pass-02-01/backup"
     }
   ]
 }

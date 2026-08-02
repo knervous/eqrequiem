@@ -10,6 +10,8 @@ import bpy
 from mathutils import Vector
 from mathutils.bvhtree import BVHTree
 
+LOCAL_LIGHT_BAKE_MULTIPLIER = 2.0
+
 
 def arguments():
     parser = argparse.ArgumentParser()
@@ -17,6 +19,7 @@ def arguments():
     parser.add_argument("--metadata", required=True)
     parser.add_argument("--output", required=True)
     parser.add_argument("--ao-rays", type=int, default=8)
+    parser.add_argument("--audit-only", action="store_true")
     separator = sys.argv.index("--") if "--" in sys.argv else len(sys.argv)
     return parser.parse_args(sys.argv[separator + 1 :])
 
@@ -35,6 +38,13 @@ def read_scene(path):
 def clear_scene():
     bpy.ops.object.select_all(action="SELECT")
     bpy.ops.object.delete(use_global=False)
+    # MCP bakes start from the open authoring file rather than Blender's empty
+    # startup scene. Remove the now-unlinked mesh datablocks as well so glTF
+    # mesh identities are imported verbatim instead of receiving `.001`
+    # suffixes from the authoring datablocks we just unlinked.
+    for mesh in list(bpy.data.meshes):
+        if mesh.users == 0:
+            bpy.data.meshes.remove(mesh)
 
 
 def build_bvh(objects):
@@ -94,6 +104,52 @@ def spatial_lights(lights, cell_size=40.0):
     return cells, cell_size
 
 
+def babylon_to_blender(position):
+    """Canonical package/metadata Y-up coordinates -> Blender Z-up."""
+    return Vector((float(position["x"]), -float(position["z"]), float(position["y"])))
+
+
+def normalized_lights(lights):
+    result = []
+    for source in lights:
+        position = babylon_to_blender(source)
+        light = dict(source)
+        light["x"], light["y"], light["z"] = position
+        result.append(light)
+    return result
+
+
+def percentile(values, fraction):
+    if not values:
+        return None
+    ordered = sorted(values)
+    index = min(len(ordered) - 1, max(0, round((len(ordered) - 1) * fraction)))
+    return ordered[index]
+
+
+def light_alignment_summary(bvh, source_lights, mirror_x=False):
+    distances = []
+    within_radius = 0
+    for source in source_lights:
+        position = babylon_to_blender(source)
+        if mirror_x:
+            position.x = -position.x
+        nearest = bvh.find_nearest(position)
+        if nearest is None or nearest[3] is None:
+            continue
+        distance = float(nearest[3])
+        distances.append(distance)
+        if distance < max(1.0, float(source.get("radius", 30.0))):
+            within_radius += 1
+    return {
+        "sampleCount": len(distances),
+        "minimumSurfaceDistance": min(distances) if distances else None,
+        "medianSurfaceDistance": percentile(distances, 0.5),
+        "p90SurfaceDistance": percentile(distances, 0.9),
+        "withinAuthoredRadius": within_radius,
+    }
+
+
 def nearby_lights(cells, cell_size, position):
     center = (
         math.floor(position.x / cell_size),
@@ -120,6 +176,7 @@ def bake_vertex(
     samples,
     light_cells,
     light_cell_size,
+    local_light_stats=None,
 ):
     origin = position + normal * 0.06
     visible = 0.0
@@ -142,11 +199,6 @@ def bake_vertex(
         )
     )
 
-    to_sun = Vector((0.36, 0.82, 0.44)).normalized()
-    sun_facing = max(0.0, normal.dot(to_sun))
-    if sun_facing > 0.01 and unobstructed(bvh, origin, to_sun, 1500.0):
-        color += Vector((0.58, 0.52, 0.42)) * sun_facing
-
     contributions = []
     for light in nearby_lights(light_cells, light_cell_size, position):
         light_position = Vector((light["x"], light["y"], light["z"]))
@@ -163,13 +215,50 @@ def bake_vertex(
         strength = attenuation * facing
         contributions.append((strength, direction, distance, light))
     contributions.sort(key=lambda item: item[0], reverse=True)
+    local_energy = 0.0
+    visible_local_lights = 0
     for strength, direction, distance, light in contributions[:4]:
         if not unobstructed(bvh, origin, direction, max(0.0, distance - 0.12)):
             continue
         light_color = Vector((light["r"], light["g"], light["b"]))
-        color += light_color * (strength * 2.6)
+        contribution = light_color * (
+            strength * 2.6 * LOCAL_LIGHT_BAKE_MULTIPLIER
+        )
+        color += contribution
+        local_energy += max(contribution)
+        visible_local_lights += 1
+
+    if local_light_stats is not None:
+        local_light_stats["sampleCount"] += 1
+        local_light_stats["sumContribution"] += local_energy
+        local_light_stats["maximumContribution"] = max(
+            local_light_stats["maximumContribution"], local_energy
+        )
+        if visible_local_lights:
+            local_light_stats["litSampleCount"] += 1
 
     return [min(1.0, max(0.1, component)) for component in color] + [1.0]
+
+
+def local_light_stats():
+    return {
+        "sampleCount": 0,
+        "litSampleCount": 0,
+        "sumContribution": 0.0,
+        "maximumContribution": 0.0,
+    }
+
+
+def finalized_local_light_stats(stats):
+    samples = stats["sampleCount"]
+    lit_samples = stats["litSampleCount"]
+    return {
+        "sampleCount": samples,
+        "litSampleCount": lit_samples,
+        "litFraction": lit_samples / samples if samples else 0.0,
+        "meanContribution": stats["sumContribution"] / samples if samples else 0.0,
+        "maximumContribution": stats["maximumContribution"],
+    }
 
 
 def main(options):
@@ -182,11 +271,22 @@ def main(options):
     ]
     with open(options.metadata, "r", encoding="utf-8") as source:
         metadata = json.load(source)
-    lights = metadata.get("lights", [])
+    source_lights = metadata.get("lights", [])
+    lights = normalized_lights(source_lights)
     bvh = build_bvh(objects)
+    coordinate_audit = {
+        "mapping": "babylon-y-up_to_blender-z-up:x,-z,y",
+        "canonical": light_alignment_summary(bvh, source_lights),
+        "mirroredX": light_alignment_summary(bvh, source_lights, mirror_x=True),
+    }
+    print("REQ_LIGHT_COORDINATE_AUDIT", json.dumps(coordinate_audit), flush=True)
+    if options.audit_only:
+        return
     samples = hemisphere_samples(options.ao_rays)
     light_cells, light_cell_size = spatial_lights(lights)
     baked = {}
+    mesh_local_light_stats = local_light_stats()
+    object_local_light_stats = local_light_stats()
     minimum = [1.0, 1.0, 1.0]
     maximum = [0.0, 0.0, 0.0]
     for object_index, obj in enumerate(objects):
@@ -206,6 +306,7 @@ def main(options):
                     samples,
                     light_cells,
                     light_cell_size,
+                    mesh_local_light_stats,
                 )
                 colors.extend(color)
                 for axis in range(3):
@@ -220,16 +321,43 @@ def main(options):
                 obj.data.name,
                 flush=True,
             )
+    object_irradiance = {}
+    for model, transforms in metadata.get("objects", {}).items():
+        for legacy_index, transform in enumerate(transforms):
+            position = babylon_to_blender(transform)
+            scale = max(0.01, abs(float(transform.get("scale", 1.0))))
+            # Sample above the authored pivot to avoid treating a ground-level
+            # placement as being inside its supporting surface.
+            position += Vector((0.0, 0.0, max(0.5, scale)))
+            object_irradiance[f"{model}-{legacy_index}"] = bake_vertex(
+                bvh,
+                position,
+                Vector((0.0, 0.0, 1.0)),
+                samples,
+                light_cells,
+                light_cell_size,
+                object_local_light_stats,
+            )
     document = {
         "schema": "eltania.zone-vertex-lighting",
-        "version": 1,
+        "version": 2,
         "scene": os.path.basename(options.scene),
         "meshCount": len(baked),
-        "lightCount": len(lights),
+        "lightCount": len(source_lights),
+        "localLightMultiplier": LOCAL_LIGHT_BAKE_MULTIPLIER,
+        "bakedComponents": ["ambient-occlusion", "metadata-local-lights"],
+        "excludedDynamicComponents": ["sun", "sky", "player-light"],
+        "objectCount": len(object_irradiance),
         "aoRays": options.ao_rays,
         "minimumRgb": minimum,
         "maximumRgb": maximum,
+        "coordinateAudit": coordinate_audit,
+        "localLightDiagnostics": {
+            "meshes": finalized_local_light_stats(mesh_local_light_stats),
+            "objects": finalized_local_light_stats(object_local_light_stats),
+        },
         "meshes": baked,
+        "objects": object_irradiance,
     }
     with open(options.output, "w", encoding="utf-8") as output:
         json.dump(document, output, separators=(",", ":"))

@@ -8,6 +8,7 @@ import { TableBrowserPage } from '@libra/pages/table-browser-page'
 import { ValidationPage } from '@libra/pages/validation-page'
 import { ShardsPage } from '@libra/pages/shards-page'
 import { ZonesPage } from '@libra/pages/zones-page'
+import { ZoneWorkspacePage } from '@libra/pages/zone-workspace-page'
 import { NpcsPage } from '@libra/pages/npcs-page'
 
 const ModelViewerPage = lazy(async () => {
@@ -22,6 +23,7 @@ function App() {
         <Route element={<DashboardPage />} index />
         <Route element={<TableBrowserPage />} path='editor' />
         <Route element={<ZonesPage />} path='zones' />
+        <Route element={<ZoneWorkspacePage />} path='zones/:zoneId' />
         <Route element={<NpcsPage />} path='npcs' />
         <Route element={<Suspense fallback={<p className='text-sm text-muted-foreground'>Loading model tools...</p>}><ModelViewerPage /></Suspense>} path='models' />
         <Route element={<ValidationPage />} path='validation' />

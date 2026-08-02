@@ -1,7 +1,13 @@
 {
-  "version": 2,
+  "version": 3,
   "asset": "requiem-sky.glb",
   "runtimeScale": 7000,
+  "textures": {
+    "cloudField": "textures/cloud-field.webp",
+    "starField": "textures/star-field.webp",
+    "sunPhotosphere": "textures/sun-photosphere.webp",
+    "moonSurface": "textures/moon-surface.webp"
+  },
   "layers": {
     "root": "Sky.Root",
     "visualDome": "Sky.VisualDome",
@@ -76,9 +82,10 @@
   "clouds": {
     "low": {
       "scale": 5.8,
-      "coverage": 0.61,
+      "textureScale": 1,
+      "coverage": 0.43,
       "rate": [0.0000035, 0.000001],
-      "softness": 0.16,
+      "softness": 0.18,
       "detail": 0.28,
       "warp": 0.34,
       "stretch": 1,
@@ -86,9 +93,10 @@
     },
     "high": {
       "scale": 8.4,
-      "coverage": 0.66,
+      "textureScale": 2,
+      "coverage": 0.46,
       "rate": [-0.0000012, 0.0000022],
-      "softness": 0.24,
+      "softness": 0.22,
       "detail": 0.44,
       "warp": 0.16,
       "stretch": 2.6,

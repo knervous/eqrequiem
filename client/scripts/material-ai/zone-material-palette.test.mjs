@@ -11,6 +11,7 @@ import {
   imageIndicesNamed,
   parseGlb,
   serializeGlb,
+  surfaceContractSignature,
   uvSignature,
 } from "./glb-material-palette.mjs";
 import {
@@ -18,7 +19,71 @@ import {
   enforcePeriodicEdges,
   seamMetrics,
 } from "./zone-material-pipeline.mjs";
-import { resizeRuntimeTexture } from "./zone-material-palette.mjs";
+import {
+  centeredBannerCompositionMetrics,
+  isRuntimePaletteEntry,
+  periodicSeamMetrics,
+  resizeRuntimeDataTexture,
+  resizeRuntimeTexture,
+  runtimeMaterialEntry,
+} from "./zone-material-palette.mjs";
+
+test("gate atlas composition keeps its colored banner centered on masonry", async () => {
+  const size = 64;
+  const pixels = Buffer.alloc(size * size * 3);
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const banner = x >= size * 0.4 && x < size * 0.6;
+      const color = banner ? [153, 104, 27] : [86, 96, 102];
+      pixels.set(color, (y * size + x) * 3);
+    }
+  }
+  const texture = await sharp(pixels, {
+    raw: { width: size, height: size, channels: 3 },
+  })
+    .webp()
+    .toBuffer();
+  const metrics = await centeredBannerCompositionMetrics(texture);
+  assert.ok(metrics.centerSaturation >= 0.3, JSON.stringify(metrics));
+  assert.ok(metrics.sideSaturation <= 0.24, JSON.stringify(metrics));
+  assert.ok(metrics.saturationDelta >= 0.15, JSON.stringify(metrics));
+});
+
+test("runtime material promotion requires explicit production approval", () => {
+  assert.equal(isRuntimePaletteEntry({ status: "production-candidate" }), true);
+  assert.equal(
+    isRuntimePaletteEntry({ status: "queued-family-migration" }),
+    false,
+  );
+  assert.equal(
+    isRuntimePaletteEntry({ status: "production-candidate", enabled: false }),
+    false,
+  );
+  assert.equal(
+    isRuntimePaletteEntry({
+      status: "production-candidate",
+      authoringOnly: true,
+    }),
+    false,
+  );
+});
+
+test("runtime material pools resolve to an approved same-family material", () => {
+  const selected = runtimeMaterialEntry(
+    {
+      families: { facade: { runtimeMaterialPool: ["clean-facade"] } },
+      materials: [
+        {
+          id: "clean-facade",
+          family: "facade",
+          status: "production-candidate",
+        },
+      ],
+    },
+    { id: "shop-slot", family: "facade" },
+  );
+  assert.equal(selected.id, "clean-facade");
+});
 
 test("accessor decoding respects interleaved strides and accessor offsets", () => {
   const binary = Buffer.alloc(2 * 20);
@@ -126,20 +191,12 @@ test("baked vertex colors append without changing existing UV values", async () 
   const after = appendVertexColorOverrides(
     before,
     new Map([
-      [
-        undefined,
-        [
-          0.2, 0.3, 0.4, 1,
-          0.5, 0.6, 0.7, 1,
-          0.8, 0.9, 1, 1,
-        ],
-      ],
+      [undefined, [0.2, 0.3, 0.4, 1, 0.5, 0.6, 0.7, 1, 0.8, 0.9, 1, 1]],
     ]),
   );
   assert.equal(after.applied, 1);
   assert.deepEqual(accessorValues(after, 0), expectedUvs);
-  const colorAccessor =
-    after.json.meshes[0].primitives[0].attributes.COLOR_0;
+  const colorAccessor = after.json.meshes[0].primitives[0].attributes.COLOR_0;
   const colors = accessorValues(after, colorAccessor);
   const expectedColors = [
     [0.2, 0.3, 0.4, 1],
@@ -158,6 +215,42 @@ test("baked vertex colors append without changing existing UV values", async () 
     after.json.asset.extras.eltaniaBakedLighting.dynamicWorldLights,
     false,
   );
+  const replacement = [0.9, 0.8, 0.7, 1, 0.6, 0.5, 0.4, 1, 0.3, 0.2, 0.1, 1];
+  const reapplied = appendVertexColorOverrides(
+    after,
+    new Map([[undefined, replacement]]),
+  );
+  assert.equal(reapplied.binary.byteLength, after.binary.byteLength);
+  const reappliedAccessor =
+    reapplied.json.meshes[0].primitives[0].attributes.COLOR_0;
+  const firstReappliedColor = accessorValues(reapplied, reappliedAccessor)[0];
+  firstReappliedColor.forEach((value, index) =>
+    assert.ok(Math.abs(value - replacement[index]) < 1e-6),
+  );
+});
+
+test("baked vertex colors split across every mesh primitive", async () => {
+  const before = parseGlb(await fixtureGlb());
+  before.json.meshes[0].name = "multi-primitive";
+  before.json.meshes[0].primitives.push(
+    structuredClone(before.json.meshes[0].primitives[0]),
+  );
+  const colors = [
+    0.1, 0.2, 0.3, 1, 0.2, 0.3, 0.4, 1, 0.3, 0.4, 0.5, 1, 0.6, 0.7, 0.8, 1, 0.7,
+    0.8, 0.9, 1, 0.8, 0.9, 1, 1,
+  ];
+  const after = appendVertexColorOverrides(
+    before,
+    new Map([["multi-primitive", colors]]),
+  );
+  assert.equal(after.applied, 1);
+  const [first, second] = after.json.meshes[0].primitives.map((primitive) =>
+    accessorValues(after, primitive.attributes.COLOR_0),
+  );
+  assert.ok(Math.abs(first[0][0] - 0.1) < 1e-6);
+  assert.ok(Math.abs(first[2][2] - 0.5) < 1e-6);
+  assert.ok(Math.abs(second[0][0] - 0.6) < 1e-6);
+  assert.ok(Math.abs(second[2][2] - 1) < 1e-6);
 });
 
 test("image overrides retain all geometry and UV bytes", async () => {
@@ -181,6 +274,10 @@ test("image overrides retain all geometry and UV bytes", async () => {
   ]);
   assert.equal(geometrySignature(after), geometrySignature(before));
   assert.equal(uvSignature(after), uvSignature(before));
+  assert.equal(
+    surfaceContractSignature(after),
+    surfaceContractSignature(before),
+  );
   assert.deepEqual(embeddedImage(after, 0), replacement);
   assert.doesNotThrow(() => parseGlb(serializeGlb(after)));
 });
@@ -244,6 +341,76 @@ test("runtime textures are reduced with exact periodic edges", async () => {
   assert.equal(metrics.edgeRmseY, 0);
 });
 
+test("runtime data maps are reduced losslessly with exact periodic edges", async () => {
+  const size = 32;
+  const pixels = Buffer.alloc(size * size * 3);
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const offset = (y * size + x) * 3;
+      pixels[offset] = 110 + ((x * 7 + y * 3) % 40);
+      pixels[offset + 1] = 180 + ((x * 5 + y * 11) % 60);
+      pixels[offset + 2] = 128;
+    }
+  }
+  const source = await enforcePeriodicEdges(
+    await sharp(pixels, {
+      raw: { width: size, height: size, channels: 3 },
+    })
+      .webp({ lossless: true })
+      .toBuffer(),
+    { size, repairBand: 4 },
+  );
+  const output = await resizeRuntimeDataTexture(source, 16);
+  const metadata = await sharp(output).metadata();
+  assert.equal(metadata.width, 16);
+  assert.equal(metadata.height, 16);
+  const metrics = await seamMetrics(output);
+  assert.equal(metrics.edgeRmseX, 0);
+  assert.equal(metrics.edgeRmseY, 0);
+  const bakedMetrics = await periodicSeamMetrics(output);
+  assert.deepEqual(bakedMetrics, metrics);
+});
+
+test("bounded tangent normals are renormalized and remain C1 periodic", async () => {
+  const size = 32;
+  const pixels = Buffer.alloc(size * size * 3);
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const offset = (y * size + x) * 3;
+      pixels[offset] = 92 + ((x * 11 + y * 3) % 72);
+      pixels[offset + 1] = 96 + ((x * 5 + y * 13) % 64);
+      pixels[offset + 2] = 205 + ((x + y) % 40);
+    }
+  }
+  const output = await resizeRuntimeDataTexture(
+    await sharp(pixels, {
+      raw: { width: size, height: size, channels: 3 },
+    })
+      .webp({ lossless: true })
+      .toBuffer(),
+    16,
+    { tangentNormal: true },
+  );
+  const metrics = await periodicSeamMetrics(output);
+  assert.equal(metrics.edgeRmseX, 0);
+  assert.equal(metrics.edgeRmseY, 0);
+  assert.ok(metrics.gradientRmseX <= 0.01, JSON.stringify(metrics));
+  assert.ok(metrics.gradientRmseY <= 0.01, JSON.stringify(metrics));
+  const { data, info } = await sharp(output)
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  let meanLength = 0;
+  for (let offset = 0; offset < data.length; offset += info.channels) {
+    meanLength += Math.hypot(
+      data[offset] / 127.5 - 1,
+      data[offset + 1] / 127.5 - 1,
+      data[offset + 2] / 127.5 - 1,
+    );
+  }
+  meanLength /= data.length / info.channels;
+  assert.ok(meanLength >= 0.98, `mean normal length ${meanLength}`);
+});
+
 test("derived PBR channels remain periodic and bind without changing geometry", async () => {
   const before = parseGlb(await fixtureGlb());
   const baseColor = await sharp({
@@ -277,7 +444,7 @@ test("derived PBR channels remain periodic and bind without changing geometry", 
   assert.equal(geometrySignature(after), geometrySignature(before));
   assert.equal(uvSignature(after), uvSignature(before));
   assert.equal(after.json.materials[0].normalTexture.scale, 0.7);
-  assert.equal(after.json.materials[0].pbrMetallicRoughness.metallicFactor, 0);
+  assert.equal(after.json.materials[0].pbrMetallicRoughness.metallicFactor, 1);
   assert.equal(imageIndicesNamed(after, "palette:grass1:normal").length, 1);
   for (const map of [channels.normal, channels.metallicRoughness]) {
     const metrics = await seamMetrics(map);
@@ -285,6 +452,29 @@ test("derived PBR channels remain periodic and bind without changing geometry", 
     assert.equal(metrics.edgeRmseY, 0);
   }
   assert.doesNotThrow(() => parseGlb(serializeGlb(after)));
+});
+
+test("derived PBR channels preserve rectangular object-texture dimensions", async () => {
+  const baseColor = await sharp({
+    create: {
+      width: 16,
+      height: 8,
+      channels: 3,
+      background: "#76512f",
+    },
+  })
+    .webp({ lossless: true })
+    .toBuffer();
+  const channels = await derivePbrChannels(baseColor);
+  const [normal, metallicRoughness] = await Promise.all([
+    sharp(channels.normal).metadata(),
+    sharp(channels.metallicRoughness).metadata(),
+  ]);
+  assert.deepEqual([normal.width, normal.height], [16, 8]);
+  assert.deepEqual(
+    [metallicRoughness.width, metallicRoughness.height],
+    [16, 8],
+  );
 });
 
 test("scalar runtime roughness does not append normal or packed PBR maps", async () => {
