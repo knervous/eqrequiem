@@ -15,7 +15,10 @@ import { WorldSocket } from '@ui/net/instances';
 import { addChatLine, addChatLines } from './chat-message';
 import { BaseCommandHandler, command } from './command-base';
 
-export function requestZoneByShortName(rawZone?: string): void {
+export function requestZoneByShortName(
+  rawZone?: string,
+  { useSafeLocation = false }: { useSafeLocation?: boolean } = {},
+): void {
   const zone = rawZone?.trim().toLowerCase();
   if (!zone) {
     addChatLine('Usage: /zone {shortname} or #zone {shortname}');
@@ -53,6 +56,7 @@ export function requestZoneByShortName(rawZone?: string): void {
     {
       type: ZoneChangeType.FROM_ZONE,
       zoneId,
+      ...(useSafeLocation ? { useSafeLocation: true } : {}),
     },
   );
   addChatLine(`Zoning to ${supportedZone.longName}...`);

@@ -600,13 +600,37 @@ export class EmbeddedGameBackend implements GameBackend {
       }
       session.pendingZone = { zoneId, instanceId };
       if (session.selectedCharacter) {
-        const hasDestination = [request.x, request.y, request.z].every(
+        const useSafeLocation = request.useSafeLocation === true;
+        const hasExplicitDestination = [request.x, request.y, request.z].every(
           (value) => typeof value === "number" && Number.isFinite(value),
         );
-        if (hasDestination) {
-          const destinationX = Number(request.x);
-          const destinationY = Number(request.y);
-          const destinationZ = Number(request.z);
+        if (useSafeLocation || hasExplicitDestination) {
+          const safeZone = useSafeLocation
+            ? (
+                await this.database.query<ZoneRow>(
+                  `SELECT id, short_name AS key, name, safe_x, safe_y, safe_z
+                   FROM ${this.contentPrefix}zones WHERE id = ? LIMIT 1`,
+                  [zoneId],
+                )
+              ).rows[0]
+            : undefined;
+          if (useSafeLocation && !safeZone) {
+            throw new Error(`Unable to resolve safe location for zone ${zoneId}`);
+          }
+          const destinationX = useSafeLocation
+            ? Number(safeZone!.safe_x)
+            : Number(request.x);
+          const destinationY = useSafeLocation
+            ? Number(safeZone!.safe_y)
+            : Number(request.y);
+          const destinationZ = useSafeLocation
+            ? Number(safeZone!.safe_z)
+            : Number(request.z);
+          const destinationHeading = useSafeLocation
+            ? 0
+            : request.heading === undefined
+              ? null
+              : radiansToEqHeading(request.heading);
           await this.database.execute(
             `UPDATE character_positions
              SET zone_id = ?, instance_id = ?, x = ?, y = ?, z = ?,
@@ -618,9 +642,7 @@ export class EmbeddedGameBackend implements GameBackend {
               destinationX,
               destinationY,
               destinationZ,
-              request.heading === undefined
-                ? null
-                : radiansToEqHeading(request.heading),
+              destinationHeading,
               session.selectedCharacter,
             ],
           );

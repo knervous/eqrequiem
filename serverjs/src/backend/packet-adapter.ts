@@ -166,6 +166,7 @@ export function decodeRequest(
           ? {}
           : { zoneId: zoneId as number | string }),
         instanceId: number(value.instanceId, 0),
+        ...(value.useSafeLocation === true ? { useSafeLocation: true } : {}),
         ...(typeof value.x === "number" && Number.isFinite(value.x)
           ? { x: value.x }
           : {}),

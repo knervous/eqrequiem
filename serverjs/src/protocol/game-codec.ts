@@ -15,6 +15,7 @@ import {
 import type { PersistCharacter } from "../persist/types.js";
 
 export interface ZoneRouteRequest extends ZoneSessionNet {
+  useSafeLocation?: boolean | undefined;
   x?: number | undefined;
   y?: number | undefined;
   z?: number | undefined;
@@ -77,6 +78,7 @@ export function decodeZoneRouteRequest(payload: Uint8Array): ZoneRouteRequest {
     decodeSidecar<{
       zoneId?: unknown;
       instanceId?: unknown;
+      useSafeLocation?: unknown;
       x?: unknown;
       y?: unknown;
       z?: unknown;
@@ -85,6 +87,7 @@ export function decodeZoneRouteRequest(payload: Uint8Array): ZoneRouteRequest {
     decodeSidecar<{
       zoneId?: unknown;
       instanceId?: unknown;
+      useSafeLocation?: unknown;
       x?: unknown;
       y?: unknown;
       z?: unknown;
@@ -103,6 +106,7 @@ export function decodeZoneRouteRequest(payload: Uint8Array): ZoneRouteRequest {
     zoneId:
       Number.isInteger(parsedZoneId) && parsedZoneId >= 0 ? parsedZoneId : -1,
     instanceId: typeof value?.instanceId === "number" ? value.instanceId : 0,
+    ...(value?.useSafeLocation === true ? { useSafeLocation: true } : {}),
     ...(x === undefined ? {} : { x }),
     ...(y === undefined ? {} : { y }),
     ...(z === undefined ? {} : { z }),

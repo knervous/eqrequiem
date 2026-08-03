@@ -226,6 +226,7 @@ export interface RequestClientZoneChange extends OpenMessage {
   zoneId?: number;
   instanceId?: number;
   type: ZoneChangeType;
+  useSafeLocation?: boolean;
   x?: number;
   y?: number;
   z?: number;

@@ -178,6 +178,7 @@ describe("game backend packet adapter", () => {
       payload: encodeSidecar(SIDECAR_SCHEMA.ZONE_CHANGE, {
         zoneId: 2,
         instanceId: 3,
+        useSafeLocation: true,
         x: 10,
         y: 20,
         z: 30,
@@ -188,6 +189,7 @@ describe("game backend packet adapter", () => {
       type: "zone_change",
       zoneId: 2,
       instanceId: 3,
+      useSafeLocation: true,
       x: 10,
       y: 20,
       z: 30,

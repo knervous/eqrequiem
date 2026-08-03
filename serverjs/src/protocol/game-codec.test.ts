@@ -55,6 +55,23 @@ describe("Shado game codec", () => {
     );
   });
 
+  it("preserves explicit GM safe-location intent", () => {
+    assert.deepEqual(
+      decodeZoneRouteRequest(
+        encodeSidecar(SIDECAR_SCHEMA.ZONE_CHANGE, {
+          zoneId: 2,
+          instanceId: 0,
+          useSafeLocation: true,
+        }),
+      ),
+      {
+        zoneId: 2,
+        instanceId: 0,
+        useSafeLocation: true,
+      },
+    );
+  });
+
   it("can select Shado for outbound integer messages", () => {
     const payload = encodeInteger(42);
     assert.equal(

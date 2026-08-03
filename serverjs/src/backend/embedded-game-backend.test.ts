@@ -219,6 +219,83 @@ describe("embedded game backend", () => {
     await backend.close();
   });
 
+  it("uses destination safe coordinates for an explicit GM zone transition", async () => {
+    const database = new SqliteBackend();
+    const backend = new EmbeddedGameBackend(database, {
+      items: [],
+      gearSets: {},
+      zones: [
+        { id: 1, shortName: "qeynos", longName: "South Qeynos" },
+        { id: 2, shortName: "qeynos2", longName: "North Qeynos" },
+      ],
+    });
+    await backend.initialize();
+    await database.execute(
+      "UPDATE zones SET safe_x = 3, safe_y = 14, safe_z = 253 WHERE id = 2",
+    );
+    await backend.connect(9);
+    await backend.handle(9, {
+      type: "character_create",
+      character: {
+        name: "Traveler",
+        charClass: 1,
+        race: 1,
+        gender: 0,
+        deity: 0,
+        startZone: 1,
+        face: 0,
+      },
+    });
+    await backend.handle(9, { type: "enter_world", name: "Traveler" });
+    await backend.handle(9, { type: "zone_session", zoneId: 1, instanceId: 0 });
+    await backend.handle(9, { type: "zone_change", instanceId: 0 });
+    await backend.handle(9, {
+      type: "client_update",
+      x: 900,
+      y: 800,
+      z: 700,
+      heading: Math.PI,
+    });
+
+    const events = await backend.handle(9, {
+      type: "zone_change",
+      zoneId: 2,
+      instanceId: 0,
+      useSafeLocation: true,
+    });
+    const profile = events.find((entry) => entry.type === "player_profile");
+    assert.deepEqual(
+      {
+        zoneId: profile?.value.zoneId,
+        x: profile?.value.x,
+        y: profile?.value.y,
+        z: profile?.value.z,
+        heading: profile?.value.heading,
+      },
+      { zoneId: 2, x: 3, y: 14, z: 253, heading: 0 },
+    );
+    const persisted = (
+      await database.query<{
+        zone_id: number;
+        x: number;
+        y: number;
+        z: number;
+        heading: number;
+      }>(
+        `SELECT zone_id, x, y, z, heading FROM character_positions
+         WHERE character_id = (SELECT id FROM characters WHERE name = 'Traveler')`,
+      )
+    ).rows[0];
+    assert.deepEqual(persisted, {
+      zone_id: 2,
+      x: 3,
+      y: 14,
+      z: 253,
+      heading: 0,
+    });
+    await backend.close();
+  });
+
   it("runs registered NPC say quests through the offline backend", async () => {
     const database = new SqliteBackend();
     const backend = new EmbeddedGameBackend(database, {

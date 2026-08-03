@@ -41,6 +41,7 @@ export type BackendRequest =
       type: "zone_change";
       zoneId?: number | string;
       instanceId: number;
+      useSafeLocation?: boolean;
       x?: number;
       y?: number;
       z?: number;

@@ -434,6 +434,7 @@ export class ZoneService {
     instanceId: number,
     characterName: string,
     transition?: {
+      useSafeLocation?: boolean | undefined;
       x?: number | undefined;
       y?: number | undefined;
       z?: number | undefined;
@@ -503,20 +504,28 @@ export class ZoneService {
       haste: 0,
       meleeRange: 3,
     };
-    const hasDestination = [transition?.x, transition?.y, transition?.z].every(
+    const useSafeLocation = transition?.useSafeLocation === true;
+    const hasExplicitDestination = [transition?.x, transition?.y, transition?.z].every(
       (value) => typeof value === "number" && Number.isFinite(value),
     );
-    const x = hasDestination
+    const x = useSafeLocation
+      ? Number(zone.safe_x)
+      : hasExplicitDestination
       ? Number(transition!.x)
       : Number(character?.x ?? zone.safe_x);
-    const y = hasDestination
+    const y = useSafeLocation
+      ? Number(zone.safe_y)
+      : hasExplicitDestination
       ? Number(transition!.y)
       : Number(character?.y ?? zone.safe_y);
-    const z = hasDestination
+    const z = useSafeLocation
+      ? Number(zone.safe_z)
+      : hasExplicitDestination
       ? Number(transition!.z)
       : Number(character?.z ?? zone.safe_z);
-    const heading =
-      transition?.heading === undefined
+    const heading = useSafeLocation
+      ? 0
+      : transition?.heading === undefined
         ? Number(character?.heading ?? 0)
         : radiansToEqHeading(transition.heading);
     const spawnRows = await gameData.zoneNpcSpawns(zoneId, instanceId);
@@ -572,7 +581,7 @@ export class ZoneService {
     this.sessionRoutes.set(sessionId, { zoneId, instanceId });
     const characterId = Number(character?.id ?? entityId);
     this.sessionEntities.set(sessionId, { shard, entityId, characterId });
-    if (character && hasDestination) {
+    if (character && (useSafeLocation || hasExplicitDestination)) {
       await runtime.execute(
         `UPDATE character_positions
          SET zone_id = ?, instance_id = ?, x = ?, y = ?, z = ?, heading = ?,

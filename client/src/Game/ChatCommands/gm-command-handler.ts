@@ -32,7 +32,7 @@ export class GMCommandHandler extends BaseCommandHandler {
 
   @command('zone')
   commandZone(args: string[]) {
-    requestZoneByShortName(args[0]);
+    requestZoneByShortName(args[0], { useSafeLocation: true });
   }
   @command('level')
   commandLevel(args: string[]) {

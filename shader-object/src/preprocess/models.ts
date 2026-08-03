@@ -136,9 +136,19 @@ export async function packShadoModel(config: ShadoModelPackConfig): Promise<Shad
         throw new Error(`Model '${config.name}' has no skeleton for DQ VAT preprocessing`);
       }
       const variants = config.vat?.variants?.length ? config.vat.variants : ['float16', 'float32'];
+      // Mesh.MergeMeshes extracts source vertices through their world matrix.
+      // Bake the palette in that same basis so an offline VAT remains valid
+      // when runtime.merge is enabled. This mirrors attachMeshes()'s in-process
+      // bake path; it is especially important for glTF's handedness root
+      // reflection (commonly diag(-1, 1, 1)).
+      const vatOptions = { ...(config.vat?.options ?? {}) };
+      if (config.runtime?.merge && !vatOptions.paletteBasis) {
+        const paletteSource = meshes.find(mesh => !!mesh.skeleton) ?? targetMesh;
+        vatOptions.paletteBasis = paletteSource.computeWorldMatrix(true).clone();
+      }
       for (const variant of variants) {
         const builder = VATBuilder.buildFromScene(scene as any, targetMesh as any, skeleton as any, {
-          ...(config.vat?.options ?? {}),
+          ...vatOptions,
           useHalfDQ: variant === 'float16',
           forceHalfDQ: variant === 'float16',
         });
