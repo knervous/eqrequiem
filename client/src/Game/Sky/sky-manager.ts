@@ -73,6 +73,11 @@ type SkyBiomeDefinition = {
   };
 };
 
+type ZoneAtmosphereOverride = {
+  fogStartMultiplier: number;
+  fogEndMultiplier: number;
+};
+
 type RequiemSkyManifest = {
   version: number;
   asset: string;
@@ -101,6 +106,7 @@ type RequiemSkyManifest = {
   biomeTransitionMs: number;
   biomes: Record<string, SkyBiomeDefinition>;
   zoneBiomes: Record<string, string>;
+  zoneAtmosphereOverrides?: Record<string, ZoneAtmosphereOverride>;
   sun: {
     azimuthBasisRadians: number;
     distance: number;
@@ -282,6 +288,8 @@ export default class DayNightSkyManager {
   #biomeTarget: SkyBiomeDefinition | null = null;
   #biomeBlendElapsedMs = 0;
   #biomeBlendDurationMs = 0;
+  #zoneFogStartMultiplier = 1;
+  #zoneFogEndMultiplier = 1;
 
   skyContainer: BJS.AssetContainer | null = null;
   parent: ZoneManager;
@@ -354,6 +362,11 @@ export default class DayNightSkyManager {
       this.#moonTexture,
     ] = textures as [BJS.Texture, BJS.Texture, BJS.Texture, BJS.Texture];
     this.scale = manifest.runtimeScale;
+    const atmosphereOverride =
+      manifest.zoneAtmosphereOverrides?.[zoneName.toLowerCase()];
+    this.#zoneFogStartMultiplier =
+      atmosphereOverride?.fogStartMultiplier ?? 1;
+    this.#zoneFogEndMultiplier = atmosphereOverride?.fogEndMultiplier ?? 1;
     const requestedBiome =
       manifest.zoneBiomes[zoneName.toLowerCase()] ?? manifest.defaultBiome;
     const targetBiome =
@@ -849,8 +862,9 @@ export default class DayNightSkyManager {
         biome.exposure,
       ),
     );
-    this.#scene.fogStart = state.fogStart;
-    this.#scene.fogEnd = state.fogEnd;
+    this.#scene.fogStart =
+      state.fogStart * this.#zoneFogStartMultiplier;
+    this.#scene.fogEnd = state.fogEnd * this.#zoneFogEndMultiplier;
 
     const cycle = wrapSkyHour(this.timeOfDay) / 24;
     const solarElevation =
@@ -965,5 +979,7 @@ export default class DayNightSkyManager {
     this.#biomeTarget = null;
     this.#biomeBlendElapsedMs = 0;
     this.#biomeBlendDurationMs = 0;
+    this.#zoneFogStartMultiplier = 1;
+    this.#zoneFogEndMultiplier = 1;
   }
 }

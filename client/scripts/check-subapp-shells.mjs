@@ -67,12 +67,13 @@ const requiredText = new Map([
   [
     'src/Game/Zone/shado-world-scene-layer.ts',
     [
-      'const WORLD_PACKAGE_REVISION = "babylon-rhs-y-up-v4"',
-      'applyWorldMaterialPolicy(sourceContainer.materials)',
+      'const WORLD_PACKAGE_REVISION = "babylon-rhs-y-up-v5-region-pvs-collision-v2"',
+      'applyWorldMaterialPolicy(',
       'material.backFaceCulling = false',
       'material.twoSidedLighting = true',
       'validateRenderChunks(world, chunks)',
-      'clone.alwaysSelectAsActiveMesh = false',
+      'clone.alwaysSelectAsActiveMesh = persistent',
+      'shadoPersistentMesh: persistent',
     ],
   ],
   ['apps/libra/index.html', ['/src/subapps/libra-main.tsx']],
@@ -156,9 +157,9 @@ assert.ok(
   'The client world contract must not apply a second zone-scene reflection.',
 );
 assert.ok(
-  !worldSceneLayer.includes('reduceWorld(') &&
+  worldSceneLayer.includes('reduceWorld(') &&
     !worldSceneLayer.includes('chunk.setIndices('),
-  'Promoted scene index buffers must remain immutable at runtime.',
+  'Promoted scene chunks must use world visibility without mutating source index buffers.',
 );
 for (const generatedTwin of [
   'src/Game/Manager/game-manager.js',

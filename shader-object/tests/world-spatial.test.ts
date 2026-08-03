@@ -2,6 +2,7 @@ import {
   compileShadoWorld,
   decodeShadoWorldCollision,
   encodeShadoWorldCollision,
+  collisionResidencyKeys,
   createShadoWorldAuthoring,
   importLegacyZoneMetadata,
   mergeLegacyZoneMetadata,
@@ -58,6 +59,7 @@ describe('Shado world spatial compiler', () => {
     const world = compileShadoWorld([quad(0, 'stone'), quad(20, 'wood')], {
       name: 'qey2hh1',
       tileSize: 16,
+      visibilityRegionSize: 16,
       maxClusterTriangles: 1,
     });
 
@@ -73,7 +75,10 @@ describe('Shado world spatial compiler', () => {
     expect(world.navigation.runtimeToRecast).toBe('z-y-negative-x');
     expect(world.collision).toMatchObject({
       source: 'qey2hh1.collision.bin.gz',
-      format: 'shado-collision-v1',
+      format: 'shado-collision-v2',
+      chunkSize: 256,
+      chunkCount: 1,
+      sourceTriangleCount: 4,
       triangleCount: 4,
     });
     expect(world.triangleCount).toBe(4);
@@ -89,7 +94,15 @@ describe('Shado world spatial compiler', () => {
     expect(world.cells.kind).toEqual([0, 0]);
     expect(world.cells.clusterCount).toEqual(world.tiles.clusterCount);
     expect(world.portals.fromCell).toHaveLength(0);
-    expect(world.pvs).toEqual({ wordsPerRow: 1, words: [0b11, 0b11] });
+    expect(world.pvs).toBeUndefined();
+    expect(world.visibility).toMatchObject({
+      version: 1,
+      size: 16,
+      width: 2,
+      height: 1,
+      cellRegion: [0, 1],
+      pvs: { wordsPerRow: 1, words: [0b11, 0b11] },
+    });
     expect(world.integrity.layoutHash).toMatch(/^[0-9a-f]{8}$/);
     expect(() => validateShadoWorldPackage(world)).not.toThrow();
   });
@@ -134,6 +147,32 @@ describe('Shado world spatial compiler', () => {
     expect(() => validateShadoWorldPackage(first)).not.toThrow();
   });
 
+  it('preserves an explicitly requested empty grass package contract', () => {
+    const world = compileShadoWorld([joinedQuads([0], 'stone')], {
+      name: 'empty-grass-world',
+      grass: { cellSize: 24 },
+    });
+
+    expect(world.grass).toEqual({
+      version: 1,
+      cellSize: 24,
+      cells: { x: [], z: [], firstPlacement: [], placementCount: [] },
+      placements: {
+        positionX: [],
+        positionY: [],
+        positionZ: [],
+        yaw: [],
+        width: [],
+        height: [],
+        phase: [],
+        stiffness: [],
+        colorVariation: [],
+      },
+      coverage: { resolution: 32, wordsPerCell: 32, words: [] },
+    });
+    expect(() => validateShadoWorldPackage(world)).not.toThrow();
+  });
+
   it('encodes, hashes, and decodes the current dedicated collision artifact', () => {
     const artifact = encodeShadoWorldCollision([quad(0, 'stone'), quad(0, 'duplicate-material')]);
     const descriptor = {
@@ -142,16 +181,57 @@ describe('Shado world spatial compiler', () => {
     };
     expect(descriptor.vertexCount).toBe(4);
     expect(descriptor.triangleCount).toBe(2);
+    expect(descriptor.sourceTriangleCount).toBe(2);
+    expect(descriptor.chunkCount).toBe(1);
     expect(descriptor.contentHash).toMatch(/^[0-9a-f]{8}$/);
     expect(decodeShadoWorldCollision(artifact.bytes, descriptor)).toEqual({
-      positions: artifact.positions,
-      indices: artifact.indices,
+      chunks: artifact.chunks,
+      chunkSize: artifact.chunkSize,
+      sourceTriangleCount: artifact.sourceTriangleCount,
+      vertexCount: artifact.vertexCount,
+      triangleCount: artifact.triangleCount,
       bounds: artifact.bounds,
     });
 
     const corrupt = artifact.bytes.slice();
     corrupt[corrupt.length - 1] ^= 1;
     expect(() => decodeShadoWorldCollision(corrupt, descriptor)).toThrow(/integrity/);
+  });
+
+  it('duplicates boundary-crossing collision into every intersected physics chunk', () => {
+    const artifact = encodeShadoWorldCollision(
+      [
+        {
+          name: 'seam-triangle',
+          material: 'stone',
+          positions: new Float32Array([255, 0, 1, 257, 0, 1, 257, 1, 2]),
+          indices: new Uint32Array([0, 1, 2]),
+        },
+      ],
+      { chunkSize: 256 }
+    );
+
+    expect(artifact.sourceTriangleCount).toBe(1);
+    expect(artifact.triangleCount).toBe(2);
+    expect(artifact.chunks.map(chunk => [chunk.x, chunk.z])).toEqual([
+      [0, 0],
+      [1, 0],
+    ]);
+    expect(artifact.chunks.every(chunk => chunk.indices.length === 3)).toBe(true);
+  });
+
+  it('builds deterministic square collision residency halos', () => {
+    expect(collisionResidencyKeys([300, -1], 256, 1)).toEqual([
+      '0,-2',
+      '1,-2',
+      '2,-2',
+      '0,-1',
+      '1,-1',
+      '2,-1',
+      '0,0',
+      '1,0',
+      '2,0',
+    ]);
   });
 
   it('rejects historical package layouts instead of entering compatibility mode', () => {
@@ -375,6 +455,24 @@ describe('Shado world spatial compiler', () => {
     expect(merged.objects.prototypes[0].source).toBe('/eqrequiem/objects/tree/final.glb.gz');
   });
 
+  it('keeps authored legacy-object tombstones during metadata refreshes', () => {
+    const authoring = createShadoWorldAuthoring('merge-exclusions');
+    authoring.legacyObjectExclusions = ['removed-temple'];
+    const merged = mergeLegacyZoneMetadata(
+      authoring,
+      {
+        objects: {
+          'removed-temple': [{ x: 1, y: 2, z: 3 }],
+          retained: [{ x: 4, y: 5, z: 6 }],
+        },
+      },
+      'merge-exclusions'
+    );
+
+    expect(merged.objects.prototypes.map(item => item.id)).toEqual(['retained']);
+    expect(merged.objects.stamps.map(item => item.prototype)).toEqual(['retained']);
+  });
+
   it('removes the superseded authoring reflection exactly once', () => {
     const initial = importLegacyZoneMetadata(
       {
@@ -453,13 +551,72 @@ describe('Shado world spatial compiler', () => {
     );
   });
 
+  it('expands PVS and compacts policy-visible world rows into persistent WASM slices', async () => {
+    const world = compileShadoWorld([quad(0, 'stone'), quad(20, 'wood')], {
+      name: 'wasm-world-visibility',
+      tileSize: 16,
+      visibilityRegionSize: 16,
+      maxClusterTriangles: 2,
+    });
+    world.visibility!.pvs.words = [0b01, 0b10];
+    world.visibility!.visibleRegionPairs = 2;
+    stampShadoWorldIntegrity(world);
+    const planes = new Float32Array([
+      1, 0, 0, 100, -1, 0, 0, 100, 0, 1, 0, 100, 0, -1, 0, 100, 0, 0, 1, 100, 0, 0, -1, 100,
+    ]);
+    const reducer = await ShadoWorldReducer.create(world);
+    const first = reducer.reduceWorld({
+      planes,
+      cameraCell: 0,
+      cameraRegion: 0,
+    });
+
+    expect(Array.from(first.visibleClusters)).toEqual([0]);
+    expect(Array.from(first.visiblePackets)).toEqual([0]);
+    expect(first.visibleClusters.byteOffset).toBe(first.visibleClustersSlice.ptr);
+    expect(first.visibleClusters.length).toBe(first.visibleClustersSlice.length);
+    expect(first.regionFlags.byteOffset).toBe(first.regionFlagsSlice.ptr);
+    expect(first.clusterFlags.buffer).toBe(first.regionFlags.buffer);
+
+    const second = reducer.reduceWorld({
+      planes,
+      cameraCell: 1,
+      cameraRegion: 1,
+      loadedCells: new Uint8Array([1, 0]),
+    });
+    expect(second.visibleClusters).toHaveLength(0);
+    expect(second.visibleClustersSlice.ptr).toBe(first.visibleClustersSlice.ptr);
+    expect(second.regionFlagsSlice.ptr).toBe(first.regionFlagsSlice.ptr);
+    expect(second.cellFlags[1] & ShadoVisibilityBits.Loaded).toBe(0);
+  });
+
+  it('retains authored persistent-mesh policy in the runtime primitive table', () => {
+    const persistent = {
+      ...quad(0, 'stone'),
+      visibilityProfile: 'distant-horizon',
+      pvsPriority: 'persistent-zoneline-vista',
+    };
+    const ordinary = quad(20, 'wood');
+    const world = compileShadoWorld([persistent, ordinary], {
+      name: 'persistent-runtime-primitives',
+      tileSize: 16,
+      visibilityRegionSize: 16,
+      maxClusterTriangles: 2,
+    });
+
+    expect(world.primitives.map(primitive => primitive.persistent)).toEqual([true, false]);
+    expect(world.visibility!.persistentCells.length).toBeGreaterThan(0);
+  });
+
   it('coordinates geometry cells with SoA entity visibility reason flags', async () => {
     const world = compileShadoWorld([quad(0, 'stone'), quad(20, 'stone')], {
       name: 'qey2hh1',
       tileSize: 16,
+      visibilityRegionSize: 16,
       maxClusterTriangles: 2,
     });
-    world.pvs = { wordsPerRow: 1, words: [0b01, 0b10] };
+    world.visibility!.pvs.words = [0b01, 0b10];
+    world.visibility!.visibleRegionPairs = 2;
     stampShadoWorldIntegrity(world);
     const planes = new Float32Array([
       1, 0, 0, 2, -1, 0, 0, 32, 0, 1, 0, 2, 0, -1, 0, 2, 0, 0, 1, 2, 0, 0, -1, 2,
@@ -494,10 +651,78 @@ describe('Shado world spatial compiler', () => {
     expect(result.flags[1] & ShadoVisibilityBits.Visible).toBe(0);
   });
 
+  it('uses continuous camera regions instead of failing open between sparse geometry cells', async () => {
+    const world = compileShadoWorld([quad(0, 'stone'), quad(200, 'stone')], {
+      name: 'continuous-camera-regions',
+      tileSize: 16,
+      visibilityRegionSize: 16,
+      visibilityMaxDistance: 64,
+      maxClusterTriangles: 2,
+    });
+    const planes = new Float32Array([
+      1, 0, 0, 1000, -1, 0, 0, 1000, 0, 1, 0, 1000, 0, -1, 0, 1000, 0, 0, 1, 1000, 0, 0, -1, 1000,
+    ]);
+    const coordinator = await ShadoWorldVisibilityCoordinator.create(world);
+    const frame = coordinator.reduceWorld(planes, [40, 0, 0]);
+    const entities = coordinator.reduceEntities(
+      {
+        count: 2,
+        positionX: new Float32Array([1, 200]),
+        positionY: new Float32Array(2),
+        positionZ: new Float32Array(2),
+      },
+      planes,
+      frame,
+      { camera: [40, 0, 0], defaultRadius: 1, outsideWorldVisible: false }
+    );
+
+    expect(frame.cameraCell).toBe(-1);
+    expect(frame.cameraRegion).toBe(2);
+    expect(Array.from(frame.visibleClusters)).toEqual([0]);
+    expect(Array.from(entities.visibleIndices)).toEqual([0]);
+  });
+
+  it('floods local visibility and overlaps adjacent camera rows conservatively', async () => {
+    const world = compileShadoWorld(
+      [quad(0, 'stone'), quad(48, 'stone'), quad(64, 'stone')],
+      {
+        name: 'local-visibility-flood',
+        tileSize: 16,
+        visibilityRegionSize: 16,
+        visibilityMaxDistance: 1,
+        maxClusterTriangles: 2,
+      }
+    );
+    const visibility = world.visibility!;
+    expect(visibility.mode).toBe('distance-flood');
+    expect(visibility.occluderCount).toBe(0);
+    const regionVisible = (from: number, to: number) => {
+      const word =
+        visibility.pvs.words[
+          from * visibility.pvs.wordsPerRow + (to >>> 5)
+        ] >>> 0;
+      return (word & (1 << (to & 31))) !== 0;
+    };
+
+    // Two regions are always local. The adjacent-camera-row union advances
+    // that conservative coverage one more region before a boundary crossing.
+    expect(regionVisible(0, 2)).toBe(true);
+    expect(regionVisible(0, 3)).toBe(true);
+    expect(regionVisible(0, 4)).toBe(false);
+
+    const planes = new Float32Array([
+      1, 0, 0, 1000, -1, 0, 0, 1000, 0, 1, 0, 1000, 0, -1, 0, 1000, 0, 0, 1, 1000, 0, 0, -1, 1000,
+    ]);
+    const coordinator = await ShadoWorldVisibilityCoordinator.create(world);
+    const frame = coordinator.reduceWorld(planes, [1, 0, 0]);
+    expect(Array.from(frame.visibleClusters)).toEqual([0, 1]);
+  });
+
   it('intersects loaded, phase, and portal reachability masks before geometry and actors', async () => {
     const world = compileShadoWorld([quad(0, 'stone'), quad(20, 'stone')], {
       name: 'policy-masks',
       tileSize: 16,
+      visibilityRegionSize: 16,
       maxClusterTriangles: 2,
     });
     const planes = new Float32Array([
@@ -544,6 +769,7 @@ describe('Shado world spatial compiler', () => {
     ]);
     const coordinator = await ShadoWorldVisibilityCoordinator.create(world);
     const frame = coordinator.reduceWorld(planes, [1, 0, 0]);
+    const regionFlagsPtr = frame.regionFlagsSlice.ptr;
     const count = 20_000;
     const result = coordinator.reduceEntities(
       {
@@ -561,6 +787,9 @@ describe('Shado world spatial compiler', () => {
     expect(result.flags).toHaveLength(count);
     expect(result.visibleIndices[19_999]).toBe(19_999);
     expect(result.flags.every(flag => !!(flag & ShadoVisibilityBits.Visible))).toBe(true);
+    expect(frame.regionFlags).toHaveLength(world.visibility!.width * world.visibility!.height);
+    expect(frame.regionFlags.byteOffset).toBe(regionFlagsPtr);
+    expect(frame.regionFlags.buffer.byteLength).toBeGreaterThan(0);
   });
 
   it('rejects malformed GLB primitive data before preprocessing', () => {

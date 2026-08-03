@@ -52,6 +52,10 @@ uniform uZoneAmbientColor: vec3f;
 uniform uZonePlayerLightPosition: vec3f;
 uniform uZonePlayerLightColor: vec3f;
 uniform uZonePlayerLightRange: f32;
+uniform uZoneFogColor: vec3f;
+uniform uZoneFogStart: f32;
+uniform uZoneFogEnd: f32;
+uniform uZoneCameraPosition: vec3f;
 
 fn grassSurfacePlayerLight(position: vec3f, normal: vec3f) -> vec3f {
   let delta = uniforms.uZonePlayerLightPosition - position;
@@ -119,11 +123,20 @@ fn main(input: FragmentInputs) -> FragmentOutputs {
   let worldLighting = uniforms.uZoneAmbientColor
     + uniforms.uZoneLightColor * skyDiffuse
     + grassSurfacePlayerLight(fragmentInputs.vWorldPosition, normal);
-  let color = terrainAlbedo
+  var color = terrainAlbedo
     * livingVariation
     * materialTint
     * worldLighting
     * upward;
+  let fogDistance = length(
+    uniforms.uZoneCameraPosition - fragmentInputs.vWorldPosition
+  );
+  let fogAmount = smoothstep(
+    uniforms.uZoneFogStart,
+    max(uniforms.uZoneFogStart + 0.001, uniforms.uZoneFogEnd),
+    fogDistance
+  );
+  color = mix(color, uniforms.uZoneFogColor, fogAmount);
   fragmentOutputs.color = vec4f(color, 1.0);
 }
 `;
@@ -158,6 +171,10 @@ export function createGrassSurfaceMaterial(
         "uTerrainHighlightColor",
         "uWindDirection",
         "uVertexTintStrength",
+        "uZoneFogColor",
+        "uZoneFogStart",
+        "uZoneFogEnd",
+        "uZoneCameraPosition",
         ...ZONE_SHADER_LIGHTING_UNIFORMS,
       ],
       samplers: ["uBaseTexture"],
@@ -165,6 +182,10 @@ export function createGrassSurfaceMaterial(
     },
   );
   material.backFaceCulling = false;
+  material.metadata = {
+    ...material.metadata,
+    requiemZoneAtmosphere: true,
+  };
   material.setTexture("uBaseTexture", baseTexture);
   material.setFloat("uTime", 0);
   material.setColor3(

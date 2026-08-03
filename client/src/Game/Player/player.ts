@@ -252,6 +252,9 @@ export default class Player {
       return;
     }
 
+    this.gameManager.ZoneManager?.ensureWorldPhysicsAt(
+      new BABYLON.Vector3(x, y, z),
+    );
     const plugin = this.gameManager
       .scene!.getPhysicsEngine()!
       .getPhysicsPlugin() as BJS.HavokPlugin;

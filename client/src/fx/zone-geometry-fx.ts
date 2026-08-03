@@ -49,6 +49,86 @@ type GrassSpatialSegment = {
   sourceIndices?: number[];
 };
 
+type TerrainTintAccumulator = {
+  red: number;
+  green: number;
+  blue: number;
+  count: number;
+};
+
+function coarseGrassTerrainTints(
+  surfaces: readonly BJS.Mesh[],
+  grass: ShadoWorldSpatialPackage["grass"],
+  useVertexTint: boolean,
+): ReadonlyMap<string, readonly [number, number, number]> {
+  const result = new Map<string, readonly [number, number, number]>();
+  if (!grass || !useVertexTint) return result;
+
+  const samples = new Map<string, TerrainTintAccumulator>();
+  for (const surface of surfaces) {
+    const positions = surface.getVerticesData(
+      BABYLON.VertexBuffer.PositionKind,
+    );
+    const colors = surface.getVerticesData(BABYLON.VertexBuffer.ColorKind);
+    const colorSize = surface
+      .getVertexBuffer(BABYLON.VertexBuffer.ColorKind)
+      ?.getSize();
+    if (!positions || !colors || !colorSize || colorSize < 3) continue;
+    for (let vertex = 0; vertex < positions.length / 3; vertex++) {
+      const x = Math.floor(positions[vertex * 3]! / grass.cellSize);
+      const z = Math.floor(positions[vertex * 3 + 2]! / grass.cellSize);
+      const key = `${x}:${z}`;
+      let sample = samples.get(key);
+      if (!sample) {
+        sample = { red: 0, green: 0, blue: 0, count: 0 };
+        samples.set(key, sample);
+      }
+      sample.red += Math.min(1, Math.max(0.18, colors[vertex * colorSize]!));
+      sample.green += Math.min(
+        1,
+        Math.max(0.18, colors[vertex * colorSize + 1]!),
+      );
+      sample.blue += Math.min(
+        1,
+        Math.max(0.18, colors[vertex * colorSize + 2]!),
+      );
+      sample.count++;
+    }
+  }
+
+  for (let cell = 0; cell < grass.cells.x.length; cell++) {
+    const x = grass.cells.x[cell]!;
+    const z = grass.cells.z[cell]!;
+    let matched: TerrainTintAccumulator | undefined;
+    // Large terrain triangles can leave a cell without an owned vertex. A
+    // small neighborhood search keeps the sample coarse and avoids hard gaps.
+    for (let radius = 0; radius <= 2 && !matched; radius++) {
+      let bestDistance = Number.POSITIVE_INFINITY;
+      for (let dz = -radius; dz <= radius; dz++) {
+        for (let dx = -radius; dx <= radius; dx++) {
+          if (radius > 0 && Math.max(Math.abs(dx), Math.abs(dz)) !== radius) {
+            continue;
+          }
+          const candidate = samples.get(`${x + dx}:${z + dz}`);
+          const distance = dx * dx + dz * dz;
+          if (candidate && distance < bestDistance) {
+            matched = candidate;
+            bestDistance = distance;
+          }
+        }
+      }
+    }
+    if (matched) {
+      result.set(`${x}:${z}`, [
+        matched.red / matched.count,
+        matched.green / matched.count,
+        matched.blue / matched.count,
+      ]);
+    }
+  }
+  return result;
+}
+
 function grassSpatialSegments(
   surfaces: readonly BJS.Mesh[],
   _world: ShadoWorldSpatialPackage,
@@ -61,6 +141,7 @@ function grassSpatialSegments(
 
 export class ZoneGeometryFx {
   private elapsedSeconds = 0;
+  private lastGrassLightingSampleSeconds = Number.NEGATIVE_INFINITY;
 
   private constructor(
     private readonly visibility: ShadoSceneFxVisibility,
@@ -146,6 +227,11 @@ export class ZoneGeometryFx {
     const grassMeshes: BJS.Mesh[] = [];
     let remainingGrassBlades = MAX_ZONE_GRASS_BLADES;
     const grassSegments = grassSpatialSegments(grassSurfaces, world);
+    const terrainTintByCell = coarseGrassTerrainTints(
+      grassSurfaces,
+      world.grass,
+      world.lighting?.vertexColors === "material-tint",
+    );
 
     for (const surface of grassSurfaces) {
       const baseTexture = baseColorTexture(surface.material);
@@ -168,6 +254,7 @@ export class ZoneGeometryFx {
           farGrassTemplate!,
           farGrassMaterial!,
           visibility,
+          terrainTintByCell,
         )
       : null;
     if (world.grass) {
@@ -261,9 +348,15 @@ export class ZoneGeometryFx {
         camera?.globalPosition ?? BABYLON.Vector3.Zero(),
       );
     }
+    const refreshGrassLighting =
+      this.elapsedSeconds - this.lastGrassLightingSampleSeconds >= 0.25;
+    if (refreshGrassLighting) {
+      this.lastGrassLightingSampleSeconds = this.elapsedSeconds;
+    }
     bindZoneShaderLighting(this.scene, [
-      this.grassMaterial,
-      this.farGrassMaterial,
+      ...(refreshGrassLighting
+        ? [this.grassMaterial, this.farGrassMaterial]
+        : []),
       ...this.grassSurfaceMaterials,
       this.waterMaterial,
     ]);

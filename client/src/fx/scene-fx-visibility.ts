@@ -2,6 +2,7 @@ import type * as BJS from "@babylonjs/core";
 import BABYLON from "@bjs";
 import {
   extractShadoWorldFxRegions,
+  ShadoVisibilityBits,
   type ShadoWorldFxCullProfile,
   type ShadoWorldFxRegion,
   type ShadoWorldSpatialPackage,
@@ -236,11 +237,13 @@ export class ShadoSceneFxVisibility {
           outsideWorldVisible: group.outsideWorldVisible,
         },
       );
-      const visible = new Set(visibility.visibleIndices);
       group.targets.forEach((target, index) => {
         const phaseVisible =
           ((target.phaseMask ?? 0xffffffff) & this.activePhaseMask) !== 0;
-        target.setActive(phaseVisible && visible.has(index));
+        target.setActive(
+          phaseVisible &&
+            !!(visibility.flags[index] & ShadoVisibilityBits.Visible),
+        );
       });
     }
   }

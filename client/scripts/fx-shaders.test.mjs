@@ -21,7 +21,7 @@ test("FX proving ground is isolated from the game bootstrap", async () => {
   assert.match(source, /WebGPUEngine/);
 });
 
-test("grass uses native WGSL wind, coarse daylight, and spatial thin-instance cells", async () => {
+test("grass uses native WGSL wind, coarse terrain lighting, and spatial thin-instance cells", async () => {
   const [shader, surfaceShader, geometry, streamer, lighting] =
     await Promise.all([
       readSource("src/fx/grass-shader.ts"),
@@ -34,8 +34,10 @@ test("grass uses native WGSL wind, coarse daylight, and spatial thin-instance ce
   assert.match(shader, /ShaderLanguage\.WGSL/);
   assert.match(shader, /tipWeight/);
   assert.match(shader, /uWindStrength/);
-  assert.match(shader, /uZoneDaylightFactor/);
+  assert.match(shader, /uZoneTerrainLightColor/);
   assert.match(shader, /uColorVariance/);
+  assert.match(shader, /unpackTerrainTint/);
+  assert.match(shader, /vTerrainTint/);
   assert.match(shader, /#52743B/);
   assert.doesNotMatch(shader, /grassPlayerLight/);
   assert.doesNotMatch(shader, /overheadLight/);
@@ -56,6 +58,8 @@ test("grass uses native WGSL wind, coarse daylight, and spatial thin-instance ce
   assert.match(geometry, /PROMOTED_GRASS_HEIGHT_SCALE = 1\.75/);
   assert.match(geometry, /heightVariation = 0\.68/);
   assert.match(geometry, /widthVariation = 0\.78/);
+  assert.match(geometry, /packGrassTerrainTint/);
+  assert.match(geometry, /renderOptions\.terrainTint/);
   assert.match(geometry, /const coverage = grass\.coverage/);
   assert.match(geometry, /bladeCount \+= countSetBits/);
   assert.match(geometry, /word >>> \(local & 31\)/);
@@ -77,6 +81,7 @@ test("grass uses native WGSL wind, coarse daylight, and spatial thin-instance ce
   assert.match(streamer, /GRASS_NEAR_ENABLE_RADIUS = 140/);
   assert.match(streamer, /GRASS_FAR_ENABLE_RADIUS = 272/);
   assert.match(streamer, /sampleRate: 0\.22/);
+  assert.match(streamer, /terrainTintByCell/);
   assert.match(streamer, /createGrassCellFromPackage/);
   assert.match(streamer, /this\.lastCellX/);
   assert.match(streamer, /mesh\.dispose\(false, false\)/);
@@ -88,14 +93,22 @@ test("grass uses native WGSL wind, coarse daylight, and spatial thin-instance ce
   assert.match(surfaceShader, /sourceLuma \* 6\.0/);
   assert.match(surfaceShader, /uTerrainBaseColor/);
   assert.match(surfaceShader, /uTerrainHighlightColor/);
+  assert.match(surfaceShader, /uZoneFogColor/);
+  assert.match(surfaceShader, /uZoneCameraPosition/);
+  assert.match(
+    surfaceShader,
+    /color = mix\(color, uniforms\.uZoneFogColor, fogAmount\)/,
+  );
   assert.doesNotMatch(surfaceShader, /base \* uniforms\.uColorLift/);
   assert.match(surfaceShader, /ShaderLanguage\.WGSL/);
   assert.match(lighting, /DirectionalLight/);
   assert.match(lighting, /HemisphericLight/);
   assert.match(lighting, /playerLight/);
-  assert.match(lighting, /lightDirection\.y > 0\.025 \? 1 : 0\.38/);
-  assert.match(lighting, /setFloat\(\s*"uZoneDaylightFactor"/);
+  assert.match(lighting, /const terrainDiffuse = 0\.3/);
+  assert.match(lighting, /setVector3\("uZoneTerrainLightColor"/);
   assert.match(lighting, /setVector3\("uZoneLightDirection"/);
+  assert.match(lighting, /requiemZoneAtmosphere/);
+  assert.match(lighting, /setFloat\("uZoneFogEnd"/);
 });
 
 test("water uses bounded directional waves and analytic normal slopes", async () => {
@@ -130,6 +143,9 @@ test("zone geometry consumes shader metadata instead of legacy frame swapping", 
   assert.match(zoneFx, /createGrassCellsForSurface/);
   assert.match(zoneFx, /if \(world\.grass\)/);
   assert.match(zoneFx, /PromotedGrassCellStreamer/);
+  assert.match(zoneFx, /coarseGrassTerrainTints/);
+  assert.match(zoneFx, /lastGrassLightingSampleSeconds/);
+  assert.match(zoneFx, />= 0\.25/);
   assert.match(zoneFx, /maxDistance: GRASS_NEAR_ENABLE_RADIUS/);
   assert.match(zoneFx, /RequiemGrassMaterial:far/);
   assert.match(zoneFx, /fadeEnd: 250/);

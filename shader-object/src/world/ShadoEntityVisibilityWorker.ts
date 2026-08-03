@@ -105,6 +105,10 @@ export type ShadoEntityVisibilitySchedule = {
 
 export type ShadoEntityVisibilityWorkerWorld = {
   tiles: Pick<ShadoWorldSpatialPackage['tiles'], 'x' | 'z' | 'size' | 'originX' | 'originZ'>;
+  visibility?: Pick<
+    NonNullable<ShadoWorldSpatialPackage['visibility']>,
+    'size' | 'originX' | 'originZ' | 'width' | 'height'
+  >;
 };
 
 /**
@@ -268,12 +272,20 @@ export class ShadoEntityVisibilityWorker {
     const buffer = new SharedArrayBuffer(layout.byteLength);
     const workerFactory = options.workerFactory ?? createBrowserWorker;
     const worker = workerFactory(SHADO_ENTITY_VISIBILITY_WORKER_SOURCE);
-    const controller = new ShadoEntityVisibilityWorker(
-      worker,
-      buffer,
-      layout,
-      world.tiles.x.length
-    );
+    const visibility = world.visibility;
+    const tiles = visibility
+      ? {
+          x: [] as number[],
+          z: [] as number[],
+          size: visibility.size,
+          originX: visibility.originX,
+          originZ: visibility.originZ,
+          denseWidth: visibility.width,
+          denseHeight: visibility.height,
+        }
+      : { ...world.tiles, denseWidth: 0, denseHeight: 0 };
+    const cellCount = visibility ? visibility.width * visibility.height : world.tiles.x.length;
+    const controller = new ShadoEntityVisibilityWorker(worker, buffer, layout, cellCount);
     const ready = new Promise<void>((resolve, reject) => {
       const onMessage = (event: MessageEvent<WorkerMessage>) => {
         if (event.data.type === 'ready') resolve();
@@ -294,13 +306,7 @@ export class ShadoEntityVisibilityWorker {
         layout,
         publishFlags: layout.flagsCapacity === layout.capacity,
         wasmBytes: wasmBuffer,
-        tiles: {
-          x: world.tiles.x,
-          z: world.tiles.z,
-          size: world.tiles.size,
-          originX: world.tiles.originX,
-          originZ: world.tiles.originZ,
-        },
+        tiles,
       },
       [wasmBuffer]
     );
@@ -587,16 +593,21 @@ async function createState(message) {
   const sharedFlags = layout.flagsOffsets.map(
     offset => new Uint8Array(buffer, offset, layout.flagsCapacity)
   );
-  const minX = tiles.x.length ? Math.min(...tiles.x) : 0;
-  const maxX = tiles.x.length ? Math.max(...tiles.x) : 0;
-  const minZ = tiles.z.length ? Math.min(...tiles.z) : 0;
-  const maxZ = tiles.z.length ? Math.max(...tiles.z) : 0;
-  const gridWidth = maxX - minX + 1;
-  const gridHeight = maxZ - minZ + 1;
-  const tileLookup = new Int32Array(gridWidth * gridHeight).fill(-1);
-  tiles.x.forEach((x, cell) => {
-    tileLookup[(tiles.z[cell] - minZ) * gridWidth + x - minX] = cell;
-  });
+  const dense = tiles.denseWidth > 0 && tiles.denseHeight > 0;
+  const minX = dense ? 0 : tiles.x.length ? Math.min(...tiles.x) : 0;
+  const maxX = dense ? tiles.denseWidth - 1 : tiles.x.length ? Math.max(...tiles.x) : 0;
+  const minZ = dense ? 0 : tiles.z.length ? Math.min(...tiles.z) : 0;
+  const maxZ = dense ? tiles.denseHeight - 1 : tiles.z.length ? Math.max(...tiles.z) : 0;
+  const gridWidth = Math.max(0, maxX - minX + 1);
+  const gridHeight = Math.max(0, maxZ - minZ + 1);
+  const cellCount = dense ? tiles.denseWidth * tiles.denseHeight : tiles.x.length;
+  let tileLookup;
+  if (!dense) {
+    tileLookup = new Int32Array(gridWidth * gridHeight).fill(-1);
+    tiles.x.forEach((x, cell) => {
+      tileLookup[(tiles.z[cell] - minZ) * gridWidth + x - minX] = cell;
+    });
+  }
   const alloc = values => {
     const pointer = wasm.alloc(values.byteLength) >>> 0;
     if (values instanceof Int32Array)
@@ -615,15 +626,17 @@ async function createState(message) {
     sharedFlags,
     publishFlags: message.publishFlags,
     tiles,
+    dense,
+    cellCount,
     gridWidth,
     gridHeight,
     gridMinX: minX,
     gridMinZ: minZ,
     tileLookup,
-    tileLookupPtr: alloc(tileLookup),
+    tileLookupPtr: dense ? 0 : alloc(tileLookup),
     descriptorPtr: wasm.alloc(88) >>> 0,
     planesPtr: wasm.alloc(24 * 4) >>> 0,
-    cellFlagsPtr: wasm.alloc(Math.max(1, tiles.x.length)) >>> 0,
+    cellFlagsPtr: wasm.alloc(Math.max(1, cellCount)) >>> 0,
     capacity: 0,
     xPtr: 0,
     yPtr: 0,
@@ -633,7 +646,7 @@ async function createState(message) {
     flagsPtr: 0,
     hierarchyRevision: -1,
     hierarchyCount: -1,
-    cellOffsets: new Uint32Array(tiles.x.length + 2),
+    cellOffsets: new Uint32Array(cellCount + 2),
     binMembers: new Uint32Array(layout.capacity),
     candidateIds: new Uint32Array(layout.capacity),
   };
@@ -653,7 +666,7 @@ function ensureCapacity(count) {
 }
 
 function locateCell(x, z) {
-  if (!state.tiles.x.length || !(state.tiles.size > 0)) return -1;
+  if (!state.cellCount || !(state.tiles.size > 0)) return -1;
   const tileX = Math.floor((x - state.tiles.originX) / state.tiles.size);
   const tileZ = Math.floor((z - state.tiles.originZ) / state.tiles.size);
   const localX = tileX - state.gridMinX;
@@ -662,11 +675,12 @@ function locateCell(x, z) {
     localX < 0 || localX >= state.gridWidth ||
     localZ < 0 || localZ >= state.gridHeight
   ) return -1;
-  return state.tileLookup[localZ * state.gridWidth + localX];
+  const denseCell = localZ * state.gridWidth + localX;
+  return state.dense ? denseCell : state.tileLookup[denseCell];
 }
 
 function rebuildHierarchy(count, revision) {
-  const bucketCount = state.tiles.x.length + 1;
+  const bucketCount = state.cellCount + 1;
   const outsideBucket = bucketCount - 1;
   const counts = new Uint32Array(bucketCount);
   for (let entity = 0; entity < count; entity++) {
@@ -690,13 +704,13 @@ function rebuildHierarchy(count, revision) {
 function prepareCandidateIds(count, message) {
   // Full reason flags require visiting every entity. Compact-only consumers can
   // skip whole cells before copying positions into private WASM memory.
-  if (state.publishFlags || !state.tiles.x.length) {
+  if (state.publishFlags || !state.cellCount) {
     for (let entity = 0; entity < count; entity++) state.candidateIds[entity] = entity;
     return count;
   }
   let candidateCount = 0;
   const requiredCellBits = 0x71;
-  for (let cell = 0; cell < state.tiles.x.length; cell++) {
+  for (let cell = 0; cell < state.cellCount; cell++) {
     if ((message.cellFlags[cell] & requiredCellBits) !== requiredCellBits) continue;
     const start = state.cellOffsets[cell];
     const end = state.cellOffsets[cell + 1];
@@ -704,7 +718,7 @@ function prepareCandidateIds(count, message) {
     candidateCount += end - start;
   }
   if (message.outsideWorldVisible) {
-    const outsideBucket = state.tiles.x.length;
+    const outsideBucket = state.cellCount;
     const start = state.cellOffsets[outsideBucket];
     const end = state.cellOffsets[outsideBucket + 1];
     state.candidateIds.set(state.binMembers.subarray(start, end), candidateCount);
@@ -720,7 +734,7 @@ function reduce(message) {
   let hierarchyRebuildMs = 0;
   if (
     !state.publishFlags &&
-    state.tiles.x.length &&
+    state.cellCount &&
     (revision !== state.hierarchyRevision || count !== state.hierarchyCount)
   ) {
     const rebuildStarted = performance.now();
@@ -742,7 +756,7 @@ function reduce(message) {
     wasmRadius[local] = state.radius[entity] * message.radiusScale;
   }
   new Float32Array(memory, state.planesPtr, 24).set(message.planes);
-  new Uint8Array(memory, state.cellFlagsPtr, state.tiles.x.length).set(message.cellFlags);
+  new Uint8Array(memory, state.cellFlagsPtr, state.cellCount).set(message.cellFlags);
   const descriptor = new DataView(memory, state.descriptorPtr, 88);
   [
     candidateCount, state.xPtr, state.yPtr, state.zPtr, state.radiusPtr, state.planesPtr,

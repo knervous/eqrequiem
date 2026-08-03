@@ -3,7 +3,11 @@
   "version": 1,
   "world": "qeynos2",
   "coordinateSystem": "babylon-y-up",
-  "revision": 3,
+  "revision": 7,
+  "legacyObjectExclusions": [
+    "templelife",
+    "templelifeb"
+  ],
   "regions": [
     {
       "id": "legacy-region-0",
@@ -968,26 +972,6 @@
         "boundsRadius": 32,
         "metadata": {
           "legacyModel": "squaretable",
-          "sourceCoordinateSystem": "requiem-y-up",
-          "generatedAsset": "final.glb.gz"
-        }
-      },
-      {
-        "id": "templelife",
-        "source": "/eqrequiem/objects/templelife/final.glb.gz",
-        "boundsRadius": 32,
-        "metadata": {
-          "legacyModel": "templelife",
-          "sourceCoordinateSystem": "requiem-y-up",
-          "generatedAsset": "final.glb.gz"
-        }
-      },
-      {
-        "id": "templelifeb",
-        "source": "/eqrequiem/objects/templelifeb/final.glb.gz",
-        "boundsRadius": 32,
-        "metadata": {
-          "legacyModel": "templelifeb",
           "sourceCoordinateSystem": "requiem-y-up",
           "generatedAsset": "final.glb.gz"
         }
@@ -8255,62 +8239,6 @@
         "tags": [],
         "metadata": {
           "legacyIndex": 1,
-          "sourceCoordinateSystem": "requiem-y-up",
-          "transformNormalizedAtPreprocess": true,
-          "transformContract": "requiem-y-up-v2"
-        }
-      },
-      {
-        "id": "templelife-0",
-        "prototype": "templelife",
-        "enabled": true,
-        "position": [
-          85.71696472167969,
-          -2.49899959564209,
-          -449.30096435546875
-        ],
-        "rotationDegrees": [
-          0,
-          -108.28125,
-          0
-        ],
-        "scale": [
-          1,
-          1,
-          1
-        ],
-        "phaseMask": 4294967295,
-        "tags": [],
-        "metadata": {
-          "legacyIndex": 0,
-          "sourceCoordinateSystem": "requiem-y-up",
-          "transformNormalizedAtPreprocess": true,
-          "transformContract": "requiem-y-up-v2"
-        }
-      },
-      {
-        "id": "templelifeb-0",
-        "prototype": "templelifeb",
-        "enabled": true,
-        "position": [
-          85.87210083007812,
-          -4.49259090423584,
-          -449.15667724609375
-        ],
-        "rotationDegrees": [
-          0,
-          -113.203125,
-          0
-        ],
-        "scale": [
-          1,
-          1,
-          1
-        ],
-        "phaseMask": 4294967295,
-        "tags": [],
-        "metadata": {
-          "legacyIndex": 0,
           "sourceCoordinateSystem": "requiem-y-up",
           "transformNormalizedAtPreprocess": true,
           "transformContract": "requiem-y-up-v2"

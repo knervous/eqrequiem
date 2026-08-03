@@ -13,6 +13,7 @@ import {
   upgradeShadoWorldAuthoring,
   type ShadoWorldCompileOptions,
   type ShadoWorldPrimitive,
+  ShadoCollisionFlags,
 } from '../world';
 import { installNodeXMLHttpRequest } from './models';
 
@@ -65,6 +66,8 @@ export type ShadoWorldPackResult = {
   tileCount: number;
   collisionVertexCount: number;
   collisionTriangleCount: number;
+  collisionSourceTriangleCount: number;
+  collisionChunkCount: number;
 };
 
 /** Imports a static GLB/GLB.GZ and emits reducer-friendly world spatial data. */
@@ -91,7 +94,9 @@ export async function packShadoWorld(config: ShadoWorldPackConfig): Promise<Shad
     config.inputHandedness === 'right'
   );
   const primitives = imported.render;
-  const collisionArtifact = encodeShadoWorldCollision(imported.collision);
+  const collisionArtifact = encodeShadoWorldCollision(imported.collision, {
+    chunkSize: config.physicsChunkSize,
+  });
   const collisionOutFile = path.resolve(
     process.cwd(),
     config.collisionOutFile ?? collisionPathForSpatial(config.outFile)
@@ -138,9 +143,14 @@ export async function packShadoWorld(config: ShadoWorldPackConfig): Promise<Shad
     source: config.runtimeSource ?? input,
     sourceTransform,
     tileSize: config.tileSize,
+    visibilityRegionSize: config.visibilityRegionSize,
+    visibilityMaxDistance: config.visibilityMaxDistance,
     maxClusterTriangles: config.maxClusterTriangles,
+    grass: config.grass,
+    runtimeLighting: config.runtimeLighting,
     authoring,
     collisionPrimitives: imported.collision,
+    physicsChunkSize: config.physicsChunkSize,
     collisionSource: path.basename(collisionOutFile),
   });
   const lighting = buildShadoWorldLightingManifest(world, primitives);
@@ -193,13 +203,18 @@ export async function packShadoWorld(config: ShadoWorldPackConfig): Promise<Shad
     tileCount: world.tiles.x.length,
     collisionVertexCount: world.collision.vertexCount,
     collisionTriangleCount: world.collision.triangleCount,
+    collisionSourceTriangleCount: world.collision.sourceTriangleCount,
+    collisionChunkCount: world.collision.chunkCount,
   };
 }
 
 type WorldPrimitivePolicy = {
   material: string;
   collision: boolean;
+  collisionFlags: number;
   extraShader?: string;
+  visibilityProfile?: string;
+  pvsPriority?: string;
 };
 
 type ImportedWorldPrimitives = {
@@ -267,6 +282,9 @@ async function importWorldPrimitives(
           name: `${mesh.name || mesh.id}#${subIndex}`,
           material,
           extraShader: policy?.extraShader,
+          visibilityProfile: policy?.visibilityProfile,
+          pvsPriority: policy?.pvsPriority,
+          collisionFlags: policy?.collisionFlags,
           positions: worldPositions,
           indices: Uint32Array.from(indices.slice(subMesh.indexStart, subMesh.indexStart + count)),
           lightmapUvs: lightmapUvs ? Float32Array.from(lightmapUvs) : undefined,
@@ -388,13 +406,49 @@ function worldGlbPrimitivePolicies(
       const extraShader = extras
         .map(value => extraShaderFromExtras(value))
         .find((value): value is string => Boolean(value));
+      const visibilityProfile = extras
+        .map(value => stringFromExtras(value, 'requiem_visibility_profile', 'visibilityProfile'))
+        .find((value): value is string => Boolean(value));
+      const pvsPriority = extras
+        .map(value => stringFromExtras(value, 'requiem_pvs_priority', 'pvsPriority'))
+        .find((value): value is string => Boolean(value));
+      const semanticRoles = extras
+        .flatMap(value => [
+          stringFromExtras(value, 'requiem_semantic_role', 'semanticRole'),
+          stringFromExtras(value, 'requiem_material_role', 'materialRole'),
+        ])
+        .filter((value): value is string => Boolean(value));
+      const visuallyPassthrough =
+        extraShader?.toLowerCase() === 'water' ||
+        semanticRoles.some(role =>
+          /(?:^|[-_])(water|window|glass|banner|textile|ivy|vine|foliage|decal|ornament)(?:$|[-_])/i.test(
+            role
+          )
+        );
+      const explicitlyPassthrough =
+        visuallyPassthrough ||
+        extras.some(value => value?.passThrough === true) ||
+        extras.some(value => value?.collision === false) ||
+        extras.some(value => value?.clientPhysics === false);
+      const explicitlySolid = extras.some(
+        value =>
+          value?.blocksPlayer === true ||
+          value?.collision === true ||
+          value?.clientPhysics === true ||
+          value?.physicsMode === 'static'
+      );
       const collision =
         meshName !== 'CLOUD_MDF' &&
-        !extras.some(value => value?.passThrough === true) &&
-        !extras.some(value => value?.collision === false) &&
-        !extras.some(value => value?.clientPhysics === false) &&
-        !extras.some(value => Array.isArray(value?.frames) && value.frames.length > 0);
-      return { material, collision, extraShader };
+        (explicitlySolid || !explicitlyPassthrough);
+      const collisionFlags = collisionFlagsFromExtras(extras, extraShader, semanticRoles);
+      return {
+        material,
+        collision,
+        collisionFlags,
+        extraShader,
+        visibilityProfile,
+        pvsPriority,
+      };
     });
     if (primitives.length === 1) {
       result.set(nodeName, policies);
@@ -407,6 +461,34 @@ function worldGlbPrimitivePolicies(
   return result;
 }
 
+function collisionFlagsFromExtras(
+  extras: readonly (Record<string, unknown> | undefined)[],
+  extraShader: string | undefined,
+  semanticRoles: readonly string[]
+): number {
+  const kind = extras
+    .map(value => stringFromExtras(value, 'requiem_collision_kind', 'collisionKind'))
+    .find((value): value is string => Boolean(value))
+    ?.toLowerCase();
+  let flags = ShadoCollisionFlags.PlayerSolid;
+  if (
+    kind === 'terrain' ||
+    kind === 'ground' ||
+    extraShader?.toLowerCase() === 'grass' ||
+    semanticRoles.some(role => /terrain|ground|path|road|walkable-field/i.test(role))
+  ) flags |= ShadoCollisionFlags.Terrain;
+  else if (kind === 'object' || kind === 'prop') flags |= ShadoCollisionFlags.StaticObject;
+  else flags |= ShadoCollisionFlags.Architecture;
+  if (
+    extras.some(
+      value => value?.alwaysResident === true || value?.requiem_physics_always_resident === true
+    )
+  ) {
+    flags |= ShadoCollisionFlags.AlwaysResident;
+  }
+  return flags;
+}
+
 function extraShaderFromExtras(
   extras: Record<string, unknown> | undefined
 ): string | undefined {
@@ -414,6 +496,17 @@ function extraShaderFromExtras(
   if (!eltania || typeof eltania !== 'object' || Array.isArray(eltania)) return undefined;
   const value = (eltania as Record<string, unknown>).extraShader;
   return typeof value === 'string' && value.trim() ? value.trim() : undefined;
+}
+
+function stringFromExtras(
+  extras: Record<string, unknown> | undefined,
+  ...keys: string[]
+): string | undefined {
+  for (const key of keys) {
+    const value = extras?.[key];
+    if (typeof value === 'string' && value.trim()) return value.trim();
+  }
+  return undefined;
 }
 
 function collisionPathForSpatial(spatialPath: string): string {

@@ -2,7 +2,7 @@ import BABYLON from "@bjs";
 import type * as BJS from "@babylonjs/core";
 
 export const ZONE_SHADER_LIGHTING_UNIFORMS = [
-  "uZoneDaylightFactor",
+  "uZoneTerrainLightColor",
   "uZoneLightDirection",
   "uZoneLightColor",
   "uZoneAmbientColor",
@@ -14,6 +14,7 @@ export const ZONE_SHADER_LIGHTING_UNIFORMS = [
 const lightDirection = BABYLON.Vector3.Up();
 const lightColor = BABYLON.Vector3.Zero();
 const ambientColor = BABYLON.Vector3.Zero();
+const terrainLightColor = BABYLON.Vector3.Zero();
 const playerLightPosition = BABYLON.Vector3.Zero();
 const playerLightColor = BABYLON.Vector3.Zero();
 const white = BABYLON.Color3.White();
@@ -68,6 +69,16 @@ export function bindZoneShaderLighting(
     ambientBase.b + hemisphereDiffuse.b * hemisphereIntensity,
   );
 
+  // Match the lighting response of a flat/upward grass terrain sample once
+  // on the CPU. Grass materials consume this coarse color directly instead
+  // of repeating directional-light work for every fragment.
+  const terrainDiffuse = 0.3 + Math.max(lightDirection.y, 0) * 0.7;
+  terrainLightColor.set(
+    ambientColor.x + lightColor.x * terrainDiffuse,
+    ambientColor.y + lightColor.y * terrainDiffuse,
+    ambientColor.z + lightColor.z * terrainDiffuse,
+  );
+
   const playerLight = scene.getLightByName(
     "playerLight",
   ) as BJS.PointLight | null;
@@ -86,18 +97,21 @@ export function bindZoneShaderLighting(
 
   for (const material of materials) {
     if (!material) continue;
-    // Grass uses this deliberately coarse day/night value instead of doing
-    // per-fragment directional and local-light work. Other zone shaders keep
-    // the richer uniforms below.
-    material.setFloat(
-      "uZoneDaylightFactor",
-      lightDirection.y > 0.025 ? 1 : 0.38,
-    );
+    material.setVector3("uZoneTerrainLightColor", terrainLightColor);
     material.setVector3("uZoneLightDirection", lightDirection);
     material.setVector3("uZoneLightColor", lightColor);
     material.setVector3("uZoneAmbientColor", ambientColor);
     material.setVector3("uZonePlayerLightPosition", playerLightPosition);
     material.setVector3("uZonePlayerLightColor", playerLightColor);
     material.setFloat("uZonePlayerLightRange", playerLight?.range ?? 1);
+    if (material.metadata?.requiemZoneAtmosphere === true) {
+      material.setColor3("uZoneFogColor", scene.fogColor);
+      material.setFloat("uZoneFogStart", scene.fogStart);
+      material.setFloat("uZoneFogEnd", scene.fogEnd);
+      material.setVector3(
+        "uZoneCameraPosition",
+        scene.activeCamera?.globalPosition ?? BABYLON.Vector3.Zero(),
+      );
+    }
   }
 }

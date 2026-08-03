@@ -2,6 +2,8 @@ import { Frustum, Plane, type Camera } from "@babylonjs/core";
 import {
   ShadoEntityVisibilityWorker,
   type ShadoEntityVisibilityWorkerStats,
+  type ShadoWorldSpatialPackage,
+  type ShadoWorldVisibilityCoordinator,
 } from "@knervous/shado/world";
 import type { RequiemEntityActor, ShadoEntityPool } from "./shado-entity-pool";
 
@@ -66,13 +68,23 @@ export class RequiemEntityVisibility implements RequiemEntityVisibilitySink {
   private hasCompletedResult = false;
   private overflowed = false;
 
-  private constructor(private readonly worker: ShadoEntityVisibilityWorker) {}
+  private constructor(
+    private readonly worker: ShadoEntityVisibilityWorker,
+    private readonly worldCoordinator: ShadoWorldVisibilityCoordinator | null,
+  ) {}
 
-  public static async create(): Promise<RequiemEntityVisibility> {
+  public static async create(
+    world?: ShadoWorldSpatialPackage,
+    coordinator?: ShadoWorldVisibilityCoordinator,
+  ): Promise<RequiemEntityVisibility> {
     return new RequiemEntityVisibility(
-      await ShadoEntityVisibilityWorker.create(STANDALONE_VISIBILITY_WORLD, {
+      await ShadoEntityVisibilityWorker.create(world ?? STANDALONE_VISIBILITY_WORLD, {
         capacity: VISIBILITY_CAPACITY,
+        // This consumer only needs compact visible IDs. Compact mode bins by
+        // visibility region first and avoids copying rejected entities to WASM.
+        publishFlags: false,
       }),
+      coordinator ?? null,
     );
   }
 
@@ -195,10 +207,15 @@ export class RequiemEntityVisibility implements RequiemEntityVisibilitySink {
         this.planeValues[offset++] = plane.d;
       }
       const position = camera.globalPosition ?? camera.position;
-      this.worker.request(this.planeValues, [], {
+      const frame = this.worldCoordinator?.reduceWorld(this.planeValues, [
+        position.x,
+        position.y,
+        position.z,
+      ]);
+      this.worker.request(this.planeValues, frame?.regionFlags ?? [], {
         camera: [position.x, position.y, position.z],
         maxDistance,
-        outsideWorldVisible: true,
+        outsideWorldVisible: this.worldCoordinator === null,
         radiusScale: ACTOR_RADIUS,
       });
     }

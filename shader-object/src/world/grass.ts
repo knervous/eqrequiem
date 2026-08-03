@@ -58,7 +58,14 @@ export function compileShadoWorldGrass(
   const sources = primitives
     .map((primitive, index) => ({ primitive, index }))
     .filter(({ primitive }) => primitive.extraShader === 'grass');
-  if (!sources.length) return undefined;
+  // An explicit grass policy is also a runtime package contract. Preserve an
+  // empty versioned package when the authored zone has no tagged surfaces so
+  // loaders and audits do not have to infer whether grass was intentionally
+  // compiled or accidentally skipped. The default `undefined` policy still
+  // omits grass for worlds that did not request it.
+  if (!sources.length) {
+    return options ? bucketPlacements([], settings, new Map()) : undefined;
+  }
   const coverage = compileCoverage(primitives, settings);
 
   const placements: Placement[] = [];
@@ -85,7 +92,7 @@ export function compileShadoWorldGrass(
     );
     remaining -= count;
   }
-  if (!placements.length) return undefined;
+  if (!placements.length) return bucketPlacements([], settings, coverage);
   return bucketPlacements(placements, settings, coverage);
 }
 

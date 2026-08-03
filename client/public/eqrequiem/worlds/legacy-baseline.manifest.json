@@ -10,9 +10,9 @@
   "runtimeWorldPrefix": "/eqrequiem/worlds",
   "runtimeObjectPrefix": "/eqrequiem/objects",
   "counts": {
-    "ready": 69,
+    "ready": 70,
     "missingSource": 5,
-    "packFailed": 2
+    "packFailed": 1
   },
   "zones": [
     {
@@ -44,28 +44,37 @@
         },
         "spatial": {
           "path": "client/public/eqrequiem/worlds/qeynos.spatial.json.gz",
-          "sha256": "d524173fa81af449a9694fbd5f638bba357fa2b2a84137a4cc4dac99c21d1431",
-          "bytes": 187560
+          "sha256": "3ef2c3924294be001a3fa9b5d00382a4a9ed7ff252ede1a5420b564636f7c49a",
+          "bytes": 202601
         },
         "collision": {
           "path": "client/public/eqrequiem/worlds/qeynos.collision.bin.gz",
-          "sha256": "c612bcf9656f4ca9dc2b0819a104f359102e9e966f39518c08d9cc5df0d3fe32",
-          "bytes": 166862
+          "sha256": "0f247249e8ea6886637880e9f0bc53bfe98fc5c2c78021dde82df8b39e088f2c",
+          "bytes": 205903
+        },
+        "lightingPlan": {
+          "path": "client/public/eqrequiem/worlds/qeynos.lighting-plan.json.gz",
+          "sha256": "5c7fab26e76759b5f49d05e64cc591165d451f0469e7aa46573fb69e5c583c7f",
+          "bytes": 23258
         }
       },
       "stats": {
         "primitives": 243,
         "triangles": 34479,
-        "clusters": 451,
-        "renderChunks": 243,
-        "cells": 28,
+        "clusters": 811,
+        "renderChunks": 696,
+        "cells": 51,
         "portals": 0,
         "regions": 44,
         "objectPrototypes": 84,
         "objectStamps": 476,
-        "tiles": 28,
-        "collisionVertices": 14327,
-        "collisionTriangles": 29948
+        "tiles": 51,
+        "collisionVertices": 19442,
+        "collisionTriangles": 36153,
+        "collisionSourceTriangles": 31910,
+        "collisionChunks": 51,
+        "lightingStatus": "blocked-missing-uv2",
+        "lightingUv2ReadyChunks": 0
       },
       "warnings": []
     },
@@ -86,52 +95,49 @@
       },
       "authoring": {
         "path": "shader-object/sandbox/public/shado/worlds/qeynos2.authoring.json",
-        "sha256": "cd01c9448f689294ba0a187d41d71c9abb1c0aff1734c70c3edfea8f63c90fb1",
-        "bytes": 325315
+        "sha256": "d8b7bfec14102e8ae8db89be43ea9504608e83d5568790a96bff8015be760865",
+        "bytes": 323478
       },
       "runtime": {
         "source": "/eqrequiem/worlds/qeynos2.glb.gz",
         "scene": {
           "path": "client/public/eqrequiem/worlds/qeynos2.glb.gz",
-          "sha256": "6410193a2041522a1ba7096d1d04d1845759ff1ba4c3d534b3769b66030295f1",
-          "bytes": 23078292
-        },
-        "legacyScene": {
-          "path": "client/public/eqrequiem/worlds/qeynos2.glb.leg.gz",
-          "sha256": "ac084cb524577aceab77817e9e1163d49a8d2899dc7feb8ac98ccf78f1118d6c",
-          "bytes": 2140136
+          "sha256": "7f0659cd8e41862995d9a06bcf879ff54a67c7501626e8854be9f30e805a71f0",
+          "bytes": 25640953
         },
         "spatial": {
           "path": "client/public/eqrequiem/worlds/qeynos2.spatial.json.gz",
-          "sha256": "44a7f3969665286898828b0e019f88f175ebf10a12f11c3e0bbde4adbacc1e0c",
-          "bytes": 3656044
+          "sha256": "b9facda7587b6148b25804dde2d982b5f97328091d02825e13dc94e27684ab3a",
+          "bytes": 4849828
         },
         "collision": {
           "path": "client/public/eqrequiem/worlds/qeynos2.collision.bin.gz",
-          "sha256": "ea85210b13003639557c96ea094688338251ce2bda3f5331f9e774f9443a5890",
-          "bytes": 238153
+          "sha256": "56f77ca94617ca624010d2894e762fb45c65a73ff80a872497d3b49719c02089",
+          "bytes": 479860
         },
         "lightingPlan": {
           "path": "client/public/eqrequiem/worlds/qeynos2.lighting-plan.json.gz",
-          "sha256": "8ce29f3b4550b41967cbddda0e4e3a04bbf72b431921fc884aaed58162eb0b98",
-          "bytes": 173324
+          "sha256": "95a1a3826186e5c3ffdf939abf21f58731c7250fe731412e7fb21fd5422f83e4",
+          "bytes": 236424
         }
       },
       "stats": {
-        "primitives": 530,
-        "triangles": 41434,
-        "clusters": 6324,
-        "renderChunks": 6296,
-        "cells": 3492,
+        "primitives": 693,
+        "triangles": 70540,
+        "clusters": 8974,
+        "renderChunks": 8854,
+        "cells": 5621,
         "portals": 0,
         "regions": 20,
-        "objectPrototypes": 48,
-        "objectStamps": 480,
-        "grassCells": 6087,
-        "grassPlacements": 38618,
-        "tiles": 3492,
-        "collisionVertices": 20190,
-        "collisionTriangles": 33585,
+        "objectPrototypes": 46,
+        "objectStamps": 478,
+        "grassCells": 6082,
+        "grassPlacements": 47220,
+        "tiles": 5621,
+        "collisionVertices": 39067,
+        "collisionTriangles": 64058,
+        "collisionSourceTriangles": 59835,
+        "collisionChunks": 80,
         "lightingStatus": "blocked-missing-uv2",
         "lightingUv2ReadyChunks": 0
       },
@@ -166,28 +172,37 @@
         },
         "spatial": {
           "path": "client/public/eqrequiem/worlds/qrg.spatial.json.gz",
-          "sha256": "38159776fa2a2d65732beaaa96828872c2d7491006ae32b8e1485c94f53be885",
-          "bytes": 61651
+          "sha256": "c1772193d447a8ca8f894cc32e82cd77545acb2ebc39be82718fbc5580d84002",
+          "bytes": 72709
         },
         "collision": {
           "path": "client/public/eqrequiem/worlds/qrg.collision.bin.gz",
-          "sha256": "9c0b806d5de6356323b8c26491fd74b4044a57e9f676cc47f00b204c16d5bff4",
-          "bytes": 48168
+          "sha256": "aea4f97c53d8c6e212d0c0cfe25bb4ba1ae1f7eca39ea052b6ab37ef6e8a175b",
+          "bytes": 60338
+        },
+        "lightingPlan": {
+          "path": "client/public/eqrequiem/worlds/qrg.lighting-plan.json.gz",
+          "sha256": "69dbb522a93251a09d640a9f15459cc86def1ed6470d65aa302fbdb463bbed85",
+          "bytes": 6982
         }
       },
       "stats": {
         "primitives": 48,
         "triangles": 10659,
-        "clusters": 118,
-        "renderChunks": 48,
-        "cells": 19,
+        "clusters": 277,
+        "renderChunks": 232,
+        "cells": 61,
         "portals": 0,
         "regions": 7,
         "objectPrototypes": 21,
         "objectStamps": 137,
-        "tiles": 19,
-        "collisionVertices": 4029,
-        "collisionTriangles": 7726
+        "tiles": 61,
+        "collisionVertices": 5834,
+        "collisionTriangles": 10033,
+        "collisionSourceTriangles": 8710,
+        "collisionChunks": 75,
+        "lightingStatus": "blocked-missing-uv2",
+        "lightingUv2ReadyChunks": 0
       },
       "warnings": []
     },
@@ -220,28 +235,37 @@
         },
         "spatial": {
           "path": "client/public/eqrequiem/worlds/qeytoqrg.spatial.json.gz",
-          "sha256": "115811e24915eca88d3d61305a5a14f6271fa7855ff08a620210fc69d7c50d37",
-          "bytes": 72742
+          "sha256": "e1ffda637503bec1a2936ca5229ce7f31e24ae519001ffb2a9875e9127b260aa",
+          "bytes": 135124
         },
         "collision": {
           "path": "client/public/eqrequiem/worlds/qeytoqrg.collision.bin.gz",
-          "sha256": "f7db94375375f1a602a9d5462f1422cd3bd5238b1ab8ba87a0104423c4fc5265",
-          "bytes": 75131
+          "sha256": "9975fc9329bda300292fd0db0bfca8ac7fd9ebdb5d0637980ab4cf5199e901f0",
+          "bytes": 102702
+        },
+        "lightingPlan": {
+          "path": "client/public/eqrequiem/worlds/qeytoqrg.lighting-plan.json.gz",
+          "sha256": "a512cd9164184545eab5acf5173a1b109507acd5754e5381b6eb77d2844ae951",
+          "bytes": 25533
         }
       },
       "stats": {
         "primitives": 61,
         "triangles": 11265,
-        "clusters": 131,
-        "renderChunks": 61,
-        "cells": 75,
+        "clusters": 964,
+        "renderChunks": 962,
+        "cells": 271,
         "portals": 0,
         "regions": 30,
         "objectPrototypes": 15,
         "objectStamps": 383,
-        "tiles": 75,
-        "collisionVertices": 5868,
-        "collisionTriangles": 11195
+        "tiles": 271,
+        "collisionVertices": 13673,
+        "collisionTriangles": 17964,
+        "collisionSourceTriangles": 11195,
+        "collisionChunks": 274,
+        "lightingStatus": "blocked-missing-uv2",
+        "lightingUv2ReadyChunks": 0
       },
       "warnings": []
     },
@@ -274,28 +298,37 @@
         },
         "spatial": {
           "path": "client/public/eqrequiem/worlds/highkeep.spatial.json.gz",
-          "sha256": "b06def395ee58b24efa5433ad2a4a9a989101f1e1fe355c240f372b828eede54",
-          "bytes": 103763
+          "sha256": "ac1cdb29f06d92141f4d73da3e1429701600b650ebdaa48040f12ea2c78d8466",
+          "bytes": 111145
         },
         "collision": {
           "path": "client/public/eqrequiem/worlds/highkeep.collision.bin.gz",
-          "sha256": "67704e8365fc2757f934a08e7a232e0128ccdfb86becc263879baacc1d8e55b8",
-          "bytes": 105536
+          "sha256": "512f064eb326cd49b69985718b4b5f1765b95e073a993764a7d656f59862c5d8",
+          "bytes": 116701
+        },
+        "lightingPlan": {
+          "path": "client/public/eqrequiem/worlds/highkeep.lighting-plan.json.gz",
+          "sha256": "50889b567dcabc5c022cfea7d5fbaa4a4608cd58a1343427dd294e54274b9738",
+          "bytes": 8464
         }
       },
       "stats": {
         "primitives": 109,
         "triangles": 18998,
-        "clusters": 225,
-        "renderChunks": 109,
+        "clusters": 328,
+        "renderChunks": 256,
         "cells": 8,
         "portals": 0,
         "regions": 2,
         "objectPrototypes": 40,
         "objectStamps": 551,
         "tiles": 8,
-        "collisionVertices": 9097,
-        "collisionTriangles": 18515
+        "collisionVertices": 10617,
+        "collisionTriangles": 20007,
+        "collisionSourceTriangles": 18515,
+        "collisionChunks": 8,
+        "lightingStatus": "blocked-missing-uv2",
+        "lightingUv2ReadyChunks": 0
       },
       "warnings": []
     },
@@ -328,28 +361,37 @@
         },
         "spatial": {
           "path": "client/public/eqrequiem/worlds/freportn.spatial.json.gz",
-          "sha256": "79f43e4b11183d50c068f1d07edab3c143807a52d24807b716454800d8a967c7",
-          "bytes": 200492
+          "sha256": "30298978ac9a4740e479c2be4abc8a0f7822e2ded2315aa949e617f0e90bdafa",
+          "bytes": 209762
         },
         "collision": {
           "path": "client/public/eqrequiem/worlds/freportn.collision.bin.gz",
-          "sha256": "92cd87e08f6440b100fcf5e3af512ae4e3641e691558ad228f3f4111ec4e0d2a",
-          "bytes": 213643
+          "sha256": "f4f934c09c3633aed4d302f5089194cf203980d02a2d9e9759705951707dd9ef",
+          "bytes": 230235
+        },
+        "lightingPlan": {
+          "path": "client/public/eqrequiem/worlds/freportn.lighting-plan.json.gz",
+          "sha256": "bc7e4401451eaad9390571e98a93a7320880e76e585c9f304b5d29c96c00bfd8",
+          "bytes": 14012
         }
       },
       "stats": {
         "primitives": 158,
         "triangles": 39419,
-        "clusters": 404,
-        "renderChunks": 158,
-        "cells": 12,
+        "clusters": 588,
+        "renderChunks": 409,
+        "cells": 20,
         "portals": 0,
         "regions": 14,
         "objectPrototypes": 61,
         "objectStamps": 556,
-        "tiles": 12,
-        "collisionVertices": 18789,
-        "collisionTriangles": 38163
+        "tiles": 20,
+        "collisionVertices": 21250,
+        "collisionTriangles": 40593,
+        "collisionSourceTriangles": 38163,
+        "collisionChunks": 20,
+        "lightingStatus": "blocked-missing-uv2",
+        "lightingUv2ReadyChunks": 0
       },
       "warnings": []
     },
@@ -382,28 +424,37 @@
         },
         "spatial": {
           "path": "client/public/eqrequiem/worlds/freportw.spatial.json.gz",
-          "sha256": "912642392de6da32d5e7721700dcd143b8b313a9b81da65de3bd1b1590dc6600",
-          "bytes": 240807
+          "sha256": "4d14fcb5e1a12fdc066a8308cc7621a57851ffb176b88d41508a71c11af6e146",
+          "bytes": 253398
         },
         "collision": {
           "path": "client/public/eqrequiem/worlds/freportw.collision.bin.gz",
-          "sha256": "ea04ea51dc2f7ca0830da111ef403b05b5173eb4899f658eff3b3a3de48a0e85",
-          "bytes": 232955
+          "sha256": "ad234e75919666e55e1448d51793bcbdd9b7f9a5a0ce1af56a84a776428f2633",
+          "bytes": 255248
+        },
+        "lightingPlan": {
+          "path": "client/public/eqrequiem/worlds/freportw.lighting-plan.json.gz",
+          "sha256": "5eccc9c7923a69b5b0e6b2afcd27c9c1421a03d77f9a46649725d3f8a3927eb0",
+          "bytes": 15593
         }
       },
       "stats": {
         "primitives": 108,
         "triangles": 42521,
-        "clusters": 401,
-        "renderChunks": 108,
-        "cells": 37,
+        "clusters": 688,
+        "renderChunks": 512,
+        "cells": 76,
         "portals": 0,
         "regions": 25,
         "objectPrototypes": 63,
         "objectStamps": 758,
-        "tiles": 37,
-        "collisionVertices": 19695,
-        "collisionTriangles": 41202
+        "tiles": 76,
+        "collisionVertices": 23900,
+        "collisionTriangles": 45370,
+        "collisionSourceTriangles": 41202,
+        "collisionChunks": 78,
+        "lightingStatus": "blocked-missing-uv2",
+        "lightingUv2ReadyChunks": 0
       },
       "warnings": []
     },
@@ -436,28 +487,37 @@
         },
         "spatial": {
           "path": "client/public/eqrequiem/worlds/freporte.spatial.json.gz",
-          "sha256": "73a39ac0ade1913c512efe4435be80521efd1fae441c659738a2b02c509225a1",
-          "bytes": 286593
+          "sha256": "5ddea56df55a006ece7a5101e4f1065ac3637894614e4cecbf69bb32e6f8a2ef",
+          "bytes": 304697
         },
         "collision": {
           "path": "client/public/eqrequiem/worlds/freporte.collision.bin.gz",
-          "sha256": "0acc1441351b00a0c8dcdf8a1874efac5a06200fbe4b4907bf6ec0b797bd309d",
-          "bytes": 280196
+          "sha256": "bddcd88644159fef8d9396ac3342adbf8b66d87752b8cac68c3cffdd90a5dc8a",
+          "bytes": 305844
+        },
+        "lightingPlan": {
+          "path": "client/public/eqrequiem/worlds/freporte.lighting-plan.json.gz",
+          "sha256": "2cec1b4cb3679a45067af4816fa5b147d986b81ef36d6f8a0d556e540a2c816e",
+          "bytes": 18769
         }
       },
       "stats": {
         "primitives": 152,
         "triangles": 50431,
-        "clusters": 494,
-        "renderChunks": 152,
-        "cells": 33,
+        "clusters": 871,
+        "renderChunks": 625,
+        "cells": 130,
         "portals": 0,
         "regions": 25,
         "objectPrototypes": 51,
         "objectStamps": 1125,
-        "tiles": 33,
-        "collisionVertices": 23654,
-        "collisionTriangles": 48913
+        "tiles": 130,
+        "collisionVertices": 28146,
+        "collisionTriangles": 53183,
+        "collisionSourceTriangles": 48913,
+        "collisionChunks": 136,
+        "lightingStatus": "blocked-missing-uv2",
+        "lightingUv2ReadyChunks": 0
       },
       "warnings": []
     },
@@ -490,28 +550,37 @@
         },
         "spatial": {
           "path": "client/public/eqrequiem/worlds/runnyeye.spatial.json.gz",
-          "sha256": "2e5502cabdbf34d3b2a1527c948e0699b7804f556a27f27ccc4d3b44160607fa",
-          "bytes": 140302
+          "sha256": "fcbfcd6e515bb3f7e785a721dd5f106bdb48554cdd6cab0325500b183bd87a29",
+          "bytes": 152036
         },
         "collision": {
           "path": "client/public/eqrequiem/worlds/runnyeye.collision.bin.gz",
-          "sha256": "c2f11425e2568987bc87d6403e5bfdbaf834b31f498a014cf8aa314ee87a5986",
-          "bytes": 116892
+          "sha256": "98442c1df7d16367713a8fe7ea6a17c5e713819ca42ed3040bb23d406b1e2bcb",
+          "bytes": 148798
+        },
+        "lightingPlan": {
+          "path": "client/public/eqrequiem/worlds/runnyeye.lighting-plan.json.gz",
+          "sha256": "522583bc24d79a22d1655dcca564d45e310125b1bc0055bf8b80fc7ccd49aa9a",
+          "bytes": 11906
         }
       },
       "stats": {
         "primitives": 110,
         "triangles": 23591,
-        "clusters": 260,
-        "renderChunks": 110,
-        "cells": 5,
+        "clusters": 430,
+        "renderChunks": 332,
+        "cells": 10,
         "portals": 0,
         "regions": 23,
         "objectPrototypes": 61,
         "objectStamps": 648,
-        "tiles": 5,
-        "collisionVertices": 9701,
-        "collisionTriangles": 19322
+        "tiles": 10,
+        "collisionVertices": 12855,
+        "collisionTriangles": 24172,
+        "collisionSourceTriangles": 22109,
+        "collisionChunks": 11,
+        "lightingStatus": "blocked-missing-uv2",
+        "lightingUv2ReadyChunks": 0
       },
       "warnings": []
     },
@@ -544,28 +613,37 @@
         },
         "spatial": {
           "path": "client/public/eqrequiem/worlds/qey2hh1.spatial.json.gz",
-          "sha256": "7d5fb375143730d0775998272273ba1188608cf4ff640bef7e5b2f9643c4fd37",
-          "bytes": 150979
+          "sha256": "e3080a5776702a48b8435d34580816815fbc8bd7eab7c69792750760e640911f",
+          "bytes": 425609
         },
         "collision": {
           "path": "client/public/eqrequiem/worlds/qey2hh1.collision.bin.gz",
-          "sha256": "3e75a092c6c7e5d9400ec027397456eef607573c66ca946a4db0870389e52a8c",
-          "bytes": 80332
+          "sha256": "4c1cbea9cb3599104b03e61bd7b7b647ded8d1fd783b96d3f635a3e14d880a13",
+          "bytes": 208245
+        },
+        "lightingPlan": {
+          "path": "client/public/eqrequiem/worlds/qey2hh1.lighting-plan.json.gz",
+          "sha256": "0f4896b4b8c967bcf819caee3a77360cf51c4a74517491ab01d18a8c3903c0db",
+          "bytes": 98949
         }
       },
       "stats": {
         "primitives": 45,
         "triangles": 12652,
-        "clusters": 127,
-        "renderChunks": 45,
-        "cells": 112,
+        "clusters": 4053,
+        "renderChunks": 4053,
+        "cells": 1991,
         "portals": 0,
         "regions": 26,
         "objectPrototypes": 62,
         "objectStamps": 3757,
-        "tiles": 112,
-        "collisionVertices": 6291,
-        "collisionTriangles": 11880
+        "tiles": 1991,
+        "collisionVertices": 45119,
+        "collisionTriangles": 41046,
+        "collisionSourceTriangles": 11880,
+        "collisionChunks": 2005,
+        "lightingStatus": "blocked-missing-uv2",
+        "lightingUv2ReadyChunks": 0
       },
       "warnings": []
     },
@@ -598,28 +676,37 @@
         },
         "spatial": {
           "path": "client/public/eqrequiem/worlds/northkarana.spatial.json.gz",
-          "sha256": "e35edf9730a9a14267ea39fbe4de1b70589a5a754644ec95c16be2b2ae05c11e",
-          "bytes": 90845
+          "sha256": "134e8d3505e3b5d9842c03fbf6be8e095566185516a76e9a1d3bbc95ab9375b6",
+          "bytes": 240612
         },
         "collision": {
           "path": "client/public/eqrequiem/worlds/northkarana.collision.bin.gz",
-          "sha256": "7c91b31c98c193b63e678bcb366ce3631486d02af21cb818e603788b86552ed2",
-          "bytes": 53067
+          "sha256": "abbabf8623b42531383537d470bb9434cfa5ba216f375db1616b1075a81e3331",
+          "bytes": 110658
+        },
+        "lightingPlan": {
+          "path": "client/public/eqrequiem/worlds/northkarana.lighting-plan.json.gz",
+          "sha256": "8d7d8aa954fd42bad2fced97ee9f78e9a53616c0fb45c349d0786353b151cb8c",
+          "bytes": 52369
         }
       },
       "stats": {
         "primitives": 38,
         "triangles": 9310,
-        "clusters": 94,
-        "renderChunks": 38,
-        "cells": 65,
+        "clusters": 2167,
+        "renderChunks": 2159,
+        "cells": 997,
         "portals": 0,
         "regions": 14,
         "objectPrototypes": 36,
         "objectStamps": 1933,
-        "tiles": 65,
-        "collisionVertices": 4460,
-        "collisionTriangles": 8400
+        "tiles": 997,
+        "collisionVertices": 24086,
+        "collisionTriangles": 23414,
+        "collisionSourceTriangles": 8400,
+        "collisionChunks": 1010,
+        "lightingStatus": "blocked-missing-uv2",
+        "lightingUv2ReadyChunks": 0
       },
       "warnings": []
     },
@@ -652,28 +739,37 @@
         },
         "spatial": {
           "path": "client/public/eqrequiem/worlds/southkarana.spatial.json.gz",
-          "sha256": "4d73a366f03a68a44c63312472b510d280757fd91d978640593502e8cbfdde5c",
-          "bytes": 173813
+          "sha256": "3eb658577165066ad1429687a2a82ffb0b82ae66ba6c44d5e9412e0716d9112e",
+          "bytes": 408691
         },
         "collision": {
           "path": "client/public/eqrequiem/worlds/southkarana.collision.bin.gz",
-          "sha256": "68dd955e59eefa2f227a8b90ce91198a9d54ff84d9860467e5b3ba1f6e683388",
-          "bytes": 115132
+          "sha256": "a2ada1c9fe24854a1ee524babeb35d9d7269b17e1ab24131633c5759c77f7d89",
+          "bytes": 231049
+        },
+        "lightingPlan": {
+          "path": "client/public/eqrequiem/worlds/southkarana.lighting-plan.json.gz",
+          "sha256": "12e8511acb156958b07f75750c8c0e577bd45f530f7d14312fb9b72b5f60a498",
+          "bytes": 80409
         }
       },
       "stats": {
         "primitives": 86,
         "triangles": 18464,
-        "clusters": 197,
-        "renderChunks": 86,
-        "cells": 117,
+        "clusters": 3277,
+        "renderChunks": 3264,
+        "cells": 1577,
         "portals": 0,
         "regions": 6,
         "objectPrototypes": 29,
         "objectStamps": 3790,
-        "tiles": 117,
-        "collisionVertices": 9584,
-        "collisionTriangles": 17813
+        "tiles": 1577,
+        "collisionVertices": 44085,
+        "collisionTriangles": 44408,
+        "collisionSourceTriangles": 17813,
+        "collisionChunks": 1634,
+        "lightingStatus": "blocked-missing-uv2",
+        "lightingUv2ReadyChunks": 0
       },
       "warnings": []
     },
@@ -706,28 +802,37 @@
         },
         "spatial": {
           "path": "client/public/eqrequiem/worlds/eastkarana.spatial.json.gz",
-          "sha256": "1225056b5ee86a5ca46e303ba6373bcc302e9b702ff369a44eb7438c28600b09",
-          "bytes": 102353
+          "sha256": "83e2272039496221fff12b0cb0ab666226e97d0a0db9eb5081b4bd719d56f0a1",
+          "bytes": 264724
         },
         "collision": {
           "path": "client/public/eqrequiem/worlds/eastkarana.collision.bin.gz",
-          "sha256": "57f68dd89689e5c197d731a9f070c4a6080c95f63127acb477b6243fb076b2d9",
-          "bytes": 74895
+          "sha256": "5dc6053be70f1cee199b467fc63ec3e0f745252a4aa5eba6a4badc2ef74ed922",
+          "bytes": 150865
+        },
+        "lightingPlan": {
+          "path": "client/public/eqrequiem/worlds/eastkarana.lighting-plan.json.gz",
+          "sha256": "1377f6fbcb6ce07cc0d24055ea966d7278503a2f6c057b1df206b64c29acba7c",
+          "bytes": 51339
         }
       },
       "stats": {
         "primitives": 54,
         "triangles": 11582,
-        "clusters": 127,
-        "renderChunks": 54,
-        "cells": 105,
+        "clusters": 2066,
+        "renderChunks": 2066,
+        "cells": 869,
         "portals": 0,
         "regions": 8,
         "objectPrototypes": 51,
         "objectStamps": 1446,
-        "tiles": 105,
-        "collisionVertices": 5593,
-        "collisionTriangles": 10628
+        "tiles": 869,
+        "collisionVertices": 25851,
+        "collisionTriangles": 27120,
+        "collisionSourceTriangles": 10754,
+        "collisionChunks": 890,
+        "lightingStatus": "blocked-missing-uv2",
+        "lightingUv2ReadyChunks": 0
       },
       "warnings": []
     },
@@ -760,28 +865,37 @@
         },
         "spatial": {
           "path": "client/public/eqrequiem/worlds/beholder.spatial.json.gz",
-          "sha256": "161dd4aa67128954046a0f9d9025a781f4bf85bfdf3e9ca679f628a5b3cd1ad4",
-          "bytes": 56206
+          "sha256": "0d6b30ef03da340a9f88319baa983c85c525793778c57344f80bfdb9dbf256dd",
+          "bytes": 80810
         },
         "collision": {
           "path": "client/public/eqrequiem/worlds/beholder.collision.bin.gz",
-          "sha256": "edc52082df5c355b92fb3fc567d09ed574052e37b0ff4f1b1c3bd455e3bf711d",
-          "bytes": 65085
+          "sha256": "334a7cba11449009599f7fb2257f4eb496e4c4aa8477d52485d936dfe01b46c0",
+          "bytes": 79076
+        },
+        "lightingPlan": {
+          "path": "client/public/eqrequiem/worlds/beholder.lighting-plan.json.gz",
+          "sha256": "f24d51964d7f678c71ae95041b4956f884817917b118388f6be8ca147569c49b",
+          "bytes": 7915
         }
       },
       "stats": {
         "primitives": 25,
         "triangles": 8578,
-        "clusters": 85,
-        "renderChunks": 25,
-        "cells": 36,
+        "clusters": 313,
+        "renderChunks": 297,
+        "cells": 88,
         "portals": 0,
         "regions": 3,
         "objectPrototypes": 11,
         "objectStamps": 152,
-        "tiles": 36,
-        "collisionVertices": 4557,
-        "collisionTriangles": 8569
+        "tiles": 88,
+        "collisionVertices": 7424,
+        "collisionTriangles": 11166,
+        "collisionSourceTriangles": 8569,
+        "collisionChunks": 93,
+        "lightingStatus": "blocked-missing-uv2",
+        "lightingUv2ReadyChunks": 0
       },
       "warnings": []
     },
@@ -814,28 +928,37 @@
         },
         "spatial": {
           "path": "client/public/eqrequiem/worlds/blackburrow.spatial.json.gz",
-          "sha256": "18aed84d937cbb9962b14d0184d3070c9f9b145d3bd0e9b1fbb747c0ffe58dcb",
-          "bytes": 114632
+          "sha256": "2eab298a094e3cdbdff17719b4b1f40738a12a8b13dae315b30f784f00a37fec",
+          "bytes": 124327
         },
         "collision": {
           "path": "client/public/eqrequiem/worlds/blackburrow.collision.bin.gz",
-          "sha256": "623e926207c57073511636a9d80197c1dbf38f2be4b422982b2957b6b6ddbc43",
-          "bytes": 98321
+          "sha256": "0d650e7248d8a1a1b6c19d4cea34085b88c8dc7262e08ce922c7f723fc96be91",
+          "bytes": 124231
+        },
+        "lightingPlan": {
+          "path": "client/public/eqrequiem/worlds/blackburrow.lighting-plan.json.gz",
+          "sha256": "53504f7e79c046fd6085ad4ee102f525b7b6338ea8fba3fa9d4b16038e44d53a",
+          "bytes": 6783
         }
       },
       "stats": {
         "primitives": 53,
         "triangles": 19962,
-        "clusters": 192,
-        "renderChunks": 53,
-        "cells": 10,
+        "clusters": 297,
+        "renderChunks": 206,
+        "cells": 11,
         "portals": 0,
         "regions": 6,
         "objectPrototypes": 34,
         "objectStamps": 283,
-        "tiles": 10,
-        "collisionVertices": 8112,
-        "collisionTriangles": 16099
+        "tiles": 11,
+        "collisionVertices": 10819,
+        "collisionTriangles": 20108,
+        "collisionSourceTriangles": 18259,
+        "collisionChunks": 11,
+        "lightingStatus": "blocked-missing-uv2",
+        "lightingUv2ReadyChunks": 0
       },
       "warnings": []
     },
@@ -868,28 +991,37 @@
         },
         "spatial": {
           "path": "client/public/eqrequiem/worlds/paw.spatial.json.gz",
-          "sha256": "3962426635d2f04c6d90d70b957bdd6a70e00a01cc76c95f153eaa481c1962f2",
-          "bytes": 94334
+          "sha256": "176f11abae3e98e57831a84a18c1139a372b380893f8e268e04d0b99b8a58a72",
+          "bytes": 104971
         },
         "collision": {
           "path": "client/public/eqrequiem/worlds/paw.collision.bin.gz",
-          "sha256": "b4edb4d97637418f99048f7b4e3dade7acaa8860b6bdb99c200f20e896117496",
-          "bytes": 89891
+          "sha256": "5ae4a443f4898b9cfdcd7bcf40fa2f1f9bb73c7c5f4adf3d538148e3fe5ae234",
+          "bytes": 101126
+        },
+        "lightingPlan": {
+          "path": "client/public/eqrequiem/worlds/paw.lighting-plan.json.gz",
+          "sha256": "3029501944d2fdeabc1a01caed764d5a76755618c95fa7a40acda836840127e1",
+          "bytes": 6794
         }
       },
       "stats": {
         "primitives": 41,
         "triangles": 15360,
-        "clusters": 145,
-        "renderChunks": 41,
-        "cells": 13,
+        "clusters": 295,
+        "renderChunks": 226,
+        "cells": 16,
         "portals": 0,
         "regions": 11,
         "objectPrototypes": 17,
         "objectStamps": 344,
-        "tiles": 13,
-        "collisionVertices": 7028,
-        "collisionTriangles": 14095
+        "tiles": 16,
+        "collisionVertices": 8488,
+        "collisionTriangles": 16019,
+        "collisionSourceTriangles": 14880,
+        "collisionChunks": 17,
+        "lightingStatus": "blocked-missing-uv2",
+        "lightingUv2ReadyChunks": 0
       },
       "warnings": []
     },
@@ -922,28 +1054,37 @@
         },
         "spatial": {
           "path": "client/public/eqrequiem/worlds/rivervale.spatial.json.gz",
-          "sha256": "153d5daa088ed126524d0f94d8d97a45d2211ed9141c01f8dc6d64176b555e4a",
-          "bytes": 126869
+          "sha256": "c3bd47df32dfc0eafd2e55da39cd9303ccc46f46791c29e9bc46cb263043d8fe",
+          "bytes": 133115
         },
         "collision": {
           "path": "client/public/eqrequiem/worlds/rivervale.collision.bin.gz",
-          "sha256": "b75e333f049abd6b005c09c74043aa2de07463fb03715928b22688314b5be741",
-          "bytes": 121124
+          "sha256": "3e1f4fa7407e0a9d129133d4bd6c71070d072b096c30c99499fff2172075eb4d",
+          "bytes": 130102
+        },
+        "lightingPlan": {
+          "path": "client/public/eqrequiem/worlds/rivervale.lighting-plan.json.gz",
+          "sha256": "10e79cec5956eade2c85fe09015244b47dabd8e06209959a6ef5af9158033e70",
+          "bytes": 6591
         }
       },
       "stats": {
         "primitives": 84,
         "triangles": 21658,
-        "clusters": 219,
-        "renderChunks": 84,
-        "cells": 11,
+        "clusters": 288,
+        "renderChunks": 182,
+        "cells": 12,
         "portals": 0,
         "regions": 3,
         "objectPrototypes": 56,
         "objectStamps": 531,
-        "tiles": 11,
-        "collisionVertices": 10334,
-        "collisionTriangles": 21164
+        "tiles": 12,
+        "collisionVertices": 11575,
+        "collisionTriangles": 22406,
+        "collisionSourceTriangles": 21173,
+        "collisionChunks": 14,
+        "lightingStatus": "blocked-missing-uv2",
+        "lightingUv2ReadyChunks": 0
       },
       "warnings": []
     },
@@ -976,28 +1117,37 @@
         },
         "spatial": {
           "path": "client/public/eqrequiem/worlds/kithicor.spatial.json.gz",
-          "sha256": "73a39ae726f6e2984a9096712e4982373e717c70b40ab76c34d311e79f037245",
-          "bytes": 106846
+          "sha256": "df05b1b8424dc79330e8f1f42a2dffd85d709d7393276bbe6a960e6051e0dee4",
+          "bytes": 156023
         },
         "collision": {
           "path": "client/public/eqrequiem/worlds/kithicor.collision.bin.gz",
-          "sha256": "c439f394972c0f22e2061090a5cff8021141c69e61a9d70f9297eeac65343fdb",
-          "bytes": 74580
+          "sha256": "26561641b9f7d9bd96694b29eb0923c810a5620b8e6f8e6edc16c66a5f7085bd",
+          "bytes": 118851
+        },
+        "lightingPlan": {
+          "path": "client/public/eqrequiem/worlds/kithicor.lighting-plan.json.gz",
+          "sha256": "77e9e2783e01b4f66d8ce37a07da555bb24301db78022af21d2a3bd5aa6e32e0",
+          "bytes": 19569
         }
       },
       "stats": {
         "primitives": 39,
         "triangles": 11259,
-        "clusters": 117,
-        "renderChunks": 39,
-        "cells": 85,
+        "clusters": 790,
+        "renderChunks": 787,
+        "cells": 282,
         "portals": 0,
         "regions": 5,
         "objectPrototypes": 32,
         "objectStamps": 1776,
-        "tiles": 85,
-        "collisionVertices": 5721,
-        "collisionTriangles": 11143
+        "tiles": 282,
+        "collisionVertices": 16199,
+        "collisionTriangles": 20080,
+        "collisionSourceTriangles": 11143,
+        "collisionChunks": 282,
+        "lightingStatus": "blocked-missing-uv2",
+        "lightingUv2ReadyChunks": 0
       },
       "warnings": []
     },
@@ -1030,28 +1180,37 @@
         },
         "spatial": {
           "path": "client/public/eqrequiem/worlds/commons.spatial.json.gz",
-          "sha256": "7d34f4dca8d7fa5c7d246adf513029ff08aa70dd6a9dcefc4bcc83482f016610",
-          "bytes": 92482
+          "sha256": "4a344b68d501fc544da31806f2d2a2f060600d64de458740241d77c9b4f8b79a",
+          "bytes": 130321
         },
         "collision": {
           "path": "client/public/eqrequiem/worlds/commons.collision.bin.gz",
-          "sha256": "07ac74a05acdbf2039bdea97669651252467334a8ca82d34ce0f51a24fec51ef",
-          "bytes": 62386
+          "sha256": "0288da5463dcf78173fd1322c75a03494486341a18e35246699faaf39ddbd36e",
+          "bytes": 100589
+        },
+        "lightingPlan": {
+          "path": "client/public/eqrequiem/worlds/commons.lighting-plan.json.gz",
+          "sha256": "d36123b7a08da7c2dc259d2efa65ad850d722f944f5b9f805bb1b2144908c920",
+          "bytes": 17837
         }
       },
       "stats": {
         "primitives": 41,
         "triangles": 10048,
-        "clusters": 111,
-        "renderChunks": 41,
-        "cells": 83,
+        "clusters": 710,
+        "renderChunks": 709,
+        "cells": 253,
         "portals": 0,
         "regions": 18,
         "objectPrototypes": 34,
         "objectStamps": 1575,
-        "tiles": 83,
-        "collisionVertices": 5118,
-        "collisionTriangles": 9931
+        "tiles": 253,
+        "collisionVertices": 14061,
+        "collisionTriangles": 17566,
+        "collisionSourceTriangles": 9931,
+        "collisionChunks": 253,
+        "lightingStatus": "blocked-missing-uv2",
+        "lightingUv2ReadyChunks": 0
       },
       "warnings": []
     },
@@ -1084,28 +1243,37 @@
         },
         "spatial": {
           "path": "client/public/eqrequiem/worlds/ecommons.spatial.json.gz",
-          "sha256": "a628d799648bf85a5c0f8473388d04b4d0f5b2f7951b75def86f8e62777b7487",
-          "bytes": 109150
+          "sha256": "406d92d8ecc54c5573fb690c6c50ec17037db517ceeb754588247050e2f6acb6",
+          "bytes": 170243
         },
         "collision": {
           "path": "client/public/eqrequiem/worlds/ecommons.collision.bin.gz",
-          "sha256": "c9941faa414fdddf20b6d1e4560d18aab2376183891e76c23fd784ca4da6d92c",
-          "bytes": 77364
+          "sha256": "10499313a3ba7ab5a310f89f346459b99921c4ae89d53f15e53493db110e5d80",
+          "bytes": 128020
+        },
+        "lightingPlan": {
+          "path": "client/public/eqrequiem/worlds/ecommons.lighting-plan.json.gz",
+          "sha256": "11867ff3eacb89eaf77867dcdc2260fe59ccc92fff00e0fe8329430a918cd001",
+          "bytes": 22254
         }
       },
       "stats": {
         "primitives": 44,
         "triangles": 12215,
-        "clusters": 130,
-        "renderChunks": 44,
-        "cells": 98,
+        "clusters": 900,
+        "renderChunks": 898,
+        "cells": 330,
         "portals": 0,
         "regions": 5,
         "objectPrototypes": 46,
         "objectStamps": 1809,
-        "tiles": 98,
-        "collisionVertices": 6235,
-        "collisionTriangles": 12203
+        "tiles": 330,
+        "collisionVertices": 17502,
+        "collisionTriangles": 21922,
+        "collisionSourceTriangles": 12203,
+        "collisionChunks": 335,
+        "lightingStatus": "blocked-missing-uv2",
+        "lightingUv2ReadyChunks": 0
       },
       "warnings": []
     },
@@ -1138,28 +1306,37 @@
         },
         "spatial": {
           "path": "client/public/eqrequiem/worlds/erudnint.spatial.json.gz",
-          "sha256": "22603a08b9d202cfd6ff76e6dbc38213b9e0f22ec8a8b15800051e403ebf395c",
-          "bytes": 142796
+          "sha256": "a54491f9c22f1b925b66a0d7316ce561582cf339c3da12c73af5ce4542765b37",
+          "bytes": 150139
         },
         "collision": {
           "path": "client/public/eqrequiem/worlds/erudnint.collision.bin.gz",
-          "sha256": "6ed6d317cea97751191b1da7cf71759dde42cff5622f04d918abecf72819197c",
-          "bytes": 135020
+          "sha256": "f1faf58e8f7e1812132f515063ba75ebdc6fdddfbd203a76f687d26fa0ddc612",
+          "bytes": 152677
+        },
+        "lightingPlan": {
+          "path": "client/public/eqrequiem/worlds/erudnint.lighting-plan.json.gz",
+          "sha256": "f98569fc28141371c0d1abdd843c39e6e05caa0e0928a033bba4850976f0888e",
+          "bytes": 5583
         }
       },
       "stats": {
         "primitives": 47,
         "triangles": 25442,
-        "clusters": 232,
-        "renderChunks": 47,
-        "cells": 16,
+        "clusters": 328,
+        "renderChunks": 174,
+        "cells": 36,
         "portals": 0,
         "regions": 4,
         "objectPrototypes": 33,
         "objectStamps": 353,
-        "tiles": 16,
-        "collisionVertices": 11864,
-        "collisionTriangles": 24035
+        "tiles": 36,
+        "collisionVertices": 14426,
+        "collisionTriangles": 26645,
+        "collisionSourceTriangles": 24277,
+        "collisionChunks": 40,
+        "lightingStatus": "blocked-missing-uv2",
+        "lightingUv2ReadyChunks": 0
       },
       "warnings": []
     },
@@ -1192,28 +1369,37 @@
         },
         "spatial": {
           "path": "client/public/eqrequiem/worlds/erudnext.spatial.json.gz",
-          "sha256": "a6d1221167a937a96d5243955bf172f0dde4b4c48162de3390cf78caa5d9106d",
-          "bytes": 180122
+          "sha256": "20954ff1bbd7de8418531d7f768fee3823ad26faec87bd5495f3422b584b6328",
+          "bytes": 198772
         },
         "collision": {
           "path": "client/public/eqrequiem/worlds/erudnext.collision.bin.gz",
-          "sha256": "0fe18388c82167d448fd45a3c844360e58654e25da1bd9c4ebe8277335ed9d51",
-          "bytes": 183872
+          "sha256": "c9a05726e8f2e4e32b1a4e61b90819a1aab42cb1a0242cb8d64932415f72515d",
+          "bytes": 213581
+        },
+        "lightingPlan": {
+          "path": "client/public/eqrequiem/worlds/erudnext.lighting-plan.json.gz",
+          "sha256": "77c28098f77b15868fee7686cc671b8004444271f74d1f3d7202c8f649cbf636",
+          "bytes": 14649
         }
       },
       "stats": {
         "primitives": 79,
         "triangles": 33847,
-        "clusters": 310,
-        "renderChunks": 79,
-        "cells": 30,
+        "clusters": 672,
+        "renderChunks": 513,
+        "cells": 121,
         "portals": 0,
         "regions": 23,
         "objectPrototypes": 24,
         "objectStamps": 165,
-        "tiles": 30,
-        "collisionVertices": 15747,
-        "collisionTriangles": 31843
+        "tiles": 121,
+        "collisionVertices": 20311,
+        "collisionTriangles": 36590,
+        "collisionSourceTriangles": 32519,
+        "collisionChunks": 131,
+        "lightingStatus": "blocked-missing-uv2",
+        "lightingUv2ReadyChunks": 0
       },
       "warnings": []
     },
@@ -1246,28 +1432,37 @@
         },
         "spatial": {
           "path": "client/public/eqrequiem/worlds/nektulos.spatial.json.gz",
-          "sha256": "a0e8cb502e4d642dbb04e3301c107580ab860a749739f24ac9a1431ed4ae12bb",
-          "bytes": 90784
+          "sha256": "38a6fe02a4ebf3200155ac47157b06163f8ffd1d746aa2f5c20a09a311a85e66",
+          "bytes": 141872
         },
         "collision": {
           "path": "client/public/eqrequiem/worlds/nektulos.collision.bin.gz",
-          "sha256": "1a4b29873ae805cdafe68d77976f0bd20430551fd440a71bdcaab9208f6c9be0",
-          "bytes": 74135
+          "sha256": "5037c1390654cb7d87b3072b9008169585bc34fb68a4256ec0e2a4baba7ff2c2",
+          "bytes": 106194
+        },
+        "lightingPlan": {
+          "path": "client/public/eqrequiem/worlds/nektulos.lighting-plan.json.gz",
+          "sha256": "3ec2f60dc6485efd632ba0b7b793bc4f9095940e2832227448eda4dacf9c8191",
+          "bytes": 21051
         }
       },
       "stats": {
         "primitives": 41,
         "triangles": 11771,
-        "clusters": 122,
-        "renderChunks": 41,
-        "cells": 82,
+        "clusters": 816,
+        "renderChunks": 815,
+        "cells": 258,
         "portals": 0,
         "regions": 7,
         "objectPrototypes": 24,
         "objectStamps": 917,
-        "tiles": 82,
-        "collisionVertices": 5791,
-        "collisionTriangles": 11205
+        "tiles": 258,
+        "collisionVertices": 14897,
+        "collisionTriangles": 19003,
+        "collisionSourceTriangles": 11205,
+        "collisionChunks": 261,
+        "lightingStatus": "blocked-missing-uv2",
+        "lightingUv2ReadyChunks": 0
       },
       "warnings": []
     },
@@ -1300,28 +1495,37 @@
         },
         "spatial": {
           "path": "client/public/eqrequiem/worlds/lavastorm.spatial.json.gz",
-          "sha256": "cf810f52ea26dae9e4b338e9cd8577e63dd9e459ccb80c258228cb521967ae6d",
-          "bytes": 70574
+          "sha256": "701a082c1e4eb8ae6c7f4877bbdf709029cd3dd2c064c95a2c94c8a229ea3690",
+          "bytes": 101599
         },
         "collision": {
           "path": "client/public/eqrequiem/worlds/lavastorm.collision.bin.gz",
-          "sha256": "0314b580c501fe7970c86c0ef62463c1d50024ef0d0394aa28f39d0db0c755f5",
-          "bytes": 61549
+          "sha256": "c30be3707c8a305fb3e3ccb3d311cbd8a0530a9a1205c75cf10d697b674f614f",
+          "bytes": 86131
+        },
+        "lightingPlan": {
+          "path": "client/public/eqrequiem/worlds/lavastorm.lighting-plan.json.gz",
+          "sha256": "dd68bb76ccad9acf2e70af6c004471c989efcd434e1f4c40b6d391037f4aec1a",
+          "bytes": 12754
         }
       },
       "stats": {
         "primitives": 15,
         "triangles": 9817,
-        "clusters": 88,
-        "renderChunks": 15,
-        "cells": 59,
+        "clusters": 512,
+        "renderChunks": 511,
+        "cells": 184,
         "portals": 0,
         "regions": 30,
         "objectPrototypes": 11,
         "objectStamps": 523,
-        "tiles": 59,
-        "collisionVertices": 4756,
-        "collisionTriangles": 9231
+        "tiles": 184,
+        "collisionVertices": 11334,
+        "collisionTriangles": 14999,
+        "collisionSourceTriangles": 9231,
+        "collisionChunks": 185,
+        "lightingStatus": "blocked-missing-uv2",
+        "lightingUv2ReadyChunks": 0
       },
       "warnings": []
     },
@@ -1354,28 +1558,37 @@
         },
         "spatial": {
           "path": "client/public/eqrequiem/worlds/halas.spatial.json.gz",
-          "sha256": "b6552b2ed635be7bd2b1a87c53388fc685ded32e8f5c11048895a130651cdbc4",
-          "bytes": 160217
+          "sha256": "0cb1a422ae4af58322679b25280751747db90a02c06c0c3ee5fb90b3e8854833",
+          "bytes": 169826
         },
         "collision": {
           "path": "client/public/eqrequiem/worlds/halas.collision.bin.gz",
-          "sha256": "da1418bd8068e7a27f0357002f6ed64aef520a6cd9b8935e2832d73c3e3615d6",
-          "bytes": 156395
+          "sha256": "64b86246dc515573d89e45ed8419bfeb3c2a25f854d1b0118460413361979464",
+          "bytes": 171386
+        },
+        "lightingPlan": {
+          "path": "client/public/eqrequiem/worlds/halas.lighting-plan.json.gz",
+          "sha256": "deb0bd02d8312a8d9a83091c022ea349ecbe564fa660d7a5f33b5f35f8a64461",
+          "bytes": 8853
         }
       },
       "stats": {
         "primitives": 69,
         "triangles": 26977,
-        "clusters": 260,
-        "renderChunks": 69,
-        "cells": 19,
+        "clusters": 390,
+        "renderChunks": 272,
+        "cells": 22,
         "portals": 0,
         "regions": 9,
         "objectPrototypes": 91,
         "objectStamps": 445,
-        "tiles": 19,
-        "collisionVertices": 13179,
-        "collisionTriangles": 26508
+        "tiles": 22,
+        "collisionVertices": 15689,
+        "collisionTriangles": 29114,
+        "collisionSourceTriangles": 26720,
+        "collisionChunks": 22,
+        "lightingStatus": "blocked-missing-uv2",
+        "lightingUv2ReadyChunks": 0
       },
       "warnings": []
     },
@@ -1408,28 +1621,37 @@
         },
         "spatial": {
           "path": "client/public/eqrequiem/worlds/everfrost.spatial.json.gz",
-          "sha256": "92751cf62044e68ce841f1de11b8c54d8162e3aeb1b24c4b3017bbc08c7ce43a",
-          "bytes": 501540
+          "sha256": "bdcdb5816e772cc9d6746f10166d987822bfc33766dc10172044466a7c21835d",
+          "bytes": 690157
         },
         "collision": {
           "path": "client/public/eqrequiem/worlds/everfrost.collision.bin.gz",
-          "sha256": "1b6f9839bfe74885fddae5a5f8801004f1208a6ec879d916ac10023ae515f1da",
-          "bytes": 582668
+          "sha256": "e9d2fa8a5f6a61538268e457c1aaa117c436ec4fec4f4a3aa27e030d24033587",
+          "bytes": 810106
+        },
+        "lightingPlan": {
+          "path": "client/public/eqrequiem/worlds/everfrost.lighting-plan.json.gz",
+          "sha256": "d31d5f3451256264a153a27212c5ccf49e56bf8e58ee71aaf5f2afcbf858d65c",
+          "bytes": 84006
         }
       },
       "stats": {
         "primitives": 91,
         "triangles": 89716,
-        "clusters": 755,
-        "renderChunks": 91,
-        "cells": 393,
+        "clusters": 3462,
+        "renderChunks": 3340,
+        "cells": 786,
         "portals": 0,
         "regions": 6,
         "objectPrototypes": 28,
         "objectStamps": 675,
-        "tiles": 393,
-        "collisionVertices": 44744,
-        "collisionTriangles": 88010
+        "tiles": 786,
+        "collisionVertices": 91041,
+        "collisionTriangles": 130542,
+        "collisionSourceTriangles": 89246,
+        "collisionChunks": 783,
+        "lightingStatus": "blocked-missing-uv2",
+        "lightingUv2ReadyChunks": 0
       },
       "warnings": []
     },
@@ -1462,28 +1684,37 @@
         },
         "spatial": {
           "path": "client/public/eqrequiem/worlds/soldunga.spatial.json.gz",
-          "sha256": "f9113fe6b802ddf170415534320b68ab0137780b38ceee39ed3dc2a76dbb85f0",
-          "bytes": 244633
+          "sha256": "61356259e0c51227f23c1f4afcb1612179ed23aa7a3a98986149d19a3e6b78b8",
+          "bytes": 258549
         },
         "collision": {
           "path": "client/public/eqrequiem/worlds/soldunga.collision.bin.gz",
-          "sha256": "66ace4a348ea6890f4ad60a05988d09c2a3932270dcc6c6a7ba43b17b10927f2",
-          "bytes": 221101
+          "sha256": "ee10cc7384729e79238622a5094c7865edefab3f81124012b59413f81edbe281",
+          "bytes": 256099
+        },
+        "lightingPlan": {
+          "path": "client/public/eqrequiem/worlds/soldunga.lighting-plan.json.gz",
+          "sha256": "4eec2bdb862d58b5ddc982cbce0682d2b9967284789ace2e7c46a8bd2fe5fd8c",
+          "bytes": 16659
         }
       },
       "stats": {
         "primitives": 143,
         "triangles": 41913,
-        "clusters": 436,
-        "renderChunks": 143,
-        "cells": 15,
+        "clusters": 719,
+        "renderChunks": 497,
+        "cells": 22,
         "portals": 0,
         "regions": 30,
         "objectPrototypes": 55,
         "objectStamps": 461,
-        "tiles": 15,
-        "collisionVertices": 18359,
-        "collisionTriangles": 36398
+        "tiles": 22,
+        "collisionVertices": 21765,
+        "collisionTriangles": 41816,
+        "collisionSourceTriangles": 39583,
+        "collisionChunks": 22,
+        "lightingStatus": "blocked-missing-uv2",
+        "lightingUv2ReadyChunks": 0
       },
       "warnings": []
     },
@@ -1516,28 +1747,37 @@
         },
         "spatial": {
           "path": "client/public/eqrequiem/worlds/soldungb.spatial.json.gz",
-          "sha256": "c25eec3f52c553adb9ca4cf76f8030ae05843a62f097a3d61896cec4435984c3",
-          "bytes": 159589
+          "sha256": "828a0abe2a5c7f76a036575bf8e5ab8e25257227c18e6da16f8858adb9f41081",
+          "bytes": 176242
         },
         "collision": {
           "path": "client/public/eqrequiem/worlds/soldungb.collision.bin.gz",
-          "sha256": "e6f6534d0422ac7cac620db22983f36711a913cc777f987732cd2fea4850806f",
-          "bytes": 131301
+          "sha256": "d7ac4fe092c130c25f171d8f2418104bcdf8517f183a9fa6b22b016e8cc2d40b",
+          "bytes": 166654
+        },
+        "lightingPlan": {
+          "path": "client/public/eqrequiem/worlds/soldungb.lighting-plan.json.gz",
+          "sha256": "f2e9e851fe742080d2d9cf8ecb7a78ec66e6d0dc2b2bcc2278f1495b88851765",
+          "bytes": 11537
         }
       },
       "stats": {
         "primitives": 80,
         "triangles": 26486,
-        "clusters": 268,
-        "renderChunks": 80,
-        "cells": 24,
+        "clusters": 482,
+        "renderChunks": 364,
+        "cells": 28,
         "portals": 0,
         "regions": 34,
         "objectPrototypes": 46,
         "objectStamps": 337,
-        "tiles": 24,
-        "collisionVertices": 10637,
-        "collisionTriangles": 20288
+        "tiles": 28,
+        "collisionVertices": 14347,
+        "collisionTriangles": 26544,
+        "collisionSourceTriangles": 24175,
+        "collisionChunks": 28,
+        "lightingStatus": "blocked-missing-uv2",
+        "lightingUv2ReadyChunks": 0
       },
       "warnings": []
     },
@@ -1589,28 +1829,37 @@
         },
         "spatial": {
           "path": "client/public/eqrequiem/worlds/nro.spatial.json.gz",
-          "sha256": "cbe1184162e6f7ec490371830b6f394973d08b2da38b9f15634b418ab9381bab",
-          "bytes": 74102
+          "sha256": "31b3520be242a099e60abbe50902a419b56e98d2c08d014392ee8a549c71bef2",
+          "bytes": 125508
         },
         "collision": {
           "path": "client/public/eqrequiem/worlds/nro.collision.bin.gz",
-          "sha256": "78528ad452032d2cdd2fcd699f7e6171a7f36728a39c16dcd066df568b3f6ce8",
-          "bytes": 69688
+          "sha256": "0676fff4d87b05c6bbf356bb928ec27214c901bb596e1cf5913005b5dfc13762",
+          "bytes": 110162
+        },
+        "lightingPlan": {
+          "path": "client/public/eqrequiem/worlds/nro.lighting-plan.json.gz",
+          "sha256": "16ac5f327ee4a1caa375d65f76de6d6ee1a9e1ad1cd1f4e8cdd924feb36190da",
+          "bytes": 20938
         }
       },
       "stats": {
         "primitives": 36,
         "triangles": 11427,
-        "clusters": 117,
-        "renderChunks": 36,
-        "cells": 86,
+        "clusters": 847,
+        "renderChunks": 847,
+        "cells": 366,
         "portals": 0,
         "regions": 5,
         "objectPrototypes": 41,
         "objectStamps": 345,
-        "tiles": 86,
-        "collisionVertices": 5611,
-        "collisionTriangles": 10922
+        "tiles": 366,
+        "collisionVertices": 16904,
+        "collisionTriangles": 20599,
+        "collisionSourceTriangles": 10922,
+        "collisionChunks": 390,
+        "lightingStatus": "blocked-missing-uv2",
+        "lightingUv2ReadyChunks": 0
       },
       "warnings": []
     },
@@ -1659,28 +1908,37 @@
         },
         "spatial": {
           "path": "client/public/eqrequiem/worlds/befallen.spatial.json.gz",
-          "sha256": "b06c300bdaae1776d85710d0d5288c0ac3530cdb2e3851b56587e030bc572b4e",
-          "bytes": 140891
+          "sha256": "48e31cd14c976205570872aac8a7e337c38a351061b151191bcaf0ac03f0dc6e",
+          "bytes": 141811
         },
         "collision": {
           "path": "client/public/eqrequiem/worlds/befallen.collision.bin.gz",
-          "sha256": "a229177692a3164e323fdb50c22518e81ffddca6ab875a2bcd1e4fe649b55ef3",
-          "bytes": 132262
+          "sha256": "bbe1827d3b82ea08cc1cbff5a0ed9fa1a3e6164b8fc3ba54d66e0aaddb34cf65",
+          "bytes": 137322
+        },
+        "lightingPlan": {
+          "path": "client/public/eqrequiem/worlds/befallen.lighting-plan.json.gz",
+          "sha256": "5b7e4aa503291892cc4e024718b20959ba521fbf51fd3102482cc02380e98283",
+          "bytes": 2832
         }
       },
       "stats": {
         "primitives": 18,
         "triangles": 23314,
-        "clusters": 192,
-        "renderChunks": 18,
-        "cells": 8,
+        "clusters": 236,
+        "renderChunks": 83,
+        "cells": 11,
         "portals": 0,
         "regions": 1,
         "objectPrototypes": 34,
         "objectStamps": 346,
-        "tiles": 8,
-        "collisionVertices": 10350,
-        "collisionTriangles": 23275
+        "tiles": 11,
+        "collisionVertices": 11011,
+        "collisionTriangles": 23947,
+        "collisionSourceTriangles": 23275,
+        "collisionChunks": 11,
+        "lightingStatus": "blocked-missing-uv2",
+        "lightingUv2ReadyChunks": 0
       },
       "warnings": []
     },
@@ -1713,28 +1971,37 @@
         },
         "spatial": {
           "path": "client/public/eqrequiem/worlds/oasis.spatial.json.gz",
-          "sha256": "967b6674f15cc663078166640c7f549dba3193c0e4c6552bc83a25a3a246f1e9",
-          "bytes": 75957
+          "sha256": "0258388f538290394aad639e54c1507e82dd1f46b237dfa9d370bffbb26b6f76",
+          "bytes": 117674
         },
         "collision": {
           "path": "client/public/eqrequiem/worlds/oasis.collision.bin.gz",
-          "sha256": "ad6ecce54a2a150731c2cbdc92965c78b2848f22194e9c53f65c728202d306bf",
-          "bytes": 72560
+          "sha256": "21899c4f1a6bbdd9aa20dc9c68103a24d61aa7cc3217a4401166f36314605b24",
+          "bytes": 106220
+        },
+        "lightingPlan": {
+          "path": "client/public/eqrequiem/worlds/oasis.lighting-plan.json.gz",
+          "sha256": "04f43c4d6b9748b44f03f00b46d2547ccd34df2a39068ee23b303290d21448dc",
+          "bytes": 18357
         }
       },
       "stats": {
         "primitives": 16,
         "triangles": 12096,
-        "clusters": 103,
-        "renderChunks": 16,
-        "cells": 63,
+        "clusters": 769,
+        "renderChunks": 767,
+        "cells": 309,
         "portals": 0,
         "regions": 30,
         "objectPrototypes": 36,
         "objectStamps": 247,
-        "tiles": 63,
-        "collisionVertices": 5779,
-        "collisionTriangles": 11324
+        "tiles": 309,
+        "collisionVertices": 15490,
+        "collisionTriangles": 19589,
+        "collisionSourceTriangles": 11324,
+        "collisionChunks": 326,
+        "lightingStatus": "blocked-missing-uv2",
+        "lightingUv2ReadyChunks": 0
       },
       "warnings": []
     },
@@ -1789,28 +2056,37 @@
         },
         "spatial": {
           "path": "client/public/eqrequiem/worlds/hole.spatial.json.gz",
-          "sha256": "292ca1176fdfb8af329a1568933d880501af03b242f69ab0baab49fa8b1f8c5c",
-          "bytes": 642520
+          "sha256": "3e9ab53b3422f85fafc46e3341aa8e0939cc1730b14029bc6620f0246f53e8c2",
+          "bytes": 671342
         },
         "collision": {
           "path": "client/public/eqrequiem/worlds/hole.collision.bin.gz",
-          "sha256": "62200e2717d7145e1a2f37583ae44d24421f1a5b36f0d9c11d7b9d656b602f25",
-          "bytes": 635522
+          "sha256": "f8d360174b3ee3fb1a7bc6efd1b86703a94783890cc1bda941462faafc482de0",
+          "bytes": 695156
+        },
+        "lightingPlan": {
+          "path": "client/public/eqrequiem/worlds/hole.lighting-plan.json.gz",
+          "sha256": "1802a633574e6ef21c4f96ac2cb92f8ece892015998473428c202dc4bab99fd1",
+          "bytes": 15635
         }
       },
       "stats": {
         "primitives": 80,
         "triangles": 115921,
-        "clusters": 958,
-        "renderChunks": 80,
-        "cells": 30,
+        "clusters": 1252,
+        "renderChunks": 536,
+        "cells": 40,
         "portals": 0,
         "regions": 31,
         "objectPrototypes": 58,
         "objectStamps": 1445,
-        "tiles": 30,
-        "collisionVertices": 53528,
-        "collisionTriangles": 112214
+        "tiles": 40,
+        "collisionVertices": 60742,
+        "collisionTriangles": 120628,
+        "collisionSourceTriangles": 114176,
+        "collisionChunks": 40,
+        "lightingStatus": "blocked-missing-uv2",
+        "lightingUv2ReadyChunks": 0
       },
       "warnings": []
     },
@@ -1843,28 +2119,37 @@
         },
         "spatial": {
           "path": "client/public/eqrequiem/worlds/neriaka.spatial.json.gz",
-          "sha256": "d0a19a7a6c4541eaee8733199137018d8a7d928900f3aad397962dc70872fc36",
-          "bytes": 126729
+          "sha256": "bb3444c2845f28f10a67f586ea1ad0e056ab447ba66ee04428b211b1ae108fac",
+          "bytes": 131828
         },
         "collision": {
           "path": "client/public/eqrequiem/worlds/neriaka.collision.bin.gz",
-          "sha256": "a4d3636a9e7f382924f1d6f7f09db00ce8e68950c79b13b0ad7c0d827188357d",
-          "bytes": 122654
+          "sha256": "3e31b157526e4d8c772588e94e2efd5f268e8a79b4c657c8019b3e2d39d721e7",
+          "bytes": 137376
+        },
+        "lightingPlan": {
+          "path": "client/public/eqrequiem/worlds/neriaka.lighting-plan.json.gz",
+          "sha256": "7fe2d650cc389ae3536502227c41dd91cfc0ea93d718a98472d6a408fa01fe59",
+          "bytes": 9245
         }
       },
       "stats": {
         "primitives": 124,
         "triangles": 21874,
-        "clusters": 258,
-        "renderChunks": 124,
-        "cells": 10,
+        "clusters": 343,
+        "renderChunks": 241,
+        "cells": 12,
         "portals": 0,
         "regions": 5,
         "objectPrototypes": 81,
         "objectStamps": 525,
-        "tiles": 10,
-        "collisionVertices": 10738,
-        "collisionTriangles": 21747
+        "tiles": 12,
+        "collisionVertices": 12698,
+        "collisionTriangles": 23721,
+        "collisionSourceTriangles": 21775,
+        "collisionChunks": 13,
+        "lightingStatus": "blocked-missing-uv2",
+        "lightingUv2ReadyChunks": 0
       },
       "warnings": []
     },
@@ -1897,28 +2182,37 @@
         },
         "spatial": {
           "path": "client/public/eqrequiem/worlds/neriakb.spatial.json.gz",
-          "sha256": "0ad3f406234ee0fa7362b8cb792652619354163a23a5a1c4fe75affe8e5ba139",
-          "bytes": 196762
+          "sha256": "a3246a6d8ceb3a5ab889dba1ec4c9059073457b685dcd90494d408f4bf1a38d6",
+          "bytes": 201589
         },
         "collision": {
           "path": "client/public/eqrequiem/worlds/neriakb.collision.bin.gz",
-          "sha256": "ab0579cacab8ef751c07105875cc43d0fc34de908e1a1c4a7c186fd7172bb879",
-          "bytes": 196288
+          "sha256": "acd1f21d69ccea12d87682536c1a16c919cb06c52f72ab025f7d2ae1efb9ca87",
+          "bytes": 215675
+        },
+        "lightingPlan": {
+          "path": "client/public/eqrequiem/worlds/neriakb.lighting-plan.json.gz",
+          "sha256": "e2da0830007f2cd4ac961eb95a717774db6542343e082da261d9051f9de8135f",
+          "bytes": 8875
         }
       },
       "stats": {
         "primitives": 110,
         "triangles": 36395,
-        "clusters": 363,
-        "renderChunks": 110,
-        "cells": 11,
+        "clusters": 450,
+        "renderChunks": 242,
+        "cells": 16,
         "portals": 0,
         "regions": 7,
         "objectPrototypes": 69,
         "objectStamps": 387,
-        "tiles": 11,
-        "collisionVertices": 17218,
-        "collisionTriangles": 34578
+        "tiles": 16,
+        "collisionVertices": 19033,
+        "collisionTriangles": 37041,
+        "collisionSourceTriangles": 35528,
+        "collisionChunks": 16,
+        "lightingStatus": "blocked-missing-uv2",
+        "lightingUv2ReadyChunks": 0
       },
       "warnings": []
     },
@@ -1951,28 +2245,37 @@
         },
         "spatial": {
           "path": "client/public/eqrequiem/worlds/neriakc.spatial.json.gz",
-          "sha256": "d79ad4195ee3c2c15ea3638553c594406119242d466509ab73859254cc910f8d",
-          "bytes": 259180
+          "sha256": "17fc434b3c2a0acc84356055970bab31ed23f1019d59040ab5af4922e6d4699e",
+          "bytes": 266994
         },
         "collision": {
           "path": "client/public/eqrequiem/worlds/neriakc.collision.bin.gz",
-          "sha256": "fa71a523461a81f3c8f4f77448ac21f8cb1b13ff0dd8597a19d4a50e839c1645",
-          "bytes": 244814
+          "sha256": "aaed719d15a936f946a7324cdac874fe482d49b25f78f6c1336578924a877687",
+          "bytes": 278438
+        },
+        "lightingPlan": {
+          "path": "client/public/eqrequiem/worlds/neriakc.lighting-plan.json.gz",
+          "sha256": "c71d4ce6770d2a57df09b9764bd58a7e35c12e86e37bd68d634ac30f0fc8b011",
+          "bytes": 10941
         }
       },
       "stats": {
         "primitives": 83,
         "triangles": 46138,
-        "clusters": 415,
-        "renderChunks": 83,
-        "cells": 20,
+        "clusters": 591,
+        "renderChunks": 340,
+        "cells": 24,
         "portals": 0,
         "regions": 13,
         "objectPrototypes": 82,
         "objectStamps": 438,
-        "tiles": 20,
-        "collisionVertices": 21750,
-        "collisionTriangles": 43320
+        "tiles": 24,
+        "collisionVertices": 25633,
+        "collisionTriangles": 48145,
+        "collisionSourceTriangles": 44852,
+        "collisionChunks": 24,
+        "lightingStatus": "blocked-missing-uv2",
+        "lightingUv2ReadyChunks": 0
       },
       "warnings": []
     },
@@ -2017,28 +2320,37 @@
         },
         "spatial": {
           "path": "client/public/eqrequiem/worlds/najena.spatial.json.gz",
-          "sha256": "04e48fccc4dc19037d46ca336ccc4d97a0b0371d06f53911a0d0e1a41a7eedc7",
-          "bytes": 76802
+          "sha256": "5f0359bf9dde416914fd5c8222cec2b78a3475ff0124dcefa5b06919806ed8bc",
+          "bytes": 80477
         },
         "collision": {
           "path": "client/public/eqrequiem/worlds/najena.collision.bin.gz",
-          "sha256": "4276de966e2650eaede8e982d4fdd2f433c6f82356667047d40c91a7e6c55605",
-          "bytes": 62750
+          "sha256": "2dbc523e3bab54d554626e245444e801bb6388670cba334526716a1210bdd5f6",
+          "bytes": 68696
+        },
+        "lightingPlan": {
+          "path": "client/public/eqrequiem/worlds/najena.lighting-plan.json.gz",
+          "sha256": "9b637574e45a7c4bbd7913d3d70cf2666be523b456d073332e78d6b194e046c2",
+          "bytes": 4800
         }
       },
       "stats": {
         "primitives": 42,
         "triangles": 11588,
-        "clusters": 119,
-        "renderChunks": 42,
-        "cells": 12,
+        "clusters": 201,
+        "renderChunks": 143,
+        "cells": 15,
         "portals": 0,
         "regions": 3,
         "objectPrototypes": 36,
         "objectStamps": 414,
-        "tiles": 12,
-        "collisionVertices": 5255,
-        "collisionTriangles": 11224
+        "tiles": 15,
+        "collisionVertices": 6129,
+        "collisionTriangles": 12213,
+        "collisionSourceTriangles": 11412,
+        "collisionChunks": 15,
+        "lightingStatus": "blocked-missing-uv2",
+        "lightingUv2ReadyChunks": 0
       },
       "warnings": []
     },
@@ -2071,28 +2383,37 @@
         },
         "spatial": {
           "path": "client/public/eqrequiem/worlds/qcat.spatial.json.gz",
-          "sha256": "f3cdf3e138fbe42ed0deec516aba95cda993d88543f68cef08fc21a8efeb2b3f",
-          "bytes": 57892
+          "sha256": "92922abc5cd20b68ef9f6ff90a0520d3769ce3d75fb03e042846e650c61be065",
+          "bytes": 62791
         },
         "collision": {
           "path": "client/public/eqrequiem/worlds/qcat.collision.bin.gz",
-          "sha256": "878cf8442e521b386b52da6a56e5dc939a635d561b11bf3c35ea540dc22579d4",
-          "bytes": 42875
+          "sha256": "06c08184b121d196d25bcfd07c913a3c9758b3662a30c9d45d74c40d46367d08",
+          "bytes": 51993
+        },
+        "lightingPlan": {
+          "path": "client/public/eqrequiem/worlds/qcat.lighting-plan.json.gz",
+          "sha256": "e42992c2989e0f2e8fc8b80b1b647ad685ad5966bb08719aa0721f313f9fd9d9",
+          "bytes": 6536
         }
       },
       "stats": {
         "primitives": 46,
         "triangles": 9938,
-        "clusters": 114,
-        "renderChunks": 46,
-        "cells": 14,
+        "clusters": 252,
+        "renderChunks": 209,
+        "cells": 19,
         "portals": 0,
         "regions": 18,
         "objectPrototypes": 14,
         "objectStamps": 93,
-        "tiles": 14,
-        "collisionVertices": 3731,
-        "collisionTriangles": 7491
+        "tiles": 19,
+        "collisionVertices": 5104,
+        "collisionTriangles": 9897,
+        "collisionSourceTriangles": 9150,
+        "collisionChunks": 19,
+        "lightingStatus": "blocked-missing-uv2",
+        "lightingUv2ReadyChunks": 0
       },
       "warnings": []
     },
@@ -2145,28 +2466,37 @@
         },
         "spatial": {
           "path": "client/public/eqrequiem/worlds/feerrott.spatial.json.gz",
-          "sha256": "91823e38678ab246ce74ebc0749a86112f8650c851d4d43cf112cd7c5f6a3579",
-          "bytes": 205253
+          "sha256": "f8fe50bf5ec11e470fd1823358ff9b14bf48f205e57744d4adbff60581a3bdc9",
+          "bytes": 299990
         },
         "collision": {
           "path": "client/public/eqrequiem/worlds/feerrott.collision.bin.gz",
-          "sha256": "2a2f5fa1eff98cdec15e7b8d5afac19ab3d997df8aa722878300c3ff899430f3",
-          "bytes": 180662
+          "sha256": "35a52ea502b2927d21c96a347af46a4404a5bae61b0a288b6e7da39d0ea15b77",
+          "bytes": 248328
+        },
+        "lightingPlan": {
+          "path": "client/public/eqrequiem/worlds/feerrott.lighting-plan.json.gz",
+          "sha256": "9cd0c02f92e8fd1f0ff60af670e135ae79f1ff5a54f4d4c1cd4684a0f5d90808",
+          "bytes": 37019
         }
       },
       "stats": {
         "primitives": 62,
         "triangles": 28121,
-        "clusters": 258,
-        "renderChunks": 62,
-        "cells": 140,
+        "clusters": 1473,
+        "renderChunks": 1462,
+        "cells": 341,
         "portals": 0,
         "regions": 7,
         "objectPrototypes": 34,
         "objectStamps": 2088,
-        "tiles": 140,
-        "collisionVertices": 14243,
-        "collisionTriangles": 27429
+        "tiles": 341,
+        "collisionVertices": 29466,
+        "collisionTriangles": 40787,
+        "collisionSourceTriangles": 27429,
+        "collisionChunks": 345,
+        "lightingStatus": "blocked-missing-uv2",
+        "lightingUv2ReadyChunks": 0
       },
       "warnings": []
     },
@@ -2199,28 +2529,37 @@
         },
         "spatial": {
           "path": "client/public/eqrequiem/worlds/cazicthule.spatial.json.gz",
-          "sha256": "c007a82c7c6612bd0df6557584f5e62c4f27ea89f8d753c575febcf5923e248f",
-          "bytes": 183450
+          "sha256": "74c230c90dfca59eac0c3b3451bf4472bd6b36a20a6e815f285e94f5bf9eb366",
+          "bytes": 195406
         },
         "collision": {
           "path": "client/public/eqrequiem/worlds/cazicthule.collision.bin.gz",
-          "sha256": "2453b4a4e2d7f613b3b6a15c9effb792bd25fc19da73ab13a947d62dcbca6bbe",
-          "bytes": 134072
+          "sha256": "675ed1b541f76628f920d65d2ca7353a509141c58eee44d1bf4fb499e3806f64",
+          "bytes": 179053
+        },
+        "lightingPlan": {
+          "path": "client/public/eqrequiem/worlds/cazicthule.lighting-plan.json.gz",
+          "sha256": "aeb5c6831211ba10491ef22a826af246d1c20c2224d3d5fb0eab91c84ac72d9d",
+          "bytes": 9573
         }
       },
       "stats": {
         "primitives": 55,
         "triangles": 33010,
-        "clusters": 288,
-        "renderChunks": 55,
-        "cells": 18,
+        "clusters": 478,
+        "renderChunks": 322,
+        "cells": 35,
         "portals": 0,
         "regions": 120,
         "objectPrototypes": 34,
         "objectStamps": 416,
-        "tiles": 18,
-        "collisionVertices": 11720,
-        "collisionTriangles": 23057
+        "tiles": 35,
+        "collisionVertices": 16713,
+        "collisionTriangles": 30357,
+        "collisionSourceTriangles": 27249,
+        "collisionChunks": 35,
+        "lightingStatus": "blocked-missing-uv2",
+        "lightingUv2ReadyChunks": 0
       },
       "warnings": []
     },
@@ -2253,28 +2592,37 @@
         },
         "spatial": {
           "path": "client/public/eqrequiem/worlds/oggok.spatial.json.gz",
-          "sha256": "b580ebc329255b1dfb5377fd26da6a7cbd2fe4e2e0779aff5af418f64bef9dea",
-          "bytes": 96042
+          "sha256": "aac5831612eb9c215e29e17a0d1e74e947457d9e331b169245b8d2ac0d35ae50",
+          "bytes": 106248
         },
         "collision": {
           "path": "client/public/eqrequiem/worlds/oggok.collision.bin.gz",
-          "sha256": "27a8b3eb13f0e975dbd73518bd771222dafe4e11508f321e4382b3318d79bee0",
-          "bytes": 80427
+          "sha256": "fc045e849e81201c2aa0939b59d061392f74d86a05a751822b570ca9e0b8bcfb",
+          "bytes": 100637
+        },
+        "lightingPlan": {
+          "path": "client/public/eqrequiem/worlds/oggok.lighting-plan.json.gz",
+          "sha256": "8a939b48ca9a87e2a375520da1817f825aea6b8b69dcd2359b094a976391149f",
+          "bytes": 6309
         }
       },
       "stats": {
         "primitives": 35,
         "triangles": 15319,
-        "clusters": 142,
-        "renderChunks": 35,
-        "cells": 22,
+        "clusters": 266,
+        "renderChunks": 212,
+        "cells": 37,
         "portals": 0,
         "regions": 7,
         "objectPrototypes": 32,
         "objectStamps": 370,
-        "tiles": 22,
-        "collisionVertices": 6984,
-        "collisionTriangles": 14035
+        "tiles": 37,
+        "collisionVertices": 10104,
+        "collisionTriangles": 17537,
+        "collisionSourceTriangles": 14809,
+        "collisionChunks": 38,
+        "lightingStatus": "blocked-missing-uv2",
+        "lightingUv2ReadyChunks": 0
       },
       "warnings": []
     },
@@ -2307,28 +2655,37 @@
         },
         "spatial": {
           "path": "client/public/eqrequiem/worlds/rathemtn.spatial.json.gz",
-          "sha256": "7962ecddedef1622231490e2b49f817e28fe483d738fbd1d4670f57bd52c968c",
-          "bytes": 259729
+          "sha256": "0be858c62f8805e0f8e0db6cda81cfedee3799ce95af78c5f7acf1b5048ce43f",
+          "bytes": 477484
         },
         "collision": {
           "path": "client/public/eqrequiem/worlds/rathemtn.collision.bin.gz",
-          "sha256": "7eae488889dcbc485d23d42594a1fd78bc71f7eadf6c93e4ee54bc83d22ac66a",
-          "bytes": 248750
+          "sha256": "969c9bb5cd05d30479845b2baccb5c639ebaf279d6e280419173a86b53093e29",
+          "bytes": 390133
+        },
+        "lightingPlan": {
+          "path": "client/public/eqrequiem/worlds/rathemtn.lighting-plan.json.gz",
+          "sha256": "3d93010ba280b60b9609faf2e9ffe204f5517bb01c114783ed1001a97e1b3174",
+          "bytes": 79900
         }
       },
       "stats": {
         "primitives": 24,
         "triangles": 37630,
-        "clusters": 309,
-        "renderChunks": 24,
-        "cells": 197,
+        "clusters": 3369,
+        "renderChunks": 3368,
+        "cells": 1071,
         "portals": 0,
         "regions": 2,
         "objectPrototypes": 70,
         "objectStamps": 2087,
-        "tiles": 197,
-        "collisionVertices": 19684,
-        "collisionTriangles": 37630
+        "tiles": 1071,
+        "collisionVertices": 55946,
+        "collisionTriangles": 67686,
+        "collisionSourceTriangles": 37630,
+        "collisionChunks": 1074,
+        "lightingStatus": "blocked-missing-uv2",
+        "lightingUv2ReadyChunks": 0
       },
       "warnings": []
     },
@@ -2361,28 +2718,37 @@
         },
         "spatial": {
           "path": "client/public/eqrequiem/worlds/lakerathe.spatial.json.gz",
-          "sha256": "b9f056e5b6a294c51bf89aaee8ad42d2a082072ad29c614ecd514b04d9085ee3",
-          "bytes": 180925
+          "sha256": "6d61a606b557816b27f76dc1d54dc6c4447a8944aa25cef06338c6d8bf2aec99",
+          "bytes": 275124
         },
         "collision": {
           "path": "client/public/eqrequiem/worlds/lakerathe.collision.bin.gz",
-          "sha256": "41570e4ae32634b6b6e00bb1d9d381fe9a8fdf8f41f175cc879d35cd1a570656",
-          "bytes": 193698
+          "sha256": "0d1a51570620a320747559fa30ad7991812e84dc007dcc6ef2e60e3747d96c19",
+          "bytes": 278651
+        },
+        "lightingPlan": {
+          "path": "client/public/eqrequiem/worlds/lakerathe.lighting-plan.json.gz",
+          "sha256": "80ac2c8e7a085bc01928f1a03f881d3864696c3719910a08e30a68a5b9022a21",
+          "bytes": 38236
         }
       },
       "stats": {
         "primitives": 19,
         "triangles": 30796,
-        "clusters": 252,
-        "renderChunks": 19,
-        "cells": 164,
+        "clusters": 1606,
+        "renderChunks": 1604,
+        "cells": 410,
         "portals": 0,
         "regions": 49,
         "objectPrototypes": 66,
         "objectStamps": 416,
-        "tiles": 164,
-        "collisionVertices": 14998,
-        "collisionTriangles": 29572
+        "tiles": 410,
+        "collisionVertices": 32988,
+        "collisionTriangles": 45705,
+        "collisionSourceTriangles": 29572,
+        "collisionChunks": 413,
+        "lightingStatus": "blocked-missing-uv2",
+        "lightingUv2ReadyChunks": 0
       },
       "warnings": []
     },
@@ -2415,28 +2781,37 @@
         },
         "spatial": {
           "path": "client/public/eqrequiem/worlds/grobb.spatial.json.gz",
-          "sha256": "36602ba70b74acce96bb277bd05e1f9247175efc6fde8fa2f692859d5dc51395",
-          "bytes": 130101
+          "sha256": "c99c2f3491117df8e0dadc602dde30ce9f49537c9f2b38b50c60c3a87140e895",
+          "bytes": 139071
         },
         "collision": {
           "path": "client/public/eqrequiem/worlds/grobb.collision.bin.gz",
-          "sha256": "b023b0c4eeb6026879e67425068bbdcf1635f7faa13df33e0a77856060371d07",
-          "bytes": 114787
+          "sha256": "35b75e5b3240b50e96a15f8ab9b97ca247a1b5d4d9f5ff5e747042d0ae45b114",
+          "bytes": 135223
+        },
+        "lightingPlan": {
+          "path": "client/public/eqrequiem/worlds/grobb.lighting-plan.json.gz",
+          "sha256": "faaa2220779936134dc935a586da57569cd25f81edbc7aff33db2d54858cdf84",
+          "bytes": 5859
         }
       },
       "stats": {
         "primitives": 45,
         "triangles": 22235,
-        "clusters": 206,
-        "renderChunks": 45,
-        "cells": 13,
+        "clusters": 296,
+        "renderChunks": 183,
+        "cells": 21,
         "portals": 0,
         "regions": 9,
         "objectPrototypes": 35,
         "objectStamps": 217,
-        "tiles": 13,
-        "collisionVertices": 9864,
-        "collisionTriangles": 19371
+        "tiles": 21,
+        "collisionVertices": 12170,
+        "collisionTriangles": 22698,
+        "collisionSourceTriangles": 20879,
+        "collisionChunks": 21,
+        "lightingStatus": "blocked-missing-uv2",
+        "lightingUv2ReadyChunks": 0
       },
       "warnings": []
     },
@@ -2469,28 +2844,37 @@
         },
         "spatial": {
           "path": "client/public/eqrequiem/worlds/gfaydark.spatial.json.gz",
-          "sha256": "a469d57f2fbd9e425a98d9917b7b6f48c52f1e3b530e00786f4ad977db806c5e",
-          "bytes": 506674
+          "sha256": "1d74369beb988bf3e817b5862159aeabf4ff912bef4df406eeab7562aa6b0b9f",
+          "bytes": 564821
         },
         "collision": {
           "path": "client/public/eqrequiem/worlds/gfaydark.collision.bin.gz",
-          "sha256": "a4ff515d1fb18c72e30d41d5fd5cc6c2db79506f474dda67948b4a91df3923cf",
-          "bytes": 457393
+          "sha256": "628f7e1ef2b0dbd9f686d7f5102cc07583433d83c89981feb65b2adee79efd06",
+          "bytes": 540002
+        },
+        "lightingPlan": {
+          "path": "client/public/eqrequiem/worlds/gfaydark.lighting-plan.json.gz",
+          "sha256": "a7f16cc82d3d6e37684868bd61300be1fac75ceb9817c5baf763e7047dcf48bb",
+          "bytes": 23438
         }
       },
       "stats": {
         "primitives": 42,
         "triangles": 74981,
-        "clusters": 612,
-        "renderChunks": 42,
-        "cells": 171,
+        "clusters": 1208,
+        "renderChunks": 933,
+        "cells": 407,
         "portals": 0,
         "regions": 4,
         "objectPrototypes": 79,
         "objectStamps": 2829,
-        "tiles": 171,
-        "collisionVertices": 38938,
-        "collisionTriangles": 71654
+        "tiles": 407,
+        "collisionVertices": 52999,
+        "collisionTriangles": 84661,
+        "collisionSourceTriangles": 71654,
+        "collisionChunks": 407,
+        "lightingStatus": "blocked-missing-uv2",
+        "lightingUv2ReadyChunks": 0
       },
       "warnings": []
     },
@@ -2523,28 +2907,37 @@
         },
         "spatial": {
           "path": "client/public/eqrequiem/worlds/akanon.spatial.json.gz",
-          "sha256": "5eaebf32f1693fe314c6af641ec40dae3b4e7cc4562ef7616c39415ca0f1340c",
-          "bytes": 204582
+          "sha256": "d8ba874d75c2e705b2c1c9e5743068ff6b308ca516e8e8e63f0dd7775b7ae21d",
+          "bytes": 214787
         },
         "collision": {
           "path": "client/public/eqrequiem/worlds/akanon.collision.bin.gz",
-          "sha256": "de81fec8158fa39b574a56bae7d7fb0561aaf1eb5f2f6906204ce2b5366a3f52",
-          "bytes": 181138
+          "sha256": "ec6347a86f5e0161599640f9f62f69e1acb878a91afbc8c4ca1f650029496c60",
+          "bytes": 208033
+        },
+        "lightingPlan": {
+          "path": "client/public/eqrequiem/worlds/akanon.lighting-plan.json.gz",
+          "sha256": "52f0d7b1704de4bc70c82c8c49b621f4160a51ec3d1687ef179e3eebd92f9871",
+          "bytes": 9641
         }
       },
       "stats": {
         "primitives": 61,
         "triangles": 36325,
-        "clusters": 322,
-        "renderChunks": 61,
-        "cells": 27,
+        "clusters": 498,
+        "renderChunks": 319,
+        "cells": 33,
         "portals": 0,
         "regions": 5,
         "objectPrototypes": 36,
         "objectStamps": 452,
-        "tiles": 27,
-        "collisionVertices": 15972,
-        "collisionTriangles": 32024
+        "tiles": 33,
+        "collisionVertices": 19190,
+        "collisionTriangles": 36538,
+        "collisionSourceTriangles": 33905,
+        "collisionChunks": 34,
+        "lightingStatus": "blocked-missing-uv2",
+        "lightingUv2ReadyChunks": 0
       },
       "warnings": []
     },
@@ -2598,28 +2991,37 @@
         },
         "spatial": {
           "path": "client/public/eqrequiem/worlds/lfaydark.spatial.json.gz",
-          "sha256": "34747531a40f138a616bef58ec7ba07fb8a9b15eea523198f082110408aa15e1",
-          "bytes": 208156
+          "sha256": "2a2ea2624adf950f0cd839a91d4fde952bda1f8b653fb6e29ec7f5aa9a995bb0",
+          "bytes": 242239
         },
         "collision": {
           "path": "client/public/eqrequiem/worlds/lfaydark.collision.bin.gz",
-          "sha256": "445789d614e510c830ea61c7a6dbb31ee5815f6a4f3d6a8da9638e49b43a6d2a",
-          "bytes": 157591
+          "sha256": "755123dbbe1a3d4ca21b7cd2082ec872a37677d47ba4bd4634b8d919817756ed",
+          "bytes": 206649
+        },
+        "lightingPlan": {
+          "path": "client/public/eqrequiem/worlds/lfaydark.lighting-plan.json.gz",
+          "sha256": "e009384d244bdb22eed4cf5df09b77ab5ecccde4edbee7218741be3e6a6de876",
+          "bytes": 17793
         }
       },
       "stats": {
         "primitives": 17,
         "triangles": 25000,
-        "clusters": 207,
-        "renderChunks": 17,
-        "cells": 135,
+        "clusters": 740,
+        "renderChunks": 737,
+        "cells": 296,
         "portals": 0,
         "regions": 4,
         "objectPrototypes": 56,
         "objectStamps": 2207,
-        "tiles": 135,
-        "collisionVertices": 12757,
-        "collisionTriangles": 25000
+        "tiles": 296,
+        "collisionVertices": 25647,
+        "collisionTriangles": 36285,
+        "collisionSourceTriangles": 25000,
+        "collisionChunks": 298,
+        "lightingStatus": "blocked-missing-uv2",
+        "lightingUv2ReadyChunks": 0
       },
       "warnings": []
     },
@@ -2652,28 +3054,37 @@
         },
         "spatial": {
           "path": "client/public/eqrequiem/worlds/crushbone.spatial.json.gz",
-          "sha256": "1dba61c8d1786964a827cd5f0976eeaeb691f28093ef81a6b3acaa59f8e4afc1",
-          "bytes": 123558
+          "sha256": "e440e09dbbf918175b029d18bba4761a6efe2952288256f2362899fa283c4a64",
+          "bytes": 135474
         },
         "collision": {
           "path": "client/public/eqrequiem/worlds/crushbone.collision.bin.gz",
-          "sha256": "f8a0aa8c991af6539f2f48bc30521b9faf2a3037a4108090b4e32be5bc0476c7",
-          "bytes": 118223
+          "sha256": "3a6a4b4eef5a87ea55a3eb1366d52f1fefcc958e384a7619a1bcd785b613adb8",
+          "bytes": 143253
+        },
+        "lightingPlan": {
+          "path": "client/public/eqrequiem/worlds/crushbone.lighting-plan.json.gz",
+          "sha256": "f9a7d5f051409f2102eb2f93e32f8dfb9ae9ec7915b19e6722697227f3d07936",
+          "bytes": 7439
         }
       },
       "stats": {
         "primitives": 46,
         "triangles": 21834,
-        "clusters": 199,
-        "renderChunks": 46,
-        "cells": 14,
+        "clusters": 336,
+        "renderChunks": 242,
+        "cells": 25,
         "portals": 0,
         "regions": 7,
         "objectPrototypes": 42,
         "objectStamps": 178,
-        "tiles": 14,
-        "collisionVertices": 9871,
-        "collisionTriangles": 19783
+        "tiles": 25,
+        "collisionVertices": 13255,
+        "collisionTriangles": 23882,
+        "collisionSourceTriangles": 20916,
+        "collisionChunks": 27,
+        "lightingStatus": "blocked-missing-uv2",
+        "lightingUv2ReadyChunks": 0
       },
       "warnings": []
     },
@@ -2706,28 +3117,37 @@
         },
         "spatial": {
           "path": "client/public/eqrequiem/worlds/mistmoore.spatial.json.gz",
-          "sha256": "8f246d7a4cfb289a4418820a56f6460b92a2b98c19fab161c65cecb34796095e",
-          "bytes": 151518
+          "sha256": "5dddef16310d82ba775cea3ba4bb5b80e72433bd61fc66359b1baf846a902c2c",
+          "bytes": 159432
         },
         "collision": {
           "path": "client/public/eqrequiem/worlds/mistmoore.collision.bin.gz",
-          "sha256": "bd0f068eb270ff051a00bfb56dd965b2ab683da37492e3f50cfa710b659871c2",
-          "bytes": 147893
+          "sha256": "668a284eb3cd3c874a72850e3b641becd6dd26c4f2641b2304b4d05e5ea3dd38",
+          "bytes": 159950
+        },
+        "lightingPlan": {
+          "path": "client/public/eqrequiem/worlds/mistmoore.lighting-plan.json.gz",
+          "sha256": "9dd334cb0cc7c5fd4af2b7ec3f86ef88f646ffc0c8c6dcd827d8a794731878a8",
+          "bytes": 6372
         }
       },
       "stats": {
         "primitives": 58,
         "triangles": 26977,
-        "clusters": 249,
-        "renderChunks": 58,
-        "cells": 9,
+        "clusters": 340,
+        "renderChunks": 189,
+        "cells": 14,
         "portals": 0,
         "regions": 4,
         "objectPrototypes": 39,
         "objectStamps": 401,
-        "tiles": 9,
-        "collisionVertices": 12931,
-        "collisionTriangles": 26401
+        "tiles": 14,
+        "collisionVertices": 14487,
+        "collisionTriangles": 27987,
+        "collisionSourceTriangles": 26487,
+        "collisionChunks": 14,
+        "lightingStatus": "blocked-missing-uv2",
+        "lightingUv2ReadyChunks": 0
       },
       "warnings": []
     },
@@ -2760,28 +3180,37 @@
         },
         "spatial": {
           "path": "client/public/eqrequiem/worlds/kaladima.spatial.json.gz",
-          "sha256": "4cd783bb92a3ac8c2d2108c6b6038d59b9b0045d2b04004d6ad709270d55080c",
-          "bytes": 98839
+          "sha256": "8d27b94f8384d1e394328ed89c45110f47fa582ed5cef0fd96e8445278f1b5b8",
+          "bytes": 101931
         },
         "collision": {
           "path": "client/public/eqrequiem/worlds/kaladima.collision.bin.gz",
-          "sha256": "dcbe129784e3b62b314e9be9c0222d295b911343b8c39a566ce4ea0d6547b807",
-          "bytes": 95640
+          "sha256": "1f5e118b16b71f6f4cd8451686af02b23cdc32cfdec2003723c694c92ba3a56c",
+          "bytes": 105585
+        },
+        "lightingPlan": {
+          "path": "client/public/eqrequiem/worlds/kaladima.lighting-plan.json.gz",
+          "sha256": "66e8aaa5cdf04e1914cbd738a551499a745835770e41398ce4795499eaaa93f0",
+          "bytes": 6154
         }
       },
       "stats": {
         "primitives": 88,
         "triangles": 17834,
-        "clusters": 197,
-        "renderChunks": 88,
-        "cells": 9,
+        "clusters": 252,
+        "renderChunks": 161,
+        "cells": 13,
         "portals": 0,
         "regions": 5,
         "objectPrototypes": 48,
         "objectStamps": 266,
-        "tiles": 9,
-        "collisionVertices": 8559,
-        "collisionTriangles": 17286
+        "tiles": 13,
+        "collisionVertices": 9679,
+        "collisionTriangles": 18598,
+        "collisionSourceTriangles": 17602,
+        "collisionChunks": 13,
+        "lightingStatus": "blocked-missing-uv2",
+        "lightingUv2ReadyChunks": 0
       },
       "warnings": []
     },
@@ -2814,28 +3243,37 @@
         },
         "spatial": {
           "path": "client/public/eqrequiem/worlds/felwithea.spatial.json.gz",
-          "sha256": "b36ab53fe99b67ed8dba2a79024d0b69495cdc15eb4a19ad0b43350603120bfb",
-          "bytes": 102103
+          "sha256": "c5279592b87ea1ae9400fc1c064b0b272d683cd24a66e80b69162c83e8d0059b",
+          "bytes": 110773
         },
         "collision": {
           "path": "client/public/eqrequiem/worlds/felwithea.collision.bin.gz",
-          "sha256": "25c9625f3d74a8ac785f2171d956bc47c7afada6ea3ddcb0f4f77ecf8791a10a",
-          "bytes": 106525
+          "sha256": "46676d0e305d322febad6aef5f9a3cc0f804c8beb1dd9f40ff1578b64efcc8a3",
+          "bytes": 119749
+        },
+        "lightingPlan": {
+          "path": "client/public/eqrequiem/worlds/felwithea.lighting-plan.json.gz",
+          "sha256": "602576ceb59284cc90568677704a1f85b060ba782ee0d666262620b8b0b33d14",
+          "bytes": 8101
         }
       },
       "stats": {
         "primitives": 96,
         "triangles": 19176,
-        "clusters": 216,
-        "renderChunks": 96,
-        "cells": 10,
+        "clusters": 316,
+        "renderChunks": 236,
+        "cells": 16,
         "portals": 0,
         "regions": 5,
         "objectPrototypes": 44,
         "objectStamps": 213,
-        "tiles": 10,
-        "collisionVertices": 9221,
-        "collisionTriangles": 18689
+        "tiles": 16,
+        "collisionVertices": 11028,
+        "collisionTriangles": 20480,
+        "collisionSourceTriangles": 18689,
+        "collisionChunks": 16,
+        "lightingStatus": "blocked-missing-uv2",
+        "lightingUv2ReadyChunks": 0
       },
       "warnings": []
     },
@@ -2868,28 +3306,37 @@
         },
         "spatial": {
           "path": "client/public/eqrequiem/worlds/felwitheb.spatial.json.gz",
-          "sha256": "a98c169c4412f29bb2fcb58b6a18d8d3d08b67d157918afee697efd00878eca1",
-          "bytes": 80868
+          "sha256": "e5d898cbf8bed0fc47400f84cb7d4306d4e4cf9a3f866870943944abb5692fdf",
+          "bytes": 83256
         },
         "collision": {
           "path": "client/public/eqrequiem/worlds/felwitheb.collision.bin.gz",
-          "sha256": "82d9e82cc0c7652243c6be932646a7b0d225fd5364a8100ffb34b98507c4aa5e",
-          "bytes": 77030
+          "sha256": "fe919f2f0ee671247ce75b4f8084fe50de11a1717c15e3624483fa80fcf93eea",
+          "bytes": 84435
+        },
+        "lightingPlan": {
+          "path": "client/public/eqrequiem/worlds/felwitheb.lighting-plan.json.gz",
+          "sha256": "8d875eb8c05594b339e2ebff9d350b2b1f7c195498d83f1ed88e04b4a860d381",
+          "bytes": 3142
         }
       },
       "stats": {
         "primitives": 28,
         "triangles": 14171,
-        "clusters": 129,
-        "renderChunks": 28,
-        "cells": 7,
+        "clusters": 167,
+        "renderChunks": 83,
+        "cells": 12,
         "portals": 0,
         "regions": 10,
         "objectPrototypes": 26,
         "objectStamps": 141,
-        "tiles": 7,
-        "collisionVertices": 6764,
-        "collisionTriangles": 13743
+        "tiles": 12,
+        "collisionVertices": 7617,
+        "collisionTriangles": 14663,
+        "collisionSourceTriangles": 13911,
+        "collisionChunks": 13,
+        "lightingStatus": "blocked-missing-uv2",
+        "lightingUv2ReadyChunks": 0
       },
       "warnings": []
     },
@@ -2922,28 +3369,37 @@
         },
         "spatial": {
           "path": "client/public/eqrequiem/worlds/unrest.spatial.json.gz",
-          "sha256": "0cb10064fc73642c1555d827a3e973ec209f02257827a963b880d10d76650aa5",
-          "bytes": 134108
+          "sha256": "618465bbfb95ef8bfa0cb93a8c8a633cc38bdd5cb82580a8a633f9dd06448e1c",
+          "bytes": 143968
         },
         "collision": {
           "path": "client/public/eqrequiem/worlds/unrest.collision.bin.gz",
-          "sha256": "93afaf3a0db8ed9ac7f69920ae39ffb50f44636d254cf5bcb38ea403c31ef6df",
-          "bytes": 140924
+          "sha256": "3e98245fc4a0928e77a4f5be024b798b841e4a669649b7d6378e83062db8aabb",
+          "bytes": 158339
+        },
+        "lightingPlan": {
+          "path": "client/public/eqrequiem/worlds/unrest.lighting-plan.json.gz",
+          "sha256": "0a260e8a1e865a48cde87c73734996ec2a1f0ddb8f7e0703a1666b0ca2db0236",
+          "bytes": 8672
         }
       },
       "stats": {
         "primitives": 66,
         "triangles": 26291,
-        "clusters": 245,
-        "renderChunks": 66,
-        "cells": 9,
+        "clusters": 387,
+        "renderChunks": 259,
+        "cells": 18,
         "portals": 0,
         "regions": 5,
         "objectPrototypes": 35,
         "objectStamps": 164,
-        "tiles": 9,
-        "collisionVertices": 12571,
-        "collisionTriangles": 25528
+        "tiles": 18,
+        "collisionVertices": 15028,
+        "collisionTriangles": 28187,
+        "collisionSourceTriangles": 25899,
+        "collisionChunks": 18,
+        "lightingStatus": "blocked-missing-uv2",
+        "lightingUv2ReadyChunks": 0
       },
       "warnings": []
     },
@@ -2951,7 +3407,7 @@
       "id": 64,
       "shortName": "kedge",
       "longName": "Kedge Keep",
-      "status": "pack-failed",
+      "status": "ready",
       "source": {
         "path": "assets/reference/everquest_rof2/zones/kedge.glb.gz",
         "sha256": "457041a7728306db4973e93bdb7d137b0e5410549dd0ca2799df29506ed12e2d",
@@ -2962,7 +3418,52 @@
         "sha256": "7c53cabfc7fbd55849e6844b99f4500f25bfe3459f92c4d451a494f0d5ff4677",
         "bytes": 93834
       },
-      "error": "World GLB has no collision-selected triangle primitives",
+      "authoring": {
+        "path": "shader-object/sandbox/public/shado/worlds/kedge.authoring.json",
+        "sha256": "222317296b0c257df8b926ef08c145ac5a005e86d9d16c885a71490e25411721",
+        "bytes": 255205
+      },
+      "runtime": {
+        "source": "/eqrequiem/worlds/kedge.glb.gz",
+        "scene": {
+          "path": "client/public/eqrequiem/worlds/kedge.glb.gz",
+          "sha256": "50973a7f4878ba550991d7149227e0bc475094c267ef75576d36c8ad7f870ad7",
+          "bytes": 238177
+        },
+        "spatial": {
+          "path": "client/public/eqrequiem/worlds/kedge.spatial.json.gz",
+          "sha256": "968a741c856a2027a21573cefac8fd8fc46facffbafb537621d4d8dd7d77149a",
+          "bytes": 54055
+        },
+        "collision": {
+          "path": "client/public/eqrequiem/worlds/kedge.collision.bin.gz",
+          "sha256": "ca00296a703c49d33299d0318fbd9745ee3cba14ad140ae055ecb270edb462cd",
+          "bytes": 47495
+        },
+        "lightingPlan": {
+          "path": "client/public/eqrequiem/worlds/kedge.lighting-plan.json.gz",
+          "sha256": "5a06b17acd6b0a187419f89257f4a1d7d93e34a79d631e59a2ff3f19adf21c6f",
+          "bytes": 2664
+        }
+      },
+      "stats": {
+        "primitives": 14,
+        "triangles": 6955,
+        "clusters": 112,
+        "renderChunks": 77,
+        "cells": 13,
+        "portals": 0,
+        "regions": 7,
+        "objectPrototypes": 11,
+        "objectStamps": 382,
+        "tiles": 13,
+        "collisionVertices": 4631,
+        "collisionTriangles": 8182,
+        "collisionSourceTriangles": 6955,
+        "collisionChunks": 13,
+        "lightingStatus": "blocked-missing-uv2",
+        "lightingUv2ReadyChunks": 0
+      },
       "warnings": []
     },
     {
@@ -2994,28 +3495,37 @@
         },
         "spatial": {
           "path": "client/public/eqrequiem/worlds/guktop.spatial.json.gz",
-          "sha256": "12c53fc752f611638ec2fe5fee0ca4fbac51d196490601bc44a92a9d6a155bea",
-          "bytes": 175241
+          "sha256": "20dad2740cb2a5c29aeaa058c0e3d108d03a7c4440bc21bc04027abf2e789718",
+          "bytes": 193145
         },
         "collision": {
           "path": "client/public/eqrequiem/worlds/guktop.collision.bin.gz",
-          "sha256": "e5a10e24f4e05f32ac28881a9fd17ab731c854dc3c083c04995b3e6cedae56b3",
-          "bytes": 131056
+          "sha256": "be7fb22156829ff815907716349fd7976e1bc09d4cf3c8f3f729d23ea85421d0",
+          "bytes": 174253
+        },
+        "lightingPlan": {
+          "path": "client/public/eqrequiem/worlds/guktop.lighting-plan.json.gz",
+          "sha256": "981e1b0b4811235069b76625b602acb22e1e14235ad4d81c7be319514f747d84",
+          "bytes": 20068
         }
       },
       "stats": {
         "primitives": 152,
         "triangles": 30239,
-        "clusters": 354,
-        "renderChunks": 152,
-        "cells": 28,
+        "clusters": 725,
+        "renderChunks": 622,
+        "cells": 37,
         "portals": 0,
         "regions": 35,
         "objectPrototypes": 34,
         "objectStamps": 395,
-        "tiles": 28,
-        "collisionVertices": 11339,
-        "collisionTriangles": 21583
+        "tiles": 37,
+        "collisionVertices": 16064,
+        "collisionTriangles": 29769,
+        "collisionSourceTriangles": 27200,
+        "collisionChunks": 37,
+        "lightingStatus": "blocked-missing-uv2",
+        "lightingUv2ReadyChunks": 0
       },
       "warnings": []
     },
@@ -3048,28 +3558,37 @@
         },
         "spatial": {
           "path": "client/public/eqrequiem/worlds/gukbottom.spatial.json.gz",
-          "sha256": "0b298856997ade975d5b3b33f730c0e363c375434824b998b08b4ea307dc9581",
-          "bytes": 195995
+          "sha256": "59e349c0992b0a2bf4b06165b6937fc77ea4113798f5502badb7fea7489c2457",
+          "bytes": 215425
         },
         "collision": {
           "path": "client/public/eqrequiem/worlds/gukbottom.collision.bin.gz",
-          "sha256": "caa3cff8eaa476e3f2c002989718b0d847958c97b5b4d2a2c3f8d181057f3e05",
-          "bytes": 167683
+          "sha256": "7a41d134b2a52ef3abe249cf0d95e0fe4f16e4060f3a9f0d577ec9fe9d336e12",
+          "bytes": 194923
+        },
+        "lightingPlan": {
+          "path": "client/public/eqrequiem/worlds/gukbottom.lighting-plan.json.gz",
+          "sha256": "f798d19fdad2c14ef21f5af434fbe686489656f7f7453cbff436b8622d55234a",
+          "bytes": 18459
         }
       },
       "stats": {
         "primitives": 124,
         "triangles": 32877,
-        "clusters": 345,
-        "renderChunks": 124,
-        "cells": 38,
+        "clusters": 727,
+        "renderChunks": 606,
+        "cells": 45,
         "portals": 0,
         "regions": 23,
         "objectPrototypes": 39,
         "objectStamps": 482,
-        "tiles": 38,
-        "collisionVertices": 14349,
-        "collisionTriangles": 28317
+        "tiles": 45,
+        "collisionVertices": 18266,
+        "collisionTriangles": 34085,
+        "collisionSourceTriangles": 31223,
+        "collisionChunks": 45,
+        "lightingStatus": "blocked-missing-uv2",
+        "lightingUv2ReadyChunks": 0
       },
       "warnings": []
     },
@@ -3102,28 +3621,37 @@
         },
         "spatial": {
           "path": "client/public/eqrequiem/worlds/kaladimb.spatial.json.gz",
-          "sha256": "73916440b366c453fc160552be7979c4b945d0649a697031bc40bfd630974cab",
-          "bytes": 129876
+          "sha256": "27c3bafc9bc2edccfb42bfd6f6579b257c0ba475967c38a717ab5d6399da858f",
+          "bytes": 135743
         },
         "collision": {
           "path": "client/public/eqrequiem/worlds/kaladimb.collision.bin.gz",
-          "sha256": "16390ecb05bec80b28b2ef8051a689894e085697cee52c9895d9aff62d216768",
-          "bytes": 124446
+          "sha256": "c46ec668e463d40ac5bbf79ff8878c1a7fe2c4d619dcd738e45e418749e6b5f2",
+          "bytes": 134562
+        },
+        "lightingPlan": {
+          "path": "client/public/eqrequiem/worlds/kaladimb.lighting-plan.json.gz",
+          "sha256": "f743389c9af4990ad3ae558f00798e9ac9fabce1986c92f6b8d2a02e0c5d92fe",
+          "bytes": 6413
         }
       },
       "stats": {
         "primitives": 88,
         "triangles": 23213,
-        "clusters": 239,
-        "renderChunks": 88,
-        "cells": 11,
+        "clusters": 296,
+        "renderChunks": 169,
+        "cells": 16,
         "portals": 0,
         "regions": 6,
         "objectPrototypes": 45,
         "objectStamps": 249,
-        "tiles": 11,
-        "collisionVertices": 11050,
-        "collisionTriangles": 22332
+        "tiles": 16,
+        "collisionVertices": 12044,
+        "collisionTriangles": 23633,
+        "collisionSourceTriangles": 22779,
+        "collisionChunks": 16,
+        "lightingStatus": "blocked-missing-uv2",
+        "lightingUv2ReadyChunks": 0
       },
       "warnings": []
     },
@@ -3156,28 +3684,37 @@
         },
         "spatial": {
           "path": "client/public/eqrequiem/worlds/butcher.spatial.json.gz",
-          "sha256": "1e559423af98fdaddd29b4cc386714966232c17e548f6910a1c17197bd71499e",
-          "bytes": 344522
+          "sha256": "ad19359c396814eaf85e129930532b13416bee7435c2f3caa69e53baf5ac1a66",
+          "bytes": 523298
         },
         "collision": {
           "path": "client/public/eqrequiem/worlds/butcher.collision.bin.gz",
-          "sha256": "f0abc677efef08074114e34c5d9568acef83a45f139e24c2a34048c890501541",
-          "bytes": 345491
+          "sha256": "e38bba72d96048c2927da6ed3e58966bb81c1abf77546f19406fb9483f3e5283",
+          "bytes": 449668
+        },
+        "lightingPlan": {
+          "path": "client/public/eqrequiem/worlds/butcher.lighting-plan.json.gz",
+          "sha256": "66ee39f5aba94353f819f36308f4cdf32a2aca6ec9fb3a95cd6d18f92b6c1500",
+          "bytes": 63429
         }
       },
       "stats": {
         "primitives": 58,
         "triangles": 52695,
-        "clusters": 444,
-        "renderChunks": 58,
-        "cells": 237,
+        "clusters": 2625,
+        "renderChunks": 2604,
+        "cells": 781,
         "portals": 0,
         "regions": 12,
         "objectPrototypes": 69,
         "objectStamps": 1884,
-        "tiles": 237,
-        "collisionVertices": 27222,
-        "collisionTriangles": 51824
+        "tiles": 781,
+        "collisionVertices": 49174,
+        "collisionTriangles": 71681,
+        "collisionSourceTriangles": 51824,
+        "collisionChunks": 688,
+        "lightingStatus": "blocked-missing-uv2",
+        "lightingUv2ReadyChunks": 0
       },
       "warnings": []
     },
@@ -3210,28 +3747,37 @@
         },
         "spatial": {
           "path": "client/public/eqrequiem/worlds/oot.spatial.json.gz",
-          "sha256": "ddd4bf192a389a2a4ee8bbd1bd02001bb403b9b37b7dc28eceaf8add5f3fe76e",
-          "bytes": 267467
+          "sha256": "2718d10a5588c04e984076f923341e6c1bbed997ccac24d0799aa2fa70f976a9",
+          "bytes": 617564
         },
         "collision": {
           "path": "client/public/eqrequiem/worlds/oot.collision.bin.gz",
-          "sha256": "e29f051f704672d1261009cc7c0e6251e405c3c7c436a8aa8834cf0b91ba40f5",
-          "bytes": 284112
+          "sha256": "e7772b98b8d75ec46708063d5cf86dd9f8c0128b40bf43f969bb8482f5cdcb93",
+          "bytes": 539193
+        },
+        "lightingPlan": {
+          "path": "client/public/eqrequiem/worlds/oot.lighting-plan.json.gz",
+          "sha256": "70312fe47c93929330326060122d46c05230a14996063fb1834633775a300ca5",
+          "bytes": 156306
         }
       },
       "stats": {
         "primitives": 33,
         "triangles": 43672,
-        "clusters": 358,
-        "renderChunks": 33,
-        "cells": 211,
+        "clusters": 6680,
+        "renderChunks": 6635,
+        "cells": 2529,
         "portals": 0,
         "regions": 294,
         "objectPrototypes": 49,
         "objectStamps": 575,
-        "tiles": 211,
-        "collisionVertices": 20083,
-        "collisionTriangles": 39421
+        "tiles": 2529,
+        "collisionVertices": 96359,
+        "collisionTriangles": 95081,
+        "collisionSourceTriangles": 39421,
+        "collisionChunks": 3680,
+        "lightingStatus": "blocked-missing-uv2",
+        "lightingUv2ReadyChunks": 0
       },
       "warnings": []
     },
@@ -3264,28 +3810,37 @@
         },
         "spatial": {
           "path": "client/public/eqrequiem/worlds/cauldron.spatial.json.gz",
-          "sha256": "fb1f20f84631b8b8d6df09ffd9bb4c77d750bd8d73fa7d4c19f1bb91d3331b43",
-          "bytes": 138997
+          "sha256": "d010ef594eaaba1c70f6dfd53c99300070a1b6b201855989c474f2f2b9c7f4a7",
+          "bytes": 205006
         },
         "collision": {
           "path": "client/public/eqrequiem/worlds/cauldron.collision.bin.gz",
-          "sha256": "551972222dbf904aa2a482c4245d3b1594e26271897c0b92b9fa4a8b12ccb46e",
-          "bytes": 167982
+          "sha256": "b1800e8a06ad983200070ba5b62a51dc37ee465726a5a6f2aebd5b70cd912855",
+          "bytes": 215649
+        },
+        "lightingPlan": {
+          "path": "client/public/eqrequiem/worlds/cauldron.lighting-plan.json.gz",
+          "sha256": "529daff3c648138bbfc7785ff4b5e6c47206a7f1fa2799845c35302ab78ff1b1",
+          "bytes": 25585
         }
       },
       "stats": {
         "primitives": 29,
         "triangles": 24989,
-        "clusters": 212,
-        "renderChunks": 29,
-        "cells": 101,
+        "clusters": 1032,
+        "renderChunks": 1011,
+        "cells": 217,
         "portals": 0,
         "regions": 5,
         "objectPrototypes": 19,
         "objectStamps": 211,
-        "tiles": 101,
-        "collisionVertices": 12463,
-        "collisionTriangles": 24455
+        "tiles": 217,
+        "collisionVertices": 23121,
+        "collisionTriangles": 34132,
+        "collisionSourceTriangles": 24455,
+        "collisionChunks": 220,
+        "lightingStatus": "blocked-missing-uv2",
+        "lightingUv2ReadyChunks": 0
       },
       "warnings": []
     },
@@ -3318,28 +3873,37 @@
         },
         "spatial": {
           "path": "client/public/eqrequiem/worlds/airplane.spatial.json.gz",
-          "sha256": "a50fc46cda2455f88e0d14f86705b1145675434db42ed12dcc643cd8e65e8f43",
-          "bytes": 157248
+          "sha256": "d8226747a149b096167568f39fc7f2e86d199e1c281ed070ad1e9de71eac6be0",
+          "bytes": 193327
         },
         "collision": {
           "path": "client/public/eqrequiem/worlds/airplane.collision.bin.gz",
-          "sha256": "66b4ba7a944452be8cc89a696045381925b42b243b7fd1674d789781c1371baa",
-          "bytes": 191216
+          "sha256": "03fc96253ce427b5d716a158adf7b4582a701829e8359529a79819671891535a",
+          "bytes": 257161
+        },
+        "lightingPlan": {
+          "path": "client/public/eqrequiem/worlds/airplane.lighting-plan.json.gz",
+          "sha256": "35d65eadbd4e23b32b06c4206fbf1049340a4ce49f3a7d7d9a157179929f307f",
+          "bytes": 16913
         }
       },
       "stats": {
         "primitives": 26,
         "triangles": 29030,
-        "clusters": 242,
-        "renderChunks": 26,
-        "cells": 87,
+        "clusters": 795,
+        "renderChunks": 696,
+        "cells": 376,
         "portals": 0,
         "regions": 65,
         "objectPrototypes": 11,
         "objectStamps": 26,
-        "tiles": 87,
-        "collisionVertices": 14664,
-        "collisionTriangles": 29028
+        "tiles": 376,
+        "collisionVertices": 28369,
+        "collisionTriangles": 41108,
+        "collisionSourceTriangles": 29028,
+        "collisionChunks": 380,
+        "lightingStatus": "blocked-missing-uv2",
+        "lightingUv2ReadyChunks": 0
       },
       "warnings": []
     },
@@ -3372,28 +3936,37 @@
         },
         "spatial": {
           "path": "client/public/eqrequiem/worlds/fearplane.spatial.json.gz",
-          "sha256": "f8c0551624e9a0402617169b1dfffdd5b983a0af451175cdde7dea823d6e0a89",
-          "bytes": 130416
+          "sha256": "9a272ea60bcd8858436acfb827eb7e0b81c3eb96ece00667037ce298e603b500",
+          "bytes": 152207
         },
         "collision": {
           "path": "client/public/eqrequiem/worlds/fearplane.collision.bin.gz",
-          "sha256": "568d946878469356529b4e83692cb5b482f85f13fed9ee7354b5b0ab842b5d38",
-          "bytes": 100252
+          "sha256": "3718b134bd967d94c3bfc2f45126b1e1710e9a3024dcef5c85f27f6698bc9420",
+          "bytes": 131209
+        },
+        "lightingPlan": {
+          "path": "client/public/eqrequiem/worlds/fearplane.lighting-plan.json.gz",
+          "sha256": "e9bd146c2aafd7b80c84b00111bc5bcef75233a7bb12e021430163591c911da9",
+          "bytes": 12431
         }
       },
       "stats": {
         "primitives": 27,
         "triangles": 19856,
-        "clusters": 169,
-        "renderChunks": 27,
-        "cells": 72,
+        "clusters": 518,
+        "renderChunks": 482,
+        "cells": 144,
         "portals": 0,
         "regions": 3,
         "objectPrototypes": 38,
         "objectStamps": 752,
-        "tiles": 72,
-        "collisionVertices": 8320,
-        "collisionTriangles": 16152
+        "tiles": 144,
+        "collisionVertices": 15151,
+        "collisionTriangles": 22192,
+        "collisionSourceTriangles": 16152,
+        "collisionChunks": 144,
+        "lightingStatus": "blocked-missing-uv2",
+        "lightingUv2ReadyChunks": 0
       },
       "warnings": []
     },
@@ -3426,28 +3999,37 @@
         },
         "spatial": {
           "path": "client/public/eqrequiem/worlds/permafrost.spatial.json.gz",
-          "sha256": "143819dda9d2f285b4d1d8a09277889bdd8348674c127f61973fc1ece961f773",
-          "bytes": 119669
+          "sha256": "975d5640c8e08ccc0d97356f31169df8ab266feddcc239e4b43f971738b0716f",
+          "bytes": 125095
         },
         "collision": {
           "path": "client/public/eqrequiem/worlds/permafrost.collision.bin.gz",
-          "sha256": "e94f7751d7d52fc625f40fd629a5fe4fa1900d0e27ec9e85e92108efebb62e44",
-          "bytes": 104323
+          "sha256": "31fd5ebfb02f872d641e4b2e7a2b7f3f5f4c690c5d4ec49d91b589ce32c50ffd",
+          "bytes": 113236
+        },
+        "lightingPlan": {
+          "path": "client/public/eqrequiem/worlds/permafrost.lighting-plan.json.gz",
+          "sha256": "a6dfa1a5cd79cc7dcc4137a8bfa8aba6db226be06c1a2aad4b49477da41ca5fa",
+          "bytes": 5003
         }
       },
       "stats": {
         "primitives": 34,
         "triangles": 18251,
-        "clusters": 167,
-        "renderChunks": 34,
-        "cells": 19,
+        "clusters": 257,
+        "renderChunks": 161,
+        "cells": 24,
         "portals": 0,
         "regions": 1,
         "objectPrototypes": 27,
         "objectStamps": 502,
-        "tiles": 19,
-        "collisionVertices": 8551,
-        "collisionTriangles": 18203
+        "tiles": 24,
+        "collisionVertices": 10190,
+        "collisionTriangles": 19832,
+        "collisionSourceTriangles": 18203,
+        "collisionChunks": 24,
+        "lightingStatus": "blocked-missing-uv2",
+        "lightingUv2ReadyChunks": 0
       },
       "warnings": []
     },
@@ -3480,28 +4062,37 @@
         },
         "spatial": {
           "path": "client/public/eqrequiem/worlds/kerraridge.spatial.json.gz",
-          "sha256": "c8f99fd4717daf9aa32c7a7c1a88bf7eff936d8e3a7e2efa31345345e8c90781",
-          "bytes": 104262
+          "sha256": "1c017e36d54eb777e41b80c350f8d541f6e3e284d3e8e216aff62d5ce5e9ada8",
+          "bytes": 118388
         },
         "collision": {
           "path": "client/public/eqrequiem/worlds/kerraridge.collision.bin.gz",
-          "sha256": "512b5b87dca304c12108f913a02597e3a53bf95907d3e3296e8a01fac404527a",
-          "bytes": 98696
+          "sha256": "f0ed7b963833a3ebfb8cb352a3e4d550fc43fe09754348e2a448e148b7d402ec",
+          "bytes": 120720
+        },
+        "lightingPlan": {
+          "path": "client/public/eqrequiem/worlds/kerraridge.lighting-plan.json.gz",
+          "sha256": "83d07c8934b2476f5487023956299d34d9f488b0141f0fae40b201b597c6854c",
+          "bytes": 9989
         }
       },
       "stats": {
         "primitives": 57,
         "triangles": 19004,
-        "clusters": 182,
-        "renderChunks": 57,
-        "cells": 26,
+        "clusters": 383,
+        "renderChunks": 327,
+        "cells": 42,
         "portals": 0,
         "regions": 5,
         "objectPrototypes": 31,
         "objectStamps": 260,
-        "tiles": 26,
-        "collisionVertices": 8407,
-        "collisionTriangles": 16812
+        "tiles": 42,
+        "collisionVertices": 11705,
+        "collisionTriangles": 20656,
+        "collisionSourceTriangles": 17735,
+        "collisionChunks": 46,
+        "lightingStatus": "blocked-missing-uv2",
+        "lightingUv2ReadyChunks": 0
       },
       "warnings": []
     },
@@ -3534,28 +4125,37 @@
         },
         "spatial": {
           "path": "client/public/eqrequiem/worlds/paineel.spatial.json.gz",
-          "sha256": "1e2f4abc6d179b96b5f04e8ddbd66fc7878b3c5ad02be29ac416cf50f7f81e81",
-          "bytes": 345383
+          "sha256": "df678062bb2ade75efef87116ad45d4fd76e9f3771b4acc90c3cfc6ebd7f1472",
+          "bytes": 353204
         },
         "collision": {
           "path": "client/public/eqrequiem/worlds/paineel.collision.bin.gz",
-          "sha256": "c5ecb348ab825de26417a5c7e00699c58ad137671598acf3aca2fcd196c5137e",
-          "bytes": 329645
+          "sha256": "6d0556b7d7575a9c37802307448b5bf4a715e61d03067d209d97418db0bef829",
+          "bytes": 356823
+        },
+        "lightingPlan": {
+          "path": "client/public/eqrequiem/worlds/paineel.lighting-plan.json.gz",
+          "sha256": "f9cbe38a293ac4abcf8dbc78eb42da22bbfeecfa0e79647e9fe077f727413974",
+          "bytes": 8136
         }
       },
       "stats": {
         "primitives": 50,
         "triangles": 60895,
-        "clusters": 507,
-        "renderChunks": 50,
-        "cells": 29,
+        "clusters": 647,
+        "renderChunks": 268,
+        "cells": 41,
         "portals": 0,
         "regions": 39,
         "objectPrototypes": 45,
         "objectStamps": 531,
-        "tiles": 29,
-        "collisionVertices": 27869,
-        "collisionTriangles": 59060
+        "tiles": 41,
+        "collisionVertices": 31282,
+        "collisionTriangles": 62617,
+        "collisionSourceTriangles": 59282,
+        "collisionChunks": 43,
+        "lightingStatus": "blocked-missing-uv2",
+        "lightingUv2ReadyChunks": 0
       },
       "warnings": []
     },
@@ -3588,28 +4188,37 @@
         },
         "spatial": {
           "path": "client/public/eqrequiem/worlds/hateplane.spatial.json.gz",
-          "sha256": "8edd9978c7570d05506e17d4b7643c37a794260b253bda751557fe990244e281",
-          "bytes": 602443
+          "sha256": "f7b44f3ba592aa1fb409cf83ea91747cc33d429b91f8973d4b895ad3bba0b14f",
+          "bytes": 638426
         },
         "collision": {
           "path": "client/public/eqrequiem/worlds/hateplane.collision.bin.gz",
-          "sha256": "17780c7b231275d432c5e44967aaed365e9e727721454ba79e931d2b9ae5abb7",
-          "bytes": 677456
+          "sha256": "fd3e83567f70f95a87e2c9ddf1844ac467f763870ff6a9c8c4dc8f83ad1bf52a",
+          "bytes": 762825
+        },
+        "lightingPlan": {
+          "path": "client/public/eqrequiem/worlds/hateplane.lighting-plan.json.gz",
+          "sha256": "86660d4b8dfd58ea21663a02375f0f71582184bea0f8b99ce2f7f36f4859421d",
+          "bytes": 17266
         }
       },
       "stats": {
         "primitives": 42,
         "triangles": 107473,
-        "clusters": 861,
-        "renderChunks": 42,
-        "cells": 32,
+        "clusters": 1246,
+        "renderChunks": 646,
+        "cells": 36,
         "portals": 0,
         "regions": 0,
         "objectPrototypes": 63,
         "objectStamps": 349,
-        "tiles": 32,
-        "collisionVertices": 57841,
-        "collisionTriangles": 106783
+        "tiles": 36,
+        "collisionVertices": 68277,
+        "collisionTriangles": 116663,
+        "collisionSourceTriangles": 107200,
+        "collisionChunks": 36,
+        "lightingStatus": "blocked-missing-uv2",
+        "lightingUv2ReadyChunks": 0
       },
       "warnings": []
     },
@@ -3642,28 +4251,37 @@
         },
         "spatial": {
           "path": "client/public/eqrequiem/worlds/arena.spatial.json.gz",
-          "sha256": "6ef052c3915607d435a538ea76173f89757b07181da71d5c000038090f44d308",
-          "bytes": 16792
+          "sha256": "bbc9fe74b8ce6793fbfd106dda7eb1922875b34c8087c93a5fd0c3a362f08c80",
+          "bytes": 24555
         },
         "collision": {
           "path": "client/public/eqrequiem/worlds/arena.collision.bin.gz",
-          "sha256": "d3e90aafadc5d7f28114d4aa136cc837cafdcdcff2a498a1e31e683a036f8b65",
-          "bytes": 17085
+          "sha256": "ac9a6d7c2f566a52ba4c2b229b6387d43466d1e302a6e05b9c69e56124622631",
+          "bytes": 23937
+        },
+        "lightingPlan": {
+          "path": "client/public/eqrequiem/worlds/arena.lighting-plan.json.gz",
+          "sha256": "bb145940f0a5209d463fbf30d98494398a1880e7204551e48518fce9bf6fdab2",
+          "bytes": 4053
         }
       },
       "stats": {
         "primitives": 7,
         "triangles": 2600,
-        "clusters": 25,
-        "renderChunks": 7,
-        "cells": 14,
+        "clusters": 145,
+        "renderChunks": 144,
+        "cells": 68,
         "portals": 0,
         "regions": 2,
         "objectPrototypes": 8,
         "objectStamps": 22,
-        "tiles": 14,
-        "collisionVertices": 1336,
-        "collisionTriangles": 2600
+        "tiles": 68,
+        "collisionVertices": 3031,
+        "collisionTriangles": 4134,
+        "collisionSourceTriangles": 2600,
+        "collisionChunks": 78,
+        "lightingStatus": "blocked-missing-uv2",
+        "lightingUv2ReadyChunks": 0
       },
       "warnings": []
     },
@@ -3696,28 +4314,37 @@
         },
         "spatial": {
           "path": "client/public/eqrequiem/worlds/emeraldjungle.spatial.json.gz",
-          "sha256": "8a78bcf61447dee7cdff0c43d162a5308058f3de9dccb06a97f8bf906c1ae347",
-          "bytes": 1040590
+          "sha256": "b0102d6733ab548426735f022dbb712b4aed425f0220214a86ef02502e4d2fec",
+          "bytes": 1221961
         },
         "collision": {
           "path": "client/public/eqrequiem/worlds/emeraldjungle.collision.bin.gz",
-          "sha256": "584c09f0d5c0b363af47d8d10795995ef42daa207582a1c4e61aeac48a462120",
-          "bytes": 498597
+          "sha256": "423121bccd27fca1b456ed44a9c01a0ca3c0c24fd00f481eb31e3dd9ac5f9280",
+          "bytes": 721339
+        },
+        "lightingPlan": {
+          "path": "client/public/eqrequiem/worlds/emeraldjungle.lighting-plan.json.gz",
+          "sha256": "3878b312e087c4f47ceb4fd6f59249b6b7e673c97658bfc18588c1ad767fd83e",
+          "bytes": 66117
         }
       },
       "stats": {
         "primitives": 36,
         "triangles": 73691,
-        "clusters": 597,
-        "renderChunks": 36,
-        "cells": 356,
+        "clusters": 2891,
+        "renderChunks": 2726,
+        "cells": 1105,
         "portals": 0,
         "regions": 11,
         "objectPrototypes": 57,
         "objectStamps": 24505,
-        "tiles": 356,
-        "collisionVertices": 36845,
-        "collisionTriangles": 73580
+        "tiles": 1105,
+        "collisionVertices": 81148,
+        "collisionTriangles": 112080,
+        "collisionSourceTriangles": 73580,
+        "collisionChunks": 1118,
+        "lightingStatus": "blocked-missing-uv2",
+        "lightingUv2ReadyChunks": 0
       },
       "warnings": []
     },
@@ -3750,28 +4377,37 @@
         },
         "spatial": {
           "path": "client/public/eqrequiem/worlds/erudsxing.spatial.json.gz",
-          "sha256": "4b5771e0685ed94e3f23b3e1ed2615d8102610e99e38619a4cacf8600d87ebe9",
-          "bytes": 43522
+          "sha256": "fb71e66d8dbe33bae2d892e0d1559252d8de2753a66601a3974f2d8709d31048",
+          "bytes": 115626
         },
         "collision": {
           "path": "client/public/eqrequiem/worlds/erudsxing.collision.bin.gz",
-          "sha256": "0420a035fbdcc51ba094113e36c5706482c712cba8639cf369c33a2ab3459e65",
-          "bytes": 38435
+          "sha256": "957f3f0575fbbc79216f71d2126a18101733e260e0f288a4fc728aa832e18b02",
+          "bytes": 82515
+        },
+        "lightingPlan": {
+          "path": "client/public/eqrequiem/worlds/erudsxing.lighting-plan.json.gz",
+          "sha256": "0a669a343cab1e4c381fd8dd3cfabc9e482db820f6dd6b1d9a19061ae95eeb64",
+          "bytes": 40540
         }
       },
       "stats": {
         "primitives": 47,
         "triangles": 7214,
-        "clusters": 88,
-        "renderChunks": 47,
-        "cells": 34,
+        "clusters": 1697,
+        "renderChunks": 1696,
+        "cells": 642,
         "portals": 0,
         "regions": 87,
         "objectPrototypes": 8,
         "objectStamps": 75,
-        "tiles": 34,
-        "collisionVertices": 3125,
-        "collisionTriangles": 5969
+        "tiles": 642,
+        "collisionVertices": 22000,
+        "collisionTriangles": 19184,
+        "collisionSourceTriangles": 5969,
+        "collisionChunks": 1056,
+        "lightingStatus": "blocked-missing-uv2",
+        "lightingUv2ReadyChunks": 0
       },
       "warnings": []
     },
@@ -3804,28 +4440,37 @@
         },
         "spatial": {
           "path": "client/public/eqrequiem/worlds/stonebrunt.spatial.json.gz",
-          "sha256": "90ddbf66eb431f812ce5dc71fc3c80e807a17614594b52dec94a3fade4770923",
-          "bytes": 477196
+          "sha256": "877f96fe13a5edad064b1f93b7ec65487e65346b4e97c9df27e1437806320e03",
+          "bytes": 830231
         },
         "collision": {
           "path": "client/public/eqrequiem/worlds/stonebrunt.collision.bin.gz",
-          "sha256": "41b1312b2cd3c803a023c54a70b389fd85729e7559cef5b2a36dc8b0fad56c89",
-          "bytes": 557993
+          "sha256": "61ccbd3ae9d9f0cb212db09e1cb9b890ee0bec82d1cc961ba52a4431ecdac907",
+          "bytes": 834607
+        },
+        "lightingPlan": {
+          "path": "client/public/eqrequiem/worlds/stonebrunt.lighting-plan.json.gz",
+          "sha256": "9f96ba71bb2e2e91e671bcb0305bf8378ea61f09094a68af2e417bb393d6e0de",
+          "bytes": 135467
         }
       },
       "stats": {
         "primitives": 97,
         "triangles": 85807,
-        "clusters": 720,
-        "renderChunks": 97,
-        "cells": 415,
+        "clusters": 5320,
+        "renderChunks": 5217,
+        "cells": 2100,
         "portals": 0,
         "regions": 44,
         "objectPrototypes": 27,
         "objectStamps": 1282,
-        "tiles": 415,
-        "collisionVertices": 41231,
-        "collisionTriangles": 81682
+        "tiles": 2100,
+        "collisionVertices": 96922,
+        "collisionTriangles": 130442,
+        "collisionSourceTriangles": 81682,
+        "collisionChunks": 1428,
+        "lightingStatus": "blocked-missing-uv2",
+        "lightingUv2ReadyChunks": 0
       },
       "warnings": []
     },
@@ -3858,98 +4503,42 @@
         },
         "spatial": {
           "path": "client/public/eqrequiem/worlds/warrens.spatial.json.gz",
-          "sha256": "e7660b520f828521b6ee9b3b95d993a79835b14c357efe34828592b82fc63ab2",
-          "bytes": 153900
+          "sha256": "61e574041805a55bad6806b704d60e34f95ec42b0077ecfa191adcd3d6a609ea",
+          "bytes": 167472
         },
         "collision": {
           "path": "client/public/eqrequiem/worlds/warrens.collision.bin.gz",
-          "sha256": "28d204af532aded03a0d2aff69d05f47c3b56f8eda1d195d73d2ec8b1573fc09",
-          "bytes": 156425
+          "sha256": "b6e197799f97a421797ddcd98d08d6edc25ec0781bd690c20834028238cfa381",
+          "bytes": 171888
+        },
+        "lightingPlan": {
+          "path": "client/public/eqrequiem/worlds/warrens.lighting-plan.json.gz",
+          "sha256": "9a7fe46bf407503926d057c6c4bf80607edf9819c93d069fad01da5240a9a166",
+          "bytes": 8662
         }
       },
       "stats": {
         "primitives": 44,
         "triangles": 28534,
-        "clusters": 249,
-        "renderChunks": 44,
-        "cells": 30,
+        "clusters": 438,
+        "renderChunks": 306,
+        "cells": 37,
         "portals": 0,
         "regions": 6,
         "objectPrototypes": 27,
         "objectStamps": 173,
-        "tiles": 30,
-        "collisionVertices": 13037,
-        "collisionTriangles": 26209
+        "tiles": 37,
+        "collisionVertices": 15915,
+        "collisionTriangles": 29702,
+        "collisionSourceTriangles": 27191,
+        "collisionChunks": 37,
+        "lightingStatus": "blocked-missing-uv2",
+        "lightingUv2ReadyChunks": 0
       },
       "warnings": []
     }
   ],
-  "clientScenes": [
-    {
-      "id": "character-select",
-      "shortName": "load2",
-      "longName": "Character Selection",
-      "status": "ready",
-      "source": {
-        "path": "assets/reference/everquest_rof2/zones/load2.glb.gz",
-        "sha256": "485c5d84d7318191a1169a73f2a184ec74f8323aaadad220d77fb690c54eb93b",
-        "bytes": 1533260
-      },
-      "metadata": {
-        "path": "assets/reference/everquest_rof2/zones/load2.json",
-        "sha256": "91b03ac6985d14a46455e152f144708b9de7d9c7e6f6302aee903ed7002e1942",
-        "bytes": 74686
-      },
-      "authoring": {
-        "path": "shader-object/sandbox/public/shado/worlds/load2.authoring.json",
-        "sha256": "4b9b3d5f5347c5943dc58bc54716f174f0958b5e3acf992c406b4abb0eda6939",
-        "bytes": 240286
-      },
-      "runtime": {
-        "source": "/eqrequiem/worlds/load2.glb.gz",
-        "scene": {
-          "path": "client/public/eqrequiem/worlds/load2.glb.gz",
-          "sha256": "256565614aeae41a991516d39471cb5397c591b8efb0b721a23b858047cbe683",
-          "bytes": 1545088
-        },
-        "spatial": {
-          "path": "client/public/eqrequiem/worlds/load2.spatial.json.gz",
-          "sha256": "6f233cc25e585fd8dcb7ede15e4327345520026aa3ef43d03ec1159811f34368",
-          "bytes": 340557
-        },
-        "collision": {
-          "path": "client/public/eqrequiem/worlds/load2.collision.bin.gz",
-          "sha256": "560be84679035ccfa0a1c8c8eec6c3e5cd8dc6ed2dd4ca07414f7c9403913a54",
-          "bytes": 378305
-        }
-      },
-      "stats": {
-        "primitives": 57,
-        "triangles": 60888,
-        "clusters": 507,
-        "renderChunks": 57,
-        "cells": 50,
-        "portals": 0,
-        "regions": 7,
-        "objectPrototypes": 59,
-        "objectStamps": 331,
-        "tiles": 50,
-        "collisionVertices": 37792,
-        "collisionTriangles": 60448
-      },
-      "excludedLegacyObjectIds": [
-        "actorch301",
-        "akbrazr303",
-        "ftorch302",
-        "ftorch303",
-        "genbonfire300",
-        "katchandl301"
-      ],
-      "warnings": [
-        "unresolved-legacy-object-prototypes"
-      ]
-    }
-  ],
+  "clientScenes": [],
   "objectAssets": {
     "status": "ready",
     "zones": [
@@ -3988,12 +4577,12 @@
       "hole",
       "kaladima",
       "kaladimb",
+      "kedge",
       "kerraridge",
       "kithicor",
       "lakerathe",
       "lavastorm",
       "lfaydark",
-      "load2",
       "mistmoore",
       "najena",
       "nektulos",
@@ -4024,11 +4613,11 @@
       "unrest",
       "warrens"
     ],
-    "objects": 950,
+    "objects": 897,
     "manifest": {
       "path": "client/public/eqrequiem/objects/manifest.json",
-      "sha256": "2254706cd792b046c3752d932ecf952d5a4fc006d3deda497a62381d4e21a691",
-      "bytes": 413682
+      "sha256": "423771c17d488792b13480ec4b137a9d82c949aeae8694005ce38eee948181d9",
+      "bytes": 381846
     }
   }
 }

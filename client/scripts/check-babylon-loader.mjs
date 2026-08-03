@@ -18,6 +18,7 @@ import {
 import { prepareSerializedBabylonScene } from "../src/bjs/babylon-file.ts";
 import {
   createHeldItemBindTransform,
+  heldItemGeometryTransform,
   heldItemLocalYOffset,
 } from "../src/Game/Model/held-item-attachment.ts";
 
@@ -123,12 +124,76 @@ for (const model of ["hum", "huf"]) {
       Math.abs(Vector3.Distance(origin, unitX) * runtimeScale - 1) < 1e-5,
       `${model} ${socketName} does not compensate for VAT runtime scale.`,
     );
+    const attachmentKey = socketName.endsWith(".R") ? "r_point" : "l_point";
+    const orientedTransform = createHeldItemBindTransform(
+      socket.getAbsoluteTransform(),
+      runtimeScale,
+      heldItemGeometryTransform(attachmentKey),
+    );
+    const orientedOrigin = Vector3.TransformCoordinates(
+      Vector3.Zero(),
+      orientedTransform,
+    );
+    const orientedLengthAxis = Vector3.TransformCoordinates(
+      Vector3.Right(),
+      orientedTransform,
+    )
+      .subtract(orientedOrigin)
+      .normalize();
+    assert.ok(
+      orientedLengthAxis.y > 0.95,
+      `${model} ${socketName} weapon tip is not above its hilt.`,
+    );
+    assert.ok(
+      Math.abs(orientedLengthAxis.x) < 0.01 && orientedLengthAxis.z > 0.2,
+      `${model} ${socketName} weapon does not pitch toward player-forward +Z.`,
+    );
   }
   assert.equal(heldItemLocalYOffset(true, 2), 0);
   assert.equal(heldItemLocalYOffset(false, 2), 1);
   container.dispose();
   scene.dispose();
 }
+
+const weaponOrientation = heldItemGeometryTransform("r_point");
+const leftWeaponOrientation = heldItemGeometryTransform("l_point");
+const shieldOrientation = heldItemGeometryTransform("shield_point");
+const weaponLengthAxis = Vector3.TransformNormal(
+  Vector3.Right(),
+  weaponOrientation,
+);
+const leftWeaponLengthAxis = Vector3.TransformNormal(
+  Vector3.Right(),
+  leftWeaponOrientation,
+);
+const weaponFaceAxis = Vector3.TransformNormal(
+  Vector3.Up(),
+  weaponOrientation,
+);
+const shieldVerticalAxis = Vector3.TransformNormal(
+  Vector3.Up(),
+  shieldOrientation,
+);
+assert.ok(
+  weaponLengthAxis.z > 0.95 && weaponLengthAxis.y > 0.2,
+  "Right-hand weapon is not aligned upward and forward at the socket.",
+);
+assert.ok(
+  Vector3.Distance(weaponLengthAxis, leftWeaponLengthAxis) < 1e-5,
+  "Left-hand weapon does not share the right-hand forward/up alignment.",
+);
+assert.ok(
+  weaponFaceAxis.y > 0.95,
+  "Weapon broad side remains edge-on instead of facing laterally from the socket.",
+);
+assert.ok(
+  Vector3.Distance(shieldVerticalAxis, Vector3.Forward()) < 1e-5,
+  "Shield face does not remain vertical at the canonical socket.",
+);
+assert.ok(
+  Vector3.TransformCoordinates(Vector3.Zero(), shieldOrientation).x < -0.8,
+  "Shield center is not offset outward from the canonical palm socket.",
+);
 
 console.log(
   "Babylon loader, Lite parser surface, sanitizer, and Physics V2 registered.",

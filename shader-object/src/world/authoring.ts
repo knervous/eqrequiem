@@ -53,6 +53,14 @@ export function validateShadoWorldAuthoring(
   if (!Number.isInteger(document.revision) || document.revision < 0) {
     throw new Error('World authoring revision must be a non-negative integer');
   }
+  if (
+    document.legacyObjectExclusions !== undefined &&
+    (!Array.isArray(document.legacyObjectExclusions) ||
+      document.legacyObjectExclusions.some(id => typeof id !== 'string' || !id.trim()) ||
+      new Set(document.legacyObjectExclusions).size !== document.legacyObjectExclusions.length)
+  ) {
+    throw new Error('World authoring legacy object exclusions must be unique non-empty IDs');
+  }
   return document;
 }
 
@@ -281,8 +289,10 @@ export function mergeLegacyZoneMetadata(
 ): ShadoWorldAuthoringDocument {
   const document = upgradeShadoWorldAuthoring(authoringValue, world);
   const promoted = importLegacyZoneMetadata(legacyValue, world, options);
+  const exclusions = new Set(document.legacyObjectExclusions ?? []);
   const prototypeIds = new Set(document.objects.prototypes.map(item => item.id));
   for (const prototype of promoted.objects.prototypes) {
+    if (exclusions.has(prototype.id)) continue;
     const existing = document.objects.prototypes.find(item => item.id === prototype.id);
     if (!existing) {
       document.objects.prototypes.push(prototype);
@@ -295,7 +305,11 @@ export function mergeLegacyZoneMetadata(
   }
   const stampIds = new Set(document.objects.stamps.map(item => item.id));
   for (const stamp of promoted.objects.stamps) {
-    if (stampIds.has(stamp.id) || !prototypeIds.has(stamp.prototype)) continue;
+    if (
+      exclusions.has(stamp.prototype) ||
+      stampIds.has(stamp.id) ||
+      !prototypeIds.has(stamp.prototype)
+    ) continue;
     document.objects.stamps.push(stamp);
     stampIds.add(stamp.id);
   }

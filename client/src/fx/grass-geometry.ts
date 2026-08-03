@@ -58,6 +58,8 @@ export type PromotedGrassCellRenderOptions = {
   nameSuffix?: string;
   seedSalt?: number;
   lod?: "near" | "far";
+  /** Coarse authored terrain tint sampled for this spatial cell. */
+  terrainTint?: readonly [number, number, number];
 };
 
 export const PROMOTED_GRASS_BLADES_PER_CELL = 1_024;
@@ -65,6 +67,14 @@ export const PROMOTED_GRASS_STRATA_SIDE = 32;
 export const PROMOTED_GRASS_HEIGHT_SCALE = 1.75;
 const PROMOTED_GRASS_WIDTH_SCALE = 1.45;
 const PROMOTED_GRASS_MAX_HEIGHT_ANCHORS = 64;
+
+export function packGrassTerrainTint(
+  tint: readonly [number, number, number],
+): number {
+  const channel = (value: number) =>
+    Math.round(Math.min(1, Math.max(0, value)) * 255);
+  return channel(tint[0]) | (channel(tint[1]) << 8) | (channel(tint[2]) << 16);
+}
 
 function randomGenerator(seed: number): () => number {
   let state = seed >>> 0;
@@ -382,7 +392,7 @@ function populateGrassCell(
     const dataOffset = index * 4;
     grassData[dataOffset] = placement.phase;
     grassData[dataOffset + 1] = placement.stiffness;
-    grassData[dataOffset + 2] = placement.colorVariation;
+    grassData[dataOffset + 2] = packGrassTerrainTint([1, 1, 1]);
     grassData[dataOffset + 3] =
       (placement.phase * 0.618_033_988_75 +
         placement.colorVariation * 0.381_966_011_25) %
@@ -586,6 +596,9 @@ export function createGrassCellFromPackage(
   );
   const matrices = new Float32Array(bladeCount * 16);
   const grassData = new Float32Array(bladeCount * 4);
+  const packedTerrainTint = packGrassTerrainTint(
+    renderOptions.terrainTint ?? [1, 1, 1],
+  );
   const anchorStep = Math.max(
     1,
     Math.ceil(seedCount / PROMOTED_GRASS_MAX_HEIGHT_ANCHORS),
@@ -642,7 +655,7 @@ export function createGrassCellFromPackage(
     const dataOffset = outputBlade * 4;
     grassData[dataOffset] = random();
     grassData[dataOffset + 1] = random();
-    grassData[dataOffset + 2] = random();
+    grassData[dataOffset + 2] = packedTerrainTint;
     grassData[dataOffset + 3] = random();
     outputBlade++;
   }

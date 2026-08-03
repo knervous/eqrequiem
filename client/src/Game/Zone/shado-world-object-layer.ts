@@ -80,9 +80,9 @@ export class ShadoWorldObjectLayer {
     const visibility = this.coordinator.reduceWorldObjects(planes, frame, {
       camera: cameraPosition,
       maxDistance: DEFAULT_OBJECT_DISTANCE,
-      // Migrated worlds currently use sparse geometry-derived cells. Stamps
-      // outside those cells still receive frustum/distance culling.
-      outsideWorldVisible: true,
+      // Continuous visibility regions cover courtyards/roads even where no
+      // geometry centroid produced a render cell.
+      outsideWorldVisible: false,
     });
     const batches = buildShadoWorldObjectRenderBatches(
       this.world,

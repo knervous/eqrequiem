@@ -92,6 +92,8 @@ export type ShadoWorldAuthoringDocument = {
   world: string;
   coordinateSystem: 'babylon-y-up';
   revision: number;
+  /** Durable tombstones preventing legacy metadata merges from restoring removed props. */
+  legacyObjectExclusions?: string[];
   regions: ShadoWorldAuthoringRegion[];
   objects: ShadoWorldAuthoringObjects;
 };
@@ -101,6 +103,12 @@ export type ShadoWorldPrimitive = {
   material: string;
   /** Optional material-authored runtime role retained by headless preprocessing. */
   extraShader?: string;
+  /** Optional authored streaming profile retained from glTF extras. */
+  visibilityProfile?: string;
+  /** Optional authored PVS priority retained from glTF extras. */
+  pvsPriority?: string;
+  /** Bitwise ShadoCollisionFlags retained from glTF collision metadata. */
+  collisionFlags?: number;
   positions: ArrayLike<number>;
   indices: ArrayLike<number>;
   /** Optional glTF TEXCOORD_1 stream used by the offline lightmap baker. */
@@ -157,6 +165,10 @@ export type ShadoWorldCompileOptions = {
   sourceTransform?: ShadoWorldSourceTransform;
   tileSize?: number;
   maxClusterTriangles?: number;
+  /** Width/depth of continuous camera/entity visibility regions. */
+  visibilityRegionSize?: number;
+  /** Ordinary-region first-pass envelope. Persistent vista cells bypass it. */
+  visibilityMaxDistance?: number;
   /** Offline proximity-grass conversion. Set false to omit tagged grass. */
   grass?: ShadoWorldGrassCompileOptions | false;
   /** Explicit runtime lighting authority. Vertex-color presence is never used to infer this. */
@@ -164,6 +176,8 @@ export type ShadoWorldCompileOptions = {
   authoring?: ShadoWorldAuthoringDocument;
   /** Collision-selected primitives in final runtime coordinates. */
   collisionPrimitives?: readonly ShadoWorldPrimitive[];
+  /** Width/depth of independently resident Havok collision chunks. */
+  physicsChunkSize?: number;
   /** Runtime URL, normally a sibling of the spatial package. */
   collisionSource?: string;
 };
@@ -201,8 +215,14 @@ export type ShadoWorldBounds = {
 
 export type ShadoWorldCollisionDescriptor = {
   source: string;
-  format: 'shado-collision-v1';
+  format: 'shado-collision-v2';
+  chunkSize: number;
+  chunkCount: number;
+  /** Unique source triangles before conservative boundary duplication. */
+  sourceTriangleCount: number;
+  /** Stored chunk-local vertices, including cross-chunk duplication. */
   vertexCount: number;
+  /** Stored triangles, including references duplicated across intersected chunks. */
   triangleCount: number;
   bounds: ShadoWorldBounds;
   /** FNV-1a hash of the uncompressed artifact bytes. */
@@ -223,7 +243,13 @@ export type ShadoWorldSpatialPackage = {
   /** Runtime lighting policy authored by the packer; never inferred from mesh attributes. */
   lighting?: ShadoWorldRuntimeLighting;
   materials: string[];
-  primitives: Array<{ name: string; material: number; vertexCount: number }>;
+  primitives: Array<{
+    name: string;
+    material: number;
+    vertexCount: number;
+    /** Authored vistas that bypass both world visibility and mesh-frustum culling. */
+    persistent?: boolean;
+  }>;
   clusterIndices: number[];
   /** Cluster IDs grouped by stable source-geometry render chunks. */
   renderChunkClusters: number[];
@@ -339,6 +365,36 @@ export type ShadoWorldSpatialPackage = {
     z: number[];
     firstCluster: number[];
     clusterCount: number[];
+  };
+  /**
+   * Continuous, dense first-pass culling topology. Unlike geometry-derived
+   * cells, these regions cover every point inside the package bounds.
+   */
+  visibility?: {
+    version: 1;
+    /** Conservative authority used to construct region rows. */
+    mode: 'distance-flood';
+    size: number;
+    originX: number;
+    originZ: number;
+    width: number;
+    height: number;
+    maxDistance: number;
+    /** Reserved for future authored/height-aware occluders; zero in distance-flood mode. */
+    occluderCount: number;
+    /** Directed set-bit count across all conservative PVS rows. */
+    visibleRegionPairs: number;
+    /** Exact render-cell to dense visibility-region ownership. */
+    cellRegion: number[];
+    /** Regions containing authored persistent vistas such as zoneline horizons. */
+    persistentRegions: number[];
+    /** Render cells that bypass regional occlusion without widening entity PVS. */
+    persistentCells: number[];
+    /** Conservative region-to-region potentially-visible rows. */
+    pvs: {
+      wordsPerRow: number;
+      words: number[];
+    };
   };
   /**
    * Navigation build inputs share authored identity and tile addressing with

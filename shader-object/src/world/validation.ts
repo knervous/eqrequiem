@@ -43,6 +43,9 @@ export function computeShadoWorldLayoutHash(world: ShadoWorldSpatialPackage): st
   feed(world.triangleCount);
   feed(world.collision.vertexCount);
   feed(world.collision.triangleCount);
+  feed(world.collision.chunkCount);
+  feed(world.collision.sourceTriangleCount);
+  feedFloatArray([world.collision.chunkSize]);
   feed(Number.parseInt(world.collision.contentHash, 16));
   const topology: ArrayLike<number>[] = [
     world.clusterIndices,
@@ -90,6 +93,25 @@ export function computeShadoWorldLayoutHash(world: ShadoWorldSpatialPackage): st
     world.navigation.modifiers.excluded
   );
   topology.forEach(feedArray);
+  if (world.visibility) {
+    feed(world.visibility.version);
+    feed(world.visibility.mode === 'distance-flood' ? 1 : 0);
+    feedFloatArray([
+      world.visibility.size,
+      world.visibility.originX,
+      world.visibility.originZ,
+      world.visibility.maxDistance,
+    ]);
+    feed(world.visibility.width);
+    feed(world.visibility.height);
+    feed(world.visibility.occluderCount);
+    feed(world.visibility.visibleRegionPairs);
+    feedArray(world.visibility.cellRegion);
+    feedArray(world.visibility.persistentRegions);
+    feedArray(world.visibility.persistentCells);
+    feed(world.visibility.pvs.wordsPerRow);
+    feedArray(world.visibility.pvs.words);
+  }
   const stampIrradiance = world.objects?.stamps.irradianceR
     ? [
         world.objects.stamps.irradianceR,
@@ -131,8 +153,14 @@ export function validateShadoWorldPackage(world: ShadoWorldSpatialPackage): void
         !['material-tint', 'baked-irradiance'].includes(world.lighting.vertexColors) ||
         (world.lighting.mode === 'baked' && world.lighting.vertexColors !== 'baked-irradiance'))) ||
     world.navigation?.runtimeToRecast !== 'z-y-negative-x' ||
-    world.collision?.format !== 'shado-collision-v1' ||
+    world.collision?.format !== 'shado-collision-v2' ||
     !world.collision.source ||
+    !Number.isFinite(world.collision.chunkSize) ||
+    world.collision.chunkSize <= 0 ||
+    !Number.isInteger(world.collision.chunkCount) ||
+    world.collision.chunkCount <= 0 ||
+    !Number.isInteger(world.collision.sourceTriangleCount) ||
+    world.collision.sourceTriangleCount <= 0 ||
     !Number.isInteger(world.collision.vertexCount) ||
     world.collision.vertexCount <= 0 ||
     !Number.isInteger(world.collision.triangleCount) ||
@@ -253,6 +281,62 @@ export function validateShadoWorldPackage(world: ShadoWorldSpatialPackage): void
     const expectedWords = cellCount * world.pvs.wordsPerRow;
     sameLength('PVS words', expectedWords, world.pvs.words);
   }
+  if (world.visibility) {
+    const visibility = world.visibility;
+    const visibilityRegionCount = visibility.width * visibility.height;
+    if (
+      visibility.version !== 1 ||
+      visibility.mode !== 'distance-flood' ||
+      !Number.isFinite(visibility.size) || visibility.size <= 0 ||
+      !Number.isFinite(visibility.originX) || !Number.isFinite(visibility.originZ) ||
+      !Number.isFinite(visibility.maxDistance) || visibility.maxDistance <= 0 ||
+      !Number.isInteger(visibility.width) || visibility.width <= 0 ||
+      !Number.isInteger(visibility.height) || visibility.height <= 0 ||
+      visibility.occluderCount !== 0 ||
+      !Number.isInteger(visibility.visibleRegionPairs) || visibility.visibleRegionPairs <= 0 ||
+      visibility.pvs.wordsPerRow !== Math.ceil(visibilityRegionCount / 32)
+    ) throw new Error('Invalid Shado world visibility topology header');
+    sameLength('visibility.cellRegion', cellCount, visibility.cellRegion);
+    sameLength(
+      'visibility PVS words',
+      visibilityRegionCount * visibility.pvs.wordsPerRow,
+      visibility.pvs.words
+    );
+    for (const region of visibility.cellRegion) {
+      if (!Number.isInteger(region) || region < 0 || region >= visibilityRegionCount) {
+        throw new Error(`Invalid Shado world render-cell visibility region ${region}`);
+      }
+    }
+    let previous = -1;
+    for (const region of visibility.persistentRegions) {
+      if (!Number.isInteger(region) || region <= previous || region >= visibilityRegionCount) {
+        throw new Error(`Invalid Shado world persistent visibility region ${region}`);
+      }
+      previous = region;
+    }
+    previous = -1;
+    for (const cell of visibility.persistentCells) {
+      if (!Number.isInteger(cell) || cell <= previous || cell >= cellCount) {
+        throw new Error(`Invalid Shado world persistent render cell ${cell}`);
+      }
+      previous = cell;
+    }
+    let pairCount = 0;
+    for (const word of visibility.pvs.words) pairCount += popcount32(word);
+    if (pairCount !== visibility.visibleRegionPairs) {
+      throw new Error(
+        `Invalid Shado world visible-region pair count: expected ${visibility.visibleRegionPairs}, got ${pairCount}`
+      );
+    }
+    for (let region = 0; region < visibilityRegionCount; region++) {
+      const word = visibility.pvs.words[
+        region * visibility.pvs.wordsPerRow + (region >>> 5)
+      ] >>> 0;
+      if (!(word & (1 << (region & 31)))) {
+        throw new Error(`Shado world visibility region ${region} cannot see itself`);
+      }
+    }
+  }
   if (world.integrity?.algorithm !== 'fnv1a32-layout') {
     throw new Error('Missing Shado world package integrity metadata');
   }
@@ -262,6 +346,13 @@ export function validateShadoWorldPackage(world: ShadoWorldSpatialPackage): void
       `Shado world package integrity mismatch: expected ${world.integrity.layoutHash}, got ${actual}`
     );
   }
+}
+
+function popcount32(value: number): number {
+  let word = value >>> 0;
+  word -= (word >>> 1) & 0x55555555;
+  word = (word & 0x33333333) + ((word >>> 2) & 0x33333333);
+  return (((word + (word >>> 4)) & 0x0f0f0f0f) * 0x01010101) >>> 24;
 }
 
 function validateGrass(

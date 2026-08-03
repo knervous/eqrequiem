@@ -351,6 +351,12 @@
     "fearplane": "planar",
     "hateplane": "planar"
   },
+  "zoneAtmosphereOverrides": {
+    "qeynos2": {
+      "fogStartMultiplier": 1.35,
+      "fogEndMultiplier": 2.25
+    }
+  },
   "sun": {
     "azimuthBasisRadians": 1.5707963267948966,
     "distance": 0.89,

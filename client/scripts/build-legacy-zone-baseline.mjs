@@ -307,6 +307,8 @@ function packStats(result) {
     tiles: result.tileCount,
     collisionVertices: result.collisionVertexCount,
     collisionTriangles: result.collisionTriangleCount,
+    collisionSourceTriangles: result.collisionSourceTriangleCount,
+    collisionChunks: result.collisionChunkCount,
     lightingStatus: result.lightingStatus,
     lightingUv2ReadyChunks: result.lightingUv2ReadyChunkCount,
   };

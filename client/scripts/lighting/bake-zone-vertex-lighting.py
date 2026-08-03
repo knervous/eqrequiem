@@ -17,6 +17,7 @@ def arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument("--scene", required=True)
     parser.add_argument("--metadata", required=True)
+    parser.add_argument("--authoring")
     parser.add_argument("--output", required=True)
     parser.add_argument("--ao-rays", type=int, default=8)
     parser.add_argument("--audit-only", action="store_true")
@@ -107,6 +108,26 @@ def spatial_lights(lights, cell_size=40.0):
 def babylon_to_blender(position):
     """Canonical package/metadata Y-up coordinates -> Blender Z-up."""
     return Vector((float(position["x"]), -float(position["z"]), float(position["y"])))
+
+
+def authored_object_placements(authoring):
+    """Return exact enabled authoring stamp IDs and Babylon-space pivots."""
+    placements = []
+    for stamp in authoring.get("objects", {}).get("stamps", []):
+        if stamp.get("enabled", True) is False:
+            continue
+        position = stamp.get("position")
+        if not isinstance(position, list) or len(position) != 3 or not stamp.get("id"):
+            raise RuntimeError(f"Invalid authoring object stamp {stamp!r}")
+        scale_value = stamp.get("scale", [1.0, 1.0, 1.0])
+        if isinstance(scale_value, list):
+            scale = max(abs(float(value)) for value in scale_value)
+        else:
+            scale = abs(float(scale_value))
+        placements.append((stamp["id"], {
+            "x": position[0], "y": position[1], "z": position[2], "scale": scale,
+        }))
+    return placements
 
 
 def normalized_lights(lights):
@@ -271,6 +292,10 @@ def main(options):
     ]
     with open(options.metadata, "r", encoding="utf-8") as source:
         metadata = json.load(source)
+    authoring = None
+    if options.authoring:
+        with open(options.authoring, "r", encoding="utf-8") as source:
+            authoring = json.load(source)
     source_lights = metadata.get("lights", [])
     lights = normalized_lights(source_lights)
     bvh = build_bvh(objects)
@@ -322,22 +347,29 @@ def main(options):
                 flush=True,
             )
     object_irradiance = {}
-    for model, transforms in metadata.get("objects", {}).items():
-        for legacy_index, transform in enumerate(transforms):
-            position = babylon_to_blender(transform)
-            scale = max(0.01, abs(float(transform.get("scale", 1.0))))
-            # Sample above the authored pivot to avoid treating a ground-level
-            # placement as being inside its supporting surface.
-            position += Vector((0.0, 0.0, max(0.5, scale)))
-            object_irradiance[f"{model}-{legacy_index}"] = bake_vertex(
-                bvh,
-                position,
-                Vector((0.0, 0.0, 1.0)),
-                samples,
-                light_cells,
-                light_cell_size,
-                object_local_light_stats,
-            )
+    if authoring is not None:
+        object_placements = authored_object_placements(authoring)
+    else:
+        object_placements = [
+            (f"{model}-{legacy_index}", transform)
+            for model, transforms in metadata.get("objects", {}).items()
+            for legacy_index, transform in enumerate(transforms)
+        ]
+    for stamp_id, transform in object_placements:
+        position = babylon_to_blender(transform)
+        scale = max(0.01, abs(float(transform.get("scale", 1.0))))
+        # Sample above the authored pivot to avoid treating a ground-level
+        # placement as being inside its supporting surface.
+        position += Vector((0.0, 0.0, max(0.5, scale)))
+        object_irradiance[stamp_id] = bake_vertex(
+            bvh,
+            position,
+            Vector((0.0, 0.0, 1.0)),
+            samples,
+            light_cells,
+            light_cell_size,
+            object_local_light_stats,
+        )
     document = {
         "schema": "eltania.zone-vertex-lighting",
         "version": 2,

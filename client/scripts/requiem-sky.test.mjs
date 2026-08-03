@@ -205,6 +205,18 @@ test("biome controls are bounded and every mapped zone and preset exists", () =>
     assert.ok(supportedZoneNames.has(zoneName), `unknown zone '${zoneName}'`);
     assert.ok(manifest.biomes[biomeName], `unknown biome '${biomeName}'`);
   }
+
+  for (const [zoneName, atmosphere] of Object.entries(
+    manifest.zoneAtmosphereOverrides ?? {},
+  )) {
+    assert.ok(supportedZoneNames.has(zoneName), `unknown zone '${zoneName}'`);
+    assert.ok(atmosphere.fogStartMultiplier > 0, zoneName);
+    assert.ok(atmosphere.fogEndMultiplier > atmosphere.fogStartMultiplier, zoneName);
+  }
+  assert.deepEqual(manifest.zoneAtmosphereOverrides.qeynos2, {
+    fogStartMultiplier: 1.35,
+    fogEndMultiplier: 2.25,
+  });
 });
 
 test("Blender geometry and generated runtime textures match manifest", async () => {

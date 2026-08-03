@@ -13,6 +13,7 @@ import DayNightSkyManager from "@game/Sky/sky-manager";
 import EntityPool from "./entity-pool";
 import { ShadoWorldObjectLayer } from "./shado-world-object-layer";
 import { ShadoWorldSceneLayer } from "./shado-world-scene-layer";
+import { ShadoWorldPhysicsStreamer } from "./shado-world-physics-streamer";
 import { Grid } from "./zone-grid";
 import { ZoneMetadata } from "./zone-types";
 
@@ -43,6 +44,7 @@ export class ZoneManager {
   private zoneObjects: ObjectCache | null = null;
   private shadoWorldObjects: ShadoWorldObjectLayer | null = null;
   private shadoWorldScene: ShadoWorldSceneLayer | null = null;
+  private shadoWorldPhysics: ShadoWorldPhysicsStreamer | null = null;
   private zoneGeometryFx: ZoneGeometryFx | null = null;
 
   private disableWorldEnv: boolean = false;
@@ -86,6 +88,8 @@ export class ZoneManager {
     this.shadoWorldObjects = null;
     this.zoneGeometryFx?.dispose();
     this.zoneGeometryFx = null;
+    this.shadoWorldPhysics?.dispose();
+    this.shadoWorldPhysics = null;
     this.shadoWorldScene?.dispose();
     this.shadoWorldScene = null;
     // Clean up resources if needed.
@@ -157,7 +161,13 @@ export class ZoneManager {
     this.zoneObjects = new ObjectCache(this.objectContainer);
     await this.instantiateZone(generation);
     if (generation !== this.loadGeneration) return;
-    EntityCache.initialize(this.GameManager.scene!);
+    EntityCache.initialize(
+      this.GameManager.scene!,
+      this.shadoWorldScene ? {
+        world: this.shadoWorldScene.world,
+        coordinator: this.shadoWorldScene.coordinator,
+      } : undefined,
+    );
   }
 
   public async loadSpawns(spawns: Spawns) {
@@ -211,7 +221,11 @@ export class ZoneManager {
       this.shadoWorldScene.world,
       this.shadoWorldScene.coordinator,
     );
-    this.attachStaticWorldPhysics(this.shadoWorldScene.collisionMesh);
+    this.shadoWorldPhysics = new ShadoWorldPhysicsStreamer(
+      this.shadoWorldScene.collision,
+      this.parent.scene,
+      this.zoneContainer,
+    );
     // Authored local light/AO values are baked into static geometry and
     // promoted objects. Keep the real sky rig alive so daylight still changes
     // those PBR surfaces and actors; player lights are the other permitted
@@ -225,22 +239,8 @@ export class ZoneManager {
     await this.loadZoneMetadata(generation);
   }
 
-  private attachStaticWorldPhysics(zoneMesh: BJS.Mesh): void {
-    zoneMesh.material?.freeze();
-    zoneMesh.freezeWorldMatrix();
-    zoneMesh.physicsBody = new BABYLON.PhysicsBody(
-      zoneMesh,
-      BABYLON.PhysicsMotionType.STATIC,
-      false,
-      this.parent.scene!,
-    );
-    zoneMesh.physicsBody.shape = new BABYLON.PhysicsShapeMesh(
-      zoneMesh,
-      this.parent.scene!,
-    );
-    zoneMesh.physicsBody.shape.material.friction = 1;
-    zoneMesh.physicsBody.shape.material.restitution = 0;
-    zoneMesh.physicsBody.setMassProperties({ mass: 0 });
+  public ensureWorldPhysicsAt(position: BJS.Vector3): void {
+    this.shadoWorldPhysics?.ensureAt(position);
   }
 
   private async loadZoneMetadata(generation: number): Promise<void> {
@@ -309,6 +309,14 @@ export class ZoneManager {
       return;
     }
     const delta = this.parent.scene?.getEngine().getDeltaTime() ?? 0;
+    const playerEntity = this.parent.player?.playerEntity ?? null;
+    const playerPosition = playerEntity?.getAbsolutePosition() ?? null;
+    if (playerPosition) {
+      this.shadoWorldPhysics?.ensureAt(
+        playerPosition,
+        playerEntity?.physicsBody?.getLinearVelocity() ?? null,
+      );
+    }
     this.shadoWorldScene?.tick(delta);
     // Update the Babylon sky lights before custom zone ShaderMaterials bind
     // them so specialized grass/water stays in lockstep with the day cycle.
@@ -316,7 +324,7 @@ export class ZoneManager {
     this.zoneGeometryFx?.tick(
       delta,
       this.parent.scene?.activeCamera ?? null,
-      this.parent.player?.playerEntity?.getAbsolutePosition() ?? null,
+      playerPosition,
     );
     this.shadoWorldObjects?.tick(delta);
     this.entityPool?.process(delta);

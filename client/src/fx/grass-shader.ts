@@ -33,10 +33,20 @@ varying vUV: vec2f;
 varying vVisibility: f32;
 varying vRandomPhase: f32;
 varying vBladeAccent: f32;
+varying vTerrainTint: vec3f;
 
 fn grassHash(p: vec2f) -> f32 {
   let h = dot(p, vec2f(127.1, 311.7));
   return fract(sin(h) * 43758.5453);
+}
+
+fn unpackTerrainTint(value: f32) -> vec3f {
+  let packed = u32(round(value));
+  return vec3f(
+    f32(packed & 255u),
+    f32((packed >> 8u) & 255u),
+    f32((packed >> 16u) & 255u)
+  ) / 255.0;
 }
 
 @vertex
@@ -50,6 +60,7 @@ fn main(input: VertexInputs) -> FragmentInputs {
   var randomPhase = grassHash(floor(vertexInputs.position.xz * 2.0) * 0.5);
   var stiffness = 0.5;
   var accent = grassHash(vertexInputs.position.xz + vec2f(19.7, -7.3));
+  var packedTerrainTint = 16777215.0;
 #ifdef INSTANCES
   instanceWorld = mat4x4f(
     vertexInputs.world0,
@@ -59,6 +70,7 @@ fn main(input: VertexInputs) -> FragmentInputs {
   );
   randomPhase = vertexInputs.grassData.x;
   stiffness = vertexInputs.grassData.y;
+  packedTerrainTint = vertexInputs.grassData.z;
   accent = vertexInputs.grassData.w;
 #endif
   let rootPosition = uniforms.world * instanceWorld[3];
@@ -79,6 +91,7 @@ fn main(input: VertexInputs) -> FragmentInputs {
   vertexOutputs.vVisibility = visibility;
   vertexOutputs.vRandomPhase = randomPhase;
   vertexOutputs.vBladeAccent = accent;
+  vertexOutputs.vTerrainTint = unpackTerrainTint(packedTerrainTint);
   let densityDistance = smoothstep(
     uniforms.uDensityFadeStart,
     uniforms.uDensityFadeEnd,
@@ -135,10 +148,11 @@ varying vUV: vec2f;
 varying vVisibility: f32;
 varying vRandomPhase: f32;
 varying vBladeAccent: f32;
+varying vTerrainTint: vec3f;
 
 uniform uBaseColor: vec3f;
 uniform uColorVariance: f32;
-uniform uZoneDaylightFactor: f32;
+uniform uZoneTerrainLightColor: vec3f;
 
 fn grassDitherHash(p: vec2f) -> f32 {
   return fract(sin(dot(p, vec2f(91.7, 271.9))) * 43758.5453);
@@ -176,7 +190,8 @@ fn main(input: FragmentInputs) -> FragmentOutputs {
     * brightness
     * rootShade
     * tipLift
-    * uniforms.uZoneDaylightFactor;
+    * fragmentInputs.vTerrainTint
+    * uniforms.uZoneTerrainLightColor;
 
   fragmentOutputs.color = vec4f(color, 1.0);
 }

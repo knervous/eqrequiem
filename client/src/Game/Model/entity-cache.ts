@@ -13,6 +13,10 @@ import type GameManager from "@game/Manager/game-manager";
 import { PlayerProfile, Spawn } from "@game/Net/messages";
 import type { NullableItemInstance } from "@game/Player/player-constants";
 import { ShadoDynamicEntityNameplateLayer } from "@knervous/shado/render";
+import type {
+  ShadoWorldSpatialPackage,
+  ShadoWorldVisibilityCoordinator,
+} from "@knervous/shado/world";
 import {
   getAssetContainerMeshes,
   getOrCreateAssetContainerRoot,
@@ -24,7 +28,10 @@ import {
   createVATShaderMaterial,
 } from "./entity-material";
 import { EntityMeshMetadata } from "./entity-types";
-import { createHeldItemBindTransform } from "./held-item-attachment";
+import {
+  createHeldItemBindTransform,
+  heldItemGeometryTransform,
+} from "./held-item-attachment";
 import ItemCache, { ItemContainer } from "./item-cache";
 import { RequiemEntityVisibility } from "./requiem-entity-visibility";
 import { ShadoEntityPool } from "./shado-entity-pool";
@@ -535,6 +542,7 @@ export class EntityCache {
               attachmentGeometryTransforms[alias] = createHeldItemBindTransform(
                 socket.getAbsoluteTransform(),
                 runtimeScale,
+                heldItemGeometryTransform(alias),
               );
             }
           }
@@ -553,7 +561,12 @@ export class EntityCache {
             (attachmentBoneIndex === undefined
               ? "unbound"
               : `bone-${attachmentBoneIndex}`);
-          const itemKey = `${itemModel}:${flip ? "flipped" : "raw"}:${attachmentCacheKey}`;
+          const attachmentGeometryTransform =
+            attachmentGeometryTransforms[attachmentCacheKey];
+          // Canonical humanoid sockets own their complete geometry alignment.
+          // Preserve the legacy flip only for older race attachment bones.
+          const applyLegacyFlip = flip && !attachmentGeometryTransform;
+          const itemKey = `${itemModel}:${applyLegacyFlip ? "flipped" : "raw"}:${attachmentCacheKey}`;
           if (!itemPool[itemKey]) {
             itemPool[itemKey] = new Promise<ItemContainer | null>((res) => {
               ItemCache.getContainer(
@@ -562,10 +575,10 @@ export class EntityCache {
                 scene,
                 manager,
                 container.skeletons[0] ?? null,
-                flip,
+                applyLegacyFlip,
                 attachmentBoneIndex,
                 attachmentCacheKey,
-                attachmentGeometryTransforms[attachmentCacheKey],
+                attachmentGeometryTransform,
               )
                 .then(res)
                 .catch((e) => {
@@ -635,7 +648,14 @@ export class EntityCache {
   private static observerScene: BJS.Scene | null = null;
   private static nameplateLayer: ShadoDynamicEntityNameplateLayer | null = null;
 
-  public static initialize(scene: BJS.Scene): void {
+  public static initialize(
+    scene: BJS.Scene,
+    worldVisibility?: {
+      world?: ShadoWorldSpatialPackage;
+      coordinator?: ShadoWorldVisibilityCoordinator;
+      disableCulling?: boolean;
+    },
+  ): void {
     const visibilityGeneration = ++EntityCache.entityVisibilityGeneration;
     EntityCache.entityVisibility?.dispose();
     EntityCache.entityVisibility = null;
@@ -659,24 +679,38 @@ export class EntityCache {
       renderingGroupId: 0,
       worldScale: 1 / 32,
     });
-    void RequiemEntityVisibility.create()
-      .then((visibility) => {
-        if (visibilityGeneration !== EntityCache.entityVisibilityGeneration) {
-          visibility.dispose();
-          return;
-        }
-        EntityCache.entityVisibility = visibility;
-        for (const pool of EntityCache.activePools) visibility.attachPool(pool);
-        (globalThis as any).__requiemEntityVisibility = visibility;
-        console.info("[EntityCache] Entity visibility=shared-worker");
-      })
-      .catch((error) => {
-        console.warn(
-          "[EntityCache] Shared entity visibility unavailable; using synchronous reducer",
-          error,
-        );
-      });
+    if (!worldVisibility?.disableCulling) {
+      void RequiemEntityVisibility.create(
+        worldVisibility?.world,
+        worldVisibility?.coordinator,
+      )
+        .then((visibility) => {
+          if (visibilityGeneration !== EntityCache.entityVisibilityGeneration) {
+            visibility.dispose();
+            return;
+          }
+          EntityCache.entityVisibility = visibility;
+          for (const pool of EntityCache.activePools) visibility.attachPool(pool);
+          (globalThis as any).__requiemEntityVisibility = visibility;
+          console.info("[EntityCache] Entity visibility=shared-worker");
+        })
+        .catch((error) => {
+          console.warn(
+            "[EntityCache] Shared entity visibility unavailable; using synchronous reducer",
+            error,
+          );
+        });
+    }
     EntityCache.cullObserver = scene.onBeforeRenderObservable.add(() => {
+      if (worldVisibility?.disableCulling) {
+        for (const pool of EntityCache.activePools) {
+          pool.applyCoarseVisibility();
+        }
+        for (const entity of EntityCache.entityInstances) {
+          entity.applyReducedVisibility();
+        }
+        return;
+      }
       const camera = scene.activeCamera;
       if (!camera) return;
       let workerHasResult = false;

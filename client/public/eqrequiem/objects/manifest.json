@@ -4,7 +4,7 @@
   "coordinateSystem": "babylon-y-up",
   "runtimeHandedness": "right",
   "sourceTransform": "identity",
-  "sourceCatalogSha256": "2a59edd5d8b8f00384f516a0de8e6d964665c9b231adb5310a5a845f5608a384",
+  "sourceCatalogSha256": "ed49b7ff8a6279fb58430ab9d0c76385c73e1c18fb5c9eccf418471dbe6f9f0b",
   "zones": [
     "airplane",
     "akanon",
@@ -41,12 +41,12 @@
     "hole",
     "kaladima",
     "kaladimb",
+    "kedge",
     "kerraridge",
     "kithicor",
     "lakerathe",
     "lavastorm",
     "lfaydark",
-    "load2",
     "mistmoore",
     "najena",
     "nektulos",
@@ -78,24 +78,6 @@
     "warrens"
   ],
   "objects": [
-    {
-      "id": "acrock301",
-      "source": "/eqrequiem/objects/acrock301/final.glb.gz",
-      "sourceSha256": "7f4af27e71f81396f802d4d31a4493bb451c29296c34eb6a8b5c6e85d32934c0",
-      "contentSha256": "538aabf5e68d04e553662d68e7969681a3648327268bc48bae045b7c02a7a573",
-      "compressedSha256": "88ac10fa59e1e1449a88ce2b654e581339a0c4b03a14debb9bee69b15d938dad",
-      "bytes": 20228,
-      "compressedBytes": 19070
-    },
-    {
-      "id": "acrock303",
-      "source": "/eqrequiem/objects/acrock303/final.glb.gz",
-      "sourceSha256": "bfdbd31315b7e84bbdd8b7c53bf62727ab9065769d5a67abf528b959fdaed77d",
-      "contentSha256": "ed15ba6737e8d46061da69e0b30f0a7e443e0fa93ebf9be5ae7a0a13fe4e19e5",
-      "compressedSha256": "24156e597c27fa97ba883d29d28157db84302c67262454555cd151397b7b1782",
-      "bytes": 22052,
-      "compressedBytes": 20159
-    },
     {
       "id": "airglass",
       "source": "/eqrequiem/objects/airglass/final.glb.gz",
@@ -250,24 +232,6 @@
       "compressedBytes": 14402
     },
     {
-      "id": "akotable301",
-      "source": "/eqrequiem/objects/akotable301/final.glb.gz",
-      "sourceSha256": "6c72a730e071e339aa99d1dd0163cd3801405d565abceb6dcb7565daac082ec4",
-      "contentSha256": "aa8091cf18cb50d454188d61bdb4cc099ae967ea1b73e53002dc97c7ec5a706a",
-      "compressedSha256": "68b00ca78bf76fbebf72afbe47561e991e3c2029441613872397b492ce5a98e8",
-      "bytes": 201952,
-      "compressedBytes": 163628
-    },
-    {
-      "id": "akrpiles303",
-      "source": "/eqrequiem/objects/akrpiles303/final.glb.gz",
-      "sourceSha256": "e5259dbdf37f367b671d8949bd773fd4ca3a73215e7d1425b69f0e49c402f97f",
-      "contentSha256": "cbaca683bd3f3c412a0731876ec5dd3482e8bc8ec3946c7f4acd50c6418fca45",
-      "compressedSha256": "8cab027bfbd3c382a438af23306c92137f4677e235bf7412aa3d34f34d1182d1",
-      "bytes": 86536,
-      "compressedBytes": 77854
-    },
-    {
       "id": "anchor",
       "source": "/eqrequiem/objects/anchor/final.glb.gz",
       "sourceSha256": "4cf061295d385672830dfef230a7e20233053dd0c79ec0ce24046734a3f28da9",
@@ -387,58 +351,20 @@
     {
       "id": "barrel3",
       "source": "/eqrequiem/objects/barrel3/final.glb.gz",
-      "sourceSha256": "188b1dae953f09e28ddd339f185b9714a27de0d9d54af0f5409fab641d598229",
-      "contentSha256": "10149a82e2a4a252695211479a23d9d0f77d2bc5a9c530e016ee282cdb20ce61",
-      "compressedSha256": "feff2965a980e05eb1e38d5b478f7cb9ffc0eb1a596129bac496b9a5eb73d6b8",
-      "bytes": 163168,
-      "compressedBytes": 121078,
-      "replacement": {
-        "passId": "qeynos2-object-pass-01",
-        "route": "procedural",
-        "candidate": "assets/src/world/objects/replacements/procedural/barrel3/final.glb",
-        "candidateSha256": "188b1dae953f09e28ddd339f185b9714a27de0d9d54af0f5409fab641d598229",
-        "generatedFinal": "assets/generated/object-replacements/qeynos2-object-pass-01/barrel3/final.glb",
-        "generatedFinalSha256": "728d7470cc8f110f65e102b91441c28449ea844fc0c68a1decf3806b823dc24e",
-        "validation": "assets/generated/object-replacements/qeynos2-object-pass-01/barrel3/validation.json",
-        "priorSourceSha256": "9483b16b0441c16a3dd1e0f9108c00559425569a6a6ee6b253114a65b4a983a6",
-        "priorContentSha256": "90522b68ec9337b3b97250b234ca20db25521d05761f268eee2a91f712a41b27",
-        "legacyFit": {
-          "scale": 0.975869081074554,
-          "translation": [
-            -0.033963918685913086,
-            -0.000186920166015625,
-            -0.028821706771850586
-          ]
-        }
-      }
+      "sourceSha256": "9483b16b0441c16a3dd1e0f9108c00559425569a6a6ee6b253114a65b4a983a6",
+      "contentSha256": "90522b68ec9337b3b97250b234ca20db25521d05761f268eee2a91f712a41b27",
+      "compressedSha256": "0068d2ebb1283a972ad1e02d8db3129b7da613f42377588904a6bc5f31e7b1ea",
+      "bytes": 27560,
+      "compressedBytes": 24090
     },
     {
       "id": "barrel4",
       "source": "/eqrequiem/objects/barrel4/final.glb.gz",
-      "sourceSha256": "11886b822b20ab35517b119eac2ce7c2f52c07d397108b7ed1563fe58af05f61",
-      "contentSha256": "c24fb963b1e3728cc894194182489d1d9c6b03c2f8ac68aac63c9d39fba9f80e",
-      "compressedSha256": "5da26c6c5be956ca70ad9be385fc9419940ce4bc8ca68f2a6d9a2647c2b8b378",
-      "bytes": 2003760,
-      "compressedBytes": 1984254,
-      "replacement": {
-        "passId": "qeynos2-object-pass-02-01",
-        "route": "stablegen",
-        "candidate": "assets/src/world/objects/replacements/stablegen/barrel4/final.glb",
-        "candidateSha256": "11886b822b20ab35517b119eac2ce7c2f52c07d397108b7ed1563fe58af05f61",
-        "generatedFinal": "assets/generated/object-replacements/qeynos2-object-pass-02-01/barrel4/final.glb",
-        "generatedFinalSha256": "d82f0273243072fcce72f5d00de4627763af99c3fd2e9f09345f59dea034e009",
-        "validation": "assets/generated/object-replacements/qeynos2-object-pass-02-01/barrel4/validation.json",
-        "priorSourceSha256": "345f72a5e75fd54572182f0a7e04fd23c919eee1bc807a036b42deed868a860b",
-        "priorContentSha256": "dc3c6addbc1ade7e5fa0b09ef673d81b995551b04d3c60f57216a59ae1305753",
-        "legacyFit": {
-          "scale": 0.9790259513696525,
-          "translation": [
-            -0.033963918685913086,
-            -0.000186920166015625,
-            -0.028821706771850586
-          ]
-        }
-      }
+      "sourceSha256": "345f72a5e75fd54572182f0a7e04fd23c919eee1bc807a036b42deed868a860b",
+      "contentSha256": "dc3c6addbc1ade7e5fa0b09ef673d81b995551b04d3c60f57216a59ae1305753",
+      "compressedSha256": "41e354d5d30560e7a22555d4da2116efb17f0bf31fee01c10ff308288708e897",
+      "bytes": 20112,
+      "compressedBytes": 16669
     },
     {
       "id": "barrelonside",
@@ -1262,30 +1188,11 @@
     {
       "id": "cart",
       "source": "/eqrequiem/objects/cart/final.glb.gz",
-      "sourceSha256": "8643488da1dddbb7a3f2a02839bbe6afbb6ce1de95a09166be20809d0f39709a",
-      "contentSha256": "0063c1ddffe9c96f4da5cb90a8871dd22cb3c15bd1868d086ebd0495ef182901",
-      "compressedSha256": "15265e071d2096038d97b4fc31cb5fce887c6040f8ec6acd758886263ebb9a53",
-      "bytes": 2041448,
-      "compressedBytes": 2011181,
-      "replacement": {
-        "passId": "qeynos2-object-pass-02-01",
-        "route": "stablegen",
-        "candidate": "assets/src/world/objects/replacements/stablegen/cart/final.glb",
-        "candidateSha256": "8643488da1dddbb7a3f2a02839bbe6afbb6ce1de95a09166be20809d0f39709a",
-        "generatedFinal": "assets/generated/object-replacements/qeynos2-object-pass-02-01/cart/final.glb",
-        "generatedFinalSha256": "17a0bcfa56e2ab10209c653ce261865355a5e015877e1cafd68d620380809f80",
-        "validation": "assets/generated/object-replacements/qeynos2-object-pass-02-01/cart/validation.json",
-        "priorSourceSha256": "9d54d8e1bc889681ddedb4a0e0f07ce2453fef7464550dc60fe7586a79811d04",
-        "priorContentSha256": "f0d8e90c079f14c17bd99f9e189c1d0e2d722b67199723bbc0a90f604432c2fa",
-        "legacyFit": {
-          "scale": 6.93900900773424,
-          "translation": [
-            -2.471016765905227,
-            2.802081952731502,
-            0.13963775103511855
-          ]
-        }
-      }
+      "sourceSha256": "9d54d8e1bc889681ddedb4a0e0f07ce2453fef7464550dc60fe7586a79811d04",
+      "contentSha256": "f0d8e90c079f14c17bd99f9e189c1d0e2d722b67199723bbc0a90f604432c2fa",
+      "compressedSha256": "6ac3cda3bb830e54ff373609b7d3622e10cd886b192ca496a2fcf266b1c668c0",
+      "bytes": 44776,
+      "compressedBytes": 34485
     },
     {
       "id": "caulcol1",
@@ -1542,86 +1449,29 @@
     {
       "id": "chair",
       "source": "/eqrequiem/objects/chair/final.glb.gz",
-      "sourceSha256": "8992e2ba4861d7fee13bdebabe86f157dc8d8eddd06234f3693465cd6e7927e6",
-      "contentSha256": "1f881e10a86b86292353e46ce1484acc9b563519ef272d17a2a548fa748f702f",
-      "compressedSha256": "c0e7cc67728e2b9486de03b56e777b88ebc6de329f3ba7ca3db3a84ff8cfb91b",
-      "bytes": 1703560,
-      "compressedBytes": 1672070,
-      "replacement": {
-        "passId": "qeynos2-object-pass-01",
-        "route": "polyhaven",
-        "candidate": "assets/src/world/objects/replacements/polyhaven/chair/final.glb",
-        "candidateSha256": "8992e2ba4861d7fee13bdebabe86f157dc8d8eddd06234f3693465cd6e7927e6",
-        "generatedFinal": "assets/generated/object-replacements/qeynos2-object-pass-01/chair/final.glb",
-        "generatedFinalSha256": "f200708eaacd2f82e33059075f4e3c228e33bf8c64f3d978346a7f9b6d6f2c06",
-        "validation": "assets/generated/object-replacements/qeynos2-object-pass-01/chair/validation.json",
-        "priorSourceSha256": "b815e9ec78f9cb29f55db8cbc5125ce55c76e2f823f3a326652c8fcf5af3208d",
-        "priorContentSha256": "acaee9f4e8ac64e374d9d2dcc2246bc44c2b38941893d4d6e372dab8eb2dcaca",
-        "legacyFit": {
-          "scale": 3.106271224383742,
-          "translation": [
-            0.19221884624629013,
-            -0.028568601347521098,
-            -0.05244260439759463
-          ]
-        }
-      }
+      "sourceSha256": "b815e9ec78f9cb29f55db8cbc5125ce55c76e2f823f3a326652c8fcf5af3208d",
+      "contentSha256": "acaee9f4e8ac64e374d9d2dcc2246bc44c2b38941893d4d6e372dab8eb2dcaca",
+      "compressedSha256": "f0353652e99d0248b04b23ced048db4d43db1d83b29fce722ea53951f0fdb13d",
+      "bytes": 28712,
+      "compressedBytes": 22704
     },
     {
       "id": "chair2",
       "source": "/eqrequiem/objects/chair2/final.glb.gz",
-      "sourceSha256": "a2e95d8be00618d3dd7f07eeab81de82073ce9368eda5e254032cb29df122614",
-      "contentSha256": "d80b2690a05ae6ace34f3b72ebd36690f8bdf44b5f5fc387da85ebd757c4fd22",
-      "compressedSha256": "6e1e66c8db0781e64205d76e7f9a6a3ed5ee8d01f7f29181688ce171f11ef178",
-      "bytes": 1682736,
-      "compressedBytes": 1613279,
-      "replacement": {
-        "passId": "qeynos2-object-pass-02-01",
-        "route": "stablegen",
-        "candidate": "assets/src/world/objects/replacements/stablegen/chair2/final.glb",
-        "candidateSha256": "a2e95d8be00618d3dd7f07eeab81de82073ce9368eda5e254032cb29df122614",
-        "generatedFinal": "assets/generated/object-replacements/qeynos2-object-pass-02-01/chair2/final.glb",
-        "generatedFinalSha256": "a0c6adf85479ad29e32365e603a32ce36751237ef945e676af47d3d667fe4472",
-        "validation": "assets/generated/object-replacements/qeynos2-object-pass-02-01/chair2/validation.json",
-        "priorSourceSha256": "a7114802b212bb4de57d089c2cd0c9bf7ad4f9a754fcfe434312c9415b15cca1",
-        "priorContentSha256": "6d24724f98aa7a3901dfd86d58c0512ac6a4492e0aa98cb2c9a9519e63de5e9f",
-        "legacyFit": {
-          "scale": 0.9856996097203069,
-          "translation": [
-            0.4760807156562805,
-            -0.09956622123718262,
-            -0.0008714786588913036
-          ]
-        }
-      }
+      "sourceSha256": "a7114802b212bb4de57d089c2cd0c9bf7ad4f9a754fcfe434312c9415b15cca1",
+      "contentSha256": "6d24724f98aa7a3901dfd86d58c0512ac6a4492e0aa98cb2c9a9519e63de5e9f",
+      "compressedSha256": "5ea69c288c7f576cceb40a110de3a5fa742f3fd43c0366264f531104af7348f8",
+      "bytes": 13392,
+      "compressedBytes": 9735
     },
     {
       "id": "chair2d",
       "source": "/eqrequiem/objects/chair2d/final.glb.gz",
-      "sourceSha256": "033ee316f96f8715522e69031482db58a3c544d996b73aa391d8462ad46f8601",
-      "contentSha256": "6556616b0514bba6c5436ddd444f2f1b4fa7e99fea9beecf59a6ebc839908b47",
-      "compressedSha256": "9dbb26fdfb4b70ff8940007e83f7a832b800d555795360cd5b12c28dd5786618",
-      "bytes": 1853164,
-      "compressedBytes": 1781361,
-      "replacement": {
-        "passId": "qeynos2-object-pass-02-01",
-        "route": "stablegen",
-        "candidate": "assets/src/world/objects/replacements/stablegen/chair2d/final.glb",
-        "candidateSha256": "033ee316f96f8715522e69031482db58a3c544d996b73aa391d8462ad46f8601",
-        "generatedFinal": "assets/generated/object-replacements/qeynos2-object-pass-02-01/chair2d/final.glb",
-        "generatedFinalSha256": "3ca49f88756432d88595129faba6a5dac38506f9be1df9b6158336a3faf54f80",
-        "validation": "assets/generated/object-replacements/qeynos2-object-pass-02-01/chair2d/validation.json",
-        "priorSourceSha256": "ab95c9e445a79279919364f727442f37b59f38ed0e1db28eb5b430d00feed37b",
-        "priorContentSha256": "159536cb8f881eda0618911e259eb5d31da16cf89350eb3ad5fd169cb83fecfc",
-        "legacyFit": {
-          "scale": 1.0000955722557796,
-          "translation": [
-            0.4760807156562805,
-            -0.09956622123718262,
-            -0.0008714795169575367
-          ]
-        }
-      }
+      "sourceSha256": "ab95c9e445a79279919364f727442f37b59f38ed0e1db28eb5b430d00feed37b",
+      "contentSha256": "159536cb8f881eda0618911e259eb5d31da16cf89350eb3ad5fd169cb83fecfc",
+      "compressedSha256": "97abca0f1877651d8bc4760c08df9d6e7c63099be54c5a77ef28267a9cb9d2eb",
+      "bytes": 17324,
+      "compressedBytes": 13700
     },
     {
       "id": "chair3",
@@ -1676,15 +1526,6 @@
       "compressedSha256": "6c889b6726d99084bc81127e94a3f2d62a5e05ed9ac3a912d10af94d1bcb8d24",
       "bytes": 26192,
       "compressedBytes": 23320
-    },
-    {
-      "id": "char300war",
-      "source": "/eqrequiem/objects/char300war/final.glb.gz",
-      "sourceSha256": "85d03768938ae212b78bc4e018f87ba69e9a40a48d83b499f84a04da9a9fc374",
-      "contentSha256": "0aad8dc7306b7438f57be51970bed8ad59eeca63605fe3e5c30efc6e0fc3b02e",
-      "compressedSha256": "a535fa3284df7791479f57a67d108e1454594d3b67383072f6a6da115e28f453",
-      "bytes": 6912,
-      "compressedBytes": 5826
     },
     {
       "id": "chest1",
@@ -1820,24 +1661,6 @@
       "compressedSha256": "2a334c55ad1883a39d0fcdb1685d18d9a54981cb75bc8ff4373a5baadd81764a",
       "bytes": 209000,
       "compressedBytes": 114697
-    },
-    {
-      "id": "combench301",
-      "source": "/eqrequiem/objects/combench301/final.glb.gz",
-      "sourceSha256": "de8491003951b2ad193d58b7f0ed9f93c2a1dab8ae45560d3ea05304e8c61db1",
-      "contentSha256": "6907093b084a3465f80fa5a8ceadbc712026b21dada77a4b536e4bc1beea3419",
-      "compressedSha256": "b38d66b2262b975a4d2af879ad4cf2cbea64ebfbd820a87cbcc0faf586e262d3",
-      "bytes": 40840,
-      "compressedBytes": 30403
-    },
-    {
-      "id": "combook301",
-      "source": "/eqrequiem/objects/combook301/final.glb.gz",
-      "sourceSha256": "c4ac0a24e485c88047a3ee8f39bb155b3131b076de7da1df976a90860b9699d5",
-      "contentSha256": "e700c69050122ff8cf8a033e1b6adf2bca2e3311ce38f553698772cb5ac5cfc6",
-      "compressedSha256": "51e64a8aec0e73286753fb88de38aa5b3b0cb708b633c43ecc4f7454bb800f5a",
-      "bytes": 38096,
-      "compressedBytes": 25378
     },
     {
       "id": "comhouse",
@@ -2362,42 +2185,6 @@
       "compressedBytes": 18013
     },
     {
-      "id": "dsrune301",
-      "source": "/eqrequiem/objects/dsrune301/final.glb.gz",
-      "sourceSha256": "bbfce4e06bb343ad77518b0e62be3eff750ff62ac43b50f2bca85ff1b681618d",
-      "contentSha256": "d77e6f76baa6b33ea334465d3a1f29a970dc9e2f51654b9d8e8ec74147dc67f9",
-      "compressedSha256": "14df6f0f0635cb294fee536beafc184eb491359cd93e94af54e54ea05f697dd8",
-      "bytes": 60600,
-      "compressedBytes": 45185
-    },
-    {
-      "id": "dsrune302",
-      "source": "/eqrequiem/objects/dsrune302/final.glb.gz",
-      "sourceSha256": "6ae2f389b2b8c6053a10c684f277f3daf0e0fdfce0c9a208dd0b4d1cd2351aed",
-      "contentSha256": "60b356797881a65e1c00822496d72145bb5e073ac7e8e9fc088fe23e2cbbb299",
-      "compressedSha256": "1e2dbe7cb9ffbccc696bf31626a238099bed510a57d2efc97e4e57810d7e1a02",
-      "bytes": 69032,
-      "compressedBytes": 48273
-    },
-    {
-      "id": "dsrune303",
-      "source": "/eqrequiem/objects/dsrune303/final.glb.gz",
-      "sourceSha256": "1c6aefcccb1987ddc1a99108142620420317ef0c3ad8a3dd0cebbeed87eacc90",
-      "contentSha256": "d243459069b1420eaf9136afe8f48e59bbadfd7f4da2d724a07be0dce328ad58",
-      "compressedSha256": "b80bf6aa3b6a5ac5591468cd4938b86a743801c526bf0212843e51347ba6f5ec",
-      "bytes": 66640,
-      "compressedBytes": 46596
-    },
-    {
-      "id": "dsrune304",
-      "source": "/eqrequiem/objects/dsrune304/final.glb.gz",
-      "sourceSha256": "3114d8946b31b2aaada2bd1c0e07091dc91d6e0e5fa5c19f5f6ab545c87101e3",
-      "contentSha256": "815fd4b911053b2c5a9c47c7de21431ccffa75a90d398e74243f7dcac1013989",
-      "compressedSha256": "0ff03a72de94b2899f5053716e7b8ecf844e153cd0b8a1d036daa860b8a6db3d",
-      "bytes": 76852,
-      "compressedBytes": 50763
-    },
-    {
       "id": "dtow1",
       "source": "/eqrequiem/objects/dtow1/final.glb.gz",
       "sourceSha256": "e461971deec70faeb748bed1c729f959c96d1747aa11d446e8d5b3da04beb676",
@@ -2794,15 +2581,6 @@
       "compressedBytes": 7479
     },
     {
-      "id": "eshoplean302",
-      "source": "/eqrequiem/objects/eshoplean302/final.glb.gz",
-      "sourceSha256": "429a4f33d18839ea8534b64b61f9914474dd2eac057b410aaa20e21df2509f21",
-      "contentSha256": "5a37fb13cdfd48a81ff2678b33c6c93c3e49b4b0c9b26de7dca01dd5da024894",
-      "compressedSha256": "7aaabf95c0139e7567273ee40d5d43630ede68c21b413ad89d6fba1f9b32f5cf",
-      "bytes": 45584,
-      "compressedBytes": 41094
-    },
-    {
       "id": "ewbonfire200",
       "source": "/eqrequiem/objects/ewbonfire200/final.glb.gz",
       "sourceSha256": "abf4f72dab8c39ad53e2961e7ef9248c2face2e020833bde978c06d4f550ea8e",
@@ -2810,15 +2588,6 @@
       "compressedSha256": "32774e1774fa03be1d686e1347f7c33575daa8b69cfa0b39fc022b30978ce481",
       "bytes": 47372,
       "compressedBytes": 37109
-    },
-    {
-      "id": "ewnest302",
-      "source": "/eqrequiem/objects/ewnest302/final.glb.gz",
-      "sourceSha256": "ae5806d04e218b7db1efa263e26163102fc4804313ac1d5e4fd9aa07dd549501",
-      "contentSha256": "9fe7b5475d331cbbed1dced22640b19559e19895fa46b53ec0c6ac699c4e1c2e",
-      "compressedSha256": "a75c2e04e7c43e33cf32ef554daa3fbaca90a6545a7e9e7c1fb527785888f938",
-      "bytes": 61512,
-      "compressedBytes": 56902
     },
     {
       "id": "farmory1",
@@ -2956,24 +2725,6 @@
       "compressedBytes": 36253
     },
     {
-      "id": "fbarrel301",
-      "source": "/eqrequiem/objects/fbarrel301/final.glb.gz",
-      "sourceSha256": "f0eacb2fc2e0e7b80ab57f8d47acd828716bbb195434277abf8e0a7cb784c2ef",
-      "contentSha256": "8b495b21ebdef5bc2e93eef222f5fc1cda7734054a266d2b0cf7ee719c38a0ed",
-      "compressedSha256": "a1c16ffc69d9df4c31ee1195f7348ce59bb5e65ec6ebad5fca5e959596e1a94b",
-      "bytes": 58836,
-      "compressedBytes": 55598
-    },
-    {
-      "id": "fcrate301",
-      "source": "/eqrequiem/objects/fcrate301/final.glb.gz",
-      "sourceSha256": "c6e6fd5ecfc2f1f7c57c3a05b26ff053e1ebf0e01991ff6e05e5f1038cf18d76",
-      "contentSha256": "936dc6ed357774ccacf150acb780e688f707959978a66c2d9f0b7c1863376755",
-      "compressedSha256": "05e4bde8e7049c14b4146ca6c80af7d90097a9891bf742506530b5dab99aa235",
-      "bytes": 25392,
-      "compressedBytes": 19794
-    },
-    {
       "id": "fdinn",
       "source": "/eqrequiem/objects/fdinn/final.glb.gz",
       "sourceSha256": "b6fb5ce263cb8e29f9169900e44f77b8c0f6d4155e201b8aba77e3b4f302838e",
@@ -2981,15 +2732,6 @@
       "compressedSha256": "dea7763095221aaa6e72af9b9a85fc7c5d540d18aedc35fe866b47fae3aa1e0b",
       "bytes": 23540,
       "compressedBytes": 20664
-    },
-    {
-      "id": "fdoorsl302",
-      "source": "/eqrequiem/objects/fdoorsl302/final.glb.gz",
-      "sourceSha256": "2503464a97446ed9e9d8669574e42b79a588febdaba6721c5a6ee19275136d35",
-      "contentSha256": "2583b0abab91dcc61c9ad47b1d707af10aff4d08aee9807a97528bbdaef99bc3",
-      "compressedSha256": "bed1449a8cfaec9b55288dade3e10de261d19fb3e6682d0b3e0b321c19db3a0a",
-      "bytes": 33024,
-      "compressedBytes": 25736
     },
     {
       "id": "fedead",
@@ -3154,33 +2896,6 @@
       "compressedBytes": 27812
     },
     {
-      "id": "ffirepot301",
-      "source": "/eqrequiem/objects/ffirepot301/final.glb.gz",
-      "sourceSha256": "19f7184cb4140d10226f03760716d0b5f5e2b7867f710c6c5033e107982eac66",
-      "contentSha256": "07d0fe62fb3f2eb262aa4fa21e751865ea553d82e73ed683a11c27af59e5697c",
-      "compressedSha256": "0cfeaf86b3ef89ef1451fa2905866e40a739337944a0a582ac691b6caf34c548",
-      "bytes": 29204,
-      "compressedBytes": 19398
-    },
-    {
-      "id": "fgdmnd302",
-      "source": "/eqrequiem/objects/fgdmnd302/final.glb.gz",
-      "sourceSha256": "35be327471caa6b03f4fd5eb0dafca84778e69c5bd9431aa506b171ee7add412",
-      "contentSha256": "dcfdc2a37afdf281f7ea81070ee3c2eb8e64eba12c78823b8e88b767e884dcdf",
-      "compressedSha256": "1db465d488aac40f70207cf912e96f4014af5077085aa0ff8627dca6c46a98db",
-      "bytes": 26668,
-      "compressedBytes": 23824
-    },
-    {
-      "id": "firewd301",
-      "source": "/eqrequiem/objects/firewd301/final.glb.gz",
-      "sourceSha256": "6b6e40a232e09ef095d5bdf909a298bff2d74d77fdf76d2ae242b3520ac549ef",
-      "contentSha256": "1d6a097413836a6331e3da7f5eb0ba3e43483b558e5d27aadf398f6c10db63d7",
-      "compressedSha256": "d205082e81a3c5ae7795e527c7cb8bb14060c45ba263a2562308bbad85e42369",
-      "bytes": 21848,
-      "compressedBytes": 18908
-    },
-    {
       "id": "fishcart",
       "source": "/eqrequiem/objects/fishcart/final.glb.gz",
       "sourceSha256": "d637efd9103b2514a802caa823d048d39df2174526cb3e7779f3951265a0c685",
@@ -3298,24 +3013,6 @@
       "compressedBytes": 74832
     },
     {
-      "id": "fpotions306",
-      "source": "/eqrequiem/objects/fpotions306/final.glb.gz",
-      "sourceSha256": "958b72d5b6b6c66732744a39acf8492190ce0680d6fb265c88e21c994be9f522",
-      "contentSha256": "d61f0d147ca69421684b0a9b4c9786ca67481d9753c00f657ca4d373c2299e80",
-      "compressedSha256": "c30c80d4598a8fbfb4ca606352a2db1011259f7a6b020450b058a6eef980b4e1",
-      "bytes": 21368,
-      "compressedBytes": 12734
-    },
-    {
-      "id": "fpotplant301",
-      "source": "/eqrequiem/objects/fpotplant301/final.glb.gz",
-      "sourceSha256": "0f23f4f94cd00b35aa57e455fdc1892c117754f22aea1496b06c63444a159a85",
-      "contentSha256": "7610302cdefbf933dcc4be1c3f72356c0b4be4188481418b507887dd6385c833",
-      "compressedSha256": "993943a5440cb9e29bcbec1cf853d1dbfe63723ef1e0e97f50a5f644accb6539",
-      "bytes": 43132,
-      "compressedBytes": 32257
-    },
-    {
       "id": "freedune1",
       "source": "/eqrequiem/objects/freedune1/final.glb.gz",
       "sourceSha256": "42326fe707bd08f9e8ce35b87915d5be2769ee8ffbddd98039e467a22aa9b6cd",
@@ -3352,33 +3049,6 @@
       "compressedBytes": 27344
     },
     {
-      "id": "frugs301",
-      "source": "/eqrequiem/objects/frugs301/final.glb.gz",
-      "sourceSha256": "83b8e071c7d87a4ac9af1e53e5219376ca300b91fe65dcc6b6c708116b4cb116",
-      "contentSha256": "4bb6c30e49272e6efe24b25b9bc7057c9e8e166068cc442dfff6c4654cda4e8c",
-      "compressedSha256": "020fca558ea49a850b7f67f98acb4cb6a923378f93f3a5c1ff2d62871e3761c1",
-      "bytes": 36432,
-      "compressedBytes": 34318
-    },
-    {
-      "id": "fsanvil301",
-      "source": "/eqrequiem/objects/fsanvil301/final.glb.gz",
-      "sourceSha256": "3f2634cec643918cfebe4a40779167f6329b815167bd42280a09c895c69c50b8",
-      "contentSha256": "8fb3ecde87ac795bee2a9ae3cddbd8ba2650314d5c78d0b3f3f6e8b3c13ed38e",
-      "compressedSha256": "078cf8898c2d82fac754a32b3120d5b7caee37d795303b662775a6bb772806df",
-      "bytes": 52880,
-      "compressedBytes": 45949
-    },
-    {
-      "id": "fsarmordisplay301",
-      "source": "/eqrequiem/objects/fsarmordisplay301/final.glb.gz",
-      "sourceSha256": "c59d32b43a715ab0f3819092854891a87d2c40539492801497d9540ea6f33746",
-      "contentSha256": "922ed14f1b1b2a74c77ce9c6f5726b2a2bbeacff642cb223d1fe2c2d2da7dd31",
-      "compressedSha256": "6d29711c8be15cc590fc81bfdebfbe78ad021885e41c4349e78d0df500fdc429",
-      "bytes": 88344,
-      "compressedBytes": 52292
-    },
-    {
       "id": "fshop1",
       "source": "/eqrequiem/objects/fshop1/final.glb.gz",
       "sourceSha256": "c62dd6eac012bd899a7170908eb53439f2cab5c540ca2c071ac8fc02e57a948b",
@@ -3413,33 +3083,6 @@
       "compressedSha256": "27cdd4875aa6184a4b714fa6277e1e800f7bc724bd04583de498b82505275549",
       "bytes": 21092,
       "compressedBytes": 19614
-    },
-    {
-      "id": "fsmforge301",
-      "source": "/eqrequiem/objects/fsmforge301/final.glb.gz",
-      "sourceSha256": "d526c2bc2d0f52fcb810b587a7ab74eee2d62039c76c72253e0d9cb82d282db9",
-      "contentSha256": "2eb91a60d62c0325104dacbe7525e673ad60cbfe67350d6ba96c540fdddd413a",
-      "compressedSha256": "59d51f89759ef34341c09a5ab4f7d125b8d1bb0c9ccf0536e5d133a2cb113a23",
-      "bytes": 178632,
-      "compressedBytes": 154746
-    },
-    {
-      "id": "fsplant303",
-      "source": "/eqrequiem/objects/fsplant303/final.glb.gz",
-      "sourceSha256": "0ecadf3bc90b6678b735d42eb9f84ca6aef1d7d9eb10dd46cc2b554fffb2834b",
-      "contentSha256": "c8182d117096795bd6cc256247abdf60c37f8279421d08c85ae5eca4117840b3",
-      "compressedSha256": "20a69a002330438f1a0e8f029ad0b476e964debccc9c5e0c109ded2b1b67f5b1",
-      "bytes": 30668,
-      "compressedBytes": 22130
-    },
-    {
-      "id": "ftraindum301",
-      "source": "/eqrequiem/objects/ftraindum301/final.glb.gz",
-      "sourceSha256": "d749adb095096a3ed57720feb219c1c5087bc9f412b374142c020ba488cc7b9c",
-      "contentSha256": "e4f6351276aa4902f71f34dd7c3f02aee84ce4be41277685748cb85e6154d23c",
-      "compressedSha256": "7b27d3e9a6cada3d643d9b7158b129c7d982b0775ebad0ae40f5bd1150ee3c52",
-      "bytes": 73620,
-      "compressedBytes": 54110
     },
     {
       "id": "ftrunk",
@@ -3577,15 +3220,6 @@
       "compressedBytes": 28745
     },
     {
-      "id": "geninnsign301",
-      "source": "/eqrequiem/objects/geninnsign301/final.glb.gz",
-      "sourceSha256": "82503bcb73ca8226c4c000a8b9ff4eb3c05349a0f1eae99aa3e9267690384c6d",
-      "contentSha256": "66f9f8c476a821d80853833bc2afd993b67260022e71328d4c8cc8eae058266d",
-      "compressedSha256": "7dc90e64e79df2a3ce6f58367dda35683b83742f0161e4d7164fe87f1f4ebf4d",
-      "bytes": 38588,
-      "compressedBytes": 34315
-    },
-    {
       "id": "gfire",
       "source": "/eqrequiem/objects/gfire/final.glb.gz",
       "sourceSha256": "6d205e07bb94bd5e08786495c25bd52fed62ae059f4bba20ad3b4b9ba6cf25c1",
@@ -3692,42 +3326,6 @@
       "compressedSha256": "87ce2dfffb71c5fe2fd21cf6a7f8b0568fbaf0f36d76032e919c6f2e4ab3396e",
       "bytes": 23444,
       "compressedBytes": 20563
-    },
-    {
-      "id": "gothchest304",
-      "source": "/eqrequiem/objects/gothchest304/final.glb.gz",
-      "sourceSha256": "5e3123e5040603ae432405588cf1fd447ac416efa347ae5215680d1293f290fd",
-      "contentSha256": "2b2a24e957175d981e76b0a7999098025a8fb16977e6bffc3098b3f145b42875",
-      "compressedSha256": "b3e501d8a221c09b7012764d6cc50c246927bbde4a37f9d976d1974df1d25d76",
-      "bytes": 20480,
-      "compressedBytes": 9888
-    },
-    {
-      "id": "gothchest306",
-      "source": "/eqrequiem/objects/gothchest306/final.glb.gz",
-      "sourceSha256": "0166a78c89e5bb001d0f04a6929f2a392c5f6a6f87419ff7951c5c79bb7a7937",
-      "contentSha256": "8ffe61c944b202d5a45d406e0a71fdc9851cf7fa9de0fce8ef47bc8b4434823a",
-      "compressedSha256": "02a05d19c32e095db163b882e12534d287cbcc247a2f1cb02832e37feeebbd8f",
-      "bytes": 24056,
-      "compressedBytes": 11341
-    },
-    {
-      "id": "gothcoff303",
-      "source": "/eqrequiem/objects/gothcoff303/final.glb.gz",
-      "sourceSha256": "4cdf19231aa1170b70a9b3a05cc064e91a3122fd5b0bd8ccc54803f70aaafaa3",
-      "contentSha256": "94160434ea97b2f206bb4b14cfc20633e56ac5ce98d5adbc521acbb31d56d143",
-      "compressedSha256": "289dc11f45d3debff809faa45e02cae3948d24ec0c21108c4cd6e3b0888e3979",
-      "bytes": 41980,
-      "compressedBytes": 36579
-    },
-    {
-      "id": "gothtable302",
-      "source": "/eqrequiem/objects/gothtable302/final.glb.gz",
-      "sourceSha256": "81933f86a725e2fb022c1c420924810e7c6f7a7d822b7168a5cba45a9abf0e0d",
-      "contentSha256": "7b94ea6d9de3d2a4c291cca63de4458a71ce87cf4b72a06b4c97eed1b2511525",
-      "compressedSha256": "cae2714ca0fd1802635df57d8b65bc3c5079576990509a6ddbcbe703026e0196",
-      "bytes": 26296,
-      "compressedBytes": 12805
     },
     {
       "id": "gpine",
@@ -4792,6 +4390,60 @@
       "compressedBytes": 32981
     },
     {
+      "id": "kedbox",
+      "source": "/eqrequiem/objects/kedbox/final.glb.gz",
+      "sourceSha256": "95d4be08449282f47c310609d74ab11b7f39cedede838e8cffddb7cc75439650",
+      "contentSha256": "5a406a9d8e0f0d2b67e4fd4e54ea22237de483f192ba1bd3ff8b199af0eb3651",
+      "compressedSha256": "018bf787e29e65fe542ba62e179962d90ef57b3aa096c3301bfdff87b4ab1046",
+      "bytes": 40168,
+      "compressedBytes": 33754
+    },
+    {
+      "id": "kedgrate1",
+      "source": "/eqrequiem/objects/kedgrate1/final.glb.gz",
+      "sourceSha256": "9f5146add7c07173934e8f4fef27d084300973e73f7b0f9bc5287c0234ed579f",
+      "contentSha256": "2cdd6988fcda931540fc1b7e2aabf856f1259956d61a00b4e1fa9d054fb5c93c",
+      "compressedSha256": "94b7a111444f08c0bd2e3127c39d049b1aff6d5ea84430d141c679153dc5bc2a",
+      "bytes": 10424,
+      "compressedBytes": 8436
+    },
+    {
+      "id": "kedlight1",
+      "source": "/eqrequiem/objects/kedlight1/final.glb.gz",
+      "sourceSha256": "0eaf9e0d6ace9d0c4df2a4a463e18f3be48b28b1e8574d37320d829302daac4b",
+      "contentSha256": "9aa38ba9d73a4f86951e759d7431c0620c36e940d803e6d4b4f5f50d0a0d541a",
+      "compressedSha256": "26fb0463562c49402d2c001ccbed761f68585b64e96de7da3090165a658b903a",
+      "bytes": 34884,
+      "compressedBytes": 30266
+    },
+    {
+      "id": "kedpill1",
+      "source": "/eqrequiem/objects/kedpill1/final.glb.gz",
+      "sourceSha256": "719ca1fa873f21955beaad7a5dde92710d3d28b1e1c13126fd014dea398bbb16",
+      "contentSha256": "5e59dbbbba7198d0d7f62eda6a09d14613c72b572a3c5794514d72d658699897",
+      "compressedSha256": "ec2648b91bb72225df016a6e5592b83199c662a55c0071faf75a7a71577ba511",
+      "bytes": 8796,
+      "compressedBytes": 7289
+    },
+    {
+      "id": "kedpill2",
+      "source": "/eqrequiem/objects/kedpill2/final.glb.gz",
+      "sourceSha256": "559270352f481fb68082d6c52f1e1f1fddad849899a86191b8fcfaeb902f1e58",
+      "contentSha256": "153559e8307cadad4574774b6153f5c06547ae5a2f045676b7314bfd9f46b321",
+      "compressedSha256": "e8f89c9f0fa900f3d9a17dcf466de46b9dcbaa8891518063e7fb9f12c93f5611",
+      "bytes": 9480,
+      "compressedBytes": 8103
+    },
+    {
+      "id": "kedplant1",
+      "source": "/eqrequiem/objects/kedplant1/final.glb.gz",
+      "sourceSha256": "076f4034b7dad3a68951aca95054c2e74a72cd3a42d4cd2dbc694f59cf090343",
+      "contentSha256": "99686218db5e9d673c3a0161e065f050681d89ebff37557bc15e58445abf1efa",
+      "compressedSha256": "71440ce8ba72beb92d52d7af425eb90228cbf55ff5e9ace6886b998c37d67035",
+      "bytes": 10840,
+      "compressedBytes": 9676
+    },
+    {
       "id": "kedreed",
       "source": "/eqrequiem/objects/kedreed/final.glb.gz",
       "sourceSha256": "d7bd4d07e71877788a93f19ab8db4a55d69b93db063b63d9699f399474b5986f",
@@ -4810,6 +4462,15 @@
       "compressedBytes": 8102
     },
     {
+      "id": "kedsand",
+      "source": "/eqrequiem/objects/kedsand/final.glb.gz",
+      "sourceSha256": "6ca91510f674e887afa180a617764f86db21b5ccb4b63988eb6f08886e9d5878",
+      "contentSha256": "021dfb19f262047d40fca145af4f086d62e00ba38962d2de62db9b72b593ed7d",
+      "compressedSha256": "cd04a345729eb32e10b1c4ccb3fd3b1f9214d1583af5b7b7a61ef47caa9bbd89",
+      "bytes": 8804,
+      "compressedBytes": 7775
+    },
+    {
       "id": "kedshell1",
       "source": "/eqrequiem/objects/kedshell1/final.glb.gz",
       "sourceSha256": "2285125be09ec2783db78c08e27bbbd0b9c7cb3df745469cb29e32c2e7d7af98",
@@ -4817,6 +4478,15 @@
       "compressedSha256": "7413bad945425f7c7a890e6d577d11c259bbe5761e64eeba57cd7b6042d675f6",
       "bytes": 18948,
       "compressedBytes": 17883
+    },
+    {
+      "id": "kedshell2",
+      "source": "/eqrequiem/objects/kedshell2/final.glb.gz",
+      "sourceSha256": "cd289b3f591a891fcb5e580842357afbe815cc96db3a4cafb2595d6d17e95045",
+      "contentSha256": "203456dabab0b161a592e17a3d9bfbdd01c7f165d2d616bd31572d1b6a82bb1f",
+      "compressedSha256": "e8d6d81c2b41a8ec87ce81ee706ff62355c6e6f0528aaced16ae5d4ad8dc8e8d",
+      "bytes": 18356,
+      "compressedBytes": 17292
     },
     {
       "id": "keg",
@@ -5287,42 +4957,6 @@
       "compressedBytes": 47164
     },
     {
-      "id": "lrock307",
-      "source": "/eqrequiem/objects/lrock307/final.glb.gz",
-      "sourceSha256": "458b5b76f79627d10377cf2b509b862a0071f14e0c471e53641f77601924b0ae",
-      "contentSha256": "c31bb274b1708d8c6f013158ab471ab3e214a8fd3685d5cf7afa068636c27c1e",
-      "compressedSha256": "c598741d298a80ee8bad7e0eb8a747c90f15783093bd9f52c764d1f63bf8747a",
-      "bytes": 23884,
-      "compressedBytes": 22803
-    },
-    {
-      "id": "lrock308",
-      "source": "/eqrequiem/objects/lrock308/final.glb.gz",
-      "sourceSha256": "970e8d049b81e9a27276874f543800dadd8fdff2769d4caec1683283865d1e07",
-      "contentSha256": "7fe973b8ba20915a2ba09907db87582b29eb98c22829dc9b130e9aa187b620a4",
-      "compressedSha256": "c6cff7ebeb6d7525b4fd5be214d55c88658fb7a1af2931fdc5079b75ff1d1efa",
-      "bytes": 23884,
-      "compressedBytes": 22795
-    },
-    {
-      "id": "lrock309",
-      "source": "/eqrequiem/objects/lrock309/final.glb.gz",
-      "sourceSha256": "f90d1c043953f778c861b39011aa572124f975c2f719ae0ab6867d3a586e7b99",
-      "contentSha256": "4c55f6314b1d687840d46624a5064cea8311841ae54723107190c7f2f9fa5476",
-      "compressedSha256": "b9f5357f798a014b3e041e7f7ea1464ccb45c985d5f4a5d00b15f3090e2d9bf0",
-      "bytes": 25708,
-      "compressedBytes": 24256
-    },
-    {
-      "id": "lrock311a",
-      "source": "/eqrequiem/objects/lrock311a/final.glb.gz",
-      "sourceSha256": "cf771f1f8e45046f5632add9a15ceaded9fa4a1ae9402997842491e063041525",
-      "contentSha256": "a6f76770db95a352261af0bdd647fa3bf2f026ffd46cebd94f2e304b5e95cb0b",
-      "compressedSha256": "73496906723f69f3266bb5acd840b4a8b8944f56b17aece0d9f076e4b772ab15",
-      "bytes": 23888,
-      "compressedBytes": 22742
-    },
-    {
       "id": "mask1",
       "source": "/eqrequiem/objects/mask1/final.glb.gz",
       "sourceSha256": "94cd1101da49e417a239ee45e0bdacb6b7150042b08c5549906d887b8991aade",
@@ -5350,15 +4984,6 @@
       "compressedBytes": 9097
     },
     {
-      "id": "mbkshelf301",
-      "source": "/eqrequiem/objects/mbkshelf301/final.glb.gz",
-      "sourceSha256": "d1a3e0354522e34a670f5b5819548542a65cdfbc04c2c6ba5f2e95639b908916",
-      "contentSha256": "e44da577f4dd3bcb2dbe670dfe79252bcf852e7160fe4be7c33d1ce765ce662a",
-      "compressedSha256": "1aeaf2f9304f5ad0afc5c4ff2e498c177116048d743dc939e20c9e57d6f839fe",
-      "bytes": 115700,
-      "compressedBytes": 43405
-    },
-    {
       "id": "mcircle",
       "source": "/eqrequiem/objects/mcircle/final.glb.gz",
       "sourceSha256": "421b8b32f13f6e0ecbe4a385df8dc53a715b4df88a39208aff50c26ce1d56441",
@@ -5366,15 +4991,6 @@
       "compressedSha256": "8f0ec797deda89aedfd2351cef510be9e9ba639ae2e0e582600bc12e7ec159d2",
       "bytes": 10744,
       "compressedBytes": 9730
-    },
-    {
-      "id": "mendtable301",
-      "source": "/eqrequiem/objects/mendtable301/final.glb.gz",
-      "sourceSha256": "2e24449a70eb3f3f4e03c9187f5a710775b0a79f34ef6517f4191e2c4df917bd",
-      "contentSha256": "88fdd343ec94cae1e5f4f3d6e0ca403d30d13e805b8c4363a3374e83017625f8",
-      "compressedSha256": "8dca714923e9ae8562ac81177d8603247de4308446d27ef099fb07aec9077b1a",
-      "bytes": 39256,
-      "compressedBytes": 22150
     },
     {
       "id": "milestone1",
@@ -5834,15 +5450,6 @@
       "compressedSha256": "537a8acbed2b5fe611019881d7a39827c1da6e8dd4d9e5a0e683e9a47e0601ab",
       "bytes": 26100,
       "compressedBytes": 19178
-    },
-    {
-      "id": "oak301",
-      "source": "/eqrequiem/objects/oak301/final.glb.gz",
-      "sourceSha256": "9adddf8378a526c04270d960bc412fcbc25675bb87b3a29ddd6fbd8e5d8bea02",
-      "contentSha256": "9ed80d0cd44461b9c8e2211e325d24f825d9b70bb9ed388b86758093e3019c01",
-      "compressedSha256": "9acfe3adaf460676daefca26900251a108b0e85841c99bc076e66bf90cc0bad3",
-      "bytes": 62488,
-      "compressedBytes": 54563
     },
     {
       "id": "ogbed",
@@ -6754,15 +6361,6 @@
       "compressedBytes": 13407
     },
     {
-      "id": "pine301",
-      "source": "/eqrequiem/objects/pine301/final.glb.gz",
-      "sourceSha256": "e57ecd1e772f90f23ce95c1a0dfb05116b704f55b5e446005d986890c96a53ae",
-      "contentSha256": "98396b44d81e2bdc580da2fe5fad4a0340a818255acc849b9967735882e17811",
-      "compressedSha256": "a3aa34357d1f376beacb291346de4c1ecb5389f35a40e3cbee694ba5de7b3a3f",
-      "bytes": 61892,
-      "compressedBytes": 53300
-    },
-    {
       "id": "pipeorgan",
       "source": "/eqrequiem/objects/pipeorgan/final.glb.gz",
       "sourceSha256": "41914d73980a00b63a8c71afcb9064a960d845d22ee454c0b425dcd97b9013bc",
@@ -6824,24 +6422,6 @@
       "compressedSha256": "b2f7da8081037b56ef4c0b37203ad34ba77a9023a50c2550665888bf236cb016",
       "bytes": 15872,
       "compressedBytes": 12946
-    },
-    {
-      "id": "pojskeprts500",
-      "source": "/eqrequiem/objects/pojskeprts500/final.glb.gz",
-      "sourceSha256": "ca4e8af473a8cbf24fe008fc9469ce429134aebf83bcce7c3635466ec9ca5c51",
-      "contentSha256": "a6e5509f3879dc1fb5a8131b0249f8115a7819f30d62b3dc644dfd5c2bd7d524",
-      "compressedSha256": "4591ee4d0fc1585659317b3b0ff1d27525afc0eeacac4be5a009d19e3c993f11",
-      "bytes": 57672,
-      "compressedBytes": 42982
-    },
-    {
-      "id": "pojskeprts502",
-      "source": "/eqrequiem/objects/pojskeprts502/final.glb.gz",
-      "sourceSha256": "26d16c4c2961135db5e483731efcd14f8c8fb25fc51c33712fb26fcc4394d597",
-      "contentSha256": "2b5d705a21ce0a2652e19bedf70430bb99fc9545dab964ab94e5bc5bd2a3d676",
-      "compressedSha256": "e48cb2c570f7e5b8750426b0779c98e2144877ed0199068a091906c5d7a1bf5b",
-      "bytes": 47236,
-      "compressedBytes": 35626
     },
     {
       "id": "portauth",
@@ -6999,30 +6579,11 @@
     {
       "id": "recttable",
       "source": "/eqrequiem/objects/recttable/final.glb.gz",
-      "sourceSha256": "3ecbcbed218e931b77a9c8a731416b7ea499b519a9e472ef2199550fb6310cd3",
-      "contentSha256": "feed3ad54fb2ca9e1400828b46a0a8c71c7fe0742cb06f435e3308161fe9341b",
-      "compressedSha256": "b9814ebb3ecde90d394c591b813d592ff611af0faf433866f994644481aafedd",
-      "bytes": 1779476,
-      "compressedBytes": 1762748,
-      "replacement": {
-        "passId": "qeynos2-object-pass-01",
-        "route": "polyhaven",
-        "candidate": "assets/src/world/objects/replacements/polyhaven/recttable/final.glb",
-        "candidateSha256": "3ecbcbed218e931b77a9c8a731416b7ea499b519a9e472ef2199550fb6310cd3",
-        "generatedFinal": "assets/generated/object-replacements/qeynos2-object-pass-01/recttable/final.glb",
-        "generatedFinalSha256": "002d6869ed5a2aed7dd3f909fdc0caecb32ca137df74ebc2b3cae65f30546c00",
-        "validation": "assets/generated/object-replacements/qeynos2-object-pass-01/recttable/validation.json",
-        "priorSourceSha256": "635e1674fee281a18e8d74eb1247c6f5d71ba80a8c037693ea30179a9e883c2f",
-        "priorContentSha256": "69935e94d11cc6926f2a18f0d278466a3c68548fb12565da85417cf3d9f7b39c",
-        "legacyFit": {
-          "scale": 4.096188074284931,
-          "translation": [
-            0.08211591215163633,
-            -0.04083101254712416,
-            -0.01769697609713902
-          ]
-        }
-      }
+      "sourceSha256": "635e1674fee281a18e8d74eb1247c6f5d71ba80a8c037693ea30179a9e883c2f",
+      "contentSha256": "69935e94d11cc6926f2a18f0d278466a3c68548fb12565da85417cf3d9f7b39c",
+      "compressedSha256": "8b3312e0b16fa3c9914d568b212f75c940cca2c984190f13d824ca946b33a3dd",
+      "bytes": 18940,
+      "compressedBytes": 16172
     },
     {
       "id": "redwood",
@@ -7187,15 +6748,6 @@
       "compressedBytes": 49998
     },
     {
-      "id": "sbowl301",
-      "source": "/eqrequiem/objects/sbowl301/final.glb.gz",
-      "sourceSha256": "62c90265a2687f71ec8a6792235d03627e3f74ae5f1aa5fc1e22c5225249c24b",
-      "contentSha256": "d0f8924808cc152958e95c3c8eb1616b85b37456ba5c924b6905e05b44082bd0",
-      "compressedSha256": "de09325c411d6c7747a887d9b22e70ac7da2ea5f4517bd698ee44dac7396d6a9",
-      "bytes": 31868,
-      "compressedBytes": 25927
-    },
-    {
       "id": "sbrock200",
       "source": "/eqrequiem/objects/sbrock200/final.glb.gz",
       "sourceSha256": "b480d4a55051951440befa897d5ddc5e64ea1b9b71f5aea21fb8607d71965025",
@@ -7268,15 +6820,6 @@
       "compressedBytes": 15131
     },
     {
-      "id": "sdshrine300",
-      "source": "/eqrequiem/objects/sdshrine300/final.glb.gz",
-      "sourceSha256": "a56f5379b1542f388d393f2746ebeac0e53b1ef97fa402effda5eba1f16505c6",
-      "contentSha256": "c533e9fe1e3e81994993de7aec294adfabb34621e6238c424374bb491ea624dd",
-      "compressedSha256": "2e8e826bfe32e57f484a607c0ed74961b18e2d6aa67b1ec58226cb70e6d6209a",
-      "bytes": 121868,
-      "compressedBytes": 80577
-    },
-    {
       "id": "sebanner",
       "source": "/eqrequiem/objects/sebanner/final.glb.gz",
       "sourceSha256": "461e8d8b678141d4c368f6539d3c0b5779300c4678e24312cee05329b458ba1f",
@@ -7331,24 +6874,6 @@
       "compressedBytes": 38491
     },
     {
-      "id": "serujewels301",
-      "source": "/eqrequiem/objects/serujewels301/final.glb.gz",
-      "sourceSha256": "a605ea5bbf347f8b91da323ac2a8ecda8e91410471ac2eb12b59ea7e83127c57",
-      "contentSha256": "9e23c3f05a3ff826dac93febaa5b87564cd1831c28516228114d5d482ff79a66",
-      "compressedSha256": "34e7925656d686dab7e7841c0fa0b9c64ac72761d29d51b6adfed8727b85ffcf",
-      "bytes": 17768,
-      "compressedBytes": 8024
-    },
-    {
-      "id": "serushopbag301",
-      "source": "/eqrequiem/objects/serushopbag301/final.glb.gz",
-      "sourceSha256": "5d1f0315e8bca5e23f3873ac234b463059f40052e9b711eaab25697598d84de9",
-      "contentSha256": "4d2487ab58aa509c2449061a6a181bd39226749a3d974074cbb45bd4d403f4e4",
-      "compressedSha256": "90ef722e2229ed0e8a8bc8715063cd053fa1fab1b233426d57365d6af270c885",
-      "bytes": 19536,
-      "compressedBytes": 13478
-    },
-    {
       "id": "shak",
       "source": "/eqrequiem/objects/shak/final.glb.gz",
       "sourceSha256": "8e5f680f528eaf5b40a27dc2030952bfa1e1363f1783d88d3f624e00849348a1",
@@ -7367,15 +6892,6 @@
       "compressedBytes": 47116
     },
     {
-      "id": "shbook306",
-      "source": "/eqrequiem/objects/shbook306/final.glb.gz",
-      "sourceSha256": "263758a8488573e54851b15e82f4d3de09581e0760fc6fad07ca8f85921a5c90",
-      "contentSha256": "e9e39803604b4f3c95ea93453d3fc4920ff5245cfce2d94eb8a42234dec58771",
-      "compressedSha256": "4d8d38bbfb6f34dc124ccea5982fbd84b19d5749f4cbf8b51e4fb25a363136e5",
-      "bytes": 36604,
-      "compressedBytes": 23214
-    },
-    {
       "id": "shovel1",
       "source": "/eqrequiem/objects/shovel1/final.glb.gz",
       "sourceSha256": "fb0e59cd6ed02c1626bcff18ad129c2b26bd39a6ebd01e6e1e28834eaf7e91ea",
@@ -7392,15 +6908,6 @@
       "compressedSha256": "56c094fa82eabfd7fec4d86e05483f50ebf9296fd6282ec9254494512f1703bb",
       "bytes": 19784,
       "compressedBytes": 17170
-    },
-    {
-      "id": "signgd301",
-      "source": "/eqrequiem/objects/signgd301/final.glb.gz",
-      "sourceSha256": "0d39547b39e8330c78171b01d006ff2bd274ed5504603bf8d967a9af2940dfef",
-      "contentSha256": "575fdeced59a09d02507e0b271a70c6fea6f5ab4b294276f19425f7cd67bf913",
-      "compressedSha256": "71c2f194241c2d5e43c674a47136bf31e6c4414e7dcd7c647f4bc364a4651e96",
-      "bytes": 33744,
-      "compressedBytes": 28923
     },
     {
       "id": "skullglow",
@@ -7707,33 +7214,6 @@
       "compressedSha256": "ef013603e2a069e773c449ff075fb517ba40275d98499c2dbe5a2fabe037d39a",
       "bytes": 23744,
       "compressedBytes": 20865
-    },
-    {
-      "id": "tchests303",
-      "source": "/eqrequiem/objects/tchests303/final.glb.gz",
-      "sourceSha256": "03089b2034f56225ce1931f4d8c84de1721c08a3f78fe380fa8dcacd2f9d8033",
-      "contentSha256": "423104454ad52e5ed49fa80c60903cb603fc09c34623385363cff7dfd84b82f1",
-      "compressedSha256": "0d90c6edc7703640708fc3063c5de16b6fc49368f58eb0d5f62d5b2f1f838d27",
-      "bytes": 80024,
-      "compressedBytes": 64789
-    },
-    {
-      "id": "templelife",
-      "source": "/eqrequiem/objects/templelife/final.glb.gz",
-      "sourceSha256": "67e8040d9b21adb84bcfa64c21d04bbc3d1342045f81e23965b03e84bb45709e",
-      "contentSha256": "0639c6cb95f73884bc8410c6333354002b59013341d2861b889fe9d5c6666031",
-      "compressedSha256": "ed4744550e2b4dc70bb601bd200eb83ebbeb53e605ad8ca4ed5b67ef5cb45970",
-      "bytes": 187564,
-      "compressedBytes": 119840
-    },
-    {
-      "id": "templelifeb",
-      "source": "/eqrequiem/objects/templelifeb/final.glb.gz",
-      "sourceSha256": "9bc7ff023e2299a55ae9353ff9d2b8e2240e654aef00ec7e2e903f816e597483",
-      "contentSha256": "3575307a3199bdfa31976d99a03df877a0eb67ff3698d60fd578ac3997572e21",
-      "compressedSha256": "36974c7750d998e693e238e5d7426103d92788b9276d0ba6e23890cbb6c99035",
-      "bytes": 16968,
-      "compressedBytes": 6050
     },
     {
       "id": "tent1",
@@ -8044,30 +7524,11 @@
     {
       "id": "tree1",
       "source": "/eqrequiem/objects/tree1/final.glb.gz",
-      "sourceSha256": "281eb1d6ee0cc7892683b2b18c0532e8294e4946e75bd47f18630a46e12d7078",
-      "contentSha256": "a73730f6d22d3e4a83b8141c6fe52f671cd9445ce90650e33d09b6d4ae54d270",
-      "compressedSha256": "3db0fa6b076826527e93129a963ce42b8e7b2dcbd9fbcc94581037f56dcd3053",
-      "bytes": 202916,
-      "compressedBytes": 117043,
-      "replacement": {
-        "passId": "qeynos2-object-pass-01",
-        "route": "procedural",
-        "candidate": "assets/src/world/objects/replacements/procedural/tree1/final.glb",
-        "candidateSha256": "281eb1d6ee0cc7892683b2b18c0532e8294e4946e75bd47f18630a46e12d7078",
-        "generatedFinal": "assets/generated/object-replacements/qeynos2-object-pass-01/tree1/final.glb",
-        "generatedFinalSha256": "bb50eaa5570992423d9f645df996f5789db398c07d9c88e187bf6de7236a2bc6",
-        "validation": "assets/generated/object-replacements/qeynos2-object-pass-01/tree1/validation.json",
-        "priorSourceSha256": "9b5eb25d8a3c651fc1dd40cc37fa9f6044ed310c1b9f080895c690d08c8b6d83",
-        "priorContentSha256": "6f4ec3b21a80d1e29ea985d4177a8771c5230e9596850e248cc0d317a0639718",
-        "legacyFit": {
-          "scale": 0.988734530687635,
-          "translation": [
-            1.4106532331766413,
-            -0.5306048393249512,
-            1.2728607175556241
-          ]
-        }
-      }
+      "sourceSha256": "9b5eb25d8a3c651fc1dd40cc37fa9f6044ed310c1b9f080895c690d08c8b6d83",
+      "contentSha256": "6f4ec3b21a80d1e29ea985d4177a8771c5230e9596850e248cc0d317a0639718",
+      "compressedSha256": "3bbe56fcc3a60c2097a5ff4bdf95a29f437ef0c1affb34e4029db6165914afcf",
+      "bytes": 27784,
+      "compressedBytes": 25122
     },
     {
       "id": "tree10",
@@ -8374,96 +7835,6 @@
       "compressedSha256": "2be6b5ba59fc9feea5e87f04af490694b70f166846f3102402e9ae8a46858f31",
       "bytes": 9180,
       "compressedBytes": 8040
-    },
-    {
-      "id": "vsbench301",
-      "source": "/eqrequiem/objects/vsbench301/final.glb.gz",
-      "sourceSha256": "f02d070ce7731a272043705ec77163aebc95ccaae251413f84ef7dd1554375ab",
-      "contentSha256": "4a9e5b58c684917ccc903fa27f4398edb6bacf24691c1c8f39021523c4883aa1",
-      "compressedSha256": "68030489aa2495e37ba25770f1d631c3320345b992267cc2c523fb3fce8739bc",
-      "bytes": 89488,
-      "compressedBytes": 81606
-    },
-    {
-      "id": "vsbench304",
-      "source": "/eqrequiem/objects/vsbench304/final.glb.gz",
-      "sourceSha256": "7777c3032bb1e0d9e85523a316f3e16b80f54ca2fe8ab6915c530c240cc48413",
-      "contentSha256": "3ffdf5105c7bc68ec7aaa6aecfd876965acec3ce25f8df20a7f0982f100b4f50",
-      "compressedSha256": "b8ae3bc7edc244914f796b862571b06190b4e683c814fe2702b6edd5826f9a61",
-      "bytes": 29544,
-      "compressedBytes": 20374
-    },
-    {
-      "id": "vsbni302",
-      "source": "/eqrequiem/objects/vsbni302/final.glb.gz",
-      "sourceSha256": "420c6153b0c958549a668cd69eeaf84ab5fee89cb27473bd0f97c7f6e4423a0b",
-      "contentSha256": "fd373d903b7a77d3ceaeaebf7c9e56efcc6748e3c6d197b52812a8075fc54e5f",
-      "compressedSha256": "fe4140d532779e25a204184dedf1bdc2466f3b211853ac83fb9bca8ab9b1d2d5",
-      "bytes": 47104,
-      "compressedBytes": 32363
-    },
-    {
-      "id": "vsbstool301",
-      "source": "/eqrequiem/objects/vsbstool301/final.glb.gz",
-      "sourceSha256": "afa4f1ff7085de57d54efe14c23a7988b1bac3e7cf6d5ab6ed869a3a34e620de",
-      "contentSha256": "e5c6edfcfda4d60ccdc1b774861c778a004ef29a5094f0fb0ab29381f940e20d",
-      "compressedSha256": "00dbad93c507d01f178892c8790d701bb8821364b9d9b1d6ce62b5952550d797",
-      "bytes": 21356,
-      "compressedBytes": 8503
-    },
-    {
-      "id": "vscholder303",
-      "source": "/eqrequiem/objects/vscholder303/final.glb.gz",
-      "sourceSha256": "c28739f43c0b6d3477db1d961e59e481dae2bc07d867cc70eb97c895cebfadc6",
-      "contentSha256": "7aa9de9474af24f653ce5a26ad60a1d3eec6f68850b7a86b767cabf9cd1bedac",
-      "compressedSha256": "1c69b7542abff07efea750fd1229de93ac13369927c330699540caeee9813d36",
-      "bytes": 18480,
-      "compressedBytes": 14064
-    },
-    {
-      "id": "vstable304",
-      "source": "/eqrequiem/objects/vstable304/final.glb.gz",
-      "sourceSha256": "d08c6903a22f93498b3683ac9956314ef3a9a569b1383f1a5fdc0cf647caf44b",
-      "contentSha256": "f0b7597a108cd6c20badc869f96a895cc1d5cc49174fe44c0dca09e9321626b3",
-      "compressedSha256": "92cfec4fd33b70ef5c3d314ea7e4114a20ac75b1c04ecf68b35e7323a355ed2c",
-      "bytes": 15896,
-      "compressedBytes": 7541
-    },
-    {
-      "id": "vswracks301",
-      "source": "/eqrequiem/objects/vswracks301/final.glb.gz",
-      "sourceSha256": "3c4f90ca7f4d1768d6037e715876b9e3f975eadd74ad972807a208c9add1e5a6",
-      "contentSha256": "dca4dc2cc4fac30cda4236c169c6c63df4b5f799e84fa82ba90240fff40b17f2",
-      "compressedSha256": "b5b5ae6e9a5ab0c1cc958f9cccbdd15520db8b457ef405dc77a34d948b7fd7d2",
-      "bytes": 72876,
-      "compressedBytes": 41562
-    },
-    {
-      "id": "vswracks302",
-      "source": "/eqrequiem/objects/vswracks302/final.glb.gz",
-      "sourceSha256": "bdbb93196e76c4cc4ff68f2714e8633b9f0400222a8a397ccdb51e515830fca6",
-      "contentSha256": "57f66e0b9d322015edba51bd2de7e39fb853838e48e7b5fc45ea0f9172c5f963",
-      "compressedSha256": "71ab6607d466f80d6428d0bc196a055ddf3d00cb52a19419240858bc9e28b70e",
-      "bytes": 112688,
-      "compressedBytes": 80091
-    },
-    {
-      "id": "vswracks303",
-      "source": "/eqrequiem/objects/vswracks303/final.glb.gz",
-      "sourceSha256": "d5514a9c21300ecc775f0a39b235accabf026fe1448c33c4ef49dc892f7bac69",
-      "contentSha256": "d5519b3670d153663baa09673c52337a08d6fe733ae1796522bcaf932370c9f0",
-      "compressedSha256": "41114e51bcd03a3c68fdfafd80d5d60b9a1c6c710cdff2ed96898342750907c2",
-      "bytes": 78932,
-      "compressedBytes": 41465
-    },
-    {
-      "id": "vswracks304",
-      "source": "/eqrequiem/objects/vswracks304/final.glb.gz",
-      "sourceSha256": "0a0533de1969351909d0c192d77a02cc1648ff06843c955bcf8040562b978087",
-      "contentSha256": "33d2418d6880d8f64d5df7fdb94e0880a46e196d42c114673f0456109b108eb8",
-      "compressedSha256": "a9028ee2d9bcb8eebb520166a611b77249b18904d0da1a3354cf96a8c4ff93fa",
-      "bytes": 49360,
-      "compressedBytes": 29792
     },
     {
       "id": "wagon",
@@ -8779,32 +8150,6 @@
       "compressedSha256": "84375310d23a078bcb505fe4b308599702db001b15d7343a08a8086e3bdf074e",
       "bytes": 21724,
       "compressedBytes": 20747
-    }
-  ],
-  "replacementPasses": [
-    {
-      "passId": "qeynos2-object-pass-01",
-      "manifest": "assets/src/world/objects/replacements/qeynos2-pass-01.json",
-      "manifestSha256": "72aca922c136abbdf17f663f551c56fe603f7177717193671296bcd6500a5935",
-      "promoted": [
-        "barrel3",
-        "chair",
-        "recttable",
-        "tree1"
-      ],
-      "backup": "assets/generated/object-replacements/qeynos2-object-pass-01/backup"
-    },
-    {
-      "passId": "qeynos2-object-pass-02-01",
-      "manifest": "assets/src/world/objects/replacements/qeynos2-pass-02-01.json",
-      "manifestSha256": "9e93f64a5005a43304843bffa90219dda5c56e9e797f7e9cb1ef244fd169aeca",
-      "promoted": [
-        "barrel4",
-        "cart",
-        "chair2",
-        "chair2d"
-      ],
-      "backup": "assets/generated/object-replacements/qeynos2-object-pass-02-01/backup"
     }
   ]
 }

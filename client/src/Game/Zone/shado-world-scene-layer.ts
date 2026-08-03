@@ -7,13 +7,14 @@ import {
   ShadoVisibilityBits,
   ShadoWorldVisibilityCoordinator,
   type ShadoWorldSpatialPackage,
+  type ShadoWorldCollisionData,
 } from "@knervous/shado/world";
 import {
   flattenWorldFrustumPlanes,
   WORLD_VISIBILITY_INTERVAL_MS,
 } from "./world-visibility-policy";
 
-const WORLD_PACKAGE_REVISION = "babylon-rhs-y-up-v5-hybrid-lighting-2x-v3";
+const WORLD_PACKAGE_REVISION = "babylon-rhs-y-up-v5-region-pvs-collision-v2";
 
 export class ShadoWorldSceneLayer {
   private elapsedMs = WORLD_VISIBILITY_INTERVAL_MS;
@@ -21,7 +22,7 @@ export class ShadoWorldSceneLayer {
   private constructor(
     public readonly world: ShadoWorldSpatialPackage,
     public readonly coordinator: ShadoWorldVisibilityCoordinator,
-    public readonly collisionMesh: BJS.Mesh,
+    public readonly collision: ShadoWorldCollisionData,
     private readonly sourceContainer: BJS.AssetContainer,
     private readonly runtimeRoot: BJS.TransformNode,
     private readonly chunks: BJS.Mesh[],
@@ -94,7 +95,6 @@ export class ShadoWorldSceneLayer {
     this.coordinator.dispose();
     this.sourceContainer.dispose();
     this.chunks.forEach((chunk) => chunk.dispose());
-    this.collisionMesh.dispose();
     this.runtimeRoot.dispose();
   }
 
@@ -152,18 +152,15 @@ export class ShadoWorldSceneLayer {
       );
       const chunks = createRenderChunks(world, sources);
       validateRenderChunks(world, chunks);
-      const collisionMesh = createCollisionMesh(collision, scene);
-      collisionMesh.name = `ShadoWorldCollision:${world.name}`;
-      collisionMesh.isVisible = false;
-      collisionMesh.isPickable = false;
-      collisionMesh.setParent(zoneContainer);
       const coordinator = await ShadoWorldVisibilityCoordinator.create(world, {
         entityVisibilityWorker: "required",
+        worldObjectVisibilityFlags: "compact-only",
+        worldObjectVisibilityHz: 30,
       });
       const layer = new ShadoWorldSceneLayer(
         world,
         coordinator,
-        collisionMesh,
+        collision,
         sourceContainer,
         runtimeRoot,
         chunks,
@@ -172,7 +169,8 @@ export class ShadoWorldSceneLayer {
       console.info(
         `[ZoneManager] Loaded promoted world scene ${world.name}: ` +
           `${world.triangleCount} triangles, ${chunks.length} render chunks, ` +
-          `${world.collision.triangleCount} collision triangles, ` +
+          `${world.collision.sourceTriangleCount} source collision triangles, ` +
+          `${world.collision.chunkCount} physics chunks, ` +
           `layout=${world.integrity.layoutHash}`,
       );
       return layer;
@@ -279,7 +277,13 @@ function createRenderChunks(
     );
     clone.isPickable = true;
     clone.collisionMask = 0x0000dad1;
-    clone.alwaysSelectAsActiveMesh = false;
+    const persistent = primitive.persistent === true;
+    clone.alwaysSelectAsActiveMesh = persistent;
+    clone.metadata = {
+      ...clone.metadata,
+      shadoPersistentMesh: persistent,
+      shadoCullingPolicy: persistent ? "never-cull" : "standard",
+    };
     clone.useVertexColors = source.isVerticesDataPresent(
       BABYLON.VertexBuffer.ColorKind,
     );
@@ -372,20 +376,4 @@ function validateRenderChunks(
       );
     }
   }
-}
-
-function createCollisionMesh(
-  collision: ReturnType<typeof decodeShadoWorldCollision>,
-  scene: BJS.Scene,
-): BJS.Mesh {
-  const mesh = new BABYLON.Mesh("ShadoWorldCollision", scene);
-  mesh.setVerticesData(
-    BABYLON.VertexBuffer.PositionKind,
-    collision.positions,
-    false,
-    3,
-  );
-  mesh.setIndices(collision.indices);
-  mesh.refreshBoundingInfo();
-  return mesh;
 }

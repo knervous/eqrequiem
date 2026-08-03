@@ -56,7 +56,7 @@ test("render lifecycle owns initial and CSS-driven backing-buffer synchronizatio
   assert.match(manager, /WebGPU initialization failed; using WebGL/);
   assert.match(wrapper, /new ResizeObserver\(GameManager\.instance\.resize\)/);
   assert.match(wrapper, /GameManager\.instance\.resize\(\)/);
-  assert.doesNotMatch(worldSceneLayer, /reduceWorld\(/);
+  assert.match(worldSceneLayer, /reduceWorld\(/);
   assert.doesNotMatch(worldSceneLayer, /chunk\.setIndices\(/);
   assert.match(worldSceneLayer, /validateRenderChunks\(world, chunks\)/);
 });

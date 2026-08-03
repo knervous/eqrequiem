@@ -359,6 +359,22 @@ export class ShadoEntityPool {
     this.shado.applyVisibilityReduction(indices);
   }
 
+  /**
+   * Presentation scenes such as character select do not have a world spatial
+   * package and contain too few actors to benefit from frustum reduction.
+   * Compact their explicitly enabled actors without running the zone culler.
+   */
+  public applyCoarseVisibility(): void {
+    const indices: number[] = [];
+    for (let index = 0; index < this.shado.children.length; index++) {
+      const actor = this.shado.children[index];
+      if (!(actor.stateFlags & REQUIEM_ACTOR_ACTIVE)) continue;
+      if (!(this.coarseVisibility.get(actor) ?? false)) continue;
+      indices.push(index);
+    }
+    this.shado.applyVisibilityReduction(indices);
+  }
+
   public dispose(): void {
     this.visibilitySink?.detachPool(this);
     this.visibilitySink = null;

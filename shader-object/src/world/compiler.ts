@@ -8,6 +8,7 @@ import { stampShadoWorldIntegrity, validateShadoWorldPackage } from './validatio
 import { validateShadoWorldAuthoring } from './authoring';
 import { encodeShadoWorldCollision } from './collision';
 import { compileShadoWorldGrass } from './grass';
+import { compileShadoWorldVisibility } from './visibility';
 
 const LEAF_BIT = 0x80000000;
 const EMPTY_REF = 0xffffffff;
@@ -46,6 +47,14 @@ export function compileShadoWorld(
     ? validateShadoWorldAuthoring(options.authoring, options.name)
     : undefined;
   const tileSize = positive(options.tileSize ?? 256, 'tileSize');
+  const visibilityRegionSize = positive(
+    options.visibilityRegionSize ?? Math.max(128, tileSize),
+    'visibilityRegionSize'
+  );
+  const visibilityMaxDistance = positive(
+    options.visibilityMaxDistance ?? 2048,
+    'visibilityMaxDistance'
+  );
   const maxTriangles = Math.floor(
     positive(options.maxClusterTriangles ?? 128, 'maxClusterTriangles')
   );
@@ -149,7 +158,9 @@ export function compileShadoWorld(
   const compiledObjects = compileObjects(authoring, tileIds, originX, originZ, tileSize);
   const grass = compileShadoWorldGrass(primitives, options.grass);
   const navigationModifiers = compileNavigationModifiers(authoring);
-  const collision = encodeShadoWorldCollision(options.collisionPrimitives ?? primitives);
+  const collision = encodeShadoWorldCollision(options.collisionPrimitives ?? primitives, {
+    chunkSize: options.physicsChunkSize,
+  });
 
   const clusterIndices: number[] = [];
   const firstIndex: number[] = [];
@@ -187,15 +198,25 @@ export function compileShadoWorld(
     for (const id of ids) clusters[id].renderChunk = chunk;
   }
   const bvh = buildQuantizedBvh(clusters, worldBounds);
-
-  const wordsPerRow = Math.ceil(tileKeys.length / 32);
-  const pvsWords = Array.from({ length: tileKeys.length * wordsPerRow }, () => 0);
-  for (let row = 0; row < tileKeys.length; row++) {
-    for (let cell = 0; cell < tileKeys.length; cell++) {
-      const word = row * wordsPerRow + (cell >>> 5);
-      pvsWords[word] = (pvsWords[word] | (1 << (cell & 31))) >>> 0;
-    }
+  const persistentRenderCells = new Uint8Array(tileKeys.length);
+  for (const cluster of clusters) {
+    const primitive = primitives[cluster.primitive];
+    if (
+      /distant-horizon/i.test(primitive.visibilityProfile ?? '') ||
+      /persistent/i.test(primitive.pvsPriority ?? '')
+    ) persistentRenderCells[cluster.cellId] = 1;
   }
+  const visibility = compileShadoWorldVisibility({
+    bounds: worldBounds,
+    regionSize: visibilityRegionSize,
+    maxDistance: visibilityMaxDistance,
+    renderCellCenters: tileKeys.map(([x, z]) => [
+      originX + (x + 0.5) * tileSize,
+      originZ + (z + 0.5) * tileSize,
+    ]),
+    persistentRenderCells,
+    collisionPrimitives: options.collisionPrimitives ?? primitives,
+  });
   const world: ShadoWorldSpatialPackage = {
     kind: 'shado.world.spatial',
     version: 5,
@@ -218,6 +239,9 @@ export function compileShadoWorld(
       name: primitive.name,
       material: materialIds.get(primitive.material || '__default')!,
       vertexCount: primitive.positions.length / 3,
+      persistent:
+        /distant-horizon/i.test(primitive.visibilityProfile ?? '') ||
+        /persistent/i.test(primitive.pvsPriority ?? ''),
     })),
     clusterIndices,
     renderChunkClusters,
@@ -294,6 +318,7 @@ export function compileShadoWorld(
       firstCluster: tileFirst,
       clusterCount: tileCount,
     },
+    visibility,
     navigation: {
       runtimeToRecast: 'z-y-negative-x',
       modifiers: {
@@ -309,9 +334,6 @@ export function compileShadoWorld(
         sizeZ: navigationModifiers.map(modifier => modifier.sizeZ),
       },
     },
-    // With no trustworthy visual portal topology in the source GLB, every outdoor
-    // cell remains a conservative candidate. Loaded/distance masks do the pruning.
-    pvs: { wordsPerRow, words: pvsWords },
     integrity: { algorithm: 'fnv1a32-layout', layoutHash: '' },
     bvh,
   };

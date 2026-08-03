@@ -205,9 +205,8 @@ export class VATBuilder {
       groups.length > 0 && (groups[0] as any).__fromSceneBeginAnimation;
 
     for (const animationGroup of groups) {
-      const from = Math.floor(animationGroup.from ?? 0);
-      const to = Math.floor(animationGroup.to ?? from);
-      const frames = Math.max(0, to - from + 1) | 0;
+      const sampleFrames = computeGroupSampleFrames(animationGroup, opts.defaultFPS ?? 60);
+      const frames = sampleFrames.length;
       if (frames <= 0) continue;
 
       skeleton.returnToRest();
@@ -221,7 +220,7 @@ export class VATBuilder {
 
       for (let f = 0; f < frames; f++) {
         // Advance to exact frame
-        const targetFrame = from + f;
+        const targetFrame = sampleFrames[f];
 
         if (useSceneBeginAnimation) {
           // Fallback: Use scene.beginAnimation for .babylon files
@@ -231,10 +230,10 @@ export class VATBuilder {
           // Use the animation group's built-in frame advance
           animationGroup.goToFrame(targetFrame);
         }
-        // Preserve the evaluation order used by the original, validated DQ
-        // baker. In particular, this synchronizes animations targeting linked
-        // glTF TransformNodes before the Bone matrices are sampled.
-        scene.render();
+        // captureSkeletonPalette() calls skeleton.prepare(true), which copies
+        // linked glTF TransformNode values into the bones. Do not render here:
+        // NullEngine advances its animatable clock during render() and can
+        // overwrite the exact pose selected by goToFrame().
         const skinPalette = captureSkeletonPalette(mesh, skeleton, opts.paletteBasis);
 
         // Write one "frame-row": split across tilesX rows
@@ -408,9 +407,8 @@ export class VATBuilder {
     let frameRowBase = 0;
     let sampled = 0;
     for (const animationGroup of groups) {
-      const from = Math.floor(animationGroup.from ?? 0);
-      const to = Math.floor(animationGroup.to ?? from);
-      const frames = Math.max(0, to - from + 1) | 0;
+      const sampleFrames = computeGroupSampleFrames(animationGroup, opts.defaultFPS ?? 60);
+      const frames = sampleFrames.length;
       if (!frames) continue;
       skeleton.returnToRest();
       if (!useSceneBeginAnimation) {
@@ -419,10 +417,9 @@ export class VATBuilder {
         animationGroup.pause();
       }
       for (let frame = 0; frame < frames; frame++) {
-        const target = from + frame;
+        const target = sampleFrames[frame];
         if (useSceneBeginAnimation) scene.beginAnimation(skeleton, target, target, false, 1);
         else animationGroup.goToFrame(target);
-        scene.render();
         const skinPalette = captureSkeletonPalette(mesh, skeleton, opts.paletteBasis);
         matrices.set(
           skinPalette.subarray(0, bones * 16),
@@ -866,15 +863,46 @@ function inferFPSFromGroup(g: AnimationGroup, fallback = 60): number {
   return (ta?.animation?.framePerSecond ?? fallback) || fallback;
 }
 
+/**
+ * glTF stores key times in seconds, and Babylon maps those seconds onto its
+ * 60-fps animation clock. UE2k4 BAT assets retain their actual sample rate and
+ * inclusive source frame range in animation extras. Prefer those values so a
+ * 30-fps source clip is not needlessly baked at 60 rows per second.
+ */
+function computeGroupSampleFrames(g: AnimationGroup, fallbackFPS: number): number[] {
+  const from = Number(g.from ?? 0);
+  const to = Number(g.to ?? from);
+  if (!Number.isFinite(from) || !Number.isFinite(to) || to < from) return [];
+
+  const extras = (g as any).metadata?.gltf?.extras;
+  const sourceFPS = Number(extras?.VAT_Rate);
+  const sourceStart = Number(extras?.VAT_FrameStart);
+  const sourceEnd = Number(extras?.VAT_FrameEnd);
+  const sourceCount = Number.isFinite(sourceStart) && Number.isFinite(sourceEnd)
+    ? Math.max(0, Math.floor(sourceEnd) - Math.floor(sourceStart) + 1)
+    : 0;
+  const engineFPS = inferFPSFromGroup(g, fallbackFPS);
+
+  if (sourceCount > 0 && Number.isFinite(sourceFPS) && sourceFPS > 0 && engineFPS > 0) {
+    const step = engineFPS / sourceFPS;
+    return Array.from({ length: sourceCount }, (_, index) => from + index * step);
+  }
+
+  const first = Math.floor(from);
+  const last = Math.floor(to);
+  return Array.from({ length: Math.max(0, last - first + 1) }, (_, index) => first + index);
+}
+
 function computeClipFrameTable(groups: AnimationGroup[], defaultFPS: number) {
   const clips: DQClipInfo[] = [];
   let framesTotal = 0;
   for (const g of groups) {
-    const from = Math.floor(g.from ?? 0);
-    const to = Math.floor(g.to ?? from);
-    const frames = Math.max(0, to - from + 1) | 0;
+    const frames = computeGroupSampleFrames(g, defaultFPS).length;
     if (frames <= 0) continue;
-    const fps = inferFPSFromGroup(g, defaultFPS);
+    const metadataFPS = Number((g as any).metadata?.gltf?.extras?.VAT_Rate);
+    const fps = Number.isFinite(metadataFPS) && metadataFPS > 0
+      ? metadataFPS
+      : inferFPSFromGroup(g, defaultFPS);
     clips.push({
       name: g.name || `clip_${clips.length}`,
       from: framesTotal, // absolute row start
@@ -899,9 +927,8 @@ function detectAnimatedScale(
   let hasAnisotropic = false;
 
   for (const ag of groups) {
-    const from = Math.floor(ag.from ?? 0);
-    const to = Math.floor(ag.to ?? from);
-    const frames = Math.max(0, to - from + 1) | 0;
+    const sampleFrames = computeGroupSampleFrames(ag, 60);
+    const frames = sampleFrames.length;
     if (frames <= 0) continue;
 
     skeleton.returnToRest();
@@ -910,9 +937,7 @@ function detectAnimatedScale(
     ag.pause();
 
     for (let f = 0; f < frames; f++) {
-      ag.goToFrame(from + f);
-      scene.render();
-      skeleton.computeAbsoluteMatrices(true);
+      ag.goToFrame(sampleFrames[f]);
       const palette = captureSkeletonPalette(mesh, skeleton);
 
       for (let b = 0; b < skeleton.bones.length; b++) {

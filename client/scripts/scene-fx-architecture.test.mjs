@@ -92,6 +92,8 @@ test("client batches geometry and FX through Shado spatial visibility", async ()
   assert.match(visibility, /SCENE_FX_CULL_PROFILES/);
   assert.match(visibility, /coordinator\.reduceWorld/);
   assert.match(visibility, /coordinator\.reduceEntities/);
+  assert.match(visibility, /visibility\.flags\[index\]/);
+  assert.doesNotMatch(visibility, /new Set\(visibility\.visibleIndices\)/);
   assert.match(visibility, /if \(!mesh\.hasThinInstances\)/);
   assert.match(zoneFx, /already compact primitive\/cell batches/);
   assert.match(zoneFx, /profile: "near-detail"/);

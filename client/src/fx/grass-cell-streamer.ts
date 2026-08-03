@@ -41,6 +41,10 @@ export class PromotedGrassCellStreamer {
     private readonly farTemplate: BJS.Mesh,
     private readonly farMaterial: BJS.Material,
     private readonly visibility: ShadoSceneFxVisibility,
+    private readonly terrainTintByCell: ReadonlyMap<
+      string,
+      readonly [number, number, number]
+    > = new Map(),
     private readonly loadRadius = GRASS_LOAD_RADIUS,
     private readonly unloadRadius = GRASS_UNLOAD_RADIUS,
   ) {
@@ -84,6 +88,7 @@ export class PromotedGrassCellStreamer {
         }
         const cellIndex = this.cellByKey.get(`${x}:${z}`);
         if (cellIndex === undefined) continue;
+        const terrainTint = this.terrainTintByCell.get(`${x}:${z}`);
         let entry = this.resident.get(cellIndex);
         if (!entry) {
           const far = createGrassCellFromPackage(
@@ -99,6 +104,7 @@ export class PromotedGrassCellStreamer {
               widthScale: 2.35,
               heightScale: 0.58,
               seedSalt: 0x4f1b_bcdc,
+              terrainTint,
             },
           );
           const unregister = this.visibility.registerMesh(far.mesh, {
@@ -122,7 +128,7 @@ export class PromotedGrassCellStreamer {
             this.grass,
             cellIndex,
             0.65,
-            { lod: "near" },
+            { lod: "near", terrainTint },
           );
           const unregister = this.visibility.registerMesh(near.mesh, {
             id: near.mesh.name,

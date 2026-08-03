@@ -220,6 +220,8 @@ function packStats(result) {
     tiles: result.tileCount,
     collisionVertices: result.collisionVertexCount,
     collisionTriangles: result.collisionTriangleCount,
+    collisionSourceTriangles: result.collisionSourceTriangleCount,
+    collisionChunks: result.collisionChunkCount,
     lightingStatus: result.lightingStatus,
     lightingUv2ReadyChunks: result.lightingUv2ReadyChunkCount,
   };
@@ -303,6 +305,10 @@ try {
     // Spatially bounded render cells. Streaming residency remains a separate
     // payload concern rather than overloading this render-culling grid.
     tileSize: 32,
+    // Finer continuous regions make room/wall occlusion useful while render
+    // chunks remain independently material/primitive bounded.
+    visibilityRegionSize: 64,
+    visibilityMaxDistance: 1280,
     maxClusterTriangles: 128,
     grass: {
       cellSize: 24,

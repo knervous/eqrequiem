@@ -118,6 +118,7 @@ test("ambient presentation orbits the camera and owns observer cleanup", () => {
 test("character preview is render-only and preserves its authored anchor", () => {
   assert.ok(characterSelectSource.includes("await this.initialize()"));
   assert.ok(characterSelectSource.includes("EntityCache.initialize("));
+  assert.ok(characterSelectSource.includes("disableCulling: true"));
   assert.ok(
     characterSelectSource.indexOf("EntityCache.initialize(") <
       characterSelectSource.indexOf(

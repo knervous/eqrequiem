@@ -1,5 +1,5 @@
 import type { ShadoWorldSpatialPackage, WorldVec3 } from './types';
-import { ShadoWorldReducer } from './ShadoWorldReducer';
+import { ShadoWorldReducer, type ShadoWorldReductionView } from './ShadoWorldReducer';
 import {
   ShadoEntityVisibilityWorker,
   type ShadoEntityVisibilityWorkerResult,
@@ -18,12 +18,6 @@ export const ShadoVisibilityBits = {
   Visible: 1 << 7,
 } as const;
 
-const CELL_CANDIDATE_BITS =
-  ShadoVisibilityBits.Pvs |
-  ShadoVisibilityBits.Loaded |
-  ShadoVisibilityBits.Phase |
-  ShadoVisibilityBits.PortalReachable;
-
 export type ShadoWorldVisibilityMasks = {
   /** Byte-per-cell sidecar; zero means the cell is not resident. */
   loadedCells?: ArrayLike<number>;
@@ -33,13 +27,9 @@ export type ShadoWorldVisibilityMasks = {
   portalReachableCells?: ArrayLike<number>;
 };
 
-export type ShadoWorldVisibilityFrame = {
+export type ShadoWorldVisibilityFrame = ShadoWorldReductionView & {
   cameraCell: number;
-  visibleClusters: Uint32Array;
-  visiblePackets: Uint32Array;
-  clusterFlags: Uint8Array;
-  cellFlags: Uint8Array;
-  packetFlags: Uint8Array;
+  cameraRegion: number;
 };
 
 export type ShadoEntityVisibilitySoA = {
@@ -91,15 +81,12 @@ export type ShadoVisibilityReducibleContainer = {
 
 /**
  * Coordinates immutable world visibility with mutable entity visibility.
- * The WASM reducer owns BVH traversal; this layer converts its cluster output
- * into cell/packet masks and intersects those masks with the entity SoA pass.
+ * WASM owns PVS expansion, region policy projection, BVH traversal, policy
+ * intersection, and compaction. This layer only locates camera topology and
+ * coordinates immutable-world and mutable-entity passes.
  */
 export class ShadoWorldVisibilityCoordinator {
   private readonly tileByCoordinate = new Map<string, number>();
-  private readonly clusterFlagsValue: Uint8Array;
-  private readonly cellFlagsValue: Uint8Array;
-  private readonly packetFlagsValue: Uint8Array;
-  private readonly pvsCellFlags: Uint8Array;
   private entityX = new Float32Array(0);
   private entityY = new Float32Array(0);
   private entityZ = new Float32Array(0);
@@ -121,10 +108,6 @@ export class ShadoWorldVisibilityCoordinator {
     world.tiles.x.forEach((x, cell) => {
       this.tileByCoordinate.set(`${x},${world.tiles.z[cell]}`, cell);
     });
-    this.clusterFlagsValue = new Uint8Array(world.clusters.radius.length);
-    this.cellFlagsValue = new Uint8Array(world.tiles.x.length);
-    this.packetFlagsValue = new Uint8Array(world.packets.cellId.length);
-    this.pvsCellFlags = new Uint8Array(world.tiles.x.length);
   }
 
   public static async create(
@@ -185,52 +168,20 @@ export class ShadoWorldVisibilityCoordinator {
     camera: WorldVec3,
     masks: ShadoWorldVisibilityMasks = {}
   ): ShadoWorldVisibilityFrame {
-    const frustumClusters = this.reducer.queryFrustum(planes);
     const cameraCell = this.locateCell(camera[0], camera[2]);
-    this.resolvePvs(cameraCell);
-    this.clusterFlagsValue.fill(0);
-    for (let cell = 0; cell < this.cellFlagsValue.length; cell++) {
-      let flags = this.pvsCellFlags[cell];
-      if (maskPasses(masks.loadedCells, cell)) flags |= ShadoVisibilityBits.Loaded;
-      if (maskPasses(masks.phaseCells, cell)) flags |= ShadoVisibilityBits.Phase;
-      if (maskPasses(masks.portalReachableCells, cell)) {
-        flags |= ShadoVisibilityBits.PortalReachable;
-      }
-      this.cellFlagsValue[cell] = flags;
-    }
-    this.packetFlagsValue.fill(0);
-    const visibleClusters: number[] = [];
-
-    for (const cluster of frustumClusters) {
-      const cell = this.world.clusters.cellId[cluster];
-      const cellPolicy = this.cellFlagsValue[cell] & CELL_CANDIDATE_BITS;
-      const candidate = cellPolicy === CELL_CANDIDATE_BITS;
-      let flags = cellPolicy | ShadoVisibilityBits.Geometry | ShadoVisibilityBits.Frustum;
-      if (candidate) flags |= ShadoVisibilityBits.Visible;
-      this.clusterFlagsValue[cluster] = flags;
-      if (!candidate) continue;
-      visibleClusters.push(cluster);
-      this.cellFlagsValue[cell] |=
-        ShadoVisibilityBits.Geometry | ShadoVisibilityBits.Frustum | ShadoVisibilityBits.Visible;
-      const packet = this.world.clusters.materialPacket[cluster];
-      this.packetFlagsValue[packet] |=
-        cellPolicy |
-        ShadoVisibilityBits.Geometry |
-        ShadoVisibilityBits.Frustum |
-        ShadoVisibilityBits.Visible;
-    }
-
-    const visiblePackets: number[] = [];
-    for (let i = 0; i < this.packetFlagsValue.length; i++) {
-      if (this.packetFlagsValue[i] & ShadoVisibilityBits.Visible) visiblePackets.push(i);
-    }
-    return {
+    const cameraRegion = this.locateRegion(camera[0], camera[2]);
+    const reduced = this.reducer.reduceWorld({
+      planes,
       cameraCell,
-      visibleClusters: Uint32Array.from(visibleClusters),
-      visiblePackets: Uint32Array.from(visiblePackets),
-      clusterFlags: this.clusterFlagsValue,
-      cellFlags: this.cellFlagsValue,
-      packetFlags: this.packetFlagsValue,
+      cameraRegion,
+      loadedCells: masks.loadedCells,
+      phaseCells: masks.phaseCells,
+      portalReachableCells: masks.portalReachableCells,
+    });
+    return {
+      ...reduced,
+      cameraCell,
+      cameraRegion,
     };
   }
 
@@ -249,18 +200,22 @@ export class ShadoWorldVisibilityCoordinator {
       this.entityRadius.fill(defaultRadius, 0, count);
       radius = this.entityRadius;
     }
-    return this.reducer.reduceEntities({
+    const result = this.reducer.reduceEntities({
       count,
       positionX: entities.positionX,
       positionY: entities.positionY,
       positionZ: entities.positionZ,
       radius,
-      planes,
-      cellFlags: frame.cellFlags,
+      planesPtr: frame.planesPtr,
+      cellFlagsPtr: frame.regionFlagsSlice.ptr,
       camera: options.camera,
       maxDistance: options.maxDistance,
       outsideWorldVisible: options.outsideWorldVisible,
     });
+    // Growing the synchronous entity scratch slab can detach prior WASM views;
+    // pointers remain stable, so refresh the frame without copying any bytes.
+    this.reducer.refreshWorldReductionViews(frame);
+    return result;
   }
 
   /** Convenience bridge for the existing AoS actor records and SoA flag planes. */
@@ -311,15 +266,15 @@ export class ShadoWorldVisibilityCoordinator {
       try {
         const latest = this.worldObjectWorker.acquireLatest();
         if (this.worldObjectMinimumIntervalMs > 0) {
-          this.updateVisibilityEpochs(planes, frame.cellFlags, options);
-          this.worldObjectWorker.requestScheduled(planes, frame.cellFlags, options, {
+          this.updateVisibilityEpochs(planes, frame.regionFlags, options);
+          this.worldObjectWorker.requestScheduled(planes, frame.regionFlags, options, {
             cameraEpoch: this.cameraEpoch,
             cellEpoch: this.cellEpoch,
             policyEpoch: this.policyEpoch,
             minimumIntervalMs: this.worldObjectMinimumIntervalMs,
           });
         } else {
-          this.worldObjectWorker.request(planes, frame.cellFlags, options);
+          this.worldObjectWorker.request(planes, frame.regionFlags, options);
         }
         if (latest) {
           this.lastWorldObjectVisibility = this.groupWorldObjectVisibility(latest);
@@ -410,18 +365,14 @@ export class ShadoWorldVisibilityCoordinator {
     return this.tileByCoordinate.get(`${tileX},${tileZ}`) ?? -1;
   }
 
-  private resolvePvs(cameraCell: number): void {
-    this.pvsCellFlags.fill(0);
-    const pvs = this.world.pvs;
-    if (cameraCell < 0 || !pvs) {
-      this.pvsCellFlags.fill(ShadoVisibilityBits.Pvs);
-      return;
-    }
-    const row = cameraCell * pvs.wordsPerRow;
-    for (let cell = 0; cell < this.pvsCellFlags.length; cell++) {
-      const word = pvs.words[row + (cell >>> 5)] >>> 0;
-      if (word & (1 << (cell & 31))) this.pvsCellFlags[cell] = ShadoVisibilityBits.Pvs;
-    }
+  public locateRegion(x: number, z: number): number {
+    const visibility = this.world.visibility;
+    if (!visibility) return this.locateCell(x, z);
+    const regionX = Math.floor((x - visibility.originX) / visibility.size);
+    const regionZ = Math.floor((z - visibility.originZ) / visibility.size);
+    if (regionX < 0 || regionX >= visibility.width || regionZ < 0 || regionZ >= visibility.height)
+      return -1;
+    return regionZ * visibility.width + regionX;
   }
 
   private ensureEntityScratch(count: number): void {
@@ -465,10 +416,6 @@ export class ShadoWorldVisibilityCoordinator {
       this.policyEpoch++;
     }
   }
-}
-
-function maskPasses(mask: ArrayLike<number> | undefined, cell: number): boolean {
-  return mask === undefined || (cell < mask.length && Number(mask[cell]) !== 0);
 }
 
 function hashNumbers(values: ArrayLike<number>, count: number): number {

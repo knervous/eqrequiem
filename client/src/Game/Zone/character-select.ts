@@ -43,7 +43,9 @@ export default class CharacterSelect {
       // must activate that presentation renderer itself. Without this call a
       // Shado actor may have visibleFlag=1 while its compact visible count
       // remains zero, submitting no body instances even as weapon meshes draw.
-      EntityCache.initialize(this.gameManager.scene!);
+      EntityCache.initialize(this.gameManager.scene!, {
+        disableCulling: true,
+      });
       this.initializePromise = this.environment.initialize();
     }
     return this.initializePromise;

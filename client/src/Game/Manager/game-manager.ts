@@ -499,6 +499,14 @@ export default class GameManager {
       this.player = null;
     }
     this.player = new Player(this, this.Camera!, true);
+    if (
+      player &&
+      [player.x, player.y, player.z].every((value) => Number.isFinite(Number(value)))
+    ) {
+      this.zoneManager?.ensureWorldPhysicsAt(
+        new BABYLON.Vector3(Number(player.x), Number(player.y), Number(player.z)),
+      );
+    }
     await this.player.Load(player as PlayerProfile);
   }
 }
