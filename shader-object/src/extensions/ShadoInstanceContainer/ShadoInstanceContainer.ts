@@ -138,6 +138,19 @@ export type ShadoHybridModuleSpec<TActor extends ShadoActor> = {
 };
 
 export type ShadoHybridModuleOptions = Omit<ShadoInstanceContainerOptions, 'merge'> & {
+  /**
+   * Where each actor's animation frame comes from.
+   *
+   * `per-actor` reads the actor's own packed animation record, so
+   * `setInstanceClip` drives clip, speed, and phase independently — the same
+   * behaviour as the non-modular path. `shared` binds one cohort uniform to
+   * every module draw, which is what `webgpu-preskin` needs: that path deforms
+   * the module library once per pose and rigid-instances the result, so a
+   * cohort is only meaningful when its actors hold the same pose.
+   *
+   * Defaults to `per-actor` for `vertex-vat` and `shared` for `webgpu-preskin`.
+   */
+  poses?: 'per-actor' | 'shared';
   /** Clip shared by the synchronized cohort. Defaults to the first VAT clip. */
   sharedClip?: string | number;
   sharedSpeed?: number;
@@ -165,7 +178,9 @@ export type ShadoHybridModuleStats = {
   avoidedHiddenVertices: number;
   vertexWorkReduction: number;
   poseCohorts: 1;
-  deformationReuse: 'shared-uniform' | 'webgpu-preskin-cache' | 'none';
+  /** Whether each actor animates from its own record or one cohort uniform. */
+  poses: 'per-actor' | 'shared';
+  deformationReuse: 'per-actor-vat' | 'shared-uniform' | 'webgpu-preskin-cache' | 'none';
   preSkinCache?: ShadoPreSkinCacheStats;
 };
 
@@ -616,6 +631,12 @@ export class ShadoInstanceContainer<T extends ShadoActor> extends Shado {
     skeleton: Skeleton | null | undefined,
     opts: ShadoHybridModuleOptions = {}
   ): Promise<ShadoHybridModuleAttachment> {
+    if (opts.deformation === 'webgpu-preskin' && opts.poses === 'per-actor') {
+      throw new Error(
+        'attachHybridModules: webgpu-preskin deforms once per pose and cannot serve ' +
+        "per-actor poses. Use deformation 'vertex-vat', or keep poses 'shared'."
+      );
+    }
     const specs = moduleSpecs.filter(spec => spec.meshes.some(mesh => mesh.getTotalVertices() > 0));
     if (!specs.length) throw new Error('attachHybridModules: no non-empty modules supplied.');
     if (!skeleton) throw new Error('attachHybridModules: modules require a shared skeleton.');
@@ -728,6 +749,10 @@ export class ShadoInstanceContainer<T extends ShadoActor> extends Shado {
       this._clipDurations.push(clip.frames / Math.max(1, clip.fps));
     }
 
+    // The pre-skin cache deforms the module library once per pose, so it can
+    // only serve actors that hold the same pose. The plain vertex-VAT module
+    // path has no such constraint and now animates per actor by default.
+    const sharedPoses = opts.poses ? opts.poses === 'shared' : requestedPreSkin;
     const sharedAnimation = new Float32Array(4);
     const resolveClip = (nameOrId: string | number) => {
       const clipId = typeof nameOrId === 'number'
@@ -793,7 +818,11 @@ export class ShadoInstanceContainer<T extends ShadoActor> extends Shado {
         vatQuality,
         textures: opts.materialTextures,
         drawSelection: selection,
-        sharedAnimation,
+        // Binding the cohort uniform sets SHADO_VAT_SHARED_POSE, which makes
+        // every actor read one animation vec4. Leaving it off falls through to
+        // the actor's own packed animationBuffer, so setInstanceClip drives
+        // each actor independently.
+        sharedAnimation: sharedPoses ? sharedAnimation : undefined,
         animationTimeSource: () => timeSeconds,
       });
       if (this.vat && !usePreSkin) material.vatDQ = this.vat;
@@ -820,9 +849,10 @@ export class ShadoInstanceContainer<T extends ShadoActor> extends Shado {
       avoidedHiddenVertices: 0,
       vertexWorkReduction: 1,
       poseCohorts: 1,
+      poses: sharedPoses ? 'shared' : 'per-actor',
       deformationReuse: usePreSkin
         ? 'webgpu-preskin-cache'
-        : useVat ? 'shared-uniform' : 'none',
+        : useVat ? (sharedPoses ? 'shared-uniform' : 'per-actor-vat') : 'none',
       preSkinCache: preSkinCache?.getStats(),
     };
     const refresh = () => {
@@ -855,9 +885,10 @@ export class ShadoInstanceContainer<T extends ShadoActor> extends Shado {
           ? baselineSupermeshVertices / submittedVertices
           : 1,
         poseCohorts: 1,
+        poses: sharedPoses ? 'shared' : 'per-actor',
         deformationReuse: usePreSkin
           ? 'webgpu-preskin-cache'
-          : useVat ? 'shared-uniform' : 'none',
+          : useVat ? (sharedPoses ? 'shared-uniform' : 'per-actor-vat') : 'none',
         preSkinCache: preSkinCache?.getStats(),
       };
       return stats;

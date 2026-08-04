@@ -375,8 +375,8 @@ function waitForFrames(
 
 /** What the active path actually exercises, spelled out under the title. */
 const PATH_SUMMARY: Record<RenderPath, string> = {
-  cached: 'module buckets · WebGPU compute pre-skin · resolved pose palette · shared DQ-VAT',
-  hybrid: 'module buckets · shared cohort clock · shared DQ-VAT',
+  cached: 'module buckets · WebGPU compute pre-skin · resolved pose palette · one shared pose',
+  hybrid: 'module buckets · per-actor clip and phase · shared DQ-VAT',
   supermesh: 'maximal-supermesh baseline · modules clipped after skinning · shared DQ-VAT',
   bat: 'captured baseline · per-actor modular meshes · shared matrix BAT',
   'bat-thin': 'captured baseline · thin-instanced module buckets · shared matrix BAT',
@@ -417,7 +417,7 @@ function createUi(
     <section class="sms-benchmark"${mode === 'benchmark' ? '' : ' hidden'}>
       <div class="sms-actions"><button data-role="rerun">Run again</button><button data-role="download" disabled>Download JSON</button></div>
       <table class="sms-table"><thead><tr><th>actors</th><th>M verts/frame</th><th>mean ms</th><th>p95 ms</th><th>GPU/queue ms</th><th>arena MiB</th><th>result</th></tr></thead><tbody data-role="rows"></tbody></table>
-      <p class="sms-note">Counts: ${counts.join(' → ')}. Stops after two levels exceed 50 ms p95. ${renderPath === 'bat' ? 'Captured baseline: six selected modular meshes per actor, independent clips/phases, two weights and eight matrix-BAT reads per vertex.' : renderPath === 'bat-thin' ? 'Same matrix BAT and independent poses, grouped into one thin-instance draw per populated module variation.' : renderPath === 'cached' ? 'Module buckets are deformed once by compute per shared pose, then rigid-instanced.' : usesModules ? 'Module buckets submit only selected parts; the cohort shares one clip and phase.' : 'Hidden modules are clipped after VAT skinning, so they still consume vertex work.'}</p>
+      <p class="sms-note">Counts: ${counts.join(' → ')}. Stops after two levels exceed 50 ms p95. ${renderPath === 'bat' ? 'Captured baseline: six selected modular meshes per actor, independent clips/phases, two weights and eight matrix-BAT reads per vertex.' : renderPath === 'bat-thin' ? 'Same matrix BAT and independent poses, grouped into one thin-instance draw per populated module variation.' : renderPath === 'cached' ? 'Module buckets are deformed once by compute per shared pose, then rigid-instanced — every actor holds the same pose by construction.' : usesModules ? 'Module buckets submit only selected parts; each actor animates from its own clip and phase.' : 'Hidden modules are clipped after VAT skinning, so they still consume vertex work.'}</p>
     </section>`;
   document.head.append(style);
   document.body.append(panel);
@@ -791,10 +791,14 @@ export class SupermeshScalePlayground {
             placeRing();
           };
 
+          // `cached` deforms the module library once per pose, so its cohort
+          // genuinely has to hold one pose; every other path animates per actor.
+          const sharedPose = hybridAttachment?.getStats().poses === 'shared';
+
           const setClip = (actor: SupermeshScaleActor, name: string) => {
             const index = container!.children.indexOf(actor);
             const resolved = manifest.animation.clips.includes(name) ? name : manifest.animation.clips[0];
-            if (usesHybridModules) {
+            if (sharedPose) {
               hybridAttachment!.setSharedClip(resolved, 1, 0);
               for (const child of container!.children) clipByActor.set(child, resolved);
             } else {
@@ -806,7 +810,7 @@ export class SupermeshScalePlayground {
           const spawn = (selections: readonly number[], clipName?: string, updateLayout = true) => {
             const actor = container!.addInstance(false, `NM_M permutation ${container!.instanceCount + 1}`);
             setActorSelections(actor, selections);
-            setClip(actor, clipName ?? (usesHybridModules
+            setClip(actor, clipName ?? (sharedPose
               ? manifest.animation.clips[0]
               : manifest.animation.clips[container!.instanceCount % manifest.animation.clips.length]));
             if (updateLayout) layoutActors();
@@ -1065,6 +1069,10 @@ export class SupermeshScalePlayground {
           return;
         }
 
+        // Only the pre-skin cohort holds one pose; every other path gives each
+        // actor its own clip and phase so the sweep measures a varied population.
+        const benchPerActorPose = renderPath === 'supermesh'
+          || hybridAttachment?.getStats().poses === 'per-actor';
         const rows: SweepRow[] = [];
         let allocated = 0;
         let consecutiveSlow = 0;
@@ -1098,7 +1106,7 @@ export class SupermeshScalePlayground {
                 new BABYLON.Vector3(Math.cos(angle) * radius, 0, Math.sin(angle) * radius),
               );
             }
-            if (renderPath === 'supermesh') {
+            if (benchPerActorPose) {
               container!.setInstanceClip(
                 index,
                 manifest.animation.clips[index % manifest.animation.clips.length],

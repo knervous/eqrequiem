@@ -45,6 +45,40 @@ describe('hybrid module draw path', () => {
     engine.dispose();
   });
 
+  it('falls back to the actor record when no cohort pose is bound', () => {
+    // The hybrid path used to bind the cohort uniform unconditionally, which
+    // set SHADO_VAT_SHARED_POSE and moved every actor in lockstep. The #else
+    // branch is what per-actor clip and phase rides on.
+    const engine = new NullEngine();
+    const container = Object.create(ShadoInstanceContainer.prototype) as ShadoInstanceContainer<any>;
+    (container as any)._useVatMaterial = true;
+    (container as any)._includeName = 'ShadoInstanceContainer';
+
+    const glsl = container.generateGLSLPair().vs;
+    const wgsl = container.generateWGSLPair().vs;
+    expect(glsl).toContain('vec4 anim = inst.animationBuffer');
+    expect(wgsl).toContain('let animation = inst.animationBuffer');
+
+    engine.dispose();
+  });
+
+  it('refuses per-actor poses on the pre-skin cache', async () => {
+    // webgpu-preskin deforms the module library once per pose, so a per-actor
+    // request is incoherent and must fail loudly rather than synchronize.
+    const engine = new NullEngine();
+    const container = Object.create(ShadoInstanceContainer.prototype) as ShadoInstanceContainer<any>;
+    await expect(
+      container.attachHybridModules(
+        {} as any,
+        [{ id: 'a', meshes: [{ getTotalVertices: () => 1 } as any], isSelected: () => true }],
+        {} as any,
+        { deformation: 'webgpu-preskin', poses: 'per-actor' },
+      )
+    ).rejects.toThrow(/cannot serve per-actor poses/);
+
+    engine.dispose();
+  });
+
   it('generates the compute-to-vertex cache shader for synchronized cohorts', () => {
     const full = emitShadoPreSkinComputeWGSL('full');
     const low = emitShadoPreSkinComputeWGSL('low');

@@ -107,6 +107,43 @@ transparent texels — it is not specific to this catalog.
    2, 3, 4 and 14 exist), so `pipeline.json` carries an explicit
    `moduleMaterialOverrides` entry pointing the module at `NM_M_EY_N_4_SD`.
 
+5. **The hybrid path forced one pose on every actor.** `attachHybridModules`
+   always bound a cohort animation uniform, which sets `SHADO_VAT_SHARED_POSE`
+   and makes every actor read the same animation vec4 — the whole population
+   moved in lockstep. The vertex path already supported per-instance animation
+   (`inst.animationBuffer`); nothing but that unconditional binding stopped it.
+   Poses are now `per-actor` by default and `setInstanceClip` drives each actor
+   independently. `webgpu-preskin` still requires `poses: 'shared'` — it
+   deforms the module library once per pose and rigid-instances the result, so
+   a cohort is only meaningful when its actors hold the same pose; asking for
+   `per-actor` there now throws instead of silently synchronizing.
+
+### Benchmark data is stale
+
+Everything under `benchmark-results/` and the published
+`hybrid-preskin-performance-report.json` was captured before the fixes above
+and no longer describes this code. Two effects, in opposite directions:
+
+- `hybrid` and `cached` were measured while defect (1) had geometry exploding
+  across the screen, which inflated their fragment cost.
+- `hybrid` was measured with one shared pose. It now does per-actor DQ skinning,
+  which is strictly more GPU work, so its numbers should get *worse* — and the
+  `cached` margin over it should widen, this time for an honest reason.
+
+The `cached` path is unchanged by defect (5) and still holds one pose by
+design, so any comparison against it is a shared-pose best case. Re-run the
+sweep in a real browser window before quoting any of it:
+
+```text
+/supermesh-scale?renderer=babylonjs&model=nm-m-supermesh&mode=benchmark&path=hybrid
+```
+
+The embedded review browser throttles rAF hard enough that the harness times
+out during warmup, so these runs cannot be produced from an agent session. The
+structural benchmark (`npm run benchmark:hybrid-structure`) needs no GPU and is
+current: 22 populated buckets, 4.775x vertex-work reduction, unchanged by the
+pose fix.
+
 ### Still open
 
 - Shado's fragment shader has its alpha discard commented out, so alpha-cutout

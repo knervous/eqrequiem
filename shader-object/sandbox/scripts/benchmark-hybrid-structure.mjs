@@ -52,13 +52,13 @@ const rows = counts.map(actors => {
 
 const report = {
   passed: sourceModuleVertices === 8_532 && modules.length === 26,
-  path: 'hybrid-module-buckets/shared-pose-uniform',
+  path: 'hybrid-module-buckets/per-actor-pose',
   animation: {
     libraries: 1,
     clips: manifest.animation.clips.length,
     vatGzipBytes: manifest.animation.vatGzipBytes,
     duplicatedAnimationLibraries: 0,
-    deformationReuse: 'shared-uniform; per-submitted-actor-vertex DQ skinning remains',
+    deformationReuse: 'none; each actor animates from its own record and every submitted vertex is DQ skinned',
   },
   geometry: {
     modules: modules.length,
