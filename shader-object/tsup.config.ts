@@ -388,6 +388,9 @@ export default defineConfig({
     'asc/index': 'src/asc/index.ts',
     'msdf/index': 'src/msdf/index.ts',
     'render/index': 'src/render/index.ts',
+    'svat/index': 'src/svat/index.ts',
+    // Node-only: pulls in node:zlib for bake-side compression.
+    'svat/node': 'src/svat/node.ts',
     'preprocess/index': 'src/preprocess/index.ts',
     'preprocess/runtime': 'src/preprocess/runtime.ts',
     'world/index': 'src/world/index.ts',

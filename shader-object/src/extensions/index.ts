@@ -1,6 +1,7 @@
 export * from './NameplateData';
 export * from './ShadoActor';
 export * from './ShadoInstanceContainer/ShadoInstanceContainer';
+export * from './ShadoInstanceContainer/ShadoInstanceDrawSelection';
 export * from './VATBuilder/VATBuilder';
 export * from './VATBuilder/VATWorker';
 export * from './VATBuilder/VATHeadlessBake';

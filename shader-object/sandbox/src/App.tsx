@@ -77,12 +77,16 @@ async function createBabylonEngine(canvas: HTMLCanvasElement, backend: RenderBac
       );
     }
 
+    const wantsGpuTiming = new URLSearchParams(window.location.search).get('model') ===
+      'nm-m-supermesh';
     const engine = new WebGPUEngine(canvas, {
       antialias: true,
+      enableAllFeatures: wantsGpuTiming,
     });
 
     try {
       await engine.initAsync();
+      engine.enableGPUTimingMeasurements = wantsGpuTiming;
       return engine;
     } catch (error) {
       try {
@@ -100,6 +104,9 @@ async function createBabylonEngine(canvas: HTMLCanvasElement, backend: RenderBac
 }
 
 async function loadBabylonPlayground(routePath: string) {
+  if (new URLSearchParams(window.location.search).get('model') === 'nm-m-supermesh') {
+    return (await import('./SupermeshScalePlayground')).SupermeshScalePlayground;
+  }
   if (routePath === '/test') {
     return (await import('./BrowserTestPlayground')).BrowserTestPlayground;
   }
@@ -114,6 +121,9 @@ async function loadBabylonPlayground(routePath: string) {
   }
   if (routePath === '/world-editor') {
     return (await import('./WorldPlayground')).WorldEditorPlayground;
+  }
+  if (routePath === '/supermesh-scale') {
+    return (await import('./SupermeshScalePlayground')).SupermeshScalePlayground;
   }
   return (await import('./Playground')).Playground;
 }
@@ -209,7 +219,7 @@ function App({ basePath = '' }: SandboxAppProps) {
         const webgpuDevice = (activeEngine as any)._device;
         const handleWebGPUError = (event: Event) => {
           const error = (event as any).error;
-          console.debug('[sandbox/webgpu] uncaptured error context', {
+          console.debug('[sandbox/webgpu] uncaptured error context', error?.message ?? String(error), {
             message: error?.message ?? String(error),
             msSinceResize: lastResizeAt ? performance.now() - lastResizeAt : null,
             resizeCount,
@@ -284,6 +294,12 @@ function App({ basePath = '' }: SandboxAppProps) {
           aria-current={routeLabel === '/world-editor' ? 'page' : undefined}
         >
           World editor
+        </a>
+        <a
+          href={`${routeHref('/supermesh-scale', basePath)}?renderer=babylonjs&model=nm-m-supermesh&mode=explore`}
+          aria-current={routeLabel === '/supermesh-scale' ? 'page' : undefined}
+        >
+          Supermesh scale
         </a>
         {renderer === 'babylonjs' && (
           <>

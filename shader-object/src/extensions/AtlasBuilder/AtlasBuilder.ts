@@ -16,23 +16,64 @@ export type ArrayAtlas = {
   entries: Record<string, EntryInfo>;
 };
 
-function extrude(
-  ctx: CanvasRenderingContext2D,
+/**
+ * Copy one sprite into the page buffer verbatim.
+ *
+ * Canvas compositing is deliberately avoided here. `putImageData` +
+ * `drawImage` round-trips through premultiplied storage, so every texel with
+ * alpha < 255 comes back with its RGB scaled toward the transparent page —
+ * fully transparent texels come back pure black. UE-style assets keep real
+ * color under a zero-alpha dye mask, and losing it rendered whole modules
+ * black.
+ */
+export function blit(
+  page: Uint8ClampedArray,
+  pageSize: number,
+  img: ImageData,
+  dx: number,
+  dy: number
+) {
+  const rowBytes = img.width * 4;
+  for (let row = 0; row < img.height; row++) {
+    const targetY = dy + row;
+    if (targetY < 0 || targetY >= pageSize) continue;
+    const sourceStart = row * rowBytes;
+    page.set(
+      img.data.subarray(sourceStart, sourceStart + rowBytes),
+      (targetY * pageSize + dx) * 4
+    );
+  }
+}
+
+/** Clamp-to-edge bleed around a placed rect, in the raw page buffer. */
+export function extrude(
+  page: Uint8ClampedArray,
+  pageSize: number,
   x: number,
   y: number,
   w: number,
   h: number,
   b: number
 ) {
-  // top/bottom/left/right + corners
-  ctx.drawImage(ctx.canvas, x, y, w, 1, x, y - b, w, b);
-  ctx.drawImage(ctx.canvas, x, y + h - 1, w, 1, x, y + h, w, b);
-  ctx.drawImage(ctx.canvas, x, y, 1, h, x - b, y, b, h);
-  ctx.drawImage(ctx.canvas, x + w - 1, y, 1, h, x + w, y, b, h);
-  ctx.drawImage(ctx.canvas, x, y, 1, 1, x - b, y - b, b, b);
-  ctx.drawImage(ctx.canvas, x + w - 1, y, 1, 1, x + w, y - b, b, b);
-  ctx.drawImage(ctx.canvas, x, y + h - 1, 1, 1, x - b, y + h, b, b);
-  ctx.drawImage(ctx.canvas, x + w - 1, y + h - 1, 1, 1, x + w, y + h, b, b);
+  if (b <= 0) return;
+  const left = Math.max(0, x - b);
+  const right = Math.min(pageSize, x + w + b);
+  const top = Math.max(0, y - b);
+  const bottom = Math.min(pageSize, y + h + b);
+  for (let targetY = top; targetY < bottom; targetY++) {
+    const sourceY = Math.min(y + h - 1, Math.max(y, targetY));
+    const insideRows = targetY >= y && targetY < y + h;
+    for (let targetX = left; targetX < right; targetX++) {
+      if (insideRows && targetX >= x && targetX < x + w) continue;
+      const sourceX = Math.min(x + w - 1, Math.max(x, targetX));
+      const source = (sourceY * pageSize + sourceX) * 4;
+      const target = (targetY * pageSize + targetX) * 4;
+      page[target] = page[source];
+      page[target + 1] = page[source + 1];
+      page[target + 2] = page[source + 2];
+      page[target + 3] = page[source + 3];
+    }
+  }
 }
 async function readTextureToImageData(scene: Scene, tex: Texture): Promise<ImageData> {
   const it = (tex as any).getInternalTexture?.() ?? (tex as any)._texture;
@@ -145,28 +186,17 @@ export async function buildArrayAtlasFromSources(
   const pixels = new Uint8Array(layerStride * layers);
   const entries: Record<string, EntryInfo> = {};
 
-  // 4) Staging canvases
-  const pageCanvas = document.createElement('canvas');
-  pageCanvas.width = pageSize;
-  pageCanvas.height = pageSize;
-  const pageCtx = pageCanvas.getContext('2d', { willReadFrequently: true })!;
-  const spriteCanvas = document.createElement('canvas');
-  const spriteCtx = spriteCanvas.getContext('2d', { willReadFrequently: true })!;
+  // 4) Page buffer, plus a canvas used only when a sprite has to be rescaled
+  const page = new Uint8ClampedArray(layerStride);
+  let scaleCanvas: HTMLCanvasElement | undefined;
   const debugCanvases: HTMLCanvasElement[] = []; // <— capture pages for export
 
   bins.forEach((bin, layer) => {
-    pageCtx.clearRect(0, 0, pageSize, pageSize);
+    page.fill(0);
 
     for (const r of bin.rects) {
       const { id, idx } = r.data as { id: string; idx: number };
       const img = images[idx];
-
-      // Prepare sprite canvas for this image
-      if (spriteCanvas.width !== img.width || spriteCanvas.height !== img.height) {
-        spriteCanvas.width = img.width;
-        spriteCanvas.height = img.height;
-      }
-      spriteCtx.putImageData(img, 0, 0);
 
       // Compute placement
       let dx = r.x,
@@ -180,19 +210,31 @@ export async function buildArrayAtlasFromSources(
         dx = r.x + Math.floor((r.width - dw) / 2);
         dy = r.y + Math.floor((r.height - dh) / 2);
       }
-      // draw (cover = stretch to rect)
-      pageCtx.drawImage(spriteCanvas, 0, 0, img.width, img.height, dx, dy, dw, dh);
 
-      if (bleed > 0) {
-        // simple edge-extrude around the drawn rect
-        // (works fine even when using 'contain' since we pass the drawn size)
-        // reuse your existing extrude helper
-        // extrude draws 1px borders outwards by 'bleed' px
-        // NOTE: clamp within page to avoid overdraw; the helper is fine for that.
-        // If you want strict clamp, add bounds checks.
-        // @ts-ignore
-        extrude(pageCtx, dx, dy, dw, dh, bleed);
+      if (dw === img.width && dh === img.height) {
+        blit(page, pageSize, img, dx, dy);
+      } else {
+        // Rescaling still needs the canvas resampler, which premultiplies and
+        // therefore darkens RGB under partially transparent texels. Rects are
+        // created at each image's own size, so this is only reachable when a
+        // caller opts into 'contain' or rotation.
+        scaleCanvas ??= document.createElement('canvas');
+        const scaleCtx = scaleCanvas.getContext('2d', { willReadFrequently: true })!;
+        if (scaleCanvas.width !== dw || scaleCanvas.height !== dh) {
+          scaleCanvas.width = dw;
+          scaleCanvas.height = dh;
+        }
+        scaleCtx.clearRect(0, 0, dw, dh);
+        const spriteBitmap = document.createElement('canvas');
+        spriteBitmap.width = img.width;
+        spriteBitmap.height = img.height;
+        spriteBitmap.getContext('2d')!.putImageData(img, 0, 0);
+        scaleCtx.drawImage(spriteBitmap, 0, 0, img.width, img.height, 0, 0, dw, dh);
+        blit(page, pageSize, scaleCtx.getImageData(0, 0, dw, dh), dx, dy);
       }
+
+      // clamp-to-edge bleed around the drawn rect
+      extrude(page, pageSize, dx, dy, dw, dh, bleed);
 
       const u0 = dx / pageSize,
         v0 = dy / pageSize;
@@ -201,15 +243,13 @@ export async function buildArrayAtlasFromSources(
       entries[id] = { layer, rect: { u0, v0, u1, v1 } };
     }
 
-    // Copy page to pixels[]
-    const pageImg = pageCtx.getImageData(0, 0, pageSize, pageSize);
-    pixels.set(pageImg.data, layer * layerStride);
+    pixels.set(page, layer * layerStride);
 
     if (debug?.export) {
       const clone = document.createElement('canvas');
       clone.width = pageSize;
       clone.height = pageSize;
-      clone.getContext('2d')!.putImageData(pageImg, 0, 0);
+      clone.getContext('2d')!.putImageData(new ImageData(page.slice(), pageSize, pageSize), 0, 0);
       debugCanvases.push(clone);
     }
   });

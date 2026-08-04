@@ -1,0 +1,59 @@
+{
+  "passed": true,
+  "checks": {
+    "oneGlbMesh": true,
+    "primitiveMapping": true,
+    "everyModuleCodeUnique": true,
+    "everyPresetSelectionValid": true,
+    "oneSkeleton": true,
+    "matchingBones": true,
+    "noEmbeddedAnimations": true,
+    "oneSharedVat": true,
+    "expectedClips": true,
+    "packedFrames": true,
+    "completeVatLibrary": true,
+    "tiledAtlasFits8192": true,
+    "vatDataLength": true,
+    "gpuTextureCreation": true,
+    "slotVariationCatalog": true,
+    "noGeneratedPermutationRecords": true,
+    "possibleCombinationsComputed": true,
+    "compressedGeometryRoundTrip": true
+  },
+  "geometry": {
+    "modules": 26,
+    "slots": 6,
+    "primitives": 26,
+    "vertices": 8532,
+    "averageSelectedVertices": 1772,
+    "vertexWorkAmplification": 4.8148984198645595,
+    "skeletons": 1,
+    "bones": 107,
+    "embeddedAnimationGroups": 0
+  },
+  "sharedVat": {
+    "componentType": "float16",
+    "clips": 329,
+    "frames": 17381,
+    "atlas": "642x5794",
+    "framesAcross": 3,
+    "bytesGzip": 20825800
+  },
+  "payload": {
+    "supermeshStatic": 5487316,
+    "supermeshStaticGzip": 4885683,
+    "oneSharedVat": 20825800,
+    "deployPair": 26313116,
+    "deployPairCompressed": 25711483,
+    "fiveSeparateStatic": 6616172,
+    "fiveSeparateStaticPlusSharedVat": 27441972,
+    "fiveSeparateSkeletal": 13919464,
+    "oneFullSkeletalControl": 101245184,
+    "fullAnimationOverhead": 99038980,
+    "projectedFiveFullSkeletal": 501811072,
+    "fullMatrixBatExr": 119072059,
+    "avoidedVsSeparateStaticPlusSharedVat": 1128856,
+    "avoidedVsSeparateStaticPlusSharedVatCompressed": 1730489,
+    "avoidedVsProjectedFiveFullSkeletalCompressed": 476099589
+  }
+}

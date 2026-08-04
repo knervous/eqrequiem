@@ -51,6 +51,8 @@ export type SerializedDQVAT = {
   bones: number;
   dqWidthBones: number;
   dqTilesX: number;
+  /** Number of complete frame palettes packed across each atlas row. Defaults to 1. */
+  dqFramesX?: number;
   dqStrideTexels: number;
   dqHasScale: boolean;
   clips: DQClipInfo[];
@@ -70,6 +72,8 @@ export type PackedDQVAT = {
   bones: number;
   dqWidthBones: number;
   dqTilesX: number;
+  /** Number of complete frame palettes packed across each atlas row. Defaults to 1. */
+  dqFramesX?: number;
   dqStrideTexels: number;
   dqHasScale: boolean;
   clips: DQClipInfo[];
@@ -89,6 +93,7 @@ export class VATBuilder {
   // Layout constants for the shader
   private _dqWidthBones = 0; // bones per row (NOT texels)
   private _dqTilesX = 0; // horizontal tiles per frame (ceil(bones / dqWidthBones))
+  private _dqFramesX = 1; // complete frame palettes packed across the atlas
   private _dqStrideTexels = 2; // texels per bone: 2 (r,d) or 3 (r,d,scale)
   private _dqHasScale = false;
   private _dqWidthTexels = 0;
@@ -104,6 +109,9 @@ export class VATBuilder {
   }
   public get dqTilesX() {
     return this._dqTilesX;
+  }
+  public get dqFramesX() {
+    return this._dqFramesX;
   }
   public get dqStrideTexels() {
     return this._dqStrideTexels;
@@ -485,6 +493,7 @@ export class VATBuilder {
       bones: this.bones,
       dqWidthBones: this._dqWidthBones,
       dqTilesX: this._dqTilesX,
+      dqFramesX: this._dqFramesX,
       dqStrideTexels: this._dqStrideTexels,
       dqHasScale: this._dqHasScale,
       clips: this.clips,
@@ -515,6 +524,7 @@ export class VATBuilder {
     dq._dqTex = texture;
     dq._dqWidthBones = packed.dqWidthBones;
     dq._dqTilesX = packed.dqTilesX;
+    dq._dqFramesX = packed.dqFramesX ?? 1;
     dq._dqStrideTexels = packed.dqStrideTexels;
     dq._dqHasScale = packed.dqHasScale;
     dq._dqWidthTexels = packed.widthTexels;
@@ -544,6 +554,7 @@ export class VATBuilder {
       bones: this.bones,
       dqWidthBones: this._dqWidthBones,
       dqTilesX: this._dqTilesX,
+      dqFramesX: this._dqFramesX,
       dqStrideTexels: this._dqStrideTexels,
       dqHasScale: this._dqHasScale,
       clips: this.clips,
@@ -593,6 +604,7 @@ export class VATBuilder {
     dq._dqTex = dqTex;
     dq._dqWidthBones = serialized.dqWidthBones;
     dq._dqTilesX = serialized.dqTilesX;
+    dq._dqFramesX = serialized.dqFramesX ?? 1;
     dq._dqStrideTexels = serialized.dqStrideTexels;
     dq._dqHasScale = serialized.dqHasScale;
     dq._dqWidthTexels = serialized.widthTexels;
@@ -610,6 +622,7 @@ export class VATBuilder {
     }
     effect.setInt('uDQWidth', this._dqWidthBones);
     effect.setInt('uDQTilesX', this._dqTilesX);
+    effect.setInt('uDQFramesX', this._dqFramesX);
     effect.setInt('uDQStrideTexels', this._dqStrideTexels);
     effect.setBool('uDQHasScale', this._dqHasScale);
   }
@@ -622,6 +635,7 @@ export class VATBuilder {
     }
     material.setInt('uDQWidth', this._dqWidthBones);
     material.setInt('uDQTilesX', this._dqTilesX);
+    material.setInt('uDQFramesX', this._dqFramesX);
     material.setInt('uDQStrideTexels', this._dqStrideTexels);
     material.setInt('uDQHasScale', this._dqHasScale ? 1 : 0);
   }

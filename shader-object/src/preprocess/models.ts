@@ -2,7 +2,10 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { gzip } from 'node:zlib';
 import { promisify } from 'node:util';
-import type { DQBuildOpts, SerializedDQVAT } from '../extensions/VATBuilder/VATBuilder';
+import type { DQBuildOpts, PackedDQVAT } from '../extensions/VATBuilder/VATBuilder';
+import { encodeSvat } from '../svat/SvatCodec';
+import { SvatCodec } from '../svat/SvatFormat';
+import { nodeSvatCompressor } from '../svat/SvatNode';
 
 const gzipAsync = promisify(gzip);
 
@@ -29,6 +32,24 @@ export type ShadoModelPackConfig = {
   vat?: {
     variants?: Array<'float16' | 'float32'>;
     options?: DQBuildOpts;
+    /**
+     * Codec for the `.svat` payload. Defaults to gzip: once the delta/shuffle
+     * filter chain has run, deflate level 9 measures slightly *smaller* than
+     * zstd 12 on real DQ atlases (14.05 vs 14.15 MB on NM_M), and it decodes
+     * through `DecompressionStream` natively on every target with no extra
+     * dependency. Zstd remains available for dictionary work later.
+     */
+    codec?: 'gzip' | 'zstd';
+    /** Codec level. Defaults to 9 for gzip, 12 for zstd. */
+    level?: number;
+    /** Target decoded bytes per streamable chunk. Defaults to 1 MiB. */
+    chunkBytes?: number;
+    /**
+     * Re-sign quaternion tracks against the previous frame before compressing.
+     * Lossless up to a whole-DQ sign, which the runtime shader already re-aligns.
+     * Defaults to true.
+     */
+    continuity?: boolean;
   };
   artifacts?: {
     asm?: string;
@@ -130,7 +151,7 @@ export async function packShadoModel(config: ShadoModelPackConfig): Promise<Shad
       targetMesh.skeleton ??
       scene.skeletons[0];
 
-    const vat: Record<string, SerializedDQVAT> = {};
+    const vat: Record<string, PackedDQVAT> = {};
     if (config.includeAnimation !== false) {
       if (!skeleton) {
         throw new Error(`Model '${config.name}' has no skeleton for DQ VAT preprocessing`);
@@ -152,7 +173,7 @@ export async function packShadoModel(config: ShadoModelPackConfig): Promise<Shad
           useHalfDQ: variant === 'float16',
           forceHalfDQ: variant === 'float16',
         });
-        vat[variant] = builder.toSerialized();
+        vat[variant] = builder.toPacked();
       }
     }
 
@@ -163,11 +184,23 @@ export async function packShadoModel(config: ShadoModelPackConfig): Promise<Shad
 
     const artifactRefs: SerializedShadoModel['artifacts'] = { ...(config.artifacts ?? {}) };
     const files: string[] = [];
+    // Binary `.svat` container: no JSON, no Base64, independently decodable
+    // per-clip chunks.
+    const { codec, compress } = nodeSvatCompressor(
+      config.vat?.codec === 'zstd' ? SvatCodec.Zstd : SvatCodec.Gzip,
+      config.vat?.level
+    );
     for (const [variant, payload] of Object.entries(vat)) {
       const suffix = variant === 'float16' ? 'vat16' : 'vat32';
-      const fileName = `${stem}.${suffix}.json.gz`;
+      const fileName = `${stem}.${suffix}.svat`;
       const file = path.join(outDir, fileName);
-      await writeGzipJson(file, payload);
+      const container = await encodeSvat(payload, {
+        codec,
+        compress,
+        continuity: config.vat?.continuity ?? true,
+        targetChunkBytes: config.vat?.chunkBytes,
+      });
+      await fs.writeFile(file, container);
       files.push(file);
       if (variant === 'float16') artifactRefs.vat16 = fileName;
       if (variant === 'float32') artifactRefs.vat32 = fileName;
@@ -232,8 +265,8 @@ export async function writeShadoModelManifest(config: ShadoModelManifestConfig):
           vat: model.vat,
           artifacts: {
             model: model.artifact ?? `models/${model.name}.model.json.gz`,
-            vat16: model.vat16 ?? `models/${model.name}.vat16.json.gz`,
-            vat32: model.vat32 ?? `models/${model.name}.vat32.json.gz`,
+            vat16: model.vat16 ?? `models/${model.name}.vat16.svat`,
+            vat32: model.vat32 ?? `models/${model.name}.vat32.svat`,
             asm: model.asm,
             wgsl: model.wgsl,
             glsl: model.glsl,

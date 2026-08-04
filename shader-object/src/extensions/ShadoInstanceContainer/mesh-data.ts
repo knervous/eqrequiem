@@ -169,6 +169,31 @@ export function compactShadoVertexMetadata(mesh: Mesh): void {
 }
 
 /**
+ * Move a source mesh's vertices into world space and detach it from any node
+ * hierarchy, leaving an identity world matrix.
+ *
+ * `Mesh.MergeMeshes` already does this while combining VertexData, so any
+ * attach path that merges gets it for free. Paths that keep a source mesh as
+ * its own draw owner (single-mesh hybrid modules, non-merged attachMeshes) do
+ * not, and Shado skins in the basis the VAT palette was baked in — the merged,
+ * world-space one. A parented glTF root is enough to break that: NM_M's
+ * Armature carries a -X mirror, so unbaked module vertices were skinned as
+ * their own mirror images and tore apart along every bone.
+ */
+export function bakeWorldTransformIntoVertices(mesh: Mesh): void {
+  const world = mesh.computeWorldMatrix(true);
+  if (!world.isIdentity()) mesh.bakeTransformIntoVertices(world);
+  // `parent = null` detaches without preserving the world transform, so the
+  // local TRS has to be cleared too or the baked transform applies twice.
+  mesh.parent = null;
+  mesh.position.setAll(0);
+  mesh.rotationQuaternion = null;
+  mesh.rotation.setAll(0);
+  mesh.scaling.setAll(1);
+  mesh.computeWorldMatrix(true);
+}
+
+/**
  * Babylon's WebGPU path recompiles shaders when common vertex buffers are
  * stored as byte/short data. Shado's VAT shader reads bone indices as floats
  * and rounds them, so normalizing these streams up front keeps the WebGPU

@@ -107,6 +107,20 @@
       "require": "./dist/render/index.cjs",
       "default": "./dist/render/index.js"
     },
+    "./svat": {
+      "source": "./src/svat/index.ts",
+      "types": "./dist/svat/index.d.ts",
+      "import": "./dist/svat/index.js",
+      "require": "./dist/svat/index.cjs",
+      "default": "./dist/svat/index.js"
+    },
+    "./svat/node": {
+      "source": "./src/svat/node.ts",
+      "types": "./dist/svat/node.d.ts",
+      "import": "./dist/svat/node.js",
+      "require": "./dist/svat/node.cjs",
+      "default": "./dist/svat/node.js"
+    },
     "./preprocess": {
       "source": "./src/preprocess/index.ts",
       "types": "./dist/preprocess/index.d.ts",

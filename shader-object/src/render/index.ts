@@ -5,3 +5,5 @@ export * from './ShadoDynamicEntityRenderer';
 export * from './ShadoDynamicEntityNameplates';
 export * from './ShadoDynamicEntityReducers';
 export * from './ShadoAsyncPicking';
+export * from './ShadoVatPoseCache';
+export * from './ShadoVatPosePalette';

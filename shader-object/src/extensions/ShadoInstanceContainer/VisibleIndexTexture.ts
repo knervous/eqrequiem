@@ -48,7 +48,17 @@ export class VisibleIndexTexture {
       });
     }
     const indices = soa.visibleActorIndices;
-    if (this.useStorage) return this.commitStorage(soa, indices);
+    return this.commitIndices(indices, soa.version, soa);
+  }
+
+  /** Upload an application-defined compact draw list instead of the global visibility list. */
+  public commitIndices(
+    indices: Uint32Array,
+    version: number,
+    soa?: ShadoInstanceSoA
+  ): GPUUploadStats {
+    if (version === this.uploadedVersion) return (this.lastStats = EMPTY_UPLOAD_STATS);
+    if (this.useStorage) return this.commitStorage(indices, version, soa);
 
     const texels = Math.max(1, Math.ceil(indices.length / 4));
     const height = Math.max(1, Math.ceil(texels / TEX_WIDTH));
@@ -76,19 +86,23 @@ export class VisibleIndexTexture {
     for (let i = 0; i < indices.length; i++) this.staging[i] = indices[i];
     if (!structural) this.texture.update(this.staging);
 
-    const visibilityBytes = this.visibilityFlagsEnabled ? this.updateVisibilityTexture(soa) : 0;
-    this.uploadedVersion = soa.version;
+    const visibilityBytes = this.visibilityFlagsEnabled && soa ? this.updateVisibilityTexture(soa) : 0;
+    this.uploadedVersion = version;
     // Four indices share one RGBA texel, so the upload is ~4 bytes/visible actor.
     const uploadedBytes = this.staging.byteLength + visibilityBytes;
     return (this.lastStats = {
-      uploadCalls: 1 + (this.visibilityFlagsEnabled ? 1 : 0),
+      uploadCalls: 1 + (this.visibilityFlagsEnabled && soa ? 1 : 0),
       uploadedBytes,
       encodedBytes:
-        indices.byteLength + (this.visibilityFlagsEnabled ? soa.visibilityFlags.byteLength : 0),
+        indices.byteLength + (this.visibilityFlagsEnabled && soa ? soa.visibilityFlags.byteLength : 0),
     });
   }
 
-  private commitStorage(soa: ShadoInstanceSoA, indices: Uint32Array): GPUUploadStats {
+  private commitStorage(
+    indices: Uint32Array,
+    version: number,
+    soa?: ShadoInstanceSoA
+  ): GPUUploadStats {
     const needBytes = Math.max(16, indices.byteLength);
     let structural = false;
     if (!this.indexBuffer || this.indexBufferCapacity < needBytes) {
@@ -115,16 +129,16 @@ export class VisibleIndexTexture {
       uploadedBytes += 16;
       uploadCalls++;
     }
-    if (this.visibilityFlagsEnabled) {
+    if (this.visibilityFlagsEnabled && soa) {
       uploadedBytes += this.updateVisibilityTexture(soa);
       uploadCalls++;
     }
-    this.uploadedVersion = soa.version;
+    this.uploadedVersion = version;
     return (this.lastStats = {
       uploadCalls,
       uploadedBytes,
       encodedBytes:
-        indices.byteLength + (this.visibilityFlagsEnabled ? soa.visibilityFlags.byteLength : 0),
+        indices.byteLength + (this.visibilityFlagsEnabled && soa ? soa.visibilityFlags.byteLength : 0),
     });
   }
 

@@ -25,12 +25,18 @@ import { InitializeConfig } from '../../types';
 import { collectSourcesFromMeshes, makeResolverForMesh } from './utils';
 import { buildArrayAtlasFromSources } from '../AtlasBuilder/AtlasBuilder';
 import {
+  bakeWorldTransformIntoVertices,
   compactShadoVertexMetadata,
   mergeWithPreservedAtlasAttributes,
   normalizeSkinningIndexAttributesForWebGPU,
   stampSubmeshAtlasAttributes,
 } from './mesh-data';
 import { VisibleIndexTexture } from './VisibleIndexTexture';
+import { ShadoInstanceDrawSelection } from './ShadoInstanceDrawSelection';
+import {
+  ShadoHybridPreSkinCache,
+  type ShadoPreSkinCacheStats,
+} from './ShadoHybridPreSkinCache';
 import type { GPUUploadStats } from '../../types';
 
 /**
@@ -120,6 +126,60 @@ export type AddInstancesOptions = {
   playRandomAnimation?: boolean;
   /** Defer nameplate publication until a larger mutation finishes. */
   rebuildNameplates?: boolean;
+};
+
+export type ShadoHybridModuleSpec<TActor extends ShadoActor> = {
+  /** Stable discovered module identifier. */
+  id: string;
+  /** One or more primitives sharing the same actor-selection rule. */
+  meshes: Mesh[];
+  /** True when this actor should participate in the module's instanced draw. */
+  isSelected: (actor: TActor, actorIndex: number) => boolean;
+};
+
+export type ShadoHybridModuleOptions = Omit<ShadoInstanceContainerOptions, 'merge'> & {
+  /** Clip shared by the synchronized cohort. Defaults to the first VAT clip. */
+  sharedClip?: string | number;
+  sharedSpeed?: number;
+  /** Normalized phase shared by the cohort. */
+  sharedPhase?: number;
+  /** Deform once per synchronized module bucket, then rigid-instance the cached vertices. */
+  deformation?: 'vertex-vat' | 'webgpu-preskin';
+  /**
+   * Resolve each active pose once into a bone palette instead of sampling the DQ
+   * atlas twice per influence for every vertex. Defaults to `true`; set `false`
+   * to restore the pre-palette behaviour. Only applies to `webgpu-preskin`.
+   */
+  vatPosePalette?: boolean;
+  /** Pose palette slot capacity. Defaults to 64. */
+  vatMaxPoses?: number;
+};
+
+export type ShadoHybridModuleStats = {
+  visibleActors: number;
+  populatedModuleBuckets: number;
+  moduleDraws: number;
+  sourceModuleVertices: number;
+  baselineSupermeshVertices: number;
+  submittedVertices: number;
+  avoidedHiddenVertices: number;
+  vertexWorkReduction: number;
+  poseCohorts: 1;
+  deformationReuse: 'shared-uniform' | 'webgpu-preskin-cache' | 'none';
+  preSkinCache?: ShadoPreSkinCacheStats;
+};
+
+export type ShadoHybridModuleAttachment = {
+  readonly meshes: ReadonlyMap<string, Mesh>;
+  readonly materials: ReadonlyMap<string, ShadoMaterial<any>>;
+  /** Rebuild module-specific compact actor lists after visibility/part changes. */
+  refresh(): ShadoHybridModuleStats;
+  getStats(): ShadoHybridModuleStats;
+  setSharedClip(clipNameOrId: string | number, speed?: number, phase?: number): void;
+  setPaused(paused: boolean): void;
+  setTimeScale(scale: number): void;
+  setTimeSeconds(seconds: number): void;
+  dispose(): void;
 };
 
 function installSolidColorTextures(scene: Scene, meshes: Mesh[]): Texture[] {
@@ -482,6 +542,8 @@ export class ShadoInstanceContainer<T extends ShadoActor> extends Shado {
       meshes.forEach(m => m.dispose());
     } else {
       mesh = meshes[0];
+      // MergeMeshes would have world-baked this; the single-owner path has to.
+      if (mesh) bakeWorldTransformIntoVertices(mesh);
     }
 
     if (!mesh) throw new Error('attachMeshes: failed to merge meshes');
@@ -534,10 +596,301 @@ export class ShadoInstanceContainer<T extends ShadoActor> extends Shado {
     if (this.vat) som.vatDQ = this.vat;
 
     mesh.material = som;
+    mesh.setEnabled(true);
     mesh.alwaysSelectAsActiveMesh = true;
 
     this._bindings.set(mesh, { material: som, generatedTextures: generatedColorTextures });
     return som;
+  }
+
+  /**
+   * Attach independently selectable rig-compatible modules to one actor arena
+   * and one synchronized BAT/VAT cohort.
+   *
+   * Unlike a variation supermesh, each populated module receives its own
+   * compact actor list, so unselected vertices never enter the VAT shader.
+   */
+  public async attachHybridModules(
+    scene: Scene,
+    moduleSpecs: readonly ShadoHybridModuleSpec<T>[],
+    skeleton: Skeleton | null | undefined,
+    opts: ShadoHybridModuleOptions = {}
+  ): Promise<ShadoHybridModuleAttachment> {
+    const specs = moduleSpecs.filter(spec => spec.meshes.some(mesh => mesh.getTotalVertices() > 0));
+    if (!specs.length) throw new Error('attachHybridModules: no non-empty modules supplied.');
+    if (!skeleton) throw new Error('attachHybridModules: modules require a shared skeleton.');
+
+    const ids = new Set<string>();
+    const sourceSet = new Set<Mesh>();
+    for (const spec of specs) {
+      if (!spec.id || ids.has(spec.id)) {
+        throw new Error(`attachHybridModules: duplicate or empty module id "${spec.id}".`);
+      }
+      ids.add(spec.id);
+      for (const mesh of spec.meshes) {
+        if (sourceSet.has(mesh)) {
+          throw new Error(`attachHybridModules: mesh "${mesh.name}" belongs to multiple modules.`);
+        }
+        sourceSet.add(mesh);
+      }
+    }
+
+    const sourceMeshes = [...sourceSet].filter(mesh => mesh.getTotalVertices() > 0);
+    // Modules keep their own draw owner, so nothing else moves them into the
+    // world-space basis the VAT palette is expressed in.
+    for (const mesh of sourceMeshes) bakeWorldTransformIntoVertices(mesh);
+    const generatedColorTextures = installSolidColorTextures(scene, sourceMeshes);
+    const { sources, byId } = collectSourcesFromMeshes(sourceMeshes);
+    let atlas;
+    try {
+      atlas = await buildArrayAtlasFromSources(scene, sources, {
+        pageSize: 2048,
+        padding: 2,
+        bleed: 2,
+        allowRotation: false,
+        mipmaps: true,
+      });
+    } catch (error) {
+      for (const texture of generatedColorTextures) texture.dispose();
+      throw error;
+    }
+
+    const texToId = new Map<Texture, string>();
+    for (const [id, record] of byId) texToId.set(record.tex, id);
+    for (const mesh of sourceMeshes) {
+      stampSubmeshAtlasAttributes(mesh, atlas, makeResolverForMesh(mesh, texture => texToId.get(texture)));
+    }
+
+    const moduleMeshes = new Map<string, Mesh>();
+    const selectors = new Map<string, ShadoHybridModuleSpec<T>['isSelected']>();
+    for (const spec of specs) {
+      const meshes = spec.meshes.filter(mesh => mesh.getTotalVertices() > 0);
+      let moduleMesh: Mesh | null | undefined;
+      if (meshes.length === 1) {
+        moduleMesh = meshes[0];
+      } else {
+        moduleMesh = BABYLON.Mesh.MergeMeshes(
+          meshes,
+          false,
+          true,
+          undefined,
+          false,
+          false
+        );
+        if (moduleMesh) {
+          mergeWithPreservedAtlasAttributes(meshes, moduleMesh);
+          for (const mesh of meshes) mesh.dispose();
+        }
+      }
+      if (!moduleMesh) throw new Error(`attachHybridModules: merge failed for "${spec.id}".`);
+      moduleMesh.name = `ShadoHybrid_${spec.id}`;
+      compactShadoVertexMetadata(moduleMesh);
+      if (scene.getEngine().isWebGPU) normalizeSkinningIndexAttributesForWebGPU(moduleMesh);
+      moduleMesh.skeleton = skeleton;
+      moduleMeshes.set(spec.id, moduleMesh);
+      selectors.set(spec.id, spec.isSelected);
+    }
+
+    const vatQuality = opts.vatQuality ?? 'full';
+    const useVat = opts.vat !== 'none' && vatQuality !== 'rigid';
+    const requestedPreSkin = opts.deformation === 'webgpu-preskin';
+    if (requestedPreSkin && useVat && !scene.getEngine().isWebGPU) {
+      throw new Error('attachHybridModules: webgpu-preskin deformation requires WebGPU.');
+    }
+    const referenceMesh = moduleMeshes.values().next().value as Mesh | undefined;
+    if (!referenceMesh) throw new Error('attachHybridModules: no module mesh was created.');
+    this.vat = useVat
+      ? opts.packedVat
+        ? VATBuilder.fromPacked(scene as any, opts.packedVat)
+        : opts.prebakedVat
+          ? VATBuilder.fromSerialized(scene as any, opts.prebakedVat)
+          : opts.vatOptions?.execution === 'worker'
+            ? await VATBuilder.buildFromSceneAsync(
+                scene as any,
+                referenceMesh as any,
+                skeleton as any,
+                opts.vatOptions
+              )
+            : VATBuilder.buildFromScene(
+                scene as any,
+                referenceMesh as any,
+                skeleton as any,
+                opts.vatOptions ?? { useHalfDQ: true }
+              )
+      : undefined;
+    this._useVatMaterial = useVat;
+    this._clipRanges.clear();
+    this._clipIndexByName.clear();
+    this._clipDurations.length = 0;
+    for (const [index, clip] of (this.vat?.clips ?? []).entries()) {
+      this._clipIndexByName.set(clip.name.toLowerCase(), index);
+      this._clipRanges.set(clip.name.toLowerCase(), clip.from);
+      this._clipDurations.push(clip.frames / Math.max(1, clip.fps));
+    }
+
+    const sharedAnimation = new Float32Array(4);
+    const resolveClip = (nameOrId: string | number) => {
+      const clipId = typeof nameOrId === 'number'
+        ? nameOrId | 0
+        : (this._clipIndexByName.get(nameOrId.toLowerCase()) ?? 0);
+      return this.vat?.clips[clipId];
+    };
+    const setSharedClip = (
+      nameOrId: string | number,
+      speed = opts.sharedSpeed ?? 1,
+      phase = opts.sharedPhase ?? 0
+    ) => {
+      const clip = resolveClip(nameOrId);
+      if (!clip) return;
+      sharedAnimation.set([
+        clip.from,
+        clip.to,
+        Math.max(0, Math.min(1, phase)) * Math.max(1, clip.frames - 1),
+        (clip.fps || 60) * speed,
+      ]);
+    };
+    setSharedClip(opts.sharedClip ?? 0);
+
+    let timeSeconds = 0;
+    let timeScale = 1;
+    let paused = false;
+    const clockObserver = scene.onBeforeRenderObservable.add(() => {
+      if (!paused) timeSeconds += scene.getEngine().getDeltaTime() * 0.001 * timeScale;
+    });
+
+    const selections = new Map<string, ShadoInstanceDrawSelection>();
+    const materials = new Map<string, ShadoMaterial<any>>();
+    for (const id of moduleMeshes.keys()) {
+      selections.set(id, new ShadoInstanceDrawSelection(scene.getEngine()));
+    }
+    const usePreSkin = requestedPreSkin && useVat;
+    this._useVatMaterial = useVat && !usePreSkin;
+    const preSkinCache = usePreSkin
+      ? await ShadoHybridPreSkinCache.Create(
+          scene,
+          moduleMeshes,
+          skeleton,
+          this.vat!,
+          vatQuality,
+          sharedAnimation,
+          () => timeSeconds,
+          {
+            // Resolved pose palette is the default; `vatPosePalette: false`
+            // restores direct per-vertex DQ atlas sampling.
+            posePalette: opts.vatPosePalette === false ? false : undefined,
+            maxPoses: opts.vatMaxPoses,
+          },
+        )
+      : undefined;
+    let firstBinding = true;
+    for (const [id, moduleMesh] of moduleMeshes) {
+      const selection = selections.get(id)!;
+      const material = new ShadoMaterial(scene, moduleMesh, atlas, this as unknown as Shado, {
+        defines: opts.defines,
+        logOnCompile: opts.logOnCompile,
+        picking: opts.picking,
+        useVat: useVat && !usePreSkin,
+        vatQuality,
+        textures: opts.materialTextures,
+        drawSelection: selection,
+        sharedAnimation,
+        animationTimeSource: () => timeSeconds,
+      });
+      if (this.vat && !usePreSkin) material.vatDQ = this.vat;
+      moduleMesh.material = material;
+      moduleMesh.setEnabled(true);
+      moduleMesh.alwaysSelectAsActiveMesh = true;
+      materials.set(id, material);
+      this._bindings.set(moduleMesh, {
+        material,
+        generatedTextures: firstBinding ? generatedColorTextures : undefined,
+      });
+      firstBinding = false;
+    }
+
+    const sourceModuleVertices = [...moduleMeshes.values()]
+      .reduce((sum, mesh) => sum + mesh.getTotalVertices(), 0);
+    let stats: ShadoHybridModuleStats = {
+      visibleActors: 0,
+      populatedModuleBuckets: 0,
+      moduleDraws: moduleMeshes.size,
+      sourceModuleVertices,
+      baselineSupermeshVertices: 0,
+      submittedVertices: 0,
+      avoidedHiddenVertices: 0,
+      vertexWorkReduction: 1,
+      poseCohorts: 1,
+      deformationReuse: usePreSkin
+        ? 'webgpu-preskin-cache'
+        : useVat ? 'shared-uniform' : 'none',
+      preSkinCache: preSkinCache?.getStats(),
+    };
+    const refresh = () => {
+      const visible = this.visibleActorIndices;
+      let submittedVertices = 0;
+      let populatedModuleBuckets = 0;
+      for (const [id, moduleMesh] of moduleMeshes) {
+        const selector = selectors.get(id)!;
+        const selected: number[] = [];
+        for (let drawIndex = 0; drawIndex < visible.length; drawIndex++) {
+          const actorIndex = visible[drawIndex];
+          const actor = this._children[actorIndex];
+          if (actor && selector(actor, actorIndex)) selected.push(actorIndex);
+        }
+        selections.get(id)!.setActorIndices(selected);
+        preSkinCache?.setModuleActive(id, selected.length > 0);
+        if (selected.length) populatedModuleBuckets++;
+        submittedVertices += moduleMesh.getTotalVertices() * selected.length;
+      }
+      const baselineSupermeshVertices = sourceModuleVertices * visible.length;
+      stats = {
+        visibleActors: visible.length,
+        populatedModuleBuckets,
+        moduleDraws: populatedModuleBuckets,
+        sourceModuleVertices,
+        baselineSupermeshVertices,
+        submittedVertices,
+        avoidedHiddenVertices: Math.max(0, baselineSupermeshVertices - submittedVertices),
+        vertexWorkReduction: submittedVertices > 0
+          ? baselineSupermeshVertices / submittedVertices
+          : 1,
+        poseCohorts: 1,
+        deformationReuse: usePreSkin
+          ? 'webgpu-preskin-cache'
+          : useVat ? 'shared-uniform' : 'none',
+        preSkinCache: preSkinCache?.getStats(),
+      };
+      return stats;
+    };
+    refresh();
+
+    let disposed = false;
+    const dispose = () => {
+      if (disposed) return;
+      disposed = true;
+      scene.onBeforeRenderObservable.remove(clockObserver);
+      preSkinCache?.dispose();
+      for (const [id, material] of materials) {
+        const mesh = moduleMeshes.get(id);
+        if (mesh) this._bindings.delete(mesh);
+        material.dispose(false, false);
+      }
+      for (const mesh of moduleMeshes.values()) mesh.dispose();
+      for (const texture of generatedColorTextures) texture.dispose();
+      atlas.texture.dispose();
+    };
+
+    return {
+      meshes: moduleMeshes,
+      materials,
+      refresh,
+      getStats: () => stats,
+      setSharedClip,
+      setPaused: value => { paused = value; },
+      setTimeScale: value => { timeScale = Number.isFinite(value) ? value : 1; },
+      setTimeSeconds: value => { timeSeconds = Math.max(0, Number(value) || 0); },
+      dispose,
+    };
   }
 
   detachMesh(mesh: Mesh) {
@@ -1029,10 +1382,14 @@ uniform vec3 uShadoLightDirection;
 uniform vec3 uShadoLightColor;
 uniform vec3 uShadoAmbientColor;
 uniform float bakedVertexAnimationTime;
+#ifdef SHADO_VAT_SHARED_POSE
+uniform vec4 uShadoSharedAnimation;
+#endif
 
 uniform sampler2D uDQAtlas;
 uniform int  uDQWidth;          // bones per row (NOT texels)
 uniform int  uDQTilesX;         // rows per frame (ceil(bones / uDQWidth))
+uniform int  uDQFramesX;        // complete frame palettes packed across the atlas
 uniform int  uDQStrideTexels;   // 2 (no scale) or 3 (has scale)
 uniform bool uDQHasScale;       // true when scale texel is present
 
@@ -1110,8 +1467,10 @@ void fetchBoneDQScale(int boneIdx, int frameRow, out vec4 qr, out vec4 qd, out f
   int stride = uDQStrideTexels;
   int x     = boneIdx % uDQWidth;
   int tile  = boneIdx / uDQWidth;
-  int y     = frameRow * uDQTilesX + tile;
-  int baseX = x * stride;
+  int frameColumn = frameRow % uDQFramesX;
+  int frameGridRow = frameRow / uDQFramesX;
+  int y     = frameGridRow * uDQTilesX + tile;
+  int baseX = frameColumn * uDQWidth * stride + x * stride;
 
   qr = fetchDQAtlas(ivec2(baseX + 0, y));
   qd = fetchDQAtlas(ivec2(baseX + 1, y));
@@ -1147,7 +1506,11 @@ void main(void) {
   vec4 T = inst.translation; // xyz + instance scale in w
   vec4 C = inst.color;
   vec4 shadoColor = C;
-  vec4 anim = inst.animationBuffer;
+  #ifdef SHADO_VAT_SHARED_POSE
+    vec4 anim = uShadoSharedAnimation;
+  #else
+    vec4 anim = inst.animationBuffer;
+  #endif
   ${hooks.vertexInstance ?? ''}
 
   // Resolve absolute frame row in the atlas (wrap within [startF, endF])
@@ -1361,7 +1724,7 @@ fn main(input: FragmentInputs) -> FragmentOutputs {
   let atlasColor = mix(vec4f(1.0), atlasSample, hasAtlasRect);
   var surface = atlasColor * fragmentInputs.vColor;
   ${hooks.fragmentSurface ?? ''}
-  surface.rgb = surface.rgb * fragmentInputs.vShadoLighting;
+  surface = vec4f(surface.rgb * fragmentInputs.vShadoLighting, surface.a);
   fragmentOutputs.color = surface;
 }
 `;
@@ -1417,8 +1780,12 @@ attribute matricesWeightsExtra: vec4f;
 uniform bakedVertexAnimationTime: f32;
 uniform uDQWidth: i32;
 uniform uDQTilesX: i32;
+uniform uDQFramesX: i32;
 uniform uDQStrideTexels: i32;
 uniform uDQHasScale: i32;
+#ifdef SHADO_VAT_SHARED_POSE
+uniform uShadoSharedAnimation: vec4f;
+#endif
 
 var uDQAtlas: texture_2d<f32>;
 
@@ -1431,8 +1798,11 @@ struct ShadoDQScale {
 fn Shado_fetchBoneDQScale(boneIndex: i32, frameRow: i32) -> ShadoDQScale {
   let x = boneIndex % uniforms.uDQWidth;
   let tile = boneIndex / uniforms.uDQWidth;
-  let y = frameRow * uniforms.uDQTilesX + tile;
-  let baseX = x * uniforms.uDQStrideTexels;
+  let frameColumn = frameRow % uniforms.uDQFramesX;
+  let frameGridRow = frameRow / uniforms.uDQFramesX;
+  let y = frameGridRow * uniforms.uDQTilesX + tile;
+  let baseX = frameColumn * uniforms.uDQWidth * uniforms.uDQStrideTexels
+    + x * uniforms.uDQStrideTexels;
   let real = textureLoad(uDQAtlas, vec2i(baseX, y), 0);
   let dual = textureLoad(uDQAtlas, vec2i(baseX + 1, y), 0);
   var scale = 1.0;
@@ -1498,7 +1868,11 @@ fn main(input: VertexInputs) -> FragmentInputs {
   let inst = ${includeName}_instances_get(sourceIndex);
   let translation = inst.translation;
   var shadoColor = inst.color;
-  let animation = inst.animationBuffer;
+  #ifdef SHADO_VAT_SHARED_POSE
+    let animation = uniforms.uShadoSharedAnimation;
+  #else
+    let animation = inst.animationBuffer;
+  #endif
   ${hooks.vertexInstance ?? ''}
 
   let startFrame = animation.x;

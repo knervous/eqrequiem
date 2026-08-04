@@ -1,0 +1,109 @@
+{
+  "passed": true,
+  "runtime": {
+    "node": "v24.18.0",
+    "platform": "darwin",
+    "architecture": "arm64",
+    "gcExposed": true
+  },
+  "actorStrideBytes": 144,
+  "maximumTestedActors": 1000000,
+  "rows": [
+    {
+      "actors": 1000,
+      "appendMs": 4.30662499999994,
+      "appendActorsPerSecond": 232200.38893565472,
+      "actorStrideBytes": 144,
+      "activeActorBytes": 144000,
+      "arenaCapacityBytes": 144016,
+      "heapUsedBytes": 66116688,
+      "heapDeltaBytes": 338120,
+      "rssBytes": 216875008,
+      "externalBytes": 2295031
+    },
+    {
+      "actors": 10000,
+      "appendMs": 16.295292000000018,
+      "appendActorsPerSecond": 552306.7644323275,
+      "actorStrideBytes": 144,
+      "activeActorBytes": 1440000,
+      "arenaCapacityBytes": 1440016,
+      "heapUsedBytes": 67574728,
+      "heapDeltaBytes": 1452528,
+      "rssBytes": 225607680,
+      "externalBytes": 4644943
+    },
+    {
+      "actors": 25000,
+      "appendMs": 24.34679200000005,
+      "appendActorsPerSecond": 616097.5951164314,
+      "actorStrideBytes": 144,
+      "activeActorBytes": 3600000,
+      "arenaCapacityBytes": 3600016,
+      "heapUsedBytes": 69758696,
+      "heapDeltaBytes": 2185168,
+      "rssBytes": 246071296,
+      "externalBytes": 10157895
+    },
+    {
+      "actors": 50000,
+      "appendMs": 51.51999999999998,
+      "appendActorsPerSecond": 485248.4472049691,
+      "actorStrideBytes": 144,
+      "activeActorBytes": 7200000,
+      "arenaCapacityBytes": 7200016,
+      "heapUsedBytes": 73425400,
+      "heapDeltaBytes": 3666856,
+      "rssBytes": 284295168,
+      "externalBytes": 13875863
+    },
+    {
+      "actors": 100000,
+      "appendMs": 90.21133299999997,
+      "appendActorsPerSecond": 554254.0869005895,
+      "actorStrideBytes": 144,
+      "activeActorBytes": 14400000,
+      "arenaCapacityBytes": 14400016,
+      "heapUsedBytes": 80970352,
+      "heapDeltaBytes": 7544776,
+      "rssBytes": 351125504,
+      "externalBytes": 25866471
+    },
+    {
+      "actors": 250000,
+      "appendMs": 247.02166699999998,
+      "appendActorsPerSecond": 607234.182416881,
+      "actorStrideBytes": 144,
+      "activeActorBytes": 36000000,
+      "arenaCapacityBytes": 36000016,
+      "heapUsedBytes": 101428600,
+      "heapDeltaBytes": 20458416,
+      "rssBytes": 425754624,
+      "externalBytes": 56774215
+    },
+    {
+      "actors": 500000,
+      "appendMs": 419.16949999999997,
+      "appendActorsPerSecond": 596417.4397230715,
+      "actorStrideBytes": 144,
+      "activeActorBytes": 72000000,
+      "arenaCapacityBytes": 72000016,
+      "heapUsedBytes": 137346808,
+      "heapDeltaBytes": 35918032,
+      "rssBytes": 578568192,
+      "externalBytes": 118219111
+    },
+    {
+      "actors": 1000000,
+      "appendMs": 999.455375,
+      "appendActorsPerSecond": 500272.4608890117,
+      "actorStrideBytes": 144,
+      "activeActorBytes": 144000000,
+      "arenaCapacityBytes": 144000016,
+      "heapUsedBytes": 209823936,
+      "heapDeltaBytes": 72477280,
+      "rssBytes": 887422976,
+      "externalBytes": 156550599
+    }
+  ]
+}

@@ -139,6 +139,18 @@ describe('WebGPU shader safety', () => {
     expect(low.vertexCode).not.toContain('dq1');
   });
 
+  it('preprocesses a synchronized cohort with a shared animation uniform', async () => {
+    const container = new ShadoInstanceContainer<TestClass>(engine);
+    const pair = container.generateWGSLPair();
+    const processed = await preprocessWGSL(engine, pair, [
+      '#define SHADO_VAT_SHARED_POSE',
+    ]);
+
+    expect(processed.vertexCode).toContain('uShadoSharedAnimation');
+    expect(processed.vertexCode).toContain('uniforms.uShadoSharedAnimation');
+    expect(processed.vertexCode).not.toContain('inst.animationBuffer');
+  });
+
   it('registers storage shaders in Babylon’s WGSL shader store', () => {
     const container = new ShadoInstanceContainer<TestClass>(engine);
     const names = container.getShaderNames();

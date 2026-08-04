@@ -25,6 +25,9 @@ export * from './renderer';
 export * from './render-data';
 export * from './storage';
 
+// Binary VAT container (.svat). Node-only encoding lives at `@knervous/shado/svat/node`.
+export * from './svat';
+
 // Extensions
 export * from './extensions';
 

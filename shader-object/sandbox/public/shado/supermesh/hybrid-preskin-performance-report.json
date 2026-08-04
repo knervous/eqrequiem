@@ -1,0 +1,328 @@
+{
+  "passed": true,
+  "model": "nm-m-supermesh",
+  "conclusion": {
+    "viable": true,
+    "recommendedPath": "thin-instanced shared BAT for modular actors with independent poses; cached pre-skin cohorts when many actors share one exact pose",
+    "scope": "actors sharing one skeleton and BAT atlas, with independently changing clip, phase, position, and body-part selection",
+    "capturedBaselineLimit": "the captured modular BAT path falls to 49.0 mean FPS at 500 actors and 24.9 mean FPS at 1,000 actors",
+    "dominantCapturedLimit": "six independently submitted module meshes per actor (6,000 draws at 1,000 actors)",
+    "thinBatResult": "22 draws remain constant through 120,000 actors; about 30,000 actors sustain 60 mean FPS, 40,000 sustain over 30 FPS p95, and the deformation-throughput knee begins between 30,000 and 40,000 actors",
+    "dominantThinBatLimit": "vertex deformation bandwidth: top-two weights require eight matrix-BAT texel reads per submitted vertex",
+    "crossoverObserved": "inline DQ-VAT begins accumulating a GPU queue backlog by 10,000 visible actors",
+    "maximumMeasuredCachedActors": 20000
+  },
+  "asset": {
+    "modules": 26,
+    "slots": 6,
+    "storedPermutationRecords": 0,
+    "discoverableCombinations": 3125,
+    "verticesInModuleLibrary": 8532,
+    "averageSelectedVertices": 1772,
+    "bones": 107,
+    "clips": 329,
+    "frames": 17381
+  },
+  "networkBytes": {
+    "capturedMatrixBatExr": 119072059,
+    "capturedMatrixBatExrGzip": 72462766,
+    "capturedModuleCatalogGlbs": 12208684,
+    "capturedBatAndModuleCatalog": 131280743,
+    "capturedGzipBatAndModuleCatalog": 84671450,
+    "nativeSkeletalGlbControl": 101245184,
+    "staticModuleGeometryGlb": 5487316,
+    "staticModuleGeometryGzip": 4885683,
+    "sharedShadoVatGzip": 20825800,
+    "compressedGeometryAndVat": 25711483,
+    "compressedShadoReductionVsCapturedPercent": 80.41488613451861,
+    "compressedShadoReductionVsCapturedGzipPercent": 69.63382226240368,
+    "preSkinCacheAdditionalNetworkBytes": 0
+  },
+  "gpuBytes": {
+    "capturedMatrixBatTexture": 119028096,
+    "thinBatSharedGeometry": 647730,
+    "thinBatInstanceDataAt1000Actors": 480000,
+    "capturedDuplicatedGeometryAt1000ActorsEstimate": 135747600,
+    "sharedDualQuaternionVatAtlas": 29757984,
+    "preSkinSource": 819072,
+    "preSkinOutput": 273024,
+    "preSkinParameters": 32,
+    "preSkinTotal": 1092128,
+    "vatAndPreSkinTotal": 30850112,
+    "preSkinOverheadVsVatPercent": 3.6700335614133004
+  },
+  "preSkinWork": {
+    "verticesPerSynchronizedPose": 8532,
+    "computeDispatchesPerPose": 1,
+    "populatedModuleDraws": 22
+  },
+  "methodology": {
+    "viewport": "1280x720",
+    "devicePixelRatio": 2,
+    "hardwareConcurrency": 12,
+    "renderer": "WebGPU1",
+    "warmupFrames": 10,
+    "sampleFrames": 30,
+    "gpuTimingSource": "queue-completion-upper-bound",
+    "warning": "Queue-completion values are backlog-sensitive upper bounds, not timestamp-query durations.",
+    "capturedBaseline": "runtime-faithful selected modular meshes, independent clip/phase, top-two normalized weights, and eight matrix-BAT texture loads per vertex",
+    "capturedLoadingConcession": "catalog modules are loaded once and cloned with unique geometry; steady-state draw/deformation topology matches the captured implementation, while repeated HTTP and glTF parsing are excluded",
+    "capturedMaterialConcession": "one shared flat surface shader replaces UE material trees and per-actor dye clones, making this an optimistic baseline for the captured implementation",
+    "thinBatPath": "one thin-instance bucket per populated module primitive; each instance carries independent clip start, frame count, rate, phase, and position while all actors share source geometry and one matrix BAT texture",
+    "visibilityConcession": "all masters are forced active so every vertex is submitted, but the stress camera cannot show every distant actor; real fully visible material and fragment cost will lower the actor ceiling"
+  },
+  "capturedModularBatSweep": [
+    {
+      "actors": 100,
+      "drawCalls": 600,
+      "submittedVertices": 178680,
+      "frameMeanMs": 16.733333333333334,
+      "frameP95Ms": 18.645000010728836,
+      "queueCompletionMeanMs": 4.773166665434838,
+      "meanFps": 59.7609561752988,
+      "duplicatedGeometryMiB": 12.945899963378906
+    },
+    {
+      "actors": 250,
+      "drawCalls": 1500,
+      "submittedVertices": 446700,
+      "frameMeanMs": 16.66533333361149,
+      "frameP95Ms": 17.854999989271164,
+      "queueCompletionMeanMs": 9.73199999332428,
+      "meanFps": 60.0048003830292,
+      "duplicatedGeometryMiB": 32.364749908447266
+    },
+    {
+      "actors": 500,
+      "drawCalls": 3000,
+      "submittedVertices": 893400,
+      "frameMeanMs": 20.402333333094916,
+      "frameP95Ms": 22.94999998807907,
+      "queueCompletionMeanMs": 66.84566666980585,
+      "meanFps": 49.014001667048824,
+      "duplicatedGeometryMiB": 64.72949981689453
+    },
+    {
+      "actors": 1000,
+      "drawCalls": 6000,
+      "submittedVertices": 1786800,
+      "frameMeanMs": 40.23633333345254,
+      "frameP95Ms": 51.019999980926514,
+      "queueCompletionMeanMs": 115.13049999773503,
+      "meanFps": 24.85315925068646,
+      "duplicatedGeometryMiB": 129.45899963378906
+    }
+  ],
+  "thinInstancedBatSweep": [
+    {
+      "actors": 100,
+      "drawCalls": 22,
+      "thinInstances": 600,
+      "submittedVertices": 178680,
+      "frameMeanMs": 16.669750000536443,
+      "frameP95Ms": 18.984999984502792,
+      "queueCompletionMeanMs": 2.8025000005960465,
+      "meanFps": 59.9889020511897,
+      "sharedGeometryMiB": 0.6177234649658203,
+      "instanceBufferMiB": 0.0457763671875
+    },
+    {
+      "actors": 250,
+      "drawCalls": 22,
+      "thinInstances": 1500,
+      "submittedVertices": 446700,
+      "frameMeanMs": 16.601749999821187,
+      "frameP95Ms": 19.33500000834465,
+      "queueCompletionMeanMs": 3.7569999977946282,
+      "meanFps": 60.23461382148091,
+      "sharedGeometryMiB": 0.6177234649658203,
+      "instanceBufferMiB": 0.11444091796875
+    },
+    {
+      "actors": 500,
+      "drawCalls": 22,
+      "thinInstances": 3000,
+      "submittedVertices": 893400,
+      "frameMeanMs": 16.770999999344347,
+      "frameP95Ms": 18.69999998807907,
+      "queueCompletionMeanMs": 4.153249993920326,
+      "meanFps": 59.626736631035385,
+      "sharedGeometryMiB": 0.6177234649658203,
+      "instanceBufferMiB": 0.2288818359375
+    },
+    {
+      "actors": 1000,
+      "drawCalls": 22,
+      "thinInstances": 6000,
+      "submittedVertices": 1786800,
+      "frameMeanMs": 16.63974999934435,
+      "frameP95Ms": 18.96500000357628,
+      "queueCompletionMeanMs": 4.160250002145768,
+      "meanFps": 60.09705674901382,
+      "sharedGeometryMiB": 0.6177234649658203,
+      "instanceBufferMiB": 0.457763671875
+    },
+    {
+      "actors": 2000,
+      "drawCalls": 22,
+      "thinInstances": 12000,
+      "submittedVertices": 3573600,
+      "frameMeanMs": 16.67124999910593,
+      "frameP95Ms": 17.729999989271164,
+      "queueCompletionMeanMs": 5.160999999940396,
+      "meanFps": 59.98350453946941,
+      "sharedGeometryMiB": 0.6177234649658203,
+      "instanceBufferMiB": 0.91552734375
+    },
+    {
+      "actors": 5000,
+      "drawCalls": 22,
+      "thinInstances": 30000,
+      "submittedVertices": 8934000,
+      "frameMeanMs": 16.667000000178813,
+      "frameP95Ms": 17.974999994039536,
+      "queueCompletionMeanMs": 8.603250002861023,
+      "meanFps": 59.99880002335582,
+      "sharedGeometryMiB": 0.6177234649658203,
+      "instanceBufferMiB": 2.288818359375
+    },
+    {
+      "actors": 10000,
+      "drawCalls": 22,
+      "thinInstances": 60000,
+      "submittedVertices": 17868000,
+      "frameMeanMs": 16.7747499987483,
+      "frameP95Ms": 18.7049999833107,
+      "queueCompletionMeanMs": 8.517499999701977,
+      "meanFps": 59.61340705969496,
+      "sharedGeometryMiB": 0.6177234649658203,
+      "instanceBufferMiB": 4.57763671875
+    },
+    {
+      "actors": 20000,
+      "drawCalls": 22,
+      "thinInstances": 120000,
+      "submittedVertices": 35736000,
+      "frameMeanMs": 16.68974999934435,
+      "frameP95Ms": 17.474999994039536,
+      "queueCompletionMeanMs": 14.436499997973442,
+      "meanFps": 59.91701493666979,
+      "sharedGeometryMiB": 0.6177234649658203,
+      "instanceBufferMiB": 9.1552734375
+    },
+    {
+      "actors": 30000,
+      "drawCalls": 22,
+      "thinInstances": 180000,
+      "submittedVertices": 53604000,
+      "frameMeanMs": 16.741499999165534,
+      "frameP95Ms": 18.649999976158142,
+      "queueCompletionMeanMs": 59.57775000333786,
+      "meanFps": 59.731804202123115,
+      "sharedGeometryMiB": 0.6177234649658203,
+      "instanceBufferMiB": 13.73291015625
+    },
+    {
+      "actors": 40000,
+      "drawCalls": 22,
+      "thinInstances": 240000,
+      "submittedVertices": 71472000,
+      "frameMeanMs": 22.588749998807906,
+      "frameP95Ms": 26.28499999642372,
+      "queueCompletionMeanMs": 92.79049999862909,
+      "meanFps": 44.269824583156385,
+      "sharedGeometryMiB": 0.6177234649658203,
+      "instanceBufferMiB": 18.310546875
+    },
+    {
+      "actors": 60000,
+      "drawCalls": 22,
+      "thinInstances": 360000,
+      "submittedVertices": 107208000,
+      "frameMeanMs": 33.651500000059606,
+      "frameP95Ms": 37.644999980926514,
+      "queueCompletionMeanMs": 136.96225000172853,
+      "meanFps": 29.716357368861082,
+      "sharedGeometryMiB": 0.6177234649658203,
+      "instanceBufferMiB": 27.4658203125
+    },
+    {
+      "actors": 80000,
+      "drawCalls": 22,
+      "thinInstances": 480000,
+      "submittedVertices": 142944000,
+      "frameMeanMs": 42.424749998748304,
+      "frameP95Ms": 42.8299999833107,
+      "queueCompletionMeanMs": 169.28699999898672,
+      "meanFps": 23.571146560191963,
+      "sharedGeometryMiB": 0.6177234649658203,
+      "instanceBufferMiB": 36.62109375
+    },
+    {
+      "actors": 120000,
+      "drawCalls": 22,
+      "thinInstances": 720000,
+      "submittedVertices": 214416000,
+      "frameMeanMs": 62.06099999994039,
+      "frameP95Ms": 64.28999999165535,
+      "queueCompletionMeanMs": 248.03324999809266,
+      "meanFps": 16.113178969094285,
+      "sharedGeometryMiB": 0.6177234649658203,
+      "instanceBufferMiB": 54.931640625
+    }
+  ],
+  "comparisons": [
+    {
+      "actors": 1000,
+      "selectedModuleVerticesPerFrame": 1786800,
+      "capturedModularBatVerticesPerFrame": 1786800,
+      "paths": {
+        "cached": {
+          "frameMeanMs": 16.669999999801316,
+          "frameP95Ms": 18.060000002384186,
+          "queueCompletionMeanMs": 4.5686666637659075,
+          "meanFps": 59.988002400235075
+        },
+        "hybrid": {
+          "frameMeanMs": 16.668500000238417,
+          "frameP95Ms": 18.36499997973442,
+          "queueCompletionMeanMs": 6.559999997417132,
+          "meanFps": 59.99340072506204
+        },
+        "bat": {
+          "frameMeanMs": 40.23633333345254,
+          "frameP95Ms": 51.019999980926514,
+          "queueCompletionMeanMs": 115.13049999773503,
+          "meanFps": 24.85315925068646,
+          "drawCalls": 6000,
+          "duplicatedGeometryMiB": 129.45899963378906
+        },
+        "thinBat": {
+          "frameMeanMs": 16.63974999934435,
+          "frameP95Ms": 18.96500000357628,
+          "queueCompletionMeanMs": 4.160250002145768,
+          "meanFps": 60.09705674901382,
+          "drawCalls": 22,
+          "sharedGeometryMiB": 0.6177234649658203,
+          "instanceBufferMiB": 0.457763671875
+        }
+      },
+      "cachedVsInlineVat": {
+        "frameSpeedup": 0.9999100180226205,
+        "frameTimeReductionPercent": -0.00899900748643212,
+        "queueCompletionSpeedup": 1.4358675036295574
+      },
+      "cachedVsCapturedModularBat": {
+        "frameSpeedup": 2.4136972605838096,
+        "frameTimeReductionPercent": 58.56978352959946,
+        "queueCompletionSpeedup": 25.20002190372849
+      },
+      "thinBatVsCapturedModularBat": {
+        "frameSpeedup": 2.4180852077127337,
+        "frameTimeReductionPercent": 58.644964337468494,
+        "drawCallReductionPercent": 99.63333333333333,
+        "duplicatedGeometryReductionPercent": 99.52284239279369
+      }
+    }
+  ]
+}

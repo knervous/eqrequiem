@@ -1,0 +1,154 @@
+{
+  "asset": {
+    "renderPath": "supermesh",
+    "modules": 26,
+    "slots": 6,
+    "vertices": 8532,
+    "averageSelectedVertices": 1772,
+    "vertexWorkAmplification": 4.8148984198645595,
+    "bones": 107,
+    "vatFrames": 17381,
+    "vatClips": 329,
+    "geometryBytes": 5487316,
+    "vatGzipBytes": 20825800
+  },
+  "backend": {
+    "renderPath": "supermesh",
+    "engine": "AbstractEngine",
+    "backend": "WebGPU/storage",
+    "vatQuality": "full",
+    "renderer": "WebGPU1",
+    "hardwareConcurrency": 12,
+    "devicePixelRatio": 2,
+    "renderWidth": 1280,
+    "renderHeight": 720,
+    "gpuTimingSource": "queue-completion-upper-bound"
+  },
+  "structuralLimits": {
+    "actorStrideBytes": 144,
+    "shaderSelectableSlots": 6,
+    "actorFieldSlotCapacity": 8,
+    "variationsPerSlotWithCurrentEncoding": 16,
+    "modulesWithCurrentSixSlotShader": 96,
+    "modulesWithEightActorFieldSlots": 128,
+    "maxTextureSize": 8192,
+    "dataTextureActorCeiling": 1864135,
+    "maxVisibleIndicesInDataTexture": 67108864,
+    "maxStorageBufferBindingBytes": 134217728,
+    "storageActorCeiling": 932067,
+    "maxVatFramesAtCurrentBoneWidth": 8192,
+    "maxVatBonesAtTwoTexelsPerBone": 4096,
+    "maxVertexAttributes": 16
+  },
+  "sweep": [
+    {
+      "actors": 1000,
+      "addActorsMs": 7.644999980926514,
+      "verticesPerFrame": 8532000,
+      "selectedVerticesPerFrame": 1772000,
+      "vertexWorkAmplification": 4.8148984198645595,
+      "frameMs": {
+        "mean": 16.625499999523164,
+        "p50": 16.66499999165535,
+        "p95": 18.189999997615814,
+        "p99": 18.360000014305115,
+        "max": 18.360000014305115
+      },
+      "queueCompletionMs": {
+        "mean": 10.006166665752728,
+        "p50": 9.599999994039536,
+        "p95": 12.849999994039536,
+        "p99": 13.340000003576279,
+        "max": 13.340000003576279
+      },
+      "meanFps": 60.148566962117286,
+      "vertexThroughputPerSecond": 513187573.3207847,
+      "actorArenaMiB": 0.1373443603515625,
+      "verdict": "30 fps"
+    },
+    {
+      "actors": 5000,
+      "addActorsMs": 21.40999999642372,
+      "verticesPerFrame": 42660000,
+      "selectedVerticesPerFrame": 8860000,
+      "vertexWorkAmplification": 4.8148984198645595,
+      "frameMs": {
+        "mean": 36.01883333325386,
+        "p50": 36.070000022649765,
+        "p95": 36.41499999165535,
+        "p99": 36.479999989271164,
+        "max": 36.479999989271164
+      },
+      "queueCompletionMs": {
+        "mean": 143.5860000004371,
+        "p50": 143.61500000953674,
+        "p95": 144.46000000834465,
+        "p99": 144.61499997973442,
+        "max": 144.61499997973442
+      },
+      "meanFps": 27.76325348319277,
+      "vertexThroughputPerSecond": 1184380393.5930035,
+      "actorArenaMiB": 0.6866607666015625,
+      "verdict": "below 30 fps"
+    },
+    {
+      "actors": 10000,
+      "addActorsMs": 26.87000000476837,
+      "verticesPerFrame": 85320000,
+      "selectedVerticesPerFrame": 17720000,
+      "vertexWorkAmplification": 4.8148984198645595,
+      "frameMs": {
+        "mean": 71.74466666678588,
+        "p50": 72.02000001072884,
+        "p95": 74.14000001549721,
+        "p99": 74.43500000238419,
+        "max": 74.43500000238419
+      },
+      "queueCompletionMs": {
+        "mean": 285.0081666638454,
+        "p50": 284.97999998927116,
+        "p95": 288.5849999785423,
+        "p99": 290.27499997615814,
+        "max": 290.27499997615814
+      },
+      "meanFps": 13.938318295413435,
+      "vertexThroughputPerSecond": 1189217316.9646742,
+      "actorArenaMiB": 1.3733062744140625,
+      "verdict": "below 30 fps"
+    },
+    {
+      "actors": 20000,
+      "addActorsMs": 64.86000001430511,
+      "verticesPerFrame": 170640000,
+      "selectedVerticesPerFrame": 35440000,
+      "vertexWorkAmplification": 4.8148984198645595,
+      "frameMs": {
+        "mean": 133.0589999993642,
+        "p50": 132.99000000953674,
+        "p95": 134,
+        "p99": 134.3100000023842,
+        "max": 134.3100000023842
+      },
+      "queueCompletionMs": {
+        "mean": 531.7081666658322,
+        "p50": 531.6450000107288,
+        "p95": 532.5749999880791,
+        "p99": 532.6800000071526,
+        "max": 532.6800000071526
+      },
+      "meanFps": 7.515463065292677,
+      "vertexThroughputPerSecond": 1282438617.4615424,
+      "actorArenaMiB": 2.7465972900390625,
+      "verdict": "below 30 fps"
+    }
+  ],
+  "measuredLimits": {
+    "largestTestedAt60FpsP95": 0,
+    "largestTestedAt30FpsP95": 1000,
+    "largestTested": 20000,
+    "peakVertexThroughputPerSecond": 1282438617.4615424,
+    "stoppedAfterTwoP95SamplesAbove50Ms": true,
+    "warmupFrames": 10,
+    "sampleFrames": 30
+  }
+}

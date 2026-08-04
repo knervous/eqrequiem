@@ -21,6 +21,7 @@ import {
   type ShadoPickingHandle,
 } from '../render/ShadoAsyncPicking';
 import type { ShadoConcreteCtor } from '../types';
+import type { ShadoInstanceDrawSelection } from '../extensions/ShadoInstanceContainer/ShadoInstanceDrawSelection';
 
 /**
  * Controls the amount of dual-quaternion VAT work performed per vertex.
@@ -40,6 +41,12 @@ export interface ShadoMaterialOptions<TActor extends ShadoActor = ShadoActor> {
   vatQuality?: ShadoVatQualityTier;
   /** Additional application-owned textures exposed to generated shaders. */
   textures?: Record<string, Texture>;
+  /** Optional compact actor list for one module/cohort draw. */
+  drawSelection?: ShadoInstanceDrawSelection;
+  /** Shared clip range/phase/rate for a synchronized animation cohort. */
+  sharedAnimation?: ArrayLike<number> | (() => ArrayLike<number>);
+  /** Shared clock used by all materials participating in one cohort. */
+  animationTimeSource?: () => number;
 }
 
 export class ShadoMaterial<T extends Shado> extends BABYLON.ShaderMaterial {
@@ -56,6 +63,7 @@ export class ShadoMaterial<T extends Shado> extends BABYLON.ShaderMaterial {
   private readonly _lightDirection = BABYLON.Vector3.Zero();
   private readonly _lightColor = BABYLON.Vector3.Zero();
   private readonly _ambientColor = BABYLON.Vector3.Zero();
+  private readonly _sharedAnimation = BABYLON.Vector4.Zero();
   public get effect() {
     return this._effect;
   }
@@ -101,6 +109,9 @@ export class ShadoMaterial<T extends Shado> extends BABYLON.ShaderMaterial {
     if (useVat && vatQuality === 'low') {
       defines.add('SHADO_VAT_DOMINANT_BONE');
     }
+    if (useVat && opts?.sharedAnimation) {
+      defines.add('SHADO_VAT_SHARED_POSE');
+    }
 
     // ── Decide texture features from current mesh material ───────────────────
     const tex = pickCommonTextures(mesh.material);
@@ -126,8 +137,10 @@ export class ShadoMaterial<T extends Shado> extends BABYLON.ShaderMaterial {
       uniforms.push('bakedVertexAnimationTime');
       uniforms.push('uDQWidth');
       uniforms.push('uDQTilesX');
+      uniforms.push('uDQFramesX');
       uniforms.push('uDQStrideTexels');
       uniforms.push('uDQHasScale');
+      if (opts?.sharedAnimation) uniforms.push('uShadoSharedAnimation');
     }
 
     const samplers = [
@@ -220,20 +233,38 @@ export class ShadoMaterial<T extends Shado> extends BABYLON.ShaderMaterial {
     const syncMaterial = () => {
       shado.syncGpu((engine as any).frameId ?? 0);
       shado.bindMaterial(this);
+      opts?.drawSelection?.commit();
+      opts?.drawSelection?.bind(this);
       this.setTexture('uAtlasArray', atlas.texture);
       this.bindBaseLighting();
       if (useVat) {
         this._vat?.bindMaterial(this);
-        this.setFloat('bakedVertexAnimationTime', this._timeSec);
+        this.setFloat(
+          'bakedVertexAnimationTime',
+          opts?.animationTimeSource?.() ?? this._timeSec
+        );
+        const sharedAnimation = typeof opts?.sharedAnimation === 'function'
+          ? opts.sharedAnimation()
+          : opts?.sharedAnimation;
+        if (sharedAnimation) {
+          this._sharedAnimation.set(
+            Number(sharedAnimation[0]) || 0,
+            Number(sharedAnimation[1]) || 0,
+            Number(sharedAnimation[2]) || 0,
+            Number(sharedAnimation[3]) || 0
+          );
+          this.setVector4('uShadoSharedAnimation', this._sharedAnimation);
+        }
       }
-      const visibleCount = (shado as any).getVisibleCount?.() ?? (shado as any).visibleCount ?? 0;
+      const visibleCount = opts?.drawSelection?.visibleCount ??
+        (shado as any).getVisibleCount?.() ?? (shado as any).visibleCount ?? 0;
       mesh.forcedInstanceCount = Math.max(0, visibleCount | 0);
       mesh.isVisible = mesh.forcedInstanceCount > 0;
     };
     syncMaterial();
     this.forceCompilation(mesh);
     const timeObs = scene.onBeforeRenderObservable.add(() => {
-      if (!this._paused) {
+      if (!opts?.animationTimeSource && !this._paused) {
         const dt = engine.getDeltaTime() * 0.001;
         this._timeSec += dt * this._timeScale;
       }
@@ -243,6 +274,7 @@ export class ShadoMaterial<T extends Shado> extends BABYLON.ShaderMaterial {
     this.onDisposeObservable.add(() => {
       scene.onBeforeRenderObservable.remove(timeObs);
       this._pickingHandle?.dispose();
+      opts?.drawSelection?.dispose();
       mesh.forcedInstanceCount = 0;
     });
 

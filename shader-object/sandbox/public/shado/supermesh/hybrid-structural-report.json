@@ -1,0 +1,60 @@
+{
+  "passed": true,
+  "path": "hybrid-module-buckets/shared-pose-uniform",
+  "animation": {
+    "libraries": 1,
+    "clips": 329,
+    "vatGzipBytes": 20825800,
+    "duplicatedAnimationLibraries": 0,
+    "deformationReuse": "shared-uniform; per-submitted-actor-vertex DQ skinning remains"
+  },
+  "geometry": {
+    "modules": 26,
+    "slots": 6,
+    "sourceModuleVertices": 8532,
+    "storedOutfitPermutations": 0,
+    "possibleDynamicCombinations": 3125
+  },
+  "rows": [
+    {
+      "actors": 1,
+      "populatedModuleBuckets": 6,
+      "baselineSupermeshVertices": 8532,
+      "submittedVertices": 1819,
+      "avoidedHiddenVertices": 6713,
+      "vertexWorkReduction": 4.690489279824079
+    },
+    {
+      "actors": 10,
+      "populatedModuleBuckets": 22,
+      "baselineSupermeshVertices": 85320,
+      "submittedVertices": 17868,
+      "avoidedHiddenVertices": 67452,
+      "vertexWorkReduction": 4.775016789791807
+    },
+    {
+      "actors": 100,
+      "populatedModuleBuckets": 22,
+      "baselineSupermeshVertices": 853200,
+      "submittedVertices": 178680,
+      "avoidedHiddenVertices": 674520,
+      "vertexWorkReduction": 4.775016789791807
+    },
+    {
+      "actors": 1000,
+      "populatedModuleBuckets": 22,
+      "baselineSupermeshVertices": 8532000,
+      "submittedVertices": 1786800,
+      "avoidedHiddenVertices": 6745200,
+      "vertexWorkReduction": 4.775016789791807
+    },
+    {
+      "actors": 2000,
+      "populatedModuleBuckets": 22,
+      "baselineSupermeshVertices": 17064000,
+      "submittedVertices": 3573600,
+      "avoidedHiddenVertices": 13490400,
+      "vertexWorkReduction": 4.775016789791807
+    }
+  ]
+}

@@ -1,4 +1,7 @@
-import type { SerializedDQVAT } from '../extensions/VATBuilder/VATBuilder';
+import type { PackedDQVAT, SerializedDQVAT } from '../extensions/VATBuilder/VATBuilder';
+import { decodeSvat } from '../svat/SvatCodec';
+import { isSvatContainer } from '../svat/SvatFormat';
+import { createSvatDecompressor, type SvatRuntimeDecoderOptions } from '../svat/SvatRuntime';
 
 export type ShadoModelArtifactMap = {
   model?: string | null;
@@ -73,6 +76,8 @@ export type ShadoDeserializeOptions = {
   gpu?: {
     textureHalfFloat?: boolean;
   };
+  /** Decoder options for `.svat` artifacts, e.g. a WASM Zstd fallback. */
+  svat?: SvatRuntimeDecoderOptions;
   fetch?: typeof fetch;
 };
 
@@ -81,7 +86,10 @@ export type ShadoDeserializedModel = {
   manifestModel?: ShadoModelManifestEntry;
   model?: ShadoPackedModel;
   modelUrl?: string;
+  /** Legacy JSON + Base64 artifact. Populated only for pre-`.svat` assets. */
   vat?: SerializedDQVAT;
+  /** Decoded `.svat` atlas. Preferred; feed straight to `VATBuilder.fromPacked()`. */
+  vatPacked?: PackedDQVAT;
   vatVariant?: 'float16' | 'float32';
   vatUrl?: string;
   wasm?: ArrayBuffer;
@@ -140,7 +148,21 @@ export async function deserializeShadoModel(
 
   const vatChoice = chooseVatArtifact(artifacts, options);
   if (vatChoice) {
-    result.vat = await fetchShadoJson<SerializedDQVAT>(vatChoice.url, { fetch: fetcher });
+    const bytes = await fetchShadoBytes(vatChoice.url, { fetch: fetcher });
+    if (isSvatContainer(bytes)) {
+      result.vatPacked = await decodeSvat(bytes, {
+        decompress: createSvatDecompressor(options.svat ?? {}),
+      });
+    } else {
+      // Legacy `.vat16.json.gz` / `.vat32.json.gz`: JSON with a Base64 payload.
+      const text = new TextDecoder().decode(bytes);
+      if (/^\s*</.test(text)) throw new Error(`VAT artifact '${vatChoice.url}' returned HTML`);
+      try {
+        result.vat = JSON.parse(text) as SerializedDQVAT;
+      } catch (error) {
+        throw new Error(`VAT artifact '${vatChoice.url}' is invalid`, { cause: error });
+      }
+    }
     result.vatVariant = vatChoice.variant;
     result.vatUrl = vatChoice.url;
   }

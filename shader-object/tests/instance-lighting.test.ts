@@ -32,7 +32,9 @@ describe('base instance lighting', () => {
     expect(glsl.fs).toContain('surface.rgb *= vShadoLighting;');
     expect(wgsl.vs).toContain('inst.padding1 > 0.5');
     expect(wgsl.vs).toContain('Shado_rotatePoint(blendedDQ.real, localNormal)');
-    expect(wgsl.fs).toContain('surface.rgb = surface.rgb * fragmentInputs.vShadoLighting;');
+    expect(wgsl.fs).toContain(
+      'surface = vec4f(surface.rgb * fragmentInputs.vShadoLighting, surface.a);'
+    );
 
     container.dispose();
     engine.dispose();

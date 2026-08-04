@@ -342,4 +342,22 @@ describe('Dual Quaternion Transform Tests', () => {
     // This test just documents the indexing logic
     expect(true).toBe(true);
   });
+
+  test('Atlas frame-grid indexing keeps a full frame palette in each column', () => {
+    const bones = 107;
+    const stride = 2;
+    const framesX = 3;
+    const width = bones * stride * framesX;
+    const coordinate = (frame: number, bone: number) => ({
+      x: (frame % framesX) * bones * stride + bone * stride,
+      y: Math.floor(frame / framesX),
+    });
+
+    expect(width).toBe(642);
+    expect(coordinate(0, 0)).toEqual({ x: 0, y: 0 });
+    expect(coordinate(1, 0)).toEqual({ x: 214, y: 0 });
+    expect(coordinate(2, 106)).toEqual({ x: 640, y: 0 });
+    expect(coordinate(3, 0)).toEqual({ x: 0, y: 1 });
+    expect(coordinate(17380, 106)).toEqual({ x: 426, y: 5793 });
+  });
 });
