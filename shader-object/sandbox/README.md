@@ -81,11 +81,21 @@ Useful query parameters:
 
 ## Vercel
 
-Create a Vercel project with `shader-object/sandbox` as its Root Directory.
-Keep **Include source files outside of the Root Directory** enabled so the
-linked parent `@knervous/shado` package is available during installation.
-The included `vercel.json` builds `dist`, restores SPA deep links, and supplies
-the cross-origin-isolation headers required by Shado's shared-memory paths.
+Vercel reads `vercel.json` from the project's Root Directory and ignores any
+other copy, so which file is live depends on how the project is configured:
+
+- Root Directory `shader-object/sandbox` — this directory's `vercel.json`
+  applies. Keep **Include source files outside of the Root Directory** enabled
+  so the linked parent `@knervous/shado` package is available during install.
+- Root Directory `shader-object` — `../vercel.json` applies instead. It carries
+  only the rewrites and headers; the build command and output directory come
+  from the project settings (`sandbox/dist`).
+
+Either way the config restores SPA deep links (`/world`, `/world-editor`,
+`/supermesh-scale` are client routes with no file on disk, so without the
+rewrite they 404 while `/?renderer=…` still works) and supplies the
+cross-origin-isolation headers Shado's shared-memory paths require. **Keep the
+`rewrites` and `headers` blocks in the two files identical.**
 The exact-model share URL is:
 
 ```text
