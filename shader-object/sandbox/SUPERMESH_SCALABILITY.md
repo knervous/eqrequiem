@@ -96,12 +96,23 @@ scaling work itself.
 Defect (2) affects any Shado asset whose textures carry meaningful colour under
 transparent texels — it is not specific to this catalog.
 
+4. **The eye module had no material at all.** `NM_M_EY_N_1.glb` ships with no
+   material, texture or sampler — the reference viewer resolves eyes at runtime
+   from `materialRegistry.js` plus a loose PNG under the face texture directory,
+   so the supermesh assembled a null material and the eyes rendered as flat
+   white. `build-supermesh.mjs` now resolves materials for material-less
+   primitives from that same registry and embeds the texture, writing the usual
+   `UE2k4_MaterialTree` extras so the dye combiner in (3) applies to them too.
+   `NM_M_EY_N_1_SD` names a texture the capture never shipped (only eye textures
+   2, 3, 4 and 14 exist), so `pipeline.json` carries an explicit
+   `moduleMaterialOverrides` entry pointing the module at `NM_M_EY_N_4_SD`.
+
 ### Still open
 
-- `NM_M_EY_N_1.glb` ships with no material and no texture at all, so the eyes
-  fall back to Babylon's default white. The reference viewer resolves an eye
-  material (a `NM_M_EY_N_CM` cubemap env map) out of its own material registry;
-  the supermesh build does not carry that.
+- Shado's fragment shader has its alpha discard commented out, so alpha-cutout
+  textures render their transparent regions opaque. It shows on hair as hard
+  black wedges around the silhouette. Unrelated to the modular work, but it is
+  now the most visible artifact on these actors.
 - The timing sweep in this document predates the fixes above. The atlas and
   dye work is load-time only, but the hybrid world-bake changes what the vertex
   shader consumes, so the sweep should be re-run before its numbers are quoted

@@ -457,17 +457,13 @@ button:focus-visible {
     max-width: none;
   }
 
+  /* Positioning is owned by the mobile modal treatment in MobilePanelModal.ts;
+     it turns this panel into a dismissible sheet instead of a full-screen
+     overlay that buried the 3D view. Only the inner spacing belongs here. */
   .world-editor-panel {
-    top: 54px;
-    right: 8px;
-    bottom: 8px;
-    left: 8px;
     box-sizing: border-box;
-    width: auto;
-    max-height: none;
     padding: 12px;
     border-radius: 10px;
-    overscroll-behavior: contain;
   }
 
   .world-editor-toolbar,

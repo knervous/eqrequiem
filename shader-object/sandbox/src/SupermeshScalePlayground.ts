@@ -13,6 +13,7 @@ import {
   type ShadoVatQualityTier,
 } from '@knervous/shado';
 import { pickShadoInstanceAtPointer } from '@knervous/shado/render';
+import { installMobilePanelModal } from './MobilePanelModal';
 import { fetchShadoBytes } from '@knervous/shado/preprocess/runtime';
 import { createSvatDecompressor, decodeSvat, isSvatContainer } from '@knervous/shado/svat';
 import {
@@ -210,7 +211,7 @@ class HybridSupermeshScaleContainer extends ShadoInstanceContainer<SupermeshScal
 
 const UI_CSS = `
 .sms-panel{position:fixed;z-index:9;top:14px;right:14px;width:min(660px,calc(100vw - 28px));max-height:calc(100vh - 70px);overflow:auto;padding:16px;border:1px solid #33443a;border-radius:12px;background:#09110eef;color:#e6eee8;text-align:left;box-shadow:0 18px 60px #000a;backdrop-filter:blur(14px);font:12px/1.4 system-ui,sans-serif}
-.sms-panel *{box-sizing:border-box}.sms-panel h1{margin:2px 0 4px;font-size:18px}.sms-panel h2{margin:13px 0 6px;color:#9fb1a5;font-size:10px;letter-spacing:.11em;text-transform:uppercase}.sms-panel p{margin:0 0 10px;color:#9aaba0}.sms-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.sms-badge{padding:4px 7px;border:1px solid #42664d;border-radius:999px;color:#8de3a1;font:10px monospace;white-space:nowrap}.sms-progress{height:5px;margin:11px 0;background:#1c2821;border-radius:8px;overflow:hidden}.sms-progress i{display:block;width:0;height:100%;background:#63cc7b;transition:width .2s}.sms-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px}.sms-stat{padding:8px;border:1px solid #26372d;border-radius:7px;background:#101914}.sms-stat b{display:block;color:#edf8ef;font:13px monospace}.sms-stat span{color:#718078;font-size:9px;text-transform:uppercase;letter-spacing:.07em}.sms-actions{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:9px 0}.sms-actions button,.sms-actions select,.sms-actions input,.sms-fields select{height:29px;padding:0 9px;border:1px solid #354b3c;border-radius:6px;background:#142019;color:#dce9df;font-size:11px}.sms-actions button{cursor:pointer}.sms-actions button:hover{border-color:#65cc7b}.sms-actions input{width:74px}.sms-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.sms-fields label{display:grid;gap:3px;color:#819289;font-size:9px;text-transform:uppercase;letter-spacing:.06em}.sms-fields select{width:100%;min-width:0;text-transform:none;letter-spacing:0}.sms-slot{display:flex;align-items:center;gap:4px}.sms-slot button{flex:0 0 auto;width:24px;height:29px;padding:0;border:1px solid #354b3c;border-radius:6px;background:#142019;color:#dce9df;font-size:11px;line-height:1;cursor:pointer}.sms-slot button:hover{border-color:#65cc7b}.sms-slot select{flex:1 1 auto}.sms-caption{display:flex;justify-content:space-between;gap:6px}.sms-caption i{font-style:normal;color:#5d6c64}.sms-hint{color:#5d6c64;font:10px monospace}.sms-table{width:100%;border-collapse:collapse;font:10px monospace}.sms-table th,.sms-table td{padding:6px 5px;border-bottom:1px solid #203027;text-align:right;white-space:nowrap}.sms-table th:first-child,.sms-table td:first-child{text-align:left}.sms-table th{position:sticky;top:-16px;background:#09110e;color:#819289}.sms-table tr[data-verdict="60 fps"] td:last-child{color:#72dc89}.sms-table tr[data-verdict="30 fps"] td:last-child{color:#e3c66f}.sms-table tr[data-verdict="below 30 fps"] td:last-child{color:#ef8383}.sms-note{margin-top:10px!important;font:10px monospace!important;color:#718078!important}.sms-benchmark[hidden],.sms-explorer[hidden]{display:none}@media(max-width:720px){.sms-panel{left:8px;right:8px;top:8px;width:auto}.sms-grid,.sms-fields{grid-template-columns:repeat(2,1fr)}}`;
+.sms-panel *{box-sizing:border-box}.sms-panel h1{margin:2px 0 4px;font-size:18px}.sms-panel h2{margin:13px 0 6px;color:#9fb1a5;font-size:10px;letter-spacing:.11em;text-transform:uppercase}.sms-panel p{margin:0 0 10px;color:#9aaba0}.sms-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.sms-badge{padding:4px 7px;border:1px solid #42664d;border-radius:999px;color:#8de3a1;font:10px monospace;white-space:nowrap}.sms-progress{height:5px;margin:11px 0;background:#1c2821;border-radius:8px;overflow:hidden}.sms-progress i{display:block;width:0;height:100%;background:#63cc7b;transition:width .2s}.sms-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px}.sms-stat{padding:8px;border:1px solid #26372d;border-radius:7px;background:#101914}.sms-stat b{display:block;color:#edf8ef;font:13px monospace}.sms-stat span{color:#718078;font-size:9px;text-transform:uppercase;letter-spacing:.07em}.sms-actions{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:9px 0}.sms-actions button,.sms-actions select,.sms-actions input,.sms-fields select{height:29px;padding:0 9px;border:1px solid #354b3c;border-radius:6px;background:#142019;color:#dce9df;font-size:11px}.sms-actions button{cursor:pointer}.sms-actions button:hover{border-color:#65cc7b}.sms-actions input{width:74px}.sms-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.sms-fields label{display:grid;gap:3px;color:#819289;font-size:9px;text-transform:uppercase;letter-spacing:.06em}.sms-fields select{width:100%;min-width:0;text-transform:none;letter-spacing:0}.sms-slot{display:flex;align-items:center;gap:4px}.sms-slot button{flex:0 0 auto;width:24px;height:29px;padding:0;border:1px solid #354b3c;border-radius:6px;background:#142019;color:#dce9df;font-size:11px;line-height:1;cursor:pointer}.sms-slot button:hover{border-color:#65cc7b}.sms-slot select{flex:1 1 auto}.sms-caption{display:flex;justify-content:space-between;gap:6px}.sms-caption i{font-style:normal;color:#5d6c64}.sms-hint{color:#5d6c64;font:10px monospace}.sms-table{width:100%;border-collapse:collapse;font:10px monospace}.sms-table th,.sms-table td{padding:6px 5px;border-bottom:1px solid #203027;text-align:right;white-space:nowrap}.sms-table th:first-child,.sms-table td:first-child{text-align:left}.sms-table th{position:sticky;top:-16px;background:#09110e;color:#819289}.sms-table tr[data-verdict="60 fps"] td:last-child{color:#72dc89}.sms-table tr[data-verdict="30 fps"] td:last-child{color:#e3c66f}.sms-table tr[data-verdict="below 30 fps"] td:last-child{color:#ef8383}.sms-note{margin-top:10px!important;font:10px monospace!important;color:#718078!important}.sms-benchmark[hidden],.sms-explorer[hidden]{display:none}@media(max-width:700px){.sms-grid,.sms-fields{grid-template-columns:repeat(2,1fr)}.sms-panel{padding:13px}}`;
 
 /**
  * NM_M ships UE2k4 material trees in glTF extras. The diffuse node is a
@@ -372,11 +373,21 @@ function waitForFrames(
   });
 }
 
+/** What the active path actually exercises, spelled out under the title. */
+const PATH_SUMMARY: Record<RenderPath, string> = {
+  cached: 'module buckets · WebGPU compute pre-skin · resolved pose palette · shared DQ-VAT',
+  hybrid: 'module buckets · shared cohort clock · shared DQ-VAT',
+  supermesh: 'maximal-supermesh baseline · modules clipped after skinning · shared DQ-VAT',
+  bat: 'captured baseline · per-actor modular meshes · shared matrix BAT',
+  'bat-thin': 'captured baseline · thin-instanced module buckets · shared matrix BAT',
+};
+
 function createUi(
   quality: ShadoVatQualityTier,
   counts: number[],
   mode: 'explore' | 'benchmark',
   renderPath: RenderPath,
+  downgraded: boolean,
 ) {
   const usesModules = renderPath !== 'supermesh';
   const style = document.createElement('style');
@@ -384,7 +395,7 @@ function createUi(
   const panel = document.createElement('section');
   panel.className = 'sms-panel';
   panel.innerHTML = `
-    <div class="sms-head"><div><h1>NM_M ${renderPath} sandbox</h1><p>Discoverable body-part catalog · runtime composition · one shared ${renderPath.startsWith('bat') ? 'matrix BAT' : 'DQ-VAT'}</p></div><span class="sms-badge" data-role="status">LOADING</span></div>
+    <div class="sms-head"><div><h1>NM_M ${renderPath} sandbox</h1><p>${PATH_SUMMARY[renderPath]}${downgraded ? ' · <b>cached needs WebGPU, running hybrid</b>' : ''}</p></div><span class="sms-badge" data-role="status">LOADING</span></div>
     <div class="sms-progress"><i data-role="bar"></i></div>
     <div class="sms-grid">
       <div class="sms-stat"><b data-role="actors">—</b><span>${mode === 'benchmark' ? 'tested' : 'spawned'} actors</span></div>
@@ -410,7 +421,11 @@ function createUi(
     </section>`;
   document.head.append(style);
   document.body.append(panel);
-  if (new URLSearchParams(location.search).get('ui') === '0') panel.hidden = true;
+  const hidden = new URLSearchParams(location.search).get('ui') === '0';
+  if (hidden) panel.hidden = true;
+  const modal = hidden
+    ? undefined
+    : installMobilePanelModal(panel, { label: 'NM_M controls', openLabel: '☰ Controls' });
   const role = <T extends HTMLElement>(name: string) => panel.querySelector<T>(`[data-role="${name}"]`)!;
   role<HTMLSelectElement>('quality').addEventListener('change', event => {
     const url = new URL(location.href);
@@ -425,7 +440,7 @@ function createUi(
     location.href = url.href;
   });
   role<HTMLButtonElement>('rerun')?.addEventListener('click', () => location.reload());
-  return { style, panel, role };
+  return { style, panel, role, modal };
 }
 
 function permutationSelections(permutation: number): number[] {
@@ -463,14 +478,27 @@ export class SupermeshScalePlayground {
         ? requestedQuality : 'full';
     const mode = params.get('mode') === 'benchmark' ? 'benchmark' : 'explore';
     const requestedPath = params.get('path');
-    const renderPath: RenderPath = requestedPath === 'bat' || requestedPath === 'bat-thin' || requestedPath === 'hybrid' || requestedPath === 'cached'
-      ? requestedPath : 'supermesh';
+    // Default to the newest path the active backend can actually run, so the
+    // route exercises the module buckets and — on WebGPU — the compute
+    // pre-skin cache and resolved pose palette without needing a query string.
+    // `supermesh` stays reachable as the explicit maximal-supermesh baseline.
+    const defaultPath: RenderPath = engine.isWebGPU ? 'cached' : 'hybrid';
+    const explicitPath = requestedPath === 'bat' || requestedPath === 'bat-thin'
+      || requestedPath === 'hybrid' || requestedPath === 'cached' || requestedPath === 'supermesh'
+      ? requestedPath as RenderPath : undefined;
+    // The footer can switch the engine underneath a saved `path=cached` URL;
+    // degrade instead of dead-ending on "webgpu-preskin requires WebGPU".
+    const downgraded = explicitPath === 'cached' && !engine.isWebGPU;
+    const renderPath: RenderPath = downgraded ? 'hybrid' : explicitPath ?? defaultPath;
+    if (downgraded) {
+      console.warn('[supermesh] path=cached needs WebGPU; running the hybrid module path instead.');
+    }
     const usesHybridModules = renderPath === 'hybrid' || renderPath === 'cached';
     const usesModules = renderPath !== 'supermesh';
     const counts = readCounts(params);
     const warmupFrames = boundedInteger(params.get('warmup'), 20, 2, 240);
     const sampleFrames = boundedInteger(params.get('frames'), 60, 10, 600);
-    const ui = createUi(quality, counts, mode, renderPath);
+    const ui = createUi(quality, counts, mode, renderPath, downgraded);
     window.__shadoSupermeshScale = { status: 'loading' };
 
     const scene = new BABYLON.Scene(engine);
@@ -1215,6 +1243,7 @@ export class SupermeshScalePlayground {
       for (const texture of dyedTextures) texture.dispose();
       container?.dispose();
       delete (window as any).__supermeshDebug;
+      ui.modal?.dispose();
       ui.panel.remove();
       ui.style.remove();
     });

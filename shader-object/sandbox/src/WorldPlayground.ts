@@ -145,7 +145,13 @@ export async function attachProcessedWorld(
         1.15;
     }
 
-    const sources = await loadSourceWorld(scene, world.source ?? '/shado/worlds/qey2hh1.glb.gz');
+    // Spatial packages bake the Requiem client's asset root into `source`
+    // (/eqrequiem/worlds/...). The sandbox serves the same GLBs from its own
+    // public directory, and the `??` fallback never fired because `source` is
+    // set — so the request fell through to the SPA index.html and the glTF
+    // loader reported "Unexpected magic: 1868833084" ("<!do"). Resolve by name.
+    const sourceName = (world.source ?? `${world.name}.glb.gz`).split('/').pop();
+    const sources = await loadSourceWorld(scene, `/shado/worlds/${sourceName}`);
     const renderChunks = createRenderChunks(scene, world, sources);
     const boundsMeshes = createClusterBounds(scene, world);
     const tileLines = createTileLines(scene, world);

@@ -529,6 +529,13 @@
   ],
   "joints": 107,
   "primitiveCount": 26,
+  "resolvedMaterials": [
+    {
+      "module": "NM_M_EY_N_1.glb",
+      "materialTree": "NM_M_EY_N_4_SD",
+      "texture": "NM_M_EY_N_4.png"
+    }
+  ],
   "animation": {
     "source": "../shado-viability/build/NM_M.full.vat16.index.json.gz",
     "dataSource": "../shado-viability/build/NM_M.full.vat16.bin.gz",
@@ -883,11 +890,11 @@
     "vatBinaryGzipBytes": 20802879
   },
   "bytes": {
-    "supermeshStatic": 5487316,
-    "supermeshStaticGzip": 4885683,
+    "supermeshStatic": 5491284,
+    "supermeshStaticGzip": 4888924,
     "oneSharedVat": 20825800,
-    "deployPair": 26313116,
-    "deployPairCompressed": 25711483,
+    "deployPair": 26317084,
+    "deployPairCompressed": 25714724,
     "fiveSeparateStatic": 6616172,
     "fiveSeparateStaticPlusSharedVat": 27441972,
     "fiveSeparateSkeletal": 13919464,
@@ -895,9 +902,9 @@
     "fullAnimationOverhead": 99038980,
     "projectedFiveFullSkeletal": 501811072,
     "fullMatrixBatExr": 119072059,
-    "avoidedVsSeparateStaticPlusSharedVat": 1128856,
-    "avoidedVsSeparateStaticPlusSharedVatCompressed": 1730489,
-    "avoidedVsProjectedFiveFullSkeletalCompressed": 476099589
+    "avoidedVsSeparateStaticPlusSharedVat": 1124888,
+    "avoidedVsSeparateStaticPlusSharedVatCompressed": 1727248,
+    "avoidedVsProjectedFiveFullSkeletalCompressed": 476096348
   },
   "sourceFiles": [
     {

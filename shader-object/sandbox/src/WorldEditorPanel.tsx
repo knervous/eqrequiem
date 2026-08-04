@@ -8,6 +8,7 @@ import {
 } from '@knervous/shado/world';
 import type { WorldDevState } from './WorldPlayground';
 import type { WorldRegionEditorCommand, WorldRegionEditorState } from './WorldRegionEditor';
+import { installMobilePanelModal } from './MobilePanelModal';
 
 const REGION_KINDS: ShadoWorldRegionKind[] = [
   'visibility-cell', 'streaming', 'water', 'lava', 'safe',
@@ -22,7 +23,17 @@ export function WorldEditorPanel() {
     () => window.__shadoWorldRegions
   );
   const [draft, setDraft] = useState<ShadoWorldAuthoringRegion>();
+  const panelRef = useRef<HTMLElement>(null);
   const draftDirty = useRef(false);
+
+  useEffect(() => {
+    if (!panelRef.current) return;
+    const modal = installMobilePanelModal(panelRef.current, {
+      label: 'World development',
+      openLabel: '☰ Editor',
+    });
+    return () => modal.dispose();
+  }, []);
   const selectedDraftId = useRef<string | undefined>(undefined);
   const [metadataText, setMetadataText] = useState('{}');
   const [editError, setEditError] = useState<string>();
@@ -178,7 +189,7 @@ export function WorldEditorPanel() {
   };
   const navigationDraft = navigationFromMetadata(draft?.metadata);
   return (
-    <aside className="world-editor-panel">
+    <aside className="world-editor-panel" ref={panelRef}>
       <header className="world-editor-header">
         <div>
           <h2>World development</h2>

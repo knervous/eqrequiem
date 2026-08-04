@@ -44,13 +44,22 @@ Open the actor editor at:
 http://localhost:5173/supermesh-scale?renderer=babylonjs&model=nm-m-supermesh&mode=explore
 ```
 
-Set `path=hybrid` to render the same catalog as independent module buckets.
+With no `path` the route runs the newest translation the active backend
+supports — `cached` on WebGPU, `hybrid` on WebGL2 — so the default exercises the
+module buckets, and on WebGPU the compute pre-skin cache and resolved pose
+palette. The title bar names the active path and what it exercises. A saved
+`path=cached` URL opened on WebGL2 degrades to `hybrid` rather than failing.
+
 Every bucket receives only the actors selecting that part, while all buckets
-share one packed actor arena, VAT texture, clock, clip, and phase:
+share one packed actor arena, VAT texture, clock, clip, and phase. Pin a path
+explicitly to compare:
 
 ```text
 http://localhost:5173/supermesh-scale?renderer=babylonjs&model=nm-m-supermesh&path=hybrid&mode=explore
 ```
+
+`path=supermesh` is the maximal-supermesh baseline: every actor skins all 8,532
+vertices and hidden modules are clipped only after skinning.
 
 The manifest stores six common body-part slots and each slot's available module
 variations. It stores no permutation table. The GUI discovers that catalog and
