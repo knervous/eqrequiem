@@ -72,6 +72,15 @@ export type EqShowcaseOptions = {
   onStats?: (stats: EqShowcaseStats) => void;
   /** URL of the bundled Shado NullEngine worker. Enables fully off-thread VAT baking. */
   bakeWorkerUrl?: string;
+  /**
+   * Resolve each visible actor's pose into a bone palette once per frame, so
+   * the vertex shader reads one pre-interpolated DQ per influence instead of
+   * sampling the DQ atlas twice (phase 3). Per-actor clip and phase are
+   * unaffected. WebGPU only; ignored elsewhere. Off by default.
+   */
+  vatPosePalette?: boolean;
+  /** Palette slot capacity per pool. Actors past it pin to slot 0. Defaults to 4096. */
+  vatPosePaletteCapacity?: number;
   /** Maximum GLBs baked in parallel. Defaults to available CPU capacity, capped at four. */
   bakeConcurrency?: number;
   /** Resident actor capacity reserved across loaded pools for scale runs. Defaults to one million. */

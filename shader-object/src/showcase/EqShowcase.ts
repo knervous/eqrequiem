@@ -807,6 +807,8 @@ export function createEqShowcase(
         replaceMaterial: true,
         disposeOriginalMaterial: false,
         packedVat,
+        vatPosePalette: options.vatPosePalette,
+        vatPosePaletteCapacity: options.vatPosePaletteCapacity,
         picking: pickingFor(() => pool),
         defines: armorAtlas ? ['EQ_ARMOR_VARIANTS'] : undefined,
         materialTextures: armorAtlas ? { uEqArmorAtlas: armorAtlas.texture } : undefined,

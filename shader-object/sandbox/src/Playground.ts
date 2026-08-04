@@ -59,6 +59,9 @@ export class Playground {
       weaponRoot: '/shado/eq-demo/weapons/',
       bakeWorkerUrl: '/shado/vat-bake-worker.js',
       bakeConcurrency: 3,
+      // Phase 3 on the common instanced VAT path: opt in from the URL so the
+      // baseline can be compared against itself on the same assets.
+      vatPosePalette: new URLSearchParams(location.search).get('palette') === '1',
       fontAsset,
       createNameplateLayer: (s, actors, names, font) =>
         createMsdfNameplateLayer(s, actors, names, font, {
