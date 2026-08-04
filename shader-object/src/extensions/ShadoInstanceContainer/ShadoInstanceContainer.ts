@@ -32,6 +32,7 @@ import {
   stampSubmeshAtlasAttributes,
 } from './mesh-data';
 import { VisibleIndexTexture } from './VisibleIndexTexture';
+import { ShadoVatInstancePosePalette } from '../../render/ShadoVatInstancePosePalette';
 import { ShadoInstanceDrawSelection } from './ShadoInstanceDrawSelection';
 import {
   ShadoHybridPreSkinCache,
@@ -66,6 +67,17 @@ export type ShadoInstanceContainerOptions = {
   vat?: 'auto' | 'bake' | 'none';
   /** Vertex-animation quality tier. `rigid` skips VAT generation and sampling. */
   vatQuality?: ShadoVatQualityTier;
+  /**
+   * Resolve each visible actor's pose into a bone palette once per frame and
+   * read one pre-interpolated DQ per influence in the vertex shader, instead of
+   * sampling the DQ atlas twice per influence per vertex (phase 3).
+   *
+   * Per-instance clip, phase, and speed are preserved — this caches bones, not
+   * skinned vertices. WebGPU only; ignored elsewhere.
+   */
+  vatPosePalette?: boolean;
+  /** Palette slot capacity. Defaults to the container's actor capacity. */
+  vatPosePaletteCapacity?: number;
   animationRanges?: Array<{ from: number; to: number }>;
   migrateTextures?: 'share' | 'move' | 'clone' | 'none';
   replaceMaterial?: boolean;
@@ -271,6 +283,18 @@ export class ShadoInstanceContainer<T extends ShadoActor> extends Shado {
   private readonly _visibleIndexTexture: VisibleIndexTexture;
   private _useVatMaterial = true;
   public vat: VATBuilder | undefined;
+  private _posePalette?: ShadoVatInstancePosePalette;
+  private _posePaletteObserver?: any;
+  private _posePaletteScene?: Scene;
+  private _posePaletteMaterial?: ShadoMaterial<any>;
+  /** Match the VAT vertex clock exactly, or the palette resolves a stale pose. */
+  private _posePaletteTimeSeconds(): number {
+    return this._posePaletteMaterial?.animationTimeSeconds ?? 0;
+  }
+  /** Resolved-pose palette stats, when phase 3 is active on this container. */
+  public getPosePaletteStats() {
+    return this._posePalette?.getStats();
+  }
   public get children() {
     return this._children;
   }
@@ -415,6 +439,12 @@ export class ShadoInstanceContainer<T extends ShadoActor> extends Shado {
       for (const texture of binding.generatedTextures ?? []) texture.dispose();
     }
     this._visibleIndexTexture.dispose();
+    if (this._posePaletteObserver) {
+      this._posePaletteScene?.onBeforeRenderObservable.remove(this._posePaletteObserver);
+      this._posePaletteObserver = undefined;
+    }
+    this._posePalette?.dispose();
+    this._posePalette = undefined;
     super.dispose();
   }
 
@@ -599,6 +629,35 @@ export class ShadoInstanceContainer<T extends ShadoActor> extends Shado {
       this._clipRanges.set(clip.name.toLowerCase(), clip.from);
       this._clipDurations.push(clip.frames / Math.max(1, clip.fps));
     }
+    // Phase 3: one resolved bone palette per visible actor, refreshed before the
+    // draw each frame. Bones only — every actor keeps its own clip and phase.
+    if (opts.vatPosePalette && useVat && this.vat && scene.getEngine().isWebGPU) {
+      this._posePalette = new ShadoVatInstancePosePalette(scene, this.vat, {
+        // Actors are added after attach, so the caller must size this for the
+        // population it intends to draw; overflow would pin the excess to slot 0.
+        capacity: Math.max(1, opts.vatPosePaletteCapacity ?? 4096),
+      });
+      this._posePaletteScene = scene;
+      this._posePaletteObserver = scene.onBeforeRenderObservable.add(() => {
+        const palette = this._posePalette;
+        if (!palette) return;
+        palette.update(
+          this.visibleActorIndices,
+          this.getVisibleCount(),
+          (actorIndex: number, out: Float32Array) => {
+            const actor = this.children[actorIndex] as any;
+            const buffer = actor?.animationBuffer as ArrayLike<number> | undefined;
+            out[0] = buffer?.[0] ?? 0;
+            out[1] = buffer?.[1] ?? 0;
+            out[2] = buffer?.[2] ?? 0;
+            out[3] = buffer?.[3] ?? 0;
+          },
+          this._posePaletteTimeSeconds(),
+        );
+        palette.dispatchResolve();
+      });
+    }
+
     // 2) Build SOMaterial (this also installs controlled draw + hides default draw)
     const som = new ShadoMaterial(scene, mesh, atlas, this as unknown as Shado, {
       defines: opts.defines,
@@ -607,8 +666,10 @@ export class ShadoInstanceContainer<T extends ShadoActor> extends Shado {
       useVat,
       vatQuality,
       textures: opts.materialTextures,
+      posePalette: this._posePalette,
     });
     if (this.vat) som.vatDQ = this.vat;
+    this._posePaletteMaterial = som;
 
     mesh.material = som;
     mesh.setEnabled(true);
@@ -1706,6 +1767,19 @@ uniform uShadoAmbientColor: vec3f;
 
 var<storage, read> uShadoVisibleIndices: array<u32>;
 
+#ifdef SHADO_VAT_POSE_PALETTE
+// Phase 3: poses resolved once per frame into a bone palette. Each actor owns a
+// slot, so clip, phase, and speed stay per-instance — this is a bone cache, not
+// a pre-skinned vertex cache.
+var<storage, read> uShadoPosePalette: array<vec4u>;
+var<storage, read> uShadoPoseScales: array<f32>;
+var<storage, read> uShadoPoseSlots: array<u32>;
+// Written once per vertex in main, then read by Shado_fetchBoneDQScale, which
+// has no way to receive it — WGSL has no closures and the call sites are shared
+// with the atlas path.
+var<private> shadoPoseSlot: u32 = 0u;
+#endif
+
 varying vUV: vec2f;
 varying vColor: vec4f;
 varying vShadoLighting: vec3f;
@@ -1826,6 +1900,23 @@ struct ShadoDQScale {
   scale: f32,
 };
 
+#ifdef SHADO_VAT_POSE_PALETTE
+fn Shado_fetchBoneDQScale(boneIndex: i32, frameRow: i32) -> ShadoDQScale {
+  let bones = uniforms.uDQTilesX * uniforms.uDQWidth;
+  let bone = u32(clamp(boneIndex, 0, bones - 1));
+  let index = shadoPoseSlot * u32(bones) + bone;
+  let packed = uShadoPosePalette[index];
+  let rxy = unpack2x16float(packed.x);
+  let rzw = unpack2x16float(packed.y);
+  let dxy = unpack2x16float(packed.z);
+  let dzw = unpack2x16float(packed.w);
+  return ShadoDQScale(
+    vec4f(rxy.x, rxy.y, rzw.x, rzw.y),
+    vec4f(dxy.x, dxy.y, dzw.x, dzw.y),
+    uShadoPoseScales[index]
+  );
+}
+#else
 fn Shado_fetchBoneDQScale(boneIndex: i32, frameRow: i32) -> ShadoDQScale {
   let x = boneIndex % uniforms.uDQWidth;
   let tile = boneIndex / uniforms.uDQWidth;
@@ -1842,6 +1933,7 @@ fn Shado_fetchBoneDQScale(boneIndex: i32, frameRow: i32) -> ShadoDQScale {
   }
   return ShadoDQScale(real, dual, scale);
 }
+#endif
 
 fn Shado_accumulateDQ(
   sum: ShadoDQScale,
@@ -1916,6 +2008,10 @@ fn main(input: VertexInputs) -> FragmentInputs {
   let frame0 = i32(floor(absoluteFrame));
   let frame1 = min(frame0 + 1, i32(endFrame));
   let frameLerp = fract(absoluteFrame);
+
+  #ifdef SHADO_VAT_POSE_PALETTE
+  shadoPoseSlot = uShadoPoseSlots[u32(sourceIndex)];
+  #endif
 
   let maxBoneIndex = uniforms.uDQTilesX * uniforms.uDQWidth - 1;
   let boneIndices0 = clamp(

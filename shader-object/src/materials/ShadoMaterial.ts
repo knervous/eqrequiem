@@ -44,6 +44,16 @@ export interface ShadoMaterialOptions<TActor extends ShadoActor = ShadoActor> {
   /** Optional compact actor list for one module/cohort draw. */
   drawSelection?: ShadoInstanceDrawSelection;
   /** Shared clip range/phase/rate for a synchronized animation cohort. */
+  /**
+   * Phase 3 bone palette. When present the vertex path reads one already
+   * frame-resolved DQ per influence from these buffers instead of sampling the
+   * DQ atlas twice, and per-instance poses are preserved via `slotIndices`.
+   */
+  posePalette?: {
+    palette: { getBuffer(): unknown } | any;
+    scales: any;
+    slotIndices: any;
+  };
   sharedAnimation?: ArrayLike<number> | (() => ArrayLike<number>);
   /** Shared clock used by all materials participating in one cohort. */
   animationTimeSource?: () => number;
@@ -51,6 +61,8 @@ export interface ShadoMaterialOptions<TActor extends ShadoActor = ShadoActor> {
 
 export class ShadoMaterial<T extends Shado> extends BABYLON.ShaderMaterial {
   private _timeSec = 0;
+  /** The clock the VAT vertex path uses, so an external pose resolver can match it. */
+  public get animationTimeSeconds(): number { return this._timeSec; }
   private _timeScale = 1;
   private _paused = false;
   private shadoScene: Scene;
@@ -112,6 +124,13 @@ export class ShadoMaterial<T extends Shado> extends BABYLON.ShaderMaterial {
     if (useVat && opts?.sharedAnimation) {
       defines.add('SHADO_VAT_SHARED_POSE');
     }
+    // The palette entry is already interpolated between frames, so the second
+    // frame fetch and the blend that follows it must be compiled out.
+    const usePosePalette = useVat && !!opts?.posePalette;
+    if (usePosePalette) {
+      defines.add('SHADO_VAT_POSE_PALETTE');
+      defines.add('SHADO_VAT_SINGLE_FRAME');
+    }
 
     // ── Decide texture features from current mesh material ───────────────────
     const tex = pickCommonTextures(mesh.material);
@@ -172,6 +191,13 @@ export class ShadoMaterial<T extends Shado> extends BABYLON.ShaderMaterial {
     this.shadoScene = scene;
     this.shadoMesh = mesh;
     this.shadoSource = shado;
+
+    if (usePosePalette) {
+      const palette = opts!.posePalette!;
+      this.setStorageBuffer('uShadoPosePalette', palette.palette);
+      this.setStorageBuffer('uShadoPoseScales', palette.scales);
+      this.setStorageBuffer('uShadoPoseSlots', palette.slotIndices);
+    }
 
     const logOnCompile = opts?.logOnCompile ?? false;
     if (logOnCompile) {

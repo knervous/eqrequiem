@@ -713,6 +713,12 @@ export class SupermeshScalePlayground {
             disposeOriginalMaterial: false,
             packedVat: packedVat!,
             vatQuality: quality,
+            // Phase 3 on the maximal supermesh: one resolved bone palette per
+            // visible actor, so each keeps its own clip and phase while the
+            // vertex shader stops sampling the DQ atlas twice per influence.
+            vatPosePalette: params.get('palette') !== '0' && engine.isWebGPU,
+            vatPosePaletteCapacity: mode === 'benchmark'
+              ? counts.at(-1)! : boundedInteger(params.get('count'), CAPTURED_PRESETS.length, 1, MAX_EXPLORER_ACTORS),
           });
           const attachedMesh = scene.meshes.find(mesh => mesh.material === material);
           if (!attachedMesh) throw new Error('Merged Shado mesh was not created');

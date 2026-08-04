@@ -91,3 +91,22 @@ describe('hybrid module draw path', () => {
     expect(low).toContain('let frameLerp = 0.0');
   });
 });
+
+describe('instanced pose palette (phase 3)', () => {
+  it('compiles the palette fetch in place of atlas sampling', async () => {
+    const { NullEngine: Engine } = await import('@babylonjs/core');
+    const engine = new Engine();
+    const container = Object.create(ShadoInstanceContainer.prototype) as ShadoInstanceContainer<any>;
+    (container as any)._useVatMaterial = true;
+    (container as any)._includeName = 'ShadoInstanceContainer';
+
+    const wgsl = container.generateWGSLPair().vs;
+    // Both branches must be present: the palette read is selected by define, and
+    // the atlas path stays as the WebGL/no-palette fallback.
+    expect(wgsl).toContain('#ifdef SHADO_VAT_POSE_PALETTE');
+    expect(wgsl).toContain('uShadoPosePalette');
+    expect(wgsl).toContain('uShadoPoseSlots[u32(sourceIndex)]');
+    expect(wgsl).toContain('textureLoad(uDQAtlas');
+    engine.dispose();
+  });
+});
