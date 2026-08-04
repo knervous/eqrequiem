@@ -76,6 +76,13 @@ export { ProceduralTexture } from "@babylonjs/core/Materials/Textures/Procedural
 export { RawTexture } from "@babylonjs/core/Materials/Textures/rawTexture.js";
 export { RawTexture2DArray } from "@babylonjs/core/Materials/Textures/rawTexture2DArray.js";
 export { Texture } from "@babylonjs/core/Materials/Textures/texture.js";
+// DynamicTexture is only a class; the engine methods it calls live in these
+// two extension modules, and Babylon 9 ships them side-effect-free unless the
+// non-`.pure` entry is imported. Without them `new DynamicTexture(...)` throws
+// `engine.createDynamicTexture is not a function`.
+import "@babylonjs/core/Engines/Extensions/engine.dynamicTexture.js";
+import "@babylonjs/core/Engines/WebGPU/Extensions/engine.dynamicTexture.js";
+export { DynamicTexture } from "@babylonjs/core/Materials/Textures/dynamicTexture.js";
 
 export { DirectionalLight } from "@babylonjs/core/Lights/directionalLight.js";
 export { HemisphericLight } from "@babylonjs/core/Lights/hemisphericLight.js";
@@ -84,8 +91,10 @@ export { PointLight } from "@babylonjs/core/Lights/pointLight.js";
 export { GlowLayer } from "@babylonjs/core/Layers/glowLayer.js";
 export { PostProcess } from "@babylonjs/core/PostProcesses/postProcess.js";
 
+export { Bone } from "@babylonjs/core/Bones/bone.js";
 export { Skeleton } from "@babylonjs/core/Bones/skeleton.js";
 export { SkeletonViewer } from "@babylonjs/core/Debug/skeletonViewer.js";
+export { GizmoManager } from "@babylonjs/core/Gizmos/gizmoManager.js";
 export { MorphTargetManager } from "@babylonjs/core/Morph/morphTargetManager.js";
 
 export { GPUPicker } from "@babylonjs/core/Collisions/gpuPicker.js";

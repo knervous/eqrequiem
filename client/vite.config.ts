@@ -203,11 +203,15 @@ function subappSourcePlugin(): Plugin {
         );
       }
 
-      if (isLibra && source === "@babylonjs/core") {
+      // Every sub-app shares the client's curated Babylon runtime. Pointing
+      // the sandbox at the package root instead gave it a second Babylon
+      // instance: engine extensions augmented that copy's prototypes while the
+      // engine itself came from the optimized-dep copy (a subpath import that
+      // was never overridden here), so `engine.createDynamicTexture` was
+      // missing, and `@babylonjs/loaders/glTF` registered its plugin on a
+      // SceneLoader the showcase never consulted.
+      if ((isLibra || isSandbox) && source === "@babylonjs/core") {
         return path.resolve(__dirname, "src/bjs/core-runtime.ts");
-      }
-      if (isSandbox && source === "@babylonjs/core") {
-        return clientRequire.resolve(source);
       }
       const shadoSource = clientBrowserDependencies.get(source);
       if (shadoSource) return shadoSource;
