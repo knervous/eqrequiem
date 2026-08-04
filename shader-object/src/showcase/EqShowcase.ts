@@ -1542,6 +1542,21 @@ export function createEqShowcase(
       stats.reducerAverageMs = reducerAverageMs;
       lastReducerAt = now;
       visibilityDirty = false;
+      // Summed across pools: the palette is sized per container, and a view
+      // that overflows any one of them is drawing wrong poses somewhere.
+      let paletteSummary: EqShowcaseStats['posePalette'];
+      for (const pool of pools.values()) {
+        const palette = pool.container.getPosePaletteStats?.();
+        if (!palette) continue;
+        paletteSummary = {
+          capacity: (paletteSummary?.capacity ?? 0) + palette.capacity,
+          resolved: (paletteSummary?.resolved ?? 0) + palette.resolved,
+          overflowed: (paletteSummary?.overflowed ?? 0) + palette.overflowed,
+          peakOverflowed: (paletteSummary?.peakOverflowed ?? 0) + palette.peakOverflowed,
+          megabytes: (paletteSummary?.megabytes ?? 0) + palette.totalBytes / 1024 / 1024,
+        };
+      }
+      stats.posePalette = paletteSummary;
       if (visible !== stats.visible) publish({ visible });
     }
   });

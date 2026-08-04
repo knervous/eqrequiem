@@ -39,7 +39,12 @@ function supermeshScaleReportPlugin() {
             const report = JSON.parse(Buffer.concat(chunks).toString('utf8'))
             const outputRoot = path.resolve(__dirname, 'benchmark-results')
             await fs.mkdir(outputRoot, { recursive: true })
-            const suffix = `${report.backend?.renderPath ?? 'supermesh'}-${report.backend?.vatQuality ?? 'unknown'}-${report.backend?.backend?.startsWith('WebGPU') ? 'webgpu' : 'webgl2'}`
+            // The pose palette is the only difference between two otherwise
+            // identical runs, so it belongs in the filename — without it the
+            // second run of a comparison overwrites the first.
+            const palette = report.backend?.posePalette?.compiledPalette
+              ? '-palette' : ''
+            const suffix = `${report.backend?.renderPath ?? 'supermesh'}-${report.backend?.vatQuality ?? 'unknown'}-${report.backend?.backend?.startsWith('WebGPU') ? 'webgpu' : 'webgl2'}${palette}`
             const json = `${JSON.stringify(report, null, 2)}\n`
             await Promise.all([
               fs.writeFile(path.join(outputRoot, `supermesh-${suffix}.json`), json),

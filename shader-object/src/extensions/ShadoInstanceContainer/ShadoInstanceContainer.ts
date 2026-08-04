@@ -76,7 +76,12 @@ export type ShadoInstanceContainerOptions = {
    * skinned vertices. WebGPU only; ignored elsewhere.
    */
   vatPosePalette?: boolean;
-  /** Palette slot capacity. Defaults to the container's actor capacity. */
+  /**
+   * Palette slot capacity, in *simultaneously visible* actors — not population.
+   * A culled world sizes this to the largest view it will draw, so a million
+   * actors showing 20k at a time needs 20k slots. Visible actors beyond it draw
+   * the wrong pose; `getPosePaletteStats().overflowed` reports how many.
+   */
   vatPosePaletteCapacity?: number;
   animationRanges?: Array<{ from: number; to: number }>;
   migrateTextures?: 'share' | 'move' | 'clone' | 'none';
@@ -633,8 +638,8 @@ export class ShadoInstanceContainer<T extends ShadoActor> extends Shado {
     // draw each frame. Bones only — every actor keeps its own clip and phase.
     if (opts.vatPosePalette && useVat && this.vat && scene.getEngine().isWebGPU) {
       this._posePalette = new ShadoVatInstancePosePalette(scene, this.vat, {
-        // Actors are added after attach, so the caller must size this for the
-        // population it intends to draw; overflow would pin the excess to slot 0.
+        // Peak *visible* actors, not population — slots are handed out in draw
+        // order, so a culled world only pays for what it draws.
         capacity: Math.max(1, opts.vatPosePaletteCapacity ?? 4096),
       });
       this._posePaletteScene = scene;
@@ -1773,10 +1778,9 @@ var<storage, read> uShadoVisibleIndices: array<u32>;
 // a pre-skinned vertex cache.
 var<storage, read> uShadoPosePalette: array<vec4u>;
 var<storage, read> uShadoPoseScales: array<f32>;
-var<storage, read> uShadoPoseSlots: array<u32>;
-// Written once per vertex in main, then read by Shado_fetchBoneDQScale, which
-// has no way to receive it — WGSL has no closures and the call sites are shared
-// with the atlas path.
+// Written once per vertex in main from the draw index, then read by
+// Shado_fetchBoneDQScale, which has no way to receive it — WGSL has no closures
+// and the call sites are shared with the atlas path.
 var<private> shadoPoseSlot: u32 = 0u;
 #endif
 
@@ -2010,7 +2014,11 @@ fn main(input: VertexInputs) -> FragmentInputs {
   let frameLerp = fract(absoluteFrame);
 
   #ifdef SHADO_VAT_POSE_PALETTE
-  shadoPoseSlot = uShadoPoseSlots[u32(sourceIndex)];
+  // The palette is built by walking the visible list in order, and drawIndex
+  // counts that same list — so the draw index is the slot. Indexing by actor
+  // instead would need a table sized to the whole population, which is what
+  // made a million-actor world unaffordable for a 20k-actor view.
+  shadoPoseSlot = u32(drawIndex);
   #endif
 
   let maxBoneIndex = uniforms.uDQTilesX * uniforms.uDQWidth - 1;

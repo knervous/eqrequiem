@@ -44,6 +44,18 @@ export type EqShowcaseStats = {
   reducerAverageMs: number;
   /** Theoretical per-model VAT actor ceiling exposed by the active device/layout. */
   vatActorsPerModel?: number;
+  /**
+   * Phase 3 pose palette, when one is active. `overflowed` above zero means
+   * more actors were visible than the palette has slots, and the excess drew
+   * the wrong pose — raise `vatPosePaletteCapacity` to the peak visible count.
+   */
+  posePalette?: {
+    capacity: number;
+    resolved: number;
+    overflowed: number;
+    peakOverflowed: number;
+    megabytes: number;
+  };
   loadedCodes: string[];
   current?: string;
   lastError?: string;

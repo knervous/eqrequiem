@@ -121,8 +121,11 @@ transparent texels — it is not specific to this catalog.
 
 ### Benchmark data is stale
 
-Everything under `benchmark-results/` and the published
-`hybrid-preskin-performance-report.json` was captured before the fixes above
+The two `supermesh-supermesh-full-webgpu*.json` recordings are current — they
+are the phase 3 pose-palette comparison, re-run 2026-08-04 against this code
+(see `docs/shado/phase-3-benchmark-handoff.md`). Everything else under
+`benchmark-results/`, and the published
+`hybrid-preskin-performance-report.json`, was captured before the fixes above
 and no longer describes this code. Two effects, in opposite directions:
 
 - `hybrid` and `cached` were measured while defect (1) had geometry exploding

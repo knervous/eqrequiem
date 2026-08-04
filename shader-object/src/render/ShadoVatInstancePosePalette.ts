@@ -12,6 +12,13 @@
  * `ShadoVatPoseCache`. That cache earns its keep when poses repeat; with
  * independent per-actor phases nearly every key is unique, so the Map lookups
  * cost CPU for nothing. One slot per visible actor is 112 bones * 20 B ~= 2 KiB.
+ *
+ * Draw order *is* the slot: the vertex shader's `instanceIndex` counts visible
+ * actors, which is the same sequence this class walks. So there is no slot
+ * table — the shader uses its own draw index. That keeps capacity a function of
+ * how many actors are on screen rather than how many exist, which is the
+ * difference between 20k visible costing 43 MB and a million-actor population
+ * costing 2 GB for the same view.
  */
 
 import type { Scene, StorageBuffer, WebGPUEngine } from '../babylon';
@@ -26,29 +33,39 @@ import {
 const RESOLVE_WORKGROUP_SIZE = 64;
 
 export type ShadoVatInstancePosePaletteStats = {
-  /** Slots the palette can hold. */
+  /** Slots the palette can hold — size this to peak *visible* actors. */
   capacity: number;
   /** Poses resolved by the most recent dispatch. */
   resolved: number;
+  /**
+   * Visible actors the most recent frame could not fit. These draw with
+   * whatever pose their draw index happens to land on, so a non-zero value here
+   * is the explanation for actors animating out of step.
+   */
+  overflowed: number;
+  /** High-water mark of `overflowed` — a camera turn can spike it for a frame. */
+  peakOverflowed: number;
   paletteBytes: number;
-  slotBytes: number;
+  scaleBytes: number;
   requestBytes: number;
+  /** Every GPU allocation this palette owns. */
+  totalBytes: number;
   bonesPerSlot: number;
 };
 
 export class ShadoVatInstancePosePalette {
   private readonly requests: Uint32Array;
   private readonly requestFloats: Float32Array;
-  private readonly slots: Uint32Array;
   private readonly requestBuffer: StorageBuffer;
   private readonly paletteBuffer: StorageBuffer;
   private readonly scaleBuffer: StorageBuffer;
-  private readonly slotBuffer: StorageBuffer;
   private readonly atlasParamsBuffer: StorageBuffer;
   private readonly shader: any;
   private readonly boneCount: number;
   private readonly capacity: number;
   private resolved = 0;
+  private overflowed = 0;
+  private peakOverflowed = 0;
 
   constructor(
     scene: Scene,
@@ -66,7 +83,6 @@ export class ShadoVatInstancePosePalette {
 
     this.requests = new Uint32Array(this.capacity * POSE_REQUEST_WORDS);
     this.requestFloats = new Float32Array(this.requests.buffer);
-    this.slots = new Uint32Array(this.capacity);
 
     const write = BABYLON.Constants.BUFFER_CREATIONFLAG_WRITE;
     this.requestBuffer = new BABYLON.StorageBuffer(
@@ -77,8 +93,6 @@ export class ShadoVatInstancePosePalette {
     this.scaleBuffer = new BABYLON.StorageBuffer(
       engine, this.capacity * this.boneCount * Float32Array.BYTES_PER_ELEMENT, write,
       'Shado instance pose scales');
-    this.slotBuffer = new BABYLON.StorageBuffer(
-      engine, this.slots.byteLength, write, 'Shado instance pose slots');
 
     const atlasParams = new Uint32Array([
       vat.dqWidthBones, vat.dqTilesX, vat.dqFramesX ?? 1,
@@ -111,7 +125,6 @@ export class ShadoVatInstancePosePalette {
 
   public get palette(): StorageBuffer { return this.paletteBuffer; }
   public get scales(): StorageBuffer { return this.scaleBuffer; }
-  public get slotIndices(): StorageBuffer { return this.slotBuffer; }
   public get bonesPerSlot(): number { return this.boneCount; }
 
   /**
@@ -120,6 +133,10 @@ export class ShadoVatInstancePosePalette {
    * `readAnimation` yields the packed `[startFrame, endFrame, phase, rate]` the
    * vertex shader would otherwise evaluate itself; the wrap arithmetic here is
    * the same, so the palette holds exactly the pose the atlas path would sample.
+   *
+   * Request order must match draw order exactly — the shader indexes the
+   * palette by its own `instanceIndex` rather than through a lookup, so slot
+   * `i` here is the actor the i-th drawn instance resolves to.
    */
   public update(
     visible: ArrayLike<number>,
@@ -145,13 +162,16 @@ export class ShadoVatInstancePosePalette {
       this.requests[base + 3] = i >>> 0;
       this.requests[base + 4] = this.boneCount >>> 0;
       this.requests[base + 5] = 0;
-      this.slots[actorIndex] = i >>> 0;
     }
     if (count > 0) {
-      this.requestBuffer.update(this.requests);
-      this.slotBuffer.update(this.slots);
+      // Upload only the prefix in use. A camera looking at empty ground still
+      // walks this path every frame, and a capacity sized for a crowded view
+      // would otherwise cost its full upload to say "nothing is visible".
+      this.requestBuffer.update(this.requests.subarray(0, count * POSE_REQUEST_WORDS));
     }
     this.resolved = count;
+    this.overflowed = Math.max(0, visibleCount - count);
+    this.peakOverflowed = Math.max(this.peakOverflowed, this.overflowed);
     return count;
   }
 
@@ -173,12 +193,17 @@ export class ShadoVatInstancePosePalette {
   }
 
   public getStats(): ShadoVatInstancePosePaletteStats {
+    const paletteBytes = this.capacity * this.boneCount * POSE_PALETTE_BYTES_PER_BONE;
+    const scaleBytes = this.capacity * this.boneCount * Float32Array.BYTES_PER_ELEMENT;
     return {
       capacity: this.capacity,
       resolved: this.resolved,
-      paletteBytes: this.capacity * this.boneCount * POSE_PALETTE_BYTES_PER_BONE,
-      slotBytes: this.slots.byteLength,
+      overflowed: this.overflowed,
+      peakOverflowed: this.peakOverflowed,
+      paletteBytes,
+      scaleBytes,
       requestBytes: this.requests.byteLength,
+      totalBytes: paletteBytes + scaleBytes + this.requests.byteLength,
       bonesPerSlot: this.boneCount,
     };
   }
@@ -187,7 +212,6 @@ export class ShadoVatInstancePosePalette {
     this.requestBuffer.dispose();
     this.paletteBuffer.dispose();
     this.scaleBuffer.dispose();
-    this.slotBuffer.dispose();
     this.atlasParamsBuffer.dispose();
   }
 }

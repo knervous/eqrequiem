@@ -47,12 +47,12 @@ export interface ShadoMaterialOptions<TActor extends ShadoActor = ShadoActor> {
   /**
    * Phase 3 bone palette. When present the vertex path reads one already
    * frame-resolved DQ per influence from these buffers instead of sampling the
-   * DQ atlas twice, and per-instance poses are preserved via `slotIndices`.
+   * DQ atlas twice. Per-instance poses survive because the palette is built in
+   * draw order, so the shader's own draw index selects the slot.
    */
   posePalette?: {
     palette: { getBuffer(): unknown } | any;
     scales: any;
-    slotIndices: any;
   };
   sharedAnimation?: ArrayLike<number> | (() => ArrayLike<number>);
   /** Shared clock used by all materials participating in one cohort. */
@@ -196,7 +196,6 @@ export class ShadoMaterial<T extends Shado> extends BABYLON.ShaderMaterial {
       const palette = opts!.posePalette!;
       this.setStorageBuffer('uShadoPosePalette', palette.palette);
       this.setStorageBuffer('uShadoPoseScales', palette.scales);
-      this.setStorageBuffer('uShadoPoseSlots', palette.slotIndices);
     }
 
     const logOnCompile = opts?.logOnCompile ?? false;

@@ -1242,6 +1242,21 @@ export class SupermeshScalePlayground {
         // the browser's rAF cadence.
         const peakThroughput = measured.length
           ? Math.max(...measured.map(row => row.vertexThroughputPerSecond)) : 0;
+        // Read the compiled shader, not the option: the palette falls back to
+        // the atlas silently, and both render the same picture.
+        const posePaletteProvenance = () => {
+          const requested = params.get('palette') !== '0' && engine.isWebGPU
+            && renderPath === 'supermesh';
+          const source: string = (shadoMesh?.material as any)?.getEffect?.()
+            ?._vertexSourceCode ?? '';
+          return {
+            requested,
+            compiledPalette: source.includes('uShadoPosePalette'),
+            compiledAtlasFetch: source.includes('textureLoad(uDQAtlas'),
+            capacity: requested ? counts.at(-1) : undefined,
+            stats: container!.getPosePaletteStats(),
+          };
+        };
         const result: ScaleResult = {
           asset: {
             renderPath,
@@ -1272,6 +1287,11 @@ export class SupermeshScalePlayground {
             renderHeight: engine.getRenderHeight(),
             gpuTimingSource: rows.some(row => row.gpuMs)
               ? 'timestamp-query' : 'queue-completion-upper-bound',
+            // A silent fallback to the atlas path renders identically, so the
+            // recording states which shader actually ran rather than which one
+            // was asked for. Without this the two palette runs are
+            // indistinguishable once they are files on disk.
+            posePalette: posePaletteProvenance(),
           },
           structuralLimits,
           sweep: rows,
