@@ -51,7 +51,9 @@ palette. The title bar names the active path and what it exercises. A saved
 `path=cached` URL opened on WebGL2 degrades to `hybrid` rather than failing.
 
 Every bucket receives only the actors selecting that part, while all buckets
-share one packed actor arena, VAT texture, clock, clip, and phase. Pin a path
+share one packed actor arena and one VAT texture. Each actor animates from its
+own clip and phase; only `cached` holds a single cohort pose, because it deforms
+the module library once per pose and rigid-instances the result. Pin a path
 explicitly to compare:
 
 ```text
@@ -85,8 +87,18 @@ Useful query parameters:
 - `path=bat|bat-thin|supermesh|hybrid|cached` (`bat*` paths are local captured-implementation benchmarks)
 - `quality=full|medium|low|rigid`
 - `counts=1,10,25,50,100,200,400,800`
-- `warmup=20`
-- `frames=60`
+- `warmupMs=800` and `sampleMs=3000` — each level spins for a wall-clock window
+  and samples whatever the host delivers, rather than waiting on a frame quota
+  that a throttled browser never meets
+
+Rows carry `fps` and `frames` alongside the timings so a starved window is
+visible rather than silent. Two verdicts mean "do not read the frame columns":
+`no samples` (the host delivered no frames at all) and `host-paced` (frame time
+tracked the browser's rAF cadence, not render cost — detected when mean frame
+time exceeds 100 ms and dwarfs measured GPU time). Neither contributes to the
+60/30 fps limits or the peak-throughput figure. The GPU column stays meaningful
+in both cases, because it measures the work inside a frame rather than how
+often frames are issued.
 
 ## Vercel
 

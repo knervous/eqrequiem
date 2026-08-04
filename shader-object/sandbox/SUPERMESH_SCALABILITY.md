@@ -57,8 +57,9 @@ deduplication without forcing every actor to skin every possible module.
 The opt-in `path=hybrid` route preserves the same dynamic six-field actor
 composition but emits one compact actor list per discovered module. Unselected
 module vertices do not enter the VAT shader. All module materials reference the
-same VATBuilder and synchronized cohort clock, so body-part separation does not
-duplicate the 329-clip animation library.
+same VATBuilder, so body-part separation does not duplicate the 329-clip
+animation library, and each actor animates from its own clip and phase (see
+defect 5).
 
 This first hybrid stage reuses animation storage and pose state but still runs
 DQ deformation for every submitted actor vertex. A WebGPU compute pre-skin
@@ -138,8 +139,11 @@ sweep in a real browser window before quoting any of it:
 /supermesh-scale?renderer=babylonjs&model=nm-m-supermesh&mode=benchmark&path=hybrid
 ```
 
-The embedded review browser throttles rAF hard enough that the harness times
-out during warmup, so these runs cannot be produced from an agent session. The
+The harness no longer waits on a frame quota — it spins for a wall-clock window
+and samples what the host delivers, so a throttled browser reports `host-paced`
+or `no samples` instead of failing, and per-frame GPU cost stays readable even
+at a fraction of a frame per second. Frame-rate figures from such a host still
+describe the browser rather than the renderer. The
 structural benchmark (`npm run benchmark:hybrid-structure`) needs no GPU and is
 current: 22 populated buckets, 4.775x vertex-work reduction, unchanged by the
 pose fix.

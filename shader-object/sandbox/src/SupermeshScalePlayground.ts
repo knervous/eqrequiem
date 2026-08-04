@@ -109,6 +109,13 @@ type FrameSummary = {
 type SweepRow = {
   actors: number;
   addActorsMs: number;
+  /** Babylon's own smoothed fps, averaged over the window. */
+  engineFps?: number;
+  /** Frames the host actually delivered — low values mean rAF was throttled. */
+  sampledFrames?: number;
+  sampleWindowMs?: number;
+  /** sampledFrames / window, so throttling is visible instead of silent. */
+  observedFps?: number;
   verticesPerFrame: number;
   selectedVerticesPerFrame: number;
   vertexWorkAmplification: number;
@@ -124,7 +131,12 @@ type SweepRow = {
   instanceBufferMiB?: number;
   populatedModuleBuckets?: number;
   actualThinInstances?: number;
-  verdict: '60 fps' | '30 fps' | 'below 30 fps';
+  /**
+   * `no samples` means the host delivered no frames in the window — the timing
+   * columns are empty, not fast. `host-paced` means frame time reflects a
+   * throttled rAF rather than render cost; read the GPU column instead.
+   */
+  verdict: '60 fps' | '30 fps' | 'below 30 fps' | 'no samples' | 'host-paced';
 };
 
 type ScaleResult = {
@@ -211,7 +223,7 @@ class HybridSupermeshScaleContainer extends ShadoInstanceContainer<SupermeshScal
 
 const UI_CSS = `
 .sms-panel{position:fixed;z-index:9;top:14px;right:14px;width:min(660px,calc(100vw - 28px));max-height:calc(100vh - 70px);overflow:auto;padding:16px;border:1px solid #33443a;border-radius:12px;background:#09110eef;color:#e6eee8;text-align:left;box-shadow:0 18px 60px #000a;backdrop-filter:blur(14px);font:12px/1.4 system-ui,sans-serif}
-.sms-panel *{box-sizing:border-box}.sms-panel h1{margin:2px 0 4px;font-size:18px}.sms-panel h2{margin:13px 0 6px;color:#9fb1a5;font-size:10px;letter-spacing:.11em;text-transform:uppercase}.sms-panel p{margin:0 0 10px;color:#9aaba0}.sms-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.sms-badge{padding:4px 7px;border:1px solid #42664d;border-radius:999px;color:#8de3a1;font:10px monospace;white-space:nowrap}.sms-progress{height:5px;margin:11px 0;background:#1c2821;border-radius:8px;overflow:hidden}.sms-progress i{display:block;width:0;height:100%;background:#63cc7b;transition:width .2s}.sms-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px}.sms-stat{padding:8px;border:1px solid #26372d;border-radius:7px;background:#101914}.sms-stat b{display:block;color:#edf8ef;font:13px monospace}.sms-stat span{color:#718078;font-size:9px;text-transform:uppercase;letter-spacing:.07em}.sms-actions{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:9px 0}.sms-actions button,.sms-actions select,.sms-actions input,.sms-fields select{height:29px;padding:0 9px;border:1px solid #354b3c;border-radius:6px;background:#142019;color:#dce9df;font-size:11px}.sms-actions button{cursor:pointer}.sms-actions button:hover{border-color:#65cc7b}.sms-actions input{width:74px}.sms-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.sms-fields label{display:grid;gap:3px;color:#819289;font-size:9px;text-transform:uppercase;letter-spacing:.06em}.sms-fields select{width:100%;min-width:0;text-transform:none;letter-spacing:0}.sms-slot{display:flex;align-items:center;gap:4px}.sms-slot button{flex:0 0 auto;width:24px;height:29px;padding:0;border:1px solid #354b3c;border-radius:6px;background:#142019;color:#dce9df;font-size:11px;line-height:1;cursor:pointer}.sms-slot button:hover{border-color:#65cc7b}.sms-slot select{flex:1 1 auto}.sms-caption{display:flex;justify-content:space-between;gap:6px}.sms-caption i{font-style:normal;color:#5d6c64}.sms-hint{color:#5d6c64;font:10px monospace}.sms-table{width:100%;border-collapse:collapse;font:10px monospace}.sms-table th,.sms-table td{padding:6px 5px;border-bottom:1px solid #203027;text-align:right;white-space:nowrap}.sms-table th:first-child,.sms-table td:first-child{text-align:left}.sms-table th{position:sticky;top:-16px;background:#09110e;color:#819289}.sms-table tr[data-verdict="60 fps"] td:last-child{color:#72dc89}.sms-table tr[data-verdict="30 fps"] td:last-child{color:#e3c66f}.sms-table tr[data-verdict="below 30 fps"] td:last-child{color:#ef8383}.sms-note{margin-top:10px!important;font:10px monospace!important;color:#718078!important}.sms-benchmark[hidden],.sms-explorer[hidden]{display:none}@media(max-width:700px){.sms-grid,.sms-fields{grid-template-columns:repeat(2,1fr)}.sms-panel{padding:13px}}`;
+.sms-panel *{box-sizing:border-box}.sms-panel h1{margin:2px 0 4px;font-size:18px}.sms-panel h2{margin:13px 0 6px;color:#9fb1a5;font-size:10px;letter-spacing:.11em;text-transform:uppercase}.sms-panel p{margin:0 0 10px;color:#9aaba0}.sms-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.sms-badge{padding:4px 7px;border:1px solid #42664d;border-radius:999px;color:#8de3a1;font:10px monospace;white-space:nowrap}.sms-progress{height:5px;margin:11px 0;background:#1c2821;border-radius:8px;overflow:hidden}.sms-progress i{display:block;width:0;height:100%;background:#63cc7b;transition:width .2s}.sms-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px}.sms-stat{padding:8px;border:1px solid #26372d;border-radius:7px;background:#101914}.sms-stat b{display:block;color:#edf8ef;font:13px monospace}.sms-stat span{color:#718078;font-size:9px;text-transform:uppercase;letter-spacing:.07em}.sms-actions{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:9px 0}.sms-actions button,.sms-actions select,.sms-actions input,.sms-fields select{height:29px;padding:0 9px;border:1px solid #354b3c;border-radius:6px;background:#142019;color:#dce9df;font-size:11px}.sms-actions button{cursor:pointer}.sms-actions button:hover{border-color:#65cc7b}.sms-actions input{width:74px}.sms-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.sms-fields label{display:grid;gap:3px;color:#819289;font-size:9px;text-transform:uppercase;letter-spacing:.06em}.sms-fields select{width:100%;min-width:0;text-transform:none;letter-spacing:0}.sms-slot{display:flex;align-items:center;gap:4px}.sms-slot button{flex:0 0 auto;width:24px;height:29px;padding:0;border:1px solid #354b3c;border-radius:6px;background:#142019;color:#dce9df;font-size:11px;line-height:1;cursor:pointer}.sms-slot button:hover{border-color:#65cc7b}.sms-slot select{flex:1 1 auto}.sms-caption{display:flex;justify-content:space-between;gap:6px}.sms-caption i{font-style:normal;color:#5d6c64}.sms-hint{color:#5d6c64;font:10px monospace}.sms-table{width:100%;border-collapse:collapse;font:10px monospace}.sms-table th,.sms-table td{padding:6px 5px;border-bottom:1px solid #203027;text-align:right;white-space:nowrap}.sms-table th:first-child,.sms-table td:first-child{text-align:left}.sms-table th{position:sticky;top:-16px;background:#09110e;color:#819289}.sms-table tr[data-verdict="60 fps"] td:last-child{color:#72dc89}.sms-table tr[data-verdict="30 fps"] td:last-child{color:#e3c66f}.sms-table tr[data-verdict="below 30 fps"] td:last-child{color:#ef8383}.sms-table tr[data-verdict="no samples"] td:last-child{color:#7f8c93}.sms-table tr[data-verdict="host-paced"] td:last-child{color:#7f8c93}.sms-note{margin-top:10px!important;font:10px monospace!important;color:#718078!important}.sms-benchmark[hidden],.sms-explorer[hidden]{display:none}@media(max-width:700px){.sms-grid,.sms-fields{grid-template-columns:repeat(2,1fr)}.sms-panel{padding:13px}}`;
 
 /**
  * NM_M ships UE2k4 material trees in glTF extras. The diffuse node is a
@@ -333,43 +345,58 @@ async function fetchGzipJson<T>(url: string): Promise<T> {
   return JSON.parse(await new Response(stream).text());
 }
 
-function waitForFrames(
+/**
+ * Let the scene spin for a wall-clock window and sample whatever it produces.
+ *
+ * The previous harness waited for a frame quota and rejected if it did not
+ * arrive, which made the sweep unrunnable anywhere rAF is throttled (embedded
+ * review browsers, background tabs) — it failed instead of reporting. Sampling
+ * on wall time cannot fail: a throttled host simply yields fewer samples and an
+ * honest fps. Per-frame GPU cost stays meaningful either way, because it
+ * measures the work in a frame rather than how often frames are issued.
+ */
+function sampleWindow(
   scene: BABYLON.Scene,
   engineInstrumentation: EngineInstrumentation,
-  frameCount: number,
+  durationMs: number,
   collect: boolean,
-): Promise<{ frameMs: number[]; gpuMs: number[]; queueMs: number[] }> {
-  return new Promise((resolve, reject) => {
+): Promise<{ frameMs: number[]; gpuMs: number[]; queueMs: number[]; fps: number[]; frames: number; elapsedMs: number }> {
+  return new Promise(resolve => {
     const frameMs: number[] = [];
     const gpuMs: number[] = [];
+    const fps: number[] = [];
     const queueCompletion: Promise<number>[] = [];
     const engine = scene.getEngine();
     const deviceQueue = (engine as any)._device?.queue as GPUQueue | undefined;
+    const started = performance.now();
     let frames = 0;
-    const timeout = window.setTimeout(() => {
+
+    const finish = () => {
+      window.clearTimeout(timer);
       engine.onEndFrameObservable.remove(observer);
-      reject(new Error(`Timed out after ${frames}/${frameCount} benchmark frames`));
-    }, Math.max(30_000, frameCount * 1_000));
+      void Promise.all(queueCompletion).then(queueMs => resolve({
+        frameMs, gpuMs, queueMs, fps, frames, elapsedMs: performance.now() - started,
+      }));
+    };
+
     const observer = engine.onEndFrameObservable.add(() => {
       frames++;
-      if (collect) {
-        frameMs.push(engine.getDeltaTime());
-        const gpuNanoseconds = engineInstrumentation.gpuFrameTimeCounter.current;
-        if (gpuNanoseconds > 0) gpuMs.push(gpuNanoseconds / 1_000_000);
-        if (deviceQueue?.onSubmittedWorkDone) {
-          const submitted = performance.now();
-          queueCompletion.push(
-            deviceQueue.onSubmittedWorkDone()
-              .then(() => performance.now() - submitted)
-              .catch(() => Number.NaN)
-          );
-        }
+      if (!collect) return;
+      frameMs.push(engine.getDeltaTime());
+      fps.push(engine.getFps());
+      const gpuNanoseconds = engineInstrumentation.gpuFrameTimeCounter.current;
+      if (gpuNanoseconds > 0) gpuMs.push(gpuNanoseconds / 1_000_000);
+      if (deviceQueue?.onSubmittedWorkDone) {
+        const submitted = performance.now();
+        queueCompletion.push(
+          deviceQueue.onSubmittedWorkDone()
+            .then(() => performance.now() - submitted)
+            .catch(() => Number.NaN)
+        );
       }
-      if (frames < frameCount) return;
-      window.clearTimeout(timeout);
-      engine.onEndFrameObservable.remove(observer);
-      void Promise.all(queueCompletion).then(queueMs => resolve({ frameMs, gpuMs, queueMs }));
     });
+
+    const timer = window.setTimeout(finish, durationMs);
   });
 }
 
@@ -416,8 +443,8 @@ function createUi(
     </section>
     <section class="sms-benchmark"${mode === 'benchmark' ? '' : ' hidden'}>
       <div class="sms-actions"><button data-role="rerun">Run again</button><button data-role="download" disabled>Download JSON</button></div>
-      <table class="sms-table"><thead><tr><th>actors</th><th>M verts/frame</th><th>mean ms</th><th>p95 ms</th><th>GPU/queue ms</th><th>arena MiB</th><th>result</th></tr></thead><tbody data-role="rows"></tbody></table>
-      <p class="sms-note">Counts: ${counts.join(' → ')}. Stops after two levels exceed 50 ms p95. ${renderPath === 'bat' ? 'Captured baseline: six selected modular meshes per actor, independent clips/phases, two weights and eight matrix-BAT reads per vertex.' : renderPath === 'bat-thin' ? 'Same matrix BAT and independent poses, grouped into one thin-instance draw per populated module variation.' : renderPath === 'cached' ? 'Module buckets are deformed once by compute per shared pose, then rigid-instanced — every actor holds the same pose by construction.' : usesModules ? 'Module buckets submit only selected parts; each actor animates from its own clip and phase.' : 'Hidden modules are clipped after VAT skinning, so they still consume vertex work.'}</p>
+      <table class="sms-table"><thead><tr><th>actors</th><th>M verts/frame</th><th>fps</th><th>frames</th><th>mean ms</th><th>p95 ms</th><th>GPU/queue ms</th><th>result</th></tr></thead><tbody data-role="rows"></tbody></table>
+      <p class="sms-note">Counts: ${counts.join(' → ')}. Each level spins for a wall-clock window and samples whatever the host delivers, so a throttled browser reports a low frame count instead of failing. Stops after two levels exceed 50 ms p95. ${renderPath === 'bat' ? 'Captured baseline: six selected modular meshes per actor, independent clips/phases, two weights and eight matrix-BAT reads per vertex.' : renderPath === 'bat-thin' ? 'Same matrix BAT and independent poses, grouped into one thin-instance draw per populated module variation.' : renderPath === 'cached' ? 'Module buckets are deformed once by compute per shared pose, then rigid-instanced — every actor holds the same pose by construction.' : usesModules ? 'Module buckets submit only selected parts; each actor animates from its own clip and phase.' : 'Hidden modules are clipped after VAT skinning, so they still consume vertex work.'}</p>
     </section>`;
   document.head.append(style);
   document.body.append(panel);
@@ -496,8 +523,10 @@ export class SupermeshScalePlayground {
     const usesHybridModules = renderPath === 'hybrid' || renderPath === 'cached';
     const usesModules = renderPath !== 'supermesh';
     const counts = readCounts(params);
-    const warmupFrames = boundedInteger(params.get('warmup'), 20, 2, 240);
-    const sampleFrames = boundedInteger(params.get('frames'), 60, 10, 600);
+    // Wall-clock windows, not frame quotas: a throttled host yields fewer
+    // samples rather than failing the run.
+    const warmupMs = boundedInteger(params.get('warmupMs'), 800, 100, 20_000);
+    const sampleMs = boundedInteger(params.get('sampleMs'), 3_000, 250, 60_000);
     const ui = createUi(quality, counts, mode, renderPath, downgraded);
     window.__shadoSupermeshScale = { status: 'loading' };
 
@@ -1128,13 +1157,28 @@ export class SupermeshScalePlayground {
           ui.role('bar').style.width = `${((countIndex + 0.15) / counts.length) * 100}%`;
           window.__shadoSupermeshScale = { status: 'running', progress: `${actorCount} actors` };
 
-          await waitForFrames(scene, instrumentation, warmupFrames, false);
-          const samples = await waitForFrames(scene, instrumentation, sampleFrames, true);
+          await sampleWindow(scene, instrumentation, warmupMs, false);
+          const samples = await sampleWindow(scene, instrumentation, sampleMs, true);
           const frameMs = summarize(samples.frameMs);
           const gpuMs = samples.gpuMs.length ? summarize(samples.gpuMs) : undefined;
           const queueCompletionMs = samples.queueMs.length
             ? summarize(samples.queueMs) : undefined;
-          const verdict = frameMs.p95 <= 16.67 ? '60 fps'
+          // An empty window summarizes to zeros, which would otherwise sail
+          // through the 16.67 ms gate and report a fabricated "60 fps".
+          //
+          // A throttled host is the opposite trap: frame time then measures how
+          // often the browser chose to run rAF, not how long a frame costs, and
+          // the run would read "below 30 fps" for reasons the renderer has no
+          // part in. When the GPU is genuinely the bottleneck its time tracks
+          // frame time; when frame time dwarfs it, the pacing came from outside.
+          const gpuSignal = gpuMs?.mean ?? queueCompletionMs?.mean;
+          const hostPaced = samples.frameMs.length > 0
+            && gpuSignal !== undefined
+            && frameMs.mean > 100
+            && frameMs.mean > gpuSignal * 4;
+          const verdict: SweepRow['verdict'] = samples.frameMs.length === 0 ? 'no samples'
+            : hostPaced ? 'host-paced'
+            : frameMs.p95 <= 16.67 ? '60 fps'
             : frameMs.p95 <= 33.34 ? '30 fps' : 'below 30 fps';
           const row: SweepRow = {
             actors: actorCount,
@@ -1147,9 +1191,19 @@ export class SupermeshScalePlayground {
             frameMs,
             gpuMs,
             queueCompletionMs,
-            meanFps: 1000 / Math.max(0.001, frameMs.mean),
-            vertexThroughputPerSecond: (thinBatStats?.submittedVertices ?? batStats?.submittedVertices ?? hybridStats?.submittedVertices ?? actorCount * totalVertices) *
-              1000 / Math.max(0.001, frameMs.mean),
+            meanFps: frameMs.mean > 0 ? 1000 / frameMs.mean : 0,
+            engineFps: samples.fps.length
+              ? samples.fps.reduce((sum, value) => sum + value, 0) / samples.fps.length
+              : 0,
+            sampledFrames: samples.frames,
+            sampleWindowMs: samples.elapsedMs,
+            observedFps: samples.frames / Math.max(0.001, samples.elapsedMs / 1000),
+            // Guarding on the mean matters: a sampleless window summarizes to 0
+            // and `1000 / max(0.001, 0)` turned that into a 3.6-trillion/s peak.
+            vertexThroughputPerSecond: frameMs.mean > 0
+              ? (thinBatStats?.submittedVertices ?? batStats?.submittedVertices ?? hybridStats?.submittedVertices ?? actorCount * totalVertices)
+                * 1000 / frameMs.mean
+              : 0,
             actorArenaMiB: container.prepareUnifiedForUpload().byteLength / 1024 / 1024,
             drawCalls: thinBatStats?.drawCalls ?? batStats?.drawCalls,
             duplicatedGeometryMiB: batStats ? batStats.duplicatedGeometryBytes / 1024 / 1024 : undefined,
@@ -1163,16 +1217,25 @@ export class SupermeshScalePlayground {
           const tr = document.createElement('tr');
           tr.dataset.verdict = verdict;
           const gpuOrQueue = gpuMs ?? queueCompletionMs;
-          tr.innerHTML = `<td>${actorCount.toLocaleString()}</td><td>${(row.verticesPerFrame / 1e6).toFixed(2)}</td><td>${frameMs.mean.toFixed(2)}</td><td>${frameMs.p95.toFixed(2)}</td><td>${gpuOrQueue ? gpuOrQueue.mean.toFixed(2) : 'n/a'}</td><td>${row.actorArenaMiB.toFixed(2)}</td><td>${verdict}</td>`;
+          // Parenthesised = present but not render-bound; em dash = nothing sampled.
+          const cell = (value: string) => verdict === 'no samples' ? '—'
+            : verdict === 'host-paced' ? `(${value})` : value;
+          tr.innerHTML = `<td>${actorCount.toLocaleString()}</td><td>${(row.verticesPerFrame / 1e6).toFixed(2)}</td><td>${cell((row.engineFps ?? 0).toFixed(1))}</td><td>${row.sampledFrames ?? 0}</td><td>${cell(frameMs.mean.toFixed(2))}</td><td>${cell(frameMs.p95.toFixed(2))}</td><td>${gpuOrQueue ? gpuOrQueue.mean.toFixed(2) : 'n/a'}</td><td>${verdict}</td>`;
           ui.role('rows').append(tr);
           ui.role('bar').style.width = `${((countIndex + 1) / counts.length) * 100}%`;
-          consecutiveSlow = frameMs.p95 > 50 ? consecutiveSlow + 1 : 0;
+          consecutiveSlow = verdict !== 'no samples' && verdict !== 'host-paced'
+            && frameMs.p95 > 50 ? consecutiveSlow + 1 : 0;
           if (consecutiveSlow >= 2) break;
         }
 
-        const at60 = rows.filter(row => row.frameMs.p95 <= 16.67).at(-1)?.actors ?? 0;
-        const at30 = rows.filter(row => row.frameMs.p95 <= 33.34).at(-1)?.actors ?? 0;
-        const peakThroughput = Math.max(...rows.map(row => row.vertexThroughputPerSecond));
+        const measured = rows.filter(
+          row => row.verdict !== 'no samples' && row.verdict !== 'host-paced');
+        const at60 = measured.filter(row => row.frameMs.p95 <= 16.67).at(-1)?.actors ?? 0;
+        const at30 = measured.filter(row => row.frameMs.p95 <= 33.34).at(-1)?.actors ?? 0;
+        // Only render-bound rows describe throughput; host-paced ones describe
+        // the browser's rAF cadence.
+        const peakThroughput = measured.length
+          ? Math.max(...measured.map(row => row.vertexThroughputPerSecond)) : 0;
         const result: ScaleResult = {
           asset: {
             renderPath,
@@ -1212,8 +1275,8 @@ export class SupermeshScalePlayground {
             largestTested: rows.at(-1)?.actors ?? 0,
             peakVertexThroughputPerSecond: peakThroughput,
             stoppedAfterTwoP95SamplesAbove50Ms: consecutiveSlow >= 2,
-            warmupFrames,
-            sampleFrames,
+            warmupMs,
+            sampleMs,
           },
         };
         window.__shadoSupermeshScale = { status: 'passed', result };
@@ -1223,8 +1286,11 @@ export class SupermeshScalePlayground {
           body: JSON.stringify(result),
         }).catch(error => console.debug('[shado/supermesh-scale] report collector unavailable', error));
         ui.role('status').textContent = 'COMPLETE';
-        ui.role('limit60').textContent = at60 ? at60.toLocaleString() : '< 1';
-        ui.role('throughput').textContent = `${(peakThroughput / 1e6).toFixed(0)} M/s`;
+        // With no render-bound row there is no limit and no throughput to show;
+        // saying "< 1" or "0 M/s" would read as a measurement.
+        ui.role('limit60').textContent = measured.length ? (at60 ? at60.toLocaleString() : '< 1') : 'host-paced';
+        ui.role('throughput').textContent = measured.length
+          ? `${(peakThroughput / 1e6).toFixed(0)} M/s` : 'host-paced';
         const download = ui.role<HTMLButtonElement>('download');
         download.disabled = false;
         download.addEventListener('click', () => {
