@@ -6,6 +6,8 @@ import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { gunzipSync, gzipSync } from "node:zlib";
 
+import { authoredObjectIds } from "./authored-object-registry.mjs";
+
 const here = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(here, "../..");
 const worldRoot = path.join(
@@ -308,11 +310,19 @@ export async function promoteZoneObjectAssets(requestedZones = ["qeynos2"]) {
       .filter((asset) => asset.kind === "object")
       .map((asset) => [asset.id, asset]),
   );
+  // Authored prototypes are deliberately absent from the RoF2 catalog: they are
+  // built from checked-in sources by promote-authored-zone-objects.mjs and
+  // publish to the same runtime URL. Skipping them here keeps this pass the
+  // sole authority over catalog assets without making a zone that references an
+  // authored building unpromotable.
+  const authored = await authoredObjectIds();
   const requiredIds = [
     ...new Set(
       worlds.flatMap((world) => world.objects.prototypes.id),
     ),
-  ].sort();
+  ]
+    .filter((id) => !authored.has(id))
+    .sort();
   const required = requiredIds.map((id) => {
     const asset = catalogObjects.get(id);
     if (!asset?.source) throw new Error(`Catalog has no source for '${id}'`);

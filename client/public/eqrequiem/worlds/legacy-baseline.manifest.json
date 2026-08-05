@@ -95,20 +95,20 @@
       },
       "authoring": {
         "path": "shader-object/sandbox/public/shado/worlds/qeynos2.authoring.json",
-        "sha256": "d8b7bfec14102e8ae8db89be43ea9504608e83d5568790a96bff8015be760865",
-        "bytes": 323478
+        "sha256": "eb3e4ca063a53c66b0474e6876661add67d969e680743558e37318478c164bbf",
+        "bytes": 325938
       },
       "runtime": {
         "source": "/eqrequiem/worlds/qeynos2.glb.gz",
         "scene": {
           "path": "client/public/eqrequiem/worlds/qeynos2.glb.gz",
-          "sha256": "7f0659cd8e41862995d9a06bcf879ff54a67c7501626e8854be9f30e805a71f0",
-          "bytes": 25640953
+          "sha256": "6f4f8ddd68b0c7c02a4fc67866898d56b84ff913b26cab67fe92101133e10cdc",
+          "bytes": 25642123
         },
         "spatial": {
           "path": "client/public/eqrequiem/worlds/qeynos2.spatial.json.gz",
-          "sha256": "b9facda7587b6148b25804dde2d982b5f97328091d02825e13dc94e27684ab3a",
-          "bytes": 4849828
+          "sha256": "4a91b0ccf13c96acd5288465d8eb09a8bcce61054b5a29b7ddf27cb2a064f0be",
+          "bytes": 4850065
         },
         "collision": {
           "path": "client/public/eqrequiem/worlds/qeynos2.collision.bin.gz",
@@ -117,8 +117,8 @@
         },
         "lightingPlan": {
           "path": "client/public/eqrequiem/worlds/qeynos2.lighting-plan.json.gz",
-          "sha256": "95a1a3826186e5c3ffdf939abf21f58731c7250fe731412e7fb21fd5422f83e4",
-          "bytes": 236424
+          "sha256": "3f747901dd3d7999539a0908e2f9ee282278381825b62a980227b06663b2c2bd",
+          "bytes": 236425
         }
       },
       "stats": {
@@ -129,8 +129,8 @@
         "cells": 5621,
         "portals": 0,
         "regions": 20,
-        "objectPrototypes": 46,
-        "objectStamps": 478,
+        "objectPrototypes": 48,
+        "objectStamps": 480,
         "grassCells": 6082,
         "grassPlacements": 47220,
         "tiles": 5621,

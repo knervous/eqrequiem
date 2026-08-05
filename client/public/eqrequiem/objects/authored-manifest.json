@@ -1,0 +1,51 @@
+{
+  "kind": "requiem.authored-object-assets",
+  "version": 1,
+  "coordinateSystem": "babylon-y-up",
+  "runtimeHandedness": "right",
+  "sourceTransform": "identity",
+  "objects": [
+    {
+      "id": "cottage_blue_roof",
+      "source": "/eqrequiem/objects/cottage_blue_roof/final.glb.gz",
+      "authoredSource": "assets/src/world/objects/authored/cottage_blue_roof/source.glb",
+      "sourceSha256": "bc61b3b40202d318dedddb788855ad442d2231f66b67733bf4daeec51eb7f2b0",
+      "conditionedSha256": "2aadee21415e3dddd8e081e24b44318f42641b1739dbec47aa67c8229aa5faf1",
+      "contentSha256": "a91d7fe783522233917763cb86223cbd59693e9e09f0bfbeeb2691f051335613",
+      "compressedSha256": "516a722ecac72e4ca7286b255ed512b6267f459fca4cea01b0c427a6bfcbf44c",
+      "bytes": 1293928,
+      "compressedBytes": 1062412,
+      "boundsRadius": 50,
+      "triangles": 14999,
+      "dimensions": [
+        44.2,
+        39.39613,
+        42.12658
+      ],
+      "zones": [
+        "qeynos2"
+      ]
+    },
+    {
+      "id": "stone_church",
+      "source": "/eqrequiem/objects/stone_church/final.glb.gz",
+      "authoredSource": "assets/src/world/objects/authored/stone_church/source.glb",
+      "sourceSha256": "c4a21fdc6ff1316681d487ac2cb42b36469b0d6922afb9bdce8dfec425c805f4",
+      "conditionedSha256": "4e8333f5fd91fca05cb68531de4144ba7c802c5a136f58f9e92bd313707f9e34",
+      "contentSha256": "60d750c5bc1a981be7e8a2697de0df24314b4875301e0b881873ad66fb937b02",
+      "compressedSha256": "39c9d02c86acff3a764051571156aa494e0e50d06b7c553bb486750af25a4df4",
+      "bytes": 1357352,
+      "compressedBytes": 1084016,
+      "boundsRadius": 83,
+      "triangles": 14999,
+      "dimensions": [
+        88,
+        62.02745,
+        63.89571
+      ],
+      "zones": [
+        "qeynos2"
+      ]
+    }
+  ]
+}

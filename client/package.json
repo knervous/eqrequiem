@@ -40,6 +40,7 @@
     "world:promote": "node scripts/promote-shado-worlds.mjs",
     "world:authoring:promote": "npm --prefix ../shader-object run build && node scripts/promote-authored-zone.mjs",
     "world:objects:promote": "node scripts/promote-zone-object-assets.mjs",
+    "world:objects:authored:promote": "node scripts/promote-authored-zone-objects.mjs",
     "world:objects:replace:review": "node scripts/object-replacement-pipeline.mjs review",
     "world:objects:replace:prepare-qeynos2": "node scripts/prepare-qeynos2-object-review.mjs",
     "world:objects:replace:first-pass-clean:qeynos2": "node scripts/clean-qeynos2-first-pass-objects.mjs",
