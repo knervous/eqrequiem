@@ -3,7 +3,7 @@
   "version": 1,
   "world": "qeynos2",
   "coordinateSystem": "babylon-y-up",
-  "revision": 7,
+  "revision": 8,
   "legacyObjectExclusions": [
     "templelife",
     "templelifeb"
@@ -1044,6 +1044,32 @@
           "legacyModel": "urn3",
           "sourceCoordinateSystem": "requiem-y-up",
           "generatedAsset": "final.glb.gz"
+        }
+      },
+      {
+        "id": "cottage_blue_roof",
+        "source": "/eqrequiem/objects/cottage_blue_roof/final.glb.gz",
+        "boundsRadius": 50,
+        "metadata": {
+          "authoredSource": "assets/src/world/objects/authored/cottage_blue_roof/source.glb",
+          "sourceCoordinateSystem": "babylon-y-up",
+          "generatedAsset": "final.glb.gz",
+          "conditioning": "assets/pipeline/condition_authored_zone_object.py",
+          "sourceLod": 1,
+          "semanticRole": "authored-building"
+        }
+      },
+      {
+        "id": "stone_church",
+        "source": "/eqrequiem/objects/stone_church/final.glb.gz",
+        "boundsRadius": 83,
+        "metadata": {
+          "authoredSource": "assets/src/world/objects/authored/stone_church/source.glb",
+          "sourceCoordinateSystem": "babylon-y-up",
+          "generatedAsset": "final.glb.gz",
+          "conditioning": "assets/pipeline/condition_authored_zone_object.py",
+          "sourceLod": 1,
+          "semanticRole": "authored-building"
         }
       }
     ],
@@ -14430,6 +14456,70 @@
           "sourceCoordinateSystem": "requiem-y-up",
           "transformNormalizedAtPreprocess": true,
           "transformContract": "requiem-y-up-v2"
+        }
+      },
+      {
+        "id": "cottage_blue_roof-0",
+        "prototype": "cottage_blue_roof",
+        "enabled": true,
+        "position": [
+          -810.0,
+          0.517,
+          -10.0
+        ],
+        "rotationDegrees": [
+          0.0,
+          -14.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "phaseMask": 4294967295,
+        "tags": [
+          "authored",
+          "building"
+        ],
+        "metadata": {
+          "sourceCoordinateSystem": "babylon-y-up",
+          "transformContract": "authored-y-up-v1",
+          "site": "castle-road-fork",
+          "facing": "castle branch road",
+          "seatedGroundY": 0.817
+        }
+      },
+      {
+        "id": "stone_church-0",
+        "prototype": "stone_church",
+        "enabled": true,
+        "position": [
+          -745.0,
+          0.003,
+          -120.0
+        ],
+        "rotationDegrees": [
+          0.0,
+          177.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "phaseMask": 4294967295,
+        "tags": [
+          "authored",
+          "building"
+        ],
+        "metadata": {
+          "sourceCoordinateSystem": "babylon-y-up",
+          "transformContract": "authored-y-up-v1",
+          "site": "castle-road-fork",
+          "facing": "castle branch road",
+          "seatedGroundY": 0.303
         }
       }
     ]

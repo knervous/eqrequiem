@@ -61,7 +61,7 @@ const CAPTURED_PRESETS = [
 ] as const;
 
 const PERMUTATION_COUNT = MODULE_FIELDS.reduce((count, field) => count * field.values.length, 1);
-const MAX_EXPLORER_ACTORS = 2_000;
+const MAX_EXPLORER_ACTORS = 40000;
 
 type ModuleRecord = {
   name: string;
