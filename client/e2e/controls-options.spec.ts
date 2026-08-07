@@ -161,6 +161,52 @@ test.describe('controller rebinding', () => {
   });
 });
 
+test.describe('input monitor', () => {
+  test('explains that the browser hides a pad until a button is pressed', async ({
+    page,
+  }) => {
+    await expect(page.getByTestId('gamepad-monitor')).toContainText(
+      'press one of its buttons',
+    );
+  });
+
+  test('mirrors live axis and button state once the pad reports', async ({
+    page,
+  }) => {
+    await connectPad(page);
+    await setPadState(page, { axes: [-1, 0.5, 0, 0], buttons: withButtons(4) });
+
+    await expect(page.getByTestId('gamepad-axis-0')).toHaveText('-1.00');
+    await expect(page.getByTestId('gamepad-axis-1')).toHaveText('0.50');
+    await expect(page.getByTestId('gamepad-pressed')).toContainText(
+      '4 (Left Bumper)',
+    );
+
+    await setPadState(page, { buttons: withButtons() });
+    await expect(page.getByTestId('gamepad-pressed')).toHaveText(
+      'No buttons held',
+    );
+  });
+
+  test('warns when the controller reports a non-standard layout', async ({
+    page,
+  }) => {
+    await connectPad(page);
+    await expect(page.getByTestId('gamepad-nonstandard')).toHaveCount(0);
+
+    await page.evaluate(() => {
+      const build = navigator.getGamepads;
+      navigator.getGamepads = () =>
+        build.call(navigator).map((pad) =>
+          pad ? ({ ...pad, mapping: '' } as never) : pad,
+        ) as never;
+    });
+    await expect(page.getByTestId('gamepad-nonstandard')).toContainText(
+      'non-standard layout',
+    );
+  });
+});
+
 test.describe('controller settings', () => {
   test('deadzone and sensitivity sliders write through to config', async ({
     page,

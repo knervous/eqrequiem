@@ -139,6 +139,65 @@ const useActiveGamepad = (polling: boolean) => {
   return gamepad;
 };
 
+/**
+ * Shows exactly what the browser reports for the attached pad. A controller
+ * that does nothing in game is almost always one the browser never exposed, or
+ * one that reports a non-standard button and axis order — both are visible
+ * here without having to guess.
+ */
+const GamepadMonitor: React.FC<{ gamepad: GamepadLike | null }> = ({
+  gamepad,
+}) => {
+  if (!gamepad) {
+    return (
+      <div className="rq-pad-monitor" data-testid="gamepad-monitor">
+        <p className="rq-pad-monitor__empty">
+          Nothing reported yet. Browsers only reveal a controller after you
+          press one of its buttons with this window focused.
+        </p>
+      </div>
+    );
+  }
+
+  const nonStandard = gamepad.mapping !== 'standard';
+  const pressed = (gamepad.buttons ?? [])
+    .map((button, index) => ({ button, index }))
+    .filter(({ button }) => button.pressed || (button.value ?? 0) >= 0.5);
+
+  return (
+    <div className="rq-pad-monitor" data-testid="gamepad-monitor">
+      {nonStandard ? (
+        <p className="rq-pad-monitor__warning" data-testid="gamepad-nonstandard">
+          This controller reports a non-standard layout
+          {gamepad.mapping ? ` ("${gamepad.mapping}")` : ''}, so the default
+          bindings below may point at the wrong buttons. Use the readout to
+          find the right ones and rebind.
+        </p>
+      ) : null}
+      <div className="rq-pad-monitor__axes">
+        {(gamepad.axes ?? []).map((value, index) => (
+          <div className="rq-pad-axis" key={index}>
+            <span>Axis {index}</span>
+            <div className="rq-pad-axis__track">
+              <i style={{ left: `${((value + 1) / 2) * 100}%` }} />
+            </div>
+            <output data-testid={`gamepad-axis-${index}`}>
+              {value.toFixed(2)}
+            </output>
+          </div>
+        ))}
+      </div>
+      <div className="rq-pad-monitor__buttons" data-testid="gamepad-pressed">
+        {pressed.length === 0
+          ? 'No buttons held'
+          : pressed
+            .map(({ index }) => `${index} (${presentGamepadBinding(`Button${index}`)})`)
+            .join(', ')}
+      </div>
+    </div>
+  );
+};
+
 export const ControlsOptions: React.FC = () => {
   const [, setRevision] = useState(0);
   const [capturingKey, setCapturingKey] = useState<keyof KeyBindings | null>(
@@ -299,6 +358,7 @@ export const ControlsOptions: React.FC = () => {
           ? `Connected: ${gamepad.id ?? 'Gamepad'}`
           : 'No controller detected. Connect one and press any button.'}
       </div>
+      <GamepadMonitor gamepad={gamepad} />
       <label className="rq-option-toggle">
         <span>
           <strong>Enable controller</strong>

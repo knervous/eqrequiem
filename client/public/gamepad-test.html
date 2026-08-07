@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Controller diagnostic — Shadows of Eltania</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bone: #e8dcc4;
+        --bronze: #9a8150;
+        --ember: #d8892f;
+        --ink: #0d0b09;
+      }
+      body {
+        margin: 0;
+        padding: 28px clamp(16px, 5vw, 48px) 64px;
+        background: var(--ink);
+        color: var(--bone);
+        font: 14px/1.6 ui-monospace, "SFMono-Regular", Consolas, monospace;
+      }
+      h1 {
+        margin: 0 0 4px;
+        font-size: 18px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      h2 {
+        margin: 28px 0 8px;
+        color: var(--bronze);
+        font-size: 11px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+      .sub {
+        margin: 0 0 20px;
+        color: var(--bronze);
+      }
+      .verdict {
+        padding: 14px 16px;
+        border-left: 3px solid var(--ember);
+        margin-bottom: 8px;
+        background: rgb(216 137 47 / 8%);
+        font-size: 15px;
+      }
+      .verdict.good {
+        border-color: #6fbf73;
+        background: rgb(111 191 115 / 8%);
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      td {
+        padding: 3px 10px 3px 0;
+        vertical-align: middle;
+      }
+      td:first-child {
+        width: 96px;
+        color: var(--bronze);
+      }
+      .track {
+        position: relative;
+        height: 8px;
+        border: 1px solid rgb(154 129 80 / 35%);
+        background: rgb(0 0 0 / 45%);
+      }
+      .track i {
+        position: absolute;
+        top: -1px;
+        width: 3px;
+        height: 8px;
+        margin-left: -1px;
+        background: var(--ember);
+      }
+      .num {
+        width: 62px;
+        text-align: right;
+      }
+      .btn-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+      }
+      .btn {
+        padding: 4px 8px;
+        border: 1px solid rgb(154 129 80 / 30%);
+        color: var(--bronze);
+        font-size: 11px;
+      }
+      .btn.on {
+        border-color: var(--ember);
+        background: var(--ember);
+        color: var(--ink);
+      }
+      .pad {
+        padding: 16px;
+        border: 1px solid rgb(154 129 80 / 25%);
+        margin-bottom: 14px;
+        background: rgb(255 255 255 / 2%);
+      }
+      .pad-id {
+        margin-bottom: 10px;
+        color: #fff1ce;
+        font-size: 15px;
+        word-break: break-all;
+      }
+      .tag {
+        display: inline-block;
+        padding: 1px 7px;
+        border: 1px solid rgb(154 129 80 / 40%);
+        margin-right: 6px;
+        font-size: 11px;
+      }
+      .tag.warn {
+        border-color: var(--ember);
+        color: var(--ember);
+      }
+      #log {
+        max-height: 180px;
+        padding: 10px 12px;
+        border: 1px solid rgb(154 129 80 / 22%);
+        margin: 0;
+        overflow-y: auto;
+        background: rgb(0 0 0 / 35%);
+        font-size: 12px;
+        white-space: pre-wrap;
+      }
+      ol {
+        padding-left: 20px;
+      }
+      li {
+        margin-bottom: 6px;
+      }
+      code {
+        color: var(--ember);
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Controller diagnostic</h1>
+    <p class="sub">
+      Raw <code>navigator.getGamepads()</code> output. Nothing to do with the
+      game client — this tells you whether the <em>browser</em> can see your
+      controller at all.
+    </p>
+
+    <div id="verdict" class="verdict">Waiting for a controller…</div>
+    <p class="sub" id="env"></p>
+
+    <h2>Press a button on the controller</h2>
+    <p class="sub">
+      Browsers deliberately hide controllers until you press something on them
+      while this page has focus. Click this page first, then press a button.
+    </p>
+
+    <div id="pads"></div>
+
+    <h2>Connection events</h2>
+    <pre id="log">(none yet)</pre>
+
+    <h2>If nothing ever appears</h2>
+    <ol>
+      <li>
+        Click on this page, then press a face button on the controller. A
+        stick nudge alone is often not enough.
+      </li>
+      <li>
+        <strong>Plug the controller in with a USB cable.</strong> Chrome on
+        macOS handles a wired Switch Pro Controller far more reliably than a
+        Bluetooth one — this is the single most common fix.
+      </li>
+      <li>
+        Try this same page in <strong>Safari</strong>. Safari reads controllers
+        through the macOS Game Controller framework, so it often sees a
+        Bluetooth pad that Chrome misses. If Safari sees it and Chrome doesn't,
+        it's a Chrome limitation, not your controller.
+      </li>
+      <li>
+        Re-pair the controller: hold the small Sync button next to the USB port
+        until the lights run, then pair from macOS Bluetooth settings.
+      </li>
+      <li>
+        Quit other apps that grab controllers (Steam, Parsec, controller
+        remappers). Steam's Input layer in particular can claim the device
+        exclusively so the browser never sees it.
+      </li>
+    </ol>
+
+    <script>
+      const padsEl = document.getElementById('pads');
+      const verdictEl = document.getElementById('verdict');
+      const logEl = document.getElementById('log');
+      const envEl = document.getElementById('env');
+      const lines = [];
+      let everSeen = false;
+
+      envEl.textContent =
+        'Secure context: ' + window.isSecureContext +
+        ' · Gamepad API: ' + (typeof navigator.getGamepads === 'function' ? 'available' : 'MISSING') +
+        ' · ' + navigator.userAgent;
+
+      const log = (message) => {
+        lines.unshift(new Date().toLocaleTimeString() + '  ' + message);
+        logEl.textContent = lines.slice(0, 40).join('\n');
+      };
+
+      window.addEventListener('gamepadconnected', (event) => {
+        log('connected  index=' + event.gamepad.index + '  "' + event.gamepad.id + '"  mapping=' + (event.gamepad.mapping || '(none)'));
+      });
+      window.addEventListener('gamepaddisconnected', (event) => {
+        log('disconnected  index=' + event.gamepad.index + '  "' + event.gamepad.id + '"');
+      });
+
+      const render = () => {
+        const pads = typeof navigator.getGamepads === 'function'
+          ? Array.from(navigator.getGamepads()).filter(Boolean)
+          : [];
+
+        if (pads.length === 0) {
+          verdictEl.className = 'verdict';
+          verdictEl.textContent = everSeen
+            ? 'Controller disconnected. Press a button to wake it.'
+            : 'The browser reports no controllers. Press a button on the pad with this page focused.';
+          padsEl.innerHTML = '';
+        } else {
+          everSeen = true;
+          verdictEl.className = 'verdict good';
+          verdictEl.textContent =
+            'The browser can see ' + pads.length +
+            (pads.length === 1 ? ' controller.' : ' controllers.') +
+            ' If the game still ignores it, the problem is in the game, not the browser.';
+
+          padsEl.innerHTML = pads.map((pad) => {
+            const axes = pad.axes.map((value, index) =>
+              '<tr><td>Axis ' + index + '</td>' +
+              '<td><div class="track"><i style="left:' + (((value + 1) / 2) * 100).toFixed(2) + '%"></i></div></td>' +
+              '<td class="num">' + value.toFixed(3) + '</td></tr>').join('');
+
+            const buttons = pad.buttons.map((button, index) => {
+              const on = button.pressed || button.value >= 0.5;
+              const value = button.value > 0 && button.value < 1 ? ' ' + button.value.toFixed(2) : '';
+              return '<span class="btn' + (on ? ' on' : '') + '">' + index + value + '</span>';
+            }).join('');
+
+            const standard = pad.mapping === 'standard';
+            return '<div class="pad">' +
+              '<div class="pad-id">' + pad.id + '</div>' +
+              '<div>' +
+                '<span class="tag">index ' + pad.index + '</span>' +
+                '<span class="tag' + (standard ? '' : ' warn') + '">mapping: ' + (pad.mapping || 'non-standard') + '</span>' +
+                '<span class="tag">' + pad.axes.length + ' axes</span>' +
+                '<span class="tag">' + pad.buttons.length + ' buttons</span>' +
+              '</div>' +
+              (standard ? '' : '<p class="sub" style="margin:10px 0 0">This pad does not use the standard layout, so the game\'s default bindings may land on the wrong buttons. Note the indices below and rebind them in Options → Controls.</p>') +
+              '<table style="margin-top:12px">' + axes + '</table>' +
+              '<div class="btn-grid" style="margin-top:12px">' + buttons + '</div>' +
+            '</div>';
+          }).join('');
+        }
+        requestAnimationFrame(render);
+      };
+
+      render();
+    </script>
+  </body>
+</html>
