@@ -114,7 +114,8 @@ describe("embedded game backend", () => {
     });
     assert.deepEqual(
       bootstrap.map((entry) => entry.type),
-      ["new_zone", "player_profile", "zone_spawns"],
+      // Zone entry also seeds the experience meter and the character's own journal.
+      ["new_zone", "player_profile", "zone_spawns", "experience_update", "journal_update"],
     );
     const geared = await backend.handle(7, {
       type: "gm_command",
@@ -337,7 +338,7 @@ describe("embedded game backend", () => {
     await backend.handle(4, { type: "zone_session", zoneId: 2, instanceId: 0 });
     await backend.handle(4, { type: "zone_change", instanceId: 0 });
 
-    const events = await backend.handle(4, {
+    const greeting = await backend.handle(4, {
       type: "channel_message",
       sender: "Ezaltarem",
       targetName: "Guard_Gehnus",
@@ -345,17 +346,69 @@ describe("embedded game backend", () => {
       channel: 0,
     });
 
-    assert.deepEqual(events, [
-      {
-        type: "channel_message",
-        transport: "control-stream",
-        value: {
-          sender: "Guard_Gehnus",
-          target: "Ezaltarem",
-          message: "Hello, Ezaltarem! How can I assist you today? count 1",
-          chanNum: 0,
-        },
-      },
+    // Hailing only offers a thread to pull; nothing is assigned or tracked yet.
+    assert.deepEqual(greeting.map((entry) => entry.type), ["channel_message"]);
+    assert.match(String(greeting[0]?.value.message), /a patrol of ours is late/);
+
+    // A level 1 character is warned off rather than handed the thread.
+    const tooGreen = await backend.handle(4, {
+      type: "channel_message",
+      sender: "Ezaltarem",
+      targetName: "Guard_Gehnus",
+      message: "what about the missing patrol?",
+      channel: 0,
+    });
+    assert.deepEqual(tooGreen.map((entry) => entry.type), ["channel_message"]);
+    assert.match(String(tooGreen[0]?.value.message), /no place for you yet/);
+
+    await database.execute("UPDATE characters SET level = 5 WHERE name = 'Ezaltarem'");
+    await backend.handle(4, { type: "zone_session", zoneId: 2, instanceId: 0 });
+    await backend.handle(4, { type: "zone_change", instanceId: 0 });
+    const asked = await backend.handle(4, {
+      type: "channel_message",
+      sender: "Ezaltarem",
+      targetName: "Guard_Gehnus",
+      message: "what about the missing patrol?",
+      channel: 0,
+    });
+
+    // Asking records what the character learned and pays the discovery once.
+    assert.deepEqual(new Set(asked.map((entry) => entry.type)), new Set([
+      "channel_message",
+      "experience_update",
+      "journal_update",
+    ]));
+    const journal = asked.find((entry) => entry.type === "journal_update");
+    const entries = journal?.value.entries as Array<{ leadKey: string; kind: string }>;
+    assert.deepEqual(entries.map((entry) => entry.leadKey).sort(), [
+      "aqueduct-lead",
+      "heard-rumor",
+    ]);
+    assert.equal(
+      Number((asked.find((entry) => entry.type === "experience_update"))?.value.experience),
+      25,
+    );
+
+    // The persisted row survives the shard: state, not chat history, is the record.
+    const stored = (
+      await database.query<{ quest_key: string; state_json: string }>(
+        "SELECT quest_key, state_json FROM character_quest_state",
+      )
+    ).rows;
+    assert.equal(stored[0]?.quest_key, "qeynos2:missing-patrol");
+    assert.equal(
+      (JSON.parse(String(stored[0]?.state_json)) as { heardRumor?: boolean }).heardRumor,
+      true,
+    );
+    const knowledge = (
+      await database.query<{ knowledge_key: string }>(
+        "SELECT knowledge_key FROM character_knowledge ORDER BY knowledge_key",
+      )
+    ).rows.map((row) => row.knowledge_key);
+    assert.deepEqual(knowledge, [
+      "qeynos2.aqueduct_route",
+      "qeynos2.patrol_missing",
+      "qeynos2.varen_led_patrol",
     ]);
     await backend.close();
   });

@@ -21,8 +21,14 @@ import { EntityKind, NPC } from "./entity-store.js";
 import { ZoneSimulationKernel } from "./zone-kernel.js";
 import { loadZoneSimulationKernel } from "./zone-kernel-node.js";
 import { QuestManager } from "./quest-manager.js";
-import type { QuestDefinition, QuestEffect } from "./quest-types.js";
+import {
+  isPersistentQuestEffect,
+  type QuestDefinition,
+  type QuestEffect,
+  type QuestPersistentEffect,
+} from "./quest-types.js";
 import { questDefinitionsForZone, questRegistryForZone } from "./quest-zone-registry.js";
+import { combatExperience, splitGroupExperience } from "./quest-progression.js";
 import { ZoneSpatialIndex } from "./spatial-index.js";
 import type { ZoneNpcSpawnDefinition } from "./zone-content.js";
 import {
@@ -89,6 +95,7 @@ const spatial = new ZoneSpatialIndex(300, 1);
 const visibleEntitiesBySession = new Map<number, Set<number>>();
 const pendingAoiChanges = new Map<number, { entered: Set<number>; exited: Set<number> }>();
 const movementRoutes = new Map<number, MovementRoute>();
+const npcSpawnsByIndex = new Map<number, ZoneNpcSpawnDefinition>();
 const suspendedMovementRoutes = new Set<number>();
 let stopping = false;
 let kernel: ZoneSimulationKernel | null = null;
@@ -104,7 +111,12 @@ let tick = 0;
 let simulationTimeMs = 0;
 let lastTickAtMs = performance.now();
 const zoneQuestRegistry = questRegistryForZone(zoneId);
-const quests = new QuestManager(zoneId, instanceId, zoneQuestRegistry?.zone.shortName ?? null);
+const quests = new QuestManager(
+  zoneId,
+  instanceId,
+  zoneQuestRegistry?.zone.shortName ?? null,
+  { tickRateHz },
+);
 quests.replace([...questDefinitionsForZone(zoneId), ...questDefinitions], questRevision);
 
 void loadZoneSimulationKernel()
@@ -195,6 +207,24 @@ function runZoneTick(): void {
       continue;
     }
 
+    if (item.type === "quest_character") {
+      quests.attachCharacter(item.sessionId, item.snapshot);
+      continue;
+    }
+
+    if (item.type === "quest_progression") {
+      quests.setCharacterProgression(item.sessionId, item.experience, item.level);
+      if (item.leveled) {
+        applyQuestEffects(quests.dispatchLevelUp({
+          tick,
+          sessionId: item.sessionId,
+          level: item.level,
+          previousLevel: item.previousLevel,
+        }));
+      }
+      continue;
+    }
+
     if (item.type === "zone_hydrate") {
       zoneKey = item.zoneKey;
       pendingNpcs = item.npcs;
@@ -267,6 +297,7 @@ function runZoneTick(): void {
   simulationTimeMs += deltaMs;
 
   applyQuestEffects(quests.dispatch({ type: "npc_tick", tick }));
+  applyQuestEffects(quests.advanceTimers(tick));
   for (const request of engagement?.tick(tick) ?? []) {
     if (!zoneKey) continue;
     post({
@@ -671,6 +702,29 @@ function publishCombatEvent(
       movementRoutes.delete(target.index);
       if (target.kind === EntityKind.npc) {
         corpseLoot?.createCorpse(target);
+        const spawn = npcSpawnsByIndex.get(target.index);
+        if (spawn) {
+          const killerSessionIds = [...ownerSessionIds].filter(
+            (candidate) => quests.character(candidate) !== null,
+          );
+          awardCombatExperience(spawn, killerSessionIds);
+          applyQuestEffects(quests.dispatchNpcDeath({
+            tick,
+            npc: {
+              kind: "npc",
+              id: spawn.spawnId,
+              name: spawn.name,
+              level: spawn.level,
+              npcIndex: target.index,
+              position: {
+                x: target.position.x,
+                y: target.position.y,
+                z: target.position.z,
+              },
+            },
+            creditSessionIds: killerSessionIds,
+          }));
+        }
       } else if (target.kind === EntityKind.pc && targetOwner !== undefined) {
         const join = clientJoins.get(targetOwner);
         if (join) {
@@ -708,6 +762,7 @@ function handleClientUpdate(sessionId: number, payload: Uint8Array): void {
   const previous = spatial.entitiesForSession(sessionId);
   spatial.upsertSession(sessionId, parsed);
   syncSessionVisibility(sessionId, previous, spatial.entitiesForSession(sessionId));
+  applyQuestEffects(quests.updatePlayerPosition(sessionId, parsed, tick));
 
   const entityIndex = clientEntityIndices.get(sessionId);
   const pc = entityIndex === undefined ? undefined : kernel?.entities.at(entityIndex);
@@ -755,7 +810,12 @@ function handleChannelMessage(sessionId: number, payload: Uint8Array): void {
 }
 
 function applyQuestEffects(effects: readonly QuestEffect[]): void {
+  const persistent: QuestPersistentEffect[] = [];
   for (const effect of effects) {
+    if (isPersistentQuestEffect(effect)) {
+      persistent.push(effect);
+      continue;
+    }
     if (effect.type === "npc_say" || effect.type === "entity_say") {
       post({
         type: "quest_say",
@@ -783,6 +843,63 @@ function applyQuestEffects(effects: readonly QuestEffect[]): void {
       meta: { questId: effect.questId },
     });
   }
+  publishQuestPersistence(persistent);
+}
+
+/**
+ * Combat experience runs through the same award path as discovery and quest beats, so
+ * the progression service stays the only writer of experience and level. Credit is the
+ * combat system's participant set; the killing blow is irrelevant.
+ */
+function awardCombatExperience(
+  spawn: ZoneNpcSpawnDefinition,
+  creditSessionIds: readonly number[],
+): void {
+  if (creditSessionIds.length === 0) return;
+  const awards: QuestPersistentEffect[] = [];
+  for (const sessionId of creditSessionIds) {
+    const character = quests.character(sessionId);
+    if (!character?.characterId) continue;
+    const amount = splitGroupExperience(
+      combatExperience(spawn.level, character.level),
+      creditSessionIds.length,
+    );
+    if (amount <= 0) continue;
+    awards.push({
+      type: "award_xp",
+      sessionId,
+      characterId: character.characterId,
+      questKey: `combat:${spawn.name}`,
+      amount,
+      source: "combat",
+      sourceKey: spawn.name,
+      awardKey: null,
+    });
+  }
+  publishQuestPersistence(awards);
+}
+
+/**
+ * The worker owns quest execution but never the database. Persistent consequences and
+ * the rows they dirtied are handed to the zone service, which commits them once.
+ */
+function publishQuestPersistence(effects: readonly QuestPersistentEffect[]): void {
+  const batches = quests.drainPersistence();
+  if (effects.length === 0 && batches.length === 0) return;
+  const sessionIds = new Set(effects.map((effect) => effect.sessionId));
+  for (const batch of batches) sessionIds.add(batch.sessionId);
+  post({
+    type: "quest_effects",
+    zoneId,
+    instanceId,
+    effects: [...effects],
+    batches: [...batches],
+    journals: [...sessionIds].map((sessionId) => ({
+      sessionId,
+      characterId: quests.character(sessionId)?.characterId ?? null,
+      entries: [...quests.journalFor(sessionId)],
+    })),
+  });
 }
 
 function hydrateNpcs(
@@ -796,6 +913,7 @@ function hydrateNpcs(
   npcCount = accepted.length;
   for (let index = 0; index < accepted.length; index++) {
     const spawn = accepted[index]!;
+    npcSpawnsByIndex.set(index, spawn);
     const npc = loaded.entities.spawnNPCAt(index, {
       id: spawn.spawnId,
       x: spawn.x,

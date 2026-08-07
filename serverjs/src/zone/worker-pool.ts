@@ -8,6 +8,7 @@ import type {
   ZoneMerchantIntentMessage,
   ZoneNavPathRequestMessage,
   ZoneNpcDebugMessage,
+  ZoneQuestEffectsMessage,
   ZonePcDeathMessage,
   ZoneWorkerInboundMessage,
   ZoneWorkerOutboundMessage,
@@ -90,6 +91,7 @@ export class ZoneWorkerPool {
       message: ZoneNavPathRequestMessage,
     ) => void,
     private readonly onNpcDebug?: (message: ZoneNpcDebugMessage) => void,
+    private readonly onQuestEffects?: (message: ZoneQuestEffectsMessage) => void,
     private readonly onPersistentSnapshot?: (
       zoneId: number,
       instanceId: number,
@@ -250,6 +252,10 @@ export class ZoneWorkerPool {
       }
       if (message.type === "npc_debug") {
         this.onNpcDebug?.(message);
+        return;
+      }
+      if (message.type === "quest_effects") {
+        this.onQuestEffects?.(message);
         return;
       }
       if (message.type === "persistent_snapshot") {

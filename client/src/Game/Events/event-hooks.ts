@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { Entity } from '@game/Model/entity';
 import { PlayerProfile } from '@game/Net/messages';
+import type { ExperienceUpdate, JournalUpdate } from '@game/Net/messages';
 import Player from '@game/Player/player';
 import type { InventorySlot, NullableItemInstance } from '@game/Player/player-constants';
 import type { PlayerInventory } from '@game/Player/player-inventory';
@@ -126,6 +127,32 @@ export const usePlayerLevel = () => {
     };
   }, []);
   return level;
+};
+
+/** In-level experience progress from the server's progression service. */
+export const useExperience = () => {
+  const [experience, setExperience] = useState<ExperienceUpdate | null>(null);
+  useEffect(() => {
+    const cb = (update: ExperienceUpdate) => setExperience(update);
+    emitter.on('experienceUpdate', cb);
+    return () => {
+      emitter.off('experienceUpdate', cb);
+    };
+  }, []);
+  return experience;
+};
+
+/** Leads the character has discovered, newest thread first. */
+export const useJournal = () => {
+  const [journal, setJournal] = useState<JournalUpdate | null>(null);
+  useEffect(() => {
+    const cb = (update: JournalUpdate) => setJournal(update);
+    emitter.on('journalUpdate', cb);
+    return () => {
+      emitter.off('journalUpdate', cb);
+    };
+  }, []);
+  return journal;
 };
 
 export const useInventoryOpen = () => {

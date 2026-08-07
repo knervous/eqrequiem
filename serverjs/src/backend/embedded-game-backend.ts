@@ -6,9 +6,12 @@ import {
 import { DrizzleDatabase } from "../db/drizzle-database.js";
 import { GameDataRepository } from "../persist/game-data-repository.js";
 import { QuestManager } from "../zone/quest-manager.js";
+import { QuestEffectApplier } from "../zone/quest-effect-applier.js";
+import { CharacterProgressRepository } from "../progression/character-progress-repository.js";
+import { combatExperience, splitGroupExperience } from "../zone/quest-progression.js";
 import { radiansToEqHeading } from "../zone/heading.js";
 import type { QuestEffect } from "../zone/quest-types.js";
-import { questRegistryForZone } from "../zone/quest-zone-registry.js";
+import { questDefinitionsForZone, questRegistryForZone } from "../zone/quest-zone-registry.js";
 import {
   EmbeddedZoneRuntime,
   type EmbeddedDeathEvent,
@@ -149,6 +152,13 @@ export class EmbeddedGameBackend implements GameBackend {
   private readonly contentPrefix: string;
   private readonly merchantRepository: MerchantRepository;
   private readonly zoneSnapshotRepository: ZoneSnapshotRepository;
+  private readonly progressRepository: CharacterProgressRepository;
+  private readonly questEffects: QuestEffectApplier;
+  /** Spawn identity per shard, so a kill can be attributed without a database read. */
+  private readonly zoneNpcs = new Map<
+    string,
+    Map<number, { name: string; level: number; archetypeId: number }>
+  >();
   private readonly createZoneKernel: ZoneKernelFactory | undefined;
   private readonly embeddedZoneOptions: Omit<
     EmbeddedZoneRuntimeOptions,
@@ -174,6 +184,12 @@ export class EmbeddedGameBackend implements GameBackend {
       this.contentPrefix,
     );
     this.zoneSnapshotRepository = new ZoneSnapshotRepository(driver);
+    this.progressRepository = new CharacterProgressRepository(
+      driver,
+      driver,
+      this.contentPrefix,
+    );
+    this.questEffects = new QuestEffectApplier(this.progressRepository);
     this.createZoneKernel = options.createZoneKernel;
     this.embeddedZoneOptions = {
       ...(options.findPath ? { findPath: options.findPath } : {}),
@@ -259,12 +275,13 @@ export class EmbeddedGameBackend implements GameBackend {
         return this.changeZone(sessionId, request);
       case "gm_command":
         return this.gmCommand(sessionId, request.command, request.args);
-      case "client_update":
+      case "client_update": {
         this.sessionRuntimes
           .get(sessionId)
           ?.applyClientUpdate(sessionId, request);
         await this.persistClientLocation(sessionId, request);
-        return [];
+        return this.trackQuestPosition(sessionId, request);
+      }
       case "auto_attack":
         this.sessionRuntimes
           .get(sessionId)
@@ -326,6 +343,7 @@ export class EmbeddedGameBackend implements GameBackend {
       if (!row) return;
       for (const table of [
         "character_quest_state",
+        "character_knowledge",
         "player_inventory",
         "character_languages",
         "character_skills",
@@ -765,10 +783,11 @@ export class EmbeddedGameBackend implements GameBackend {
       return [];
     }
     const player = await this.character(session.selectedCharacter);
-    const effects = this.questManager(
+    const manager = this.questManager(
       session.activeZone.zoneId,
       session.activeZone.instanceId,
-    ).dispatch({
+    );
+    const effects = manager.dispatch({
       type: "say",
       tick: 0,
       sessionId,
@@ -805,7 +824,12 @@ export class EmbeddedGameBackend implements GameBackend {
         },
       },
     });
-    return this.questEvents(effects, session.selectedCharacter);
+    return this.commitQuestEffects(
+      manager,
+      effects,
+      sessionId,
+      session.selectedCharacter,
+    );
   }
 
   private questManager(zoneId: number, instanceId: number): QuestManager {
@@ -818,8 +842,17 @@ export class EmbeddedGameBackend implements GameBackend {
       zoneId,
       instanceId,
       questRegistryForZone(zoneId)?.zone.shortName ?? null,
+      { tickRateHz: 10 },
     );
-    created.replace(this.content.quests ?? [], 1);
+    // Content may already carry the code-owned definitions (BUILTIN_QUESTS is derived
+    // from them), so dedupe by quest key or every handler would run twice.
+    const definitions = new Map(
+      questDefinitionsForZone(zoneId).map((definition) => [definition.id, definition]),
+    );
+    for (const definition of this.content.quests ?? []) {
+      if (!definitions.has(definition.id)) definitions.set(definition.id, definition);
+    }
+    created.replace([...definitions.values()], 1);
     this.questManagers.set(key, created);
     return created;
   }
@@ -847,6 +880,64 @@ export class EmbeddedGameBackend implements GameBackend {
       ];
     });
   }
+
+  /**
+   * Commits the persistent half of a dispatch and returns the packets owed to
+   * `sessionId`; anything addressed to another character is published directly.
+   */
+  private async commitQuestEffects(
+    manager: QuestManager,
+    effects: readonly QuestEffect[],
+    sessionId: number,
+    actorName: string,
+  ): Promise<BackendEvent[]> {
+    const events = this.questEvents(effects, actorName);
+    const deliveries = await this.questEffects.apply(manager, effects);
+    for (const delivery of deliveries) {
+      const outbound = event(delivery.type, delivery.value, "control-stream");
+      if (delivery.sessionId === sessionId) {
+        events.push(outbound);
+        continue;
+      }
+      this.publish([delivery.sessionId], outbound);
+    }
+    return events;
+  }
+
+  private publish(sessionIds: readonly number[], outbound: BackendEvent): void {
+    const delivery: BackendEventDelivery = { sessionIds, event: outbound };
+    for (const listener of this.listeners) listener(delivery);
+  }
+
+  /**
+   * Drives the authored region/proximity trackers and named timers from the position
+   * stream, so exploration content fires without any handler polling coordinates.
+   */
+  private async trackQuestPosition(
+    sessionId: number,
+    position: { x: number; y: number; z: number },
+  ): Promise<BackendEvent[]> {
+    const session = this.sessions.get(sessionId);
+    if (!session?.activeZone || !session.selectedCharacter) return [];
+    const manager = this.questManager(
+      session.activeZone.zoneId,
+      session.activeZone.instanceId,
+    );
+    this.questTick += 1;
+    const effects = [
+      ...manager.updatePlayerPosition(sessionId, position, this.questTick),
+      ...manager.advanceTimers(this.questTick),
+    ];
+    if (effects.length === 0) return [];
+    return this.commitQuestEffects(
+      manager,
+      effects,
+      sessionId,
+      session.selectedCharacter,
+    );
+  }
+
+  private questTick = 0;
 
   private async summonItem(
     characterName: string,
@@ -1404,11 +1495,21 @@ export class EmbeddedGameBackend implements GameBackend {
       });
       this.sessionRuntimes.set(sessionId, runtime);
     }
-    this.questManager(route.zoneId, route.instanceId).hydrate({
+    this.zoneNpcs.set(
+      key,
+      new Map(spawns.map((spawn) => [spawn.spawnId, {
+        name: spawn.name,
+        level: spawn.level,
+        archetypeId: spawn.id,
+      }])),
+    );
+    const manager = this.questManager(route.zoneId, route.instanceId);
+    manager.hydrate({
       players: [
         {
           kind: "player",
           sessionId,
+          characterId: Number(character.id),
           id: Number(character.id),
           name: character.name,
           level: Number(character.level),
@@ -1440,6 +1541,40 @@ export class EmbeddedGameBackend implements GameBackend {
         },
       })),
     });
+    // Load persisted quest state, knowledge and inventory before any handler runs,
+    // then let the world react to the arrival.
+    const record = await this.progressRepository.load(Number(character.id));
+    if (record) manager.attachCharacter(sessionId, record);
+    const questEvents = await this.commitQuestEffects(
+      manager,
+      manager.dispatch({
+        type: "player_enter",
+        tick: this.questTick,
+        sessionId,
+        actorName: character.name,
+        actor: {
+          kind: "player",
+          sessionId,
+          characterId: Number(character.id),
+          name: character.name,
+          level: Number(character.level),
+          position: {
+            x: Number(character.x),
+            y: Number(character.y),
+            z: Number(character.z),
+          },
+        },
+      }),
+      sessionId,
+      character.name,
+    );
+    for (const delivery of await this.questEffects.snapshot(
+      manager,
+      sessionId,
+      Number(character.id),
+    )) {
+      questEvents.push(event(delivery.type, delivery.value, "control-stream"));
+    }
     return [
       event(
         "new_zone",
@@ -1483,6 +1618,7 @@ export class EmbeddedGameBackend implements GameBackend {
         "control-stream",
       ),
       event("zone_spawns", { spawns }, "control-stream"),
+      ...questEvents,
     ];
   }
 
@@ -1591,6 +1727,9 @@ export class EmbeddedGameBackend implements GameBackend {
               event: event("combat_event", { ...combat }, "control-stream"),
             };
             for (const listener of this.listeners) listener(delivery);
+            if (combat.killed) {
+              void this.handleNpcDeath(key, zoneId, instanceId, sessionIds, combat.targetId);
+            }
           },
           (sessionId, death) => {
             const delivery: BackendEventDelivery = {
@@ -1632,6 +1771,58 @@ export class EmbeddedGameBackend implements GameBackend {
       }
     });
     return created;
+  }
+
+  /**
+   * A kill is a world event first and an experience source second. Credit comes from
+   * the combat system's participant set, never from the killing blow.
+   */
+  private async handleNpcDeath(
+    zoneKey: string,
+    zoneId: number,
+    instanceId: number,
+    creditSessionIds: readonly number[],
+    targetId: number,
+  ): Promise<void> {
+    const npc = this.zoneNpcs.get(zoneKey)?.get(targetId);
+    if (!npc) return;
+    const manager = this.questManager(zoneId, instanceId);
+    const credited = creditSessionIds.filter(
+      (sessionId) => manager.character(sessionId) !== null,
+    );
+    this.questTick += 1;
+    const effects = manager.dispatchNpcDeath({
+      tick: this.questTick,
+      npc: { kind: "npc", id: targetId, name: npc.name, level: npc.level },
+      creditSessionIds: credited,
+    });
+    for (const sessionId of credited) {
+      const character = manager.character(sessionId);
+      if (!character?.characterId) continue;
+      const amount = splitGroupExperience(
+        combatExperience(npc.level, character.level),
+        credited.length,
+      );
+      if (amount <= 0) continue;
+      for (const delivery of await this.questEffects.apply(manager, [{
+        type: "award_xp",
+        sessionId,
+        characterId: character.characterId,
+        questKey: `combat:${npc.name}`,
+        amount,
+        source: "combat",
+        sourceKey: npc.name,
+        awardKey: null,
+      }])) {
+        this.publish([delivery.sessionId], event(delivery.type, delivery.value, "control-stream"));
+      }
+    }
+    for (const delivery of await this.questEffects.apply(manager, effects)) {
+      this.publish([delivery.sessionId], event(delivery.type, delivery.value, "control-stream"));
+    }
+    for (const outbound of this.questEvents(effects, "")) {
+      this.publish([...credited], outbound);
+    }
   }
 
   private async handleEmbeddedDeath(
@@ -2019,6 +2210,7 @@ const RESET_TABLES = [
   "local_spawns",
   "offline_hydration",
   "character_quest_state",
+  "character_knowledge",
   "player_inventory",
   "character_positions",
   "characters",

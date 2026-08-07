@@ -1,5 +1,6 @@
 import { ZoneQuestRegistry } from "../../../quest-registry.js";
 import { registerItemQuests } from "./items.js";
+import { registerMissingPatrol } from "./missing-patrol.js";
 import { registerNpcQuests } from "./npcs.js";
 import { registerZoneQuests } from "./zone.js";
 
@@ -8,5 +9,6 @@ export function registerZone(): ZoneQuestRegistry {
   registerNpcQuests(quests);
   registerItemQuests(quests);
   registerZoneQuests(quests);
+  registerMissingPatrol(quests);
   return quests;
 }

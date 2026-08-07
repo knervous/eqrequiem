@@ -109,7 +109,9 @@ export type BackendEventKind =
   | "loot_error"
   | "merchant_window"
   | "merchant_error"
-  | "npc_debug_state";
+  | "npc_debug_state"
+  | "journal_update"
+  | "experience_update";
 
 export interface BackendEvent {
   type: BackendEventKind;

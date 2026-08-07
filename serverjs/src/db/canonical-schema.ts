@@ -167,6 +167,15 @@ const contentMigrations: Migration[] = [{
     createIndex(database, "merchant_catalog_item_idx", "merchant_catalog_entries", "item_id"),
     createIndex(database, "npc_merchant_catalog_idx", "npc_merchant_assignments", "catalog_id"),
   ],
+}, {
+  // Progression tuning is content, not code: the curve is imported and rebalanced
+  // against play telemetry without touching the progression service.
+  version: 10,
+  statements: () => [
+    `CREATE TABLE IF NOT EXISTS level_experience_curve (
+      level INTEGER PRIMARY KEY,
+      cumulative_experience BIGINT NOT NULL)`,
+  ],
 }];
 
 const runtimeMigrations: Migration[] = [{
@@ -261,6 +270,19 @@ const runtimeMigrations: Migration[] = [{
       ),
     ];
   },
+}, {
+  version: 6,
+  statements: () => [
+    "ALTER TABLE characters ADD COLUMN experience BIGINT NOT NULL DEFAULT 0",
+    // Character knowledge is deliberately its own scope: what the character has
+    // learned outlives, and is queried independently of, any one quest's state.
+    `CREATE TABLE IF NOT EXISTS character_knowledge (
+      character_id BIGINT NOT NULL, knowledge_key VARCHAR(255) NOT NULL,
+      data_json TEXT NOT NULL DEFAULT '{}',
+      learned_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY(character_id, knowledge_key),
+      FOREIGN KEY(character_id) REFERENCES characters(id) ON DELETE CASCADE)`,
+  ],
 }];
 
 export function applyCanonicalContentSchema(database: DatabaseBackend): Promise<void> {

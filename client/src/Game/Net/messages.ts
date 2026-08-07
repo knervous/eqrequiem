@@ -454,6 +454,60 @@ export const MerchantError = defineNetMessage<MerchantError>(
   72,
   "MerchantError",
 );
+/** A lead the character has actually discovered. Never an undiscovered objective. */
+export interface JournalLead {
+  questKey: string;
+  questTitle: string | null;
+  leadKey: string;
+  kind:
+    | "rumor"
+    | "observation"
+    | "promise"
+    | "person"
+    | "place"
+    | "item"
+    | "warning"
+    | "resolved";
+  text: string;
+  title: string | null;
+  place:
+    | { kind: "none" }
+    | { kind: "zone"; zoneId: number }
+    | { kind: "direction"; text: string }
+    | { kind: "landmark"; landmarkId: string }
+    | { kind: "area"; regionId: string }
+    | { kind: "point"; x: number; z: number }
+    | null;
+  status: "active" | "resolved";
+  order: number;
+  archived: boolean;
+}
+export interface JournalUpdate {
+  entries: JournalLead[];
+  changed: {
+    questKey: string;
+    leadKey: string;
+    reason: "discovered" | "resolved" | "archived";
+  } | null;
+}
+export const JournalUpdate = defineNetMessage<JournalUpdate>(
+  73,
+  "JournalUpdate",
+);
+export interface ExperienceUpdate {
+  experience: number;
+  level: number;
+  /** Experience earned inside the current level, and what the level costs. */
+  intoLevel: number;
+  forLevel: number;
+  gained: number;
+  leveled: boolean;
+  source: "award" | "sync";
+}
+export const ExperienceUpdate = defineNetMessage<ExperienceUpdate>(
+  74,
+  "ExperienceUpdate",
+);
 export interface EntityAnimation extends OpenMessage {
   spawnId: number;
   /** Canonical EQ animation clip key such as `l01` or `p01`. */

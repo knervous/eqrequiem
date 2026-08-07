@@ -22,6 +22,7 @@ describe("canonical database schema", () => {
       { namespace: "content", version: 7 },
       { namespace: "content", version: 8 },
       { namespace: "content", version: 9 },
+      { namespace: "content", version: 10 },
     ]);
     assert.deepEqual((await runtime.query("SELECT namespace, version FROM schema_migrations")).rows, [
       { namespace: "runtime", version: 1 },
@@ -29,6 +30,7 @@ describe("canonical database schema", () => {
       { namespace: "runtime", version: 3 },
       { namespace: "runtime", version: 4 },
       { namespace: "runtime", version: 5 },
+      { namespace: "runtime", version: 6 },
     ]);
     assert.equal((await content.query("SELECT name FROM sqlite_master WHERE name = 'spawn_points'")).rows.length, 1);
     assert.equal((await content.query("SELECT name FROM sqlite_master WHERE name = 'items'")).rows.length, 1);
@@ -42,11 +44,14 @@ describe("canonical database schema", () => {
     assert.equal((await runtime.query("SELECT name FROM sqlite_master WHERE name = 'character_binds'")).rows.length, 1);
     assert.equal((await runtime.query("SELECT name FROM sqlite_master WHERE name = 'merchant_transactions'")).rows.length, 1);
     assert.equal((await runtime.query("SELECT name FROM sqlite_master WHERE name = 'zone_snapshots'")).rows.length, 1);
+    assert.equal((await runtime.query("SELECT name FROM sqlite_master WHERE name = 'character_knowledge'")).rows.length, 1);
+    assert.equal((await content.query("SELECT name FROM sqlite_master WHERE name = 'level_experience_curve'")).rows.length, 1);
     const characterColumns = (await runtime.query<{ name: string }>(
       "PRAGMA table_info(characters)",
     )).rows.map((column) => column.name);
     assert.ok(characterColumns.includes("body_family_id"));
     assert.ok(characterColumns.includes("origin_id"));
+    assert.ok(characterColumns.includes("experience"));
     await Promise.all([content.close(), runtime.close()]);
   });
 });

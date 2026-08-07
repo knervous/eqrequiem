@@ -11,6 +11,12 @@ export interface JsonCommandLink {
 export const LinkTypes = {
   ItemLink: 0,
   SummonItem: 1,
+  /**
+   * A phrase an NPC actually offered. Clicking says it; typing it still works. Only
+   * offered phrases are ever linked, so the chat never becomes a dialogue wheel that
+   * reveals branches the player has not discovered.
+   */
+  DialogueTopic: 2,
 } as const;
 
 export const parseCommandLink = (text: string): JsonCommandLink | null => {

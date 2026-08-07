@@ -5,6 +5,8 @@ import type { PlayerProfile } from '@game/Net/messages';
 import type {
   CombatEvent,
   DeathEvent,
+  ExperienceUpdate,
+  JournalUpdate,
   LootWindow,
   MerchantWindow,
   NpcDebugState,
@@ -32,6 +34,10 @@ export type Events = {
 
   // Updates
   levelUpdate: number;
+  /** Cumulative experience and in-level progress, from the one progression service. */
+  experienceUpdate: ExperienceUpdate;
+  /** The character's discovered leads. The client never receives undiscovered ones. */
+  journalUpdate: JournalUpdate;
 
   // Items/inventory
   updateInventory: void;

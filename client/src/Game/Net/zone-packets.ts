@@ -15,7 +15,9 @@ import {
   DeleteSpawn,
   EntityAnimation,
   EntityPositionUpdate,
+  ExperienceUpdate,
   ItemInstance,
+  JournalUpdate,
   LevelUpdate,
   LootError,
   LootWindow,
@@ -293,6 +295,35 @@ export class ZonePacketHandler {
   @opCodeHandler(OpCodes.MerchantError, MerchantError)
   processMerchantError(error: MerchantError) {
     addChatLine(error.message);
+  }
+
+  @opCodeHandler(OpCodes.JournalUpdate, JournalUpdate)
+  processJournalUpdate(journal: JournalUpdate) {
+    emitter.emit("journalUpdate", journal);
+    const changed = journal.changed;
+    if (changed?.reason !== "discovered") {
+      return;
+    }
+    const lead = journal.entries.find(
+      (entry) =>
+        entry.questKey === changed.questKey && entry.leadKey === changed.leadKey,
+    );
+    if (lead) {
+      addChatLine(`Your journal records what you learned: ${lead.text}`);
+    }
+  }
+
+  @opCodeHandler(OpCodes.ExperienceUpdate, ExperienceUpdate)
+  processExperienceUpdate(experience: ExperienceUpdate) {
+    const player = Player.instance?.player;
+    if (player) {
+      player.level = experience.level;
+      player.exp = experience.intoLevel;
+    }
+    emitter.emit("experienceUpdate", experience);
+    if (experience.gained > 0) {
+      addChatLine("You gain experience!");
+    }
   }
 
   @opCodeHandler(OpCodes.MoveItem, MoveItem)

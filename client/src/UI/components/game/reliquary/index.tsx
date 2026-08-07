@@ -18,13 +18,16 @@ import type {
 } from '@game/Config/types';
 import {
   useEventState,
+  useExperience,
   useInventoryOpen,
+  useJournal,
   usePlayerLevel,
   usePlayerName,
   usePlayerProfile,
   useTarget,
 } from '@game/Events/event-hooks';
 import emitter, { ChatMessage } from '@game/Events/events';
+import type { JournalLead } from '@game/Net/messages';
 import GameManager from '@game/Manager/game-manager';
 import type { Entity } from '@game/Model/entity';
 import Player from '@game/Player/player';
@@ -48,7 +51,7 @@ import { useDispatch, useUIContext } from '../../context';
 import { actions } from '../../../state/reducer';
 import { ParsedMessage } from '../chat/command-link';
 import type { JsonCommandLink } from '../chat/command-link-util';
-import { linkItemToChat } from '../chat/command-link-util';
+import { linkItemToChat, LinkTypes } from '../chat/command-link-util';
 import { ChatInputSlate } from '../chat/chat-input';
 import { useDrag } from '../../../hooks/use-drag';
 import { ControllerHud } from './controller-hud';
@@ -251,6 +254,85 @@ const Meter: React.FC<{
   );
 };
 
+/**
+ * The Field Journal is memory, not a tracker: it shows only leads the character has
+ * actually discovered, in the order they were learned, and never a step the player has
+ * not yet reasoned their way to. Threads whose leads are all spent are archived rather
+ * than stamped complete, because "what happened" is more interesting than a done bit.
+ */
+const placeSummary = (place: JournalLead['place']): string | null => {
+  if (!place) return null;
+  switch (place.kind) {
+    case 'direction':
+      return place.text;
+    case 'landmark':
+      return place.landmarkId.replaceAll('-', ' ');
+    case 'area':
+      return `somewhere around ${place.regionId.replaceAll('-', ' ')}`;
+    case 'point':
+      return `${Math.round(place.x)}, ${Math.round(place.z)}`;
+    case 'zone':
+      return `zone ${place.zoneId}`;
+    default:
+      return null;
+  }
+};
+
+const FieldJournal: React.FC = () => {
+  const journal = useJournal();
+  const threads = useMemo(() => {
+    const grouped = new Map<string, JournalLead[]>();
+    for (const lead of journal?.entries ?? []) {
+      const thread = grouped.get(lead.questKey) ?? [];
+      thread.push(lead);
+      grouped.set(lead.questKey, thread);
+    }
+    return [...grouped.entries()]
+      .map(([questKey, leads]) => ({
+        questKey,
+        title: leads.find((lead) => lead.questTitle)?.questTitle
+          ?? leads.find((lead) => lead.title)?.title
+          ?? 'Loose Thread',
+        archived: leads.every((lead) => lead.archived),
+        leads: [...leads].sort((left, right) => left.order - right.order),
+      }))
+      // Threads still worth pulling come first; settled ones fall to the bottom.
+      .sort((left, right) => Number(left.archived) - Number(right.archived));
+  }, [journal]);
+
+  return (
+    <ReliquaryPanel title="Field Journal" className="rq-journal">
+      {threads.length === 0 ? (
+        <div className="rq-empty-state">No active entries.</div>
+      ) : (
+        threads.map((thread) => (
+          <section
+            key={thread.questKey}
+            className={`rq-journal__thread${thread.archived ? ' is-archived' : ''}`}
+          >
+            <h4>{thread.title}</h4>
+            {thread.leads.map((lead) => {
+              const place = placeSummary(lead.place);
+              return (
+                <article
+                  key={lead.leadKey}
+                  className={`rq-journal__lead rq-journal__lead--${lead.kind}${
+                    lead.status === 'resolved' ? ' is-resolved' : ''
+                  }`}
+                >
+                  <span className="rq-journal__kind">{lead.kind}</span>
+                  <p>{lead.text}</p>
+                  {place ? <small>{place}</small> : null}
+                </article>
+              );
+            })}
+          </section>
+        ))
+      )}
+    </ReliquaryPanel>
+  );
+};
+
 const Compass: React.FC<{ heading: number }> = ({ heading }) => {
   const cardinal = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'][
     Math.round(heading / 45) % 8
@@ -404,12 +486,21 @@ const StatusCluster: React.FC = () => {
   const playerName = usePlayerName();
   const player = usePlayerProfile();
   const level = usePlayerLevel();
+  const experience = useExperience();
   return (
     <div className="rq-status-cluster">
       <ReliquaryPanel title={playerName || 'Wayfarer'} eyebrow={`Level ${level}`}>
         <Meter label="Health" value={player?.curHp ?? 0} max={player?.maxHp ?? 1} />
         <Meter label="Mana" value={player?.mana ?? 0} max={player?.maxMana ?? 1} tone="mana" />
         <Meter label="Vigor" value={100} tone="stamina" />
+        {experience && experience.forLevel > 0 ? (
+          <Meter
+            label="Experience"
+            value={experience.intoLevel}
+            max={experience.forLevel}
+            tone="experience"
+          />
+        ) : null}
       </ReliquaryPanel>
       <Conditions />
     </div>
@@ -640,11 +731,7 @@ const SurveyMap: React.FC<{ telemetry: PlayerTelemetry }> = ({ telemetry }) => {
           </>
         ) : null}
       </ReliquaryPanel>
-      {journalOpen && !collapsed ? (
-        <ReliquaryPanel title="Field Journal" className="rq-journal">
-          <div className="rq-empty-state">No active entries.</div>
-        </ReliquaryPanel>
-      ) : null}
+      {journalOpen && !collapsed ? <FieldJournal /> : null}
     </div>
   );
 };
@@ -653,8 +740,13 @@ const Chat: React.FC = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const executeLink = useCallback((payload: JsonCommandLink) => {
-    if (payload.linkType === 1) {
+    if (payload.linkType === LinkTypes.SummonItem) {
       CommandParser.parseCommand(`#si ${payload.data}`);
+      return;
+    }
+    if (payload.linkType === LinkTypes.DialogueTopic) {
+      // Exactly what typing the phrase would do, aimed at the current target.
+      CommandParser.parseCommand(payload.data);
     }
   }, []);
   useEffect(() => {

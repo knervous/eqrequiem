@@ -355,6 +355,8 @@ const eventEncoding: Record<BackendEvent["type"], readonly [number, number]> = {
   merchant_window: [OP.MERCHANT_WINDOW, SIDECAR_SCHEMA.MERCHANT_WINDOW],
   merchant_error: [OP.MERCHANT_ERROR, SIDECAR_SCHEMA.MERCHANT_ERROR],
   npc_debug_state: [OP.NPC_DEBUG_STATE, SIDECAR_SCHEMA.NPC_DEBUG_STATE],
+  journal_update: [OP.JOURNAL_UPDATE, SIDECAR_SCHEMA.JOURNAL_UPDATE],
+  experience_update: [OP.EXPERIENCE_UPDATE, SIDECAR_SCHEMA.EXPERIENCE_UPDATE],
 };
 
 function decodeZone(

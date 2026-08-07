@@ -203,7 +203,7 @@ export class GameRepository {
       if (!row) return false;
       const characterId = Number(row.id);
       for (const table of [
-        "character_quest_state", "player_inventory", "character_languages",
+        "character_quest_state", "character_knowledge", "player_inventory", "character_languages",
         "character_skills", "character_binds", "character_positions",
       ]) {
         await database.execute(`DELETE FROM ${table} WHERE character_id = ?`, [characterId]);

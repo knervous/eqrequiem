@@ -35,7 +35,12 @@ import type {
   ZoneLootAwardMessage,
   ZoneMerchantIntentMessage,
   ZonePcDeathMessage,
+  ZoneQuestEffectsMessage,
 } from "./worker-types.js";
+import { CharacterProgressRepository } from "../progression/character-progress-repository.js";
+import { QuestEffectApplier, type QuestEffectSource } from "./quest-effect-applier.js";
+import type { QuestPersistenceBatch } from "./quest-manager.js";
+import { journalFromState, type QuestJournalEntry } from "./quest-state.js";
 import {
   MerchantRepository,
   MerchantTransactionError,
@@ -86,6 +91,9 @@ export class ZoneService {
   private readonly merchantWrites = new Map<number, Promise<void>>();
   private merchantRepository: MerchantRepository | null = null;
   private zoneSnapshotRepository: ZoneSnapshotRepository | null = null;
+  private progressRepository: CharacterProgressRepository | null = null;
+  private questEffects: QuestEffectApplier | null = null;
+  private readonly questWrites = new Map<string, Promise<void>>();
 
   constructor(
     private readonly env: AppEnv,
@@ -256,6 +264,15 @@ export class ZoneService {
             });
         }
       },
+      (message) => {
+        void this.commitQuestEffects(message).catch((error: unknown) => {
+          this.logger.error("Quest effect commit failed", {
+            zoneId: message.zoneId,
+            instanceId: message.instanceId,
+            error: error instanceof Error ? error.message : String(error),
+          });
+        });
+      },
       async (zoneId, instanceId, blobData, formatVersion) => {
         const repository = this.zoneSnapshotRepository;
         if (!repository) throw new Error("Zone snapshot repository is not started");
@@ -385,6 +402,13 @@ export class ZoneService {
     this.zoneSnapshotRepository = new ZoneSnapshotRepository(
       this.databases.backend("runtime"),
     );
+    this.progressRepository = new CharacterProgressRepository(
+      this.databases.backend("runtime"),
+      this.databases.backend("content"),
+    );
+    this.questEffects = new QuestEffectApplier(this.progressRepository, {
+      onLog: (questId, message) => this.logger.info(message, { questId }),
+    });
     await this.questCatalog.start();
     this.logger.info("Zone service started", {
       tickRateHz: this.env.zone.tickRateHz,
@@ -708,6 +732,167 @@ export class ZoneService {
         heading: Number(bind?.heading ?? 0),
       },
     });
+    void this.sendQuestCharacter(zoneId, instanceId, sessionId, characterId);
+  }
+
+  /**
+   * Loads persisted quest state, knowledge and progression into the shard, then pushes
+   * the character's own journal and experience meter back to the client.
+   */
+  private async sendQuestCharacter(
+    zoneId: number,
+    instanceId: number,
+    sessionId: number,
+    characterId: number,
+  ): Promise<void> {
+    const repository = this.progressRepository;
+    if (!repository) return;
+    try {
+      const snapshot = await repository.load(characterId);
+      if (!snapshot) return;
+      this.workerPool.enqueue(zoneId, instanceId, {
+        type: "quest_character",
+        sessionId,
+        snapshot,
+      });
+      const progress = await repository.progress(characterId);
+      if (progress) {
+        await this.sendReliable(
+          sessionId,
+          OP.EXPERIENCE_UPDATE,
+          encodeSidecar(SIDECAR_SCHEMA.EXPERIENCE_UPDATE, {
+            experience: progress.experience,
+            level: progress.level,
+            intoLevel: progress.intoLevel,
+            forLevel: progress.forLevel,
+            gained: 0,
+            leveled: false,
+            source: "sync",
+          }),
+        );
+      }
+      await this.sendJournal(sessionId, journalFromState(snapshot), null);
+    } catch (error: unknown) {
+      this.logger.warn("Quest character load failed", {
+        sessionId,
+        characterId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
+
+  private async sendJournal(
+    sessionId: number,
+    entries: readonly QuestJournalEntry[],
+    changed: unknown,
+  ): Promise<void> {
+    await this.sendReliable(
+      sessionId,
+      OP.JOURNAL_UPDATE,
+      encodeSidecar(SIDECAR_SCHEMA.JOURNAL_UPDATE, { entries, changed }),
+    );
+  }
+
+  /**
+   * The worker executes quests; this is the only place their persistent consequences
+   * reach the database, serialized per shard so concurrent dispatches cannot interleave.
+   */
+  private commitQuestEffects(message: ZoneQuestEffectsMessage): Promise<void> {
+    const key = `${message.zoneId}:${message.instanceId}`;
+    const previous = this.questWrites.get(key) ?? Promise.resolve();
+    const next = previous
+      .catch(() => {})
+      .then(() => this.applyQuestEffects(message));
+    this.questWrites.set(key, next);
+    return next;
+  }
+
+  private async applyQuestEffects(message: ZoneQuestEffectsMessage): Promise<void> {
+    const applier = this.questEffects;
+    if (!applier) return;
+    const journals = new Map(
+      message.journals.map((journal) => [journal.sessionId, journal]),
+    );
+    let batches: readonly QuestPersistenceBatch[] = message.batches;
+    const source: QuestEffectSource = {
+      journalFor: (sessionId) => journals.get(sessionId)?.entries ?? [],
+      drainPersistence: () => {
+        const pending = batches;
+        batches = [];
+        return pending;
+      },
+      character: (sessionId) => {
+        const journal = journals.get(sessionId);
+        return journal ? { characterId: journal.characterId } : null;
+      },
+      setCharacterProgression: (sessionId, experience, level) => {
+        this.workerPool.enqueue(message.zoneId, message.instanceId, {
+          type: "quest_progression",
+          sessionId,
+          experience,
+          level,
+          previousLevel: level,
+          leveled: false,
+        });
+      },
+      // The shard raises level_up itself when it receives the committed progression.
+      dispatchLevelUp: () => [],
+    };
+    for (const delivery of await applier.apply(source, message.effects)) {
+      if (delivery.type === "level_update") {
+        // Tell the shard a threshold was crossed so authored level_up hooks can run.
+        this.workerPool.enqueue(message.zoneId, message.instanceId, {
+          type: "quest_progression",
+          sessionId: delivery.sessionId,
+          experience: Number(delivery.value.exp ?? 0),
+          level: Number(delivery.value.level ?? 1),
+          previousLevel: Math.max(1, Number(delivery.value.level ?? 1) - 1),
+          leveled: true,
+        });
+      }
+      await this.deliverQuestPacket(delivery.sessionId, delivery.type, delivery.value);
+    }
+  }
+
+  private async deliverQuestPacket(
+    sessionId: number,
+    type: "journal_update" | "experience_update" | "level_update" | "channel_message",
+    value: Record<string, unknown>,
+  ): Promise<void> {
+    if (type === "journal_update") {
+      await this.sendReliable(
+        sessionId,
+        OP.JOURNAL_UPDATE,
+        encodeSidecar(SIDECAR_SCHEMA.JOURNAL_UPDATE, value),
+      );
+      return;
+    }
+    if (type === "experience_update") {
+      await this.sendReliable(
+        sessionId,
+        OP.EXPERIENCE_UPDATE,
+        encodeSidecar(SIDECAR_SCHEMA.EXPERIENCE_UPDATE, value),
+      );
+      return;
+    }
+    if (type === "level_update") {
+      await this.sendReliable(
+        sessionId,
+        OP.LEVEL_UPDATE,
+        encodeSidecar(SIDECAR_SCHEMA.LEVEL, value),
+      );
+      return;
+    }
+    await this.sendReliable(
+      sessionId,
+      OP.CHANNEL_MESSAGE,
+      encodeChannelMessage({
+        sender: String(value.sender ?? ""),
+        target: String(value.target ?? ""),
+        message: String(value.message ?? ""),
+        chanNum: 0,
+      }),
+    );
   }
 
   private async handlePcDeath(message: ZonePcDeathMessage): Promise<void> {

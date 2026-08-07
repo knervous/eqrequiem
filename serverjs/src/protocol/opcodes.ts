@@ -41,6 +41,8 @@ export const OP = {
   MERCHANT_BUY: 618,
   MERCHANT_SELL: 619,
   MERCHANT_ERROR: 620,
+  JOURNAL_UPDATE: 621,
+  EXPERIENCE_UPDATE: 622,
 } as const;
 
 export type KnownOpcode = (typeof OP)[keyof typeof OP];

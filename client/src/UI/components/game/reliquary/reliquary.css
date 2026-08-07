@@ -423,6 +423,67 @@
 
 .rq-journal > .rq-hud-panel__body {
   min-height: 54px;
+  max-height: clamp(140px, 26vh, 320px);
+  overflow-y: auto;
+}
+
+.rq-journal__thread + .rq-journal__thread {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid color-mix(in srgb, var(--rq-bronze-dark), transparent 40%);
+}
+
+.rq-journal__thread h4 {
+  margin: 0 0 4px;
+  color: var(--rq-bronze-light);
+  font-size: 11px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+/* A settled thread stays readable but stops competing for attention. */
+.rq-journal__thread.is-archived {
+  opacity: .62;
+}
+
+.rq-journal__lead {
+  padding: 3px 0 3px 8px;
+  border-left: 2px solid var(--rq-bronze-dark);
+}
+
+.rq-journal__lead p {
+  margin: 0;
+  color: var(--rq-bone);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.rq-journal__lead small {
+  color: var(--rq-ash);
+  font-size: 10px;
+  font-style: italic;
+}
+
+.rq-journal__kind {
+  color: var(--rq-ash);
+  font-size: 8px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+.rq-journal__lead--rumor,
+.rq-journal__lead--warning {
+  border-left-color: var(--rq-ember);
+}
+
+.rq-journal__lead--place,
+.rq-journal__lead--person {
+  border-left-color: var(--rq-bronze);
+}
+
+.rq-journal__lead.is-resolved p,
+.rq-journal__lead--resolved p {
+  color: var(--rq-ash);
 }
 
 .rq-chat {

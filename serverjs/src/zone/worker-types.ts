@@ -57,6 +57,23 @@ export interface ZoneQuestHydrateMessage {
   npcs: QuestNpcSnapshot[];
 }
 
+/** Persisted quest state loaded before any handler can observe the character. */
+export interface ZoneQuestCharacterMessage {
+  type: "quest_character";
+  sessionId: number;
+  snapshot: QuestCharacterSnapshot;
+}
+
+/** Progression committed by the zone service, echoed back so the shard stays accurate. */
+export interface ZoneQuestProgressionMessage {
+  type: "quest_progression";
+  sessionId: number;
+  experience: number;
+  level: number;
+  previousLevel: number;
+  leveled: boolean;
+}
+
 export interface ZoneContentHydrateMessage {
   type: "zone_hydrate";
   zoneKey: string;
@@ -85,6 +102,8 @@ export type ZoneWorkerInboundMessage =
   | ZoneShutdownCommitMessage
   | ZoneQuestUpdateMessage
   | ZoneQuestHydrateMessage
+  | ZoneQuestCharacterMessage
+  | ZoneQuestProgressionMessage
   | ZoneContentHydrateMessage
   | ZoneNavPathResultMessage
   | ZoneClientJoinMessage
@@ -130,6 +149,20 @@ export interface ZoneQuestSayMessage {
   sender: string;
   target: string;
   message: string;
+}
+
+/** Everything a dispatch changed that outlives the shard, plus the journals it touched. */
+export interface ZoneQuestEffectsMessage {
+  type: "quest_effects";
+  zoneId: number;
+  instanceId: number;
+  effects: QuestPersistentEffect[];
+  batches: QuestPersistenceBatch[];
+  journals: Array<{
+    sessionId: number;
+    characterId: number | null;
+    entries: QuestJournalEntry[];
+  }>;
 }
 
 export interface ZoneAoiChangeMessage {
@@ -237,6 +270,7 @@ export type ZoneWorkerOutboundMessage =
   | ZoneSnapshotMessage
   | ZoneAoiChangeMessage
   | ZoneQuestSayMessage
+  | ZoneQuestEffectsMessage
   | ZoneCombatEventMessage
   | ZonePcDeathMessage
   | ZoneLootWindowMessage
@@ -246,7 +280,16 @@ export type ZoneWorkerOutboundMessage =
   | ZoneMerchantIntentMessage
   | ZoneMerchantErrorMessage
   | ZonePersistentSnapshotMessage;
-import type { QuestDefinition, QuestNpcSnapshot } from "./quest-types.js";
+import type {
+  QuestDefinition,
+  QuestNpcSnapshot,
+  QuestPersistentEffect,
+} from "./quest-types.js";
+import type { QuestPersistenceBatch } from "./quest-manager.js";
+import type {
+  QuestCharacterSnapshot,
+  QuestJournalEntry,
+} from "./quest-state.js";
 import type { ZoneNpcSpawnDefinition } from "./zone-content.js";
 import type {
   CombatEvent,
