@@ -77,6 +77,42 @@ test.describe('legend', () => {
   });
 });
 
+test.describe('hot bar section', () => {
+  test('shows what the d-pad reaches, labelled from the hot bar', async ({
+    page,
+  }) => {
+    await connectPad(page);
+    await expect(page.getByTestId('controller-hud-hotbar')).toBeVisible();
+    // Consider lives on hot bar slot four, so the d-pad reaches it at range
+    // even though the contextual prompt owns X and Y.
+    await expect(page.getByTestId('controller-hud-hotkey4')).toContainText(
+      'Consider',
+    );
+    await expect(page.getByTestId('controller-hud-hotkey4')).toContainText(
+      'D-Right',
+    );
+    await expect(page.getByTestId('controller-hud-hotkey1')).toContainText(
+      'Melee Attack',
+    );
+  });
+
+  test('highlights a hot bar row while its button is held', async ({
+    page,
+  }) => {
+    await connectPad(page);
+    const consider = page.getByTestId('controller-hud-hotkey4');
+    await expect(consider).toHaveAttribute('data-held', 'false');
+    await setPadState(page, { buttons: withButtons(15) });
+    await expect(consider).toHaveAttribute('data-held', 'true');
+  });
+
+  test('drops a slot that has no hot button in it', async ({ page }) => {
+    await connectPad(page);
+    // Slot seven is empty in the defaults, and hotkey8 is unbound anyway.
+    await expect(page.getByTestId('controller-hud-hotkey8')).toHaveCount(0);
+  });
+});
+
 test.describe('live feedback', () => {
   test('highlights a row while its button is held', async ({ page }) => {
     await connectPad(page);

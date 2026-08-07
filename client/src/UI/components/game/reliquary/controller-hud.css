@@ -39,6 +39,16 @@
   letter-spacing: 0.08em;
 }
 
+.rq-pad-hud__divider {
+  padding-top: 6px;
+  border-top: 1px solid rgb(154 129 80 / 22%);
+  margin: 7px 0 5px;
+  color: var(--rq-bronze, #9a8150);
+  font-size: 8px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
 .rq-pad-hud ul {
   display: grid;
   gap: 2px;
