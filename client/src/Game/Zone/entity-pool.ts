@@ -258,6 +258,9 @@ export default class EntityPool {
     entity.spawn.isNpc =
       entity.spawn.kind === 2 || entity.spawn.kind === 3;
     entity.spawn.isCorpse = entity.spawn.kind === 3;
+    // Class drives who counts as a merchant, and therefore which contextual
+    // interactions an entity offers.
+    entity.spawn.charClass = state.stateClassId[index]!;
     if (entity.spawn.isCorpse && !wasCorpse) {
       this.activeRemoteMotion.delete(spawnId);
       entity.presentAsCorpse();

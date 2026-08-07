@@ -25,8 +25,8 @@ const LEGEND: ReadonlyArray<{
 }> = [
   { action: 'jump', label: 'Jump' },
   { action: 'sitStand', label: 'Sit' },
-  { action: 'hail', label: 'Hail' },
-  { action: 'consider', label: 'Consider' },
+  { action: 'interactPrimary', label: 'Interact' },
+  { action: 'interactSecondary', label: 'Interact 2' },
   { action: 'targetNearest', label: 'Target' },
   { action: 'autoAttack', label: 'Attack' },
   { action: 'sprint', label: 'Sprint' },

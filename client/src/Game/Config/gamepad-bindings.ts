@@ -18,6 +18,8 @@ export type GamepadDigitalAction =
   | 'targetNearest'
   | 'targetPrevious'
   | 'clearTarget'
+  | 'interactPrimary'
+  | 'interactSecondary'
   | 'inventory'
   | 'spells'
   | 'options'
@@ -63,6 +65,18 @@ export const GAMEPAD_BUTTON_LABELS: readonly string[] = [
   'D-Pad Right',
   'Guide',
 ];
+
+/**
+ * Which controller binding fills each contextual prompt slot. The prompt
+ * renders these glyphs, so rebinding the slot changes what the world shows.
+ */
+export const INTERACT_SLOT_BINDINGS: Record<
+  'primary' | 'secondary',
+  GamepadDigitalAction
+> = {
+  primary: 'interactPrimary',
+  secondary: 'interactSecondary',
+};
 
 /** Compact button names, for places too narrow for the full label. */
 export const GAMEPAD_BUTTON_LABELS_SHORT: readonly string[] = [

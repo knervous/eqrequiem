@@ -308,7 +308,7 @@ test.describe('the full hot button row', () => {
             })),
           },
         ] as never,
-        { bindings: { hotkey9: 'Button2', hail: '' } } as never,
+        { bindings: { hotkey9: 'Button2', interactPrimary: '' } } as never,
       ),
     );
     expect(samples[1].hotkeys).toEqual([8]);

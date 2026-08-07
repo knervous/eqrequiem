@@ -15,6 +15,7 @@ import { PlayerAbility } from "./player-ability";
 import { PlayerCamera } from "./player-cam";
 import { PlayerCombat } from "./player-combat";
 import { InventorySlot } from "./player-constants";
+import { InteractionManager } from "@game/Interaction/interaction-manager";
 import { PlayerGamepad } from "./player-gamepad";
 import { PlayerInventory } from "./player-inventory";
 import { PlayerKeyboard } from "./player-keyboard";
@@ -30,6 +31,7 @@ export default class Player {
   public playerCamera: PlayerCamera;
   public playerKeyboard: PlayerKeyboard;
   public playerGamepad: PlayerGamepad;
+  public interactions: InteractionManager;
   public playerCombat: PlayerCombat;
   public playerAbility: PlayerAbility;
   public playerSocials: PlayerSocials;
@@ -136,6 +138,7 @@ export default class Player {
     this.playerCamera = new PlayerCamera(this, camera);
     this.playerKeyboard = new PlayerKeyboard(this, gameManager.scene!);
     this.playerGamepad = new PlayerGamepad(this);
+    this.interactions = new InteractionManager(this);
     this.playerCombat = new PlayerCombat(this);
     this.playerAbility = new PlayerAbility(this);
     this.playerSocials = new PlayerSocials(this);
@@ -163,6 +166,9 @@ export default class Player {
     }
     if (this.playerGamepad) {
       this.playerGamepad.dispose();
+    }
+    if (this.interactions) {
+      this.interactions.dispose();
     }
     if (this.playerMovement) {
       this.playerMovement.dispose();
@@ -217,6 +223,7 @@ export default class Player {
       (this.gameManager.scene?.getEngine().getDeltaTime() ?? 0) / 1000;
     // Poll the controller first so movement sees this frame's stick values.
     this.playerGamepad?.tick(delta);
+    this.interactions?.tick();
     this.playerMovement?.movementTick?.(delta);
 
     // New raycast logic

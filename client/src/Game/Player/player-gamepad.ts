@@ -206,6 +206,13 @@ export class PlayerGamepad {
       case 'cameraToggle':
         this.player.playerCamera.toggleCameraPerspective();
         break;
+      // Contextual slots act on whatever the floating prompt is pointing at.
+      case 'interactPrimary':
+        this.player.interactions.trigger('primary');
+        break;
+      case 'interactSecondary':
+        this.player.interactions.trigger('secondary');
+        break;
       default:
         // jump/sprint/crouch/gyroHold/hotkeyModifier are polled as held
         // state, and hot buttons arrive through `hotkeys` instead.

@@ -17,6 +17,14 @@ import {
   type GamepadSample,
 } from '@game/Config/gamepad-bindings';
 import {
+  buildPromptText,
+  selectFocus,
+} from '@game/Interaction/interaction-focus';
+import {
+  getInteractions,
+  type InteractionSubject,
+} from '@game/Interaction/interaction-registry';
+import {
   buildFullModeRequest,
   buildImuRequest,
   isNintendoController,
@@ -148,12 +156,32 @@ const harness = {
     ),
 };
 
+/** The contextual interaction rules, which are pure in the same way. */
+const interactionHarness = {
+  getInteractions,
+  selectFocus: (
+    subjects: InteractionSubject[],
+    options: Record<string, unknown> = {},
+  ) => selectFocus(subjects, options as never),
+  buildPrompt: (
+    subject: InteractionSubject | null,
+    glyphs: Record<string, string>,
+  ) => {
+    const focus = subject
+      ? { subject, actions: getInteractions(subject) }
+      : null;
+    return buildPromptText(focus, (action) => glyphs[action.slot] ?? null);
+  },
+};
+
 declare global {
   interface Window {
     gamepadHarness: typeof harness;
+    interactionHarness: typeof interactionHarness;
   }
 }
 
 window.gamepadHarness = harness;
+window.interactionHarness = interactionHarness;
 
 export default harness;

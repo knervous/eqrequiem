@@ -63,6 +63,8 @@ export type Events = {
   chatMessage: ChatMessage;
   toggleInventory: void;
   toggleOptions: void;
+  /** Contextual prompt text for the nearest interactable subject, or null. */
+  interactionPrompt: string | null;
   /** Bindable but not yet consumed: the client has no spellbook window. */
   toggleSpells: void;
   /** Bindable but not yet consumed: the client has no reply target. */

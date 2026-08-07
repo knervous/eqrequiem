@@ -122,6 +122,24 @@ export class PlayerKeyboard {
   private handleKeyDownEvent(key: string) {
     const keyBindings = UserConfig.instance.getConfig().keyBindings;
 
+    // The contextual prompt claims its keys first, so walking up to a merchant
+    // and pressing H hails them rather than your distant target. When no
+    // prompt is showing the generic bindings below still apply.
+    if (
+      keyBindings.interactPrimary &&
+      key.toLowerCase() === keyBindings.interactPrimary.toLowerCase() &&
+      this.player.interactions.trigger('primary')
+    ) {
+      return;
+    }
+    if (
+      keyBindings.interactSecondary &&
+      key.toLowerCase() === keyBindings.interactSecondary.toLowerCase() &&
+      this.player.interactions.trigger('secondary')
+    ) {
+      return;
+    }
+
     switch (key.toLowerCase()) {
       case keyBindings.inventory.toLowerCase(): {
         emitter.emit("toggleInventory");

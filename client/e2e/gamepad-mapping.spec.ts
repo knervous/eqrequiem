@@ -170,8 +170,9 @@ test.describe('button actions', () => {
       { buttons: withButtons(9) },
     ]);
     expect(samples[1].actions).toContain('sitStand');
-    expect(samples[3].actions).toContain('hail');
-    expect(samples[5].actions).toContain('consider');
+    // X and Y drive the contextual interaction slots by default.
+    expect(samples[3].actions).toContain('interactPrimary');
+    expect(samples[5].actions).toContain('interactSecondary');
     expect(samples[7].actions).toContain('targetNearest');
     expect(samples[9].actions).toContain('options');
   });

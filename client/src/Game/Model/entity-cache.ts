@@ -12,7 +12,11 @@ import { FileSystem } from "@game/FileSystem/filesystem";
 import type GameManager from "@game/Manager/game-manager";
 import { PlayerProfile, Spawn } from "@game/Net/messages";
 import type { NullableItemInstance } from "@game/Player/player-constants";
-import { ShadoDynamicEntityNameplateLayer } from "@knervous/shado/render";
+import Player from "@game/Player/player";
+import {
+  ShadoDynamicEntityNameplateLayer,
+  type ShadoDynamicEntityNameplateInput,
+} from "@knervous/shado/render";
 import type {
   ShadoWorldSpatialPackage,
   ShadoWorldVisibilityCoordinator,
@@ -755,8 +759,15 @@ export class EntityCache {
           console.warn("[EntityCache] Entity matrix sync skipped", error);
         }
       }
+      // The contextual prompt rides the same MSDF layer as nameplates, one
+      // line above the focused entity's name.
+      const interactions = Player.instance?.interactions;
+      const promptSpawnId = interactions?.focusedSpawnId ?? null;
+      const promptText = promptSpawnId !== null ? interactions!.promptText : '';
+      const prompts: ShadoDynamicEntityNameplateInput[] = [];
+
       EntityCache.nameplateLayer?.sync(
-        [...EntityCache.entityInstances].map((entity) => {
+        [...EntityCache.entityInstances].map<ShadoDynamicEntityNameplateInput>((entity) => {
           const selected = entity.isSelected;
           const selectionAgeMs = now - entity.selectionStartedAtMs;
           const acquisitionBlink =
@@ -765,18 +776,35 @@ export class EntityCache {
             Math.floor(selectionAgeMs / 80) % 2 === 0;
           const selectionPulse =
             selected ? 0.5 + Math.sin(now / 260) * 0.5 : 0;
+          const spawnId = (entity.spawn as Spawn).spawnId;
+          const nameplateZ =
+            entity.spawnPosition.y +
+            (4 + entity.nameplateLines.length * 1.5) * entity.spawnScale;
+          const entityVisible =
+            !entity.hidden &&
+            !entity.lifecycleDisposed &&
+            Boolean(entity.meshInstance?.actor.visibleFlag);
+
+          if (promptText && spawnId === promptSpawnId && entityVisible) {
+            prompts.push({
+              id: `prompt:${spawnId}`,
+              text: promptText,
+              x: entity.spawnPosition.x,
+              y: entity.spawnPosition.z,
+              z: nameplateZ + 2.2 * entity.spawnScale,
+              visible: true,
+              color: '#ffd79a',
+              fontSize: 12.5,
+            });
+          }
+
           return {
-            id: `${entity.spawn.name}:${(entity.spawn as Spawn).spawnId ?? "player"}`,
+            id: `${entity.spawn.name}:${spawnId ?? "player"}`,
             text: entity.displayNameplateText,
             x: entity.spawnPosition.x,
             y: entity.spawnPosition.z,
-            z:
-              entity.spawnPosition.y +
-              (4 + entity.nameplateLines.length * 1.5) * entity.spawnScale,
-            visible:
-              !entity.hidden &&
-              !entity.lifecycleDisposed &&
-              Boolean(entity.meshInstance?.actor.visibleFlag),
+            z: nameplateZ,
+            visible: entityVisible,
             color: selected
               ? acquisitionBlink
                 ? "#ffffff"
@@ -784,7 +812,7 @@ export class EntityCache {
               : undefined,
             fontSize: selected ? 14.25 + selectionPulse * 0.55 : undefined,
           };
-        }),
+        }).concat(prompts),
       );
       const delta = performance.now() - now;
       (window as any).perf = delta;

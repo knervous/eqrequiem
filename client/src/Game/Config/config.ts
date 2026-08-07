@@ -43,8 +43,16 @@ export const DEFAULT_GAMEPAD_BINDINGS: GamepadBindings = {
 
   jump: "Button0",
   sitStand: "Button1",
-  hail: "Button2",
-  consider: "Button3",
+
+  // X and Y drive the two contextual prompt slots. Hail and consider used to
+  // live here, but the prompt covers hailing better -- it aims at whoever you
+  // are standing next to rather than your target -- so they start unbound and
+  // stay rebindable.
+  interactPrimary: "Button2",
+  interactSecondary: "Button3",
+  hail: "",
+  consider: "",
+
   hotkeyModifier: "Button4",
   targetNearest: "Button5",
   sprint: "Button6",
@@ -119,6 +127,10 @@ export const DEFAULT_CONFIG: Config = {
     sitStand: "Ctrl+S",
     targetNearest: "Tab",
     targetPrevious: "Shift+Tab",
+    // The two contextual prompt slots. H keeps hailing where players expect
+    // it; E is the usual "use the thing in front of me" key.
+    interactPrimary: "H",
+    interactSecondary: "E",
     inventory: "I",
     spells: "P",
     autoAttack: "T",
@@ -157,6 +169,7 @@ export const DEFAULT_CONFIG: Config = {
     uiScale: 1,
     hudLocked: false,
     hudWindows: structuredClone(DEFAULT_HUD_WINDOWS),
+    interactionPrompts: true,
     controllerHud: true,
     controllerHudAutoHide: true,
   },

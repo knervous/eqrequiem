@@ -19,6 +19,9 @@ export interface KeyBindings {
   sitStand: string;
   targetNearest: string;
   targetPrevious: string;
+  /** Contextual interaction slots, driven by the floating prompt. */
+  interactPrimary: string;
+  interactSecondary: string;
   inventory: string;
   spells: string;
   autoAttack: string;
@@ -117,6 +120,8 @@ export interface UISettings {
   uiScale: number;
   hudLocked: boolean;
   hudWindows: Record<HudWindowId, HudWindowPlacement>;
+  /** Show floating interaction prompts over nearby NPCs and objects. */
+  interactionPrompts: boolean;
   /** Show the on-screen controller button legend. */
   controllerHud: boolean;
   /** Hide the controller legend when no controller is connected. */

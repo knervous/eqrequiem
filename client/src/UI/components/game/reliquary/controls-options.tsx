@@ -42,6 +42,10 @@ const keybindGroups: ReadonlyArray<{
     keys: ['targetNearest', 'targetPrevious', 'autoAttack', 'hail', 'consider'],
   },
   {
+    title: 'Interaction',
+    keys: ['interactPrimary', 'interactSecondary'],
+  },
+  {
     title: 'Windows',
     keys: ['inventory', 'spells', 'options', 'reply'],
   },
@@ -104,6 +108,10 @@ const gamepadGroups: ReadonlyArray<{
     actions: ['who', 'invite', 'disband', 'camp', 'help'],
   },
   {
+    title: 'Interaction',
+    actions: ['interactPrimary', 'interactSecondary'],
+  },
+  {
     title: 'Motion',
     actions: ['gyroHold'],
   },
@@ -134,6 +142,8 @@ const actionLabels: Partial<Record<GamepadAction | keyof KeyBindings, string>> =
   clearTarget: 'Clear target',
   hotkeyModifier: 'Hot button shift',
   gyroHold: 'Hold to aim with gyro',
+  interactPrimary: 'Interact (primary)',
+  interactSecondary: 'Interact (secondary)',
   walkRun: 'Toggle walk / run',
   spells: 'Spellbook',
   reply: 'Reply to last tell',
@@ -715,6 +725,20 @@ export const ControlsOptions: React.FC = () => {
       </label>
 
       <h3>On-screen legend</h3>
+      <label className="rq-option-toggle">
+        <span>
+          <strong>Interaction prompts</strong>
+          <small>Float quick actions over the nearest NPC or object.</small>
+        </span>
+        <input
+          type="checkbox"
+          data-testid="interaction-prompts-enabled"
+          checked={uiSettings.interactionPrompts}
+          onChange={(event) =>
+            updateUiSetting('interactionPrompts', event.target.checked)
+          }
+        />
+      </label>
       <label className="rq-option-toggle">
         <span>
           <strong>Controller overlay</strong>

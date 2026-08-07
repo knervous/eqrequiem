@@ -69,9 +69,11 @@ test.describe('legend', () => {
 
   test('drops a row whose action has been unbound', async ({ page }) => {
     await connectPad(page);
-    await expect(page.getByTestId('controller-hud-hail')).toBeVisible();
-    await page.evaluate(() => window.hudHarness.setBinding('hail', ''));
-    await expect(page.getByTestId('controller-hud-hail')).toHaveCount(0);
+    await expect(page.getByTestId('controller-hud-interactPrimary')).toBeVisible();
+    await page.evaluate(() =>
+      window.hudHarness.setBinding('interactPrimary', ''),
+    );
+    await expect(page.getByTestId('controller-hud-interactPrimary')).toHaveCount(0);
   });
 });
 
@@ -91,10 +93,9 @@ test.describe('live feedback', () => {
   test('highlights only the row that was pressed', async ({ page }) => {
     await connectPad(page);
     await setPadState(page, { buttons: withButtons(2) });
-    await expect(page.getByTestId('controller-hud-hail')).toHaveAttribute(
-      'data-held',
-      'true',
-    );
+    await expect(
+      page.getByTestId('controller-hud-interactPrimary'),
+    ).toHaveAttribute('data-held', 'true');
     await expect(page.getByTestId('controller-hud-jump')).toHaveAttribute(
       'data-held',
       'false',

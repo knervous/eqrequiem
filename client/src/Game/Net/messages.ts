@@ -260,6 +260,8 @@ export interface Spawn extends OpenMessage {
   kind?: number;
   isNpc?: boolean;
   isCorpse?: boolean;
+  /** Hydrated from the render snapshot; 41 marks a merchant. */
+  charClass?: number;
   equipment?: {
     head?: number;
     chest?: number;
