@@ -159,6 +159,17 @@
     <h2>Connection events</h2>
     <pre id="log">(none yet)</pre>
 
+    <h2>WebHID fallback</h2>
+    <p class="sub">
+      If the Gamepad API above stays empty, the browser can still talk to the
+      controller as a raw HID device. This is how the game reads a Switch Pro
+      Controller on macOS. Click below and pick your controller from the
+      browser's prompt.
+    </p>
+    <button id="hid-pair">Pair controller over HID</button>
+    <p class="sub" id="hid-status">Not paired.</p>
+    <pre id="hid-report">(no reports yet)</pre>
+
     <h2>If nothing ever appears</h2>
     <ol>
       <li>
@@ -262,6 +273,68 @@
       };
 
       render();
+
+      // ---- WebHID -------------------------------------------------------
+      const hidStatus = document.getElementById('hid-status');
+      const hidReport = document.getElementById('hid-report');
+      const hidButton = document.getElementById('hid-pair');
+
+      if (!('hid' in navigator)) {
+        hidStatus.textContent =
+          'This browser has no WebHID support. Chrome, Edge and Opera have it.';
+        hidButton.disabled = true;
+      }
+
+      const hex = (view) =>
+        Array.from(new Uint8Array(view.buffer, view.byteOffset, view.byteLength))
+          .map((byte) => byte.toString(16).padStart(2, '0'))
+          .join(' ');
+
+      let reportCount = 0;
+      const seenReportIds = new Set();
+
+      hidButton.addEventListener('click', async () => {
+        try {
+          const devices = await navigator.hid.requestDevice({
+            filters: [{ vendorId: 0x057e }],
+          });
+          const device = devices[0];
+          if (!device) {
+            hidStatus.textContent =
+              'Nothing selected. An empty prompt usually means another app is holding the controller.';
+            return;
+          }
+
+          if (!device.opened) await device.open();
+          hidStatus.textContent =
+            'Opened "' + device.productName + '" (vendor 0x' +
+            device.vendorId.toString(16) + ' product 0x' +
+            device.productId.toString(16) + '). Waiting for reports…';
+
+          device.addEventListener('inputreport', (event) => {
+            reportCount++;
+            seenReportIds.add(event.reportId);
+            hidReport.textContent =
+              'reports received: ' + reportCount +
+              '\nreport ids seen: ' + [...seenReportIds].map((id) => '0x' + id.toString(16)).join(', ') +
+              '\n\nlatest id 0x' + event.reportId.toString(16) +
+              '\n' + hex(event.data);
+          });
+
+          // Ask for the high-resolution input report.
+          try {
+            await device.sendReport(
+              0x01,
+              new Uint8Array([0, 0x00, 0x01, 0x40, 0x40, 0x00, 0x01, 0x40, 0x40, 0x03, 0x30]),
+            );
+            log('HID: requested full input report mode');
+          } catch (error) {
+            log('HID: full mode request failed (' + error.message + ') — simple reports still work');
+          }
+        } catch (error) {
+          hidStatus.textContent = 'Pairing failed or cancelled: ' + error.message;
+        }
+      });
     </script>
   </body>
 </html>

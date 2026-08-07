@@ -12,6 +12,10 @@ import {
 import { keyboardEventToBinding } from '@game/Config/key-bindings';
 import type { GamepadBindings, KeyBindings } from '@game/Config/types';
 import emitter from '@game/Events/events';
+import {
+  getWebHidGamepad,
+  isWebHidSupported,
+} from '@game/Player/webhid-gamepad';
 
 type GamepadAction = GamepadDigitalAction | GamepadAxisAction;
 
@@ -124,19 +128,82 @@ const readGamepads = (): (GamepadLike | null)[] => {
   return pads ? (Array.from(pads) as (GamepadLike | null)[]) : [];
 };
 
-/** Live connection state plus a low-rate sample of the active pad. */
+/**
+ * Live connection state plus a low-rate sample of the active pad. A controller
+ * paired over WebHID takes priority, since one is only ever paired because the
+ * Gamepad API could not see it.
+ */
 const useActiveGamepad = (polling: boolean) => {
   const [gamepad, setGamepad] = useState<GamepadLike | null>(null);
 
   useEffect(() => {
     if (!polling) return;
-    const sample = () => setGamepad(selectActiveGamepad(readGamepads()));
+    const sample = () =>
+      setGamepad(
+        getWebHidGamepad().current ?? selectActiveGamepad(readGamepads()),
+      );
     sample();
     const timer = window.setInterval(sample, 100);
     return () => window.clearInterval(timer);
   }, [polling]);
 
   return gamepad;
+};
+
+/**
+ * Pairing controls for controllers the browser's Gamepad API never reports.
+ * On macOS the Switch Pro Controller is claimed by the system's own Game
+ * Controller framework, so it drives native games while staying invisible to
+ * Chrome; opening it as a raw HID device is the way around that.
+ */
+const WebHidPairing: React.FC<{ detected: boolean }> = ({ detected }) => {
+  const [status, setStatus] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const supported = isWebHidSupported();
+
+  if (!supported) {
+    return (
+      <p className="rq-controls__hint" data-testid="webhid-unsupported">
+        This browser has no WebHID support, so a controller the Gamepad API
+        cannot see has no fallback here. Chrome, Edge and Opera support it.
+      </p>
+    );
+  }
+
+  const pair = async () => {
+    setBusy(true);
+    setStatus(null);
+    const ok = await getWebHidGamepad().requestDevice();
+    setBusy(false);
+    setStatus(
+      ok
+        ? 'Controller paired. Move a stick to confirm it reports below.'
+        : 'No controller was selected. If the picker was empty, the device is likely held by another app.',
+    );
+  };
+
+  return (
+    <div className="rq-webhid">
+      <p className="rq-controls__hint">
+        {detected
+          ? 'A controller is already reporting. Pairing over HID is only needed when nothing shows up.'
+          : 'If your controller works in other apps but reports nothing above, pair it directly. Switch Pro Controllers on macOS usually need this.'}
+      </p>
+      <button
+        className="rq-options__reset"
+        data-testid="webhid-pair"
+        disabled={busy}
+        onClick={() => void pair()}
+      >
+        {busy ? 'Waiting for selection…' : 'Pair controller over HID'}
+      </button>
+      {status ? (
+        <p className="rq-controls__hint" data-testid="webhid-status">
+          {status}
+        </p>
+      ) : null}
+    </div>
+  );
 };
 
 /**
@@ -359,6 +426,7 @@ export const ControlsOptions: React.FC = () => {
           : 'No controller detected. Connect one and press any button.'}
       </div>
       <GamepadMonitor gamepad={gamepad} />
+      <WebHidPairing detected={Boolean(gamepad)} />
       <label className="rq-option-toggle">
         <span>
           <strong>Enable controller</strong>

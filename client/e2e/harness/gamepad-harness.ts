@@ -15,6 +15,13 @@ import {
   type GamepadLike,
   type GamepadSample,
 } from '@game/Config/gamepad-bindings';
+import {
+  buildFullModeRequest,
+  isNintendoController,
+  parseNintendoReport,
+  REPORT_ID_FULL,
+  REPORT_ID_SIMPLE,
+} from '@game/Config/nintendo-hid';
 
 type Overrides = {
   bindings?: Partial<Record<string, string>>;
@@ -72,6 +79,35 @@ const harness = {
       delta,
     ),
   replay,
+  nintendo: {
+    REPORT_ID_FULL,
+    REPORT_ID_SIMPLE,
+    isNintendoController,
+    buildFullModeRequest: (counter: number) =>
+      Array.from(buildFullModeRequest(counter)),
+    /** Decodes a report given as a plain byte array (no report id). */
+    parse: (reportId: number, bytes: number[]) =>
+      parseNintendoReport(
+        reportId,
+        new DataView(new Uint8Array(bytes).buffer),
+      ),
+    /** Decodes, then runs the result through the normal mapping pipeline. */
+    sample: (reportId: number, bytes: number[]) => {
+      const pad = parseNintendoReport(
+        reportId,
+        new DataView(new Uint8Array(bytes).buffer),
+      );
+      return pad
+        ? sampleGamepad(
+          pad,
+          DEFAULT_GAMEPAD_BINDINGS,
+          DEFAULT_GAMEPAD_SETTINGS,
+          {},
+          1 / 60,
+        )
+        : null;
+    },
+  },
   /** Reads whatever `navigator.getGamepads()` currently reports. */
   poll: (overrides?: Overrides, previous: ButtonSnapshot = {}, delta = 1 / 60) =>
     sampleGamepad(

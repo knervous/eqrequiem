@@ -11,6 +11,7 @@ import {
   type GamepadSample,
 } from '@game/Config/gamepad-bindings';
 import emitter from '@game/Events/events';
+import { getWebHidGamepad } from './webhid-gamepad';
 import type Player from './player';
 
 /**
@@ -39,15 +40,25 @@ export class PlayerGamepad {
     emitter.emit('gamepadConnected', null);
   };
 
+  /**
+   * Raw-HID fallback for controllers the Gamepad API refuses to enumerate,
+   * notably the Switch Pro Controller over Bluetooth on macOS.
+   */
+  public readonly webHid = getWebHidGamepad();
+
   constructor(player: Player) {
     this.player = player;
     window.addEventListener('gamepadconnected', this.onConnected);
     window.addEventListener('gamepaddisconnected', this.onDisconnected);
+    // Silently re-opens a controller the player has already approved.
+    void this.webHid.restore();
   }
 
   public dispose() {
     window.removeEventListener('gamepadconnected', this.onConnected);
     window.removeEventListener('gamepaddisconnected', this.onDisconnected);
+    // The HID device is owned by the session, not by one Player: zoning
+    // recreates the player and must not drop the paired controller.
     this.reset();
     this.player = null as any;
   }
@@ -85,8 +96,11 @@ export class PlayerGamepad {
       return;
     }
 
+    // A WebHID device wins: the player only pairs one when the Gamepad API
+    // could not see their controller in the first place.
     const pads = navigator.getGamepads?.() as (GamepadLike | null)[] | null;
-    const gamepad = selectActiveGamepad(pads, this.activeIndex);
+    const gamepad =
+      this.webHid.current ?? selectActiveGamepad(pads, this.activeIndex);
     if (!gamepad) {
       this.reset();
       return;
