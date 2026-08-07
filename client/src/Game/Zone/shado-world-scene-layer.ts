@@ -26,6 +26,11 @@ export class ShadoWorldSceneLayer {
     private readonly sourceContainer: BJS.AssetContainer,
     private readonly runtimeRoot: BJS.TransformNode,
     private readonly chunks: BJS.Mesh[],
+    /**
+     * Render-chunk index for each entry of `chunks`. Chunks that can only ever
+     * be disabled are not built, so the two are not the same sequence.
+     */
+    private readonly chunkIndices: number[],
     public readonly usesBakedWorldLighting: boolean,
   ) {}
 
@@ -51,12 +56,9 @@ export class ShadoWorldSceneLayer {
       position.y,
       position.z,
     ]);
-    for (let chunk = 0; chunk < this.chunks.length; chunk++) {
-      const renderMesh = this.chunks[chunk]!;
-      if (renderMesh.metadata?.shadoAlwaysDisabled === true) {
-        renderMesh.setEnabled(false);
-        continue;
-      }
+    for (let index = 0; index < this.chunks.length; index++) {
+      const renderMesh = this.chunks[index]!;
+      const chunk = this.chunkIndices[index]!;
       const first = this.world.renderChunks.firstClusterRef[chunk]!;
       const count = this.world.renderChunks.clusterRefCount[chunk]!;
       let visible = false;
@@ -150,8 +152,8 @@ export class ShadoWorldSceneLayer {
       const sources = new Map(
         sourceContainer.meshes.map((mesh) => [mesh.name, mesh]),
       );
-      const chunks = createRenderChunks(world, sources);
-      validateRenderChunks(world, chunks);
+      const { meshes: chunks, chunkIndices } = createRenderChunks(world, sources);
+      validateRenderChunks(world, chunks, chunkIndices);
       const coordinator = await ShadoWorldVisibilityCoordinator.create(world, {
         entityVisibilityWorker: "required",
         worldObjectVisibilityFlags: "compact-only",
@@ -164,11 +166,13 @@ export class ShadoWorldSceneLayer {
         sourceContainer,
         runtimeRoot,
         chunks,
+        chunkIndices,
         usesBakedWorldLighting,
       );
       console.info(
         `[ZoneManager] Loaded promoted world scene ${world.name}: ` +
-          `${world.triangleCount} triangles, ${chunks.length} render chunks, ` +
+          `${world.triangleCount} triangles, ${chunks.length} render meshes ` +
+          `of ${world.renderChunks.primitive.length} chunks, ` +
           `${world.collision.sourceTriangleCount} source collision triangles, ` +
           `${world.collision.chunkCount} physics chunks, ` +
           `layout=${world.integrity.layoutHash}`,
@@ -234,8 +238,20 @@ function packageArtifactUrl(source: string, spatialUrl: string): string {
 function createRenderChunks(
   world: ShadoWorldSpatialPackage,
   sources: ReadonlyMap<string, BJS.AbstractMesh>,
-): BJS.Mesh[] {
-  const chunks: BJS.Mesh[] = [];
+): { meshes: BJS.Mesh[]; chunkIndices: number[] } {
+  const meshes: BJS.Mesh[] = [];
+  const chunkIndices: number[] = [];
+
+  // One lookup table instead of a linear scan of every scene material for
+  // every chunk.
+  const scene = sources.values().next().value?.getScene();
+  const materialsByName = new Map<string, BJS.Material>();
+  for (const material of scene?.materials ?? []) {
+    if (!materialsByName.has(material.name)) {
+      materialsByName.set(material.name, material);
+    }
+  }
+
   for (let chunk = 0; chunk < world.renderChunks.primitive.length; chunk++) {
     const primitive = world.primitives[world.renderChunks.primitive[chunk]!]!;
     const separator = primitive.name.lastIndexOf("#");
@@ -245,6 +261,20 @@ function createRenderChunks(
     if (!(source instanceof BABYLON.Mesh)) {
       throw new Error(`Promoted world primitive source '${meshName}' is missing`);
     }
+
+    const material =
+      materialsByName.get(world.materials[world.renderChunks.material[chunk]!]!) ??
+      source.material;
+    // A chunk that can only ever be disabled still costs a geometry clone, a
+    // bounding refresh, and a slot in the per-frame visibility sweep. Decide
+    // before building anything rather than after.
+    if (
+      meshName === "CLOUD_MDF" ||
+      material?.metadata?.gltf?.extras?.boundary === true
+    ) {
+      continue;
+    }
+
     const clone = source.clone(`ShadoWorldChunk:${chunk}`, source.parent, true);
     if (!clone) throw new Error(`Unable to clone promoted primitive '${meshName}'`);
     clone.makeGeometryUnique();
@@ -260,13 +290,7 @@ function createRenderChunks(
     }
     clone.setIndices(compacted.indices);
     clone.subMeshes = [];
-    clone.material =
-      source
-        .getScene()
-        .materials.find(
-          (material) =>
-            material.name === world.materials[world.renderChunks.material[chunk]!],
-        ) ?? source.material;
+    clone.material = material;
     new BABYLON.SubMesh(
       0,
       0,
@@ -288,19 +312,14 @@ function createRenderChunks(
       BABYLON.VertexBuffer.ColorKind,
     );
     clone.hasVertexAlpha = false;
-    const boundaryOnly =
-      clone.material?.metadata?.gltf?.extras?.boundary === true;
-    if (meshName === "CLOUD_MDF" || boundaryOnly) {
-      clone.metadata = { ...clone.metadata, shadoAlwaysDisabled: true };
-      clone.setEnabled(false);
-    }
     clone.refreshBoundingInfo();
-    chunks.push(clone);
+    meshes.push(clone);
+    chunkIndices.push(chunk);
   }
   sources.forEach((source) => {
     if (source.getTotalVertices() > 0) source.setEnabled(false);
   });
-  return chunks;
+  return { meshes, chunkIndices };
 }
 
 function indicesForClusters(
@@ -357,15 +376,27 @@ function compactGeometry(
 function validateRenderChunks(
   world: ShadoWorldSpatialPackage,
   chunks: readonly BJS.Mesh[],
+  chunkIndices: readonly number[],
 ): void {
   const indexCount = chunks.reduce(
     (count, chunk) => count + (chunk.getIndices()?.length ?? 0),
     0,
   );
-  if (indexCount !== world.triangleCount * 3) {
+  // Chunks that can only ever be disabled are never built, so the package
+  // triangle total is not the expected payload. Require instead that every
+  // chunk that was built carries exactly the geometry the package assigned it.
+  let expected = 0;
+  for (const chunk of chunkIndices) {
+    const first = world.renderChunks.firstClusterRef[chunk]!;
+    const count = world.renderChunks.clusterRefCount[chunk]!;
+    for (let ref = first; ref < first + count; ref++) {
+      expected += world.clusters.indexCount[world.renderChunkClusters[ref]!]!;
+    }
+  }
+  if (indexCount !== expected) {
     throw new Error(
       `World '${world.name}' render payload has ${indexCount / 3} triangles; ` +
-        `package requires ${world.triangleCount}`,
+        `its ${chunks.length} built chunks require ${expected / 3}`,
     );
   }
   for (const chunk of chunks) {

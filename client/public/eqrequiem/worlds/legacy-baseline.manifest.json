@@ -95,7 +95,7 @@
       },
       "authoring": {
         "path": "shader-object/sandbox/public/shado/worlds/qeynos2.authoring.json",
-        "sha256": "eb3e4ca063a53c66b0474e6876661add67d969e680743558e37318478c164bbf",
+        "sha256": "0dc823d351d20d226dfa73e4a69612edaa6612acb92f590b055d169aaf4ca829",
         "bytes": 325938
       },
       "runtime": {
@@ -107,8 +107,8 @@
         },
         "spatial": {
           "path": "client/public/eqrequiem/worlds/qeynos2.spatial.json.gz",
-          "sha256": "4a91b0ccf13c96acd5288465d8eb09a8bcce61054b5a29b7ddf27cb2a064f0be",
-          "bytes": 4850065
+          "sha256": "3164d2130e76c045d07891c180ad509940518dd651db5b72ed9163bf77da3d0e",
+          "bytes": 4822518
         },
         "collision": {
           "path": "client/public/eqrequiem/worlds/qeynos2.collision.bin.gz",
@@ -117,15 +117,15 @@
         },
         "lightingPlan": {
           "path": "client/public/eqrequiem/worlds/qeynos2.lighting-plan.json.gz",
-          "sha256": "3f747901dd3d7999539a0908e2f9ee282278381825b62a980227b06663b2c2bd",
-          "bytes": 236425
+          "sha256": "2f349d8042daa4837b501228bab5ccd2a437998cfb292b857415da43248305f4",
+          "bytes": 56066
         }
       },
       "stats": {
         "primitives": 693,
         "triangles": 70540,
         "clusters": 8974,
-        "renderChunks": 8854,
+        "renderChunks": 1845,
         "cells": 5621,
         "portals": 0,
         "regions": 20,

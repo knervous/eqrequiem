@@ -98,22 +98,62 @@ for (const world of worlds) {
       );
     }
     if (spatial.lighting) {
+      // A render batch is a draw unit, so the compiler merges neighbouring
+      // cells to keep it from degenerating into two-triangle meshes. What has
+      // to hold is not "one cell" but that a merged batch stays small enough
+      // to still be worth culling. Persistent batches are never culled at all,
+      // so no extent bound applies to them.
+      // Each package is checked against the contract it was built under. A
+      // package that declares no limits predates cell merging, so its batches
+      // must still be strictly cell-bounded; re-promoting the zone migrates it.
+      const limits = spatial.renderChunkLimits;
       for (
         let chunk = 0;
         chunk < spatial.renderChunks.primitive.length;
         chunk++
       ) {
+        const primitive = spatial.primitives[spatial.renderChunks.primitive[chunk]];
         const first = spatial.renderChunks.firstClusterRef[chunk];
         const count = spatial.renderChunks.clusterRefCount[chunk];
-        const cells = new Set(
-          spatial.renderChunkClusters
-            .slice(first, first + count)
-            .map((cluster) => spatial.clusters.cellId[cluster]),
+        const ids = spatial.renderChunkClusters.slice(first, first + count);
+        const cells = new Set(ids.map((c) => spatial.clusters.cellId[c]));
+        if (!limits) {
+          assert.equal(
+            cells.size,
+            1,
+            `${world.shortName}: render batch ${chunk} crosses spatial cells`,
+          );
+          continue;
+        }
+        assert.ok(
+          Number.isFinite(limits.maxExtent) && limits.maxExtent > 0,
+          `${world.shortName}: render chunk limits declare no usable extent`,
         );
-        assert.equal(
-          cells.size,
-          1,
-          `${world.shortName}: render batch ${chunk} crosses spatial cells`,
+        if (primitive?.persistent === true) continue;
+        // An unmerged batch inherits whatever extent its own cell produced and
+        // is not subject to the merge ceiling.
+        if (cells.size <= 1) continue;
+        let radius = 0;
+        let minX = Infinity;
+        let maxX = -Infinity;
+        let minZ = Infinity;
+        let maxZ = -Infinity;
+        for (const id of ids) {
+          radius = Math.max(radius, spatial.clusters.radius[id]);
+          minX = Math.min(minX, spatial.clusters.centerX[id]);
+          maxX = Math.max(maxX, spatial.clusters.centerX[id]);
+          minZ = Math.min(minZ, spatial.clusters.centerZ[id]);
+          maxZ = Math.max(maxZ, spatial.clusters.centerZ[id]);
+        }
+        // Cluster spheres contain their geometry, so centre spread never
+        // exceeds the extent the compiler bounded; allow one cluster diameter
+        // of slack for the sphere itself.
+        const spread = Math.max(maxX - minX, maxZ - minZ);
+        assert.ok(
+          spread <= limits.maxExtent + 2 * radius,
+          `${world.shortName}: merged render batch ${chunk} spans ${spread.toFixed(1)} ` +
+            `units across ${cells.size} cells, exceeding the declared ` +
+            `${limits.maxExtent} unit ceiling`,
         );
       }
     }

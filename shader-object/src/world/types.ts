@@ -165,6 +165,19 @@ export type ShadoWorldCompileOptions = {
   sourceTransform?: ShadoWorldSourceTransform;
   tileSize?: number;
   maxClusterTriangles?: number;
+  /**
+   * Smallest triangle count a render chunk should reach before the compiler
+   * stops merging neighbouring cells into it. Render chunks are draw units, so
+   * a per-cell fragment of two triangles costs a full mesh and draw call for
+   * almost no geometry. Merging trades culling granularity for draw calls.
+   */
+  minRenderChunkTriangles?: number;
+  /**
+   * Ceiling on how far a merged render chunk may span, in world units. Chunk
+   * visibility is the union of its clusters, so an unbounded merge would keep
+   * distant geometry resident whenever any part of it is on screen.
+   */
+  maxRenderChunkExtent?: number;
   /** Width/depth of continuous camera/entity visibility regions. */
   visibilityRegionSize?: number;
   /** Ordinary-region first-pass envelope. Persistent vista cells bypass it. */
@@ -365,6 +378,16 @@ export type ShadoWorldSpatialPackage = {
     z: number[];
     firstCluster: number[];
     clusterCount: number[];
+  };
+  /**
+   * Limits the compiler applied when merging cell-bounded clusters into draw
+   * units. A render chunk may span multiple cells, so consumers validating
+   * culling granularity check against these rather than assuming one cell.
+   */
+  renderChunkLimits: {
+    minTriangles: number;
+    /** Ceiling on merged XZ extent. Persistent chunks are exempt. */
+    maxExtent: number;
   };
   /**
    * Continuous, dense first-pass culling topology. Unlike geometry-derived

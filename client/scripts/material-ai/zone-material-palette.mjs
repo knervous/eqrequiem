@@ -19,6 +19,12 @@ export const PALETTE_SCHEMA = "eltania.zone-material-palette";
 export const PALETTE_VERSION = 1;
 export const RUNTIME_TEXTURE_SIZE = 512;
 export const RUNTIME_WEBP_QUALITY = 82;
+/**
+ * Near-lossless preprocessing strength for the final runtime encode. Lower
+ * values compress harder; 60 measured bit-exact wrap edges on every qeynos2
+ * channel while the seam gate is what ultimately enforces the contract.
+ */
+export const RUNTIME_NEAR_LOSSLESS_QUALITY = 60;
 
 export function paletteRoot(repoRoot, zone) {
   return path.join(
@@ -130,8 +136,25 @@ export async function resizeRuntimeTexture(
     .raw()
     .toBuffer({ resolveWithObject: true });
   closePeriodicEdges(repaired.data, repaired.info);
-  return sharp(repaired.data, { raw: repaired.info })
-    .webp({ lossless: true, effort: 6 })
+  return encodeRuntimeWebp(repaired);
+}
+
+/**
+ * Encode a repaired runtime channel.
+ *
+ * The final encode cannot be lossy. Every channel is a periodic tile whose
+ * wrap edges were just closed, and lossy WebP perturbs the two edges
+ * independently: measured against the palette's 0.003 edge-RMSE ceiling, q90
+ * lands at 0.010-0.058 and even q98 at 0.006-0.056. Near-lossless keeps the
+ * closed edges bit-exact while still dropping 31-45% of the payload, so it is
+ * the cheapest encode that preserves the seam contract.
+ *
+ * This is a download saving only. WebP of either kind decodes to RGBA8, so
+ * texture VRAM is unchanged; reducing that needs a GPU-compressed format.
+ */
+export async function encodeRuntimeWebp(image) {
+  return sharp(image.data, { raw: image.info })
+    .webp({ nearLossless: true, quality: RUNTIME_NEAR_LOSSLESS_QUALITY, effort: 6 })
     .toBuffer();
 }
 
@@ -146,9 +169,7 @@ export async function resizeRuntimeDataTexture(
     .toBuffer({ resolveWithObject: true });
   if (tangentNormal) renormalizeTangentNormals(resized.data, resized.info);
   closePeriodicEdges(resized.data, resized.info);
-  return sharp(resized.data, { raw: resized.info })
-    .webp({ lossless: true, effort: 6 })
-    .toBuffer();
+  return encodeRuntimeWebp(resized);
 }
 
 function rmse(sum, samples) {

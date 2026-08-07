@@ -12,6 +12,7 @@
     "world:baseline:dry-run": "npm --prefix client run world:baseline:dry-run",
     "world:baseline:check": "npm --prefix client run world:baseline:check",
     "world:authoring:promote": "npm --prefix client run world:authoring:promote --",
+    "world:objects:authored:promote": "npm --prefix client run world:objects:authored:promote --",
     "material-ai:zone": "npm --prefix client run material-ai:zone --",
     "material-ai:test": "npm --prefix client run material-ai:test",
     "fx:check": "npm --prefix client run fx:check",
@@ -20,7 +21,8 @@
     "libra:model:test": "npm --prefix serverjs/libra-ui run test:model",
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "oxlint . --deny-warnings --report-unused-disable-directives",
-    "lint:fix": "oxlint . --fix"
+    "lint:fix": "oxlint . --fix",
+    "world:textures:variance": "npm --prefix client run world:textures:variance --"
   },
   "repository": {
     "type": "git",

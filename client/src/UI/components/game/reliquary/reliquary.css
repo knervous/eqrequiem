@@ -1504,6 +1504,81 @@
   pointer-events: none;
 }
 
+/* Time of day: centred at the top of the stage, above the draggable windows. */
+.rq-timebar {
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--rq-bronze), transparent 55%);
+  background: color-mix(in srgb, var(--rq-basalt-0), transparent 22%);
+  box-shadow: var(--rq-shadow);
+  font-size: 0.78em;
+  line-height: 1;
+  white-space: nowrap;
+  pointer-events: auto;
+}
+
+.rq-timebar__phase {
+  min-width: 5.2em;
+  text-align: right;
+  color: var(--rq-ash);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.rq-timebar__track {
+  position: relative;
+  width: 190px;
+  height: 7px;
+  border-radius: 999px;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--rq-basalt-2), transparent 30%);
+  /* Night -> dawn -> noon -> dusk -> night, keyed to the sky's own anchors. */
+  background: linear-gradient(
+    90deg,
+    #0d1424 0%,
+    #26304a 18%,
+    var(--rq-ember) 26%,
+    #f0d9a4 40%,
+    #fdf3d6 50%,
+    #f0d9a4 60%,
+    var(--rq-oxide) 76%,
+    #26304a 84%,
+    #0d1424 100%
+  );
+}
+
+.rq-timebar__tick {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: color-mix(in srgb, var(--rq-basalt-0), transparent 40%);
+}
+
+.rq-timebar__marker {
+  position: absolute;
+  top: 50%;
+  width: 3px;
+  height: 15px;
+  border-radius: 2px;
+  transform: translate(-50%, -50%);
+  background: var(--rq-bone);
+  box-shadow: 0 0 5px rgb(0 0 0 / 85%);
+}
+
+.rq-timebar__clock {
+  min-width: 3.4em;
+  color: var(--rq-bone);
+  font-variant-numeric: tabular-nums;
+}
+
 .rq-hud-window {
   position: absolute;
   container-type: size;

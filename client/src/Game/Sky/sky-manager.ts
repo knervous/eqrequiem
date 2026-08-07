@@ -2,6 +2,7 @@ import BABYLON from "@bjs";
 import type * as BJS from "@babylonjs/core";
 import type { ZoneManager } from "@game/Zone/zone-manager";
 import { FileSystem } from "@game/FileSystem/filesystem";
+import emitter from "@game/Events/events";
 import {
   createRequiemSkyMaterial,
   setRequiemAtmosphereState,
@@ -259,6 +260,9 @@ const findRoot = (
 export default class DayNightSkyManager {
   scale = 7000;
   timeOfDay = 12;
+
+  /** Last whole world-minute pushed to the UI, so the clock is not re-emitted every frame. */
+  #publishedMinute = -1;
 
   #camera: BJS.Camera | null = null;
   #scene: BJS.Scene | null = null;
@@ -593,6 +597,7 @@ export default class DayNightSkyManager {
       delta,
       this.#motionSettings,
     );
+    this.#publishTimeOfDay();
     this.#starElapsedSeconds +=
       deltaSeconds * this.#motionSettings.starTwinkleRate;
     this.#starRotationRadians =
@@ -682,7 +687,23 @@ export default class DayNightSkyManager {
 
   setTimeOfDay(time: number): void {
     this.timeOfDay = wrapSkyHour(time);
+    this.#publishTimeOfDay(true);
     this.#updateAppearance();
+  }
+
+  /**
+   * Push the world clock to the UI.
+   *
+   * The sky advances every frame but a clock only needs to move when the
+   * displayed value would change, so this throttles to whole minutes. `force`
+   * bypasses that for an explicit time change, which may land inside the same
+   * minute yet still needs to reach the HUD.
+   */
+  #publishTimeOfDay(force = false): void {
+    const minute = Math.floor(wrapSkyHour(this.timeOfDay) * 60);
+    if (!force && minute === this.#publishedMinute) return;
+    this.#publishedMinute = minute;
+    emitter.emit('timeOfDay', this.timeOfDay);
   }
 
   get biome(): string {

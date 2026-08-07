@@ -83,7 +83,8 @@
     "build": "vite build",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "lint": "oxlint src --tsconfig tsconfig.json --react-plugin --import-plugin --deny-warnings --report-unused-disable-directives",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "world:textures:variance": "node scripts/audit-zone-texture-variance.mjs"
   },
   "dependencies": {
     "@babylonjs/addons": "9.16.1",

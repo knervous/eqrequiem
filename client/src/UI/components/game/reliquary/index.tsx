@@ -263,6 +263,63 @@ const Compass: React.FC<{ heading: number }> = ({ heading }) => {
   );
 };
 
+/**
+ * Phase boundaries of the world day.
+ *
+ * These are the sky manifest's own keyframe anchors (night 0, dawn 6, noon 12,
+ * dusk 18), so the bar's segments line up with what the sky actually does
+ * rather than with a separately invented schedule.
+ */
+const DAY_PHASES = [
+  { start: 0, label: 'Night' },
+  { start: 5, label: 'Dawn' },
+  { start: 8, label: 'Morning' },
+  { start: 12, label: 'Midday' },
+  { start: 16, label: 'Afternoon' },
+  { start: 19, label: 'Dusk' },
+  { start: 21, label: 'Night' },
+] as const;
+
+const phaseForHour = (hour: number): string => {
+  let label: string = DAY_PHASES[0].label;
+  for (const phase of DAY_PHASES) {
+    if (hour >= phase.start) label = phase.label;
+  }
+  return label;
+};
+
+const TimeOfDayBar: React.FC = () => {
+  const hour = useEventState('timeOfDay', 12);
+  const wrapped = ((hour % 24) + 24) % 24;
+  const totalMinutes = Math.floor(wrapped * 60);
+  const clock =
+    `${String(Math.floor(totalMinutes / 60)).padStart(2, '0')}:` +
+    `${String(totalMinutes % 60).padStart(2, '0')}`;
+  const phase = phaseForHour(wrapped);
+  const percent = (wrapped / 24) * 100;
+
+  return (
+    <div
+      className="rq-timebar"
+      role="meter"
+      aria-valuemin={0}
+      aria-valuemax={24}
+      aria-valuenow={Number(wrapped.toFixed(2))}
+      aria-valuetext={`${clock}, ${phase}`}
+      aria-label="Time of day"
+    >
+      <span className="rq-timebar__phase">{phase}</span>
+      <div className="rq-timebar__track">
+        {/* Sunrise and sunset, the two boundaries worth reading at a glance. */}
+        <i className="rq-timebar__tick" style={{ left: '25%' }} aria-hidden="true" />
+        <i className="rq-timebar__tick" style={{ left: '75%' }} aria-hidden="true" />
+        <span className="rq-timebar__marker" style={{ left: `${percent}%` }} />
+      </div>
+      <strong className="rq-timebar__clock">{clock}</strong>
+    </div>
+  );
+};
+
 const Conditions: React.FC = () => {
   const running = useEventState('playerRunning', true);
   const sitting = useEventState('playerSitting', false);
@@ -614,17 +671,15 @@ const QuickControls: React.FC<{
       >
         {autoAttacking ? 'Stop Attack' : 'Attack'} <kbd>T</kbd>
       </button>
-      {import.meta.env.DEV ? (
-        <button
-          title="Open developer tools (F8)"
-          onClick={(event) => {
-            onDeveloperTools();
-            event.currentTarget.blur();
-          }}
-        >
-          Dev <kbd>F8</kbd>
-        </button>
-      ) : null}
+      <button
+        title="Open developer tools (F8)"
+        onClick={(event) => {
+          onDeveloperTools();
+          event.currentTarget.blur();
+        }}
+      >
+        Dev <kbd>F8</kbd>
+      </button>
     </nav>
   );
 };
@@ -1354,7 +1409,6 @@ export const ReliquaryHUD: React.FC = () => {
     };
   }, []);
   useEffect(() => {
-    if (!import.meta.env.DEV) return;
     const toggleDeveloperTools = (event: KeyboardEvent) => {
       if (event.key !== 'F8') return;
       event.preventDefault();
@@ -1390,6 +1444,7 @@ export const ReliquaryHUD: React.FC = () => {
           transform: `scale(${ui.uiScale})`,
         }}
       >
+        <TimeOfDayBar />
         <HudWindow
           {...windowProps('player')}
           label="Character"

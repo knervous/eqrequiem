@@ -39,6 +39,9 @@ export type Events = {
   updateBagState: { slot: InventorySlot; state: BagState };
   bagClick: number;
 
+  /** World clock in hours, 0-24. Emitted by the sky manager as the day advances. */
+  timeOfDay: number;
+
   zoneSpawns: void;
   playerPosition: BJS.Vector3;
   playerRotation: BJS.Vector3;

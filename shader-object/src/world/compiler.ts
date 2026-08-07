@@ -37,6 +37,137 @@ type Cluster = Bounds & {
   renderChunk: number;
 };
 
+function isPersistentPrimitive(primitive: ShadoWorldPrimitive): boolean {
+  return (
+    /distant-horizon/i.test(primitive.visibilityProfile ?? '') ||
+    /persistent/i.test(primitive.pvsPriority ?? '')
+  );
+}
+
+/**
+ * Groups clusters into render chunks, which the client instantiates one Babylon
+ * mesh per and therefore draws one call per.
+ *
+ * Clusters are cell-bounded so the runtime can reject them per region, but a
+ * cell-sized draw unit is far too fine: a continuous surface crossing hundreds
+ * of cells becomes hundreds of two-triangle meshes. Two rules coarsen that
+ * without touching cluster, packet, or BVH data:
+ *
+ * - a persistent primitive is never frustum-culled at runtime, so subdividing
+ *   it by cell buys no rejection at all and costs one mesh per cell it spans.
+ *   Those collapse to a single chunk per material.
+ * - every other primitive keeps cell granularity, but consecutive same-material
+ *   cells merge until the chunk reaches a triangle floor. Merging is bounded by
+ *   world extent so a chunk cannot grow large enough to defeat the culling it
+ *   exists to enable.
+ */
+function buildRenderChunkGroups(
+  clusters: readonly Cluster[],
+  primitives: readonly ShadoWorldPrimitive[],
+  limits: { minTriangles: number; maxExtent: number }
+): number[][] {
+  const byPrimitiveCell = new Map<string, number[]>();
+  clusters.forEach((cluster, id) => {
+    const key = `${cluster.primitive},${cluster.cellId}`;
+    const ids = byPrimitiveCell.get(key) ?? [];
+    ids.push(id);
+    byPrimitiveCell.set(key, ids);
+  });
+
+  const cellGroups = [...byPrimitiveCell.values()].sort((a, b) => {
+    const clusterA = clusters[a[0]];
+    const clusterB = clusters[b[0]];
+    return (
+      clusterA.primitive - clusterB.primitive ||
+      clusterA.material - clusterB.material ||
+      clusterA.cellId - clusterB.cellId
+    );
+  });
+
+  const groups: number[][] = [];
+  let open: number[] | undefined;
+  let openTriangles = 0;
+  let openBounds: Bounds | undefined;
+  let openKey = '';
+
+  const closeOpen = (): void => {
+    if (open) groups.push(open);
+    open = undefined;
+    openTriangles = 0;
+    openBounds = undefined;
+    openKey = '';
+  };
+
+  for (const ids of cellGroups) {
+    const head = clusters[ids[0]];
+    const primitive = primitives[head.primitive];
+    const key = `${head.primitive},${head.material}`;
+    const triangles = ids.reduce(
+      (sum, id) => sum + clusters[id].indices.length / 3,
+      0
+    );
+    const bounds = unionBounds(ids.map(id => clusters[id]));
+
+    if (isPersistentPrimitive(primitive)) {
+      // Never culled: extent and triangle floor are both irrelevant, so take
+      // every cell of this primitive/material into one draw unit.
+      if (open && openKey === key) {
+        open.push(...ids);
+      } else {
+        closeOpen();
+        open = [...ids];
+        openKey = key;
+        openTriangles = triangles;
+        openBounds = bounds;
+      }
+      continue;
+    }
+
+    if (open && openKey === key && openBounds) {
+      const merged = unionOfBounds(openBounds, bounds);
+      if (openTriangles < limits.minTriangles && extentOf(merged) <= limits.maxExtent) {
+        open.push(...ids);
+        openTriangles += triangles;
+        openBounds = merged;
+        continue;
+      }
+    }
+    closeOpen();
+    open = [...ids];
+    openKey = key;
+    openTriangles = triangles;
+    openBounds = bounds;
+  }
+  closeOpen();
+
+  // Keep the runtime's chunk order aligned with cell order so streaming and
+  // visibility iteration stay spatially coherent.
+  return groups.sort((a, b) => {
+    const clusterA = clusters[a[0]];
+    const clusterB = clusters[b[0]];
+    return clusterA.cellId - clusterB.cellId || clusterA.primitive - clusterB.primitive;
+  });
+}
+
+function unionOfBounds(a: Bounds, b: Bounds): Bounds {
+  return {
+    min: [
+      Math.min(a.min[0], b.min[0]),
+      Math.min(a.min[1], b.min[1]),
+      Math.min(a.min[2], b.min[2]),
+    ],
+    max: [
+      Math.max(a.max[0], b.max[0]),
+      Math.max(a.max[1], b.max[1]),
+      Math.max(a.max[2], b.max[2]),
+    ],
+  };
+}
+
+function extentOf(bounds: Bounds): number {
+  return Math.max(bounds.max[0] - bounds.min[0], bounds.max[2] - bounds.min[2]);
+}
+
 export function compileShadoWorld(
   primitives: readonly ShadoWorldPrimitive[],
   options: ShadoWorldCompileOptions
@@ -57,6 +188,13 @@ export function compileShadoWorld(
   );
   const maxTriangles = Math.floor(
     positive(options.maxClusterTriangles ?? 128, 'maxClusterTriangles')
+  );
+  const minRenderChunkTriangles = Math.floor(
+    positive(options.minRenderChunkTriangles ?? 64, 'minRenderChunkTriangles')
+  );
+  const maxRenderChunkExtent = positive(
+    options.maxRenderChunkExtent ?? Math.max(256, tileSize * 8),
+    'maxRenderChunkExtent'
   );
   const worldBounds = boundsOfPrimitives(primitives);
   const originX = Math.floor(worldBounds.min[0] / tileSize) * tileSize;
@@ -175,17 +313,9 @@ export function compileShadoWorld(
   const renderChunkMaterial: number[] = [];
   const renderChunkFirst: number[] = [];
   const renderChunkCount: number[] = [];
-  const clustersByPrimitiveCell = new Map<string, number[]>();
-  clusters.forEach((cluster, id) => {
-    const key = `${cluster.primitive},${cluster.cellId}`;
-    const ids = clustersByPrimitiveCell.get(key) ?? [];
-    ids.push(id);
-    clustersByPrimitiveCell.set(key, ids);
-  });
-  const chunkGroups = [...clustersByPrimitiveCell.values()].sort((a, b) => {
-    const clusterA = clusters[a[0]];
-    const clusterB = clusters[b[0]];
-    return clusterA.cellId - clusterB.cellId || clusterA.primitive - clusterB.primitive;
+  const chunkGroups = buildRenderChunkGroups(clusters, primitives, {
+    minTriangles: minRenderChunkTriangles,
+    maxExtent: maxRenderChunkExtent,
   });
   for (const ids of chunkGroups) {
     const primitive = clusters[ids[0]].primitive;
@@ -200,11 +330,9 @@ export function compileShadoWorld(
   const bvh = buildQuantizedBvh(clusters, worldBounds);
   const persistentRenderCells = new Uint8Array(tileKeys.length);
   for (const cluster of clusters) {
-    const primitive = primitives[cluster.primitive];
-    if (
-      /distant-horizon/i.test(primitive.visibilityProfile ?? '') ||
-      /persistent/i.test(primitive.pvsPriority ?? '')
-    ) persistentRenderCells[cluster.cellId] = 1;
+    if (isPersistentPrimitive(primitives[cluster.primitive])) {
+      persistentRenderCells[cluster.cellId] = 1;
+    }
   }
   const visibility = compileShadoWorldVisibility({
     bounds: worldBounds,
@@ -239,9 +367,7 @@ export function compileShadoWorld(
       name: primitive.name,
       material: materialIds.get(primitive.material || '__default')!,
       vertexCount: primitive.positions.length / 3,
-      persistent:
-        /distant-horizon/i.test(primitive.visibilityProfile ?? '') ||
-        /persistent/i.test(primitive.pvsPriority ?? ''),
+      persistent: isPersistentPrimitive(primitive),
     })),
     clusterIndices,
     renderChunkClusters,
@@ -317,6 +443,10 @@ export function compileShadoWorld(
       z: tileKeys.map(tile => tile[1]),
       firstCluster: tileFirst,
       clusterCount: tileCount,
+    },
+    renderChunkLimits: {
+      minTriangles: minRenderChunkTriangles,
+      maxExtent: maxRenderChunkExtent,
     },
     visibility,
     navigation: {
