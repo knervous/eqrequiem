@@ -300,6 +300,7 @@ function runZoneTick(): void {
   simulationTimeMs += deltaMs;
 
   refreshWorldContext(quests);
+  streamWatchedNpcPositions();
   applyQuestEffects(quests.dispatch({ type: "npc_tick", tick }));
   applyQuestEffects(quests.advanceTimers(tick));
   for (const request of engagement?.tick(tick) ?? []) {
@@ -850,6 +851,32 @@ function applyQuestEffects(effects: readonly QuestEffect[]): void {
     });
   }
   publishQuestPersistence(persistent);
+}
+
+/**
+ * Feeds live positions for NPCs that proximity content actually watches, so an
+ * authored radius follows a roaming guard instead of the spot it spawned at.
+ */
+function streamWatchedNpcPositions(): void {
+  const watched = quests.watchedNpcNames();
+  const loaded = kernel;
+  if (watched.length === 0 || !loaded) return;
+  const wanted = new Set(watched.map(npcKey));
+  const positions: Array<{ name: string; position: { x: number; y: number; z: number } }> = [];
+  for (const [index, spawn] of npcSpawnsByIndex) {
+    if (!wanted.has(npcKey(spawn.name))) continue;
+    const entity = loaded.entities.at(index);
+    if (!entity) continue;
+    positions.push({
+      name: spawn.name,
+      position: { x: entity.position.x, y: entity.position.y, z: entity.position.z },
+    });
+  }
+  if (positions.length > 0) quests.updateNpcPositions(positions);
+}
+
+function npcKey(name: string): string {
+  return name.trim().replaceAll(" ", "_").toLowerCase();
 }
 
 /**

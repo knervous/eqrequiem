@@ -140,6 +140,41 @@ export function combatExperience(npcLevel: number, killerLevel: number): number 
   return base;
 }
 
+/** How much a beat is worth relative to the level it is authored for. */
+export type QuestBeatWeight = "hint" | "discovery" | "beat" | "resolution";
+
+const BEAT_SHARE: Readonly<Record<QuestBeatWeight, number>> = {
+  /** Learning something small. Barely moves the bar. */
+  hint: 0.02,
+  /** A genuine discovery: a place found, a clue understood. */
+  discovery: 0.08,
+  /** An irreversible step in a longer story. */
+  beat: 0.12,
+  /** A situation meaningfully resolved. */
+  resolution: 0.25,
+};
+
+/**
+ * Authored awards expressed as a share of the level they are earned at.
+ *
+ * Combat experience is quadratic in level while a hardcoded number is flat, so a fixed
+ * award inverts across the band: 120 is two thirds of level 1 and four percent of level
+ * 10. Anchoring to the curve keeps a discovery worth roughly the same *amount of
+ * progress* wherever the player meets it, which is what the 20–35% target in the design
+ * is actually about.
+ */
+export function questExperience(
+  curve: LevelCurve,
+  level: number,
+  weight: QuestBeatWeight,
+): number {
+  const progress = curve.progress(curve.cumulativeFor(Math.max(1, Math.trunc(level))));
+  const levelCost = progress.forLevel > 0
+    ? progress.forLevel
+    : curve.cumulativeFor(curve.maxLevel) - curve.cumulativeFor(curve.maxLevel - 1);
+  return Math.max(1, Math.round(levelCost * BEAT_SHARE[weight]));
+}
+
 /**
  * Group split with a modest bonus for playing together, so the credit set from a kill
  * or a shared discovery never punishes grouping. Killing blow is irrelevant: callers

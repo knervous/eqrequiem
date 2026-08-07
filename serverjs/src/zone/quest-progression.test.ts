@@ -5,6 +5,7 @@ import {
   LevelCurve,
   combatExperience,
   defaultLevelCurve,
+  questExperience,
   splitGroupExperience,
 } from "./quest-progression.js";
 
@@ -70,5 +71,38 @@ describe("experience sources", () => {
     assert.equal(splitGroupExperience(300, 1), 300);
     assert.ok(splitGroupExperience(300, 3) * 3 > 300);
     assert.ok(splitGroupExperience(300, 3) < 300);
+  });
+});
+
+describe("authored beat values", () => {
+  it("keeps a beat worth the same share of a level across the band", () => {
+    const curve = LevelCurve.default();
+    for (const level of [1, 5, 20, 50]) {
+      const award = questExperience(curve, level, "discovery");
+      const levelCost = curve.progress(curve.cumulativeFor(level)).forLevel;
+      const share = award / levelCost;
+      assert.ok(
+        share > 0.07 && share < 0.09,
+        `level ${level} discovery was ${Math.round(share * 100)}% of a level`,
+      );
+    }
+  });
+
+  it("orders beats by how much they should matter", () => {
+    const curve = LevelCurve.default();
+    const at = (weight: Parameters<typeof questExperience>[2]) =>
+      questExperience(curve, 5, weight);
+    assert.ok(at("hint") < at("discovery"));
+    assert.ok(at("discovery") < at("beat"));
+    assert.ok(at("beat") < at("resolution"));
+  });
+
+  it("stays comparable to what killing things pays", () => {
+    const curve = LevelCurve.default();
+    // A resolution should be worth a session's worth of camp, not a level.
+    const resolution = questExperience(curve, 10, "resolution");
+    const perKill = combatExperience(10, 10);
+    assert.ok(resolution > perKill, "a story resolution should beat one kill");
+    assert.ok(resolution < perKill * 12, "but it should not replace playing the game");
   });
 });

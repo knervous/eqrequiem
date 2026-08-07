@@ -187,6 +187,26 @@ export class QuestManager {
     if (snapshot) this.playerSnapshots.set(sessionId, { ...snapshot, level });
   }
 
+  /** NPC names any proximity watcher cares about, so the zone streams only those. */
+  watchedNpcNames(): readonly string[] {
+    return [...new Set(this.proximityWatchers.map((watcher) => watcher.npcName))];
+  }
+
+  /**
+   * Refreshes live NPC positions. Without this, proximity watches a spawn point rather
+   * than an NPC, which is wrong for anything that moves.
+   */
+  updateNpcPositions(
+    positions: ReadonlyArray<{ readonly name: string; readonly position: QuestVector3 }>,
+  ): void {
+    for (const entry of positions) {
+      const key = normalizeNpcName(entry.name);
+      const current = this.npcSnapshots.get(key);
+      if (!current) continue;
+      this.npcSnapshots.set(key, { ...current, position: entry.position });
+    }
+  }
+
   setCharacterInventory(sessionId: number, items: readonly QuestItemSnapshot[]): void {
     this.characters.get(sessionId)?.setInventory(items);
   }
