@@ -125,6 +125,23 @@ test.describe('controller rebinding', () => {
     expect(config.gamepadBindings.lookAxisX).toBe('Axis1');
   });
 
+  test('a button already held when the row opens cannot bind itself', async ({
+    page,
+  }) => {
+    await connectPad(page);
+    await setPadState(page, { buttons: withButtons(2) });
+    const button = page.getByTestId('gamepad-bind-inventory');
+    await button.click();
+    await settleCapture(page);
+    await expect(button).toHaveText('Press a button…');
+
+    // Releasing and pressing the same button again does bind it.
+    await setPadState(page, { buttons: withButtons() });
+    await settleCapture(page);
+    await setPadState(page, { buttons: withButtons(2) });
+    await expect(button).toHaveText('X / Square');
+  });
+
   test('clearing a binding leaves the action unbound', async ({ page }) => {
     const button = page.getByTestId('gamepad-bind-autoAttack');
     await expect(button).toHaveText('Right Trigger');

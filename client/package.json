@@ -82,6 +82,9 @@
     "start:prod": "cross-env VITE_LOCAL_DEV=false vite",
     "build": "vite build",
     "typecheck": "tsc --noEmit -p tsconfig.json",
+    "e2e:build": "node e2e/build-harness.mjs",
+    "e2e": "playwright test",
+    "e2e:ui": "playwright test --ui",
     "lint": "oxlint src --tsconfig tsconfig.json --react-plugin --import-plugin --deny-warnings --report-unused-disable-directives",
     "preview": "vite preview",
     "world:textures:variance": "node scripts/audit-zone-texture-variance.mjs"

@@ -23,3 +23,10 @@ dist-ssr
 *.sln
 *.sw?
 .vercel
+
+# Playwright
+e2e/.artifacts/
+test-results/
+playwright-report/
+blob-report/
+.playwright/
