@@ -43,6 +43,7 @@ export const OP = {
   MERCHANT_ERROR: 620,
   JOURNAL_UPDATE: 621,
   EXPERIENCE_UPDATE: 622,
+  JOURNAL_NOTE: 623,
 } as const;
 
 export type KnownOpcode = (typeof OP)[keyof typeof OP];
@@ -71,4 +72,5 @@ export const ZONE_HANDLED_OPCODES = new Set<number>([
   OP.MOVE_ITEM,
   OP.DELETE_ITEM,
   OP.GM_COMMAND,
+  OP.JOURNAL_NOTE,
 ]);

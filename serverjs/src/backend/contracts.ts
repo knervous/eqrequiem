@@ -84,7 +84,17 @@ export type BackendRequest =
       quantity: number;
     }
   | ({ type: "move_item" } & BackendMoveItem)
-  | { type: "delete_item"; slot: number; bag: number };
+  | { type: "delete_item"; slot: number; bag: number }
+  /** The player chose to keep something: a line an NPC said, or a note of their own. */
+  | {
+      type: "journal_note";
+      action: "add" | "remove" | "pin";
+      body?: string;
+      source?: string;
+      noteId?: number;
+      pinned?: boolean;
+      withPosition?: boolean;
+    };
 
 export type BackendEventKind =
   | "jwt_response"

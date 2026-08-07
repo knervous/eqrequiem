@@ -283,6 +283,29 @@ const runtimeMigrations: Migration[] = [{
       PRIMARY KEY(character_id, knowledge_key),
       FOREIGN KEY(character_id) REFERENCES characters(id) ON DELETE CASCADE)`,
   ],
+}, {
+  version: 7,
+  statements: (database) => {
+    const id = identity(database);
+    return [
+      // What the player chose to remember, as opposed to what the world told them.
+      // Deliberately its own scope: no content author has to annotate a line perfectly
+      // for the player to be able to keep it.
+      `CREATE TABLE IF NOT EXISTS character_journal_notes (
+        id ${id}, character_id BIGINT NOT NULL,
+        source TEXT NOT NULL DEFAULT '', body TEXT NOT NULL,
+        zone_id BIGINT, x REAL, y REAL, z REAL,
+        pinned INTEGER NOT NULL DEFAULT 0,
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY(character_id) REFERENCES characters(id) ON DELETE CASCADE)`,
+      createIndex(
+        database,
+        "character_journal_notes_character_idx",
+        "character_journal_notes",
+        "character_id, created_at",
+      ),
+    ];
+  },
 }];
 
 export function applyCanonicalContentSchema(database: DatabaseBackend): Promise<void> {

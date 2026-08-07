@@ -9,6 +9,7 @@ import { QuestManager } from "../zone/quest-manager.js";
 import { QuestEffectApplier } from "../zone/quest-effect-applier.js";
 import { CharacterProgressRepository } from "../progression/character-progress-repository.js";
 import { combatExperience, splitGroupExperience } from "../zone/quest-progression.js";
+import { worldHourAt } from "../zone/world-clock.js";
 import { radiansToEqHeading } from "../zone/heading.js";
 import type { QuestEffect } from "../zone/quest-types.js";
 import { questDefinitionsForZone, questRegistryForZone } from "../zone/quest-zone-registry.js";
@@ -303,7 +304,81 @@ export class EmbeddedGameBackend implements GameBackend {
         return this.moveItem(sessionId, request);
       case "delete_item":
         return this.deleteItem(sessionId, request.slot, request.bag);
+      case "journal_note":
+        return this.journalNote(sessionId, request);
     }
+  }
+
+  /**
+   * The player's own memory. The world decides what it tells you; you decide what is
+   * worth keeping — no content author has to annotate every useful sentence perfectly.
+   */
+  private async journalNote(
+    sessionId: number,
+    request: Extract<BackendRequest, { type: "journal_note" }>,
+  ): Promise<BackendEvent[]> {
+    const session = await this.ensureSelectedCharacter(sessionId);
+    if (!session.selectedCharacter) return [];
+    const character = await this.character(session.selectedCharacter);
+    if (!character) return [];
+    const characterId = Number(character.id);
+    if (request.action === "add") {
+      const body = (request.body ?? "").trim().slice(0, 500);
+      if (!body) return [];
+      const position = request.withPosition
+        ? {
+            zoneId: session.activeZone?.zoneId ?? null,
+            x: Number(character.x),
+            y: Number(character.y),
+            z: Number(character.z),
+          }
+        : { zoneId: null, x: null, y: null, z: null };
+      await this.database.execute(
+        `INSERT INTO character_journal_notes
+         (character_id, source, body, zone_id, x, y, z)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [
+          characterId,
+          (request.source ?? "").slice(0, 120),
+          body,
+          position.zoneId,
+          position.x,
+          position.y,
+          position.z,
+        ],
+      );
+    } else if (request.action === "remove" && request.noteId) {
+      await this.database.execute(
+        "DELETE FROM character_journal_notes WHERE id = ? AND character_id = ?",
+        [request.noteId, characterId],
+      );
+    } else if (request.action === "pin" && request.noteId) {
+      await this.database.execute(
+        "UPDATE character_journal_notes SET pinned = ? WHERE id = ? AND character_id = ?",
+        [request.pinned ? 1 : 0, request.noteId, characterId],
+      );
+    }
+    return [await this.journalEvent(sessionId, characterId)];
+  }
+
+  /** The character's journal as it stands: discovered leads plus their own notes. */
+  private async journalEvent(
+    sessionId: number,
+    characterId: number,
+  ): Promise<BackendEvent> {
+    const session = this.sessions.get(sessionId);
+    const manager = session?.activeZone
+      ? this.questManager(session.activeZone.zoneId, session.activeZone.instanceId)
+      : null;
+    return event(
+      "journal_update",
+      {
+        entries: manager?.journalFor(sessionId) ?? [],
+        notes: await this.progressRepository.notes(characterId),
+        changed: null,
+      },
+      "control-stream",
+    );
   }
 
   async close(): Promise<void> {
@@ -836,6 +911,7 @@ export class EmbeddedGameBackend implements GameBackend {
     const key = `${zoneId}:${instanceId}`;
     const current = this.questManagers.get(key);
     if (current) {
+      current.setWorldContext({ timeOfDay: worldHourAt(Date.now()) });
       return current;
     }
     const created = new QuestManager(
@@ -853,6 +929,7 @@ export class EmbeddedGameBackend implements GameBackend {
       if (!definitions.has(definition.id)) definitions.set(definition.id, definition);
     }
     created.replace([...definitions.values()], 1);
+    created.setWorldContext({ timeOfDay: worldHourAt(Date.now()) });
     this.questManagers.set(key, created);
     return created;
   }

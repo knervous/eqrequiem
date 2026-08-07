@@ -481,6 +481,59 @@
   border-left-color: var(--rq-bronze);
 }
 
+.rq-journal__notes h4 {
+  color: var(--rq-ash);
+}
+
+.rq-journal__lead--kept {
+  border-left-style: dashed;
+}
+
+.rq-journal__note-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.rq-journal__note-actions button {
+  border: none;
+  background: none;
+  color: var(--rq-ash);
+  font-size: 9px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.rq-journal__note-actions button:hover,
+.rq-chat__remember:hover {
+  color: var(--rq-bronze-light);
+}
+
+.rq-chat__line {
+  position: relative;
+}
+
+/* Stays out of the way until the player is actually considering the line. */
+.rq-chat__remember {
+  display: none;
+  border: none;
+  margin-left: 6px;
+  padding: 0;
+  background: none;
+  color: var(--rq-ash);
+  font-size: 9px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  vertical-align: middle;
+}
+
+.rq-chat__line:hover .rq-chat__remember,
+.rq-chat__line:focus-within .rq-chat__remember {
+  display: inline;
+}
+
 .rq-journal__lead.is-resolved p,
 .rq-journal__lead--resolved p {
   color: var(--rq-ash);

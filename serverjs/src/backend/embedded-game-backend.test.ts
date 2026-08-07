@@ -410,6 +410,46 @@ describe("embedded game backend", () => {
       "qeynos2.patrol_missing",
       "qeynos2.varen_led_patrol",
     ]);
+
+    // The player can also keep a line the world never annotated as important.
+    const kept = await backend.handle(4, {
+      type: "journal_note",
+      action: "add",
+      body: "Varen used to take his patrol through the old aqueduct.",
+      source: "Guard Gehnus",
+      withPosition: true,
+    });
+    assert.equal(kept[0]?.type, "journal_update");
+    const notes = kept[0]!.value.notes as Array<{
+      id: number;
+      body: string;
+      source: string;
+      pinned: boolean;
+      place: unknown;
+    }>;
+    assert.equal(notes.length, 1);
+    assert.equal(notes[0]?.source, "Guard Gehnus");
+    assert.notEqual(notes[0]?.place, null);
+    // Server-authored leads are unaffected by the player's own memory.
+    assert.equal((kept[0]!.value.entries as unknown[]).length, 2);
+
+    const pinned = await backend.handle(4, {
+      type: "journal_note",
+      action: "pin",
+      noteId: notes[0]!.id,
+      pinned: true,
+    });
+    assert.equal(
+      (pinned[0]!.value.notes as Array<{ pinned: boolean }>)[0]?.pinned,
+      true,
+    );
+
+    const dropped = await backend.handle(4, {
+      type: "journal_note",
+      action: "remove",
+      noteId: notes[0]!.id,
+    });
+    assert.deepEqual(dropped[0]?.value.notes, []);
     await backend.close();
   });
 

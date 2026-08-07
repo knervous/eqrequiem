@@ -18,6 +18,7 @@ import {
 } from "../protocol/world-state.js";
 import type { InboundPacket } from "../protocol/index.js";
 import { OP } from "../protocol/opcodes.js";
+import { decodeRequest } from "../backend/packet-adapter.js";
 import { encodeSidecar, SIDECAR_SCHEMA } from "../protocol/sidecar-codec.js";
 import type { PersistService } from "../persist/index.js";
 import { GameDataRepository } from "../persist/game-data-repository.js";
@@ -37,7 +38,10 @@ import type {
   ZonePcDeathMessage,
   ZoneQuestEffectsMessage,
 } from "./worker-types.js";
-import { CharacterProgressRepository } from "../progression/character-progress-repository.js";
+import {
+  CharacterProgressRepository,
+  type CharacterJournalNote,
+} from "../progression/character-progress-repository.js";
 import { QuestEffectApplier, type QuestEffectSource } from "./quest-effect-applier.js";
 import type { QuestPersistenceBatch } from "./quest-manager.js";
 import { journalFromState, type QuestJournalEntry } from "./quest-state.js";
@@ -371,6 +375,19 @@ export class ZoneService {
             });
           });
       }
+    }
+
+    if (packet.opcode === OP.JOURNAL_NOTE) {
+      // The player's own memory never reaches the simulation; it is pure persistence.
+      void this.handleJournalNote(packet.sessionId, packet.payload).catch(
+        (error: unknown) => {
+          this.logger.warn("Journal note failed", {
+            sessionId: packet.sessionId,
+            error: error instanceof Error ? error.message : String(error),
+          });
+        },
+      );
+      return;
     }
 
     this.workerPool.enqueue(zoneId, instanceId, {
@@ -771,7 +788,12 @@ export class ZoneService {
           }),
         );
       }
-      await this.sendJournal(sessionId, journalFromState(snapshot), null);
+      await this.sendJournal(
+        sessionId,
+        journalFromState(snapshot),
+        await repository.notes(characterId),
+        null,
+      );
     } catch (error: unknown) {
       this.logger.warn("Quest character load failed", {
         sessionId,
@@ -781,15 +803,93 @@ export class ZoneService {
     }
   }
 
+  /** Add, drop or pin a player-authored note, then echo the whole journal back. */
+  private async handleJournalNote(
+    sessionId: number,
+    payload: Uint8Array,
+  ): Promise<void> {
+    const repository = this.progressRepository;
+    const entity = this.sessionEntities.get(sessionId);
+    const request = decodeRequest(OP.JOURNAL_NOTE, payload);
+    if (!repository || !entity || request?.type !== "journal_note") return;
+    const runtime = this.databases.backend("runtime");
+    if (request.action === "add") {
+      const body = (request.body ?? "").trim().slice(0, 500);
+      if (!body) return;
+      const position = request.withPosition
+        ? await this.characterPosition(entity.characterId)
+        : null;
+      await runtime.execute(
+        `INSERT INTO character_journal_notes
+         (character_id, source, body, zone_id, x, y, z)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [
+          entity.characterId,
+          (request.source ?? "").slice(0, 120),
+          body,
+          position?.zoneId ?? null,
+          position?.x ?? null,
+          position?.y ?? null,
+          position?.z ?? null,
+        ],
+      );
+    } else if (request.action === "remove" && request.noteId) {
+      await runtime.execute(
+        "DELETE FROM character_journal_notes WHERE id = ? AND character_id = ?",
+        [request.noteId, entity.characterId],
+      );
+    } else if (request.action === "pin" && request.noteId) {
+      await runtime.execute(
+        "UPDATE character_journal_notes SET pinned = ? WHERE id = ? AND character_id = ?",
+        [request.pinned ? 1 : 0, request.noteId, entity.characterId],
+      );
+    }
+    const snapshot = await repository.load(entity.characterId);
+    await this.sendJournal(
+      sessionId,
+      snapshot ? journalFromState(snapshot) : [],
+      await repository.notes(entity.characterId),
+      null,
+    );
+  }
+
+  private async characterPosition(characterId: number): Promise<{
+    zoneId: number;
+    x: number;
+    y: number;
+    z: number;
+  } | null> {
+    const row = (
+      await this.databases.backend("runtime").query<{
+        zone_id: number;
+        x: number;
+        y: number;
+        z: number;
+      }>(
+        "SELECT zone_id, x, y, z FROM character_positions WHERE character_id = ? LIMIT 1",
+        [characterId],
+      )
+    ).rows[0];
+    return row
+      ? {
+          zoneId: Number(row.zone_id),
+          x: Number(row.x),
+          y: Number(row.y),
+          z: Number(row.z),
+        }
+      : null;
+  }
+
   private async sendJournal(
     sessionId: number,
     entries: readonly QuestJournalEntry[],
+    notes: readonly CharacterJournalNote[],
     changed: unknown,
   ): Promise<void> {
     await this.sendReliable(
       sessionId,
       OP.JOURNAL_UPDATE,
-      encodeSidecar(SIDECAR_SCHEMA.JOURNAL_UPDATE, { entries, changed }),
+      encodeSidecar(SIDECAR_SCHEMA.JOURNAL_UPDATE, { entries, notes, changed }),
     );
   }
 

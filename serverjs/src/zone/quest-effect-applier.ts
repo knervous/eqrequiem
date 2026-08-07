@@ -1,4 +1,7 @@
-import type { CharacterProgressRepository } from "../progression/character-progress-repository.js";
+import type {
+  CharacterJournalNote,
+  CharacterProgressRepository,
+} from "../progression/character-progress-repository.js";
 import type { QuestPersistenceBatch } from "./quest-manager.js";
 import type { QuestJournalEntry } from "./quest-state.js";
 import { isPersistentQuestEffect, type QuestEffect } from "./quest-types.js";
@@ -33,6 +36,8 @@ export interface QuestClientDelivery {
 
 export interface QuestJournalPayload {
   readonly entries: readonly QuestJournalEntry[];
+  /** What the player chose to keep, alongside what the world told them. */
+  readonly notes: readonly CharacterJournalNote[];
   /** The lead that just changed, so the client can highlight it without diffing. */
   readonly changed: {
     readonly questKey: string;
@@ -110,11 +115,13 @@ export class QuestEffectApplier {
     }
 
     for (const [sessionId, changed] of journalDirty) {
+      const characterId = manager.character(sessionId)?.characterId ?? null;
       deliveries.push({
         sessionId,
         type: "journal_update",
         value: {
           entries: manager.journalFor(sessionId),
+          notes: characterId === null ? [] : await this.repository.notes(characterId),
           changed,
         } satisfies QuestJournalPayload as unknown as Record<string, unknown>,
       });
@@ -155,6 +162,7 @@ export class QuestEffectApplier {
         type: "journal_update",
         value: {
           entries: manager.journalFor(sessionId),
+          notes: await this.repository.notes(characterId),
           changed: null,
         } satisfies QuestJournalPayload as unknown as Record<string, unknown>,
       },

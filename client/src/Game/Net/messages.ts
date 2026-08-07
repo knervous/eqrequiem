@@ -482,8 +482,27 @@ export interface JournalLead {
   order: number;
   archived: boolean;
 }
+/** A line the player chose to keep, in their own words or an NPC's. */
+export interface JournalNoteEntry {
+  id: number;
+  source: string;
+  body: string;
+  pinned: boolean;
+  place: { zoneId: number; x: number; y: number; z: number } | null;
+}
+/** Player intent: keep, drop or pin a note. */
+export interface JournalNote {
+  action: "add" | "remove" | "pin";
+  body?: string;
+  source?: string;
+  noteId?: number;
+  pinned?: boolean;
+  withPosition?: boolean;
+}
+export const JournalNote = defineNetMessage<JournalNote>(75, "JournalNote");
 export interface JournalUpdate {
   entries: JournalLead[];
+  notes: JournalNoteEntry[];
   changed: {
     questKey: string;
     leadKey: string;

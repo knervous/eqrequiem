@@ -163,9 +163,15 @@ describe("generated discoverability index", () => {
   it("derives bindings from authored code rather than a maintained table", () => {
     const bindings = questBindingsForSource("npc", "Guard Gehnus", "qeynos2");
     assert.deepEqual(bindings.map((binding) => [binding.questKey, binding.role]), [
+      // He carries the zone's rumors and owns a role in the patrol thread.
+      ["zone:qeynos2", "rumor"],
       ["qeynos2:missing-patrol", "rumor"],
     ]);
-    assert.deepEqual(bindings[0]?.recommendedLevel, [3, 7]);
+    assert.deepEqual(
+      bindings.find((binding) => binding.questKey === "qeynos2:missing-patrol")
+        ?.recommendedLevel,
+      [3, 7],
+    );
   });
 
   it("marks an NPC only once the character has the connecting knowledge", () => {

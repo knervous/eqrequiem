@@ -82,4 +82,5 @@ export const SIDECAR_SCHEMA = Object.freeze({
   MERCHANT_ERROR: 72,
   JOURNAL_UPDATE: 73,
   EXPERIENCE_UPDATE: 74,
+  JOURNAL_NOTE: 75,
 });

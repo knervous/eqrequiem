@@ -1,3 +1,4 @@
+import { RumorNetwork, type RumorSourceOptions } from "./quest-rumors.js";
 import type {
   QuestBinding,
   QuestBindingRole,
@@ -213,9 +214,26 @@ export class QuestScope {
 export class ZoneQuestRegistry {
   readonly #scopes = new Map<string, QuestScope>();
   readonly #ambient: QuestScope;
+  readonly #rumors = new RumorNetwork();
 
   constructor(readonly zone: ZoneQuestIdentity) {
     this.#ambient = new QuestScope(`zone:${zone.shortName}`, zone, { journal: "none" });
+  }
+
+  /** The zone's rumor network: what is currently worth talking about here. */
+  get rumors(): RumorNetwork {
+    return this.#rumors;
+  }
+
+  /**
+   * Makes an NPC somewhere a player can plausibly ask what is happening. The binding is
+   * deliberately hidden: a rumor source is found by being a guard at a gate or a keeper
+   * behind a bar, not by wearing a marker.
+   */
+  rumorSource(name: string, options: RumorSourceOptions = {}): this {
+    this.#ambient.bindNpc(name, { role: "rumor", visibility: "hidden" });
+    this.#ambient.registerNpc(name, this.#rumors.sourceHandler(name, options));
+    return this;
   }
 
   /** Declares (or returns) an authored quest scope inside this zone. */

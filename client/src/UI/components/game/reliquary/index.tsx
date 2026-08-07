@@ -31,6 +31,7 @@ import type { JournalLead } from '@game/Net/messages';
 import GameManager from '@game/Manager/game-manager';
 import type { Entity } from '@game/Model/entity';
 import Player from '@game/Player/player';
+import { playerJournal } from '@game/Player/player-journal';
 import { MusicPlayer } from '@game/Music/music-player';
 import {
   InventorySlot,
@@ -300,9 +301,10 @@ const FieldJournal: React.FC = () => {
       .sort((left, right) => Number(left.archived) - Number(right.archived));
   }, [journal]);
 
+  const notes = journal?.notes ?? [];
   return (
     <ReliquaryPanel title="Field Journal" className="rq-journal">
-      {threads.length === 0 ? (
+      {threads.length === 0 && notes.length === 0 ? (
         <div className="rq-empty-state">No active entries.</div>
       ) : (
         threads.map((thread) => (
@@ -329,6 +331,26 @@ const FieldJournal: React.FC = () => {
           </section>
         ))
       )}
+      {notes.length > 0 ? (
+        <section className="rq-journal__thread rq-journal__notes">
+          <h4>Kept</h4>
+          {notes.map((note) => (
+            <article key={note.id} className="rq-journal__lead rq-journal__lead--kept">
+              {note.source ? <span className="rq-journal__kind">{note.source}</span> : null}
+              <p>{note.body}</p>
+              <div className="rq-journal__note-actions">
+                <button
+                  aria-pressed={note.pinned}
+                  onClick={() => void playerJournal.pin(note.id, !note.pinned)}
+                >
+                  {note.pinned ? 'Unpin' : 'Pin'}
+                </button>
+                <button onClick={() => void playerJournal.forget(note.id)}>Forget</button>
+              </div>
+            </article>
+          ))}
+        </section>
+      ) : null}
     </ReliquaryPanel>
   );
 };
@@ -736,6 +758,26 @@ const SurveyMap: React.FC<{ telemetry: PlayerTelemetry }> = ({ telemetry }) => {
   );
 };
 
+/** Command-link tokens are machinery; a remembered line should read as it was spoken. */
+const stripLinks = (text: string): string =>
+  text
+    .replace(/\{\{([\s\S]*?)\}\}/g, (_token, encoded: string) => {
+      try {
+        const link = JSON.parse(atob(encoded)) as { label?: string };
+        return link.label ?? '';
+      } catch {
+        return '';
+      }
+    })
+    .replace(/\s+/g, ' ')
+    .trim();
+
+/** "Guard Gehnus says, ..." — keep who said it, so the note has a source. */
+const senderOf = (text: string): string => {
+  const match = /^([A-Za-z_' ]{2,32})\s(?:says|tells|shouts|mutters|whispers)\b/.exec(text);
+  return match?.[1]?.trim() ?? '';
+};
+
 const Chat: React.FC = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -764,8 +806,23 @@ const Chat: React.FC = () => {
     <ReliquaryPanel title="Chat" className="rq-chat">
       <div ref={scrollRef} className="rq-chat__messages" aria-live="polite">
         {messages.length ? messages.map((message, index) => (
-          <div key={`${index}-${message.message}`} style={{ color: message.color || undefined }}>
+          <div
+            key={`${index}-${message.message}`}
+            className="rq-chat__line"
+            style={{ color: message.color || undefined }}
+          >
             <ParsedMessage text={message.message} onExecute={executeLink} />
+            {/* The player decides what was important, not the content author. */}
+            <button
+              className="rq-chat__remember"
+              title="Keep this in your Field Journal"
+              onClick={() => void playerJournal.remember(
+                stripLinks(message.message),
+                senderOf(message.message),
+              )}
+            >
+              Remember
+            </button>
           </div>
         )) : <div className="rq-empty-state">The road is quiet.</div>}
       </div>

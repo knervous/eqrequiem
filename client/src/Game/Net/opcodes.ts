@@ -618,5 +618,6 @@ export enum OpCodes {
     MerchantSell = 619,
     MerchantError = 620,
     JournalUpdate = 621,
-    ExperienceUpdate = 622
+    ExperienceUpdate = 622,
+    JournalNote = 623
 }

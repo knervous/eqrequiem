@@ -288,6 +288,24 @@ export function decodeRequest(
         channel: number(value.chanNum, 0),
       };
     }
+    case OP.JOURNAL_NOTE: {
+      const value = decodeSidecar<Record<string, unknown>>(
+        SIDECAR_SCHEMA.JOURNAL_NOTE,
+        payload,
+      );
+      if (!value) return null;
+      const action = String(value.action ?? "add");
+      if (action !== "add" && action !== "remove" && action !== "pin") return null;
+      return {
+        type: "journal_note",
+        action,
+        body: String(value.body ?? ""),
+        source: String(value.source ?? ""),
+        noteId: number(value.noteId, 0),
+        pinned: value.pinned === true,
+        withPosition: value.withPosition === true,
+      };
+    }
     case OP.MOVE_ITEM: {
       const value = decodeMoveItemRequest(payload);
       return value ? { type: "move_item", ...value } : null;

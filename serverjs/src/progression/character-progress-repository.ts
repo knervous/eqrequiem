@@ -25,6 +25,31 @@ interface KnowledgeRow extends DatabaseRow {
   data_json: string;
 }
 
+interface JournalNoteRow extends DatabaseRow {
+  id: number;
+  source: string;
+  body: string;
+  zone_id: number | null;
+  x: number | null;
+  y: number | null;
+  z: number | null;
+  pinned: number;
+}
+
+/** Something the player chose to remember, in their own words or an NPC's. */
+export interface CharacterJournalNote {
+  readonly id: number;
+  readonly source: string;
+  readonly body: string;
+  readonly pinned: boolean;
+  readonly place: {
+    readonly zoneId: number;
+    readonly x: number;
+    readonly y: number;
+    readonly z: number;
+  } | null;
+}
+
 interface InventoryRow extends DatabaseRow {
   bag: number;
   slot: number;
@@ -175,6 +200,37 @@ export class CharacterProgressRepository {
       { experience: Number(row.experience ?? 0), level: Number(row.level ?? 1) },
       0,
     );
+  }
+
+  /** Player-authored journal notes, pinned first, newest last. */
+  async notes(characterId: number): Promise<readonly CharacterJournalNote[]> {
+    try {
+      const rows = (
+        await this.runtime.query<JournalNoteRow>(
+          `SELECT id, source, body, zone_id, x, y, z, pinned
+           FROM character_journal_notes WHERE character_id = ?
+           ORDER BY pinned DESC, id`,
+          [characterId],
+        )
+      ).rows;
+      return rows.map((row) => ({
+        id: Number(row.id),
+        source: String(row.source ?? ""),
+        body: String(row.body ?? ""),
+        pinned: Number(row.pinned ?? 0) === 1,
+        place: row.zone_id === null || row.zone_id === undefined
+          ? null
+          : {
+              zoneId: Number(row.zone_id),
+              x: Number(row.x ?? 0),
+              y: Number(row.y ?? 0),
+              z: Number(row.z ?? 0),
+            },
+      }));
+    } catch {
+      // A runtime database predating the notes table simply has no notes.
+      return [];
+    }
   }
 
   private async questStates(

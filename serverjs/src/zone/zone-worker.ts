@@ -29,6 +29,7 @@ import {
 } from "./quest-types.js";
 import { questDefinitionsForZone, questRegistryForZone } from "./quest-zone-registry.js";
 import { combatExperience, splitGroupExperience } from "./quest-progression.js";
+import { worldHourAt } from "./world-clock.js";
 import { ZoneSpatialIndex } from "./spatial-index.js";
 import type { ZoneNpcSpawnDefinition } from "./zone-content.js";
 import {
@@ -296,6 +297,7 @@ function runZoneTick(): void {
   lastTickAtMs = nowMs;
   simulationTimeMs += deltaMs;
 
+  quests.setWorldContext({ timeOfDay: worldHourAt(Date.now()) });
   applyQuestEffects(quests.dispatch({ type: "npc_tick", tick }));
   applyQuestEffects(quests.advanceTimers(tick));
   for (const request of engagement?.tick(tick) ?? []) {
