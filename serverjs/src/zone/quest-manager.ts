@@ -37,6 +37,8 @@ import {
 
 export interface QuestManagerOptions {
   readonly tickRateHz?: number;
+  /** Injectable clock so timer content is testable without sleeping. */
+  readonly now?: () => number;
 }
 
 /** One character's pending writes, drained by the boundary that owns the database. */
@@ -64,7 +66,8 @@ interface ProximityWatcher {
 }
 
 interface QuestTimer {
-  readonly dueTick: number;
+  /** Wall-clock due time: a timer must not depend on how often a client moves. */
+  readonly dueAtMs: number;
   readonly sessionId: number | null;
   readonly questKey: string;
   readonly name: string;
@@ -89,7 +92,6 @@ export class QuestManager {
   private timeOfDay: number | null = null;
   private weather: string | null = null;
   private revision = 0;
-  private readonly tickMs: number;
 
   constructor(
     private readonly zoneId: number,
@@ -97,8 +99,10 @@ export class QuestManager {
     private readonly shortName: string | null = null,
     options: QuestManagerOptions = {},
   ) {
-    this.tickMs = 1000 / Math.max(1, options.tickRateHz ?? 10);
+    this.clock = options.now ?? (() => Date.now());
   }
+
+  private readonly clock: () => number;
 
   hydrate(state: {
     npcs?: readonly QuestNpcSnapshot[];
@@ -263,11 +267,11 @@ export class QuestManager {
   }
 
   /** Named per-character timers, so scripts never poll `npc_tick`. */
-  advanceTimers(tick: number): QuestEffect[] {
+  advanceTimers(tick: number, nowMs = Date.now()): QuestEffect[] {
     if (this.timers.length === 0) return [];
-    const due = this.timers.filter((timer) => timer.dueTick <= tick);
+    const due = this.timers.filter((timer) => timer.dueAtMs <= nowMs);
     if (due.length === 0) return [];
-    this.timers = this.timers.filter((timer) => timer.dueTick > tick);
+    this.timers = this.timers.filter((timer) => timer.dueAtMs > nowMs);
     const effects: QuestEffect[] = [];
     for (const timer of due) {
       const actor = timer.sessionId === null ? undefined : this.playerSnapshots.get(timer.sessionId);
@@ -334,7 +338,6 @@ export class QuestManager {
   dispatch(event: QuestEvent): QuestEffect[] {
     const effects: QuestEffect[] = [];
     const emit = (effect: QuestEffect): void => { effects.push(effect); };
-    this.currentTick = event.tick;
     if (event.actor) this.remember(event.actor);
     if (event.receiver) this.remember(event.receiver);
     const turnIn = event.type === "item_turn_in" ? { consumed: false } : null;
@@ -411,7 +414,9 @@ export class QuestManager {
     if (sessionId === undefined) return true;
     const character = this.characters.get(sessionId);
     if (!character) return true;
-    const handlerKey = `${handler.event}:${handlerIndex}`;
+    // An explicit key survives content edits; the positional fallback does not, which
+    // is why `onceKey` is required by the manifest check for anything shipped.
+    const handlerKey = handler.onceKey ?? `${handler.event}:${handlerIndex}`;
     if (character.handlerFired(quest.id, handlerKey)) return false;
     character.markHandlerFired(quest.id, handlerKey);
     emit({
@@ -672,21 +677,27 @@ export class QuestManager {
     name: string,
     delayMs: number,
   ): void {
-    const dueTick = this.currentTick + Math.max(1, Math.ceil(delayMs / this.tickMs));
     this.timers = this.timers.filter(
       (timer) => !(timer.sessionId === sessionId && timer.questKey === questKey && timer.name === name),
     );
-    this.timers.push({ dueTick, sessionId, questKey, name });
+    this.timers.push({
+      dueAtMs: this.now() + Math.max(0, delayMs),
+      sessionId,
+      questKey,
+      name,
+    });
   }
 
-  private currentTick = 0;
+  /** Overridable so tests can drive named timers without sleeping. */
+  private now(): number {
+    return this.clock();
+  }
 
   private syncRegions(
     sessionId: number,
     position: QuestVector3,
     tick: number,
   ): QuestEffect[] {
-    this.currentTick = tick;
     if (this.regions.size === 0) return [];
     const previous = this.regionMembership.get(sessionId) ?? new Set<string>();
     const next = new Set<string>();
@@ -1129,6 +1140,24 @@ class PlayerFacade extends EntityFacade implements QuestPlayer {
       count: (itemId) => state.inventory
         .filter((item) => item.id === itemId)
         .reduce((total, item) => total + (item.quantity ?? 1), 0),
+      grantOnce: (grantKey: string, itemId: number, quantity = 1) => {
+        if (!state.grant(questId, `item:${grantKey}`)) return false;
+        // Reflect it immediately so the same dispatch can branch on carrying it.
+        state.setInventory([
+          ...state.inventory,
+          { id: itemId, name: `Item ${itemId}`, quantity },
+        ]);
+        emit({
+          type: "grant_item",
+          sessionId,
+          characterId,
+          questKey: questId,
+          itemId,
+          quantity,
+          grantKey,
+        });
+        return true;
+      },
     };
   }
 }

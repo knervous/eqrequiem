@@ -161,6 +161,11 @@ export interface QuestPlayerInventoryApi {
   has(itemId: number): boolean;
   count(itemId: number): number;
   readonly items: readonly QuestItemSnapshot[];
+  /**
+   * Places an item in the character's inventory. Idempotent on `grantKey`, so a
+   * reconnect or a retriggered discovery cannot mint duplicates.
+   */
+  grantOnce(grantKey: string, itemId: number, quantity?: number): boolean;
 }
 
 export interface QuestPlayer extends QuestEntity {
@@ -403,8 +408,14 @@ export interface QuestHandlerOptions {
   radius?: number;
   /** Named timer this handler answers to. */
   timerName?: string;
-  /** Runs at most once per character for the owning quest key. */
+  /**
+   * Runs at most once per character for the owning quest key. Pair it with `onceKey`
+   * on anything shipped: without one the claim is keyed by registration order, so
+   * inserting a handler above it silently re-fires or suppresses the content.
+   */
   oncePerPlayer?: boolean;
+  /** Stable identity for the `oncePerPlayer` claim. Survives handler reordering. */
+  onceKey?: string;
   actions?: QuestAction[];
 }
 
@@ -552,6 +563,16 @@ export type QuestPersistentEffect =
       awardKey: string | null;
     }
   | {
+      type: 'grant_item';
+      sessionId: number;
+      characterId: number | null;
+      questKey: string;
+      itemId: number;
+      quantity: number;
+      /** Idempotency anchor: the flag lives in quest state, like a one-time award. */
+      grantKey: string | null;
+    }
+  | {
       type: 'item_turn_in_result';
       sessionId: number;
       characterId: number | null;
@@ -570,6 +591,7 @@ const PERSISTENT_EFFECT_TYPES = new Set<QuestEffect['type']>([
   'journal_resolve',
   'journal_archive',
   'award_xp',
+  'grant_item',
   'item_turn_in_result',
 ]);
 

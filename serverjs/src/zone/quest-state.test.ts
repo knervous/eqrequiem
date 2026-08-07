@@ -9,10 +9,16 @@ import { isQuestPlayer, onQuest, type QuestEffect } from "./quest-types.js";
 const SESSION = 7;
 const CHARACTER = 42;
 
+/** Test clock so timer content is exercised without sleeping. */
+let nowMs = 1_000_000;
+
 function shard(build: (registry: ZoneQuestRegistry) => void): QuestManager {
   const registry = new ZoneQuestRegistry({ id: 2, shortName: "qeynos2" });
   build(registry);
-  const manager = new QuestManager(2, 0, "qeynos2", { tickRateHz: 10 });
+  const manager = new QuestManager(2, 0, "qeynos2", {
+    tickRateHz: 10,
+    now: () => nowMs,
+  });
   manager.replace(registry.definitions(), 1);
   manager.hydrate({
     players: [{ kind: "player", sessionId: SESSION, name: "Ezaltarem", level: 5 }],
@@ -204,7 +210,8 @@ describe("expanded event surface", () => {
     assert.equal(manager.character(SESSION)?.knows("killed.a_gnoll_pup"), true);
   });
 
-  it("fires named timers on the tick they come due, once", () => {
+  it("fires named timers when they come due in wall time, once", () => {
+    nowMs = 1_000_000;
     const fired: string[] = [];
     const manager = shard((registry) => {
       const scope = registry.quest("ritual");
@@ -220,9 +227,10 @@ describe("expanded event surface", () => {
     });
 
     hail(manager, "Guard_Gehnus");
-    assert.deepEqual(manager.advanceTimers(2), []);
-    manager.advanceTimers(10);
-    manager.advanceTimers(20);
+    // Ticks alone must not fire it: a character standing still still gets their timer.
+    assert.deepEqual(manager.advanceTimers(2, nowMs + 100), []);
+    manager.advanceTimers(3, nowMs + 500);
+    manager.advanceTimers(4, nowMs + 5_000);
     assert.deepEqual(fired, ["meet-at-midnight:Ezaltarem"]);
   });
 

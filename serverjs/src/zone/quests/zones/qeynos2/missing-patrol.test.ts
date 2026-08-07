@@ -105,6 +105,16 @@ describe("The Missing Patrol", () => {
     assert.equal(lead?.kind, "observation");
     assert.deepEqual(lead?.place, { kind: "area", regionId: "north-patrol-camp" });
     assert.ok(effects.some((effect) => effect.type === "award_xp"));
+    // Finding the camp puts the evidence in your hands, so the branches that need it
+    // are reachable by playing rather than only by test fixture.
+    const grant = effects.find((effect) => effect.type === "grant_item");
+    assert.equal(grant?.type === "grant_item" && grant.itemId, BROKEN_SPEAR_ITEM_ID);
+    assert.equal(character?.inventory.some((item) => item.id === BROKEN_SPEAR_ITEM_ID), true);
+
+    // Re-entering the camp must not mint a second spear.
+    manager.updatePlayerPosition(SESSION, { x: 0, y: 0, z: 0 }, 2);
+    const again = manager.updatePlayerPosition(SESSION, CAMP, 3);
+    assert.equal(again.some((effect) => effect.type === "grant_item"), false);
   });
 
   it("gates the north road on level without hiding the quest", () => {
@@ -125,9 +135,8 @@ describe("The Missing Patrol", () => {
   });
 
   it("resolves through Gehnus when the player carries the evidence back", () => {
-    const manager = shard({
-      inventory: [{ id: BROKEN_SPEAR_ITEM_ID, name: "Rusty Spear", quantity: 1 }],
-    });
+    const manager = shard();
+    // No fixture: walking into the camp is what put the spear in the pack.
     manager.updatePlayerPosition(SESSION, CAMP, 1);
     const effects = say(manager, "Guard_Gehnus", "I found your patrol's spear");
 

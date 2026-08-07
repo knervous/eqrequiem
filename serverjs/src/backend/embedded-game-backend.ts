@@ -8,11 +8,17 @@ import { GameDataRepository } from "../persist/game-data-repository.js";
 import { QuestManager } from "../zone/quest-manager.js";
 import { QuestEffectApplier } from "../zone/quest-effect-applier.js";
 import { CharacterProgressRepository } from "../progression/character-progress-repository.js";
-import { combatExperience, splitGroupExperience } from "../zone/quest-progression.js";
-import { worldHourAt } from "../zone/world-clock.js";
+import {
+  applyJournalNote,
+  attachQuestCharacter,
+  grantedItemEvent,
+  combatExperienceEffects,
+  createZoneQuestManager,
+  creditableSessions,
+  refreshWorldContext,
+} from "../zone/quest-runtime.js";
 import { radiansToEqHeading } from "../zone/heading.js";
 import type { QuestEffect } from "../zone/quest-types.js";
-import { questDefinitionsForZone, questRegistryForZone } from "../zone/quest-zone-registry.js";
 import {
   EmbeddedZoneRuntime,
   type EmbeddedDeathEvent,
@@ -322,42 +328,7 @@ export class EmbeddedGameBackend implements GameBackend {
     const character = await this.character(session.selectedCharacter);
     if (!character) return [];
     const characterId = Number(character.id);
-    if (request.action === "add") {
-      const body = (request.body ?? "").trim().slice(0, 500);
-      if (!body) return [];
-      const position = request.withPosition
-        ? {
-            zoneId: session.activeZone?.zoneId ?? null,
-            x: Number(character.x),
-            y: Number(character.y),
-            z: Number(character.z),
-          }
-        : { zoneId: null, x: null, y: null, z: null };
-      await this.database.execute(
-        `INSERT INTO character_journal_notes
-         (character_id, source, body, zone_id, x, y, z)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        [
-          characterId,
-          (request.source ?? "").slice(0, 120),
-          body,
-          position.zoneId,
-          position.x,
-          position.y,
-          position.z,
-        ],
-      );
-    } else if (request.action === "remove" && request.noteId) {
-      await this.database.execute(
-        "DELETE FROM character_journal_notes WHERE id = ? AND character_id = ?",
-        [request.noteId, characterId],
-      );
-    } else if (request.action === "pin" && request.noteId) {
-      await this.database.execute(
-        "UPDATE character_journal_notes SET pinned = ? WHERE id = ? AND character_id = ?",
-        [request.pinned ? 1 : 0, request.noteId, characterId],
-      );
-    }
+    await applyJournalNote(this.progressRepository, characterId, request);
     return [await this.journalEvent(sessionId, characterId)];
   }
 
@@ -911,25 +882,15 @@ export class EmbeddedGameBackend implements GameBackend {
     const key = `${zoneId}:${instanceId}`;
     const current = this.questManagers.get(key);
     if (current) {
-      current.setWorldContext({ timeOfDay: worldHourAt(Date.now()) });
+      refreshWorldContext(current);
       return current;
     }
-    const created = new QuestManager(
+    const created = createZoneQuestManager({
       zoneId,
       instanceId,
-      questRegistryForZone(zoneId)?.zone.shortName ?? null,
-      { tickRateHz: 10 },
-    );
-    // Content may already carry the code-owned definitions (BUILTIN_QUESTS is derived
-    // from them), so dedupe by quest key or every handler would run twice.
-    const definitions = new Map(
-      questDefinitionsForZone(zoneId).map((definition) => [definition.id, definition]),
-    );
-    for (const definition of this.content.quests ?? []) {
-      if (!definitions.has(definition.id)) definitions.set(definition.id, definition);
-    }
-    created.replace([...definitions.values()], 1);
-    created.setWorldContext({ timeOfDay: worldHourAt(Date.now()) });
+      tickRateHz: 10,
+      extraDefinitions: this.content.quests ?? [],
+    });
     this.questManagers.set(key, created);
     return created;
   }
@@ -971,7 +932,8 @@ export class EmbeddedGameBackend implements GameBackend {
     const events = this.questEvents(effects, actorName);
     const deliveries = await this.questEffects.apply(manager, effects);
     for (const delivery of deliveries) {
-      const outbound = event(delivery.type, delivery.value, "control-stream");
+      const outbound = await this.questDelivery(delivery);
+      if (!outbound) continue;
       if (delivery.sessionId === sessionId) {
         events.push(outbound);
         continue;
@@ -979,6 +941,21 @@ export class EmbeddedGameBackend implements GameBackend {
       this.publish([delivery.sessionId], outbound);
     }
     return events;
+  }
+
+  /** One place that turns a quest delivery into a packet for this transport. */
+  private async questDelivery(
+    delivery: { type: string; value: Record<string, unknown> },
+  ): Promise<BackendEvent | null> {
+    if (delivery.type !== "grant_item") {
+      return event(delivery.type as BackendEvent["type"], delivery.value, "control-stream");
+    }
+    const instance = await grantedItemEvent(
+      this.progressRepository,
+      delivery.value as unknown as { slot: number; bag: number; itemId: number },
+      Number(delivery.value.quantity ?? 1),
+    );
+    return instance ? event("add_item", instance) : null;
   }
 
   private publish(sessionIds: readonly number[], outbound: BackendEvent): void {
@@ -1620,8 +1597,12 @@ export class EmbeddedGameBackend implements GameBackend {
     });
     // Load persisted quest state, knowledge and inventory before any handler runs,
     // then let the world react to the arrival.
-    const record = await this.progressRepository.load(Number(character.id));
-    if (record) manager.attachCharacter(sessionId, record);
+    await attachQuestCharacter(
+      manager,
+      this.progressRepository,
+      sessionId,
+      Number(character.id),
+    );
     const questEvents = await this.commitQuestEffects(
       manager,
       manager.dispatch({
@@ -1650,7 +1631,8 @@ export class EmbeddedGameBackend implements GameBackend {
       sessionId,
       Number(character.id),
     )) {
-      questEvents.push(event(delivery.type, delivery.value, "control-stream"));
+      const outbound = await this.questDelivery(delivery);
+      if (outbound) questEvents.push(outbound);
     }
     return [
       event(
@@ -1864,38 +1846,23 @@ export class EmbeddedGameBackend implements GameBackend {
     const npc = this.zoneNpcs.get(zoneKey)?.get(targetId);
     if (!npc) return;
     const manager = this.questManager(zoneId, instanceId);
-    const credited = creditSessionIds.filter(
-      (sessionId) => manager.character(sessionId) !== null,
-    );
+    const credited = creditableSessions(manager, creditSessionIds);
     this.questTick += 1;
-    const effects = manager.dispatchNpcDeath({
-      tick: this.questTick,
-      npc: { kind: "npc", id: targetId, name: npc.name, level: npc.level },
-      creditSessionIds: credited,
-    });
-    for (const sessionId of credited) {
-      const character = manager.character(sessionId);
-      if (!character?.characterId) continue;
-      const amount = splitGroupExperience(
-        combatExperience(npc.level, character.level),
-        credited.length,
-      );
-      if (amount <= 0) continue;
-      for (const delivery of await this.questEffects.apply(manager, [{
-        type: "award_xp",
-        sessionId,
-        characterId: character.characterId,
-        questKey: `combat:${npc.name}`,
-        amount,
-        source: "combat",
-        sourceKey: npc.name,
-        awardKey: null,
-      }])) {
-        this.publish([delivery.sessionId], event(delivery.type, delivery.value, "control-stream"));
-      }
-    }
+    const effects = [
+      ...manager.dispatchNpcDeath({
+        tick: this.questTick,
+        npc: { kind: "npc", id: targetId, name: npc.name, level: npc.level },
+        creditSessionIds: credited,
+      }),
+      ...combatExperienceEffects(
+        manager,
+        { id: targetId, name: npc.name, level: npc.level },
+        credited,
+      ),
+    ];
     for (const delivery of await this.questEffects.apply(manager, effects)) {
-      this.publish([delivery.sessionId], event(delivery.type, delivery.value, "control-stream"));
+      const outbound = await this.questDelivery(delivery);
+      if (outbound) this.publish([delivery.sessionId], outbound);
     }
     for (const outbound of this.questEvents(effects, "")) {
       this.publish([...credited], outbound);

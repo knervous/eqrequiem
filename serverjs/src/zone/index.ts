@@ -42,9 +42,14 @@ import {
   CharacterProgressRepository,
   type CharacterJournalNote,
 } from "../progression/character-progress-repository.js";
-import { QuestEffectApplier, type QuestEffectSource } from "./quest-effect-applier.js";
+import {
+  QuestEffectApplier,
+  type QuestClientDelivery,
+  type QuestEffectSource,
+} from "./quest-effect-applier.js";
 import type { QuestPersistenceBatch } from "./quest-manager.js";
 import { journalFromState, type QuestJournalEntry } from "./quest-state.js";
+import { applyJournalNote, grantedItemEvent } from "./quest-runtime.js";
 import {
   MerchantRepository,
   MerchantTransactionError,
@@ -425,6 +430,13 @@ export class ZoneService {
     );
     this.questEffects = new QuestEffectApplier(this.progressRepository, {
       onLog: (questId, message) => this.logger.info(message, { questId }),
+      onCommitError: (batch, error) => {
+        this.logger.error("Quest state commit failed; will retry", {
+          characterId: batch.characterId,
+          questKeys: batch.quests.map((quest) => quest.questKey),
+          error: error instanceof Error ? error.message : String(error),
+        });
+      },
     });
     await this.questCatalog.start();
     this.logger.info("Zone service started", {
@@ -812,38 +824,7 @@ export class ZoneService {
     const entity = this.sessionEntities.get(sessionId);
     const request = decodeRequest(OP.JOURNAL_NOTE, payload);
     if (!repository || !entity || request?.type !== "journal_note") return;
-    const runtime = this.databases.backend("runtime");
-    if (request.action === "add") {
-      const body = (request.body ?? "").trim().slice(0, 500);
-      if (!body) return;
-      const position = request.withPosition
-        ? await this.characterPosition(entity.characterId)
-        : null;
-      await runtime.execute(
-        `INSERT INTO character_journal_notes
-         (character_id, source, body, zone_id, x, y, z)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        [
-          entity.characterId,
-          (request.source ?? "").slice(0, 120),
-          body,
-          position?.zoneId ?? null,
-          position?.x ?? null,
-          position?.y ?? null,
-          position?.z ?? null,
-        ],
-      );
-    } else if (request.action === "remove" && request.noteId) {
-      await runtime.execute(
-        "DELETE FROM character_journal_notes WHERE id = ? AND character_id = ?",
-        [request.noteId, entity.characterId],
-      );
-    } else if (request.action === "pin" && request.noteId) {
-      await runtime.execute(
-        "UPDATE character_journal_notes SET pinned = ? WHERE id = ? AND character_id = ?",
-        [request.pinned ? 1 : 0, request.noteId, entity.characterId],
-      );
-    }
+    await applyJournalNote(repository, entity.characterId, request);
     const snapshot = await repository.load(entity.characterId);
     await this.sendJournal(
       sessionId,
@@ -851,33 +832,6 @@ export class ZoneService {
       await repository.notes(entity.characterId),
       null,
     );
-  }
-
-  private async characterPosition(characterId: number): Promise<{
-    zoneId: number;
-    x: number;
-    y: number;
-    z: number;
-  } | null> {
-    const row = (
-      await this.databases.backend("runtime").query<{
-        zone_id: number;
-        x: number;
-        y: number;
-        z: number;
-      }>(
-        "SELECT zone_id, x, y, z FROM character_positions WHERE character_id = ? LIMIT 1",
-        [characterId],
-      )
-    ).rows[0];
-    return row
-      ? {
-          zoneId: Number(row.zone_id),
-          x: Number(row.x),
-          y: Number(row.y),
-          z: Number(row.z),
-        }
-      : null;
   }
 
   private async sendJournal(
@@ -956,9 +910,27 @@ export class ZoneService {
 
   private async deliverQuestPacket(
     sessionId: number,
-    type: "journal_update" | "experience_update" | "level_update" | "channel_message",
+    type: QuestClientDelivery["type"],
     value: Record<string, unknown>,
   ): Promise<void> {
+    if (type === "grant_item") {
+      const repository = this.progressRepository;
+      const instance = repository
+        ? await grantedItemEvent(
+            repository,
+            value as unknown as { slot: number; bag: number; itemId: number },
+            Number(value.quantity ?? 1),
+          )
+        : null;
+      if (instance) {
+        await this.sendReliable(
+          sessionId,
+          OP.ADD_ITEM_PACKET,
+          encodeSidecar(SIDECAR_SCHEMA.ITEM, instance),
+        );
+      }
+      return;
+    }
     if (type === "journal_update") {
       await this.sendReliable(
         sessionId,

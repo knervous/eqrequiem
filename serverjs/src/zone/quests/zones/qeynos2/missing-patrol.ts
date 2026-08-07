@@ -60,7 +60,7 @@ export function registerMissingPatrol(quests: ZoneQuestRegistry): void {
   patrol.npc(
     "Guard_Gehnus",
     { role: "rumor", visibility: "hidden" },
-    onQuest("proximity_enter", { radius: 25, oncePerPlayer: true }, ({ player, npc }) => {
+    onQuest("proximity_enter", { radius: 25, oncePerPlayer: true, onceKey: "gate-bark" }, ({ player, npc }) => {
       if (player.knowledge.has(PATROL_KNOWLEDGE.missing)) return;
       npc.say(
         "mutters to the guard beside him, \"Still no word from Varen's patrol. "
@@ -87,20 +87,27 @@ export function registerMissingPatrol(quests: ZoneQuestRegistry): void {
   patrol.region(
     "north-patrol-camp",
     { role: "discovery", visibility: "hidden" },
-    onQuest("region_enter", { oncePerPlayer: true }, ({ player, region }) => {
-      player.quest.patch({ foundCamp: true });
-      player.knowledge.learn(PATROL_KNOWLEDGE.camp);
-      player.journal.discover("found-camp", {
-        kind: "observation",
-        title: "The Missing Patrol",
-        text:
-          "A cold fire, dried blood on the grass and a broken Qeynos spear. "
-          + "Tracks lead further north, toward the old aqueduct.",
-        place: { kind: "area", regionId: region.key },
-      });
-      player.knowledge.learn(PATROL_KNOWLEDGE.aqueduct);
-      player.progression.awardXpOnce("found-camp", 120, { source: "discovery" });
-    }),
+    onQuest(
+      "region_enter",
+      { oncePerPlayer: true, onceKey: "found-camp" },
+      ({ player, region }) => {
+        player.quest.patch({ foundCamp: true });
+        player.knowledge.learn(PATROL_KNOWLEDGE.camp);
+        player.journal.discover("found-camp", {
+          kind: "observation",
+          title: "The Missing Patrol",
+          text:
+            "A cold fire, dried blood on the grass and a broken Qeynos spear. "
+            + "Tracks lead further north, toward the old aqueduct.",
+          place: { kind: "area", regionId: region.key },
+        });
+        player.knowledge.learn(PATROL_KNOWLEDGE.aqueduct);
+        // The evidence is a thing you carry, not a flag: it is what makes the
+        // conversations downstream possible, and what you may choose to keep.
+        player.inventory.grantOnce("camp-spear", BROKEN_SPEAR_ITEM_ID);
+        player.progression.awardXpOnce("found-camp", 120, { source: "discovery" });
+      },
+    ),
   );
 
   // ---------------------------------------------------------------------------

@@ -89,3 +89,100 @@ function normalizeKey(kind: QuestBinding["kind"], key: string): string {
     ? key.trim().replaceAll(" ", "_").toLowerCase()
     : key.trim().toLowerCase();
 }
+
+export interface QuestManifestProblem {
+  readonly questKey: string;
+  readonly rule: string;
+  readonly detail: string;
+}
+
+/**
+ * Static checks over the generated manifest.
+ *
+ * Code-owned content has no schema to validate against, so this is the cheap safety net
+ * the design asks for (§35): the failures it catches — a region bound but never defined,
+ * an unclaimable one-time handler, a duplicate key — are all silent at runtime. Content
+ * simply never fires, and nothing tells you.
+ */
+export function validateQuestContent(
+  knownNpcNames?: ReadonlySet<string>,
+): readonly QuestManifestProblem[] {
+  const problems: QuestManifestProblem[] = [];
+  const seen = new Set<string>();
+  for (const registry of registries) {
+    for (const scope of registry.scopes()) {
+      const definition = scope.definition();
+      const questKey = definition.id;
+      if (seen.has(questKey)) {
+        problems.push({ questKey, rule: "duplicate-quest-key", detail: questKey });
+      }
+      seen.add(questKey);
+
+      const regions = new Set(definition.regions?.map((region) => region.key) ?? []);
+      for (const handler of definition.handlers) {
+        if (handler.regionKey && !regions.has(handler.regionKey)) {
+          problems.push({
+            questKey,
+            rule: "region-not-defined",
+            detail: `${handler.event} bound to '${handler.regionKey}'`,
+          });
+        }
+        if (
+          (handler.event === "proximity_enter" || handler.event === "proximity_leave")
+          && handler.radius === undefined
+        ) {
+          problems.push({
+            questKey,
+            rule: "proximity-without-radius",
+            detail: handler.npcName ?? "(zone)",
+          });
+        }
+        // A positional once-claim breaks the moment a handler is inserted above it.
+        if (handler.oncePerPlayer && !handler.onceKey) {
+          problems.push({
+            questKey,
+            rule: "once-without-key",
+            detail: `${handler.event} on ${handler.npcName ?? handler.regionKey ?? "(zone)"}`,
+          });
+        }
+        if (
+          knownNpcNames
+          && handler.npcName
+          && !knownNpcNames.has(normalizeKey("npc", handler.npcName))
+        ) {
+          problems.push({
+            questKey,
+            rule: "unknown-npc",
+            detail: handler.npcName,
+          });
+        }
+      }
+
+      const band = definition.metadata?.recommendedLevel;
+      if (band && band[0] > band[1]) {
+        problems.push({
+          questKey,
+          rule: "impossible-level-band",
+          detail: `${band[0]}-${band[1]}`,
+        });
+      }
+      for (const binding of definition.bindings ?? []) {
+        if (binding.visibility === "contextual" && !binding.requiresKnowledge?.length) {
+          problems.push({
+            questKey,
+            rule: "contextual-without-knowledge",
+            detail: `${binding.kind}:${binding.key}`,
+          });
+        }
+        if (binding.kind === "region" && !regions.has(binding.key)) {
+          problems.push({
+            questKey,
+            rule: "region-not-defined",
+            detail: `binding '${binding.key}'`,
+          });
+        }
+      }
+    }
+  }
+  return problems;
+}

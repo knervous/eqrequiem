@@ -1,4 +1,5 @@
 import type { DatabaseBackend, DatabaseRow } from "../db/backend.js";
+import type { GameItemRow } from "../backend/item-instance.js";
 import {
   LevelCurve,
   type ExperienceAwardResult,
@@ -6,6 +7,11 @@ import {
 import type { QuestPersistenceBatch } from "../zone/quest-manager.js";
 import type { QuestCharacterSnapshot, QuestStateRecord } from "../zone/quest-state.js";
 import type { QuestItemSnapshot } from "../zone/quest-types.js";
+
+/** Canonical general-inventory slots, matching the backend's own layout. */
+const GENERAL_SLOTS = [22, 23, 24, 25, 26, 27, 28, 29] as const;
+const NOTE_BODY_LIMIT = 500;
+const NOTE_LIMIT = 250;
 
 interface CharacterRow extends DatabaseRow {
   id: number;
@@ -168,22 +174,153 @@ export class CharacterProgressRepository {
     amount: number,
   ): Promise<ExperienceAwardResult | null> {
     const curve = await this.curve();
-    const row = (
-      await this.runtime.query<CharacterRow>(
-        "SELECT id, name, level, experience FROM characters WHERE id = ? LIMIT 1",
+    const gained = Math.max(0, Math.trunc(amount));
+    return this.runtime.transaction(async (transaction) => {
+      // Relative increment inside a transaction: a kill landing while a quest beat
+      // resolves must not lose one of the two awards to a read-modify-write race.
+      const updated = await transaction.execute(
+        "UPDATE characters SET experience = experience + ? WHERE id = ?",
+        [gained, characterId],
+      );
+      if (Number(updated.affectedRows ?? 0) === 0) return null;
+      const row = (
+        await transaction.query<CharacterRow>(
+          "SELECT id, name, level, experience FROM characters WHERE id = ? LIMIT 1",
+          [characterId],
+        )
+      ).rows[0];
+      if (!row) return null;
+      const experience = Number(row.experience ?? 0);
+      const result = curve.award(
+        { experience: experience - gained, level: Number(row.level ?? 1) },
+        gained,
+      );
+      if (result.level !== Number(row.level ?? 1)) {
+        await transaction.execute(
+          "UPDATE characters SET level = ? WHERE id = ?",
+          [result.level, characterId],
+        );
+      }
+      return result;
+    });
+  }
+
+  /**
+   * Places an item in the first free general slot. Returns the stored row so the
+   * caller can tell the client, or null when there is nowhere to put it.
+   */
+  async grantItem(
+    characterId: number,
+    itemId: number,
+    quantity = 1,
+  ): Promise<{ readonly slot: number; readonly bag: number; readonly itemId: number } | null> {
+    const occupied = new Set(
+      (
+        await this.runtime.query<{ slot: number }>(
+          "SELECT slot FROM player_inventory WHERE character_id = ? AND bag = 0",
+          [characterId],
+        )
+      ).rows.map((row) => Number(row.slot)),
+    );
+    const slot = GENERAL_SLOTS.find((candidate) => !occupied.has(candidate));
+    if (slot === undefined) return null;
+    await this.runtime.execute(
+      `INSERT INTO player_inventory (character_id, bag, slot, item_id, quantity)
+       VALUES (?, 0, ?, ?, ?)`,
+      [characterId, slot, itemId, Math.max(1, quantity)],
+    );
+    return { slot, bag: 0, itemId };
+  }
+
+  /** Content row for an item, so every transport encodes the same instance. */
+  async itemRow(itemId: number): Promise<GameItemRow | null> {
+    try {
+      return (
+        await this.content.query<GameItemRow>(
+          `SELECT * FROM ${this.contentPrefix}items WHERE id = ? LIMIT 1`,
+          [itemId],
+        )
+      ).rows[0] ?? null;
+    } catch {
+      return null;
+    }
+  }
+
+  /** Player-authored note writes. One implementation for every transport. */
+  async addNote(
+    characterId: number,
+    note: {
+      readonly body: string;
+      readonly source?: string;
+      readonly place?: {
+        readonly zoneId: number;
+        readonly x: number;
+        readonly y: number;
+        readonly z: number;
+      } | null;
+    },
+  ): Promise<void> {
+    const body = note.body.trim().slice(0, NOTE_BODY_LIMIT);
+    if (!body) return;
+    const existing = (
+      await this.runtime.query<{ total: number }>(
+        "SELECT COUNT(*) AS total FROM character_journal_notes WHERE character_id = ?",
         [characterId],
       )
     ).rows[0];
-    if (!row) return null;
-    const result = curve.award(
-      { experience: Number(row.experience ?? 0), level: Number(row.level ?? 1) },
-      amount,
-    );
+    // A journal is memory, not a log; refuse to grow without bound.
+    if (Number(existing?.total ?? 0) >= NOTE_LIMIT) return;
     await this.runtime.execute(
-      "UPDATE characters SET experience = ?, level = ? WHERE id = ?",
-      [result.experience, result.level, characterId],
+      `INSERT INTO character_journal_notes
+       (character_id, source, body, zone_id, x, y, z)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [
+        characterId,
+        (note.source ?? "").slice(0, 120),
+        body,
+        note.place?.zoneId ?? null,
+        note.place?.x ?? null,
+        note.place?.y ?? null,
+        note.place?.z ?? null,
+      ],
     );
-    return result;
+  }
+
+  async removeNote(characterId: number, noteId: number): Promise<void> {
+    await this.runtime.execute(
+      "DELETE FROM character_journal_notes WHERE id = ? AND character_id = ?",
+      [noteId, characterId],
+    );
+  }
+
+  async pinNote(characterId: number, noteId: number, pinned: boolean): Promise<void> {
+    await this.runtime.execute(
+      "UPDATE character_journal_notes SET pinned = ? WHERE id = ? AND character_id = ?",
+      [pinned ? 1 : 0, noteId, characterId],
+    );
+  }
+
+  /** Where the character currently stands, for notes that keep a place. */
+  async position(characterId: number): Promise<{
+    readonly zoneId: number;
+    readonly x: number;
+    readonly y: number;
+    readonly z: number;
+  } | null> {
+    const row = (
+      await this.runtime.query<{ zone_id: number; x: number; y: number; z: number }>(
+        "SELECT zone_id, x, y, z FROM character_positions WHERE character_id = ? LIMIT 1",
+        [characterId],
+      )
+    ).rows[0];
+    return row
+      ? {
+          zoneId: Number(row.zone_id),
+          x: Number(row.x),
+          y: Number(row.y),
+          z: Number(row.z),
+        }
+      : null;
   }
 
   /** Reads progression without mutating it, for profile and meter bootstrap. */

@@ -20,16 +20,19 @@ import type {
 import { EntityKind, NPC } from "./entity-store.js";
 import { ZoneSimulationKernel } from "./zone-kernel.js";
 import { loadZoneSimulationKernel } from "./zone-kernel-node.js";
-import { QuestManager } from "./quest-manager.js";
 import {
   isPersistentQuestEffect,
   type QuestDefinition,
   type QuestEffect,
   type QuestPersistentEffect,
 } from "./quest-types.js";
-import { questDefinitionsForZone, questRegistryForZone } from "./quest-zone-registry.js";
-import { combatExperience, splitGroupExperience } from "./quest-progression.js";
-import { worldHourAt } from "./world-clock.js";
+import {
+  combatExperienceEffects,
+  createZoneQuestManager,
+  creditableSessions,
+  mergeQuestDefinitions,
+  refreshWorldContext,
+} from "./quest-runtime.js";
 import { ZoneSpatialIndex } from "./spatial-index.js";
 import type { ZoneNpcSpawnDefinition } from "./zone-content.js";
 import {
@@ -111,14 +114,13 @@ let npcCount = 0;
 let tick = 0;
 let simulationTimeMs = 0;
 let lastTickAtMs = performance.now();
-const zoneQuestRegistry = questRegistryForZone(zoneId);
-const quests = new QuestManager(
+const quests = createZoneQuestManager({
   zoneId,
   instanceId,
-  zoneQuestRegistry?.zone.shortName ?? null,
-  { tickRateHz },
-);
-quests.replace([...questDefinitionsForZone(zoneId), ...questDefinitions], questRevision);
+  tickRateHz,
+  extraDefinitions: questDefinitions,
+  revision: questRevision,
+});
 
 void loadZoneSimulationKernel()
   .then((loaded) => {
@@ -191,7 +193,7 @@ function runZoneTick(): void {
     }
 
     if (item.type === "quest_update") {
-      quests.replace([...questDefinitionsForZone(zoneId), ...item.definitions], item.revision);
+      quests.replace(mergeQuestDefinitions(zoneId, item.definitions), item.revision);
       post({
         type: "log",
         level: "info",
@@ -297,7 +299,7 @@ function runZoneTick(): void {
   lastTickAtMs = nowMs;
   simulationTimeMs += deltaMs;
 
-  quests.setWorldContext({ timeOfDay: worldHourAt(Date.now()) });
+  refreshWorldContext(quests);
   applyQuestEffects(quests.dispatch({ type: "npc_tick", tick }));
   applyQuestEffects(quests.advanceTimers(tick));
   for (const request of engagement?.tick(tick) ?? []) {
@@ -706,10 +708,12 @@ function publishCombatEvent(
         corpseLoot?.createCorpse(target);
         const spawn = npcSpawnsByIndex.get(target.index);
         if (spawn) {
-          const killerSessionIds = [...ownerSessionIds].filter(
-            (candidate) => quests.character(candidate) !== null,
-          );
-          awardCombatExperience(spawn, killerSessionIds);
+          const killerSessionIds = creditableSessions(quests, ownerSessionIds);
+          publishQuestPersistence(combatExperienceEffects(
+            quests,
+            { id: spawn.spawnId, name: spawn.name, level: spawn.level },
+            killerSessionIds,
+          ));
           applyQuestEffects(quests.dispatchNpcDeath({
             tick,
             npc: {
@@ -846,39 +850,6 @@ function applyQuestEffects(effects: readonly QuestEffect[]): void {
     });
   }
   publishQuestPersistence(persistent);
-}
-
-/**
- * Combat experience runs through the same award path as discovery and quest beats, so
- * the progression service stays the only writer of experience and level. Credit is the
- * combat system's participant set; the killing blow is irrelevant.
- */
-function awardCombatExperience(
-  spawn: ZoneNpcSpawnDefinition,
-  creditSessionIds: readonly number[],
-): void {
-  if (creditSessionIds.length === 0) return;
-  const awards: QuestPersistentEffect[] = [];
-  for (const sessionId of creditSessionIds) {
-    const character = quests.character(sessionId);
-    if (!character?.characterId) continue;
-    const amount = splitGroupExperience(
-      combatExperience(spawn.level, character.level),
-      creditSessionIds.length,
-    );
-    if (amount <= 0) continue;
-    awards.push({
-      type: "award_xp",
-      sessionId,
-      characterId: character.characterId,
-      questKey: `combat:${spawn.name}`,
-      amount,
-      source: "combat",
-      sourceKey: spawn.name,
-      awardKey: null,
-    });
-  }
-  publishQuestPersistence(awards);
 }
 
 /**

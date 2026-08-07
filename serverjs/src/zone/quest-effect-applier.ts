@@ -11,6 +11,9 @@ import { isPersistentQuestEffect, type QuestEffect } from "./quest-types.js";
  * the worker path supplies an adapter over the effects it posted across the thread
  * boundary, so both runtimes commit through exactly one implementation.
  */
+/** Bounded so a database outage cannot grow the retry queue without limit. */
+const MAX_PENDING_BATCHES = 512;
+
 export interface QuestEffectSource {
   journalFor(sessionId: number): readonly QuestJournalEntry[];
   drainPersistence(): readonly QuestPersistenceBatch[];
@@ -30,7 +33,9 @@ export interface QuestClientDelivery {
     | "journal_update"
     | "experience_update"
     | "level_update"
-    | "channel_message";
+    | "channel_message"
+    /** An item the world placed in the character's hands; the caller renders it. */
+    | "grant_item";
   readonly value: Record<string, unknown>;
 }
 
@@ -58,6 +63,10 @@ export class QuestEffectApplier {
     private readonly repository: CharacterProgressRepository,
     private readonly options: {
       readonly onLog?: (questId: string, message: string) => void;
+      readonly onCommitError?: (
+        batch: QuestPersistenceBatch,
+        error: unknown,
+      ) => void;
     } = {},
   ) {}
 
@@ -98,6 +107,22 @@ export class QuestEffectApplier {
             reason: "archived",
           });
           break;
+        case "grant_item": {
+          if (effect.characterId === null) break;
+          const stored = await this.repository.grantItem(
+            effect.characterId,
+            effect.itemId,
+            effect.quantity,
+          );
+          if (stored) {
+            deliveries.push({
+              sessionId: effect.sessionId,
+              type: "grant_item",
+              value: { ...stored, quantity: effect.quantity },
+            });
+          }
+          break;
+        }
         case "award_xp":
           if (effect.characterId === null) break;
           experienceBySession.set(
@@ -127,12 +152,31 @@ export class QuestEffectApplier {
       });
     }
 
-    for (const batch of manager.drainPersistence()) {
-      await this.repository.commit(batch);
-    }
-
+    await this.commitBatches(manager.drainPersistence());
     return deliveries;
   }
+
+  /**
+   * Commits drained batches, holding on to any that fail so the next commit retries
+   * them. In-memory state is already ahead of the database at this point; dropping a
+   * failed write would silently lose it until that quest key happened to change again.
+   */
+  private async commitBatches(
+    batches: readonly QuestPersistenceBatch[],
+  ): Promise<void> {
+    const pending = [...this.retries, ...batches];
+    this.retries = [];
+    for (const batch of pending) {
+      try {
+        await this.repository.commit(batch);
+      } catch (error) {
+        if (this.retries.length < MAX_PENDING_BATCHES) this.retries.push(batch);
+        this.options.onCommitError?.(batch, error);
+      }
+    }
+  }
+
+  private retries: QuestPersistenceBatch[] = [];
 
   /** Pushes the current meter state without awarding anything (zone entry, respawn). */
   async snapshot(
