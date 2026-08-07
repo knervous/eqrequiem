@@ -20,6 +20,7 @@ await build({
   entryPoints: [
     path.join(here, 'harness/gamepad-harness.ts'),
     path.join(here, 'harness/controls-harness.tsx'),
+    path.join(here, 'harness/hud-harness.tsx'),
   ],
   outdir: outDir,
   bundle: true,
@@ -35,7 +36,7 @@ await build({
   },
 });
 
-for (const page of ['gamepad.html', 'controls.html']) {
+for (const page of ['gamepad.html', 'controls.html', 'hud.html']) {
   fs.copyFileSync(path.join(here, 'harness', page), path.join(outDir, page));
 }
 

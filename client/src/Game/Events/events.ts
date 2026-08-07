@@ -63,6 +63,10 @@ export type Events = {
   chatMessage: ChatMessage;
   toggleInventory: void;
   toggleOptions: void;
+  /** Bindable but not yet consumed: the client has no spellbook window. */
+  toggleSpells: void;
+  /** Bindable but not yet consumed: the client has no reply target. */
+  chatReply: void;
   setMode: string;
 
   // Config

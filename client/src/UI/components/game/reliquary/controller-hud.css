@@ -1,0 +1,90 @@
+/* File: client/src/UI/components/game/reliquary/controller-hud.css */
+
+.rq-pad-hud {
+  position: absolute;
+  right: 18px;
+  bottom: 18px;
+  z-index: 8;
+  min-width: 168px;
+  padding: 9px 11px 10px;
+  border: 1px solid rgb(154 129 80 / 30%);
+  background: linear-gradient(
+    180deg,
+    rgb(13 11 9 / 88%),
+    rgb(13 11 9 / 72%)
+  );
+  box-shadow: 0 6px 18px rgb(0 0 0 / 45%);
+  color: var(--rq-bone, #e8dcc4);
+  font-size: 10px;
+  pointer-events: none;
+  user-select: none;
+}
+
+.rq-pad-hud__title {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgb(154 129 80 / 22%);
+  margin-bottom: 7px;
+  color: var(--rq-bronze-light, #c7a86a);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.rq-pad-hud__title small {
+  color: var(--rq-bronze, #9a8150);
+  font-size: 8px;
+  letter-spacing: 0.08em;
+}
+
+.rq-pad-hud ul {
+  display: grid;
+  gap: 2px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.rq-pad-hud li {
+  display: grid;
+  align-items: center;
+  gap: 8px;
+  grid-template-columns: 52px minmax(0, 1fr);
+  padding: 2px 3px;
+  border-radius: 2px;
+  transition: background-color 90ms linear, color 90ms linear;
+}
+
+.rq-pad-hud li b {
+  color: var(--rq-bronze-light, #c7a86a);
+  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-size: 9px;
+  font-weight: 400;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rq-pad-hud li.is-held {
+  background: rgb(216 137 47 / 22%);
+}
+
+.rq-pad-hud li.is-held b,
+.rq-pad-hud li.is-held span {
+  color: #fff1ce;
+}
+
+@media (max-width: 900px) {
+  .rq-pad-hud {
+    right: 10px;
+    bottom: 10px;
+    min-width: 140px;
+    font-size: 9px;
+  }
+
+  .rq-pad-hud li {
+    grid-template-columns: 46px minmax(0, 1fr);
+  }
+}

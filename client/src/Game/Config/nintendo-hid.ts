@@ -10,7 +10,7 @@
 // Everything here is pure: reports in, a standard-mapping `GamepadLike` out,
 // so the rest of the controller pipeline is unchanged and the decoding can be
 // tested without the hardware present.
-import type { GamepadLike } from './gamepad-bindings';
+import type { GamepadLike, MotionSample } from './gamepad-bindings';
 
 export const NINTENDO_VENDOR_ID = 0x057e;
 
@@ -34,6 +34,21 @@ export const REPORT_ID_OUTPUT = 0x01;
 export const SUBCOMMAND_SET_INPUT_MODE = 0x03;
 /** Argument to `SUBCOMMAND_SET_INPUT_MODE` selecting the full report. */
 export const INPUT_MODE_FULL = 0x30;
+/** Subcommand: enable or disable the six-axis motion sensor. */
+export const SUBCOMMAND_ENABLE_IMU = 0x40;
+
+/** Offset of the IMU block within the full report, excluding the report id. */
+export const IMU_OFFSET = 12;
+/** The full report carries three IMU frames, 5ms apart. */
+export const IMU_FRAME_COUNT = 3;
+export const IMU_FRAME_BYTES = 12;
+
+/**
+ * Raw-to-physical scale factors for the default sensor ranges: +/-8g for the
+ * accelerometer and +/-2000 degrees per second for the gyroscope.
+ */
+export const ACCEL_SCALE_G = 0.000244;
+export const GYRO_SCALE_DPS = 0.06103;
 
 const STANDARD_BUTTON_COUNT = 17;
 
@@ -107,6 +122,47 @@ const DPAD_DIRECTIONS: Record<number, number[]> = {
 
 const readByte = (data: DataView, offset: number): number =>
   offset < data.byteLength ? data.getUint8(offset) : 0;
+
+const readInt16 = (data: DataView, offset: number): number =>
+  offset + 1 < data.byteLength ? data.getInt16(offset, true) : 0;
+
+/**
+ * Averages the three IMU frames the full report carries. Each frame holds a
+ * three-axis accelerometer reading followed by a three-axis gyroscope
+ * reading, all as signed 16-bit little-endian values.
+ *
+ * Returns null when the report is too short, which is what a controller that
+ * has not had its motion sensor enabled sends.
+ */
+export const parseMotion = (data: DataView): MotionSample | null => {
+  const required = IMU_OFFSET + IMU_FRAME_COUNT * IMU_FRAME_BYTES;
+  if (data.byteLength < required) return null;
+
+  let accelX = 0, accelY = 0, accelZ = 0;
+  let gyroX = 0, gyroY = 0, gyroZ = 0;
+
+  for (let frame = 0; frame < IMU_FRAME_COUNT; frame++) {
+    const base = IMU_OFFSET + frame * IMU_FRAME_BYTES;
+    accelX += readInt16(data, base);
+    accelY += readInt16(data, base + 2);
+    accelZ += readInt16(data, base + 4);
+    gyroX += readInt16(data, base + 6);
+    gyroY += readInt16(data, base + 8);
+    gyroZ += readInt16(data, base + 10);
+  }
+
+  const accelAverage = ACCEL_SCALE_G / IMU_FRAME_COUNT;
+  const gyroAverage = GYRO_SCALE_DPS / IMU_FRAME_COUNT;
+
+  return {
+    accelX: accelX * accelAverage,
+    accelY: accelY * accelAverage,
+    accelZ: accelZ * accelAverage,
+    gyroX: gyroX * gyroAverage,
+    gyroY: gyroY * gyroAverage,
+    gyroZ: gyroZ * gyroAverage,
+  };
+};
 
 /**
  * Decodes the simple report the controller emits over Bluetooth before it has
@@ -201,6 +257,7 @@ export const parseFullReport = (data: DataView): GamepadLike => {
 
   const leftStick = stickAt(5);
   const rightStick = stickAt(8);
+  const motion = parseMotion(data);
 
   return {
     id: 'Pro Controller (WebHID)',
@@ -214,6 +271,7 @@ export const parseFullReport = (data: DataView): GamepadLike => {
       -normalizeStick(rightStick.y, CENTER_12BIT, RANGE_12BIT),
     ],
     buttons,
+    ...(motion ? { motion } : {}),
   };
 };
 
@@ -232,15 +290,29 @@ export const parseNintendoReport = (
  * Layout is a rolling packet counter, eight bytes of neutral rumble, then the
  * subcommand and its argument.
  */
-export const buildFullModeRequest = (packetCounter: number): Uint8Array => {
+export const buildSubcommand = (
+  packetCounter: number,
+  subcommand: number,
+  argument: number,
+): Uint8Array => {
   const neutralRumble = [0x00, 0x01, 0x40, 0x40, 0x00, 0x01, 0x40, 0x40];
   return new Uint8Array([
     packetCounter & 0x0f,
     ...neutralRumble,
-    SUBCOMMAND_SET_INPUT_MODE,
-    INPUT_MODE_FULL,
+    subcommand,
+    argument,
   ]);
 };
+
+export const buildFullModeRequest = (packetCounter: number): Uint8Array =>
+  buildSubcommand(packetCounter, SUBCOMMAND_SET_INPUT_MODE, INPUT_MODE_FULL);
+
+/** Turns the six-axis motion sensor on or off. */
+export const buildImuRequest = (
+  packetCounter: number,
+  enabled: boolean,
+): Uint8Array =>
+  buildSubcommand(packetCounter, SUBCOMMAND_ENABLE_IMU, enabled ? 0x01 : 0x00);
 
 export const isNintendoController = (device: {
   vendorId?: number;

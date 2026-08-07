@@ -74,12 +74,21 @@ const gamepadGroups: ReadonlyArray<{
   },
   {
     title: 'Movement',
-    actions: ['jump', 'sprint', 'crouch', 'autoRun', 'sitStand', 'cameraToggle'],
+    actions: [
+      'jump',
+      'sprint',
+      'crouch',
+      'autoRun',
+      'walkRun',
+      'sitStand',
+      'cameraToggle',
+    ],
   },
   {
     title: 'Targeting & combat',
     actions: [
       'targetNearest',
+      'targetPrevious',
       'clearTarget',
       'autoAttack',
       'hail',
@@ -87,12 +96,32 @@ const gamepadGroups: ReadonlyArray<{
     ],
   },
   {
-    title: 'Windows',
-    actions: ['inventory', 'options'],
+    title: 'Windows & chat',
+    actions: ['inventory', 'spells', 'options', 'reply'],
+  },
+  {
+    title: 'Group & session',
+    actions: ['who', 'invite', 'disband', 'camp', 'help'],
+  },
+  {
+    title: 'Motion',
+    actions: ['gyroHold'],
   },
   {
     title: 'Hot buttons',
-    actions: ['hotkeyModifier', 'hotkey1', 'hotkey2', 'hotkey3', 'hotkey4'],
+    actions: [
+      'hotkeyModifier',
+      'hotkey1',
+      'hotkey2',
+      'hotkey3',
+      'hotkey4',
+      'hotkey5',
+      'hotkey6',
+      'hotkey7',
+      'hotkey8',
+      'hotkey9',
+      'hotkey10',
+    ],
   },
 ];
 
@@ -104,6 +133,10 @@ const actionLabels: Partial<Record<GamepadAction | keyof KeyBindings, string>> =
   cameraToggle: 'First / third person',
   clearTarget: 'Clear target',
   hotkeyModifier: 'Hot button shift',
+  gyroHold: 'Hold to aim with gyro',
+  walkRun: 'Toggle walk / run',
+  spells: 'Spellbook',
+  reply: 'Reply to last tell',
   targetNearest: 'Target nearest',
   targetPrevious: 'Target previous',
   autoAttack: 'Auto attack',
@@ -333,11 +366,22 @@ export const ControlsOptions: React.FC = () => {
   };
 
   const gamepadSettings = config.gamepad;
+  const uiSettings = config.ui;
+  const motionAvailable = Boolean(gamepad?.motion);
+
   const updateGamepadSetting = <K extends keyof typeof gamepadSettings>(
     key: K,
     value: (typeof gamepadSettings)[K],
   ) => {
     UserConfig.instance.updateGamepadSetting(key, value);
+    refresh();
+  };
+
+  const updateUiSetting = <K extends keyof typeof uiSettings>(
+    key: K,
+    value: (typeof uiSettings)[K],
+  ) => {
+    UserConfig.instance.updateUISetting(key, value);
     refresh();
   };
 
@@ -500,6 +544,202 @@ export const ControlsOptions: React.FC = () => {
           checked={gamepadSettings.invertMoveY}
           onChange={(event) =>
             updateGamepadSetting('invertMoveY', event.target.checked)
+          }
+        />
+      </label>
+
+      <h3>Feel</h3>
+      <label className="rq-option-range">
+        <span>
+          <strong>Response curve</strong>
+          <small>
+            Higher values give finer aim near centre without giving up top
+            speed.
+          </small>
+          <output>{gamepadSettings.lookCurve.toFixed(2)}</output>
+        </span>
+        <input
+          type="range"
+          data-testid="gamepad-look-curve"
+          min="1"
+          max="3"
+          step="0.05"
+          value={gamepadSettings.lookCurve}
+          onChange={(event) =>
+            updateGamepadSetting('lookCurve', Number(event.target.value))
+          }
+        />
+      </label>
+      <label className="rq-option-range">
+        <span>
+          <strong>Turn acceleration</strong>
+          <small>Extra speed earned by holding the look stick.</small>
+          <output>+{Math.round(gamepadSettings.lookAcceleration * 100)}%</output>
+        </span>
+        <input
+          type="range"
+          data-testid="gamepad-look-acceleration"
+          min="0"
+          max="3"
+          step="0.05"
+          value={gamepadSettings.lookAcceleration}
+          onChange={(event) =>
+            updateGamepadSetting('lookAcceleration', Number(event.target.value))
+          }
+        />
+      </label>
+      <label className="rq-option-range">
+        <span>
+          <strong>Acceleration ramp</strong>
+          <small>How long a held stick takes to reach full speed.</small>
+          <output>{gamepadSettings.lookRampTime.toFixed(2)}s</output>
+        </span>
+        <input
+          type="range"
+          data-testid="gamepad-look-ramp"
+          min="0"
+          max="1.5"
+          step="0.05"
+          value={gamepadSettings.lookRampTime}
+          onChange={(event) =>
+            updateGamepadSetting('lookRampTime', Number(event.target.value))
+          }
+        />
+      </label>
+      <label className="rq-option-range">
+        <span>
+          <strong>Look smoothing</strong>
+          <small>Softens flicks. Too much feels like lag.</small>
+          <output>{Math.round(gamepadSettings.lookSmoothing * 1000)}ms</output>
+        </span>
+        <input
+          type="range"
+          data-testid="gamepad-look-smoothing"
+          min="0"
+          max="0.2"
+          step="0.005"
+          value={gamepadSettings.lookSmoothing}
+          onChange={(event) =>
+            updateGamepadSetting('lookSmoothing', Number(event.target.value))
+          }
+        />
+      </label>
+      <label className="rq-option-range">
+        <span>
+          <strong>Movement smoothing</strong>
+          <small>Eases the character in and out of a run.</small>
+          <output>{Math.round(gamepadSettings.moveSmoothing * 1000)}ms</output>
+        </span>
+        <input
+          type="range"
+          data-testid="gamepad-move-smoothing"
+          min="0"
+          max="0.25"
+          step="0.005"
+          value={gamepadSettings.moveSmoothing}
+          onChange={(event) =>
+            updateGamepadSetting('moveSmoothing', Number(event.target.value))
+          }
+        />
+      </label>
+
+      <h3>Motion aiming</h3>
+      <div className="rq-controls__hint">
+        Uses the controller's gyroscope for fine aim on top of the stick.
+        Needs a controller paired over HID, since the Gamepad API does not
+        carry motion data.
+      </div>
+      <label className="rq-option-toggle">
+        <span>
+          <strong>Gyro aiming</strong>
+          <small>{motionAvailable
+            ? 'Motion data is reporting from this controller.'
+            : 'No motion data from the current controller.'}</small>
+        </span>
+        <input
+          type="checkbox"
+          data-testid="gamepad-gyro-enabled"
+          checked={gamepadSettings.gyroEnabled}
+          onChange={(event) =>
+            updateGamepadSetting('gyroEnabled', event.target.checked)
+          }
+        />
+      </label>
+      <label className="rq-option-range">
+        <span>
+          <strong>Gyro sensitivity</strong>
+          <output>{gamepadSettings.gyroSensitivity.toFixed(2)}×</output>
+        </span>
+        <input
+          type="range"
+          data-testid="gamepad-gyro-sensitivity"
+          min="0.1"
+          max="4"
+          step="0.05"
+          value={gamepadSettings.gyroSensitivity}
+          onChange={(event) =>
+            updateGamepadSetting('gyroSensitivity', Number(event.target.value))
+          }
+        />
+      </label>
+      <label className="rq-option-toggle">
+        <span>
+          <strong>Invert gyro vertical</strong>
+          <small>Independent of the stick's invert setting.</small>
+        </span>
+        <input
+          type="checkbox"
+          data-testid="gamepad-gyro-invert"
+          checked={gamepadSettings.gyroInvertY}
+          onChange={(event) =>
+            updateGamepadSetting('gyroInvertY', event.target.checked)
+          }
+        />
+      </label>
+      <label className="rq-option-toggle">
+        <span>
+          <strong>Aim only while held</strong>
+          <small>
+            Gyro applies only while the bound hold button is down. Bind it
+            under Motion below.
+          </small>
+        </span>
+        <input
+          type="checkbox"
+          data-testid="gamepad-gyro-hold"
+          checked={gamepadSettings.gyroRequiresHold}
+          onChange={(event) =>
+            updateGamepadSetting('gyroRequiresHold', event.target.checked)
+          }
+        />
+      </label>
+
+      <h3>On-screen legend</h3>
+      <label className="rq-option-toggle">
+        <span>
+          <strong>Controller overlay</strong>
+          <small>Show the button legend while playing.</small>
+        </span>
+        <input
+          type="checkbox"
+          data-testid="controller-hud-enabled"
+          checked={uiSettings.controllerHud}
+          onChange={(event) =>
+            updateUiSetting('controllerHud', event.target.checked)
+          }
+        />
+      </label>
+      <label className="rq-option-toggle">
+        <span>
+          <strong>Hide without a controller</strong>
+          <small>Keeps the overlay out of the way when playing on keys.</small>
+        </span>
+        <input
+          type="checkbox"
+          data-testid="controller-hud-autohide"
+          checked={uiSettings.controllerHudAutoHide}
+          onChange={(event) =>
+            updateUiSetting('controllerHudAutoHide', event.target.checked)
           }
         />
       </label>

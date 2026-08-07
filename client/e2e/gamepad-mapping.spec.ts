@@ -15,6 +15,24 @@ type Overrides = {
   settings?: Record<string, unknown>;
 };
 
+/**
+ * These tests are about the mapping, not the feel, so they run with the
+ * smoothing and acceleration filters off. A single frame then lands on the
+ * steady-state value. Smoothing and acceleration have their own suite in
+ * gamepad-feel.spec.ts.
+ */
+const INSTANT = {
+  lookSmoothing: 0,
+  moveSmoothing: 0,
+  lookAcceleration: 0,
+  lookRampTime: 0,
+};
+
+const instant = (overrides?: Overrides): Overrides => ({
+  ...overrides,
+  settings: { ...INSTANT, ...overrides?.settings },
+});
+
 test.beforeEach(async ({ page }) => {
   await installVirtualGamepad(page);
   await page.goto('/gamepad.html');
@@ -28,7 +46,7 @@ const sampleOnce = (
 ) =>
   page.evaluate(
     ({ frame, opts }) => window.gamepadHarness.sample(frame as never, opts as never),
-    { frame: padFrame(state), opts: overrides ?? {} },
+    { frame: padFrame(state), opts: instant(overrides) },
   );
 
 const replay = (
@@ -39,12 +57,15 @@ const replay = (
   page.evaluate(
     ({ frames, opts }) =>
       window.gamepadHarness.replay(frames as never, opts as never),
-    { frames: states.map(padFrame), opts: overrides ?? {} },
+    { frames: states.map(padFrame), opts: instant(overrides) },
   );
 
 test.describe('stick handling', () => {
   test('ignores drift inside the deadzone', async ({ page }) => {
-    const sample = await sampleOnce(page, { axes: [0.1, -0.1, 0.1, 0.1] });
+    // Well inside the 0.12 default, including as a diagonal magnitude.
+    const sample = await sampleOnce(page, {
+      axes: [0.06, -0.06, 0.06, 0.06],
+    });
     expect(sample.move.forward).toBe(0);
     expect(sample.move.strafe).toBe(0);
     expect(sample.look).toEqual({ x: 0, y: 0 });
@@ -254,7 +275,10 @@ test.describe('device selection and capture', () => {
   }) => {
     await connectPad(page);
     await setPadState(page, { axes: [0, -1, 0, 0] });
-    const sample = await page.evaluate(() => window.gamepadHarness.poll());
+    const sample = await page.evaluate(
+      (opts) => window.gamepadHarness.poll(opts as never),
+      instant(),
+    );
     expect(sample.move.forward).toBeCloseTo(-1, 5);
   });
 

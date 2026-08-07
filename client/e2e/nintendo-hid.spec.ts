@@ -222,6 +222,85 @@ test.describe('full report (high resolution mode)', () => {
   });
 });
 
+test.describe('motion sensor', () => {
+  /** A full report padded out with three IMU frames. */
+  const withImu = (frames: number[][]) => {
+    const bytes = fullIdle();
+    while (bytes.length < 12) bytes.push(0);
+    for (const frame of frames) {
+      for (let axis = 0; axis < 6; axis++) {
+        const value = frame[axis] ?? 0;
+        bytes.push(value & 0xff, (value >> 8) & 0xff);
+      }
+    }
+    return bytes;
+  };
+
+  test('a report without the IMU block reports no motion', async ({ page }) => {
+    const pad = await page.evaluate(
+      ({ id, data }) => window.gamepadHarness.nintendo.parse(id, data),
+      { id: FULL, data: fullIdle() },
+    );
+    expect(pad.motion).toBeUndefined();
+  });
+
+  test('decodes and averages the three frames', async ({ page }) => {
+    // accelX, accelY, accelZ, gyroX, gyroY, gyroZ
+    const bytes = withImu([
+      [0, 0, 4096, 100, 200, 300],
+      [0, 0, 4096, 100, 200, 300],
+      [0, 0, 4096, 100, 200, 300],
+    ]);
+    const pad = await page.evaluate(
+      ({ id, data }) => window.gamepadHarness.nintendo.parse(id, data),
+      { id: FULL, data: bytes },
+    );
+    // 4096 raw at 0.000244 g per count is roughly 1g, which is what a
+    // controller resting flat should read on one axis.
+    expect(pad.motion.accelZ).toBeCloseTo(1, 1);
+    expect(pad.motion.gyroX).toBeCloseTo(100 * 0.06103, 3);
+    expect(pad.motion.gyroY).toBeCloseTo(200 * 0.06103, 3);
+    expect(pad.motion.gyroZ).toBeCloseTo(300 * 0.06103, 3);
+  });
+
+  test('averaging smooths across differing frames', async ({ page }) => {
+    const bytes = withImu([
+      [0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 300, 0, 0],
+      [0, 0, 0, 600, 0, 0],
+    ]);
+    const pad = await page.evaluate(
+      ({ id, data }) => window.gamepadHarness.nintendo.parse(id, data),
+      { id: FULL, data: bytes },
+    );
+    expect(pad.motion.gyroX).toBeCloseTo(300 * 0.06103, 3);
+  });
+
+  test('negative rates survive the signed decode', async ({ page }) => {
+    const negative = -500 & 0xffff;
+    const bytes = withImu([
+      [0, 0, 0, negative, 0, 0],
+      [0, 0, 0, negative, 0, 0],
+      [0, 0, 0, negative, 0, 0],
+    ]);
+    const pad = await page.evaluate(
+      ({ id, data }) => window.gamepadHarness.nintendo.parse(id, data),
+      { id: FULL, data: bytes },
+    );
+    expect(pad.motion.gyroX).toBeCloseTo(-500 * 0.06103, 3);
+  });
+
+  test('the IMU enable subcommand is well formed', async ({ page }) => {
+    const [on, off] = await page.evaluate(() => [
+      window.gamepadHarness.nintendo.buildImuRequest(0, true),
+      window.gamepadHarness.nintendo.buildImuRequest(0, false),
+    ]);
+    expect(on[9]).toBe(0x40);
+    expect(on[10]).toBe(0x01);
+    expect(off[10]).toBe(0x00);
+  });
+});
+
 test.describe('end to end through the mapping pipeline', () => {
   test('a decoded report drives the same actions as any other pad', async ({
     page,
@@ -245,6 +324,9 @@ test.describe('end to end through the mapping pipeline', () => {
       ({ id, data }) => window.gamepadHarness.nintendo.sample(id, data),
       { id: FULL, data: bytes },
     );
-    expect(sample.move.forward).toBeLessThan(-0.9);
+    // One frame, so movement smoothing has only just started easing in; the
+    // direction is what matters here. Steady state is covered in the feel
+    // suite.
+    expect(sample.move.forward).toBeLessThan(0);
   });
 });

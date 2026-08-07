@@ -8,6 +8,7 @@ import {
   applyStickDeadzone,
   detectGamepadBinding,
   emptyGamepadSample,
+  emptyMotionState,
   presentGamepadBinding,
   sampleGamepad,
   selectActiveGamepad,
@@ -17,6 +18,7 @@ import {
 } from '@game/Config/gamepad-bindings';
 import {
   buildFullModeRequest,
+  buildImuRequest,
   isNintendoController,
   parseNintendoReport,
   REPORT_ID_FULL,
@@ -38,7 +40,10 @@ const settingsWith = (overrides?: Overrides) => ({
   ...overrides?.settings,
 });
 
-/** Replays a sequence of pad frames, carrying edge state between them. */
+/**
+ * Replays a sequence of pad frames, carrying edge state and the look/move
+ * filters between them so smoothing and acceleration behave as they do live.
+ */
 const replay = (
   frames: GamepadLike[],
   overrides?: Overrides,
@@ -47,20 +52,40 @@ const replay = (
   const bindings = bindingsWith(overrides);
   const settings = settingsWith(overrides);
   let previous: ButtonSnapshot = {};
+  let motion = emptyMotionState();
   return frames.map((frame) => {
-    const sample = sampleGamepad(frame, bindings, settings, previous, delta);
+    const sample = sampleGamepad(
+      frame,
+      bindings,
+      settings,
+      previous,
+      delta,
+      motion,
+    );
     previous = sample.buttons;
+    motion = sample.motionState;
     return sample;
   });
 };
+
+/** Repeats one frame, which is what holding a stick actually looks like. */
+const hold = (
+  frame: GamepadLike,
+  frameCount: number,
+  overrides?: Overrides,
+  delta = 1 / 60,
+): GamepadSample[] =>
+  replay(new Array(frameCount).fill(frame), overrides, delta);
 
 const harness = {
   applyDeadzone,
   applyStickDeadzone,
   detectGamepadBinding,
   emptyGamepadSample,
+  emptyMotionState,
   presentGamepadBinding,
   selectActiveGamepad,
+  hold,
   defaults: {
     bindings: DEFAULT_GAMEPAD_BINDINGS,
     settings: DEFAULT_GAMEPAD_SETTINGS,
@@ -85,6 +110,8 @@ const harness = {
     isNintendoController,
     buildFullModeRequest: (counter: number) =>
       Array.from(buildFullModeRequest(counter)),
+    buildImuRequest: (counter: number, enabled: boolean) =>
+      Array.from(buildImuRequest(counter, enabled)),
     /** Decodes a report given as a plain byte array (no report id). */
     parse: (reportId: number, bytes: number[]) =>
       parseNintendoReport(

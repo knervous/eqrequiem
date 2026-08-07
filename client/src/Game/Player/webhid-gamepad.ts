@@ -2,6 +2,7 @@
 import type { GamepadLike } from '@game/Config/gamepad-bindings';
 import {
   buildFullModeRequest,
+  buildImuRequest,
   isNintendoController,
   NINTENDO_HID_FILTERS,
   parseNintendoReport,
@@ -153,6 +154,18 @@ export class WebHidGamepad {
         '[WebHidGamepad] Full input mode refused, using simple reports:',
         error,
       );
+    }
+
+    // Motion data only rides along once the sensor is switched on, and only
+    // in the full report. Gyro aiming is off by default, so a refusal here
+    // costs nothing until the player turns it on.
+    try {
+      await device.sendReport(
+        REPORT_ID_OUTPUT,
+        buildImuRequest(this.packetCounter++, true),
+      );
+    } catch (error) {
+      console.info('[WebHidGamepad] Motion sensor unavailable:', error);
     }
 
     emitter.emit('gamepadConnected', device.productName || 'Pro Controller');

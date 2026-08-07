@@ -51,6 +51,7 @@ import type { JsonCommandLink } from '../chat/command-link-util';
 import { linkItemToChat } from '../chat/command-link-util';
 import { ChatInputSlate } from '../chat/chat-input';
 import { useDrag } from '../../../hooks/use-drag';
+import { ControllerHud } from './controller-hud';
 import { ControlsOptions } from './controls-options';
 import { HudWindow } from './hud-window';
 import './reliquary.css';
@@ -1476,6 +1477,7 @@ export const ReliquaryHUD: React.FC = () => {
         }}
       >
         <TimeOfDayBar />
+        <ControllerHud />
         <HudWindow
           {...windowProps('player')}
           label="Character"

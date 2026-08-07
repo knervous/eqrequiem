@@ -57,17 +57,52 @@ export const DEFAULT_GAMEPAD_BINDINGS: GamepadBindings = {
   hotkey2: "Button13",
   hotkey3: "Button14",
   hotkey4: "Button15",
+
+  // Hot buttons five to eight are reachable by holding the shift with the
+  // D-pad; these direct bindings exist so all ten can be assigned outright.
+  hotkey5: "",
+  hotkey6: "",
+  hotkey7: "",
+  hotkey8: "",
+  hotkey9: "",
+  hotkey10: "",
+
+  // Reachable by binding, but left free so the defaults stay uncrowded.
   crouch: "",
   clearTarget: "",
+  walkRun: "",
+  targetPrevious: "",
+  spells: "",
+  reply: "",
+  camp: "",
+  who: "",
+  invite: "",
+  disband: "",
+  help: "",
+  gyroHold: "",
 };
 
 export const DEFAULT_GAMEPAD_SETTINGS: GamepadSettings = {
   enabled: true,
-  deadzone: 0.18,
+  // Tight enough to kill drift without swallowing slow, deliberate pushes.
+  deadzone: 0.12,
   lookSensitivity: 1,
   invertLookY: false,
   invertMoveY: false,
   vibration: true,
+
+  // A gentle curve plus a short ramp: precise for small corrections, and it
+  // still spins around quickly when the stick is pinned for a moment.
+  lookCurve: 1.7,
+  lookAcceleration: 1.1,
+  lookRampTime: 0.35,
+  lookSmoothing: 0.055,
+  moveSmoothing: 0.07,
+
+  gyroEnabled: false,
+  gyroSensitivity: 1,
+  gyroInvertY: false,
+  gyroRequiresHold: true,
 };
 
 export const DEFAULT_CONFIG: Config = {
@@ -122,6 +157,8 @@ export const DEFAULT_CONFIG: Config = {
     uiScale: 1,
     hudLocked: false,
     hudWindows: structuredClone(DEFAULT_HUD_WINDOWS),
+    controllerHud: true,
+    controllerHudAutoHide: true,
   },
   hotButtons: {
     0: {

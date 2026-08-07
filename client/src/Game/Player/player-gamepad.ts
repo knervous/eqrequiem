@@ -3,11 +3,13 @@ import { CommandHandler } from '@game/ChatCommands/command-handler';
 import { UserConfig } from '@game/Config/config';
 import {
   emptyGamepadSample,
+  emptyMotionState,
   sampleGamepad,
   selectActiveGamepad,
   type ButtonSnapshot,
   type GamepadDigitalAction,
   type GamepadLike,
+  type GamepadMotionState,
   type GamepadSample,
 } from '@game/Config/gamepad-bindings';
 import emitter from '@game/Events/events';
@@ -25,6 +27,7 @@ export class PlayerGamepad {
   private activeIndex: number | null = null;
   private connectedId: string | null = null;
   private sample: GamepadSample = emptyGamepadSample();
+  private motionState: GamepadMotionState = emptyMotionState();
 
   private readonly onConnected = (event: GamepadEvent) => {
     this.activeIndex = event.gamepad.index;
@@ -87,6 +90,13 @@ export class PlayerGamepad {
   private reset() {
     this.sample = emptyGamepadSample();
     this.previousButtons = {};
+    this.motionState = emptyMotionState();
+  }
+
+  /** The pad currently driving input, for the HUD and the options readout. */
+  public get activeGamepad(): GamepadLike | null {
+    const pads = navigator.getGamepads?.() as (GamepadLike | null)[] | null;
+    return this.webHid.current ?? selectActiveGamepad(pads, this.activeIndex);
   }
 
   public tick(delta: number) {
@@ -117,8 +127,10 @@ export class PlayerGamepad {
       config.gamepad,
       this.previousButtons,
       delta,
+      this.motionState,
     );
     this.previousButtons = this.sample.buttons;
+    this.motionState = this.sample.motionState;
 
     const { look } = this.sample;
     if (look.x !== 0 || look.y !== 0) {
@@ -133,6 +145,7 @@ export class PlayerGamepad {
   }
 
   private runAction(action: GamepadDigitalAction) {
+    const commands = CommandHandler.instance();
     switch (action) {
       case 'inventory':
         emitter.emit('toggleInventory');
@@ -144,10 +157,25 @@ export class PlayerGamepad {
         this.player.autoAttack();
         break;
       case 'hail':
-        CommandHandler.instance().commandHail();
+        commands.commandHail();
         break;
       case 'consider':
-        CommandHandler.instance().commandConsider();
+        commands.commandConsider();
+        break;
+      case 'camp':
+        commands.commandCamp();
+        break;
+      case 'who':
+        commands.commandWho();
+        break;
+      case 'invite':
+        commands.commandInvite([]);
+        break;
+      case 'disband':
+        commands.commandDisband();
+        break;
+      case 'help':
+        commands.commandHelp();
         break;
       case 'sitStand':
         this.player.toggleSit();
@@ -155,17 +183,32 @@ export class PlayerGamepad {
       case 'autoRun':
         this.player.toggleAutoRun();
         break;
+      case 'walkRun':
+        this.player.Running = !this.player.Running;
+        break;
       case 'targetNearest':
         this.player.playerKeyboard.cycleNearestTarget();
         break;
+      case 'targetPrevious':
+        this.player.playerKeyboard.cycleNearestTarget(true);
+        break;
       case 'clearTarget':
         this.player.Target = null;
+        break;
+      // The client has no spellbook or reply target yet, on either input
+      // path; the controller side is done and waiting for a consumer.
+      case 'spells':
+        emitter.emit('toggleSpells');
+        break;
+      case 'reply':
+        emitter.emit('chatReply');
         break;
       case 'cameraToggle':
         this.player.playerCamera.toggleCameraPerspective();
         break;
       default:
-        // jump/sprint/crouch/hotkeyModifier are polled as held state instead.
+        // jump/sprint/crouch/gyroHold/hotkeyModifier are polled as held
+        // state, and hot buttons arrive through `hotkeys` instead.
         break;
     }
   }

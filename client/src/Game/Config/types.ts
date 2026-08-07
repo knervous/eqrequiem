@@ -60,6 +60,29 @@ export interface GamepadSettings {
   invertMoveY: boolean;
   /** Fire the haptic actuator on hits and other feedback events. */
   vibration: boolean;
+
+  /**
+   * Response exponent for the look stick. 1 is linear; higher values give
+   * finer control near centre while keeping full speed at full deflection.
+   */
+  lookCurve: number;
+  /** Extra look speed earned by holding the stick, as a multiplier above 1. */
+  lookAcceleration: number;
+  /** Seconds of sustained deflection needed to reach full acceleration. */
+  lookRampTime: number;
+  /** Smoothing applied to the look stick, in seconds of lag. 0 disables it. */
+  lookSmoothing: number;
+  /** Seconds for movement to ease in and out. 0 makes it instant. */
+  moveSmoothing: number;
+
+  /** Use the controller's gyroscope to aim. */
+  gyroEnabled: boolean;
+  /** Gyro aiming speed multiplier. */
+  gyroSensitivity: number;
+  /** Flip the gyro's vertical axis. */
+  gyroInvertY: boolean;
+  /** Only aim with the gyro while the bound button is held. */
+  gyroRequiresHold: boolean;
 }
 
 export interface Settings {
@@ -94,6 +117,10 @@ export interface UISettings {
   uiScale: number;
   hudLocked: boolean;
   hudWindows: Record<HudWindowId, HudWindowPlacement>;
+  /** Show the on-screen controller button legend. */
+  controllerHud: boolean;
+  /** Hide the controller legend when no controller is connected. */
+  controllerHudAutoHide: boolean;
 }
 
 export type ActionButtonRecord = Record<number, ActionButtonData>;
