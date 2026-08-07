@@ -146,10 +146,20 @@ export const ControlsOptions: React.FC = () => {
   );
   const [capturingPad, setCapturingPad] = useState<GamepadAction | null>(null);
   const captureAllowsAxes = useRef(false);
+  const pendingModifier = useRef<string | null>(null);
   const config = UserConfig.instance.getConfig();
   const gamepad = useActiveGamepad(true);
 
   const refresh = useCallback(() => setRevision((value) => value + 1), []);
+
+  const commitKeybind = useCallback(
+    (key: keyof KeyBindings, binding: string) => {
+      UserConfig.instance.updateKeybind(key, binding);
+      setCapturingKey(null);
+      refresh();
+    },
+    [refresh],
+  );
 
   useEffect(() => {
     emitter.on('updateGamepad', refresh);
@@ -235,16 +245,32 @@ export const ControlsOptions: React.FC = () => {
                     event.preventDefault();
                     event.stopPropagation();
                     if (event.key === 'Escape') {
+                      pendingModifier.current = null;
                       setCapturingKey(null);
                       return;
                     }
+                    // A modifier on its own is only a binding once it is
+                    // released; until then it may still be the start of a
+                    // combination such as Ctrl+S.
+                    if (MODIFIER_KEYS.has(event.key)) {
+                      pendingModifier.current = keyboardEventToBinding(
+                        event.nativeEvent,
+                      );
+                      return;
+                    }
+                    pendingModifier.current = null;
                     const nextBinding = keyboardEventToBinding(
                       event.nativeEvent,
                     );
                     if (!nextBinding) return;
-                    UserConfig.instance.updateKeybind(key, nextBinding);
-                    setCapturingKey(null);
-                    refresh();
+                    commitKeybind(key, nextBinding);
+                  }}
+                  onKeyUp={(event) => {
+                    if (capturingKey !== key) return;
+                    if (!MODIFIER_KEYS.has(event.key)) return;
+                    const pending = pendingModifier.current;
+                    pendingModifier.current = null;
+                    if (pending) commitKeybind(key, pending);
                   }}
                 >
                   {capturingKey === key

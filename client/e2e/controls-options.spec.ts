@@ -10,6 +10,14 @@ import {
 const readConfig = (page: import('@playwright/test').Page) =>
   page.evaluate(() => window.controlsHarness.config());
 
+/**
+ * The capture loop samples a resting frame before it accepts input, so that a
+ * button already held when the row opens can't bind itself. Tests move faster
+ * than a person does, so they have to let that first poll land.
+ */
+const settleCapture = (page: import('@playwright/test').Page) =>
+  page.waitForTimeout(120);
+
 test.beforeEach(async ({ page }) => {
   await installVirtualGamepad(page);
   await page.goto('/controls.html');
@@ -96,8 +104,7 @@ test.describe('controller rebinding', () => {
 
     await button.click();
     await expect(button).toHaveText('Press a button…');
-    // The capture loop waits for an idle pad before accepting a press, so a
-    // held button can't bind itself the instant the row opens.
+    await settleCapture(page);
     await setPadState(page, { buttons: withButtons(3) });
     await expect(button).toHaveText('Y / Triangle');
 
@@ -110,6 +117,7 @@ test.describe('controller rebinding', () => {
     const button = page.getByTestId('gamepad-bind-lookAxisX');
     await button.click();
     await expect(button).toHaveText('Move a stick…');
+    await settleCapture(page);
     await setPadState(page, { axes: [0, -0.95, 0, 0] });
     await expect(button).toHaveText('Left Stick Y');
 
