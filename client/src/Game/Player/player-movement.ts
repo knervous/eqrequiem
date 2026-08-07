@@ -7,7 +7,10 @@ import emitter from '@game/Events/events';
 import { ClientPositionUpdate } from '@game/Net/messages';
 import { OpCodes } from '@game/Net/opcodes';
 import { WorldSocket } from '@ui/net/instances';
+import type { PlayerGamepad } from './player-gamepad';
 import type Player from './player';
+
+const clampUnit = (value: number) => Math.max(-1, Math.min(1, value));
 
 type SimpleVector4 = {
   x: number;
@@ -74,19 +77,45 @@ export class PlayerMovement {
       turn_left    : bindingToCode(bindings.turnLeft),
       turn_right   : bindingToCode(bindings.turnRight),
       move_up      : bindingToCode(bindings.jump),
-      move_down    : 'ControlLeft',
-      sprint       : 'ShiftLeft',
+      move_down    : bindingToCode(bindings.crouch),
+      sprint       : bindingToCode(bindings.sprint),
     };
     const code = keyMap[action];
-    return code ? Boolean(this.keyStates[code]) : false;
+    if (code && this.keyStates[code]) {
+      return true;
+    }
+    switch (action) {
+      case 'move_up':
+        return this.gamepad?.jump ?? false;
+      case 'move_down':
+        return this.gamepad?.crouch ?? false;
+      case 'sprint':
+        return this.gamepad?.sprint ?? false;
+      default:
+        return false;
+    }
+  }
+
+  /** Analog stick contribution for the current frame, or zero without a pad. */
+  private get analogMove(): { forward: number; strafe: number } {
+    const move = this.gamepad?.move;
+    if (!move) {return { forward: 0, strafe: 0 };}
+    return { forward: move.forward, strafe: move.strafe };
+  }
+
+  private get gamepad(): PlayerGamepad | null {
+    return this.player?.playerGamepad ?? null;
   }
 
   private isMovementKeysPressed(): boolean {
+    const analog = this.analogMove;
     return (
       this.isActionPressed('move_forward') ||
       this.isActionPressed('move_backward') ||
       this.isActionPressed('turn_left') ||
       this.isActionPressed('turn_right') ||
+      analog.forward !== 0 ||
+      analog.strafe !== 0 ||
       this.moveForward ||
       this.autoRun
     );
@@ -216,6 +245,23 @@ export class PlayerMovement {
       playWalk = true;
     }
 
+    // Controller sticks. Pushing the stick forward reads as -1 on the Y axis,
+    // which matches the sign convention the forward key uses above.
+    const analog = this.analogMove;
+    if (analog.forward !== 0 || analog.strafe !== 0) {
+      movement.x = clampUnit(movement.x + analog.forward);
+      movement.z = clampUnit(movement.z - analog.strafe);
+      this.autoRun = false;
+      playWalk = true;
+    }
+
+    // Analog sticks move the player slower when partly deflected; keyboard
+    // input always lands on a full-magnitude vector so this is a no-op there.
+    const inputMagnitude = Math.min(
+      1,
+      Math.hypot(movement.x, movement.z),
+    );
+
     // Compute forward and right vectors
     let forward: BJS.Vector3;
     if (firstPerson) {
@@ -304,7 +350,9 @@ export class PlayerMovement {
     const velocityXZ = velocityForward.add(velocityStrafe);
     const velocity =
       velocityXZ.length() > 0
-        ? velocityXZ.normalize().scale(this.moveSpeed * speedMod)
+        ? velocityXZ
+          .normalize()
+          .scale(this.moveSpeed * speedMod * inputMagnitude)
         : velocityXZ;
     this.finalVelocity = velocity.add(velocityY); // Store finalVelocity
     const finalVelocity = velocity.add(velocityY);

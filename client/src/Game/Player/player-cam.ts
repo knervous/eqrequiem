@@ -424,8 +424,33 @@ export class PlayerCamera {
     this.updateCameraPosition();
   }
 
+  /** Swaps between the first-person and the last used third-person distance. */
+  public toggleCameraPerspective() {
+    const target = this.isFirstPerson
+      ? Math.min(this.maxCameraDistance, 12)
+      : this.minCameraDistance;
+    this.adjustCameraDistance(
+      (target - this.preferredCameraDistance) / 1.2,
+    );
+  }
+
   public inputMouseMotion(x: number, y: number) {
-    if (!this.player.playerEntity || !this.isLocked) {
+    if (!this.isLocked) {
+      return;
+    }
+    this.applyLook(x, y);
+  }
+
+  /**
+   * Analog stick look. Unlike the mouse this never needs pointer lock, since
+   * the stick is already a relative input device.
+   */
+  public inputGamepadLook(x: number, y: number) {
+    this.applyLook(x, y);
+  }
+
+  private applyLook(x: number, y: number) {
+    if (!this.player.playerEntity) {
       return;
     }
     const charSelect = !!this.player.gameManager.CharacterSelect?.character;

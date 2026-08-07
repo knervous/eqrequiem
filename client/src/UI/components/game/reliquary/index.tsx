@@ -13,7 +13,6 @@ import type {
   ActionButtonRecord,
   HudWindowId,
   HudWindowPlacement,
-  KeyBindings,
   Settings,
   UISettings,
 } from '@game/Config/types';
@@ -52,6 +51,7 @@ import type { JsonCommandLink } from '../chat/command-link-util';
 import { linkItemToChat } from '../chat/command-link-util';
 import { ChatInputSlate } from '../chat/chat-input';
 import { useDrag } from '../../../hooks/use-drag';
+import { ControlsOptions } from './controls-options';
 import { HudWindow } from './hud-window';
 import './reliquary.css';
 
@@ -288,8 +288,13 @@ const phaseForHour = (hour: number): string => {
   return label;
 };
 
+const skyManager = () => GameManager.instance?.ZoneManager?.SkyManager;
+
 const TimeOfDayBar: React.FC = () => {
   const hour = useEventState('timeOfDay', 12);
+  const trackRef = useRef<HTMLDivElement | null>(null);
+  const [scrubbing, setScrubbing] = useState(false);
+
   const wrapped = ((hour % 24) + 24) % 24;
   const totalMinutes = Math.floor(wrapped * 60);
   const clock =
@@ -298,18 +303,81 @@ const TimeOfDayBar: React.FC = () => {
   const phase = phaseForHour(wrapped);
   const percent = (wrapped / 24) * 100;
 
+  // The sky manager owns the clock and re-emits it, so scrubbing only has to
+  // push the new hour in; the displayed value still arrives back through the
+  // same event as an ordinary tick.
+  const applyFromClientX = useCallback((clientX: number) => {
+    const track = trackRef.current;
+    if (!track) return;
+    const bounds = track.getBoundingClientRect();
+    if (bounds.width <= 0) return;
+    const ratio = Math.min(1, Math.max(0, (clientX - bounds.left) / bounds.width));
+    skyManager()?.setTimeOfDay(ratio * 24);
+  }, []);
+
+  const onPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (event.button !== 0) return;
+    event.preventDefault();
+    event.currentTarget.setPointerCapture(event.pointerId);
+    setScrubbing(true);
+    applyFromClientX(event.clientX);
+  };
+
+  const onPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (!scrubbing) return;
+    applyFromClientX(event.clientX);
+  };
+
+  const endScrub = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (!scrubbing) return;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+    setScrubbing(false);
+  };
+
+  const onKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    const step = event.shiftKey ? 1 : 1 / 6;
+    const jump: Record<string, number> = {
+      ArrowLeft: -step,
+      ArrowDown: -step,
+      ArrowRight: step,
+      ArrowUp: step,
+    };
+    if (event.key in jump) {
+      event.preventDefault();
+      skyManager()?.setTimeOfDay(wrapped + jump[event.key]!);
+      return;
+    }
+    if (event.key === 'Home' || event.key === 'End') {
+      event.preventDefault();
+      skyManager()?.setTimeOfDay(event.key === 'Home' ? 0 : 12);
+    }
+  };
+
   return (
     <div
-      className="rq-timebar"
-      role="meter"
-      aria-valuemin={0}
-      aria-valuemax={24}
-      aria-valuenow={Number(wrapped.toFixed(2))}
-      aria-valuetext={`${clock}, ${phase}`}
+      className={`rq-timebar${scrubbing ? ' is-scrubbing' : ''}`}
       aria-label="Time of day"
     >
       <span className="rq-timebar__phase">{phase}</span>
-      <div className="rq-timebar__track">
+      <div
+        ref={trackRef}
+        className="rq-timebar__track"
+        role="slider"
+        tabIndex={0}
+        aria-valuemin={0}
+        aria-valuemax={24}
+        aria-valuenow={Number(wrapped.toFixed(2))}
+        aria-valuetext={`${clock}, ${phase}`}
+        aria-label="Set time of day"
+        title="Drag to set the time of day"
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={endScrub}
+        onPointerCancel={endScrub}
+        onKeyDown={onKeyDown}
+      >
         {/* Sunrise and sunset, the two boundaries worth reading at a glance. */}
         <i className="rq-timebar__tick" style={{ left: '25%' }} aria-hidden="true" />
         <i className="rq-timebar__tick" style={{ left: '75%' }} aria-hidden="true" />
@@ -1057,11 +1125,6 @@ const Actions: React.FC<{ open: boolean; onClose: () => void }> = ({ open, onClo
 const optionTabs = ['Gameplay', 'Controls', 'Interface', 'Audio', 'Video'] as const;
 type OptionTab = (typeof optionTabs)[number];
 
-const presentSettingName = (name: string) =>
-  name
-    .replace(/([a-z])([A-Z0-9])/g, '$1 $2')
-    .replace(/^./, (letter) => letter.toUpperCase());
-
 const OptionsMenu: React.FC<{
   open: boolean;
   ui: UISettings;
@@ -1073,7 +1136,6 @@ const OptionsMenu: React.FC<{
   onResetHud: () => void;
 }> = ({ open, ui, onClose, onUIChange, onResetHud }) => {
   const [tab, setTab] = useState<OptionTab>('Gameplay');
-  const [capturing, setCapturing] = useState<keyof KeyBindings | null>(null);
   const [, setRevision] = useState(0);
   const config = UserConfig.instance.getConfig();
 
@@ -1082,7 +1144,6 @@ const OptionsMenu: React.FC<{
     const closeOnEscape = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return;
       event.preventDefault();
-      setCapturing(null);
       onClose();
     };
     window.addEventListener('keydown', closeOnEscape);
@@ -1136,37 +1197,7 @@ const OptionsMenu: React.FC<{
                 </div>
               </>
             ) : null}
-            {tab === 'Controls' ? (
-              <>
-                <h2>Key bindings</h2>
-                <div className="rq-keybind-list">
-                  {(Object.entries(config.keyBindings) as Array<
-                    [keyof KeyBindings, string]
-                  >).map(([key, binding]) => (
-                    <div className="rq-keybind-row" key={key}>
-                      <span>{presentSettingName(key)}</span>
-                      <button
-                        className={capturing === key ? 'is-capturing' : ''}
-                        onClick={() => setCapturing(key)}
-                        onBlur={() => setCapturing((current) => current === key ? null : current)}
-                        onKeyDown={(event) => {
-                          if (capturing !== key) return;
-                          event.preventDefault();
-                          event.stopPropagation();
-                          const nextBinding = keyboardEventToBinding(event.nativeEvent);
-                          if (!nextBinding) return;
-                          UserConfig.instance.updateKeybind(key, nextBinding);
-                          setCapturing(null);
-                          setRevision((value) => value + 1);
-                        }}
-                      >
-                        {capturing === key ? 'Press a key…' : binding}
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </>
-            ) : null}
+            {tab === 'Controls' ? <ControlsOptions /> : null}
             {tab === 'Interface' ? (
               <>
                 <h2>HUD</h2>

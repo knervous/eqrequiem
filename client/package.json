@@ -151,6 +151,7 @@
     "@azure/storage-blob": "^12.27.0",
     "@gltf-transform/core": "^4.4.1",
     "@itk-viewer/blosc-zarr": "^0.2.3",
+    "@playwright/test": "^1.62.1",
     "@protobuf-ts/plugin": "^2.9.5",
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",

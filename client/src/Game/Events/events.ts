@@ -68,6 +68,9 @@ export type Events = {
   // Config
   updateConfig: keyof Config | undefined;
   updateKeybinds: void;
+  updateGamepad: void;
+  /** Emitted when a controller connects or disconnects, with its id or null. */
+  gamepadConnected: string | null;
   updateSettings: void;
   updateUI: void;
 

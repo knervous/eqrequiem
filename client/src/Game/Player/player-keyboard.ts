@@ -94,6 +94,31 @@ export class PlayerKeyboard {
     }
   }
 
+  /**
+   * Advances the target ring to the next closest entity. Shared by the target
+   * key binding and the controller's target button.
+   */
+  public cycleNearestTarget(backwards: boolean = false) {
+    if (!this.player.gameManager.ZoneManager?.EntityPool?.entities) {
+      return;
+    }
+    this.updateClosestEntities();
+    if (this.closestEntities.length === 0) {
+      return;
+    }
+    const offset = backwards ? -1 : 1;
+    this.currentSelectionIndex =
+      (this.currentSelectionIndex + offset + this.closestEntities.length) %
+      this.closestEntities.length;
+
+    const selected = this.closestEntities[this.currentSelectionIndex];
+    if (!selected) {
+      this.currentSelectionIndex = -1;
+      return;
+    }
+    this.player.Target = selected.entity;
+  }
+
   private handleKeyDownEvent(key: string) {
     const keyBindings = UserConfig.instance.getConfig().keyBindings;
 
@@ -119,29 +144,7 @@ export class PlayerKeyboard {
         break;
       }
       case keyBindings.targetNearest.toLowerCase(): {
-        if (this.player.gameManager.ZoneManager?.EntityPool?.entities) {
-          // Update the list of closest entities
-          this.updateClosestEntities();
-
-          if (this.closestEntities.length === 0) {
-            console.log("No other entities found.");
-            return;
-          }
-
-          // Cycle to the next entity
-          const offset = this.modifierKeys.shift ? -1 : 1;
-          this.currentSelectionIndex =
-            (this.currentSelectionIndex + offset) % this.closestEntities.length;
-
-          const selected = this.closestEntities[this.currentSelectionIndex];
-          if (!selected) {
-            this.currentSelectionIndex = -1; // Reset if no selection
-            return;
-          }
-          this.player.Target = selected.entity;
-        } else {
-          console.log("No entities available.");
-        }
+        this.cycleNearestTarget(this.modifierKeys.shift);
         break;
       }
 

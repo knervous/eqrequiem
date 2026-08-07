@@ -7,6 +7,8 @@ import {
 } from "@ui/components/game/action-button/constants";
 import {
   Config,
+  GamepadBindings,
+  GamepadSettings,
   HudWindowId,
   HudWindowPlacement,
   KeyBindings,
@@ -28,12 +30,54 @@ export const DEFAULT_HUD_WINDOWS: UISettings["hudWindows"] = {
   commands: { x: 0.445, y: 0.79, width: 690, height: 142, z: 6 },
 };
 
+/**
+ * Standard-mapping defaults. Face buttons cover the verbs a player reaches for
+ * mid-fight, the D-pad drives the first four hot buttons, and holding the left
+ * bumper shifts the D-pad onto hot buttons five through eight.
+ */
+export const DEFAULT_GAMEPAD_BINDINGS: GamepadBindings = {
+  moveAxisX: "Axis0",
+  moveAxisY: "Axis1",
+  lookAxisX: "Axis2",
+  lookAxisY: "Axis3",
+
+  jump: "Button0",
+  sitStand: "Button1",
+  hail: "Button2",
+  consider: "Button3",
+  hotkeyModifier: "Button4",
+  targetNearest: "Button5",
+  sprint: "Button6",
+  autoAttack: "Button7",
+  inventory: "Button8",
+  options: "Button9",
+  autoRun: "Button10",
+  cameraToggle: "Button11",
+  hotkey1: "Button12",
+  hotkey2: "Button13",
+  hotkey3: "Button14",
+  hotkey4: "Button15",
+  crouch: "",
+  clearTarget: "",
+};
+
+export const DEFAULT_GAMEPAD_SETTINGS: GamepadSettings = {
+  enabled: true,
+  deadzone: 0.18,
+  lookSensitivity: 1,
+  invertLookY: false,
+  invertMoveY: false,
+  vibration: true,
+};
+
 export const DEFAULT_CONFIG: Config = {
   keyBindings: {
     moveForward: "W",
     moveBackward: "S",
     turnLeft: "A",
     turnRight: "D",
+    sprint: "Shift",
+    crouch: "Ctrl",
     hail: "H",
     consider: "C",
     jump: "Space",
@@ -62,6 +106,8 @@ export const DEFAULT_CONFIG: Config = {
     hotkey9: "9",
     hotkey10: "0",
   },
+  gamepadBindings: structuredClone(DEFAULT_GAMEPAD_BINDINGS),
+  gamepad: { ...DEFAULT_GAMEPAD_SETTINGS },
   settings: {
     particles: true,
     sound: true,
@@ -157,6 +203,14 @@ export function mergeConfig(configData: Partial<Config> | null): Config {
       ...DEFAULT_CONFIG.keyBindings,
       ...configData?.keyBindings,
     },
+    gamepadBindings: {
+      ...DEFAULT_CONFIG.gamepadBindings,
+      ...configData?.gamepadBindings,
+    },
+    gamepad: {
+      ...DEFAULT_CONFIG.gamepad,
+      ...configData?.gamepad,
+    },
     settings: {
       ...DEFAULT_CONFIG.settings,
       ...configData?.settings,
@@ -245,6 +299,10 @@ export class UserConfig {
       case "keyBindings":
         emitter.emit("updateKeybinds");
         break;
+      case "gamepadBindings":
+      case "gamepad":
+        emitter.emit("updateGamepad");
+        break;
       case "settings":
         emitter.emit("updateSettings");
         break;
@@ -267,6 +325,7 @@ export class UserConfig {
         emitter.emit("updateSettings");
         emitter.emit("updateUI");
         emitter.emit("updateKeybinds");
+        emitter.emit("updateGamepad");
         emitter.emit("updateHotButtons");
         emitter.emit("updateCombatButtons");
         emitter.emit("updateSocialButtons");
@@ -360,6 +419,36 @@ export class UserConfig {
   public updateKeybind(key: keyof KeyBindings, value: string): void {
     this.config.keyBindings[key] = value;
     emitter.emit("updateConfig", "keyBindings");
+    this.save();
+  }
+
+  public resetKeybinds(): void {
+    this.config.keyBindings = { ...DEFAULT_CONFIG.keyBindings };
+    emitter.emit("updateConfig", "keyBindings");
+    this.save();
+  }
+
+  public updateGamepadBinding(
+    key: keyof GamepadBindings,
+    value: string,
+  ): void {
+    this.config.gamepadBindings[key] = value;
+    emitter.emit("updateConfig", "gamepadBindings");
+    this.save();
+  }
+
+  public resetGamepadBindings(): void {
+    this.config.gamepadBindings = structuredClone(DEFAULT_GAMEPAD_BINDINGS);
+    emitter.emit("updateConfig", "gamepadBindings");
+    this.save();
+  }
+
+  public updateGamepadSetting<K extends keyof GamepadSettings>(
+    key: K,
+    value: GamepadSettings[K],
+  ): void {
+    this.config.gamepad[key] = value;
+    emitter.emit("updateConfig", "gamepad");
     this.save();
   }
 
