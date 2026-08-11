@@ -95,45 +95,45 @@
       },
       "authoring": {
         "path": "shader-object/sandbox/public/shado/worlds/talioscrownward.authoring.json",
-        "sha256": "113b212566c01cf85321d63aa4673676efeaa2cde272d6dc601b7d1a2b8f07e0",
-        "bytes": 395077
+        "sha256": "651c1b4fd1d85e183429d671f769a7edce447adfa476f51bc3b91199e88e7c24",
+        "bytes": 402854
       },
       "runtime": {
         "source": "/eqrequiem/worlds/talioscrownward.glb.gz",
         "scene": {
           "path": "client/public/eqrequiem/worlds/talioscrownward.glb.gz",
-          "sha256": "bd223ed60667513ecebd0c187b005e8daf34d13293eb5f007f984bac377e6a09",
-          "bytes": 39183742
+          "sha256": "dd468bd10225eeb872398a2656a203f434954c1e13e1662e349e4560bcb367be",
+          "bytes": 39183717
         },
         "spatial": {
           "path": "client/public/eqrequiem/worlds/talioscrownward.spatial.json.gz",
-          "sha256": "4716c0a6071945be8bca80ad40ca567955a85a1923e3f79f2c931aa57cedbda1",
-          "bytes": 5945660
+          "sha256": "5dcc86c70193eecadcf7c0ad46a03a511ccdd1978e17b17227788a58205ffd8c",
+          "bytes": 5948067
         },
         "collision": {
           "path": "client/public/eqrequiem/worlds/talioscrownward.collision.bin.gz",
-          "sha256": "c83007594b5835ea502a48262cc3fa9decfadbf27de5f5bc57f69c45db4b1263",
-          "bytes": 806366
+          "sha256": "746275552edc2101051c962a81e5219635c3ff1dcd9533a11d6e42d82ed28037",
+          "bytes": 806377
         },
         "lightingPlan": {
           "path": "client/public/eqrequiem/worlds/talioscrownward.lighting-plan.json.gz",
-          "sha256": "d4e7d588f45495d9967a1e266939b9dde0d63d4363575bd3337aeea9d05ca5fb",
-          "bytes": 63543
+          "sha256": "00c2f1aba5a47ffefcc6f3d0f07062418b7eb6df5db225aac1579fc10f739885",
+          "bytes": 63693
         }
       },
       "stats": {
         "primitives": 928,
         "triangles": 132498,
-        "clusters": 9618,
-        "renderChunks": 2008,
-        "cells": 5635,
+        "clusters": 9631,
+        "renderChunks": 2014,
+        "cells": 5636,
         "portals": 0,
         "regions": 20,
         "objectPrototypes": 48,
         "objectStamps": 480,
         "grassCells": 6082,
-        "grassPlacements": 44872,
-        "tiles": 5635,
+        "grassPlacements": 44871,
+        "tiles": 5636,
         "collisionVertices": 65536,
         "collisionTriangles": 114194,
         "collisionSourceTriangles": 109136,
