@@ -9,6 +9,7 @@ import { RegisterJoinedPhysicsEngineComponent } from "@babylonjs/core/Physics/jo
 import { RegisterPhysicsV2PhysicsEngineComponent } from "@babylonjs/core/Physics/v2/physicsEngineComponent.pure.js";
 import {
   ComputeShader,
+  Matrix,
   NullEngine,
   Scene,
   ShaderStore,
@@ -81,8 +82,26 @@ assert.equal(
 assert.ok(prepared.materials[0].plugins.DetailMapConfiguration);
 
 for (const model of ["hum", "huf"]) {
-  const compressedScene = await readFile(
-    new URL(`../public/eqrequiem/babylon/${model}.babylon.gz`, import.meta.url),
+  const [compressedScene, compressedVat] = await Promise.all([
+    readFile(
+      new URL(
+        `../public/eqrequiem/babylon/${model}.babylon.gz`,
+        import.meta.url,
+      ),
+    ),
+    readFile(
+      new URL(
+        `../public/eqrequiem/vat/${model}_32.bin.gz`,
+        import.meta.url,
+      ),
+    ),
+  ]);
+  const vatBytes = gunzipSync(compressedVat);
+  const vat = new Float32Array(
+    vatBytes.buffer.slice(
+      vatBytes.byteOffset,
+      vatBytes.byteOffset + vatBytes.byteLength,
+    ),
   );
   const sceneData = prepareSerializedBabylonScene(
     gunzipSync(compressedScene).buffer,
@@ -105,6 +124,7 @@ for (const model of ["hum", "huf"]) {
   );
   const runtimeScale = runtimeMesh?.metadata?.gltf?.extras?.runtimeScale;
   const skeleton = container.skeletons[0];
+  const floatsPerFrame = (skeleton.bones.length + 1) * 16;
   skeleton.returnToRest();
   skeleton.computeAbsoluteMatrices(true);
   for (const socketName of ["socket_hand.L", "socket_hand.R"]) {
@@ -130,24 +150,36 @@ for (const model of ["hum", "huf"]) {
       runtimeScale,
       heldItemGeometryTransform(attachmentKey),
     );
-    const orientedOrigin = Vector3.TransformCoordinates(
-      Vector3.Zero(),
-      orientedTransform,
-    );
-    const orientedLengthAxis = Vector3.TransformCoordinates(
-      Vector3.Right(),
-      orientedTransform,
-    )
-      .subtract(orientedOrigin)
-      .normalize();
-    assert.ok(
-      orientedLengthAxis.y > 0.95,
-      `${model} ${socketName} weapon tip is not above its hilt.`,
-    );
-    assert.ok(
-      Math.abs(orientedLengthAxis.x) < 0.01 && orientedLengthAxis.z < -0.2,
-      `${model} ${socketName} weapon does not pitch toward player-forward -Z.`,
-    );
+    for (const frame of [0, 30, 60, 90, 120]) {
+      const vatTransform = Matrix.FromArray(
+        vat,
+        frame * floatsPerFrame + socket.getIndex() * 16,
+      );
+      const animatedTransform = orientedTransform.multiply(vatTransform);
+      const orientedOrigin = Vector3.TransformCoordinates(
+        Vector3.Zero(),
+        animatedTransform,
+      );
+      const orientedLengthAxis = Vector3.TransformCoordinates(
+        Vector3.Right(),
+        animatedTransform,
+      )
+        .subtract(orientedOrigin)
+        .normalize();
+      assert.ok(
+        orientedLengthAxis.y > 0.85,
+        `${model} ${socketName} weapon tip is not above its hilt at idle frame ${frame}.`,
+      );
+      assert.ok(
+        orientedLengthAxis.x > 0.15,
+        `${model} ${socketName} weapon still leans behind the idle pose at frame ${frame}.`,
+      );
+      const expectedSide = socketName.endsWith(".R") ? 1 : -1;
+      assert.ok(
+        orientedLengthAxis.z * expectedSide > 0.3,
+        `${model} ${socketName} weapon lost its mirrored hand-facing at idle frame ${frame}.`,
+      );
+    }
   }
   assert.equal(heldItemLocalYOffset(true, 2), 0);
   assert.equal(heldItemLocalYOffset(false, 2), 1);
@@ -171,12 +203,12 @@ const shieldVerticalAxis = Vector3.TransformNormal(
   shieldOrientation,
 );
 assert.ok(
-  weaponLengthAxis.z > 0.95 && weaponLengthAxis.y < -0.2,
-  "Promoted-human weapon is not aligned upward and forward at the socket.",
+  weaponLengthAxis.x < -0.7 && leftWeaponLengthAxis.x > 0.7,
+  "Promoted-human weapon geometry does not preserve the mirrored hand roll.",
 );
 assert.ok(
-  Vector3.Distance(weaponLengthAxis, leftWeaponLengthAxis) < 1e-5,
-  "Left-hand weapon does not share the right-hand forward/up alignment.",
+  weaponLengthAxis.z > 0.6 && leftWeaponLengthAxis.z > 0.6,
+  "Promoted-human weapon geometry lost its common upright quarter-turn.",
 );
 assert.ok(
   Vector3.Distance(shieldVerticalAxis, Vector3.Backward()) < 1e-5,

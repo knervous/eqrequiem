@@ -1,4 +1,4 @@
-import { Matrix, type DeepImmutable } from "@babylonjs/core";
+import { Matrix, Vector3, type DeepImmutable } from "@babylonjs/core";
 
 export function createHeldItemBindTransform(
   socketBindTransform: DeepImmutable<Matrix>,
@@ -23,6 +23,18 @@ export function createHeldItemBindTransform(
 // inverting source Z; weapons use their authored +X tip direction unchanged.
 const PROMOTED_HUMAN_SHIELD_SOURCE_CORRECTION = Matrix.RotationZ(Math.PI);
 
+// Keep the authored +X blade tip on the upward quarter-turn, then roll each
+// mirrored hand around its grip axis so the blade leans across the front of
+// the idle pose rather than behind it. These axes are the promoted rig's
+// canonical idle hand-up axes expressed in each socket's local space.
+const PROMOTED_HUMAN_WEAPON_UPRIGHT = Matrix.RotationZ(
+  Math.PI / 12,
+).multiply(Matrix.RotationY(-Math.PI / 2));
+const PROMOTED_HUMAN_WEAPON_FACING_AXIS = {
+  l_point: new Vector3(0.420287959, 0.058386742, 0.90551037),
+  r_point: new Vector3(-0.420287721, 0.058386354, 0.905510494),
+} as const;
+
 /**
  * Aligns EQ-source held items to the promoted human's canonical Y-up sockets.
  * Weapons point their authored +X tip upward and slightly player-forward;
@@ -42,10 +54,11 @@ export function heldItemGeometryTransform(attachmentKey: string): Matrix {
     );
   }
   if (attachmentKey === "r_point" || attachmentKey === "l_point") {
-    // Pitch source +X toward the socket's player-forward -Z axis before the
-    // upright quarter-turn. Both hands then produce the same forward/up axis.
-    return Matrix.RotationZ(-Math.PI / 12).multiply(
-      Matrix.RotationY(-Math.PI / 2),
+    return PROMOTED_HUMAN_WEAPON_UPRIGHT.multiply(
+      Matrix.RotationAxis(
+        PROMOTED_HUMAN_WEAPON_FACING_AXIS[attachmentKey],
+        Math.PI,
+      ),
     );
   }
   return Matrix.Identity();
