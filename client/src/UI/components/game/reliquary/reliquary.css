@@ -35,6 +35,63 @@
   inset: 0;
 }
 
+/* Auto-attack engagement.
+   The steady edge says "you are swinging" from anywhere on the screen; the pulse
+   is one real swing.  Both are inset glows rather than a drawn frame, so nothing
+   competes with the HUD panels or eats usable screen area. */
+.rq-engaged {
+  position: absolute;
+  inset: 0;
+  /* Must be 0, not 1: the HUD stage is z-index auto, so a positive z-index here
+     paints the glow over the panels instead of behind them.  0 and auto share a
+     paint step and resolve in tree order, and the stage follows this node. */
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.rq-engaged__edge,
+.rq-engaged__swing {
+  position: absolute;
+  inset: 0;
+}
+
+.rq-engaged__edge {
+  box-shadow:
+    inset 0 0 90px 18px rgb(156 77 63 / 22%),
+    inset 0 0 26px 2px rgb(218 139 61 / 12%);
+  animation: rq-engaged-breathe 2.6s ease-in-out infinite;
+}
+
+/* A swing reads as the edge tightening, then releasing. */
+.rq-engaged__swing {
+  box-shadow: inset 0 0 120px 26px rgb(218 139 61 / 34%);
+  animation: rq-engaged-swing 420ms ease-out forwards;
+}
+
+.rq-engaged__swing.is-miss {
+  box-shadow: inset 0 0 110px 22px rgb(155 162 158 / 20%);
+  animation-duration: 300ms;
+}
+
+@keyframes rq-engaged-breathe {
+  0%, 100% { opacity: .74; }
+  50% { opacity: 1; }
+}
+
+@keyframes rq-engaged-swing {
+  0% { opacity: 0; }
+  18% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* A pulsing screen edge is exactly the thing to hold still for anyone who has
+   asked the OS to stop moving. The steady glow still reports engagement. */
+@media (prefers-reduced-motion: reduce) {
+  .rq-engaged__edge { animation: none; opacity: 1; }
+  .rq-engaged__swing { display: none; }
+}
+
 .rq-hud__top {
   position: absolute;
   top: max(12px, env(safe-area-inset-top));
@@ -840,6 +897,854 @@
   font-size: 9px;
 }
 
+.rq-vertical-hotbar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.rq-vertical-hotbar__slots {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.rq-techniques-container,
+.rq-grimoire-container,
+.rq-aspects-container {
+  z-index: 250;
+  pointer-events: auto;
+}
+
+.rq-grimoire-book {
+  position: relative;
+  width: 540px;
+  height: 400px;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.85), 0 0 24px rgba(195, 170, 112, 0.25);
+  border: 1px solid var(--rq-bronze);
+  display: flex;
+  flex-direction: column;
+}
+
+.rq-grimoire-book__bg {
+  position: absolute;
+  inset: 0;
+  background-image: url('/eltania/ui/grimoire_bg.jpg');
+  background-size: cover;
+  background-position: center;
+  z-index: 1;
+}
+
+.rq-grimoire-book__vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, transparent 40%, rgba(0, 0, 0, 0.75) 100%);
+  z-index: 2;
+  pointer-events: none;
+}
+
+.rq-grimoire-book__header {
+  position: relative;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  background: linear-gradient(180deg, rgba(16, 20, 19, 0.92), rgba(8, 12, 11, 0.95));
+  border-bottom: 1px solid rgba(195, 170, 112, 0.4);
+  cursor: move;
+  user-select: none;
+}
+
+.rq-grimoire-book__title {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #f7e7c4;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+}
+
+.rq-grimoire-book__close {
+  position: static;
+}
+
+.rq-grimoire-book__pages {
+  position: relative;
+  z-index: 5;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  padding: 12px 18px 16px 18px;
+  height: calc(100% - 40px);
+}
+
+.rq-grimoire-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.rq-grimoire-page__heading {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #3b2817;
+  border-bottom: 1px solid rgba(59, 40, 23, 0.3);
+  padding-bottom: 4px;
+  margin: 0 0 8px 0;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.rq-grimoire-page__list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow-y: auto;
+  padding-right: 4px;
+  flex: 1;
+}
+
+.rq-grimoire-spell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 6px;
+  background: rgba(30, 24, 16, 0.55);
+  border: 1px solid rgba(135, 102, 56, 0.4);
+  border-radius: 4px;
+  backdrop-filter: blur(4px);
+  transition: all 120ms ease;
+}
+
+.rq-grimoire-spell--draggable {
+  cursor: grab;
+}
+
+.rq-grimoire-spell--draggable:active {
+  cursor: grabbing;
+}
+
+.rq-grimoire-spell:hover {
+  background: rgba(45, 34, 20, 0.75);
+  border-color: rgba(195, 170, 112, 0.8);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.rq-grimoire-spell__body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.rq-grimoire-spell__name {
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff4d9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+}
+
+.rq-grimoire-spell__level {
+  font-size: 9px;
+  color: #d1b88e;
+}
+
+.rq-grimoire-spell__cast-hint {
+  font-size: 9px;
+  font-weight: 700;
+  color: #ffd700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 2px 5px;
+  background: rgba(30, 24, 12, 0.6);
+  border: 1px solid rgba(195, 170, 112, 0.4);
+  border-radius: 3px;
+}
+
+.rq-grimoire-spell__locked {
+  font-size: 9px;
+  font-weight: 700;
+  color: #c0a880;
+  padding: 2px 5px;
+  background: rgba(18, 14, 10, 0.5);
+  border: 1px solid rgba(100, 80, 60, 0.4);
+  border-radius: 3px;
+}
+
+.rq-grimoire-btn {
+  height: 20px;
+  padding: 0 6px;
+  background: linear-gradient(180deg, #3a2e1e, #1e160c);
+  border: 1px solid #9a8150;
+  color: #fff2d0;
+  font-size: 9.5px;
+  font-weight: 700;
+  border-radius: 2px;
+  cursor: pointer;
+}
+
+.rq-grimoire-btn:hover {
+  background: linear-gradient(180deg, #59462d, #2d2112);
+  border-color: gold;
+  color: #ffffff;
+}
+
+.rq-grimoire-btn--remove {
+  background: linear-gradient(180deg, #24352b, #101c15);
+  border-color: #558769;
+  color: #d2f2df;
+}
+
+.rq-grimoire-empty {
+  font-family: Georgia, serif;
+  font-size: 11px;
+  font-style: italic;
+  color: #523f2b;
+  padding: 12px 4px;
+}
+
+.rq-aspects-panel {
+  width: 520px;
+}
+
+/* WoW Style Dual Talent Tree Panel */
+.rq-wow-aspects-container {
+  z-index: 250;
+  pointer-events: auto;
+}
+
+.rq-wow-talent-panel {
+  position: relative;
+  width: 640px;
+  max-height: 520px;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.9), 0 0 28px rgba(255, 215, 0, 0.25);
+  border: 1px solid rgba(195, 170, 112, 0.8);
+  display: flex;
+  flex-direction: column;
+}
+
+.rq-wow-talent-panel__header {
+  position: relative;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  background: linear-gradient(180deg, rgba(16, 22, 28, 0.95), rgba(8, 12, 16, 0.98));
+  border-bottom: 1px solid rgba(195, 170, 112, 0.4);
+  cursor: move;
+  user-select: none;
+}
+
+.rq-wow-talent-panel__title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rq-wow-talent-panel__title {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #ffd700;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
+}
+
+.rq-wow-talent-panel__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.rq-wow-talent-panel__body {
+  position: relative;
+  z-index: 5;
+  padding: 14px 16px 18px 16px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.rq-dual-trees {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 14px;
+}
+
+.rq-dual-trees__divider {
+  width: 1px;
+  background: linear-gradient(180deg, transparent, rgba(195, 170, 112, 0.5), transparent);
+}
+
+.rq-talent-tree-col {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: rgba(10, 16, 24, 0.65);
+  border: 1px solid rgba(195, 170, 112, 0.3);
+  border-radius: 6px;
+  padding: 10px 12px;
+  backdrop-filter: blur(6px);
+}
+
+.rq-talent-tree-col__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(195, 170, 112, 0.3);
+  padding-bottom: 4px;
+}
+
+.rq-talent-tree-col__header strong {
+  font-family: Georgia, serif;
+  font-size: 12px;
+  color: #f7e7c4;
+  letter-spacing: 0.04em;
+}
+
+.rq-talent-tree-col__pts {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #ffd700;
+}
+
+.rq-talent-tree-col__tiers {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.rq-talent-track-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.rq-talent-track-label {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #80c4e0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.rq-talent-nodes-column {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* WoW Talent Node Item */
+.rq-wow-node {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 8px;
+  background: rgba(14, 22, 32, 0.7);
+  border: 1px solid rgba(120, 150, 180, 0.3);
+  border-radius: 4px;
+  transition: all 120ms ease;
+}
+
+.rq-wow-node--mastered {
+  border-color: rgba(255, 215, 0, 0.9);
+  background: rgba(36, 28, 12, 0.85);
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+}
+
+.rq-wow-node--available {
+  border-color: rgba(0, 204, 255, 0.9);
+  background: rgba(8, 28, 44, 0.85);
+  box-shadow: 0 0 10px rgba(0, 204, 255, 0.35);
+}
+
+.rq-wow-node--locked {
+  opacity: 0.6;
+  filter: grayscale(0.6);
+}
+
+.rq-wow-node__frame {
+  position: relative;
+  display: inline-flex;
+}
+
+.rq-wow-node__rank {
+  position: absolute;
+  bottom: -3px;
+  right: -3px;
+  padding: 0 3px;
+  min-width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  background: #080c10;
+  border: 1px solid #9a8150;
+  color: #ffd700;
+  font-size: 8.5px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rq-wow-node--available .rq-wow-node__rank {
+  border-color: #00ccff;
+  color: #00ccff;
+}
+
+.rq-wow-node__label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex: 1;
+  min-width: 0;
+}
+
+.rq-wow-node__name {
+  font-size: 11px;
+  font-weight: 700;
+  color: #f7f9fa;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rq-wow-spend-btn {
+  height: 20px;
+  padding: 0 6px;
+  background: linear-gradient(180deg, #0088cc, #004466);
+  border: 1px solid #00ccff;
+  color: #ffffff;
+  font-size: 9px;
+  font-weight: 700;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.rq-wow-spend-btn:hover {
+  background: linear-gradient(180deg, #00b3ff, #006699);
+  box-shadow: 0 0 8px rgba(0, 204, 255, 0.5);
+}
+
+.rq-wow-tooltip {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 210px;
+  padding: 8px 10px;
+  background: rgba(6, 10, 16, 0.96);
+  border: 1px solid #ffd700;
+  border-radius: 4px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.9);
+  z-index: 100;
+  pointer-events: none;
+  backdrop-filter: blur(8px);
+}
+
+.rq-wow-tooltip__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 215, 0, 0.3);
+  padding-bottom: 4px;
+  margin-bottom: 4px;
+}
+
+.rq-wow-tooltip__header strong {
+  font-size: 11px;
+  color: #ffffff;
+}
+
+.rq-wow-tooltip__rank {
+  font-size: 9.5px;
+  color: #ffd700;
+}
+
+.rq-wow-tooltip__effect {
+  font-size: 10px;
+  color: #c8e4f8;
+  margin: 0;
+  line-height: 1.35;
+}
+
+.rq-wow-tooltip__refusal {
+  margin-top: 6px;
+  font-size: 9px;
+  color: #ff9980;
+  font-style: italic;
+}
+
+/* Aspect Constellation Talent Tree Panel */
+.rq-aspects-tree-container {
+  z-index: 250;
+  pointer-events: auto;
+}
+
+.rq-aspects-tree-panel {
+  position: relative;
+  width: 680px;
+  min-height: 460px;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.9), 0 0 28px rgba(0, 204, 255, 0.25);
+  border: 1px solid rgba(195, 170, 112, 0.7);
+  display: flex;
+  flex-direction: column;
+}
+
+.rq-aspects-tree__bg {
+  position: absolute;
+  inset: 0;
+  background-image: url('/eltania/ui/aspects_tree_bg.jpg');
+  background-size: cover;
+  background-position: center;
+  z-index: 1;
+}
+
+.rq-aspects-tree__vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, transparent 30%, rgba(5, 8, 12, 0.88) 100%);
+  z-index: 2;
+  pointer-events: none;
+}
+
+.rq-aspects-tree__header {
+  position: relative;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  background: linear-gradient(180deg, rgba(12, 16, 20, 0.94), rgba(6, 9, 12, 0.98));
+  border-bottom: 1px solid rgba(195, 170, 112, 0.4);
+  cursor: move;
+  user-select: none;
+}
+
+.rq-aspects-tree__title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rq-aspects-tree__sigil {
+  width: 14px;
+  height: 14px;
+  background: #00ccff;
+  clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+  box-shadow: 0 0 10px #00ccff;
+}
+
+.rq-aspects-tree__title {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #e3f6ff;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
+}
+
+.rq-aspects-tree__actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.rq-aspects-tree__points {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 8px;
+  background: rgba(0, 204, 255, 0.12);
+  border: 1px solid rgba(0, 204, 255, 0.4);
+  border-radius: 4px;
+  color: #80e5ff;
+}
+
+.rq-aspects-tree__gem {
+  width: 10px;
+  height: 10px;
+  background: #ffd700;
+  clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+  box-shadow: 0 0 8px #ffd700;
+}
+
+.rq-aspects-tree__points strong {
+  font-size: 13px;
+  font-weight: 800;
+  color: #ffd700;
+}
+
+.rq-aspects-tree__points small {
+  font-size: 9.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.rq-aspects-respec-btn {
+  height: 22px;
+  padding: 0 8px;
+  background: linear-gradient(180deg, #3a2e1e, #1e160c);
+  border: 1px solid #9a8150;
+  color: #fff2d0;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.rq-aspects-respec-btn:hover {
+  background: linear-gradient(180deg, #59462d, #2d2112);
+  border-color: gold;
+  color: #ffffff;
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+}
+
+.rq-aspects-tree__close {
+  position: static;
+}
+
+.rq-aspects-tree__content {
+  position: relative;
+  z-index: 5;
+  padding: 14px 18px 18px 18px;
+  overflow-y: auto;
+  max-height: 420px;
+}
+
+.rq-aspect-constellations {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.rq-constellation-track {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px 12px;
+  background: rgba(8, 14, 22, 0.65);
+  border: 1px solid rgba(0, 204, 255, 0.25);
+  border-radius: 6px;
+  backdrop-filter: blur(8px);
+}
+
+.rq-constellation-track__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(0, 204, 255, 0.2);
+  padding-bottom: 4px;
+}
+
+.rq-constellation-track__title strong {
+  font-family: Georgia, serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: #e3f6ff;
+  letter-spacing: 0.04em;
+}
+
+.rq-constellation-track__title small {
+  margin-left: 8px;
+  font-size: 10px;
+  color: #80c4e0;
+}
+
+.rq-constellation-track__depth {
+  font-size: 10px;
+  font-weight: 700;
+  color: #ffd700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.rq-constellation-track__nodes {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  overflow-x: auto;
+  padding: 4px 2px 8px 2px;
+}
+
+.rq-constellation-node {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: rgba(12, 20, 30, 0.7);
+  border: 1px solid rgba(100, 140, 180, 0.4);
+  border-radius: 6px;
+  transition: all 140ms ease;
+  min-width: 150px;
+}
+
+.rq-constellation-node--taken {
+  border-color: rgba(255, 215, 0, 0.8);
+  background: rgba(36, 28, 12, 0.8);
+  box-shadow: 0 0 12px rgba(255, 215, 0, 0.25);
+}
+
+.rq-constellation-node--available {
+  border-color: rgba(0, 204, 255, 0.8);
+  background: rgba(8, 28, 42, 0.8);
+  box-shadow: 0 0 12px rgba(0, 204, 255, 0.3);
+}
+
+.rq-constellation-node__gem {
+  position: relative;
+  display: inline-flex;
+}
+
+.rq-constellation-node__badge {
+  position: absolute;
+  bottom: -3px;
+  right: -3px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #101820;
+  border: 1px solid #9a8150;
+  color: #ffd700;
+  font-size: 8.5px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rq-constellation-node--available .rq-constellation-node__badge {
+  border-color: #00ccff;
+  color: #00ccff;
+}
+
+.rq-constellation-node__info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.rq-constellation-node__title {
+  font-size: 11px;
+  font-weight: 700;
+  color: #f0f8ff;
+  white-space: nowrap;
+}
+
+.rq-constellation-node__type {
+  font-size: 9px;
+  color: #90b8d0;
+  text-transform: capitalize;
+}
+
+.rq-constellation-spend-btn {
+  height: 22px;
+  padding: 0 8px;
+  background: linear-gradient(180deg, #0088cc, #004466);
+  border: 1px solid #00ccff;
+  color: #ffffff;
+  font-size: 9.5px;
+  font-weight: 700;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.rq-constellation-spend-btn:hover {
+  background: linear-gradient(180deg, #00b3ff, #006699);
+  box-shadow: 0 0 10px rgba(0, 204, 255, 0.5);
+}
+
+.rq-constellation-node__status {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #ffd700;
+}
+
+.rq-constellation-tooltip {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 220px;
+  padding: 8px 10px;
+  background: rgba(6, 10, 16, 0.96);
+  border: 1px solid #00ccff;
+  border-radius: 4px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.9);
+  z-index: 100;
+  pointer-events: none;
+  backdrop-filter: blur(8px);
+}
+
+.rq-constellation-tooltip__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(0, 204, 255, 0.3);
+  padding-bottom: 4px;
+  margin-bottom: 4px;
+}
+
+.rq-constellation-tooltip__header strong {
+  font-size: 11px;
+  color: #ffffff;
+}
+
+.rq-constellation-tooltip__header small {
+  font-size: 9.5px;
+  color: #ffd700;
+}
+
+.rq-constellation-tooltip__effect {
+  font-size: 10px;
+  color: #c8e4f8;
+  margin: 0;
+  line-height: 1.35;
+}
+
+.rq-constellation-tooltip__refusal {
+  margin-top: 6px;
+  font-size: 9px;
+  color: #ff9980;
+  font-style: italic;
+}
+
+.rq-aspects-empty {
+  font-family: Georgia, serif;
+  font-size: 12px;
+  font-style: italic;
+  color: #80c4e0;
+  padding: 24px;
+  text-align: center;
+}
+
+.rq-technique--draggable,
+.rq-aspect-node--draggable {
+  cursor: grab !important;
+}
+
+.rq-technique--draggable:active,
+.rq-aspect-node--draggable:active {
+  cursor: grabbing !important;
+}
+
 .rq-quick-controls {
   display: flex;
   gap: 5px;
@@ -855,6 +1760,37 @@
   letter-spacing: .06em;
   text-transform: uppercase;
   clip-path: polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%);
+}
+
+/* A toggle that is on has to look on. Nothing distinguished an engaged toggle
+   from an idle one but the word on it. */
+.rq-quick-controls button[aria-pressed="true"] {
+  border-color: var(--rq-bronze);
+  background: linear-gradient(180deg, #2c352f, #151b19);
+  color: var(--rq-bone);
+}
+
+/* Ember is the combat colour, so only the attack toggle wears it — on Rest or
+   Walk it would read as danger. */
+.rq-quick-controls .rq-attack-toggle[aria-pressed="true"] {
+  border-color: var(--rq-ember);
+  background: linear-gradient(180deg, #4a2c1c, #241410);
+  color: #ffe3bd;
+  box-shadow: inset 0 0 12px rgb(218 139 61 / 26%);
+  animation: rq-attack-toggle-breathe 2.6s ease-in-out infinite;
+}
+
+.rq-quick-controls .rq-attack-toggle[aria-pressed="true"] kbd {
+  color: #ffcf95;
+}
+
+@keyframes rq-attack-toggle-breathe {
+  0%, 100% { box-shadow: inset 0 0 12px rgb(218 139 61 / 26%); }
+  50% { box-shadow: inset 0 0 16px rgb(218 139 61 / 46%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rq-quick-controls .rq-attack-toggle[aria-pressed="true"] { animation: none; }
 }
 
 .rq-quick-controls kbd {
@@ -1855,6 +2791,46 @@
   min-width: 58%;
   border-bottom-color: var(--rq-ember);
   font-size: 14px;
+}
+
+/* Engaged target: the panel itself carries the state, so a player watching the
+   health bar drain never has to look elsewhere to confirm they are attacking. */
+.rq-hud-window--target .rq-target.is-engaged::before {
+  border-color: var(--rq-ember);
+  box-shadow:
+    inset 0 0 22px rgb(218 139 61 / 16%),
+    0 0 14px rgb(218 139 61 / 22%);
+}
+
+.rq-hud-window--target .rq-target.is-engaged {
+  filter:
+    drop-shadow(0 12px 20px rgb(0 0 0 / 58%))
+    drop-shadow(0 0 14px rgb(218 139 61 / 30%));
+}
+
+.rq-target__swing {
+  position: absolute;
+  z-index: 1;
+  inset: 8px 0 0;
+  border: 1px solid var(--rq-ember);
+  clip-path: polygon(0 8px, 8px 0, calc(100% - 20px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+  animation: rq-target-swing 420ms ease-out forwards;
+  pointer-events: none;
+}
+
+.rq-target__swing.is-miss {
+  border-color: var(--rq-ash);
+  animation-duration: 300ms;
+}
+
+@keyframes rq-target-swing {
+  0% { opacity: 0; transform: scale(1.035); }
+  20% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rq-target__swing { display: none; }
 }
 
 .rq-hud-window--target .rq-target .rq-hud-panel__body {

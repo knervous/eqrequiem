@@ -36,7 +36,7 @@ export interface PersistDeleteCharacterResult {
 }
 
 export interface PersistMoveItemInput {
-  sessionId: number;
+  characterId: number;
   fromSlot: number;
   toSlot: number;
   fromBag: number;
@@ -51,33 +51,42 @@ export interface PersistSlotMove {
 }
 
 export interface PersistDeleteItemInput {
-  sessionId: number;
+  characterId: number;
   slot: number;
   bag: number;
 }
 
-export interface PersistMoveItemResult {
+export interface PersistEnterWorldResult {
   ok: boolean;
-  moves: PersistSlotMove[];
+  characterId: number | null;
+  name: string | null;
+  demoStartPending: boolean;
 }
 
-export interface PersistDeleteItemResult {
-  ok: boolean;
+export interface PersistZoneSessionResult {
+  valid: boolean;
+  zoneId: number | null;
+  instanceId: number;
 }
 
 export type PersistCommand =
   | { type: "login_load"; token: string }
   | { type: "character_create"; accountId: number; character: import("../backend/contracts.js").BackendCharacterCreate }
   | { type: "character_delete"; accountId: number; name: string }
-  | ({ type: "inventory_move" } & PersistMoveItemInput)
-  | ({ type: "inventory_delete" } & PersistDeleteItemInput);
+  | { type: "character_enter_world"; name: string }
+  | {
+      type: "zone_session_resolve";
+      zoneId: number | string;
+      instanceId: number;
+      demoStartPending: boolean;
+    };
 
 export type PersistResult =
   | { type: "login_load"; data: PersistLoginResult }
   | { type: "character_create"; data: PersistCreateCharacterResult }
   | { type: "character_delete"; data: PersistDeleteCharacterResult }
-  | { type: "inventory_move"; data: PersistMoveItemResult }
-  | { type: "inventory_delete"; data: PersistDeleteItemResult };
+  | { type: "character_enter_world"; data: PersistEnterWorldResult }
+  | { type: "zone_session_resolve"; data: PersistZoneSessionResult };
 
 export interface PersistRequestEnvelope {
   requestId: number;

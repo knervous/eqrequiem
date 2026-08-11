@@ -1,0 +1,21 @@
+{
+  "kind": "eltania.zone-minimap",
+  "version": 1,
+  "zone": "talioscrownward",
+  "image": "/eltania/maps/talioscrownward-topdown-v1.webp",
+  "north": "+x",
+  "rotationDegrees": -90,
+  "size": 1024,
+  "bounds": {
+    "minX": -1999.1875,
+    "maxX": 258.90625,
+    "minZ": -1129.046875,
+    "maxZ": 1129.046875
+  },
+  "source": {
+    "spatial": "/eqrequiem/worlds/talioscrownward.spatial.json.gz",
+    "collision": "/eqrequiem/worlds/talioscrownward.collision.bin.gz",
+    "collisionHash": "6d814b2a",
+    "layoutHash": "bbb88317"
+  }
+}

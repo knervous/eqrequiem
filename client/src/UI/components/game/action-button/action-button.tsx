@@ -1,5 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { CommandHandler } from '@game/ChatCommands/command-handler';
+import { AbilityStore } from '@game/Combat/ability-store';
+import { ActivateAbility } from '@game/Net/messages';
+import { OpCodes } from '@game/Net/opcodes';
+import { WorldSocket } from '@ui/net/instances';
 import { UserConfig } from '@game/Config/config';
 import type { ActionButtonsConfig } from '@game/Config/types';
 import { useEventArg } from '@game/Events/event-hooks';
@@ -8,6 +12,7 @@ import Player from '@game/Player/player';
 import { Box } from '@mui/material';
 import { ActionButtonData, ActionButtonType, FullActionData, FullItemEntryData } from './constants';
 import { useImmediateDragClone } from './hooks';
+import { TechniqueFace } from './technique-face';
 import { ItemButton } from './item-button';
 
 
@@ -28,7 +33,7 @@ interface HotButtonProps extends CommonButtonProps {
 }
 
 interface ActionButtonProps extends CommonButtonProps {
-  action: (_: any) => void;
+  action: (_?: any) => void;
   playerAction?: boolean;
   buttonName?: string;
 }
@@ -66,7 +71,11 @@ export const ActionButton: React.FC<ActionButtonProps> = (props) => {
       }}
       onMouseDown={onMouseDown}
     >
-      <span>{props.text ?? props.actionData?.label ?? ''}</span>
+      {props.actionData?.type === ActionButtonType.TECHNIQUE ? (
+        <TechniqueFace slot={props.actionData.index ?? -1} />
+      ) : (
+        <span>{props.text ?? props.actionData?.label ?? ''}</span>
+      )}
     </Box>
   );
 };
@@ -124,6 +133,17 @@ export const ActionHotButton: React.FC<HotButtonProps> = (props) => {
         );
       case ActionButtonType.INVENTORY:
         return () => player.playerInventory.useItem(props.actionData?.index ?? -1);
+      case ActionButtonType.TECHNIQUE:
+        return () => {
+          const ability = AbilityStore.inSlot(props.actionData?.index ?? -1);
+          if (!ability) return;
+          // The current target is the intent; the server decides whether it is a legal
+          // one for this technique and answers with a reason if not.
+          WorldSocket.sendMessage(OpCodes.ActivateAbility, ActivateAbility, {
+            abilityId: ability.abilityId,
+            targetId: player.Target?.spawn?.spawnId ?? 0,
+          });
+        };
       case ActionButtonType.MELEE_ATTACK:
         return player.autoAttack.bind(player);
       case ActionButtonType.RANGED_ATTACK:
@@ -210,6 +230,10 @@ export const ActionHotButton: React.FC<HotButtonProps> = (props) => {
           return 'Melee';
         case ActionButtonType.RANGED_ATTACK:
           return 'Ranged';
+        case ActionButtonType.TECHNIQUE:
+          // The authored name from the server's loadout, so the bar and the ability
+          // registry cannot disagree about what a slot does.
+          return AbilityStore.inSlot(props.actionData?.index ?? -1)?.name ?? 'Empty';
         case ActionButtonType.SIT:
           return Player.instance?.Sitting ? 'Stand' : 'Sit';
         case ActionButtonType.WALK:

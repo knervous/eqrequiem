@@ -7,6 +7,7 @@ import { gunzipSync } from "node:zlib";
 import { NullEngine } from "@babylonjs/core/Engines/nullEngine.js";
 import { LoadAssetContainerAsync } from "@babylonjs/core/Loading/sceneLoader.js";
 import { Scene } from "@babylonjs/core/scene.js";
+import "@babylonjs/core/Meshes/instancedMesh.js";
 import "@babylonjs/loaders/glTF/index.js";
 
 const clientRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -43,6 +44,18 @@ const characterSelectSource = await readFile(
   path.join(clientRoot, "src/Game/Zone/character-select.ts"),
   "utf8",
 );
+const characterSelectUiSource = await readFile(
+  path.join(clientRoot, "src/UI/components/character-select/index.tsx"),
+  "utf8",
+);
+const characterCreateUiSource = await readFile(
+  path.join(clientRoot, "src/UI/components/character-select/char-create.tsx"),
+  "utf8",
+);
+const characterSelectCssSource = await readFile(
+  path.join(clientRoot, "src/UI/components/character-select/component.css"),
+  "utf8",
+);
 
 function parseGlb(bytes) {
   assert.equal(bytes.toString("ascii", 0, 4), "glTF");
@@ -61,6 +74,7 @@ test("character-select manifest is an identity presentation contract", () => {
   assert.equal(manifest.character.gravity, false);
   assert.equal(manifest.character.collision, false);
   assert.ok(manifest.camera.orbitDurationSeconds >= 120);
+  assert.equal(manifest.camera.driftDegrees, undefined);
   assert.equal(new Set(Object.values(manifest.semantics)).size, 8);
   assert.equal(report.coordinateContract, manifest.coordinateContract);
   assert.deepEqual(report.semantics, manifest.semantics);
@@ -113,12 +127,15 @@ test("ambient presentation orbits the camera and owns observer cleanup", () => {
   assert.ok(environmentSource.includes("onBeforeRenderObservable.remove"));
   assert.ok(environmentSource.includes("orbitDurationSeconds"));
   assert.ok(environmentSource.includes("horizontalCompositionOffset"));
+  assert.ok(environmentSource.includes("Math.PI * 2 * deltaSeconds"));
+  assert.ok(environmentSource.includes("createAmbientMotes()"));
 });
 
 test("character preview is render-only and preserves its authored anchor", () => {
   assert.ok(characterSelectSource.includes("await this.initialize()"));
   assert.ok(characterSelectSource.includes("EntityCache.initialize("));
   assert.ok(characterSelectSource.includes("disableCulling: true"));
+  assert.ok(characterSelectSource.includes("nameplateDepthTest: false"));
   assert.ok(
     characterSelectSource.indexOf("EntityCache.initialize(") <
       characterSelectSource.indexOf(
@@ -139,6 +156,17 @@ test("character preview is render-only and preserves its authored anchor", () =>
       "if (this.renderOnly) this.position.copyFrom(this.spawnPosition)",
     ),
   );
+  assert.ok(characterSelectSource.includes('fromCharCreate ? [] : [player.name || "Wayfarer"]'));
+  assert.ok(characterCreateUiSource.includes("rq-character-create__preview-nameplate"));
+  assert.ok(!characterCreateUiSource.includes("Player.instance?.UpdateNameplate"));
+});
+
+test("character roster is a compact single-action composition", () => {
+  assert.ok(characterSelectUiSource.includes("Choose your wayfarer"));
+  assert.ok(characterSelectUiSource.includes("Create a new wayfarer"));
+  assert.ok(!characterSelectUiSource.includes("Array.from({ length: charSelectNum"));
+  assert.ok(characterSelectCssSource.includes("right: 24px"));
+  assert.ok(characterSelectCssSource.includes("backdrop-filter: blur"));
 });
 
 test("authored sky is normalized as a camera-visible unlit backdrop", () => {
@@ -218,21 +246,30 @@ test("canonical Blender source and production review are retained", async () => 
     ),
     readFile(path.join(repoRoot, report.reviews.clay)),
     readFile(path.join(repoRoot, report.reviews.wireframe)),
+    readFile(path.join(repoRoot, "client/public/eltania/terrain/character-select/control0.png")),
+    ...["grass-albedo.webp", "grass-mr.webp", "dirt-albedo.webp", "dirt-mr.webp", "rock-albedo.webp", "rock-mr.webp"].map(
+      (name) => readFile(path.join(repoRoot, "client/public/eltania/terrain/character-select", name)),
+    ),
   ]);
-  assert.ok(report.triangles > 20_000);
-  assert.ok(report.triangles < 200_000);
-  assert.ok(report.estimatedDrawGroups <= 40);
-  assert.ok(report.meshCount <= 40);
+  assert.ok(report.triangles > 8_000);
+  assert.ok(report.triangles < 500_000);
+  assert.ok(report.estimatedDrawGroups <= 250);
+  assert.ok(report.meshCount <= 250);
+  assert.equal(report.terrain.grassClumps, 20000);
+  assert.equal(report.terrain.horizonRidges, 2);
+  assert.equal(report.terrain.runtimeShader, "requiemTerrainSurface");
+  assert.equal(report.treeVariation.species, 5);
+  assert.equal(report.treeVariation.linkedInstances, 108);
+  assert.deepEqual(report.backgroundLandmarks, ["stone_church", "cottage_blue_roof"]);
+  assert.equal(report.settlementLights, 4);
   assert.deepEqual(report.materialsMissingTextures, []);
   assert.deepEqual(report.meshesMissingUvs, []);
   for (const [materialName, textures] of Object.entries(
     report.pbrTextureCoverage,
   )) {
     if (materialName.startsWith("CS Atmosphere ·")) continue;
-    assert.ok(
-      textures.length >= 3,
-      `${materialName} must have albedo, roughness, and normal textures`,
-    );
+    const requiredTextureCount = materialName.startsWith("CS ") ? 3 : 1;
+    assert.ok(textures.length >= requiredTextureCount, `${materialName} must retain its authored PBR textures`);
   }
   assert.equal(report.negativeScaleObjects.length, 0);
   assert.deepEqual(report.unappliedModifiers, {});

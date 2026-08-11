@@ -77,11 +77,11 @@ describe("QuestManager", () => {
   });
 
   it("provides live zone-instance queries and private state to dynamic quests", () => {
-    const registry = new ZoneQuestRegistry({ id: 1, shortName: "qeynos" });
+    const registry = new ZoneQuestRegistry({ id: 1, shortName: "talioslowharbor" });
     registry.registerNpc("Klieb_Torne", onQuest("say", {}, ({ initiator, npc, zone }) => {
       assert.equal(zone.id, 1);
       assert.equal(zone.instanceId, 4);
-      assert.equal(zone.shortName, "qeynos");
+      assert.equal(zone.shortName, "talioslowharbor");
       assert.equal(zone.players.length, 1);
       const count = (zone.get<number>("klieb:hails") ?? 0) + 1;
       zone.set("klieb:hails", count);
@@ -89,7 +89,7 @@ describe("QuestManager", () => {
       npc.moveTo({ x: 7, y: 8, z: 9 });
     }));
 
-    const manager = new QuestManager(1, 4, "qeynos");
+    const manager = new QuestManager(1, 4, "talioslowharbor");
     manager.replace([registry.definition()], 1);
     manager.hydrate({
       players: [{ kind: "player", sessionId: 9, name: "Ezaltarem" }],
@@ -123,13 +123,13 @@ describe("QuestManager", () => {
 
   it("runs zone-global handlers first and honors Go-style stop propagation", () => {
     const calls: string[] = [];
-    const registry = new ZoneQuestRegistry({ id: 2, shortName: "qeynos2" });
+    const registry = new ZoneQuestRegistry({ id: 2, shortName: "talioscrownward" });
     registry.registerNpc("Guard_Gehnus", onQuest("say", {}, () => { calls.push("npc"); }));
     registry.registerZone(onQuest("say", {}, () => {
       calls.push("zone");
       return true;
     }));
-    const manager = new QuestManager(2, 0, "qeynos2");
+    const manager = new QuestManager(2, 0, "talioscrownward");
     manager.replace([registry.definition()], 1);
     manager.dispatch({
       type: "say",
@@ -143,7 +143,7 @@ describe("QuestManager", () => {
   });
 
   it("routes named custom events through the same zone instance registry", () => {
-    const registry = new ZoneQuestRegistry({ id: 2, shortName: "qeynos2" });
+    const registry = new ZoneQuestRegistry({ id: 2, shortName: "talioscrownward" });
     registry.registerNpc("Guard_Gehnus", onQuest("say", {}, ({ zone }) => {
       zone.emitCustom("guards:alert", { message: "Intruder" });
     }));
@@ -151,7 +151,7 @@ describe("QuestManager", () => {
       const alert = data as { message: string };
       zone.npcByName("Guard Hewet")?.say(alert.message);
     }));
-    const manager = new QuestManager(2, 5, "qeynos2");
+    const manager = new QuestManager(2, 5, "talioscrownward");
     manager.replace([registry.definition()], 1);
     manager.hydrate({ npcs: [{ kind: "npc", name: "Guard_Hewet", npcIndex: 4 }] });
 

@@ -9,11 +9,13 @@ import type {
   ZoneNavPathRequestMessage,
   ZoneNpcDebugMessage,
   ZoneQuestEffectsMessage,
+  ZoneAbilityResultMessage,
   ZonePcDeathMessage,
   ZoneWorkerInboundMessage,
   ZoneWorkerOutboundMessage,
 } from "./worker-types.js";
 import type { QuestDefinition } from "./quest-types.js";
+import { EMPTY_WORLD_STATE, type WorldStateSnapshot } from "./world-state-types.js";
 import type { CombatEvent } from "../combat/melee-combat.js";
 import type { NpcEngagementRules } from "../ai/npc-engagement.js";
 
@@ -48,6 +50,8 @@ export class ZoneWorkerPool {
   private readonly workers = new Map<string, ZoneWorkerHandle>();
   private questDefinitions: QuestDefinition[] = [];
   private questRevision = 0;
+  /** Last published world state, so a shard started later opens with current facts. */
+  private worldState: WorldStateSnapshot = EMPTY_WORLD_STATE;
 
   constructor(
     private readonly tickRateHz: number,
@@ -98,6 +102,12 @@ export class ZoneWorkerPool {
       blobData: Uint8Array,
       formatVersion: number,
     ) => Promise<void>,
+    // Appended rather than grouped with the other combat callbacks: the list is
+    // positional, so inserting in the middle would silently reassign every argument
+    // after it at each call site.
+    private readonly onAbilityResult?: (
+      message: ZoneAbilityResultMessage,
+    ) => void,
   ) {}
 
   enqueue(
@@ -128,6 +138,20 @@ export class ZoneWorkerPool {
     handle.worker.postMessage({ type: "shutdown" } satisfies ZoneWorkerInboundMessage);
     await stopped;
     return true;
+  }
+
+  /**
+   * Publishes global world state to every shard. Shards consume snapshots; none of them
+   * owns global state, so a fact means the same thing in every zone at the same time.
+   */
+  updateWorldState(snapshot: WorldStateSnapshot): void {
+    this.worldState = snapshot;
+    for (const handle of this.workers.values()) {
+      handle.worker.postMessage({
+        type: "world_state",
+        snapshot,
+      } satisfies ZoneWorkerInboundMessage);
+    }
   }
 
   updateQuests(definitions: readonly QuestDefinition[], revision: number): void {
@@ -174,6 +198,7 @@ export class ZoneWorkerPool {
         questRevision: this.questRevision,
         engagementRules: this.engagementRules,
         devDiagnostics: this.devDiagnostics,
+        worldState: this.worldState,
       },
     });
 
@@ -224,6 +249,10 @@ export class ZoneWorkerPool {
       }
       if (message.type === "combat_event") {
         this.onCombatEvent?.(message.sessionIds, message.event);
+        return;
+      }
+      if (message.type === "ability_result") {
+        this.onAbilityResult?.(message);
         return;
       }
       if (message.type === "pc_death") {

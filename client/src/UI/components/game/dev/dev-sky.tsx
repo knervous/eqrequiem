@@ -81,9 +81,23 @@ export const DevSky: React.FC = () => {
     ...manager?.motionSettings,
   });
 
+  const [followsWorldClock, setFollowsWorldClock] = useState(
+    manager?.followsWorldClock ?? true,
+  );
+
   const setTimeOfDay = (value: number) => {
     setTimeOfDayState(value);
     skyManager()?.setTimeOfDay(value);
+    setFollowsWorldClock(false);
+  };
+
+  // Scrubbing the slider detaches the sky from the world's clock, which would leave a
+  // tester looking at midday while the server considers it night.
+  const resumeWorldClock = () => {
+    const sky = skyManager();
+    sky?.resumeWorldClock();
+    setTimeOfDayState(sky?.timeOfDay ?? 12);
+    setFollowsWorldClock(true);
   };
 
   const setMotionValue = (key: MotionKey, value: number) => {
@@ -109,6 +123,7 @@ export const DevSky: React.FC = () => {
       <FormControl sx={{ width: '100%', mb: 1.5 }}>
         <Typography sx={{ fontSize: 11 }}>
           Time of day: {timeOfDay.toFixed(2)}
+          {followsWorldClock ? ' (world clock)' : ' (detached)'}
         </Typography>
         <Slider
           size="small"
@@ -141,6 +156,15 @@ export const DevSky: React.FC = () => {
       ))}
       <Button size="small" variant="outlined" onClick={resetMotion}>
         Reset gentle defaults
+      </Button>
+      <Button
+        size="small"
+        variant="outlined"
+        disabled={followsWorldClock}
+        onClick={resumeWorldClock}
+        sx={{ ml: 1 }}
+      >
+        Resume world clock
       </Button>
     </div>
   );

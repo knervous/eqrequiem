@@ -5,6 +5,11 @@ import {
   type EntityStore,
   NPC,
 } from "../zone/entity-store.js";
+import {
+  ForcedAttention,
+  type HateEntry,
+  type ThreatPlan,
+} from "../combat/threat.js";
 
 export interface NpcEngagementRules {
   readonly damageHateMultiplier: number;
@@ -120,6 +125,10 @@ const EMPTY_CHASE = (): ChaseState => ({
  */
 export class NpcEngagementSystem {
   private readonly hateByNpc = new Map<number, Map<number, MutableHateEntry>>();
+  /** Taunt-style overrides. Consulted before the hate list when picking a target. */
+  private readonly forcedAttention = new ForcedAttention();
+  /** Injectable so taunt windows are testable without sleeping. */
+  private nowMs: () => number = () => Date.now();
   private readonly chaseByNpc = new Map<number, ChaseState>();
   private readonly baseSpeedByNpc = new Map<number, number>();
   private nextRequestId = 1;
@@ -148,6 +157,43 @@ export class NpcEngagementSystem {
       safeDamage * this.rules.damageHateMultiplier,
     );
     this.addHate(npcId, attackerId, hate, safeDamage, tick);
+  }
+
+  /** `HateView`: what a taunt needs to read before it can decide where to place someone. */
+  hateOf(npcId: number, actorId: number): number {
+    return this.hateByNpc.get(npcId)?.get(actorId)?.hate ?? 0;
+  }
+
+  /** `HateView`: the highest-hate actor, optionally ignoring one (see `tauntPlan`). */
+  leader(npcId: number, excludeEntityId?: number): HateEntry | null {
+    const list = this.hateByNpc.get(npcId);
+    if (!list) return null;
+    let best: MutableHateEntry | null = null;
+    for (const entry of list.values()) {
+      if (entry.entityId === excludeEntityId) continue;
+      if (!best || entry.hate > best.hate) best = entry;
+    }
+    return best ? { entityId: best.entityId, hate: best.hate } : null;
+  }
+
+  /**
+   * Applies a threat decision from `combat/threat.ts`.
+   *
+   * The policy module decides how much and why; this stays the only thing that writes
+   * the hate list, so there is still exactly one place hate can change.
+   */
+  /** Replaces the wall clock, for tests and deterministic replay. */
+  setClock(clock: () => number): void {
+    this.nowMs = clock;
+  }
+
+  applyThreat(plan: ThreatPlan, tick: number, nowMs: number): void {
+    if (plan.addHate > 0) {
+      this.addHate(plan.npcId, plan.actorId, plan.addHate, 0, tick);
+    }
+    if (plan.forceAttentionMs && plan.forceAttentionMs > 0) {
+      this.forcedAttention.force(plan.npcId, plan.actorId, nowMs + plan.forceAttentionMs);
+    }
   }
 
   addHate(
@@ -191,6 +237,7 @@ export class NpcEngagementSystem {
 
   clearNpc(npcId: number): void {
     this.hateByNpc.delete(npcId);
+    this.forcedAttention.clear(npcId);
     this.chaseByNpc.delete(npcId);
     const npc = this.entities.get(npcId);
     if (npc instanceof NPC) {
@@ -217,7 +264,12 @@ export class NpcEngagementSystem {
         this.clearNpc(npcId);
         continue;
       }
-      const target = this.entities.get(top.entityId);
+      // A taunt briefly overrides the list. This is what makes a Warrior's hold
+      // reliable: the enemy looks at them even if someone out-damaged them a moment
+      // ago, and goes back to the list the instant the window closes.
+      const forcedId = this.forcedAttention.target(npcId, this.nowMs());
+      const chosenId = forcedId !== null && list.has(forcedId) ? forcedId : top.entityId;
+      const target = this.entities.get(chosenId);
       if (!target) continue;
 
       const chase = this.chaseByNpc.get(npcId) ?? EMPTY_CHASE();
@@ -228,6 +280,9 @@ export class NpcEngagementSystem {
       npc.moveSpeed = this.baseSpeedByNpc.get(npcId) ?? npc.moveSpeed;
       this.combat.engageNpcTarget(npcId, target.id, currentTick);
 
+      // Safe to stop on reach: an NPC's reach is the ordinary one, so this is the
+      // distance it can actually swing from. The player's relaxed pad is not shared,
+      // precisely so a chase cannot inherit it and halt two body lengths out.
       if (this.combat.isWithinMeleeReach(npcId, target.id)) {
         chase.status = "melee";
         chase.error = null;

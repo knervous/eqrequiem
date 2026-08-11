@@ -2,8 +2,8 @@ import { readFile, mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { gunzipSync } from "node:zlib";
 import sharp from "sharp";
+import { decodeShadoWorldCollision } from "../../shader-object/dist/world/index.js";
 
-const HEADER_BYTES = 40;
 const OUTPUT_SIZE = 1024;
 const zone = process.argv[2]?.trim().toLowerCase();
 
@@ -18,21 +18,18 @@ const spatialBytes = gunzipSync(await readFile(spatialPath));
 const spatial = JSON.parse(spatialBytes.toString("utf8"));
 const collisionPath = path.join(worldRoot, spatial.collision.source);
 const collisionBytes = gunzipSync(await readFile(collisionPath));
-const view = new DataView(
-  collisionBytes.buffer,
-  collisionBytes.byteOffset,
-  collisionBytes.byteLength,
-);
-const vertexCount = view.getUint32(8, true);
-const indexCount = view.getUint32(12, true);
-const positions = new Float32Array(vertexCount * 3);
-let offset = HEADER_BYTES;
-for (let index = 0; index < positions.length; index++, offset += 4) {
-  positions[index] = view.getFloat32(offset, true);
-}
-const indices = new Uint32Array(indexCount);
-for (let index = 0; index < indices.length; index++, offset += 4) {
-  indices[index] = view.getUint32(offset, true);
+const collision = decodeShadoWorldCollision(collisionBytes, spatial.collision);
+const positions = new Float32Array(collision.vertexCount * 3);
+const indices = new Uint32Array(collision.triangleCount * 3);
+let vertexOffset = 0;
+let indexOffset = 0;
+for (const chunk of collision.chunks) {
+  positions.set(chunk.positions, vertexOffset * 3);
+  for (let index = 0; index < chunk.indices.length; index++) {
+    indices[indexOffset + index] = chunk.indices[index] + vertexOffset;
+  }
+  vertexOffset += chunk.positions.length / 3;
+  indexOffset += chunk.indices.length;
 }
 
 const [worldMinX, worldMinY, worldMinZ] = spatial.collision.bounds.min;

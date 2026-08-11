@@ -8,6 +8,8 @@ import path from "node:path";
 import { gunzipSync, gzipSync } from "node:zlib";
 import { pathToFileURL } from "node:url";
 
+import { requireZoneUvContract } from "./authoring/validate-zone-uvs.mjs";
+
 const repoRoot = path.resolve(import.meta.dirname, "../..");
 const publicWorldRoot = path.join(
   repoRoot,
@@ -30,7 +32,7 @@ const runtimeWorldPrefix = "/eqrequiem/worlds";
 
 const cliArgs = process.argv.slice(2);
 const zone = (
-  cliArgs.find((argument) => !argument.startsWith("--")) ?? "qeynos2"
+  cliArgs.find((argument) => !argument.startsWith("--")) ?? "talioscrownward"
 ).toLowerCase();
 const bakeLighting = !cliArgs.includes("--skip-lighting-bake");
 const reuseLightingField = cliArgs.includes("--reuse-lighting-field");
@@ -156,10 +158,85 @@ function rebuildGlb(document, sourceChunks) {
   return output;
 }
 
+/**
+ * Babylon represents a GLTF mesh used by more than one node as one concrete
+ * Mesh plus InstancedMesh children. The world compiler deliberately keys its
+ * primitives by their node names, while the streaming renderer needs a
+ * concrete Mesh for each of those names in order to compact its index stream.
+ *
+ * Keep every node's mesh definition distinct in the promoted runtime GLB.
+ * This duplicates only JSON mesh descriptors; their buffer views remain
+ * shared, so geometry bytes are not copied. It also makes authored layout
+ * stamps safe to use as independently named spatial primitives.
+ */
+function deinstanceRuntimeNodeMeshes(document) {
+  const meshes = document.meshes ?? [];
+  const nodes = document.nodes ?? [];
+  const users = new Map();
+  nodes.forEach((node, nodeIndex) => {
+    if (!Number.isInteger(node.mesh)) return;
+    const entries = users.get(node.mesh) ?? [];
+    entries.push(nodeIndex);
+    users.set(node.mesh, entries);
+  });
+
+  for (const [meshIndex, nodeIndices] of users) {
+    if (nodeIndices.length < 2) continue;
+    const sharedMesh = meshes[meshIndex];
+    ensure(sharedMesh, `Runtime GLB node references missing mesh ${meshIndex}`);
+    for (const nodeIndex of nodeIndices) {
+      const node = nodes[nodeIndex];
+      // GLTF mesh descriptors are plain JSON, so a JSON clone is sufficient
+      // and intentionally continues to share accessors/buffer views.
+      const uniqueMesh = JSON.parse(JSON.stringify(sharedMesh));
+      uniqueMesh.name = node.name ?? `${sharedMesh.name ?? "Mesh"}.Node${nodeIndex}`;
+      uniqueMesh.extras = {
+        ...uniqueMesh.extras,
+        // The lighting field was baked against the Blender mesh datablock.
+        // Preserve that lookup as the runtime gets its own node-specific name.
+        requiemLightingSourceMesh: sharedMesh.name,
+      };
+      node.mesh = meshes.length;
+      meshes.push(uniqueMesh);
+    }
+  }
+
+  const remainingUsers = new Map();
+  for (const node of nodes) {
+    if (!Number.isInteger(node.mesh)) continue;
+    remainingUsers.set(node.mesh, (remainingUsers.get(node.mesh) ?? 0) + 1);
+  }
+  ensure(
+    [...remainingUsers.values()].every((count) => count === 1),
+    "Promoted runtime GLB still contains instanced node meshes",
+  );
+}
+
+/**
+ * The imported Qeynos2 palette predates the current renderer and carries its
+ * WebP images solely through EXT_texture_webp. Keep that extension binding for
+ * conforming glTF readers, but also write the same image as the core texture
+ * source. Browser decoders support WebP directly, so this supplies a
+ * deterministic fallback when an embedded/runtime loader omits the optional
+ * extension registration.
+ */
+function addWebpTextureSourceFallbacks(document) {
+  let added = 0;
+  for (const texture of document.textures ?? []) {
+    const source = texture.extensions?.EXT_texture_webp?.source;
+    if (!Number.isInteger(source) || Number.isInteger(texture.source)) continue;
+    texture.source = source;
+    added++;
+  }
+  return added;
+}
+
 function stampRuntimeContract(source) {
   const parsed = parseGlb(source, `${zone} authoring preview`);
   ensure(parsed.document.scenes?.length, `${zone} preview has no scene`);
   ensure(parsed.document.meshes?.length, `${zone} preview has no meshes`);
+  deinstanceRuntimeNodeMeshes(parsed.document);
+  const webpSourceFallbacks = addWebpTextureSourceFallbacks(parsed.document);
   parsed.document.asset.extras = {
     ...parsed.document.asset.extras,
     requiemRuntimeContract: "babylon-rhs-y-up-v4",
@@ -167,6 +244,7 @@ function stampRuntimeContract(source) {
     exporterReflectionRemoved: true,
     canonicalZoneMirrorXApplied: true,
     authoredZonePromotion: true,
+    webpSourceFallbacks,
   };
   return rebuildGlb(parsed.document, parsed.chunks);
 }
@@ -258,6 +336,8 @@ const [preview, authoring, baseline, { packShadoWorld }, worldModule] =
     import(pathToFileURL(packerFile).href),
     import(pathToFileURL(worldFile).href),
   ]);
+
+const uvAudit = requireZoneUvContract(preview, `${zone} authoring preview`);
 
 ensure(
   baseline.kind === "requiem.legacy-zone-baseline" && baseline.version === 4,
@@ -401,6 +481,8 @@ try {
       `${result.collisionTriangleCount} collision triangles, ` +
       `${result.grassPlacementCount} grass placements in ${result.grassCellCount} cells, ` +
       `${sceneBytes.byteLength} compressed scene bytes; ` +
+      `mandatory UV pass audited ${uvAudit.texturedPrimitives} textured primitives/` +
+      `${uvAudit.auditedTriangleFaces} triangle faces; ` +
       `${path.basename(validation.file)} passed ${validation.report.checks.length} checks; ` +
       `lighting ${shouldBakeLighting ? "rebaked and promoted" : `${runtimeLighting.mode}/${runtimeLighting.vertexColors}`}.`,
   );

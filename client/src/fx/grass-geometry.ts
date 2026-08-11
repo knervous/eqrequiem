@@ -60,6 +60,11 @@ export type PromotedGrassCellRenderOptions = {
   lod?: "near" | "far";
   /** Coarse authored terrain tint sampled for this spatial cell. */
   terrainTint?: readonly [number, number, number];
+  /** Smooth authored terrain tint sampled at each blade root. */
+  terrainTintAt?: (
+    worldX: number,
+    worldZ: number,
+  ) => readonly [number, number, number] | undefined;
 };
 
 export const PROMOTED_GRASS_BLADES_PER_CELL = 1_024;
@@ -84,14 +89,65 @@ function randomGenerator(seed: number): () => number {
   };
 }
 
-function countSetBits(value: number): number {
-  let word = value >>> 0;
-  let count = 0;
-  while (word) {
-    word &= word - 1;
-    count++;
+function unpackPromotedGrassSurfaceY(
+  grass: ShadoWorldGrassPackage,
+  cell: number,
+): { values: Float64Array; resolution: number } | null {
+  const heightField = grass.coverage?.heightField;
+  if (!heightField) return null;
+
+  const sampleCount = heightField.resolution * heightField.resolution;
+  const surfaceY = new Float64Array(sampleCount);
+  surfaceY.fill(Number.NaN);
+  const minimumY = heightField.minimumY[cell]!;
+  const heightRange = heightField.heightRange[cell]!;
+  const firstWord = cell * heightField.wordsPerCell;
+  const firstSample = cell * sampleCount;
+  for (let local = 0; local < sampleCount; local++) {
+    const word = heightField.words[firstWord + (local >>> 5)]!;
+    if (((word >>> (local & 31)) & 1) === 0) continue;
+    surfaceY[local] =
+      minimumY +
+      (heightField.samples[firstSample + local]! / 0xffff) * heightRange;
   }
-  return count;
+  return { values: surfaceY, resolution: heightField.resolution };
+}
+
+function samplePromotedGrassSurfaceY(
+  heightField: { values: Float64Array; resolution: number } | null,
+  normalizedX: number,
+  normalizedZ: number,
+  fallbackY: number,
+): number {
+  if (!heightField) return fallbackY;
+  const { values: surfaceY, resolution } = heightField;
+
+  // Coverage heights live at stratum centers. Bilinear sampling makes each
+  // blade root follow authored concave/convex relief instead of reproducing a
+  // flat height plate around the nearest sparse placement anchor.
+  const sampleX = normalizedX * resolution - 0.5;
+  const sampleZ = normalizedZ * resolution - 0.5;
+  const x0 = Math.min(resolution - 1, Math.max(0, Math.floor(sampleX)));
+  const z0 = Math.min(resolution - 1, Math.max(0, Math.floor(sampleZ)));
+  const x1 = Math.min(resolution - 1, x0 + 1);
+  const z1 = Math.min(resolution - 1, z0 + 1);
+  const fractionX = Math.min(1, Math.max(0, sampleX - Math.floor(sampleX)));
+  const fractionZ = Math.min(1, Math.max(0, sampleZ - Math.floor(sampleZ)));
+  const samples = [
+    [x0, z0, (1 - fractionX) * (1 - fractionZ)],
+    [x1, z0, fractionX * (1 - fractionZ)],
+    [x0, z1, (1 - fractionX) * fractionZ],
+    [x1, z1, fractionX * fractionZ],
+  ] as const;
+  let weightedY = 0;
+  let totalWeight = 0;
+  for (const [x, z, weight] of samples) {
+    const value = surfaceY[z * resolution + x]!;
+    if (!Number.isFinite(value) || weight <= 0) continue;
+    weightedY += value * weight;
+    totalWeight += weight;
+  }
+  return totalWeight > 1e-6 ? weightedY / totalWeight + 0.012 : fallbackY;
 }
 
 function promotedGrassSampleRandom(
@@ -109,6 +165,43 @@ function promotedGrassSampleRandom(
   value = Math.imul(value ^ (value >>> 16), 0x7feb_352d) >>> 0;
   value = Math.imul(value ^ (value >>> 15), 0x846c_a68b) >>> 0;
   return ((value ^ (value >>> 16)) >>> 0) / 0x1_0000_0000;
+}
+
+function promotedGrassValueNoise(
+  worldX: number,
+  worldZ: number,
+  frequency: number,
+  salt: number,
+): number {
+  // Rotate the sampling axes so density changes cannot line up with streamed
+  // cell edges or the authored 32x32 coverage raster.
+  const sampleX = (worldX + worldZ * 0.618_033_988_75) * frequency;
+  const sampleZ = (worldZ - worldX * 0.381_966_011_25) * frequency;
+  const x0 = Math.floor(sampleX);
+  const z0 = Math.floor(sampleZ);
+  const fractionX = sampleX - x0;
+  const fractionZ = sampleZ - z0;
+  const blendX = fractionX * fractionX * (3 - 2 * fractionX);
+  const blendZ = fractionZ * fractionZ * (3 - 2 * fractionZ);
+  const sample = (x: number, z: number) =>
+    promotedGrassSampleRandom(x, z, salt, 0x6d2b_79f5);
+  const row0 = sample(x0, z0) * (1 - blendX) + sample(x0 + 1, z0) * blendX;
+  const row1 =
+    sample(x0, z0 + 1) * (1 - blendX) +
+    sample(x0 + 1, z0 + 1) * blendX;
+  return row0 * (1 - blendZ) + row1 * blendZ;
+}
+
+function promotedGrassCoverageProbability(
+  worldX: number,
+  worldZ: number,
+): number {
+  const broad = promotedGrassValueNoise(worldX, worldZ, 0.055, 0x2c92_7a51);
+  const detail = promotedGrassValueNoise(worldX, worldZ, 0.19, 0x68bc_21eb);
+  const field = broad * 0.72 + detail * 0.28;
+  const shaped = Math.min(1, Math.max(0, (field - 0.18) / 0.68));
+  const smooth = shaped * shaped * (3 - 2 * shaped);
+  return 0.3 + smooth * 0.68;
 }
 
 export function createGrassPatch(
@@ -548,6 +641,8 @@ export function createGrassCellFromPackage(
   const candidateCount = strataSide * strataSide;
   const x = grass.cells.x[cell]!;
   const z = grass.cells.z[cell]!;
+  const cellMinimumX = x * grass.cellSize;
+  const cellMinimumZ = z * grass.cellSize;
   const sampleRate = renderOptions.sampleRate ?? 1;
   if (!Number.isFinite(sampleRate) || sampleRate <= 0 || sampleRate > 1) {
     throw new Error(
@@ -567,26 +662,36 @@ export function createGrassCellFromPackage(
   ) {
     firstCoveredSample++;
   }
-  const isIncluded = (local: number) =>
-    isCovered(local) &&
-    (sampleRate >= 1 ||
+  const isIncluded = (local: number) => {
+    if (!isCovered(local)) return false;
+    const column = local % strataSide;
+    const row = Math.floor(local / strataSide);
+    const sampleX =
+      cellMinimumX + ((column + 0.5) / strataSide) * grass.cellSize;
+    const sampleZ =
+      cellMinimumZ + ((row + 0.5) / strataSide) * grass.cellSize;
+    const coverageProbability = promotedGrassCoverageProbability(
+      sampleX,
+      sampleZ,
+    );
+    const coverageSample = promotedGrassSampleRandom(x, z, local, 0x35f2_4a9d);
+    if (local !== firstCoveredSample && coverageSample > coverageProbability) {
+      return false;
+    }
+    return (
+      sampleRate >= 1 ||
       local === firstCoveredSample ||
-      promotedGrassSampleRandom(x, z, local, seedSalt) < sampleRate);
+      promotedGrassSampleRandom(x, z, local, seedSalt) < sampleRate
+    );
+  };
+  const surfaceY = unpackPromotedGrassSurfaceY(grass, cell);
+  const included = new Uint8Array(candidateCount);
   let bladeCount = 0;
-  if (sampleRate >= 1 && coverage) {
-    const firstWord = cell * coverage.wordsPerCell;
-    for (let word = 0; word < coverage.wordsPerCell; word++) {
-      bladeCount += countSetBits(coverage.words[firstWord + word]!);
-    }
-  } else if (sampleRate >= 1) {
-    bladeCount = PROMOTED_GRASS_BLADES_PER_CELL;
-  } else {
-    for (let local = 0; local < candidateCount; local++) {
-      if (isIncluded(local)) bladeCount++;
-    }
+  for (let local = 0; local < candidateCount; local++) {
+    if (!isIncluded(local)) continue;
+    included[local] = 1;
+    bladeCount++;
   }
-  const cellMinimumX = x * grass.cellSize;
-  const cellMinimumZ = z * grass.cellSize;
   const random = randomGenerator(
     (Math.imul(x, 73_856_093) ^
       Math.imul(z, 19_349_663) ^
@@ -596,20 +701,19 @@ export function createGrassCellFromPackage(
   );
   const matrices = new Float32Array(bladeCount * 16);
   const grassData = new Float32Array(bladeCount * 4);
-  const packedTerrainTint = packGrassTerrainTint(
-    renderOptions.terrainTint ?? [1, 1, 1],
-  );
+  const fallbackTerrainTint: readonly [number, number, number] =
+    renderOptions.terrainTint ?? [1, 1, 1];
   const anchorStep = Math.max(
     1,
     Math.ceil(seedCount / PROMOTED_GRASS_MAX_HEIGHT_ANCHORS),
   );
   let outputBlade = 0;
   for (let local = 0; local < candidateCount; local++) {
-    if (!isIncluded(local)) continue;
+    if (!included[local]) continue;
     const column = local % strataSide;
     const row = Math.floor(local / strataSide);
-    const normalizedX = (column + 0.15 + random() * 0.7) / strataSide;
-    const normalizedZ = (row + 0.15 + random() * 0.7) / strataSide;
+    const normalizedX = (column + 0.02 + random() * 0.96) / strataSide;
+    const normalizedZ = (row + 0.02 + random() * 0.96) / strataSide;
     const positionX = cellMinimumX + normalizedX * grass.cellSize;
     const positionZ = cellMinimumZ + normalizedZ * grass.cellSize;
 
@@ -617,11 +721,16 @@ export function createGrassCellFromPackage(
     // while stratified positions prevent sparse source samples becoming clumps.
     let seed = first;
     let nearestDistanceSquared = Number.POSITIVE_INFINITY;
+    let anchorWeightedY = 0;
+    let anchorWeight = 0;
     for (let anchor = 0; anchor < seedCount; anchor += anchorStep) {
       const candidate = first + anchor;
       const deltaX = grass.placements.positionX[candidate]! - positionX;
       const deltaZ = grass.placements.positionZ[candidate]! - positionZ;
       const distanceSquared = deltaX * deltaX + deltaZ * deltaZ;
+      const weight = 1 / Math.max(0.25, distanceSquared);
+      anchorWeightedY += grass.placements.positionY[candidate]! * weight;
+      anchorWeight += weight;
       if (distanceSquared < nearestDistanceSquared) {
         nearestDistanceSquared = distanceSquared;
         seed = candidate;
@@ -649,13 +758,29 @@ export function createGrassCellFromPackage(
       0,
       rotation,
     );
-    translation.set(positionX, grass.placements.positionY[seed]!, positionZ);
+    const fallbackY =
+      anchorWeight > 0
+        ? anchorWeightedY / anchorWeight
+        : grass.placements.positionY[seed]!;
+    translation.set(
+      positionX,
+      samplePromotedGrassSurfaceY(
+        surfaceY,
+        normalizedX,
+        normalizedZ,
+        fallbackY,
+      ),
+      positionZ,
+    );
     BABYLON.Matrix.ComposeToRef(scale, rotation, translation, matrix);
     matrix.copyToArray(matrices, outputBlade * 16);
     const dataOffset = outputBlade * 4;
     grassData[dataOffset] = random();
     grassData[dataOffset + 1] = random();
-    grassData[dataOffset + 2] = packedTerrainTint;
+    grassData[dataOffset + 2] = packGrassTerrainTint(
+      renderOptions.terrainTintAt?.(positionX, positionZ) ??
+        fallbackTerrainTint,
+    );
     grassData[dataOffset + 3] = random();
     outputBlade++;
   }
@@ -676,6 +801,9 @@ export function createGrassCellFromPackage(
     requiemGrassCell: [x, z],
     requiemGrassPromoted: true,
     requiemGrassLod: renderOptions.lod ?? "near",
+    requiemGrassHeightSource: surfaceY
+      ? "coverage-height-field"
+      : "interpolated-placement-anchors",
   };
   uploadGrassCell(mesh, matrices, grassData, windBoundsPadding);
   mesh.setEnabled(false);

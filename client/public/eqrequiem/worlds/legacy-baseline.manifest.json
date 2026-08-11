@@ -17,8 +17,8 @@
   "zones": [
     {
       "id": 1,
-      "shortName": "qeynos",
-      "longName": "South Qeynos",
+      "shortName": "talioslowharbor",
+      "longName": "Talios Lowharbor",
       "status": "ready",
       "source": {
         "path": "assets/reference/everquest_rof2/zones/qeynos.glb.gz",
@@ -31,31 +31,31 @@
         "bytes": 122108
       },
       "authoring": {
-        "path": "shader-object/sandbox/public/shado/worlds/qeynos.authoring.json",
-        "sha256": "5eb3eaebf0d76c59427e3789eab0ff373b5956498e58c5c7e1fc061886b97384",
-        "bytes": 351786
+        "path": "shader-object/sandbox/public/shado/worlds/talioslowharbor.authoring.json",
+        "sha256": "b93d59f737ae8a2fd9ae630282ecab92ac373864025b42b6a7616c9b44399014",
+        "bytes": 351795
       },
       "runtime": {
-        "source": "/eqrequiem/worlds/qeynos.glb.gz",
+        "source": "/eqrequiem/worlds/talioslowharbor.glb.gz",
         "scene": {
-          "path": "client/public/eqrequiem/worlds/qeynos.glb.gz",
+          "path": "client/public/eqrequiem/worlds/talioslowharbor.glb.gz",
           "sha256": "6a372b24edd193557cc83f5de88f61e1a06d0d3e9f179e2a2a47b95bedfefec2",
           "bytes": 3641025
         },
         "spatial": {
-          "path": "client/public/eqrequiem/worlds/qeynos.spatial.json.gz",
-          "sha256": "3ef2c3924294be001a3fa9b5d00382a4a9ed7ff252ede1a5420b564636f7c49a",
-          "bytes": 202601
+          "path": "client/public/eqrequiem/worlds/talioslowharbor.spatial.json.gz",
+          "sha256": "06c0a234cc5e79e85471130baf068a25db4ff5c1e9546ab584b7269434009d4f",
+          "bytes": 202609
         },
         "collision": {
-          "path": "client/public/eqrequiem/worlds/qeynos.collision.bin.gz",
+          "path": "client/public/eqrequiem/worlds/talioslowharbor.collision.bin.gz",
           "sha256": "0f247249e8ea6886637880e9f0bc53bfe98fc5c2c78021dde82df8b39e088f2c",
           "bytes": 205903
         },
         "lightingPlan": {
-          "path": "client/public/eqrequiem/worlds/qeynos.lighting-plan.json.gz",
-          "sha256": "5c7fab26e76759b5f49d05e64cc591165d451f0469e7aa46573fb69e5c583c7f",
-          "bytes": 23258
+          "path": "client/public/eqrequiem/worlds/talioslowharbor.lighting-plan.json.gz",
+          "sha256": "ad348f5066886970b6f107fcd802440d4a6172d722933faa8bcf5438d13c7410",
+          "bytes": 23264
         }
       },
       "stats": {
@@ -80,8 +80,8 @@
     },
     {
       "id": 2,
-      "shortName": "qeynos2",
-      "longName": "North Qeynos",
+      "shortName": "talioscrownward",
+      "longName": "Talios Crownward",
       "status": "ready",
       "source": {
         "path": "assets/reference/everquest_rof2/zones/qeynos2.glb.gz",
@@ -94,49 +94,49 @@
         "bytes": 93596
       },
       "authoring": {
-        "path": "shader-object/sandbox/public/shado/worlds/qeynos2.authoring.json",
-        "sha256": "0dc823d351d20d226dfa73e4a69612edaa6612acb92f590b055d169aaf4ca829",
-        "bytes": 325938
+        "path": "shader-object/sandbox/public/shado/worlds/talioscrownward.authoring.json",
+        "sha256": "113b212566c01cf85321d63aa4673676efeaa2cde272d6dc601b7d1a2b8f07e0",
+        "bytes": 395077
       },
       "runtime": {
-        "source": "/eqrequiem/worlds/qeynos2.glb.gz",
+        "source": "/eqrequiem/worlds/talioscrownward.glb.gz",
         "scene": {
-          "path": "client/public/eqrequiem/worlds/qeynos2.glb.gz",
-          "sha256": "6f4f8ddd68b0c7c02a4fc67866898d56b84ff913b26cab67fe92101133e10cdc",
-          "bytes": 25642123
+          "path": "client/public/eqrequiem/worlds/talioscrownward.glb.gz",
+          "sha256": "bd223ed60667513ecebd0c187b005e8daf34d13293eb5f007f984bac377e6a09",
+          "bytes": 39183742
         },
         "spatial": {
-          "path": "client/public/eqrequiem/worlds/qeynos2.spatial.json.gz",
-          "sha256": "3164d2130e76c045d07891c180ad509940518dd651db5b72ed9163bf77da3d0e",
-          "bytes": 4822518
+          "path": "client/public/eqrequiem/worlds/talioscrownward.spatial.json.gz",
+          "sha256": "4716c0a6071945be8bca80ad40ca567955a85a1923e3f79f2c931aa57cedbda1",
+          "bytes": 5945660
         },
         "collision": {
-          "path": "client/public/eqrequiem/worlds/qeynos2.collision.bin.gz",
-          "sha256": "56f77ca94617ca624010d2894e762fb45c65a73ff80a872497d3b49719c02089",
-          "bytes": 479860
+          "path": "client/public/eqrequiem/worlds/talioscrownward.collision.bin.gz",
+          "sha256": "c83007594b5835ea502a48262cc3fa9decfadbf27de5f5bc57f69c45db4b1263",
+          "bytes": 806366
         },
         "lightingPlan": {
-          "path": "client/public/eqrequiem/worlds/qeynos2.lighting-plan.json.gz",
-          "sha256": "2f349d8042daa4837b501228bab5ccd2a437998cfb292b857415da43248305f4",
-          "bytes": 56066
+          "path": "client/public/eqrequiem/worlds/talioscrownward.lighting-plan.json.gz",
+          "sha256": "d4e7d588f45495d9967a1e266939b9dde0d63d4363575bd3337aeea9d05ca5fb",
+          "bytes": 63543
         }
       },
       "stats": {
-        "primitives": 693,
-        "triangles": 70540,
-        "clusters": 8974,
-        "renderChunks": 1845,
-        "cells": 5621,
+        "primitives": 928,
+        "triangles": 132498,
+        "clusters": 9618,
+        "renderChunks": 2008,
+        "cells": 5635,
         "portals": 0,
         "regions": 20,
         "objectPrototypes": 48,
         "objectStamps": 480,
         "grassCells": 6082,
-        "grassPlacements": 47220,
-        "tiles": 5621,
-        "collisionVertices": 39067,
-        "collisionTriangles": 64058,
-        "collisionSourceTriangles": 59835,
+        "grassPlacements": 44872,
+        "tiles": 5635,
+        "collisionVertices": 65536,
+        "collisionTriangles": 114194,
+        "collisionSourceTriangles": 109136,
         "collisionChunks": 80,
         "lightingStatus": "blocked-missing-uv2",
         "lightingUv2ReadyChunks": 0
@@ -145,8 +145,8 @@
     },
     {
       "id": 3,
-      "shortName": "qrg",
-      "longName": "Surefall Glade",
+      "shortName": "greenveil",
+      "longName": "The Greenveil",
       "status": "ready",
       "source": {
         "path": "assets/reference/everquest_rof2/zones/qrg.glb.gz",
@@ -159,31 +159,31 @@
         "bytes": 42565
       },
       "authoring": {
-        "path": "shader-object/sandbox/public/shado/worlds/qrg.authoring.json",
-        "sha256": "814c1ec5548fd903103b02ef0b4426bb535aaa83fcbdcfac3707467f08f83cab",
-        "bytes": 95022
+        "path": "shader-object/sandbox/public/shado/worlds/greenveil.authoring.json",
+        "sha256": "031c3ec620bdfed16979e4ae9bf34d5c9bb611396c7147757260b547592a8196",
+        "bytes": 95028
       },
       "runtime": {
-        "source": "/eqrequiem/worlds/qrg.glb.gz",
+        "source": "/eqrequiem/worlds/greenveil.glb.gz",
         "scene": {
-          "path": "client/public/eqrequiem/worlds/qrg.glb.gz",
+          "path": "client/public/eqrequiem/worlds/greenveil.glb.gz",
           "sha256": "826070d19fb004821f9122bc61e4b0c48ce4930d08d9deb84b1b03a03755fd01",
           "bytes": 840471
         },
         "spatial": {
-          "path": "client/public/eqrequiem/worlds/qrg.spatial.json.gz",
-          "sha256": "c1772193d447a8ca8f894cc32e82cd77545acb2ebc39be82718fbc5580d84002",
-          "bytes": 72709
+          "path": "client/public/eqrequiem/worlds/greenveil.spatial.json.gz",
+          "sha256": "88187a7f77d488751444a5ecad25d47f9097821bcb22d5137f4c7514126b4e30",
+          "bytes": 72706
         },
         "collision": {
-          "path": "client/public/eqrequiem/worlds/qrg.collision.bin.gz",
+          "path": "client/public/eqrequiem/worlds/greenveil.collision.bin.gz",
           "sha256": "aea4f97c53d8c6e212d0c0cfe25bb4ba1ae1f7eca39ea052b6ab37ef6e8a175b",
           "bytes": 60338
         },
         "lightingPlan": {
-          "path": "client/public/eqrequiem/worlds/qrg.lighting-plan.json.gz",
-          "sha256": "69dbb522a93251a09d640a9f15459cc86def1ed6470d65aa302fbdb463bbed85",
-          "bytes": 6982
+          "path": "client/public/eqrequiem/worlds/greenveil.lighting-plan.json.gz",
+          "sha256": "9556eb9c09a82d8590c7d9f86157bccbe2ccd2272ef3653daa08a63c93eea876",
+          "bytes": 6984
         }
       },
       "stats": {
@@ -208,8 +208,8 @@
     },
     {
       "id": 4,
-      "shortName": "qeytoqrg",
-      "longName": "Qeynos Hills",
+      "shortName": "greymarch",
+      "longName": "The Greymarch",
       "status": "ready",
       "source": {
         "path": "assets/reference/everquest_rof2/zones/qeytoqrg.glb.gz",
@@ -217,53 +217,55 @@
         "bytes": 1266980
       },
       "metadata": {
-        "path": "assets/reference/everquest_rof2/zones/qeytoqrg.json",
-        "sha256": "4f0c1775f9724e5a7de6aac3754aa51b057f89a2312cf765b423b6c34c9b24c3",
-        "bytes": 59199
+        "path": "assets/reference/everquest_rof2/zones/greymarch.json",
+        "sha256": "2b5b84a3a986a600124ab9e6f4a1d29396dd603b9eab3ad0b1f6784dd9c33eaf",
+        "bytes": 1887
       },
       "authoring": {
-        "path": "shader-object/sandbox/public/shado/worlds/qeytoqrg.authoring.json",
-        "sha256": "2d6bc9f8b9513b84352b6b9e679bfad927a838070c3aaf3619bce09dc2ead1f5",
-        "bytes": 262561
+        "path": "shader-object/sandbox/public/shado/worlds/greymarch.authoring.json",
+        "sha256": "a6ebf96edaa091f34d1d40a40700cabf24bb6302e62189aa26fa386ba3fd4d08",
+        "bytes": 4251
       },
       "runtime": {
-        "source": "/eqrequiem/worlds/qeytoqrg.glb.gz",
+        "source": "/eqrequiem/worlds/greymarch.glb.gz",
         "scene": {
-          "path": "client/public/eqrequiem/worlds/qeytoqrg.glb.gz",
-          "sha256": "d9dd10dab167084cc0ae2a90c80a703407155559b9267f0205b9147cc60f5f9f",
-          "bytes": 1267989
+          "path": "client/public/eqrequiem/worlds/greymarch.glb.gz",
+          "sha256": "9f92b3d03de5e1b6de97d59a5c53a6ae841729feafce73206dcd0c551c86f9f9",
+          "bytes": 49425326
         },
         "spatial": {
-          "path": "client/public/eqrequiem/worlds/qeytoqrg.spatial.json.gz",
-          "sha256": "e1ffda637503bec1a2936ca5229ce7f31e24ae519001ffb2a9875e9127b260aa",
-          "bytes": 135124
+          "path": "client/public/eqrequiem/worlds/greymarch.spatial.json.gz",
+          "sha256": "e4fdf4e36ac7554054024042e789a528800aa713ac9563ef8664b4297599bf81",
+          "bytes": 17038571
         },
         "collision": {
-          "path": "client/public/eqrequiem/worlds/qeytoqrg.collision.bin.gz",
-          "sha256": "9975fc9329bda300292fd0db0bfca8ac7fd9ebdb5d0637980ab4cf5199e901f0",
-          "bytes": 102702
+          "path": "client/public/eqrequiem/worlds/greymarch.collision.bin.gz",
+          "sha256": "d8f76d1da2b8e1a209ae31653e915940f3ab193170bd51295fc9b2e6a3110801",
+          "bytes": 3690595
         },
         "lightingPlan": {
-          "path": "client/public/eqrequiem/worlds/qeytoqrg.lighting-plan.json.gz",
-          "sha256": "a512cd9164184545eab5acf5173a1b109507acd5754e5381b6eb77d2844ae951",
-          "bytes": 25533
+          "path": "client/public/eqrequiem/worlds/greymarch.lighting-plan.json.gz",
+          "sha256": "c066d48f41d057b2f38fd012fc114fc72545ff67e8d8acf3a5a70c3d236cdd3b",
+          "bytes": 148516
         }
       },
       "stats": {
-        "primitives": 61,
-        "triangles": 11265,
-        "clusters": 964,
-        "renderChunks": 962,
-        "cells": 271,
+        "primitives": 99,
+        "triangles": 591469,
+        "clusters": 35949,
+        "renderChunks": 6177,
+        "cells": 30732,
         "portals": 0,
-        "regions": 30,
-        "objectPrototypes": 15,
-        "objectStamps": 383,
-        "tiles": 271,
-        "collisionVertices": 13673,
-        "collisionTriangles": 17964,
-        "collisionSourceTriangles": 11195,
-        "collisionChunks": 274,
+        "regions": 5,
+        "objectPrototypes": 0,
+        "objectStamps": 0,
+        "grassCells": 54292,
+        "grassPlacements": 71234,
+        "tiles": 30732,
+        "collisionVertices": 292253,
+        "collisionTriangles": 522780,
+        "collisionSourceTriangles": 491994,
+        "collisionChunks": 500,
         "lightingStatus": "blocked-missing-uv2",
         "lightingUv2ReadyChunks": 0
       },
@@ -901,8 +903,8 @@
     },
     {
       "id": 17,
-      "shortName": "blackburrow",
-      "longName": "BlackBurrow",
+      "shortName": "blackrootwarrens",
+      "longName": "Blackroot Warrens",
       "status": "ready",
       "source": {
         "path": "assets/reference/everquest_rof2/zones/blackburrow.glb.gz",
@@ -915,31 +917,31 @@
         "bytes": 102406
       },
       "authoring": {
-        "path": "shader-object/sandbox/public/shado/worlds/blackburrow.authoring.json",
-        "sha256": "8fd8be8e77059b34a382480a114f254919838c42bda216d3c86eaf17803f0170",
-        "bytes": 196415
+        "path": "shader-object/sandbox/public/shado/worlds/blackrootwarrens.authoring.json",
+        "sha256": "5a6f5fdfdc1a66f3358e72c6e9d2e9a6c20b89908ffe7f88d8151f156225a300",
+        "bytes": 196420
       },
       "runtime": {
-        "source": "/eqrequiem/worlds/blackburrow.glb.gz",
+        "source": "/eqrequiem/worlds/blackrootwarrens.glb.gz",
         "scene": {
-          "path": "client/public/eqrequiem/worlds/blackburrow.glb.gz",
+          "path": "client/public/eqrequiem/worlds/blackrootwarrens.glb.gz",
           "sha256": "3c31ed83e42178b1e25f30e115fe8c33ea8dcede501ac55fa6670483808437f9",
           "bytes": 705527
         },
         "spatial": {
-          "path": "client/public/eqrequiem/worlds/blackburrow.spatial.json.gz",
-          "sha256": "2eab298a094e3cdbdff17719b4b1f40738a12a8b13dae315b30f784f00a37fec",
-          "bytes": 124327
+          "path": "client/public/eqrequiem/worlds/blackrootwarrens.spatial.json.gz",
+          "sha256": "6a91b72d6119678e511d85528ba23bf43aa5fe9a6ce835a7e4e510d2b292ab27",
+          "bytes": 124331
         },
         "collision": {
-          "path": "client/public/eqrequiem/worlds/blackburrow.collision.bin.gz",
+          "path": "client/public/eqrequiem/worlds/blackrootwarrens.collision.bin.gz",
           "sha256": "0d650e7248d8a1a1b6c19d4cea34085b88c8dc7262e08ce922c7f723fc96be91",
           "bytes": 124231
         },
         "lightingPlan": {
-          "path": "client/public/eqrequiem/worlds/blackburrow.lighting-plan.json.gz",
-          "sha256": "53504f7e79c046fd6085ad4ee102f525b7b6338ea8fba3fa9d4b16038e44d53a",
-          "bytes": 6783
+          "path": "client/public/eqrequiem/worlds/blackrootwarrens.lighting-plan.json.gz",
+          "sha256": "f4334a3cb8c4a71760efb9c74679eaf36a03f97892df7d5fa0ab8cf519a34f5d",
+          "bytes": 6784
         }
       },
       "stats": {
@@ -1881,8 +1883,8 @@
     },
     {
       "id": 36,
-      "shortName": "befallen",
-      "longName": "Befallen",
+      "shortName": "mournvault",
+      "longName": "Mournvault: The First Descent",
       "status": "ready",
       "source": {
         "path": "assets/reference/everquest_rof2/zones/befallen.glb.gz",
@@ -1895,30 +1897,30 @@
         "bytes": 92645
       },
       "authoring": {
-        "path": "shader-object/sandbox/public/shado/worlds/befallen.authoring.json",
-        "sha256": "08b9dc31964450f06ce852967348a1092db1c7eee5dff3db1ed5c97f293a9210",
-        "bytes": 236267
+        "path": "shader-object/sandbox/public/shado/worlds/mournvault.authoring.json",
+        "sha256": "2b107a3f106d2f8a9869bd7a3b289e5bb07abf3c6bc44a32fadc1e2b63d088e6",
+        "bytes": 236269
       },
       "runtime": {
-        "source": "/eqrequiem/worlds/befallen.glb.gz",
+        "source": "/eqrequiem/worlds/mournvault.glb.gz",
         "scene": {
-          "path": "client/public/eqrequiem/worlds/befallen.glb.gz",
+          "path": "client/public/eqrequiem/worlds/mournvault.glb.gz",
           "sha256": "373ab2af59b199cb9e41479718c06a36a3b3fc5e282b2bb9bd436653b9c1c204",
           "bytes": 526629
         },
         "spatial": {
-          "path": "client/public/eqrequiem/worlds/befallen.spatial.json.gz",
-          "sha256": "48e31cd14c976205570872aac8a7e337c38a351061b151191bcaf0ac03f0dc6e",
-          "bytes": 141811
+          "path": "client/public/eqrequiem/worlds/mournvault.spatial.json.gz",
+          "sha256": "a223ee27b25f8d720b32e287fcbd735aa7eb3434e067c645287734c03180e853",
+          "bytes": 141817
         },
         "collision": {
-          "path": "client/public/eqrequiem/worlds/befallen.collision.bin.gz",
+          "path": "client/public/eqrequiem/worlds/mournvault.collision.bin.gz",
           "sha256": "bbe1827d3b82ea08cc1cbff5a0ed9fa1a3e6164b8fc3ba54d66e0aaddb34cf65",
           "bytes": 137322
         },
         "lightingPlan": {
-          "path": "client/public/eqrequiem/worlds/befallen.lighting-plan.json.gz",
-          "sha256": "5b7e4aa503291892cc4e024718b20959ba521fbf51fd3102482cc02380e98283",
+          "path": "client/public/eqrequiem/worlds/mournvault.lighting-plan.json.gz",
+          "sha256": "de836879abd03140b0b5a6b45aaa34641d0f36ba4224a808d68bda28d9ed6527",
           "bytes": 2832
         }
       },
@@ -2357,7 +2359,7 @@
     {
       "id": 45,
       "shortName": "qcat",
-      "longName": "Qeynos Catacombs",
+      "longName": "The Talios Undervault",
       "status": "ready",
       "source": {
         "path": "assets/reference/everquest_rof2/zones/qcat.glb.gz",
@@ -4545,9 +4547,8 @@
       "airplane",
       "akanon",
       "arena",
-      "befallen",
       "beholder",
-      "blackburrow",
+      "blackrootwarrens",
       "butcher",
       "cauldron",
       "cazicthule",
@@ -4568,6 +4569,8 @@
       "freportn",
       "freportw",
       "gfaydark",
+      "greenveil",
+      "greymarch",
       "grobb",
       "gukbottom",
       "guktop",
@@ -4584,6 +4587,7 @@
       "lavastorm",
       "lfaydark",
       "mistmoore",
+      "mournvault",
       "najena",
       "nektulos",
       "neriaka",
@@ -4599,10 +4603,6 @@
       "permafrost",
       "qcat",
       "qey2hh1",
-      "qeynos",
-      "qeynos2",
-      "qeytoqrg",
-      "qrg",
       "rathemtn",
       "rivervale",
       "runnyeye",
@@ -4610,14 +4610,16 @@
       "soldungb",
       "southkarana",
       "stonebrunt",
+      "talioscrownward",
+      "talioslowharbor",
       "unrest",
       "warrens"
     ],
     "objects": 897,
     "manifest": {
       "path": "client/public/eqrequiem/objects/manifest.json",
-      "sha256": "423771c17d488792b13480ec4b137a9d82c949aeae8694005ce38eee948181d9",
-      "bytes": 381846
+      "sha256": "76fbfec6c88624bdc201601a629aab1d961cccf05a0edcea3199b9b8f0b07de8",
+      "bytes": 384901
     }
   }
 }

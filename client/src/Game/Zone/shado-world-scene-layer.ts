@@ -13,8 +13,9 @@ import {
   flattenWorldFrustumPlanes,
   WORLD_VISIBILITY_INTERVAL_MS,
 } from "./world-visibility-policy";
+import { getZoneAssetKey } from "@game/Constants/supportedZones";
 
-const WORLD_PACKAGE_REVISION = "babylon-rhs-y-up-v5-region-pvs-collision-v2";
+const WORLD_PACKAGE_REVISION = "babylon-rhs-y-up-v7-canonical-zone-identity";
 
 export class ShadoWorldSceneLayer {
   private elapsedMs = WORLD_VISIBILITY_INTERVAL_MS;
@@ -78,14 +79,15 @@ export class ShadoWorldSceneLayer {
     scene: BJS.Scene,
     zoneContainer: BJS.TransformNode,
   ): Promise<ShadoWorldSceneLayer> {
-    const zone = encodeURIComponent(zoneName.toLowerCase());
+    const assetKey = getZoneAssetKey(zoneName);
+    const zone = encodeURIComponent(assetKey.toLowerCase());
     const spatialUrl =
       `${import.meta.env.BASE_URL}eqrequiem/worlds/${zone}.spatial.json.gz` +
       `?revision=${WORLD_PACKAGE_REVISION}`;
     const world = await deserializeShadoWorld(spatialUrl);
     if (
       world.version !== 5 ||
-      world.name.toLowerCase() !== zoneName.toLowerCase() ||
+      (world.name.toLowerCase() !== zoneName.toLowerCase() && world.name.toLowerCase() !== assetKey.toLowerCase()) ||
       world.sourceTransform !== "mirror-x"
     ) {
       throw new Error(`World package '${zoneName}' does not satisfy the current contract`);
@@ -134,10 +136,8 @@ export class ShadoWorldSceneLayer {
     }
     sourceContainer.addAllToScene();
     const usesBakedWorldLighting = world.lighting?.mode === "baked";
-    applyWorldMaterialPolicy(
-      sourceContainer.materials,
-      usesBakedWorldLighting,
-    );
+    applyWorldMaterialPolicy(sourceContainer.materials);
+    logLocalWorldMaterialDiagnostics(world.name, sourceUrl, sourceContainer);
 
     const runtimeRoot = new BABYLON.TransformNode(
       `ShadoWorldRoot:${world.name}`,
@@ -153,6 +153,7 @@ export class ShadoWorldSceneLayer {
         sourceContainer.meshes.map((mesh) => [mesh.name, mesh]),
       );
       const { meshes: chunks, chunkIndices } = createRenderChunks(world, sources);
+      logLocalRenderChunkDiagnostics(world.name, chunks);
       validateRenderChunks(world, chunks, chunkIndices);
       const coordinator = await ShadoWorldVisibilityCoordinator.create(world, {
         entityVisibilityWorker: "required",
@@ -175,6 +176,7 @@ export class ShadoWorldSceneLayer {
           `of ${world.renderChunks.primitive.length} chunks, ` +
           `${world.collision.sourceTriangleCount} source collision triangles, ` +
           `${world.collision.chunkCount} physics chunks, ` +
+          `source=${sourceUrl}, ` +
           `layout=${world.integrity.layoutHash}`,
       );
       return layer;
@@ -187,6 +189,89 @@ export class ShadoWorldSceneLayer {
 
 }
 
+function logLocalWorldMaterialDiagnostics(
+  worldName: string,
+  sourceUrl: string,
+  container: BJS.AssetContainer,
+): void {
+  if (import.meta.env.VITE_LOCAL_DEV !== "true") return;
+  const inspectedNames = new Set([
+    "1roof.003",
+    "12roof.003",
+    "citywal4.003",
+    "REQ_Q2_GARDEN_CLIPPED_HEDGE.003",
+  ]);
+  const materials = container.materials
+    .filter(
+      (material): material is BJS.PBRMaterial =>
+        material instanceof BABYLON.PBRMaterial && inspectedNames.has(material.name),
+    )
+    .map((material) => ({
+      material: material.name,
+      albedo: Boolean(material.albedoTexture),
+      albedoReady: material.albedoTexture?.isReady() ?? false,
+      normal: Boolean(material.bumpTexture),
+      normalReady: material.bumpTexture?.isReady() ?? false,
+      metallicRoughness: Boolean(material.metallicTexture),
+      metallicRoughnessReady: material.metallicTexture?.isReady() ?? false,
+      unlit: material.unlit,
+    }));
+  const meshes = container.meshes
+    .filter(
+      (mesh): mesh is BJS.Mesh =>
+        mesh instanceof BABYLON.Mesh &&
+        ["1ROOF_MDF.003", "12ROOF_MDF.003", "CastleWallModification_CITYWAL4_Mesh.003"].includes(mesh.name),
+    )
+    .map((mesh) => ({
+      mesh: mesh.name,
+      uv0: mesh.isVerticesDataPresent(BABYLON.VertexBuffer.UVKind),
+      colors: mesh.isVerticesDataPresent(BABYLON.VertexBuffer.ColorKind),
+    }));
+  console.info(
+    "[ZoneManager] Local world material diagnostic " +
+      JSON.stringify({ world: worldName, source: sourceUrl, materials, meshes }),
+  );
+}
+
+function logLocalRenderChunkDiagnostics(
+  worldName: string,
+  chunks: readonly BJS.Mesh[],
+): void {
+  if (import.meta.env.VITE_LOCAL_DEV !== "true") return;
+  const inspectedNames = new Set(["1roof.003", "12roof.003", "citywal4.003"]);
+  const matching = chunks.filter(
+    (chunk) =>
+      chunk.material instanceof BABYLON.PBRMaterial &&
+      inspectedNames.has(chunk.material.name),
+  );
+  const samples = matching.slice(0, 6).map((chunk) => {
+    const uv = chunk.getVerticesData(BABYLON.VertexBuffer.UVKind);
+    let minU = Infinity;
+    let minV = Infinity;
+    let maxU = -Infinity;
+    let maxV = -Infinity;
+    for (let index = 0; index + 1 < (uv?.length ?? 0); index += 2) {
+      minU = Math.min(minU, uv![index]!);
+      minV = Math.min(minV, uv![index + 1]!);
+      maxU = Math.max(maxU, uv![index]!);
+      maxV = Math.max(maxV, uv![index + 1]!);
+    }
+    return {
+      material: chunk.material?.name,
+      vertices: chunk.getTotalVertices(),
+      uv0: Boolean(uv?.length),
+      uvRange: uv?.length ? [minU, minV, maxU, maxV] : null,
+      colors: chunk.isVerticesDataPresent(BABYLON.VertexBuffer.ColorKind),
+      vertexColorTint: chunk.useVertexColors,
+      albedo: Boolean((chunk.material as BJS.PBRMaterial).albedoTexture),
+    };
+  });
+  console.info(
+    "[ZoneManager] Local render-chunk diagnostic " +
+      JSON.stringify({ world: worldName, matchingChunks: matching.length, samples }),
+  );
+}
+
 /**
  * Current Requiem scene geometry is an open architectural surface set rather
  * than a collection of closed solids. Every material passed here belongs to
@@ -194,10 +279,7 @@ export class ShadoWorldSceneLayer {
  * prototype/object materials are loaded by a different layer and retain their
  * own authored policy.
  */
-function applyWorldMaterialPolicy(
-  materials: readonly BJS.Material[],
-  usesBakedWorldLighting: boolean,
-): void {
+function applyWorldMaterialPolicy(materials: readonly BJS.Material[]): void {
   const materialPreview =
     import.meta.env.VITE_LOCAL_DEV === "true" &&
     new URLSearchParams(window.location.search).has("materialPreview");
@@ -205,19 +287,29 @@ function applyWorldMaterialPolicy(
     material.backFaceCulling = false;
     if (material instanceof BABYLON.PBRMaterial) {
       material.twoSidedLighting = true;
-      // A clean-room material review needs to expose the embedded albedo
-      // rather than tinting it with an unfinished zone light/sky setup.
-      material.unlit = materialPreview || usesBakedWorldLighting;
+      // Baked world lighting is carried by each mesh's vertex colours; it is
+      // not a reason to bypass the PBR shader. Keeping this lit preserves
+      // normal maps plus metallic/roughness response in promoted zones.
+      // The explicit local review mode remains intentionally unlit.
+      material.unlit = materialPreview;
     }
   }
 }
 
 function sourceSceneUrl(world: ShadoWorldSpatialPackage, spatialUrl: string): string {
   if (world.source && /^(?:https?:)?\//.test(world.source)) {
+    let source = world.source;
     if (world.source.startsWith("/") && import.meta.env.BASE_URL !== "/") {
-      return `${import.meta.env.BASE_URL}${world.source.slice(1)}`;
+      source = `${import.meta.env.BASE_URL}${world.source.slice(1)}`;
     }
-    return world.source;
+    // The spatial package itself is revisioned, but previously an absolute
+    // world source discarded that query. Carry it forward so a promotion
+    // cannot be hidden behind a browser's cached GLB response.
+    const sourceUrl = new URL(source, window.location.href);
+    if (!sourceUrl.search) {
+      sourceUrl.search = new URL(spatialUrl, window.location.href).search;
+    }
+    return sourceUrl.toString();
   }
   return spatialUrl.replace(/\.spatial\.json\.gz(?:[?#].*)?$/i, ".glb.gz");
 }
@@ -308,9 +400,14 @@ function createRenderChunks(
       shadoPersistentMesh: persistent,
       shadoCullingPolicy: persistent ? "never-cull" : "standard",
     };
-    clone.useVertexColors = source.isVerticesDataPresent(
-      BABYLON.VertexBuffer.ColorKind,
-    );
+    // Baked irradiance is stored in vertex colours on inherited zone meshes.
+    // Babylon multiplies those colours into PBR albedo, which mutes detailed
+    // legacy texture maps into broad flat tints. World PBR chunks use the
+    // scene lighting path instead; non-PBR/FX geometry preserves its authored
+    // vertex-colour behaviour.
+    clone.useVertexColors =
+      !(clone.material instanceof BABYLON.PBRMaterial) &&
+      source.isVerticesDataPresent(BABYLON.VertexBuffer.ColorKind);
     clone.hasVertexAlpha = false;
     clone.refreshBoundingInfo();
     meshes.push(clone);

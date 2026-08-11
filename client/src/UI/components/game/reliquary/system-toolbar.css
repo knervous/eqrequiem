@@ -1,0 +1,275 @@
+/* EQ Sage Diagonal System Outer Wrapper */
+.rq-system-toolbar-wrapper {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  pointer-events: auto;
+  filter: drop-shadow(0 12px 28px rgba(0, 0, 0, 0.75));
+}
+
+/* EQ Sage Underlay Gold Rim Layer (builder-header-bg) */
+.rq-system-toolbar-bg {
+  position: absolute;
+  inset: 0 -2px -2px -2px;
+  z-index: 1;
+  background: linear-gradient(180deg, #c3aa70 0%, #9a8150 70%, #574729 100%) !important;
+  clip-path: polygon(0 0, 100% 0, calc(100% - 24px) 100%, 24px 100%);
+  box-shadow: 0 0 14px rgb(195 170 112 / 40%);
+  pointer-events: none;
+}
+
+/* EQ Sage Main Diagonal Header Background Strip */
+.rq-system-toolbar-bar {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background:
+    linear-gradient(180deg, rgb(24 32 30 / 96%), rgb(8 12 11 / 98%)),
+    linear-gradient(145deg, rgb(255 255 255 / 4%), transparent 30%);
+  clip-path: polygon(0 0, 100% 0, calc(100% - 24px) 100%, 24px 100%);
+  backdrop-filter: blur(10px);
+  pointer-events: none;
+}
+
+/* Inner Toolbar Interactive Content (UNCLIPPED container allowing popover dropdowns to bleed outside) */
+.rq-system-toolbar {
+  position: relative;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 26px 8px 26px;
+  background: transparent;
+  clip-path: none;
+}
+
+/* EQ Sage Text Outline Styles */
+.text-outline {
+  cursor: initial;
+  user-select: none;
+  color: white !important;
+  text-shadow:
+    -1px -1px 0 rgba(0, 0, 0, 0.7),
+     1px -1px 0 rgba(0, 0, 0, 0.7),
+    -1px  1px 0 rgba(0, 0, 0, 0.7),
+     1px  1px 0 rgba(0, 0, 0, 0.7);
+  transition: text-shadow 0.2s ease, color 0.2s ease;
+}
+
+.rq-system-toolbar__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding-right: 10px;
+  margin-right: 2px;
+  border-right: 1px solid rgb(87 71 41 / 50%);
+}
+
+.rq-system-toolbar__sigil {
+  width: 14px;
+  height: 14px;
+  background: var(--rq-bronze);
+  clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+  box-shadow: 0 0 6px var(--rq-bronze);
+}
+
+.rq-system-toolbar__title {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--rq-bronze-light);
+}
+
+.rq-system-toolbar__section {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.rq-system-toolbar__label {
+  font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--rq-ash);
+  line-height: 1;
+  user-select: none;
+}
+
+.rq-system-toolbar__group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.rq-system-toolbar__divider {
+  width: 1px;
+  height: 28px;
+  background: rgb(87 71 41 / 50%);
+  margin: 0 4px;
+}
+
+/* EQ Sage Nav Button Styling */
+.rq-system-toolbar__button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 26px;
+  padding: 0 9px;
+  background: linear-gradient(180deg, rgb(30 38 35 / 85%), rgb(12 16 15 / 95%));
+  border: 1px solid rgb(87 71 41 / 60%);
+  color: var(--rq-bone);
+  font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  clip-path: polygon(0 4px, 4px 0, calc(100% - 4px) 0, 100% 4px, 100% calc(100% - 4px), calc(100% - 4px) 100%, 4px 100%, 0 calc(100% - 4px));
+  transition: all 140ms ease-out;
+}
+
+.rq-system-toolbar__button:hover {
+  background: linear-gradient(180deg, rgb(45 56 52 / 90%), rgb(20 28 26 / 95%));
+  border-color: var(--rq-bronze-light);
+  color: gold;
+  text-shadow:
+    -0.5px -1px 0 rgba(0, 0, 0, 0.4),
+     0.5px -1px 0 rgba(0, 0, 0, 0.4),
+    -0.5px  1px 0 rgba(0, 0, 0, 0.4),
+     0.5px  1px 0 rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 10px rgb(195 170 112 / 30%);
+}
+
+.rq-system-toolbar__button:active {
+  transform: translateY(1px);
+}
+
+.rq-system-toolbar__button[aria-pressed="true"],
+.rq-system-toolbar__button[aria-expanded="true"],
+.rq-system-toolbar__button.is-active {
+  background: linear-gradient(180deg, rgb(87 71 41 / 80%), rgb(38 30 16 / 95%));
+  border-color: var(--rq-bronze-light);
+  color: #fff8e7;
+  box-shadow: inset 0 0 6px rgb(0 0 0 / 50%), 0 0 12px rgb(195 170 112 / 40%);
+}
+
+.rq-system-toolbar__button kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 14px;
+  height: 14px;
+  padding: 0 3px;
+  background: rgb(8 11 11 / 85%);
+  border: 1px solid rgb(87 71 41 / 60%);
+  color: var(--rq-ash);
+  font-family: monospace;
+  font-size: 9px;
+  font-weight: 700;
+  border-radius: 2px;
+}
+
+.rq-system-toolbar__button:hover kbd {
+  border-color: var(--rq-bronze);
+  color: var(--rq-bone);
+}
+
+.rq-system-toolbar__button--danger:hover {
+  background: linear-gradient(180deg, rgb(156 77 63 / 80%), rgb(80 30 20 / 90%));
+  border-color: var(--rq-oxide);
+  color: #ffb8b0;
+  box-shadow: 0 0 8px rgb(156 77 63 / 35%);
+}
+
+/* EQ Sage Popover Sub-menus (UNCLIPPED with HIGH Z-INDEX) */
+.rq-system-toolbar__popover-wrapper {
+  position: relative;
+}
+
+.rq-system-toolbar__popover {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  min-width: 160px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px;
+  background: linear-gradient(180deg, rgb(22 28 26 / 98%), rgb(8 12 11 / 99%));
+  border: 1px solid var(--rq-bronze);
+  box-shadow: 0 14px 32px rgb(0 0 0 / 85%), 0 0 16px rgb(154 129 80 / 30%);
+  clip-path: polygon(0 4px, 4px 0, calc(100% - 4px) 0, 100% 4px, 100% calc(100% - 4px), calc(100% - 4px) 100%, 4px 100%, 0 calc(100% - 4px));
+  z-index: 2000;
+  backdrop-filter: blur(12px);
+}
+
+.rq-system-toolbar__popover--dev {
+  min-width: 240px;
+  right: 0;
+}
+
+.rq-system-toolbar__dev-widget {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 4px 6px;
+  background: rgb(8 11 11 / 80%);
+  border: 1px solid rgb(87 71 41 / 40%);
+  margin-bottom: 4px;
+}
+
+.rq-system-toolbar__dev-header {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--rq-bronze-light);
+}
+
+.rq-system-toolbar__dev-widget .rq-timebar {
+  position: relative;
+  top: auto;
+  left: auto;
+  transform: none;
+  z-index: auto;
+  margin: 0;
+  box-shadow: none;
+  background: transparent;
+  border: 0;
+  padding: 0 2px;
+}
+
+.rq-system-toolbar__popover button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  height: 28px;
+  padding: 0 8px;
+  background: transparent;
+  border: 0;
+  color: var(--rq-bone);
+  font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease;
+}
+
+.rq-system-toolbar__popover button:hover {
+  background: rgb(87 71 41 / 45%);
+  color: gold;
+}
+
+.rq-system-toolbar__popover-divider {
+  height: 1px;
+  background: rgb(87 71 41 / 45%);
+  margin: 4px 0;
+}

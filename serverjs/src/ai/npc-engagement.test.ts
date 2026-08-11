@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
+import { tauntPlan } from "../combat/threat.js";
 
 import {
   MeleeCombatSystem,
@@ -112,5 +113,46 @@ describe("NPC engagement and pursuit", () => {
     engagement.clearEntity(higherId.id);
     assert.equal(engagement.isEngaged(npc.id), false);
     assert.equal(npc.aggroTargetId, 0);
+  });
+
+  it("lets a taunt pull an enemy off whoever out-damaged the tank", async () => {
+    // The whole point of Taunt: a Warrior who is behind on threat can still take the
+    // enemy, and the enemy goes back to the list when the window closes.
+    const kernel = await loadZoneSimulationKernel("debug");
+    const npc = kernel.entities.spawnNPC({ id: 200, x: 0, y: 0, z: 0, speed: 4 });
+    const warrior = kernel.entities.spawnPC({ id: 11, x: 5, y: 0, z: 0 });
+    const wizard = kernel.entities.spawnPC({ id: 22, x: 6, y: 0, z: 0 });
+    const combat = new MeleeCombatSystem(kernel.entities, 20);
+    for (const entity of [npc, warrior, wizard]) combat.register(entity, STATS);
+    const engagement = new NpcEngagementSystem(kernel.entities, combat);
+    engagement.registerNpc(npc);
+
+    let now = 0;
+    engagement.setClock(() => now);
+
+    // The wizard is comfortably ahead on threat.
+    engagement.noteDamage(npc.id, warrior.id, 10, 1);
+    engagement.noteDamage(npc.id, wizard.id, 400, 1);
+    assert.equal(engagement.leader(npc.id)?.entityId, wizard.id);
+
+    // The Warrior taunts: placed above the leader, and attention forced for 3s.
+    const plan = tauntPlan(engagement, npc.id, warrior.id, 3_000);
+    engagement.applyThreat(plan, 2, now);
+    engagement.tick(2);
+    assert.equal(
+      npc.aggroTargetId,
+      warrior.id,
+      "the taunt must actually take the enemy",
+    );
+    assert.equal(
+      engagement.leader(npc.id, warrior.id)?.entityId,
+      wizard.id,
+      "the wizard is still on the list, just no longer led",
+    );
+
+    // Hate placed the Warrior on top, so they keep it after the window closes.
+    now = 4_000;
+    engagement.tick(3);
+    assert.equal(engagement.leader(npc.id)?.entityId, warrior.id);
   });
 });

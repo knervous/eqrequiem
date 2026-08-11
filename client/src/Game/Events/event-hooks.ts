@@ -155,6 +155,21 @@ export const useJournal = () => {
   return journal;
 };
 
+/** The Techniques window's own open state, toggled from the HUD or the keyboard. */
+export const useTechniquesOpen = () => {
+  const [open, setOpen] = useState<boolean>(false);
+  useEffect(() => {
+    const cb = () => {
+      setOpen((open) => !open);
+    };
+    emitter.on('toggleTechniques', cb);
+    return () => {
+      emitter.off('toggleTechniques', cb);
+    };
+  }, []);
+  return open;
+};
+
 export const useInventoryOpen = () => {
   const [open, setOpen] = useState<boolean>(false);
   useEffect(() => {

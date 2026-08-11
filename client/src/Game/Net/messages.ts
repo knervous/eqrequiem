@@ -559,3 +559,140 @@ export const CommandMessage = defineNetMessage<CommandMessage>(
   47,
   "CommandMessage",
 );
+
+/**
+ * Combat techniques.
+ *
+ * The server is authoritative about whether an action may happen: the client sends an
+ * intent and is told what became of it, including *why* when it is refused. Guessing
+ * locally would put the hotbar and the server's cooldowns out of step the first time a
+ * packet was late.
+ */
+export interface AbilityDescriptor {
+  abilityId: string;
+  name: string;
+  kind: string;
+  minLevel: number;
+  cooldownMs: number;
+  recoveryMs: number;
+  resource: string | null;
+  resourceAmount: number;
+  targetKind: string;
+  rangeMetres: number;
+}
+export interface PreparedAbility extends AbilityDescriptor {
+  slot: number;
+}
+export interface AbilityLoadout {
+  learned: AbilityDescriptor[];
+  prepared: PreparedAbility[];
+}
+export const AbilityLoadout = defineNetMessage<AbilityLoadout>(
+  78,
+  "AbilityLoadout",
+);
+
+export interface ActivateAbility {
+  abilityId: string;
+  targetId: number;
+}
+export const ActivateAbility = defineNetMessage<ActivateAbility>(
+  76,
+  "ActivateAbility",
+);
+
+export interface AbilityEffect {
+  kind: string;
+  targetId: number;
+  damage?: number;
+  statusId?: string;
+  seconds?: number;
+  amount?: number;
+  killed?: boolean;
+}
+export interface AbilityResult {
+  abilityId: string;
+  targetId: number;
+  ok: number;
+  actionId?: string;
+  cooldownEndsAtMs?: number;
+  recoveryEndsAtMs?: number;
+  effects?: AbilityEffect[];
+  reason?: string;
+  readyAtMs?: number;
+}
+export const AbilityResult = defineNetMessage<AbilityResult>(77, "AbilityResult");
+
+/** One request against the character's own progression. */
+export type ProgressionRequestBody =
+  | { type: "learn_ability"; abilityId: string }
+  | { type: "prepare_ability"; abilityId: string; slot: number }
+  | { type: "clear_slot"; slot: number }
+  | { type: "spend_aspect_point"; nodeId: string }
+  | { type: "respec_aspects" };
+
+export interface ProgressionRequest {
+  request: ProgressionRequestBody;
+}
+export const ProgressionRequest = defineNetMessage<ProgressionRequest>(
+  79,
+  "ProgressionRequest",
+);
+
+export interface ProgressionAbility {
+  abilityId: string;
+  name: string;
+  kind: string;
+  minLevel: number;
+  cooldownMs: number;
+  recoveryMs: number;
+  resource: string | null;
+  resourceAmount: number;
+  targetKind: string;
+  rangeMetres: number;
+  acquisition: string;
+  tags: string[];
+  known: boolean;
+  learnable: boolean;
+  refusal: string | null;
+}
+
+export interface ProgressionNode {
+  nodeId: string;
+  name: string;
+  effect: string;
+  kind: string;
+  cost: number;
+  requiresTrackDepth: number;
+  modifies: string | null;
+  unlocks: string | null;
+  points: number;
+  affordable: boolean;
+  refusal: string | null;
+}
+
+export interface ProgressionTrack {
+  trackId: string;
+  name: string;
+  focus: string;
+  depth: number;
+  nodes: ProgressionNode[];
+}
+
+/** Everything the Abilities and Aspects panels draw, pushed whole. */
+export interface ProgressionState {
+  level: number;
+  classId: number;
+  slots: { primary: number; reaction: number; consumable: number };
+  prepared: { slot: number; abilityId: string }[];
+  abilities: ProgressionAbility[];
+  aspectPointsAvailable: number;
+  aspectPointsSpent: number;
+  tracks: ProgressionTrack[];
+  neverLost: string[];
+  refusal: string | null;
+}
+export const ProgressionState = defineNetMessage<ProgressionState>(
+  80,
+  "ProgressionState",
+);

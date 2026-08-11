@@ -1,8 +1,13 @@
 import type { DatabaseBackend, DatabaseRow } from "../db/backend.js";
 import { sql } from "drizzle-orm";
+import { resolveCharacterOrigin } from "../content/character-origin.js";
+import { applyDemoStart } from "../content/demo-start.js";
+import { TechniqueRepository } from "../progression/technique-repository.js";
 import { DrizzleDatabase } from "../db/drizzle-database.js";
 import { applyCanonicalRuntimeSchema } from "../db/canonical-schema.js";
 import {
+  characterCanEquipItem,
+  itemAllowedInSlot,
   movementConfirmations,
   planInventorySwap,
 } from "../backend/inventory-rules.js";
@@ -15,6 +20,7 @@ import {
   startingSkills,
 } from "../backend/character-rules.js";
 import type { BackendCharacterCreate } from "../backend/contracts.js";
+import type { GameItemRow } from "../backend/item-instance.js";
 import type {
   PersistCharacter,
   PersistDeleteItemInput,
@@ -48,17 +54,38 @@ interface CharacterRow extends DatabaseRow {
   origin_id: string | null;
 }
 
-interface InventoryRow extends DatabaseRow {
-  item_id: number;
-  bag: number;
-  slot: number;
+interface InventoryCharacterRow extends DatabaseRow {
+  class_id: number;
+  race_id: number;
 }
+
+export interface GrantedInventoryItem {
+  readonly slot: number;
+  readonly bag: number;
+  readonly item: GameItemRow;
+}
+
+export interface InventoryPositionRecord extends DatabaseRow {
+  readonly slot: number;
+  readonly bag: number;
+}
+
+export interface InventoryDestination {
+  readonly slot: number;
+  readonly bag: number;
+}
+
+const GENERAL_SLOTS = [22, 23, 24, 25, 26, 27, 28, 29] as const;
 
 export class GameRepository {
   private readonly drizzle: DrizzleDatabase;
   private readonly contentDrizzle: DrizzleDatabase;
 
-  constructor(private readonly database: DatabaseBackend, private readonly contentDatabase: DatabaseBackend = database) {
+  constructor(
+    private readonly database: DatabaseBackend,
+    private readonly contentDatabase: DatabaseBackend = database,
+    private readonly contentPrefix = "",
+  ) {
     this.drizzle = new DrizzleDatabase(database);
     this.contentDrizzle = new DrizzleDatabase(contentDatabase);
   }
@@ -96,7 +123,11 @@ export class GameRepository {
           JOIN character_positions position ON position.character_id = character.id
           WHERE character.account_id = ${accountId} ORDER BY character.name LIMIT 8`,
     );
-    const gameData = new GameDataRepository(this.contentDatabase, this.database);
+    const gameData = new GameDataRepository(
+      this.contentDatabase,
+      this.database,
+      this.contentPrefix,
+    );
     return Promise.all(result.rows.map(async (row) => ({
       id: Number(row.id),
       name: row.name,
@@ -118,6 +149,20 @@ export class GameRepository {
   }
 
   async createCharacter(accountId: number, character: BackendCharacterCreate): Promise<boolean> {
+    return this.database.transaction((database) =>
+      new GameRepository(
+        database,
+        this.transactionContent(database),
+        this.contentPrefix,
+      ).createCharacterInTransaction(accountId, character)
+    );
+  }
+
+  /** Creates the complete playable character inside the caller's transaction. */
+  async createCharacterInTransaction(
+    accountId: number,
+    character: BackendCharacterCreate,
+  ): Promise<boolean> {
     const name = normalizeCharacterName(character.name);
     const stats = resolveCharacterStats(character);
     if (!name || !stats) return false;
@@ -126,13 +171,12 @@ export class GameRepository {
           AND lower(name) = lower(${name}) LIMIT 1`,
     );
     if (duplicate.rows.length > 0) return false;
-    const origin = (await this.contentDrizzle.query<DatabaseRow>(sql`
-      SELECT zone_id, x, y, z, heading, bind_zone_id, bind_x, bind_y, bind_z, bind_heading
-      FROM character_origins WHERE race_id = ${character.race}
-        AND class_id = ${character.charClass} AND deity_id = ${character.deity}
-        AND (start_zone_id = ${character.startZone} OR zone_id = ${character.startZone})
-      ORDER BY priority DESC LIMIT 1`)).rows[0];
-    if (!origin) return false;
+    // One shared rule for both runtimes: every character starts in Talios, and a
+    // character that content has no opinion about is placed at the canonical arrival
+    // rather than refused.
+    const origin = await resolveCharacterOrigin(this.contentDatabase, character, {
+      contentPrefix: this.contentPrefix,
+    });
     await this.drizzle.execute(
       sql`INSERT INTO characters
           (account_id, name, level, class_id, race_id, gender, deity_id, face,
@@ -154,16 +198,16 @@ export class GameRepository {
     const characterId = Number(row.id);
     await this.drizzle.execute(sql`INSERT INTO character_positions
       (character_id, zone_id, instance_id, x, y, z, heading) VALUES
-      (${characterId}, ${Number(origin.zone_id)}, 0, ${Number(origin.x)}, ${Number(origin.y)},
-       ${Number(origin.z)}, ${Number(origin.heading)})`);
+      (${characterId}, ${origin.zoneId}, 0, ${origin.x}, ${origin.y},
+       ${origin.z}, ${origin.heading})`);
     for (let slot = 0; slot < 5; slot++) await this.drizzle.execute(sql`
       INSERT INTO character_binds (character_id, slot, zone_id, instance_id, x, y, z, heading)
-      VALUES (${characterId}, ${slot}, ${Number(origin.bind_zone_id)}, 0,
-        ${Number(origin.bind_x)}, ${Number(origin.bind_y)}, ${Number(origin.bind_z)},
-        ${Number(origin.bind_heading)})`);
+      VALUES (${characterId}, ${slot}, ${origin.bindZoneId}, 0,
+        ${origin.bindX}, ${origin.bindY}, ${origin.bindZ},
+        ${origin.bindHeading})`);
     const skills = new Map(startingSkills(character.race));
     const classSkills = (await this.contentDrizzle.query<{ skill_id: number; cap: number }>(sql`
-      SELECT skill_id, cap FROM class_skill_caps
+      SELECT skill_id, cap FROM ${this.contentTable("class_skill_caps")}
       WHERE class_id = ${character.charClass} AND level = 1 AND cap > 0`)).rows;
     for (const row of classSkills) {
       const skillId = Number(row.skill_id);
@@ -175,14 +219,18 @@ export class GameRepository {
     for (const [language, value] of startingLanguages(character.race, character.charClass)) await this.drizzle.execute(sql`
       INSERT INTO character_languages (character_id, language_id, value)
       VALUES (${characterId}, ${language}, ${value})`);
-    await this.seedStartingItems(characterId, character, Number(origin.zone_id));
+    await this.seedStartingItems(characterId, character, origin.zoneId);
+    // A level 1 character is their class immediately: starting techniques are granted
+    // and placed on the bar, so nobody has to find a trainer before they can fight.
+    await new TechniqueRepository(this.database)
+      .grantStartingTechniques(characterId, character.charClass);
     return true;
   }
 
   private async seedStartingItems(characterId: number, character: BackendCharacterCreate, zoneId: number): Promise<void> {
     const rows = (await this.contentDrizzle.query<DatabaseRow>(sql`
       SELECT item_id, quantity, inventory_slot, criteria_json
-      FROM character_starting_items ORDER BY id`)).rows;
+      FROM ${this.contentTable("character_starting_items")} ORDER BY id`)).rows;
     const occupied = new Set<number>();
     for (const row of rows) {
       if (!startingItemMatches(String(row.criteria_json ?? "{}"), character, zoneId)) continue;
@@ -197,7 +245,11 @@ export class GameRepository {
 
   async deleteCharacter(accountId: number, name: string): Promise<boolean> {
     return this.database.transaction(async (database) => {
-      const repository = new GameRepository(database, this.contentDatabase);
+      const repository = new GameRepository(
+        database,
+        this.transactionContent(database),
+        this.contentPrefix,
+      );
       const row = (await repository.drizzle.query<{ id: number }>(sql`
         SELECT id FROM characters WHERE account_id = ${accountId} AND name = ${name} LIMIT 1`)).rows[0];
       if (!row) return false;
@@ -214,72 +266,258 @@ export class GameRepository {
     });
   }
 
+  /** Temporary demo hook used by the shared character-entry service. */
+  async applyDemoStart(name: string): Promise<boolean> {
+    const row = (
+      await this.drizzle.query<{ id: number }>(
+        sql`SELECT id FROM characters WHERE lower(name) = lower(${name}) LIMIT 1`,
+      )
+    ).rows[0];
+    if (!row) return false;
+    return applyDemoStart(this.database, Number(row.id));
+  }
+
+  async touchCharacterLogin(characterId: number): Promise<void> {
+    await this.drizzle.execute(sql`
+      UPDATE characters SET last_login_at = CURRENT_TIMESTAMP
+      WHERE id = ${characterId}
+    `);
+  }
+
+  async setCharacterLevel(characterId: number, level: number): Promise<void> {
+    await this.drizzle.execute(sql`
+      UPDATE characters SET level = ${level} WHERE id = ${characterId}
+    `);
+  }
+
+  async summonItemInTransaction(
+    characterId: number,
+    itemId: number,
+  ): Promise<GrantedInventoryItem | null> {
+    const gameData = new GameDataRepository(
+      this.contentDatabase,
+      this.database,
+      this.contentPrefix,
+    );
+    const item = await gameData.item(itemId);
+    if (!item) return null;
+    const inventory = await gameData.inventoryEntries(characterId);
+    const occupied = new Set(
+      inventory
+        .filter((entry) => entry.bag === 0)
+        .map((entry) => entry.slot),
+    );
+    const slot = GENERAL_SLOTS.find((candidate) => !occupied.has(candidate)) ?? 30;
+    if (slot === 30 && occupied.has(30)) return null;
+    await this.drizzle.execute(sql`
+      INSERT INTO player_inventory (character_id, slot, bag, item_id)
+      VALUES (${characterId}, ${slot}, 0, ${itemId})
+    `);
+    return { slot, bag: 0, item };
+  }
+
+  async grantItemInTransaction(
+    characterId: number,
+    itemId: number,
+    quantity = 1,
+    charges = 0,
+  ): Promise<InventoryDestination | null> {
+    const occupied = (await this.drizzle.query<{ slot: number }>(sql`
+      SELECT slot FROM player_inventory
+      WHERE character_id = ${characterId} AND bag = -1 AND slot BETWEEN 22 AND 30
+    `)).rows;
+    const used = new Set(occupied.map((row) => Number(row.slot)));
+    const slot = GENERAL_SLOTS.find((candidate) => !used.has(candidate))
+      ?? (!used.has(30) ? 30 : null);
+    if (slot === null) return null;
+    await this.drizzle.execute(sql`
+      INSERT INTO player_inventory
+        (character_id, bag, slot, item_id, quantity, charges)
+      VALUES (${characterId}, -1, ${slot}, ${itemId},
+        ${Math.max(1, Math.trunc(quantity))}, ${Math.trunc(charges)})
+    `);
+    return { slot, bag: -1 };
+  }
+
+  async purgeInventoryInTransaction(
+    characterId: number,
+  ): Promise<InventoryPositionRecord[]> {
+    const rows = (await this.drizzle.query<InventoryPositionRecord>(sql`
+      SELECT slot, bag FROM player_inventory WHERE character_id = ${characterId}
+    `)).rows.map((row) => ({
+      slot: Number(row.slot),
+      bag: Number(row.bag),
+    }));
+    await this.drizzle.execute(sql`
+      DELETE FROM player_inventory WHERE character_id = ${characterId}
+    `);
+    return rows;
+  }
+
+  async replaceEquipmentInTransaction(
+    characterId: number,
+    gear: readonly (readonly [slot: number, itemId: number])[],
+  ): Promise<InventoryPositionRecord[]> {
+    const old = (await this.drizzle.query<InventoryPositionRecord>(sql`
+      SELECT slot, bag FROM player_inventory
+      WHERE character_id = ${characterId} AND bag = -1
+    `)).rows.map((row) => ({ slot: Number(row.slot), bag: Number(row.bag) }));
+    await this.drizzle.execute(sql`
+      DELETE FROM player_inventory WHERE character_id = ${characterId} AND bag = -1
+    `);
+    const gameData = new GameDataRepository(
+      this.contentDatabase,
+      this.database,
+      this.contentPrefix,
+    );
+    for (const [slot, itemId] of gear) {
+      if (!await gameData.item(itemId)) continue;
+      await this.drizzle.execute(sql`
+        INSERT INTO player_inventory (character_id, slot, bag, item_id)
+        VALUES (${characterId}, ${slot}, -1, ${itemId})
+      `);
+    }
+    return old;
+  }
+
   async moveItem(input: PersistMoveItemInput): Promise<PersistSlotMove[]> {
     return this.database.transaction(async (database) => {
-      const repository = new GameRepository(database);
-      const inventory = await repository.drizzle.query<InventoryRow>(
-        sql`SELECT bag, slot, item_id FROM player_inventory
-            WHERE character_id = ${input.sessionId}
-            AND slot IN (${input.fromSlot}, ${input.toSlot})`,
-      );
-      const moves = planInventorySwap(
-        inventory.rows.map((row) => ({
-          slot: Number(row.slot),
-          bag: Number(row.bag),
-          itemKey: Number(row.item_id),
-        })),
-        { slot: input.fromSlot, bag: input.fromBag },
-        { slot: input.toSlot, bag: input.toBag },
-      );
-      for (const movement of moves) {
-        await repository.deleteInventorySlot(
-          input.sessionId,
-          movement.fromBag,
-          movement.fromSlot,
-        );
-      }
-      for (const movement of moves) {
-        await repository.putInventorySlot(
-          input.sessionId,
-          movement.bag,
-          movement.slot,
-          Number(movement.itemKey),
-        );
-      }
-      return movementConfirmations(
-        moves,
-        { slot: input.fromSlot, bag: input.fromBag },
-        { slot: input.toSlot, bag: input.toBag },
-      ) satisfies PersistSlotMove[];
+      return new GameRepository(
+        database,
+        this.transactionContent(database),
+        this.contentPrefix,
+      ).moveItemInTransaction(input);
     });
   }
 
+  /** Executes a move inside the caller's transaction/critical lane. */
+  async moveItemInTransaction(
+    input: PersistMoveItemInput,
+  ): Promise<PersistSlotMove[]> {
+    const character = (await this.drizzle.query<InventoryCharacterRow>(sql`
+      SELECT class_id, race_id FROM characters WHERE id = ${input.characterId} LIMIT 1
+    `)).rows[0];
+    if (!character) throw new Error("Character not found.");
+    const gameData = new GameDataRepository(
+      this.contentDatabase,
+      this.database,
+      this.contentPrefix,
+    );
+    const inventory = await gameData.inventoryEntries(input.characterId);
+    const source = inventory.find(
+      (row) => row.slot === input.fromSlot && row.bag === input.fromBag,
+    );
+    const destination = inventory.find(
+      (row) => row.slot === input.toSlot && row.bag === input.toBag,
+    );
+    if (
+      !itemAllowedInSlot(source?.item, input.toSlot) ||
+      !itemAllowedInSlot(destination?.item, input.fromSlot)
+    ) {
+      throw new Error("That item cannot be equipped in that slot.");
+    }
+    const identity = {
+      classId: Number(character.class_id),
+      raceId: Number(character.race_id),
+    };
+    if (
+      !characterCanEquipItem(identity, source?.item, input.toSlot) ||
+      !characterCanEquipItem(identity, destination?.item, input.fromSlot)
+    ) {
+      throw new Error("Your class or race cannot equip that item.");
+    }
+    const byPosition = new Map<string, (typeof inventory)[number]>(
+      inventory.map((row) => [`${row.slot}:${row.bag}`, row] as const),
+    );
+    const moves = planInventorySwap(
+      inventory.map((row) => ({
+        slot: row.slot,
+        bag: row.bag,
+        itemKey: `${row.slot}:${row.bag}`,
+        containerSlots: Number(row.item.bagslots),
+      })),
+      { slot: input.fromSlot, bag: input.fromBag },
+      { slot: input.toSlot, bag: input.toBag },
+    );
+    for (const movement of moves) {
+      await this.deleteInventorySlot(
+        input.characterId,
+        movement.fromBag,
+        movement.fromSlot,
+      );
+    }
+    for (const movement of moves) {
+      const stored = byPosition.get(String(movement.itemKey));
+      if (!stored) throw new Error("Inventory changed during move.");
+      await this.putInventorySlot(
+        input.characterId,
+        movement.bag,
+        movement.slot,
+        stored.itemId,
+        stored.quantity,
+        stored.charges,
+      );
+    }
+    return movementConfirmations(
+      moves,
+      { slot: input.fromSlot, bag: input.fromBag },
+      { slot: input.toSlot, bag: input.toBag },
+    ) satisfies PersistSlotMove[];
+  }
+
   async deleteItem(input: PersistDeleteItemInput): Promise<void> {
-    await this.deleteInventorySlot(input.sessionId, input.bag, input.slot);
+    await this.database.transaction((database) =>
+      new GameRepository(
+        database,
+        this.transactionContent(database),
+        this.contentPrefix,
+      ).deleteItemInTransaction(input)
+    );
+  }
+
+  /** Executes a deletion inside the caller's transaction/critical lane. */
+  async deleteItemInTransaction(input: PersistDeleteItemInput): Promise<void> {
+    await this.deleteInventorySlot(input.characterId, input.bag, input.slot);
   }
 
   private async deleteInventorySlot(
-    sessionId: number,
+    characterId: number,
     bag: number,
     slot: number,
   ): Promise<void> {
     await this.drizzle.execute(
-      sql`DELETE FROM player_inventory WHERE character_id = ${sessionId}
+      sql`DELETE FROM player_inventory WHERE character_id = ${characterId}
           AND bag = ${bag} AND slot = ${slot}`,
     );
   }
 
   private async putInventorySlot(
-    sessionId: number,
+    characterId: number,
     bag: number,
     slot: number,
     itemId: number,
+    quantity: number,
+    charges: number,
   ): Promise<void> {
-    await this.deleteInventorySlot(sessionId, bag, slot);
+    await this.deleteInventorySlot(characterId, bag, slot);
     await this.drizzle.execute(
-      sql`INSERT INTO player_inventory (character_id, bag, slot, item_id)
-          VALUES (${sessionId}, ${bag}, ${slot}, ${itemId})`,
+      sql`INSERT INTO player_inventory
+          (character_id, bag, slot, item_id, quantity, charges)
+          VALUES (${characterId}, ${bag}, ${slot}, ${itemId}, ${quantity}, ${charges})`,
     );
+  }
+
+  private transactionContent(transaction: DatabaseBackend): DatabaseBackend {
+    return this.contentDatabase === this.database
+      ? transaction
+      : this.contentDatabase;
+  }
+
+  private contentTable(name: string) {
+    if (!/^[a-z_]+$/.test(name) || !/^(?:[a-z_]+\.)?$/.test(this.contentPrefix)) {
+      throw new Error("Invalid content table identifier");
+    }
+    return sql.raw(`${this.contentPrefix}${name}`);
   }
 }
 

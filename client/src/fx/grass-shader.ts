@@ -34,6 +34,7 @@ varying vVisibility: f32;
 varying vRandomPhase: f32;
 varying vBladeAccent: f32;
 varying vTerrainTint: vec3f;
+varying vWorldPosition: vec3f;
 
 fn grassHash(p: vec2f) -> f32 {
   let h = dot(p, vec2f(127.1, 311.7));
@@ -92,6 +93,7 @@ fn main(input: VertexInputs) -> FragmentInputs {
   vertexOutputs.vRandomPhase = randomPhase;
   vertexOutputs.vBladeAccent = accent;
   vertexOutputs.vTerrainTint = unpackTerrainTint(packedTerrainTint);
+  vertexOutputs.vWorldPosition = rootPosition.xyz;
   let densityDistance = smoothstep(
     uniforms.uDensityFadeStart,
     uniforms.uDensityFadeEnd,
@@ -139,6 +141,7 @@ fn main(input: VertexInputs) -> FragmentInputs {
   worldPosition.z += bend.y;
   worldPosition.y -= length(bend) * 0.075 * tipWeight;
 
+  vertexOutputs.vWorldPosition = worldPosition.xyz;
   vertexOutputs.position = uniforms.viewProjection * worldPosition;
 }
 `;
@@ -149,13 +152,36 @@ varying vVisibility: f32;
 varying vRandomPhase: f32;
 varying vBladeAccent: f32;
 varying vTerrainTint: vec3f;
+varying vWorldPosition: vec3f;
 
 uniform uBaseColor: vec3f;
 uniform uColorVariance: f32;
 uniform uZoneTerrainLightColor: vec3f;
+uniform uZonePlayerLightPosition: vec3f;
+uniform uZonePlayerLightColor: vec3f;
+uniform uZonePlayerLightRange: f32;
+uniform uZoneFogColor: vec3f;
+uniform uZoneFogStart: f32;
+uniform uZoneFogEnd: f32;
+uniform uZoneCameraPosition: vec3f;
 
 fn grassDitherHash(p: vec2f) -> f32 {
   return fract(sin(dot(p, vec2f(91.7, 271.9))) * 43758.5453);
+}
+
+fn grassGroundPlayerLight(position: vec3f) -> vec3f {
+  let delta = uniforms.uZonePlayerLightPosition - position;
+  let lightDistance = length(delta);
+  let attenuation = pow(
+    clamp(
+      1.0 - lightDistance / max(uniforms.uZonePlayerLightRange, 0.0001),
+      0.0,
+      1.0
+    ),
+    2.0
+  );
+  let upwardDiffuse = max(delta.y / max(lightDistance, 0.0001), 0.0);
+  return uniforms.uZonePlayerLightColor * attenuation * upwardDiffuse;
 }
 
 @fragment
@@ -179,19 +205,40 @@ fn main(input: FragmentInputs) -> FragmentOutputs {
   let rootShade = mix(0.78, 1.0, smoothstep(0.0, 0.42, fragmentInputs.vUV.y));
   let signedVariation = fragmentInputs.vBladeAccent * 2.0 - 1.0;
   let brightness = 1.0 + signedVariation * uniforms.uColorVariance;
-  let subtleHue = vec3f(
-    1.0 - signedVariation * uniforms.uColorVariance * 0.22,
-    1.0 + signedVariation * uniforms.uColorVariance * 0.16,
-    1.0 - signedVariation * uniforms.uColorVariance * 0.12
+  let paletteVariation = grassDitherHash(vec2f(
+    fragmentInputs.vBladeAccent * 47.3,
+    fragmentInputs.vRandomPhase * 83.1
+  ));
+  let paletteTint = mix(
+    vec3f(0.78, 0.96, 0.7),
+    vec3f(1.14, 1.02, 0.68),
+    paletteVariation
+  );
+  let subtleHue = mix(
+    vec3f(1.0),
+    paletteTint,
+    clamp(uniforms.uColorVariance * 2.8, 0.0, 0.72)
   );
   let tipLift = mix(0.94, 1.04, smoothstep(0.1, 1.0, fragmentInputs.vUV.y));
-  let color = uniforms.uBaseColor
+  let worldLighting = uniforms.uZoneTerrainLightColor
+    + grassGroundPlayerLight(fragmentInputs.vWorldPosition);
+  var color = uniforms.uBaseColor
     * subtleHue
     * brightness
     * rootShade
     * tipLift
     * fragmentInputs.vTerrainTint
-    * uniforms.uZoneTerrainLightColor;
+    * worldLighting;
+
+  let fogDistance = length(
+    uniforms.uZoneCameraPosition - fragmentInputs.vWorldPosition
+  );
+  let fogAmount = smoothstep(
+    uniforms.uZoneFogStart,
+    max(uniforms.uZoneFogStart + 0.001, uniforms.uZoneFogEnd),
+    fogDistance
+  );
+  color = mix(color, uniforms.uZoneFogColor, fogAmount);
 
   fragmentOutputs.color = vec4f(color, 1.0);
 }
@@ -248,12 +295,20 @@ export function createGrassMaterial(
         "uMinimumDensity",
         "uBaseColor",
         "uColorVariance",
+        "uZoneFogColor",
+        "uZoneFogStart",
+        "uZoneFogEnd",
+        "uZoneCameraPosition",
         ...ZONE_SHADER_LIGHTING_UNIFORMS,
       ],
       shaderLanguage: BABYLON.ShaderLanguage.WGSL,
     },
   );
   material.backFaceCulling = false;
+  material.metadata = {
+    ...material.metadata,
+    requiemZoneAtmosphere: true,
+  };
   material.setFloat("uTime", 0);
   material.setVector2(
     "uWindDirection",
@@ -266,7 +321,7 @@ export function createGrassMaterial(
     // variance stays bounded around this value so cards blend into terrain.
     options.baseColor ?? BABYLON.Color3.FromHexString("#52743B"),
   );
-  material.setFloat("uColorVariance", options.colorVariance ?? 0.12);
+  material.setFloat("uColorVariance", options.colorVariance ?? 0.24);
   material.setVector3("uFocusPosition", BABYLON.Vector3.Zero());
   material.setFloat("uFadeInStart", options.fadeInStart ?? -1);
   material.setFloat("uFadeInEnd", options.fadeInEnd ?? 0);

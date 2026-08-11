@@ -1,3 +1,7 @@
+import type { QuestBeatWeight } from './quest-progression.js';
+
+export type { QuestBeatWeight };
+
 export type QuestEventName = keyof QuestEventArguments;
 
 export interface QuestVector3 {
@@ -154,6 +158,22 @@ export interface QuestPlayerProgressionApi {
   awardXp(amount: number, options?: QuestXpOptions): void;
   /** Idempotent on `awardKey`; returns true only when the award is newly granted. */
   awardXpOnce(awardKey: string, amount: number, options?: QuestXpOptions): boolean;
+  /**
+   * Awards a beat as a share of the level it is earned at — the form authored content
+   * should use.
+   *
+   * A literal number inverts across the level band: combat experience is quadratic in
+   * level while a hardcoded award is flat, so 120 is two thirds of level 1 and four
+   * percent of level 10. A weight keeps a discovery worth roughly the same *amount of
+   * progress* wherever a player happens to meet it.
+   */
+  awardBeat(weight: QuestBeatWeight, options?: QuestXpOptions): void;
+  /** Idempotent on `awardKey`; returns true only when the beat is newly granted. */
+  awardBeatOnce(
+    awardKey: string,
+    weight: QuestBeatWeight,
+    options?: QuestXpOptions,
+  ): boolean;
   granted(awardKey: string, questKey?: string): boolean;
 }
 
@@ -556,11 +576,20 @@ export type QuestPersistentEffect =
       sessionId: number;
       characterId: number | null;
       questKey: string;
+      /**
+       * The shard's own estimate. Authoritative only when `weight` is absent; with a
+       * weight the applier recomputes against the content curve, which the shard does
+       * not have.
+       */
       amount: number;
       source: 'combat' | 'discovery' | 'quest' | 'world';
       sourceKey: string | null;
       /** Set when the award was gated by `awardXpOnce`; the flag lives in quest state. */
       awardKey: string | null;
+      /** Level-relative authored beat; resolved to an amount at commit time. */
+      weight?: QuestBeatWeight;
+      /** The level the beat was earned at, so the resolved share matches the player. */
+      atLevel?: number;
     }
   | {
       type: 'grant_item';

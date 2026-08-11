@@ -6,10 +6,11 @@
  * time against a fixed epoch, which makes it deterministic, restart-proof and free of any
  * per-shard state.
  *
- * The client sky (`sky-motion.ts`) currently free-runs from hour 12 at scene load with
- * the same day length, so the two agree in cadence but not in phase. Syncing the client
- * to this clock is a separate change; until then, treat the server hour as authoritative
- * for content decisions and the client sky as decoration.
+ * The client sky (`client/src/Game/Sky/sky-motion.ts`) derives its hour from the same
+ * function of wall time — same epoch hour, same day length — so the two agree in phase
+ * without a packet. Changing `DEFAULT_DAY_LENGTH_SECONDS` or the epoch hour here means
+ * changing `DEFAULT_SKY_MOTION_SETTINGS` and `WORLD_CLOCK_EPOCH_HOUR` there, or a
+ * night-gated quest will tell a player "after sunset" while their sky renders midday.
  */
 
 /** One in-world day per real hour, matching DEFAULT_SKY_MOTION_SETTINGS. */

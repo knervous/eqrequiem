@@ -45,6 +45,9 @@ export default class CharacterSelect {
       // remains zero, submitting no body instances even as weapon meshes draw.
       EntityCache.initialize(this.gameManager.scene!, {
         disableCulling: true,
+        // Presentation nameplates must remain legible over the authored sky,
+        // terrain, and character preview regardless of their depth ordering.
+        nameplateDepthTest: false,
       });
       this.initializePromise = this.environment.initialize();
     }
@@ -65,7 +68,7 @@ export default class CharacterSelect {
 
   public async loadModel(
     player: CharacterSelectEntry,
-    _fromCharCreate = false,
+    fromCharCreate = false,
     onLoaded: () => void = () => {},
   ) {
     const generation = ++this.loadGeneration;
@@ -128,6 +131,13 @@ export default class CharacterSelect {
         return;
       }
 
+      // Roster selection keeps the chosen character identified in-world.
+      // Creation owns its guaranteed UI-backed label and therefore suppresses
+      // the Shado plate to avoid a duplicate.
+      await character.UpdateNameplate(
+        fromCharCreate ? [] : [player.name || "Wayfarer"],
+      );
+
       character.setGravity(this.environment.gravityEnabled);
       character.setCollision(this.environment.collisionEnabled);
       character.playerEntity.setVelocity(0, 0, 0);
@@ -142,4 +152,5 @@ export default class CharacterSelect {
       console.error("Error loading character model:", err);
     }
   }
+
 }

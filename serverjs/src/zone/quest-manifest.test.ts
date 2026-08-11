@@ -23,8 +23,22 @@ describe("quest content manifest", () => {
       assert.ok(entry.revision >= 1, `${entry.questKey} needs a revision`);
     }
     assert.ok(
-      manifest.some((entry) => entry.questKey === "qeynos2:missing-patrol"),
+      manifest.some((entry) => entry.questKey === "talioscrownward:missing-patrol"),
       "the vertical slice should be discoverable through the manifest",
+    );
+  });
+
+  it("scopes authored quest keys by canonical place, not by legacy zone file", () => {
+    // A quest key is persisted in every character's state, so it belongs to the place
+    // in the fiction. Nothing new may be keyed by the EverQuest zone short name the
+    // demo still renders from.
+    const legacy = questManifest().filter((entry) =>
+      /(^|:)qeynos2?(:|$)/.test(entry.questKey),
+    );
+    assert.deepEqual(
+      legacy.map((entry) => entry.questKey),
+      [],
+      "authored quest keys must use canonical Eltania zone keys",
     );
   });
 });

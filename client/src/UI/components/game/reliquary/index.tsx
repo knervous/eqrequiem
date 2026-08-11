@@ -55,10 +55,14 @@ import type { JsonCommandLink } from '../chat/command-link-util';
 import { linkItemToChat, LinkTypes } from '../chat/command-link-util';
 import { ChatInputSlate } from '../chat/chat-input';
 import { useDrag } from '../../../hooks/use-drag';
+import { AbilitiesWindow } from './abilities-window';
+import { AspectsWindow } from './aspects-window';
 import { ControllerHud } from './controller-hud';
 import { ControlsOptions } from './controls-options';
 import { HudWindow } from './hud-window';
+import { SystemToolbar } from './system-toolbar';
 import './reliquary.css';
+import { eltaniaZoneName } from '@game/Content/eltania-zones';
 
 const generalSlots = [
   InventorySlot.General1,
@@ -133,15 +137,9 @@ const emptyTelemetry: PlayerTelemetry = {
   available: false,
 };
 
-const presentZoneName = (zoneName: string): string => {
-  const normalized = zoneName.toLowerCase();
-  if (normalized === 'qeynos' || normalized === 'qeynos2') {
-    return 'Southern Reach';
-  }
-  return zoneName
-    .replaceAll('_', ' ')
-    .replace(/\b\w/g, (letter) => letter.toUpperCase());
-};
+const presentZoneName = (zoneName: string): string =>
+  eltaniaZoneName(zoneName)
+  ?? zoneName.replaceAll('_', ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
 
 const usePlayerTelemetry = (): PlayerTelemetry => {
   const target = useTarget();
@@ -529,6 +527,51 @@ const StatusCluster: React.FC = () => {
   );
 };
 
+/**
+ * Auto-attack used to be legible only from the word on the toolbar button, which is
+ * the last place a player looks mid-fight. A screen-edge vignette answers "am I
+ * swinging?" from anywhere on the screen without occupying any of it.
+ *
+ * The pulse rides `playerSwing` rather than a free-running animation, so it reports
+ * the real attack cadence: swings that never land because the target walked out of
+ * range simply do not pulse, which is the feedback the chat log makes you read for.
+ */
+const useSwingPulse = (engaged: boolean) => {
+  const [swing, setSwing] = useState<{ id: number; hit: boolean } | null>(null);
+  useEffect(() => {
+    if (!engaged) {
+      setSwing(null);
+      return;
+    }
+    let sequence = 0;
+    const onSwing = ({ hit }: { hit: boolean }) => {
+      sequence += 1;
+      setSwing({ id: sequence, hit });
+    };
+    emitter.on('playerSwing', onSwing);
+    return () => emitter.off('playerSwing', onSwing);
+  }, [engaged]);
+  return swing;
+};
+
+const CombatEngagement: React.FC = () => {
+  const engaged = useEventState('autoAttack', false);
+  const swing = useSwingPulse(engaged);
+  if (!engaged) return null;
+  return (
+    <div className="rq-engaged" aria-hidden="true">
+      <span className="rq-engaged__edge" />
+      {/* Keyed so each swing restarts the animation rather than extending it. */}
+      {swing ? (
+        <span
+          key={swing.id}
+          className={`rq-engaged__swing${swing.hit ? '' : ' is-miss'}`}
+        />
+      ) : null}
+    </div>
+  );
+};
+
 const TargetFrame: React.FC<{
   target: Entity;
   targetDistance: number | null;
@@ -536,6 +579,8 @@ const TargetFrame: React.FC<{
   target,
   targetDistance,
 }) => {
+  const engaged = useEventState('autoAttack', false);
+  const swing = useSwingPulse(engaged);
   const targetHealth = useEventState('entityHealth', {
     spawnId: 0,
     currentHp: 0,
@@ -554,8 +599,15 @@ const TargetFrame: React.FC<{
     <ReliquaryPanel
       title={target.cleanName}
       eyebrow={targetDistance === null ? 'Target' : `${Math.round(targetDistance)}m`}
-      className="rq-target"
+      className={`rq-target${engaged ? ' is-engaged' : ''}`}
     >
+      {engaged && swing ? (
+        <span
+          key={swing.id}
+          className={`rq-target__swing${swing.hit ? '' : ' is-miss'}`}
+          aria-hidden="true"
+        />
+      ) : null}
       <Meter label="Health" value={currentHp} max={maximumHp} />
       {target.spawn.isCorpse ? (
         <button onClick={() => void Player.instance?.playerCombat.lootTarget()}>
@@ -634,7 +686,7 @@ const SurveyMap: React.FC<{ telemetry: PlayerTelemetry }> = ({ telemetry }) => {
     <div className="rq-survey-stack">
       <ReliquaryPanel
         title={telemetry.zone || 'Survey'}
-        eyebrow="Elrador"
+        eyebrow="Eltania"
         className={`rq-survey ${collapsed ? 'is-collapsed' : ''}`}
       >
         <div className="rq-survey__toolbar">
@@ -866,6 +918,35 @@ const Hotbar: React.FC = () => {
   );
 };
 
+const VerticalHotbar: React.FC<{ startIndex: number; label: string }> = ({
+  startIndex,
+  label,
+}) => {
+  const config = useActionButtons();
+  return (
+    <div className="rq-vertical-hotbar" aria-label={label}>
+      <div className="rq-vertical-hotbar__slots">
+        {Array.from({ length: 10 }, (_, index) => {
+          const absoluteIndex = startIndex + index;
+          return (
+            <div className="rq-hotbar__slot" key={absoluteIndex}>
+              <kbd>{index === 9 ? '0' : index + 1}</kbd>
+              <ActionHotButton
+                hotButton
+                actionButtonConfig={config}
+                actionData={config?.hotButtons?.[absoluteIndex]}
+                index={absoluteIndex}
+                scale={1}
+                size={48}
+              />
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
 const QuickControls: React.FC<{
   onActions: () => void;
   onDeveloperTools: () => void;
@@ -876,11 +957,13 @@ const QuickControls: React.FC<{
   return (
     <nav className="rq-quick-controls" aria-label="Character controls">
       <button onClick={() => emitter.emit('toggleInventory')}>Equipment</button>
+      <button onClick={() => emitter.emit('toggleTechniques')}>Techniques</button>
       <button onClick={onActions}>Actions</button>
       <button aria-pressed={sitting} onClick={() => Player.instance?.toggleSit()}>{sitting ? 'Stand' : 'Rest'}</button>
       <button aria-pressed={!running} onClick={() => Player.instance?.toggleWalk()}>{running ? 'Walk' : 'Run'}</button>
       <button
         aria-pressed={autoAttacking}
+        className="rq-attack-toggle"
         title="Toggle auto-attack (T)"
         onClick={(event) => {
           Player.instance?.autoAttack();
@@ -1382,6 +1465,22 @@ const OptionsMenu: React.FC<{
                   />
                 </label>
                 <label className="rq-option-toggle">
+                  <span><strong>Left vertical hotbar</strong><small>Show 10-button vertical bar docked on the left.</small></span>
+                  <input
+                    type="checkbox"
+                    checked={ui.showLeftHotbar}
+                    onChange={(event) => onUIChange('showLeftHotbar', event.target.checked)}
+                  />
+                </label>
+                <label className="rq-option-toggle">
+                  <span><strong>Right vertical hotbar</strong><small>Show 10-button vertical bar docked on the right.</small></span>
+                  <input
+                    type="checkbox"
+                    checked={ui.showRightHotbar}
+                    onChange={(event) => onUIChange('showRightHotbar', event.target.checked)}
+                  />
+                </label>
+                <label className="rq-option-toggle">
                   <span><strong>Lock HUD</strong><small>Prevent moving and resizing HUD windows.</small></span>
                   <input
                     type="checkbox"
@@ -1617,6 +1716,8 @@ export const ReliquaryHUD: React.FC = () => {
       data-tooltips={ui.showTooltips ? 'enabled' : 'disabled'}
     >
       <div ref={viewportRef} id="ui-viewport" className="rq-viewport" />
+      {/* Outside the scaled stage: the vignette frames the screen, not the HUD. */}
+      <CombatEngagement />
       <div
         className="rq-hud-stage"
         style={{
@@ -1625,7 +1726,16 @@ export const ReliquaryHUD: React.FC = () => {
           transform: `scale(${ui.uiScale})`,
         }}
       >
-        <TimeOfDayBar />
+        <SystemToolbar
+          devToolsOpen={developerVisible}
+          optionsOpen={optionsOpen}
+          onToggleDevTools={() =>
+            dispatch(actions.setWindowVisibility('devWindow', !developerVisible))}
+          onToggleOptions={() =>
+            setOptionsOpen((current) => !current)}
+        >
+          <TimeOfDayBar />
+        </SystemToolbar>
         <ControllerHud />
         <HudWindow
           {...windowProps('player')}
@@ -1698,8 +1808,32 @@ export const ReliquaryHUD: React.FC = () => {
             />
           </div>
         </HudWindow>
+        {ui.showLeftHotbar ? (
+          <HudWindow
+            {...windowProps('hotbarLeft')}
+            label="Left Bar"
+            minWidth={58}
+            minHeight={530}
+            className="rq-hud-window--hotbar-left"
+          >
+            <VerticalHotbar startIndex={10} label="Left Vertical Hotbar" />
+          </HudWindow>
+        ) : null}
+        {ui.showRightHotbar ? (
+          <HudWindow
+            {...windowProps('hotbarRight')}
+            label="Right Bar"
+            minWidth={58}
+            minHeight={530}
+            className="rq-hud-window--hotbar-right"
+          >
+            <VerticalHotbar startIndex={20} label="Right Vertical Hotbar" />
+          </HudWindow>
+        ) : null}
       </div>
       <Inventory />
+      <AbilitiesWindow />
+      <AspectsWindow />
       <CorpseLoot />
       <Merchant />
       <Actions open={actionsOpen} onClose={() => setActionsOpen(false)} />

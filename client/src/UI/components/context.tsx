@@ -7,7 +7,6 @@ export type State = {
   ui: UiState;
   mode: string;
   setMode: React.Dispatch<React.SetStateAction<string>>;
-  setSplash: React.Dispatch<React.SetStateAction<boolean>>;
   token: React.RefObject<string | null>;
   dispatcher: React.ActionDispatch<[Action: UiAction]>;
   getEQFile(path: string, file: string): Promise<ArrayBuffer | null>;

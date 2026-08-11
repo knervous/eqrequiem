@@ -31,6 +31,32 @@ const limits: Record<
 export const wrapSkyHour = (hour: number): number =>
   ((hour % 24) + 24) % 24;
 
+/**
+ * World hour at the Unix epoch. Shared constant with the server's `world-clock.ts`;
+ * the two must stay equal or the sky and the rules will disagree about nightfall.
+ */
+export const WORLD_CLOCK_EPOCH_HOUR = 12;
+
+/**
+ * The world hour derived from wall time, using the same epoch and day length as the
+ * server's authoritative clock.
+ *
+ * Time of day is a gameplay input — night-only content, who is awake to talk to — so
+ * the sky cannot free-run from whatever hour the scene happened to load at. Both sides
+ * computing the same function of wall time means they agree in phase without a packet,
+ * and a reconnect or a zone change cannot shift the sky.
+ */
+export const worldClockHour = (
+  nowMilliseconds: number,
+  dayLengthSeconds: number = DEFAULT_SKY_MOTION_SETTINGS.dayLengthSeconds,
+): number => {
+  const safeDayLength = Math.max(1, dayLengthSeconds);
+  const hoursPerSecond = 24 / safeDayLength;
+  return wrapSkyHour(
+    WORLD_CLOCK_EPOCH_HOUR + (nowMilliseconds / 1000) * hoursPerSecond,
+  );
+};
+
 export const normalizeSkyMotionSettings = (
   current: RequiemSkyMotionSettings,
   partial: Partial<RequiemSkyMotionSettings>,

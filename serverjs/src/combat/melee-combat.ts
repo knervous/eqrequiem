@@ -4,6 +4,12 @@ import {
   type EntityStore,
   NPC,
 } from "../zone/entity-store.js";
+import {
+  DEFAULT_REACH_RULES,
+  NPC_REACH_RULES,
+  separationBetween,
+  withinReach,
+} from "./reach.js";
 
 export interface MeleeCombatRules {
   readonly baseHitChancePermille: number;
@@ -22,7 +28,10 @@ export interface MeleeCombatRules {
   readonly baseMaximumHp: number;
   readonly maximumHpPerLevel: number;
   readonly staminaHpDivisor: number;
+  /** Slack a player character's swing gets. Generous on purpose. */
   readonly meleeRangePadding: number;
+  /** Slack an NPC's swing gets. Ordinary — the generosity is the player's alone. */
+  readonly npcMeleeRangePadding: number;
   readonly maximumVerticalMeleeSeparation: number;
 }
 
@@ -43,8 +52,11 @@ export const DEFAULT_MELEE_COMBAT_RULES: MeleeCombatRules = Object.freeze({
   baseMaximumHp: 20,
   maximumHpPerLevel: 5,
   staminaHpDivisor: 10,
-  meleeRangePadding: 3,
-  maximumVerticalMeleeSeparation: 12,
+  // Sourced from the shared reach rule so melee and abilities cannot be tuned apart.
+  meleeRangePadding: DEFAULT_REACH_RULES.bodyPaddingMetres,
+  npcMeleeRangePadding: NPC_REACH_RULES.bodyPaddingMetres,
+  maximumVerticalMeleeSeparation:
+    DEFAULT_REACH_RULES.maximumVerticalSeparationMetres,
 });
 
 export interface CombatantStats {
@@ -356,6 +368,74 @@ export class MeleeCombatSystem {
     return events;
   }
 
+  /**
+   * Damage from something other than an auto-attack swing — an ability.
+   *
+   * Routed through here rather than written onto the entity directly so that a kill by
+   * Kick behaves exactly like a kill by a swing: the same engagement clearing, the same
+   * retaliation, and the same `CombatEvent` the client already renders as a floating
+   * number. An ability that bypassed this would produce a corpse nothing had noticed.
+   */
+  applyAbilityDamage(
+    attackerId: number,
+    targetId: number,
+    amount: number,
+    currentTick: number,
+  ): CombatEvent | null {
+    const attacker = this.entities.get(attackerId);
+    if (!attacker) return null;
+    const target = this.validTarget(attacker, targetId);
+    if (!target) return null;
+
+    const damage = Math.max(0, Math.round(amount));
+    target.currentHp = Math.max(0, target.currentHp - damage);
+    const killed = target.currentHp === 0;
+    if (killed) {
+      this.clearEngagement(target.id);
+      if (target instanceof NPC) {
+        target.moveSpeed = 0;
+        target.target.set(target.position.x, target.position.y, target.position.z);
+      }
+    } else if (attacker.kind === EntityKind.pc && target.kind === EntityKind.npc) {
+      // Hitting something with an ability pulls it, exactly as a swing does.
+      this.enabled[target.index] = 1;
+      this.targetIds[target.index] = attacker.id;
+      this.nextSwingTicks[target.index] = currentTick >>> 0;
+      if (target instanceof NPC) target.aggroTargetId = attacker.id;
+    }
+    const sequence = (this.swingSequences[attacker.index]! + 1) >>> 0;
+    this.swingSequences[attacker.index] = sequence;
+    return this.event(currentTick, attacker, target.id, "hit", sequence, damage, killed);
+  }
+
+  /**
+   * Healing from an ability.
+   *
+   * Lives beside `applyAbilityDamage` because this system owns hit points; a healer
+   * writing to `currentHp` directly would be a second authority on how alive something
+   * is. Returns null when there is nothing to heal, so the caller can tell the
+   * difference between a heal that landed for zero and a heal that found no target.
+   */
+  applyAbilityHeal(
+    healerId: number,
+    targetId: number,
+    amount: number,
+  ): { healed: number; targetCurrentHp: number; targetMaximumHp: number } | null {
+    const healer = this.entities.get(healerId);
+    const target = this.entities.get(targetId);
+    if (!healer || !target || target.currentHp <= 0) return null;
+    const before = target.currentHp;
+    target.currentHp = Math.min(
+      target.maximumHp,
+      target.currentHp + Math.max(0, Math.round(amount)),
+    );
+    return {
+      healed: target.currentHp - before,
+      targetCurrentHp: target.currentHp,
+      targetMaximumHp: target.maximumHp,
+    };
+  }
+
   clearEngagement(entityId: number): void {
     const entity = this.entities.get(entityId);
     for (let index = 0; index < this.entities.count; index++) {
@@ -404,6 +484,10 @@ export class MeleeCombatSystem {
     npc.aggroTargetId = 0;
   }
 
+  /**
+   * Whether a swing between these two is legal. Deliberately forgiving — see the
+   * body pad in reach.ts.
+   */
   isWithinMeleeReach(attackerId: number, targetId: number): boolean {
     const attacker = this.entities.get(attackerId);
     const target = this.entities.get(targetId);
@@ -513,20 +597,23 @@ function normalizeStats(
 }
 
 function isWithinMeleeRange(
-  left: Entity,
-  right: Entity,
+  attacker: Entity,
+  target: Entity,
   reach: number,
   rules: MeleeCombatRules,
 ): boolean {
-  const dx = left.position.x - right.position.x;
-  const dy = left.position.y - right.position.y;
-  const dz = left.position.z - right.position.z;
-  const horizontalReach =
-    Math.max(0.1, reach) + Math.max(0, rules.meleeRangePadding);
-  return (
-    Math.abs(dy) <= Math.max(0, rules.maximumVerticalMeleeSeparation)
-    && dx * dx + dz * dz <= horizontalReach * horizontalReach
-  );
+  // Delegated so a swing and an ability can never disagree about what "in range"
+  // means. See reach.ts for why they used to.
+  //
+  // The pad is the attacker's, not the pair's: the generous one exists to stop a
+  // player being refused by a hair, and an NPC handed the same slack would hit from
+  // two body lengths out and stop chasing there.
+  return withinReach(separationBetween(attacker.position, target.position), reach, {
+    bodyPaddingMetres: attacker.kind === EntityKind.pc
+      ? rules.meleeRangePadding
+      : rules.npcMeleeRangePadding,
+    maximumVerticalSeparationMetres: rules.maximumVerticalMeleeSeparation,
+  });
 }
 
 function samplePermille(

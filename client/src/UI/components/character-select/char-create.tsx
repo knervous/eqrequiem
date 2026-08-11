@@ -8,7 +8,6 @@ import {
 } from '@game/Content/eltania-character-contract';
 import { CharCreate, Int } from '@game/Net/messages';
 import { OpCodes } from '@game/Net/opcodes';
-import Player from '@game/Player/player';
 import { VIEWS } from '../../../Game/Constants/constants';
 import { WorldSocket } from '../../net/instances';
 import {
@@ -46,21 +45,38 @@ export const CharacterCreate: React.FC<CharacterCreateProps> = ({ setView }) => 
     [draft],
   );
 
+  // Naming does not change the preview mesh. Keeping it out of this memo
+  // prevents every keystroke from disposing the actor that owns the plate.
+  const previewCharacter = useMemo(
+    () => projectEltaniaCharacterToLegacyTransport({
+      name           : '',
+      bodyFamilyId   : draft.bodyFamilyId,
+      bodyComponentId: draft.bodyComponentId,
+      faceComponentId: draft.faceComponentId,
+      presentationId : draft.presentationId,
+      callingId      : draft.callingId,
+      originId       : draft.originId,
+    }),
+    [
+      draft.bodyComponentId,
+      draft.bodyFamilyId,
+      draft.callingId,
+      draft.faceComponentId,
+      draft.originId,
+      draft.presentationId,
+    ],
+  );
+
   useEffect(() => {
     const preview = {
-      ...transportCharacter,
+      ...previewCharacter,
+      name           : 'Wayfarer',
       inventoryItems: [],
       equip         : [],
       equipment     : {},
     };
-    GameManager.instance?.CharacterSelect?.loadModel(preview, true, () => {
-      Player.instance?.UpdateNameplate([draft.name || 'Wayfarer']);
-    });
-  }, [draft.name, transportCharacter]);
-
-  useEffect(() => {
-    Player.instance?.UpdateNameplate([draft.name || 'Wayfarer']);
-  }, [draft.name]);
+    GameManager.instance?.CharacterSelect?.loadModel(preview, true);
+  }, [previewCharacter]);
 
   const setBody = useCallback((bodyComponentId: string, presentationId: string) => {
     setDraft((current) => ({
@@ -118,9 +134,15 @@ export const CharacterCreate: React.FC<CharacterCreateProps> = ({ setView }) => 
 
   return (
     <div className="rq-character-create">
+      <div
+        aria-live="polite"
+        className="rq-character-create__preview-nameplate"
+      >
+        {draft.name || 'Wayfarer'}
+      </div>
       <RequiemPanel
         className="rq-character-create__composition"
-        eyebrow="Elrador // Appearance"
+        eyebrow="Eltania // Appearance"
         title="Create a character"
       >
         <div className="rq-character-create__section">
@@ -211,7 +233,7 @@ export const CharacterCreate: React.FC<CharacterCreateProps> = ({ setView }) => 
 
       <RequiemPanel
         className="rq-character-create__identity"
-        eyebrow="Elrador // Identity"
+        eyebrow="Eltania // Identity"
         title="Character"
       >
         <div className="rq-character-create__adapter">

@@ -1,0 +1,321 @@
+/*
+ * Techniques window.
+ *
+ * Reuses the Reliquary panel chrome (`rq-hud-panel`, `rq-modal-layer`, `rq-close`) so
+ * this reads as part of the same HUD rather than a bolted-on screen. Only what is
+ * genuinely new to this window is defined here.
+ */
+
+.rq-techniques {
+  max-height: min(82vh, 900px);
+  width: min(960px, 94vw);
+  display: flex;
+  flex-direction: column;
+}
+
+.rq-techniques .rq-hud-panel__body {
+  overflow-y: auto;
+  position: relative;
+}
+
+.rq-techniques__tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.rq-techniques__tabs button {
+  background: rgb(255 255 255 / 4%);
+  border: 1px solid rgb(255 255 255 / 12%);
+  border-radius: 4px;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  letter-spacing: 0.04em;
+  padding: 6px 14px;
+  text-transform: uppercase;
+}
+
+.rq-techniques__tabs button[aria-pressed='true'] {
+  background: rgb(255 255 255 / 12%);
+  border-color: rgb(255 255 255 / 30%);
+}
+
+.rq-techniques__pip {
+  background: #c8a45a;
+  border-radius: 999px;
+  color: #1b1710;
+  font-size: 11px;
+  font-style: normal;
+  margin-left: 6px;
+  padding: 1px 6px;
+}
+
+.rq-techniques__hint {
+  color: rgb(255 255 255 / 60%);
+  font-size: 12px;
+  margin: 0 0 12px;
+}
+
+.rq-techniques h4 {
+  border-bottom: 1px solid rgb(255 255 255 / 10%);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  margin: 18px 0 8px;
+  padding-bottom: 4px;
+  text-transform: uppercase;
+}
+
+.rq-technique-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.rq-technique {
+  align-items: center;
+  background: rgb(255 255 255 / 3%);
+  border: 1px solid rgb(255 255 255 / 8%);
+  border-radius: 6px;
+  display: flex;
+  gap: 12px;
+  padding: 8px 10px;
+}
+
+.rq-technique--unknown {
+  opacity: 0.62;
+}
+
+.rq-technique__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.rq-technique__title {
+  align-items: baseline;
+  display: flex;
+  gap: 8px;
+}
+
+.rq-technique__title small {
+  color: rgb(255 255 255 / 45%);
+  font-size: 11px;
+}
+
+.rq-technique__meta {
+  color: rgb(255 255 255 / 55%);
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 11px;
+  gap: 10px;
+  margin-top: 2px;
+}
+
+.rq-technique__tag {
+  border: 1px solid rgb(255 255 255 / 15%);
+  border-radius: 3px;
+  padding: 0 4px;
+}
+
+.rq-technique__actions {
+  align-items: center;
+  display: flex;
+  flex-shrink: 0;
+  gap: 8px;
+}
+
+.rq-technique__actions button {
+  background: rgb(255 255 255 / 6%);
+  border: 1px solid rgb(255 255 255 / 18%);
+  border-radius: 4px;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  padding: 4px 10px;
+}
+
+.rq-technique__actions button:disabled {
+  cursor: default;
+  opacity: 0.4;
+}
+
+.rq-technique__learn {
+  background: rgb(200 164 90 / 22%) !important;
+  border-color: rgb(200 164 90 / 60%) !important;
+}
+
+.rq-technique__slot,
+.rq-technique__locked {
+  color: rgb(255 255 255 / 45%);
+  font-size: 11px;
+}
+
+.rq-technique-icon {
+  border: 1px solid rgb(255 255 255 / 14%);
+  border-radius: 5px;
+  flex-shrink: 0;
+  object-fit: cover;
+}
+
+/* Missing art reads as "no icon yet", never as a broken image. */
+.rq-technique-icon--fallback {
+  align-items: center;
+  display: inline-flex;
+  font-size: 14px;
+  font-weight: 700;
+  justify-content: center;
+  letter-spacing: 0.02em;
+  text-shadow: 0 1px 2px rgb(0 0 0 / 60%);
+}
+
+.rq-aspects__summary {
+  align-items: center;
+  background: rgb(255 255 255 / 4%);
+  border: 1px solid rgb(255 255 255 / 10%);
+  border-radius: 6px;
+  display: flex;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding: 10px 12px;
+}
+
+.rq-aspects__summary strong {
+  font-size: 22px;
+}
+
+.rq-aspects__summary span {
+  color: rgb(255 255 255 / 60%);
+  flex: 1;
+  font-size: 12px;
+}
+
+.rq-aspects__summary button {
+  background: rgb(255 255 255 / 6%);
+  border: 1px solid rgb(255 255 255 / 18%);
+  border-radius: 4px;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  padding: 4px 10px;
+}
+
+.rq-aspects__summary button:disabled {
+  cursor: default;
+  opacity: 0.35;
+}
+
+.rq-aspect-tracks {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+}
+
+.rq-aspect-track > header {
+  border-bottom: 1px solid rgb(255 255 255 / 12%);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+}
+
+.rq-aspect-track > header strong {
+  font-size: 14px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.rq-aspect-track > header small {
+  color: rgb(255 255 255 / 50%);
+  flex-basis: 100%;
+  font-size: 11px;
+}
+
+.rq-aspect-track__depth {
+  color: rgb(200 164 90 / 90%);
+  font-size: 11px;
+  margin-left: auto;
+}
+
+.rq-aspect-track ul {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.rq-aspect-node {
+  align-items: center;
+  background: rgb(255 255 255 / 3%);
+  border: 1px solid rgb(255 255 255 / 8%);
+  border-radius: 6px;
+  display: flex;
+  gap: 10px;
+  opacity: 0.55;
+  padding: 7px 9px;
+}
+
+/* Reachable now, and taken, are the two states worth seeing across the tree at a glance. */
+.rq-aspect-node--available {
+  border-color: rgb(200 164 90 / 45%);
+  opacity: 1;
+}
+
+.rq-aspect-node--taken {
+  background: rgb(200 164 90 / 10%);
+  border-color: rgb(200 164 90 / 65%);
+  opacity: 1;
+}
+
+.rq-aspect-node__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.rq-aspect-node__title {
+  align-items: baseline;
+  display: flex;
+  gap: 8px;
+}
+
+.rq-aspect-node__title small {
+  color: rgb(255 255 255 / 45%);
+  font-size: 10px;
+  text-transform: uppercase;
+}
+
+.rq-aspect-node__body p {
+  color: rgb(255 255 255 / 62%);
+  font-size: 11px;
+  margin: 2px 0 0;
+}
+
+.rq-aspect-node__taken {
+  color: rgb(200 164 90 / 90%);
+  flex-shrink: 0;
+  font-size: 11px;
+}
+
+.rq-aspect-node button {
+  background: rgb(255 255 255 / 6%);
+  border: 1px solid rgb(255 255 255 / 18%);
+  border-radius: 4px;
+  color: inherit;
+  cursor: pointer;
+  flex-shrink: 0;
+  font: inherit;
+  font-size: 11px;
+  padding: 3px 9px;
+}
+
+.rq-aspect-node button:disabled {
+  cursor: default;
+  opacity: 0.35;
+}

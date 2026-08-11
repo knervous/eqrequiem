@@ -1,7 +1,7 @@
 import { AnimationDefinitions } from '@game/Animation/animation-constants';
 import { CLASS_DATA_NAMES } from '@game/Constants/class-data';
 import RACE_DATA from '@game/Constants/race-data';
-import { supportedZones } from '@game/Constants/supportedZones';
+import { findSupportedZone, supportedZones } from '@game/Constants/supportedZones';
 import emitter from '@game/Events/events';
 import GameManager from '@game/Manager/game-manager';
 import { ChannelMessage } from '@game/Net/messages';
@@ -24,9 +24,7 @@ export function requestZoneByShortName(
     addChatLine('Usage: /zone {shortname} or #zone {shortname}');
     return;
   }
-  const supportedZoneEntry = Object.entries(supportedZones).find(
-    ([, value]) => value.shortName.toLowerCase() === zone,
-  );
+  const supportedZoneEntry = findSupportedZone(zone);
   if (!supportedZoneEntry) {
     addChatLine(`Zone '${zone}' not found. Type /listzones to see available zones.`);
     return;
@@ -64,12 +62,6 @@ export function requestZoneByShortName(
 
 
 export class CommandHandler extends BaseCommandHandler {
-  private setMode: React.Dispatch<React.SetStateAction<string>> | null = null;
-
-  public setModeHandler(setMode: React.Dispatch<React.SetStateAction<string>>) {
-    this.setMode = setMode;
-  }
-
   @command('speed')
   commandSpeed(args: string[]) {
     if (+args[0] > 0 && Player.instance?.playerMovement) {
@@ -98,12 +90,12 @@ export class CommandHandler extends BaseCommandHandler {
   commandHelp() {
     addChatLines(`
         ----- Available commands -----
-        /zone {shortname} - Example /zone qeynos2
+        /zone {shortname} - Example /zone talioscrownward
         /spawn {model} - Example /spawn hum
         /controls - Displays controls
         /goto - Teleports you to the specified coordinates or current target, example: /goto 100 200 300
         /target {name}
-        /zone - Changes your zone, example: /zone qeynos2
+        /zone - Changes your zone, example: /zone talioscrownward
         /listzones - Lists all available zones
         ----- Keyboard Hotkeys -----
         Space: Jump
@@ -182,7 +174,12 @@ export class CommandHandler extends BaseCommandHandler {
     }
     const entities = GameManager.instance.ZoneManager?.EntityPool?.getPlayerEntities() ?? [];
     addChatLine(`----- There are ${entities.length} players in ${GameManager.instance.ZoneManager?.CurrentZone?.longName} -----`);
-    addChatLines(entities.map((e) => `[${e.spawn.level} ${RACE_DATA[e.spawn.race]?.name ?? 'Unknown'} ${CLASS_DATA_NAMES[e.spawn.charClass]}] ${e.spawn.name}`));
+    addChatLines(entities.map((e) => {
+      const className = e.spawn.charClass === undefined
+        ? 'Unknown'
+        : (CLASS_DATA_NAMES[e.spawn.charClass] ?? 'Unknown');
+      return `[${e.spawn.level} ${RACE_DATA[e.spawn.race]?.name ?? 'Unknown'} ${className}] ${e.spawn.name}`;
+    }));
   }
 
   @command('invite')

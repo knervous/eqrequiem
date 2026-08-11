@@ -138,6 +138,9 @@ export class BrowserSqliteOpfsBackend implements DatabaseBackend {
           { cause: error },
         );
       }
+      if (!database) {
+        throw new Error("OPFS SQLite database constructor returned no database");
+      }
       try {
         assertDatabaseIntegrity(database, filename);
       } catch (error) {
@@ -159,11 +162,15 @@ export class BrowserSqliteOpfsBackend implements DatabaseBackend {
         ]) {
           if (pool.getFileNames().includes(candidate)) pool.unlink(candidate);
         }
-        database = new pool.OpfsSAHPoolDb(filename);
-        assertDatabaseIntegrity(database, filename);
+        const rebuiltDatabase = new pool.OpfsSAHPoolDb(filename);
+        assertDatabaseIntegrity(rebuiltDatabase, filename);
+        database = rebuiltDatabase;
         console.warn(
           `[local-backend] Rebuilt corrupt SQLite runtime database; preserved damaged image as ${quarantineName}`,
         );
+      }
+      if (!database) {
+        throw new Error("OPFS SQLite database was unavailable after recovery");
       }
       database.exec("PRAGMA foreign_keys = ON");
       return new BrowserSqliteOpfsBackend(

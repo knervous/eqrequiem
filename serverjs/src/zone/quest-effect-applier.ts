@@ -5,6 +5,8 @@ import type {
 import type { QuestPersistenceBatch } from "./quest-manager.js";
 import type { QuestJournalEntry } from "./quest-state.js";
 import { isPersistentQuestEffect, type QuestEffect } from "./quest-types.js";
+import { questExperience } from "./quest-progression.js";
+import type { ZoneDeferredWrite } from "../persist/zone-write-intents.js";
 
 /**
  * What the applier needs from a shard. `QuestManager` satisfies it directly in-process;
@@ -17,7 +19,11 @@ const MAX_PENDING_BATCHES = 512;
 export interface QuestEffectSource {
   journalFor(sessionId: number): readonly QuestJournalEntry[];
   drainPersistence(): readonly QuestPersistenceBatch[];
-  character(sessionId: number): { readonly characterId: number | null } | null;
+  character(sessionId: number): {
+    readonly characterId: number | null;
+    readonly experience?: number;
+    readonly level?: number;
+  } | null;
   setCharacterProgression(sessionId: number, experience: number, level: number): void;
   dispatchLevelUp(options: {
     readonly tick: number;
@@ -67,6 +73,19 @@ export class QuestEffectApplier {
         batch: QuestPersistenceBatch,
         error: unknown,
       ) => void;
+      readonly deferWrite?: (
+        characterId: number,
+        intent: ZoneDeferredWrite,
+      ) => void;
+      readonly grantItem?: (
+        characterId: number,
+        itemId: number,
+        quantity: number,
+      ) => Promise<{
+        readonly slot: number;
+        readonly bag: number;
+        readonly itemId: number;
+      } | null>;
     } = {},
   ) {}
 
@@ -77,7 +96,10 @@ export class QuestEffectApplier {
   ): Promise<readonly QuestClientDelivery[]> {
     const deliveries: QuestClientDelivery[] = [];
     const journalDirty = new Map<number, QuestJournalPayload["changed"]>();
-    const experienceBySession = new Map<number, number>();
+    const experienceBySession = new Map<
+      number,
+      { resolved: number; optimistic: number }
+    >();
 
     for (const effect of effects) {
       if (effect.type === "log") {
@@ -109,11 +131,17 @@ export class QuestEffectApplier {
           break;
         case "grant_item": {
           if (effect.characterId === null) break;
-          const stored = await this.repository.grantItem(
-            effect.characterId,
-            effect.itemId,
-            effect.quantity,
-          );
+          const stored = this.options.grantItem
+            ? await this.options.grantItem(
+                effect.characterId,
+                effect.itemId,
+                effect.quantity,
+              )
+            : await this.repository.grantItem(
+                effect.characterId,
+                effect.itemId,
+                effect.quantity,
+              );
           if (stored) {
             deliveries.push({
               sessionId: effect.sessionId,
@@ -123,20 +151,42 @@ export class QuestEffectApplier {
           }
           break;
         }
-        case "award_xp":
+        case "award_xp": {
           if (effect.characterId === null) break;
-          experienceBySession.set(
-            effect.sessionId,
-            (experienceBySession.get(effect.sessionId) ?? 0) + effect.amount,
-          );
+          // An authored beat is a share of a level, so it is resolved here against the
+          // content-authored curve; the shard only estimated it.
+          const amount = effect.weight
+            ? questExperience(
+                await this.repository.curve(),
+                effect.atLevel ?? 1,
+                effect.weight,
+              )
+            : effect.amount;
+          if (amount <= 0) break;
+          const pending = experienceBySession.get(effect.sessionId) ?? {
+            resolved: 0,
+            optimistic: 0,
+          };
+          experienceBySession.set(effect.sessionId, {
+            resolved: pending.resolved + amount,
+            // QuestCharacterState applied the emitted estimate before this boundary.
+            optimistic: pending.optimistic + effect.amount,
+          });
           break;
+        }
         default:
           break;
       }
     }
 
     for (const [sessionId, amount] of experienceBySession) {
-      deliveries.push(...await this.commitExperience(manager, sessionId, amount, context.tick));
+      deliveries.push(...await this.commitExperience(
+        manager,
+        sessionId,
+        amount.resolved,
+        amount.optimistic,
+        context.tick,
+      ));
     }
 
     for (const [sessionId, changed] of journalDirty) {
@@ -166,6 +216,15 @@ export class QuestEffectApplier {
   ): Promise<void> {
     const pending = [...this.retries, ...batches];
     this.retries = [];
+    if (this.options.deferWrite) {
+      for (const batch of pending) {
+        this.options.deferWrite(batch.characterId, {
+          kind: "quest_commit",
+          batch,
+        });
+      }
+      return;
+    }
     for (const batch of pending) {
       try {
         await this.repository.commit(batch);
@@ -217,11 +276,37 @@ export class QuestEffectApplier {
     manager: QuestEffectSource,
     sessionId: number,
     amount: number,
+    optimisticAmount: number,
     tick: number,
   ): Promise<readonly QuestClientDelivery[]> {
     const characterId = manager.character(sessionId)?.characterId;
     if (characterId === undefined || characterId === null) return [];
-    const result = await this.repository.awardExperience(characterId, amount);
+    const character = manager.character(sessionId);
+    let result;
+    if (
+      this.options.deferWrite
+      && character?.experience !== undefined
+      && character.level !== undefined
+    ) {
+      const curve = await this.repository.curve();
+      result = curve.award(
+        {
+          // The shard applied effect.amount before publishing. An authored beat may be
+          // re-priced here by the content curve, so remove the estimate, not the final
+          // award, before deriving the authoritative in-memory result.
+          experience: Math.max(0, character.experience - optimisticAmount),
+          level: character.level,
+        },
+        amount,
+      );
+      this.options.deferWrite(characterId, {
+        kind: "xp_award",
+        amount,
+        resultingLevel: result.level,
+      });
+    } else {
+      result = await this.repository.awardExperience(characterId, amount);
+    }
     if (!result) return [];
     manager.setCharacterProgression(sessionId, result.experience, result.level);
     const deliveries: QuestClientDelivery[] = [{

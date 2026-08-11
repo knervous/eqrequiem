@@ -85,15 +85,15 @@ function applyToMaterial(
   if (material instanceof BABYLON.StandardMaterial) {
     material.diffuseTexture = tex;
     if (flipY) {
-      material.diffuseTexture.vScale = -1;
-      material.diffuseTexture.vOffset = 1;
+      tex.vScale = -1;
+      tex.vOffset = 1;
     }
   } else if (material instanceof BABYLON.PBRMaterial) {
     material.albedoTexture = tex;
     tex.hasAlpha = true;
     if (flipY) {
-      material.albedoTexture.vScale = -1;
-      material.albedoTexture.vOffset = 1;
+      tex.vScale = -1;
+      tex.vOffset = 1;
     }
   } else {
     console.warn(

@@ -306,6 +306,67 @@ const runtimeMigrations: Migration[] = [{
       ),
     ];
   },
+}, {
+  // Global world state. Deliberately two small tables rather than a normalized model:
+  // a fact is a key the whole shard set agrees on, and an occurrence is one concrete
+  // appearance of a repeatable situation. Occurrence identity is what lets "repeatable"
+  // mean "the world produced this again" instead of "a daily timer reset".
+  version: 8,
+  statements: (database) => {
+    const id = identity(database);
+    return [
+      `CREATE TABLE IF NOT EXISTS world_facts (
+        fact_key VARCHAR(255) PRIMARY KEY,
+        value_json TEXT NOT NULL,
+        revision BIGINT NOT NULL DEFAULT 1,
+        updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)`,
+      `CREATE TABLE IF NOT EXISTS world_situation_occurrences (
+        id ${id}, situation_key VARCHAR(255) NOT NULL,
+        state VARCHAR(32) NOT NULL DEFAULT 'active',
+        seed BIGINT NOT NULL,
+        data_json TEXT NOT NULL DEFAULT '{}',
+        started_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        ends_at TIMESTAMP, resolved_at TIMESTAMP)`,
+      createIndex(
+        database,
+        "world_situation_state_idx",
+        "world_situation_occurrences",
+        "situation_key, state",
+      ),
+      createIndex(
+        database,
+        "world_situation_recent_idx",
+        "world_situation_occurrences",
+        "state, started_at",
+      ),
+    ];
+  },
+}, {
+  // Progression a character owns. Deliberately three scopes rather than one blob:
+  // what you have *learned* is permanent, what you have *prepared* is a small loadout
+  // you rearrange out of combat, and Aspect points are spent and refundable. Collapsing
+  // them would make a respec able to erase knowledge, and a loadout change able to
+  // unlearn a spell.
+  version: 9,
+  statements: () => [
+    `CREATE TABLE IF NOT EXISTS character_abilities (
+      character_id BIGINT NOT NULL, ability_id VARCHAR(255) NOT NULL,
+      source VARCHAR(32) NOT NULL DEFAULT 'trainer',
+      learned_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY(character_id, ability_id),
+      FOREIGN KEY(character_id) REFERENCES characters(id) ON DELETE CASCADE)`,
+    // Slot is the position on the bar, so a loadout round-trips exactly as arranged.
+    `CREATE TABLE IF NOT EXISTS character_prepared_actions (
+      character_id BIGINT NOT NULL, slot INTEGER NOT NULL,
+      ability_id VARCHAR(255) NOT NULL,
+      PRIMARY KEY(character_id, slot),
+      FOREIGN KEY(character_id) REFERENCES characters(id) ON DELETE CASCADE)`,
+    `CREATE TABLE IF NOT EXISTS character_aspect_points (
+      character_id BIGINT NOT NULL, node_id VARCHAR(255) NOT NULL,
+      points INTEGER NOT NULL DEFAULT 1,
+      PRIMARY KEY(character_id, node_id),
+      FOREIGN KEY(character_id) REFERENCES characters(id) ON DELETE CASCADE)`,
+  ],
 }];
 
 export function applyCanonicalContentSchema(database: DatabaseBackend): Promise<void> {

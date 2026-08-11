@@ -130,6 +130,8 @@ async function loadWorldRegistry() {
       id: Number(id),
       shortName: zone.shortName.toLowerCase(),
       longName: zone.longName,
+      legacySourceKey: zone.legacySourceKey?.toLowerCase(),
+      legacyMetadataKey: zone.legacyMetadataKey?.toLowerCase(),
     }))
     .sort((a, b) => a.id - b.id);
   if (
@@ -185,12 +187,32 @@ async function inspectInputs(zones) {
   const unresolvedReadyObjects = new Map();
   const excludedLegacyObjects = new Map();
   for (const zone of zones) {
-    const source = await sourceSceneFor(zone.shortName);
-    const metadataFile = path.join(sourceRoot, `${zone.shortName}.json`);
-    const authoringFile = path.join(
+    const sourceKey = zone.legacySourceKey ?? zone.shortName;
+    const source = await sourceSceneFor(sourceKey);
+    const canonicalMetadataFile = path.join(
+      sourceRoot,
+      `${zone.shortName}.json`,
+    );
+    const legacyMetadataFile = path.join(
+      sourceRoot,
+      `${zone.legacyMetadataKey ?? sourceKey}.json`,
+    );
+    const metadataFile = zone.legacyMetadataKey
+      ? legacyMetadataFile
+      : (await exists(canonicalMetadataFile))
+        ? canonicalMetadataFile
+        : legacyMetadataFile;
+    const canonicalAuthoringFile = path.join(
       sandboxRoot,
       `${zone.shortName}.authoring.json`,
     );
+    const legacyAuthoringFile = path.join(
+      sandboxRoot,
+      `${sourceKey}.authoring.json`,
+    );
+    const authoringFile = (await exists(canonicalAuthoringFile))
+      ? canonicalAuthoringFile
+      : legacyAuthoringFile;
     const metadata = (await exists(metadataFile))
       ? JSON.parse(await fs.readFile(metadataFile, "utf8"))
       : undefined;
@@ -323,7 +345,17 @@ async function stageZone(zone, stagingRoot, shado) {
     : ".glb";
   const authoring = path.join(stagingRoot, `${zone.shortName}.authoring.json`);
   if (zone.authoringFile) {
-    await fs.copyFile(zone.authoringFile, authoring);
+    if (zone.legacySourceKey && zone.authoringFile.endsWith(
+      `${zone.legacySourceKey}.authoring.json`,
+    )) {
+      const document = JSON.parse(
+        await fs.readFile(zone.authoringFile, "utf8"),
+      );
+      document.world = zone.shortName;
+      await fs.writeFile(authoring, `${JSON.stringify(document, null, 2)}\n`);
+    } else {
+      await fs.copyFile(zone.authoringFile, authoring);
+    }
   } else {
     const document = shado.createShadoWorldAuthoring(zone.shortName);
     await fs.writeFile(authoring, `${JSON.stringify(document, null, 2)}\n`);
@@ -600,8 +632,21 @@ async function checkBaseline(registry) {
         zone.longName === expected.longName,
       `${entry.registry} registry changed at '${expected.shortName}'`,
     );
-    const currentSource = await sourceSceneFor(zone.shortName);
-    const currentMetadata = path.join(sourceRoot, `${zone.shortName}.json`);
+    const sourceKey = expected.legacySourceKey ?? zone.shortName;
+    const currentSource = await sourceSceneFor(sourceKey);
+    const canonicalMetadata = path.join(
+      sourceRoot,
+      `${zone.shortName}.json`,
+    );
+    const legacyMetadata = path.join(
+      sourceRoot,
+      `${expected.legacyMetadataKey ?? sourceKey}.json`,
+    );
+    const currentMetadata = expected.legacyMetadataKey
+      ? legacyMetadata
+      : (await exists(canonicalMetadata))
+        ? canonicalMetadata
+        : legacyMetadata;
     if (zone.status === "missing-source") {
       ensure(
         !currentSource,

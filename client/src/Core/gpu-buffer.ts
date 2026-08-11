@@ -63,12 +63,6 @@ function isStructRef(t: any): t is StructRef {
 function isScalar(t: any): t is ScalarType {
   return t === "f32" || t === "i32" || t === "u32";
 }
-function isVector(t: any): t is VectorType {
-  return t === "vec2" || t === "vec3" || t === "vec4";
-}
-function isMatrix(t: any): t is MatrixType {
-  return t === "mat2" || t === "mat3" || t === "mat4";
-}
 function isVarArrayOfStruct(t: FieldType): t is VarArrayType {
   return isVarArray(t) && isStructRef((t as VarArrayType).varOf as any);
 }
@@ -746,7 +740,7 @@ type GPURecordCtor = typeof GPURecord & {
   registerIncludes(): void;
 };
 
-function createEmbeddedProxy<T extends GPURecord>(
+function createEmbeddedProxy(
   parent: GPURecord,
   childCtor: { getSchema(): GPUStructSchema },
   baseFloatOffset: number,
@@ -1088,8 +1082,8 @@ export abstract class GPURecord {
     }
     seg.lenF = needF;
     this._structArrayCount[field] = countPerParent | 0;
-    this._structArraySlots[field] = new Array(countPerParent);
-    this._structArrayUnsubs[field] = new Array(countPerParent);
+    this._structArraySlots[field] = Array.from({ length: countPerParent });
+    this._structArrayUnsubs[field] = Array.from({ length: countPerParent });
   }
 
   /** Bulk set a struct-array (copies child headers into the arena). */

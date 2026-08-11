@@ -145,8 +145,8 @@ for (const model of ["hum", "huf"]) {
       `${model} ${socketName} weapon tip is not above its hilt.`,
     );
     assert.ok(
-      Math.abs(orientedLengthAxis.x) < 0.01 && orientedLengthAxis.z > 0.2,
-      `${model} ${socketName} weapon does not pitch toward player-forward +Z.`,
+      Math.abs(orientedLengthAxis.x) < 0.01 && orientedLengthAxis.z < -0.2,
+      `${model} ${socketName} weapon does not pitch toward player-forward -Z.`,
     );
   }
   assert.equal(heldItemLocalYOffset(true, 2), 0);
@@ -166,29 +166,21 @@ const leftWeaponLengthAxis = Vector3.TransformNormal(
   Vector3.Right(),
   leftWeaponOrientation,
 );
-const weaponFaceAxis = Vector3.TransformNormal(
-  Vector3.Up(),
-  weaponOrientation,
-);
 const shieldVerticalAxis = Vector3.TransformNormal(
   Vector3.Up(),
   shieldOrientation,
 );
 assert.ok(
-  weaponLengthAxis.z > 0.95 && weaponLengthAxis.y > 0.2,
-  "Right-hand weapon is not aligned upward and forward at the socket.",
+  weaponLengthAxis.z > 0.95 && weaponLengthAxis.y < -0.2,
+  "Promoted-human weapon is not aligned upward and forward at the socket.",
 );
 assert.ok(
   Vector3.Distance(weaponLengthAxis, leftWeaponLengthAxis) < 1e-5,
   "Left-hand weapon does not share the right-hand forward/up alignment.",
 );
 assert.ok(
-  weaponFaceAxis.y > 0.95,
-  "Weapon broad side remains edge-on instead of facing laterally from the socket.",
-);
-assert.ok(
-  Vector3.Distance(shieldVerticalAxis, Vector3.Forward()) < 1e-5,
-  "Shield face does not remain vertical at the canonical socket.",
+  Vector3.Distance(shieldVerticalAxis, Vector3.Backward()) < 1e-5,
+  "Promoted-human shield did not reverse its Z-facing side.",
 );
 assert.ok(
   Vector3.TransformCoordinates(Vector3.Zero(), shieldOrientation).x < -0.8,

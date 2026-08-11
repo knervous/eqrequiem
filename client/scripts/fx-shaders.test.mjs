@@ -48,6 +48,9 @@ test("grass uses native WGSL wind, coarse terrain lighting, and spatial thin-ins
   assert.match(shader, /distanceToFocus >= uniforms\.uFadeEnd/);
   assert.match(shader, /attribute grassData/);
   assert.match(shader, /vBladeAccent/);
+  assert.match(shader, /grassGroundPlayerLight/);
+  assert.match(shader, /uZoneFogColor/);
+  assert.match(shader, /paletteTint/);
   assert.match(geometry, /new BABYLON\.Mesh/);
   assert.match(geometry, /createGrassCrossGeometry/);
   assert.match(geometry, /createGrassClumpGeometry/);
@@ -61,9 +64,15 @@ test("grass uses native WGSL wind, coarse terrain lighting, and spatial thin-ins
   assert.match(geometry, /packGrassTerrainTint/);
   assert.match(geometry, /renderOptions\.terrainTint/);
   assert.match(geometry, /const coverage = grass\.coverage/);
-  assert.match(geometry, /bladeCount \+= countSetBits/);
+  assert.match(geometry, /unpackPromotedGrassSurfaceY/);
+  assert.match(geometry, /samplePromotedGrassSurfaceY/);
+  assert.match(geometry, /coverage-height-field/);
+  assert.match(geometry, /anchorWeightedY/);
   assert.match(geometry, /word >>> \(local & 31\)/);
-  assert.match(geometry, /column \+ 0\.15 \+ random\(\) \* 0\.7/);
+  assert.match(geometry, /promotedGrassCoverageProbability/);
+  assert.match(geometry, /field = broad \* 0\.72 \+ detail \* 0\.28/);
+  assert.match(geometry, /column \+ 0\.02 \+ random\(\) \* 0\.96/);
+  assert.match(geometry, /renderOptions\.terrainTintAt/);
   assert.doesNotMatch(geometry, /Math\.sqrt\(random\(\)\) \* spread/);
   assert.match(geometry, /cellSize \?\? 24/);
   assert.match(geometry, /thinInstanceSetBuffer\("matrix"/);
@@ -82,6 +91,8 @@ test("grass uses native WGSL wind, coarse terrain lighting, and spatial thin-ins
   assert.match(streamer, /GRASS_FAR_ENABLE_RADIUS = 272/);
   assert.match(streamer, /sampleRate: 0\.22/);
   assert.match(streamer, /terrainTintByCell/);
+  assert.match(streamer, /sampleTerrainTint/);
+  assert.match(streamer, /terrainTintAt/);
   assert.match(streamer, /createGrassCellFromPackage/);
   assert.match(streamer, /this\.lastCellX/);
   assert.match(streamer, /mesh\.dispose\(false, false\)/);
@@ -104,7 +115,7 @@ test("grass uses native WGSL wind, coarse terrain lighting, and spatial thin-ins
   assert.match(lighting, /DirectionalLight/);
   assert.match(lighting, /HemisphericLight/);
   assert.match(lighting, /playerLight/);
-  assert.match(lighting, /const terrainDiffuse = 0\.3/);
+  assert.match(lighting, /const terrainDiffuse = 0\.28/);
   assert.match(lighting, /setVector3\("uZoneTerrainLightColor"/);
   assert.match(lighting, /setVector3\("uZoneLightDirection"/);
   assert.match(lighting, /requiemZoneAtmosphere/);

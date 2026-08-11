@@ -1,0 +1,265 @@
+import { CLASS_IDS } from "../ability-types.js";
+import type { ClassAspects } from "./types.js";
+
+/**
+ * Wizard Aspects: Evocation and Arcanum.
+ *
+ * Evocation spends everything for the biggest number; Arcanum keeps the Wizard alive
+ * and in position long enough to keep casting. An Arcanum Wizard is still the most
+ * dangerous burst caster in the game — the track buys efficiency and control, never a
+ * trade of damage for durability, because a Wizard who stops threatening people stops
+ * being the reason anyone brings one.
+ */
+export const WIZARD_ASPECTS: ClassAspects = {
+  classId: CLASS_IDS.wizard,
+  neverLost: ["burst magic", "roots", "elemental schools", "fragility"],
+  tracks: [
+    {
+      id: "wizard.evocation",
+      name: "Evocation",
+      focus: "Elemental burst, high expenditure, critical windows, direct damage.",
+      nodes: [
+        {
+          id: "wizard.evocation.kindling",
+          name: "Kindling",
+          effect: "Cinder's burn clings for longer.",
+          kind: "modifier",
+          modifies: "wizard.cinder",
+          requiresTrackDepth: 0,
+          cost: 1,
+          modifiers: [{ kind: "status_duration", statusId: "wizard.burning", multiplier: 1.5 }],
+        },
+        {
+          id: "wizard.evocation.cold_fracture",
+          name: "Cold Fracture",
+          effect: "Shatterfrost breaks a chilled target far harder.",
+          kind: "modifier",
+          modifies: "wizard.shatterfrost",
+          requiresTrackDepth: 1,
+          cost: 1,
+          modifiers: [{ kind: "damage", abilityId: "wizard.shatterfrost", multiplier: 1.35 }],
+        },
+        {
+          id: "wizard.evocation.piercing_flame",
+          name: "Piercing Flame",
+          effect: "Flame Lance strikes deeper.",
+          kind: "modifier",
+          modifies: "wizard.flame_lance",
+          requiresTrackDepth: 2,
+          cost: 1,
+          modifiers: [{ kind: "damage", abilityId: "wizard.flame_lance", multiplier: 1.25 }],
+        },
+        {
+          id: "wizard.evocation.elemental_echo",
+          name: "Elemental Echo",
+          effect: "Alternating schools leaves every element burning hotter.",
+          kind: "passive",
+          requiresTrackDepth: 3,
+          cost: 1,
+          modifiers: [
+            { kind: "damage", school: "fire", multiplier: 1.08 },
+            { kind: "damage", school: "cold", multiplier: 1.08 },
+          ],
+        },
+        {
+          id: "wizard.evocation.overchannel",
+          name: "Overchannel",
+          effect: "Spend your own vitality to empower the next spell.",
+          kind: "active",
+          unlocks: "wizard.overchannel",
+          requiresTrackDepth: 4,
+          cost: 2,
+        },
+        {
+          id: "wizard.evocation.combustion",
+          name: "Combustion",
+          effect: "Combust detonates a burn for far more, far sooner.",
+          kind: "modifier",
+          modifies: "wizard.combust",
+          requiresTrackDepth: 6,
+          cost: 1,
+          modifiers: [
+            { kind: "damage", abilityId: "wizard.combust", multiplier: 1.3 },
+            { kind: "cooldown", abilityId: "wizard.combust", multiplier: 0.75 },
+          ],
+        },
+        {
+          id: "wizard.evocation.ember_field",
+          name: "Ember Field",
+          effect: "Emberburst covers more ground and returns sooner.",
+          kind: "modifier",
+          modifies: "wizard.emberburst",
+          requiresTrackDepth: 7,
+          cost: 1,
+          modifiers: [
+            { kind: "range", abilityId: "wizard.emberburst", bonusMetres: 5 },
+            { kind: "cooldown", abilityId: "wizard.emberburst", multiplier: 0.8 },
+          ],
+        },
+        {
+          id: "wizard.evocation.cataclysmic_focus",
+          name: "Cataclysmic Focus",
+          effect: "Arcane Surge burns longer and comes around sooner.",
+          kind: "modifier",
+          modifies: "wizard.arcane_surge",
+          requiresTrackDepth: 8,
+          cost: 2,
+          modifiers: [
+            { kind: "status_duration", statusId: "wizard.arcane_surge", multiplier: 1.5 },
+            { kind: "cooldown", abilityId: "wizard.arcane_surge", multiplier: 0.7 },
+          ],
+        },
+        {
+          id: "wizard.evocation.raw_power",
+          name: "Raw Power",
+          effect: "Every spell the Wizard casts lands harder.",
+          kind: "passive",
+          requiresTrackDepth: 10,
+          cost: 2,
+          modifiers: [{ kind: "damage", multiplier: 1.1 }],
+        },
+        {
+          id: "wizard.evocation.conflagrant",
+          name: "Conflagrant",
+          effect: "Conflagration engulfs a far wider field, far more often.",
+          kind: "modifier",
+          modifies: "wizard.conflagration",
+          requiresTrackDepth: 12,
+          cost: 3,
+          modifiers: [
+            { kind: "cooldown", abilityId: "wizard.conflagration", multiplier: 0.6 },
+            { kind: "range", abilityId: "wizard.conflagration", bonusMetres: 8 },
+          ],
+        },
+      ],
+    },
+    {
+      id: "wizard.arcanum",
+      name: "Arcanum",
+      focus: "Roots, efficiency, wards, repositioning, arcane utility.",
+      nodes: [
+        {
+          id: "wizard.arcanum.stable_sigil",
+          name: "Stable Sigil",
+          effect: "Root Sigil holds considerably longer.",
+          kind: "modifier",
+          modifies: "wizard.root_sigil",
+          requiresTrackDepth: 0,
+          cost: 1,
+          modifiers: [{ kind: "status_duration", statusId: "wizard.rooted", multiplier: 1.4 }],
+        },
+        {
+          id: "wizard.arcanum.efficient_formula",
+          name: "Efficient Formula",
+          effect: "The utility kit costs noticeably less mana.",
+          kind: "passive",
+          requiresTrackDepth: 1,
+          cost: 1,
+          modifiers: [
+            { kind: "cost", abilityId: "wizard.root_sigil", multiplier: 0.75 },
+            { kind: "cost", abilityId: "wizard.arcane_ward", multiplier: 0.75 },
+            { kind: "cost", abilityId: "wizard.blink", multiplier: 0.75 },
+          ],
+        },
+        {
+          id: "wizard.arcanum.arcane_rebound",
+          name: "Arcane Rebound",
+          effect: "Fully resisting magic opens an immediate bolt in reply.",
+          kind: "reaction",
+          requiresTrackDepth: 2,
+          cost: 1,
+          modifiers: [
+            {
+              kind: "reaction",
+              trigger: "resist",
+              grantsAbilityId: "wizard.arc_bolt",
+              windowMs: 3_000,
+            },
+          ],
+        },
+        {
+          id: "wizard.arcanum.displacement",
+          name: "Displacement",
+          effect: "Blink carries further, and a third one is held in reserve.",
+          kind: "modifier",
+          modifies: "wizard.blink",
+          requiresTrackDepth: 3,
+          cost: 1,
+          modifiers: [{ kind: "charges", abilityId: "wizard.blink", bonus: 1 }],
+        },
+        {
+          id: "wizard.arcanum.null_pattern",
+          name: "Null Pattern",
+          effect: "A reactive unravelling that interrupts and strips magic.",
+          kind: "active",
+          unlocks: "wizard.null_pattern",
+          requiresTrackDepth: 4,
+          cost: 2,
+        },
+        {
+          id: "wizard.arcanum.ley_sense",
+          name: "Ley Sense",
+          effect: "Mana Reave draws back much more of what it takes.",
+          kind: "modifier",
+          modifies: "wizard.mana_reave",
+          requiresTrackDepth: 6,
+          cost: 1,
+          modifiers: [
+            { kind: "cooldown", abilityId: "wizard.mana_reave", multiplier: 0.7 },
+            { kind: "damage", abilityId: "wizard.mana_reave", multiplier: 1.2 },
+          ],
+        },
+        {
+          id: "wizard.arcanum.binding_frost",
+          name: "Binding Frost",
+          effect: "Glacial Bind holds longer and costs less.",
+          kind: "modifier",
+          modifies: "wizard.glacial_bind",
+          requiresTrackDepth: 7,
+          cost: 1,
+          modifiers: [
+            { kind: "status_duration", statusId: "wizard.glacial_bind", multiplier: 1.4 },
+            { kind: "cost", abilityId: "wizard.glacial_bind", multiplier: 0.8 },
+          ],
+        },
+        {
+          id: "wizard.arcanum.unravelling",
+          name: "Unravelling",
+          effect: "Null Field silences for longer and returns sooner.",
+          kind: "modifier",
+          modifies: "wizard.null_field",
+          requiresTrackDepth: 8,
+          cost: 2,
+          modifiers: [
+            { kind: "status_duration", statusId: "common.silenced", multiplier: 1.5 },
+            { kind: "cooldown", abilityId: "wizard.null_field", multiplier: 0.75 },
+          ],
+        },
+        {
+          id: "wizard.arcanum.deep_reservoir",
+          name: "Deep Reservoir",
+          effect: "A far larger pool of mana, refilling as you travel.",
+          kind: "passive",
+          requiresTrackDepth: 10,
+          cost: 2,
+          modifiers: [
+            { kind: "resource_max", resource: "mana", bonus: 70 },
+            { kind: "resource_regen", resource: "mana", perSecond: 0.3 },
+          ],
+        },
+        {
+          id: "wizard.arcanum.perfect_recall",
+          name: "Perfect Recall",
+          effect: "Arcane Ward holds longer, and the escape is always ready.",
+          kind: "passive",
+          requiresTrackDepth: 12,
+          cost: 3,
+          modifiers: [
+            { kind: "status_duration", statusId: "wizard.arcane_ward", multiplier: 1.6 },
+            { kind: "cooldown", abilityId: "wizard.blink", multiplier: 0.6 },
+          ],
+        },
+      ],
+    },
+  ],
+};

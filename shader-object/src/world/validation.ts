@@ -129,7 +129,16 @@ export function computeShadoWorldLayoutHash(world: ShadoWorldSpatialPackage): st
       world.grass.cells.placementCount,
     ].forEach(feedArray);
     Object.values(world.grass.placements).forEach(feedFloatArray);
-    if (world.grass.coverage) world.grass.coverage.words.forEach(feed);
+    if (world.grass.coverage) {
+      world.grass.coverage.words.forEach(feed);
+      const heightField = world.grass.coverage.heightField;
+      if (heightField) {
+        heightField.words.forEach(feed);
+        feedFloatArray(heightField.minimumY);
+        feedFloatArray(heightField.heightRange);
+        heightField.samples.forEach(feed);
+      }
+    }
   }
   return hash.toString(16).padStart(8, '0');
 }
@@ -287,15 +296,22 @@ export function validateShadoWorldPackage(world: ShadoWorldSpatialPackage): void
     if (
       visibility.version !== 1 ||
       visibility.mode !== 'distance-flood' ||
-      !Number.isFinite(visibility.size) || visibility.size <= 0 ||
-      !Number.isFinite(visibility.originX) || !Number.isFinite(visibility.originZ) ||
-      !Number.isFinite(visibility.maxDistance) || visibility.maxDistance <= 0 ||
-      !Number.isInteger(visibility.width) || visibility.width <= 0 ||
-      !Number.isInteger(visibility.height) || visibility.height <= 0 ||
+      !Number.isFinite(visibility.size) ||
+      visibility.size <= 0 ||
+      !Number.isFinite(visibility.originX) ||
+      !Number.isFinite(visibility.originZ) ||
+      !Number.isFinite(visibility.maxDistance) ||
+      visibility.maxDistance <= 0 ||
+      !Number.isInteger(visibility.width) ||
+      visibility.width <= 0 ||
+      !Number.isInteger(visibility.height) ||
+      visibility.height <= 0 ||
       visibility.occluderCount !== 0 ||
-      !Number.isInteger(visibility.visibleRegionPairs) || visibility.visibleRegionPairs <= 0 ||
+      !Number.isInteger(visibility.visibleRegionPairs) ||
+      visibility.visibleRegionPairs <= 0 ||
       visibility.pvs.wordsPerRow !== Math.ceil(visibilityRegionCount / 32)
-    ) throw new Error('Invalid Shado world visibility topology header');
+    )
+      throw new Error('Invalid Shado world visibility topology header');
     sameLength('visibility.cellRegion', cellCount, visibility.cellRegion);
     sameLength(
       'visibility PVS words',
@@ -329,9 +345,7 @@ export function validateShadoWorldPackage(world: ShadoWorldSpatialPackage): void
       );
     }
     for (let region = 0; region < visibilityRegionCount; region++) {
-      const word = visibility.pvs.words[
-        region * visibility.pvs.wordsPerRow + (region >>> 5)
-      ] >>> 0;
+      const word = visibility.pvs.words[region * visibility.pvs.wordsPerRow + (region >>> 5)] >>> 0;
       if (!(word & (1 << (region & 31)))) {
         throw new Error(`Shado world visibility region ${region} cannot see itself`);
       }
@@ -387,7 +401,7 @@ function validateGrass(
     throw new Error('Invalid Shado world grass placement ranges');
   }
   if (grass.coverage) {
-    const { resolution, wordsPerCell, words } = grass.coverage;
+    const { resolution, wordsPerCell, words, heightField } = grass.coverage;
     if (
       !Number.isInteger(resolution) ||
       resolution <= 0 ||
@@ -400,6 +414,34 @@ function validateGrass(
     sameLength('grass coverage words', cellCount * wordsPerCell, words);
     if (words.some(word => !Number.isInteger(word) || word < 0 || word > 0xffff_ffff)) {
       throw new Error('Invalid Shado world grass coverage words');
+    }
+    if (heightField) {
+      const sampleCount = heightField.resolution * heightField.resolution;
+      if (
+        !Number.isInteger(heightField.resolution) ||
+        heightField.resolution <= 1 ||
+        heightField.resolution > resolution ||
+        !Number.isInteger(heightField.wordsPerCell) ||
+        heightField.wordsPerCell !== Math.ceil(sampleCount / 32)
+      ) {
+        throw new Error('Invalid Shado world grass surface-height header');
+      }
+      sameLength(
+        'grass surface-height coverage words',
+        cellCount * heightField.wordsPerCell,
+        heightField.words
+      );
+      sameLength('grass surface-height minima', cellCount, heightField.minimumY);
+      sameLength('grass surface-height ranges', cellCount, heightField.heightRange);
+      sameLength('grass surface-height samples', cellCount * sampleCount, heightField.samples);
+      if (
+        heightField.words.some(word => !Number.isInteger(word) || word < 0 || word > 0xffff_ffff) ||
+        heightField.minimumY.some(value => !Number.isFinite(value)) ||
+        heightField.heightRange.some(value => !Number.isFinite(value) || value < 0) ||
+        heightField.samples.some(value => !Number.isInteger(value) || value < 0 || value > 0xffff)
+      ) {
+        throw new Error('Invalid Shado world grass surface-height data');
+      }
     }
   }
   for (let placement = 0; placement < placementCount; placement++) {

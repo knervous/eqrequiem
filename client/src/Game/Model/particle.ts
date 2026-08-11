@@ -62,7 +62,7 @@ export const createVATParticleSystem = (
   manager: BJS.BakedVertexAnimationManager,
   capacity: number,
 ): ([BJS.GPUParticleSystem, BJS.Observer<BJS.Scene>]) => {
-  const { Vector3, GPUParticleSystem, Texture, Color4, BoxParticleEmitter } = BABYLON;
+  const { Texture } = BABYLON;
 
   const particleSystem = new BABYLON.GPUParticleSystem(name, { capacity }, scene);
   particleSystem.particleTexture = new Texture('textures/flare.png', scene);

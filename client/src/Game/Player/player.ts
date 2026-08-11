@@ -140,8 +140,8 @@ export default class Player {
     this.playerGamepad = new PlayerGamepad(this);
     this.interactions = new InteractionManager(this);
     this.playerCombat = new PlayerCombat(this);
-    this.playerAbility = new PlayerAbility(this);
-    this.playerSocials = new PlayerSocials(this);
+    this.playerAbility = new PlayerAbility();
+    this.playerSocials = new PlayerSocials();
     this.playerInventory = new PlayerInventory(this);
     this.playerMerchant = new PlayerMerchant(this);
 
@@ -199,6 +199,11 @@ export default class Player {
   }
 
   public setGravity(on: boolean) {
+    // The movement controller owns the body's gravity factor frame to frame,
+    // so the toggle has to travel through it or it is overwritten immediately.
+    if (this.playerMovement) {
+      this.playerMovement.gravity = on;
+    }
     if (this.playerEntity?.physicsBody) {
       this.playerEntity.physicsBody.setGravityFactor(on ? 1 : 0);
       console.log(
@@ -232,17 +237,14 @@ export default class Player {
       this.raycastTickCounter = 0; // Reset counter
       this.playerEntity.checkBelowAndReposition();
     }
-  }
 
-  private get headVariation(): number {
-    if (!this.player) {
-      return 0;
-    }
-    return 0; // this.playerInventory.getHeadSlot()?.itemtype ?? 0;
-  }
-
-  private get headModelName(): string {
-    return this.headVariation.toString().padStart(2, "0") ?? "00";
+    // The cone belongs to swinging, not to selecting. Showing it for any target
+    // meant walking the whole zone with a wedge on the ground, which made it
+    // scenery rather than information.
+    this.playerEntity.updateAttackConePosition(
+      this.playerEntity.getHeading(),
+      this.playerCombat.AutoAttacking,
+    );
   }
 
   public get physicsPlugin(): BJS.HavokPlugin {

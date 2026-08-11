@@ -43,7 +43,7 @@ export const humanoidNpcRaces = new Set([
   44, // Freeport guard
   55, // Human beggar
   67, // Highpass citizen
-  71, // Qeynos citizen
+  71, // Talios citizen
   77, // Neriak citizen
   78, // Erudite citizen
   81, // Rivervale citizen
@@ -127,9 +127,9 @@ export const Classes = {
 // Canonical zone ids from content.character_origins. These are sent over the
 // wire, so they must not use the old client-facing city-choice indices.
 export const StartingZones = {
-    SouthQeynos: [1, 'South Qeynos'],
-    NorthQeynos: [2, 'North Qeynos'],
-    SurefallGlade: [3, 'Surefall Glade'],
+    TaliosLowharbor: [1, 'Talios Lowharbor'],
+    TaliosCrownward: [2, 'Talios Crownward'],
+    Greenveil: [3, 'The Greenveil'],
     NorthFreeport: [8, 'North Freeport'],
     WestFreeport: [9, 'West Freeport'],
     EastFreeport: [10, 'East Freeport'],
@@ -146,7 +146,7 @@ export const StartingZones = {
     Rivervale: [19, 'Rivervale'],
     NorthernFelwithe: [61, 'Northern Felwithe'],
     SouthernFelwithe: [62, 'Southern Felwithe'],
-    QeynosAqueducts: [45, 'Qeynos Catacombs'],
+    TaliosUndervault: [45, 'The Talios Undervault'],
     NeriakCommons: [41, 'Neriak Commons'],
     NeriakThirdGate: [42, 'Neriak Third Gate'],
 }
@@ -187,24 +187,24 @@ export const CharClassStrings = {
 
 export const Deity = {
     Unknown:  [0, 'Unknown'],
-    Agnostic_LB : [140, 'Agnostic'],
-    Bertoxxulous : [201, 'Bertoxxulous'],
-    BrellSerilis: [202, 'Brell Serilis'],
-    CazicThule: [203, 'Cazic Thule'],
-    ErollisiMarr: [204, 'Erollisi Marr'],
-    Bristlebane: [205, 'Bristlebane'],
-    Innoruuk: [206, 'Innoruuk'],
-    Karana: [207, 'Karana'],
-    MithanielMarr: [208, 'Mithaniel Marr'],
-    Prexus: [209, 'Prexus'],
-    Quellious: [210, 'Quellious'],
-    RallosZek: [211, 'Rallos Zek'],
-    RodcetNife: [212, 'Rodcet Nife'],
-    SolusekRo: [213, 'Solusek Ro'],
-    TheTribunal: [214, 'The Tribunal'],
-    Tunare: [215, 'Tunare'],
-    Veeshan: [216, 'Veeshan'],
-    Agnostic: [396, 'Agnostic']
+    Unbound : [140, 'The Unbound'],
+    Moros : [201, 'Moros (Blight)'],
+    IronHearth: [202, 'The Iron Hearth'],
+    Kharos: [203, 'Kharos (Dread)'],
+    Lyra: [204, 'Lyra (Harmony)'],
+    Olav: [205, 'Olav (Shadow-Hand)'],
+    Voradun: [206, 'Voradun (Hollow Star)'],
+    Aethelgard: [207, 'Aethelgard'],
+    Aethira: [208, 'Aethira (Seven Rays)'],
+    Vaelen: [209, 'Vaelen (Tidebringer)'],
+    SereneAstra: [210, 'Serene Astra'],
+    Maelstrom: [211, 'Maelstrom (Tempest)'],
+    Eryon: [212, 'Eryon (Life-Giver)'],
+    Solus: [213, 'Solus (Sunforge)'],
+    Concordia: [214, 'Concordia'],
+    Silvanus: [215, 'Silvanus (Living Canopy)'],
+    Skywyrm: [216, 'Skywyrm'],
+    Agnostic: [396, 'The Unbound'],
 }
 
 export const preferredStats = {

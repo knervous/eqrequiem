@@ -22,24 +22,42 @@ const { WAR, CLR, PAL, RNG, SHD, DRU, MNK, BRD, ROG, SHM, NEC, WIZ, MAG, ENC } =
   Classes;
 
 const {
-  Agnostic,
-  Bertoxxulous,
-  BrellSerilis,
-  CazicThule,
-  ErollisiMarr,
-  Bristlebane,
-  Innoruuk,
-  Karana,
-  MithanielMarr,
-  Prexus,
-  Quellious,
-  RallosZek,
-  RodcetNife,
-  SolusekRo,
-  TheTribunal,
-  Tunare,
-  Veeshan,
+  Unbound,
+  Moros,
+  IronHearth,
+  Kharos,
+  Lyra,
+  Olav,
+  Voradun,
+  Aethelgard,
+  Aethira,
+  Vaelen,
+  SereneAstra,
+  Maelstrom,
+  Eryon,
+  Solus,
+  Concordia,
+  Silvanus,
+  Skywyrm,
 } : any = Deity;
+
+const Agnostic = Unbound;
+const Bertoxxulous = Moros;
+const BrellSerilis = IronHearth;
+const CazicThule = Kharos;
+const ErollisiMarr = Lyra;
+const Bristlebane = Olav;
+const Innoruuk = Voradun;
+const Karana = Aethelgard;
+const MithanielMarr = Aethira;
+const Prexus = Vaelen;
+const Quellious = SereneAstra;
+const RallosZek = Maelstrom;
+const RodcetNife = Eryon;
+const SolusekRo = Solus;
+const TheTribunal = Concordia;
+const Tunare = Silvanus;
+const Veeshan = Skywyrm;
 
 export const getDeityName = (deity: number) => {
   return Object.values(Deity).find((d) => d[0] === deity)?.[1] || 'Unknown';
@@ -47,9 +65,9 @@ export const getDeityName = (deity: number) => {
 
 
 const {
-  SouthQeynos,
-  NorthQeynos,
-  SurefallGlade,
+  TaliosLowharbor,
+  TaliosCrownward,
+  Greenveil,
   NorthFreeport,
   WestFreeport,
   EastFreeport,
@@ -66,7 +84,7 @@ const {
   Rivervale,
   NorthernFelwithe,
   SouthernFelwithe,
-  QeynosAqueducts,
+  TaliosUndervault,
   NeriakCommons,
   NeriakThirdGate,
 } = StartingZones;
@@ -105,10 +123,6 @@ const PlayerRaceTrollBit = 256;
 const PlayerRaceOgreBit = 512;
 const PlayerRaceHalflingBit = 1024;
 const PlayerRaceGnomeBit = 2048;
-const PlayerRaceIksarBit = 4096;
-const PlayerRaceVahshirBit = 8192;
-const PlayerRaceFroglokBit = 16384;
-const PlayerRaceDrakkinBit = 32768;
 const PlayerRaceAllMask = 65535;
 
 
@@ -152,7 +166,7 @@ const getPlayerRaceBit = (race: number): number => {
 };
 
 export const getRaceStringListFromRaceBitmask = (raceBitmask: number): string => {
-  return raceBitmask === 65535 ? 'ALL' : Object.entries(AbbreviatedRaces)
+  return raceBitmask === PlayerRaceAllMask ? 'ALL' : Object.entries(AbbreviatedRaces)
     .filter(([_, raceId]) => (raceBitmask & getPlayerRaceBit(raceId)) !== 0)
     .map(([raceName]) => raceName).join(' ');
 };
@@ -170,36 +184,36 @@ export const getClassListFromClassBitmask = (classBitmask: number): number[] => 
 export const startingCityMap = {
   [BRD]: {
     [HALFELF]: {
-      [Agnostic]     : [SouthQeynos, NorthFreeport, GreaterFaydark],
-      [BrellSerilis] : [SouthQeynos, NorthFreeport, GreaterFaydark],
-      [Bristlebane]  : [SouthQeynos, NorthFreeport, GreaterFaydark],
+      [Agnostic]     : [TaliosLowharbor, NorthFreeport, GreaterFaydark],
+      [BrellSerilis] : [TaliosLowharbor, NorthFreeport, GreaterFaydark],
+      [Bristlebane]  : [TaliosLowharbor, NorthFreeport, GreaterFaydark],
       [ErollisiMarr] : [NorthFreeport],
-      [Karana]       : [SouthQeynos],
+      [Karana]       : [TaliosLowharbor],
       [MithanielMarr]: [NorthFreeport],
-      [Prexus]       : [SouthQeynos, NorthFreeport, GreaterFaydark],
-      [Quellious]    : [SouthQeynos, NorthFreeport, GreaterFaydark],
-      [RallosZek]    : [SouthQeynos, NorthFreeport, GreaterFaydark],
-      [RodcetNife]   : [SouthQeynos],
-      [SolusekRo]    : [SouthQeynos, NorthFreeport, GreaterFaydark],
-      [TheTribunal]  : [SouthQeynos, NorthFreeport, GreaterFaydark],
-      [Tunare]       : [SouthQeynos, NorthFreeport, GreaterFaydark],
-      [Veeshan]      : [SouthQeynos, NorthFreeport, GreaterFaydark],
+      [Prexus]       : [TaliosLowharbor, NorthFreeport, GreaterFaydark],
+      [Quellious]    : [TaliosLowharbor, NorthFreeport, GreaterFaydark],
+      [RallosZek]    : [TaliosLowharbor, NorthFreeport, GreaterFaydark],
+      [RodcetNife]   : [TaliosLowharbor],
+      [SolusekRo]    : [TaliosLowharbor, NorthFreeport, GreaterFaydark],
+      [TheTribunal]  : [TaliosLowharbor, NorthFreeport, GreaterFaydark],
+      [Tunare]       : [TaliosLowharbor, NorthFreeport, GreaterFaydark],
+      [Veeshan]      : [TaliosLowharbor, NorthFreeport, GreaterFaydark],
     },
     [HUMAN]: {
-      [Agnostic]     : [SouthQeynos, NorthFreeport],
-      [BrellSerilis] : [SouthQeynos, NorthFreeport],
-      [Bristlebane]  : [SouthQeynos, NorthFreeport],
+      [Agnostic]     : [TaliosLowharbor, NorthFreeport],
+      [BrellSerilis] : [TaliosLowharbor, NorthFreeport],
+      [Bristlebane]  : [TaliosLowharbor, NorthFreeport],
       [ErollisiMarr] : [NorthFreeport],
-      [Karana]       : [SouthQeynos],
+      [Karana]       : [TaliosLowharbor],
       [MithanielMarr]: [NorthFreeport],
-      [Prexus]       : [SouthQeynos, NorthFreeport],
-      [Quellious]    : [SouthQeynos, NorthFreeport],
-      [RallosZek]    : [SouthQeynos, NorthFreeport],
-      [RodcetNife]   : [SouthQeynos],
-      [SolusekRo]    : [SouthQeynos, NorthFreeport],
-      [TheTribunal]  : [SouthQeynos, NorthFreeport],
-      [Tunare]       : [SouthQeynos, NorthFreeport],
-      [Veeshan]      : [SouthQeynos, NorthFreeport],
+      [Prexus]       : [TaliosLowharbor, NorthFreeport],
+      [Quellious]    : [TaliosLowharbor, NorthFreeport],
+      [RallosZek]    : [TaliosLowharbor, NorthFreeport],
+      [RodcetNife]   : [TaliosLowharbor],
+      [SolusekRo]    : [TaliosLowharbor, NorthFreeport],
+      [TheTribunal]  : [TaliosLowharbor, NorthFreeport],
+      [Tunare]       : [TaliosLowharbor, NorthFreeport],
+      [Veeshan]      : [TaliosLowharbor, NorthFreeport],
     },
     [WOODELF]: {
       [Agnostic]     : [GreaterFaydark],
@@ -242,12 +256,12 @@ export const startingCityMap = {
       [Tunare]: [NorthernFelwithe],
     },
     [HUMAN]: {
-      [Bertoxxulous] : [QeynosAqueducts],
+      [Bertoxxulous] : [TaliosUndervault],
       [ErollisiMarr] : [NorthFreeport],
       [Innoruuk]     : [EastFreeport],
-      [Karana]       : [SouthQeynos],
+      [Karana]       : [TaliosLowharbor],
       [MithanielMarr]: [NorthFreeport],
-      [RodcetNife]   : [NorthQeynos],
+      [RodcetNife]   : [TaliosCrownward],
     },
   },
   [ENC]: {
@@ -273,13 +287,13 @@ export const startingCityMap = {
       [Tunare]       : [SouthernFelwithe],
     },
     [HUMAN]: {
-      [Agnostic]     : [SouthQeynos, WestFreeport],
-      [Bertoxxulous] : [QeynosAqueducts],
+      [Agnostic]     : [TaliosLowharbor, WestFreeport],
+      [Bertoxxulous] : [TaliosUndervault],
       [ErollisiMarr] : [WestFreeport],
       [Innoruuk]     : [EastFreeport],
-      [Karana]       : [SouthQeynos],
+      [Karana]       : [TaliosLowharbor],
       [MithanielMarr]: [WestFreeport],
-      [RodcetNife]   : [SouthQeynos],
+      [RodcetNife]   : [TaliosLowharbor],
     },
   },
   [MAG]: {
@@ -305,18 +319,18 @@ export const startingCityMap = {
       [Tunare]       : [SouthernFelwithe],
     },
     [HUMAN]: {
-      [Agnostic]     : [SouthQeynos, WestFreeport],
-      [Bertoxxulous] : [QeynosAqueducts],
+      [Agnostic]     : [TaliosLowharbor, WestFreeport],
+      [Bertoxxulous] : [TaliosUndervault],
       [ErollisiMarr] : [WestFreeport],
       [Innoruuk]     : [EastFreeport],
-      [Karana]       : [SouthQeynos],
+      [Karana]       : [TaliosLowharbor],
       [MithanielMarr]: [WestFreeport],
-      [RodcetNife]   : [SouthQeynos],
+      [RodcetNife]   : [TaliosLowharbor],
     },
   },
   [MNK]: {
     [HUMAN]: {
-      [Agnostic] : [NorthQeynos],
+      [Agnostic] : [TaliosCrownward],
       [Quellious]: [WestFreeport],
     },
   },
@@ -331,7 +345,7 @@ export const startingCityMap = {
       [Bertoxxulous]: [AkAnon],
     },
     [HUMAN]: {
-      [Bertoxxulous]: [QeynosAqueducts],
+      [Bertoxxulous]: [TaliosUndervault],
       [Innoruuk]    : [EastFreeport],
     },
   },
@@ -348,9 +362,9 @@ export const startingCityMap = {
     },
     [HALFELF]: {
       [ErollisiMarr] : [NorthFreeport],
-      [Karana]       : [SouthQeynos],
+      [Karana]       : [TaliosLowharbor],
       [MithanielMarr]: [NorthFreeport],
-      [RodcetNife]   : [SouthQeynos],
+      [RodcetNife]   : [TaliosLowharbor],
       [Tunare]       : [NorthernFelwithe],
     },
     [HALFLING]: {
@@ -361,22 +375,22 @@ export const startingCityMap = {
     },
     [HUMAN]: {
       [ErollisiMarr] : [NorthFreeport],
-      [Karana]       : [SouthQeynos],
+      [Karana]       : [TaliosLowharbor],
       [MithanielMarr]: [NorthFreeport],
-      [RodcetNife]   : [NorthQeynos],
+      [RodcetNife]   : [TaliosCrownward],
     },
   },
   [RNG]: {
     [HALFELF]: {
-      [Karana]: [SurefallGlade],
-      [Tunare]: [SurefallGlade, GreaterFaydark],
+      [Karana]: [Greenveil],
+      [Tunare]: [Greenveil, GreaterFaydark],
     },
     [HALFLING]: {
       [Karana]: [Rivervale],
     },
     [HUMAN]: {
-      [Karana]: [SurefallGlade],
-      [Tunare]: [SurefallGlade],
+      [Karana]: [Greenveil],
+      [Tunare]: [Greenveil],
     },
     [WOODELF]: {
       [Tunare]: [GreaterFaydark],
@@ -405,12 +419,12 @@ export const startingCityMap = {
       [Bristlebane] : [AkAnon],
     },
     [HALFELF]: {
-      [Agnostic]    : [NorthQeynos, EastFreeport, GreaterFaydark],
-      [Bertoxxulous]: [NorthQeynos],
-      [Bristlebane] : [NorthQeynos, EastFreeport, GreaterFaydark],
+      [Agnostic]    : [TaliosCrownward, EastFreeport, GreaterFaydark],
+      [Bertoxxulous]: [TaliosCrownward],
+      [Bristlebane] : [TaliosCrownward, EastFreeport, GreaterFaydark],
       [ErollisiMarr]: [EastFreeport],
-      [Karana]      : [NorthQeynos],
-      [RodcetNife]  : [NorthQeynos],
+      [Karana]      : [TaliosCrownward],
+      [RodcetNife]  : [TaliosCrownward],
       [Tunare]      : [GreaterFaydark],
     },
     [HALFLING]: {
@@ -419,13 +433,13 @@ export const startingCityMap = {
       [Bristlebane] : [Rivervale],
     },
     [HUMAN]: {
-      [Agnostic]    : [NorthQeynos, EastFreeport],
-      [Bertoxxulous]: [NorthQeynos],
-      [Bristlebane] : [NorthQeynos, EastFreeport],
+      [Agnostic]    : [TaliosCrownward, EastFreeport],
+      [Bertoxxulous]: [TaliosCrownward],
+      [Bristlebane] : [TaliosCrownward, EastFreeport],
       [ErollisiMarr]: [EastFreeport],
       [Innoruuk]    : [EastFreeport],
-      [Karana]      : [NorthQeynos],
-      [RodcetNife]  : [NorthQeynos],
+      [Karana]      : [TaliosCrownward],
+      [RodcetNife]  : [TaliosCrownward],
     },
     [WOODELF]: {
       [Agnostic]   : [GreaterFaydark],
@@ -445,7 +459,7 @@ export const startingCityMap = {
       [Bertoxxulous]: [AkAnon],
     },
     [HUMAN]: {
-      [Bertoxxulous]: [QeynosAqueducts],
+      [Bertoxxulous]: [TaliosUndervault],
       [Innoruuk]    : [EastFreeport],
     },
     [OGRE]: {
@@ -491,16 +505,16 @@ export const startingCityMap = {
       [RallosZek]   : [AkAnon],
     },
     [HALFELF]: {
-      [Agnostic]     : [SouthQeynos, WestFreeport, GreaterFaydark],
-      [Bertoxxulous] : [SouthQeynos],
+      [Agnostic]     : [TaliosLowharbor, WestFreeport, GreaterFaydark],
+      [Bertoxxulous] : [TaliosLowharbor],
       [ErollisiMarr] : [WestFreeport],
       [Innoruuk]     : [WestFreeport],
-      [Karana]       : [SouthQeynos],
+      [Karana]       : [TaliosLowharbor],
       [MithanielMarr]: [WestFreeport],
-      [Prexus]       : [SouthQeynos, WestFreeport, GreaterFaydark],
-      [RallosZek]    : [SouthQeynos, WestFreeport, GreaterFaydark],
-      [RodcetNife]   : [SouthQeynos],
-      [TheTribunal]  : [SouthQeynos, WestFreeport, GreaterFaydark],
+      [Prexus]       : [TaliosLowharbor, WestFreeport, GreaterFaydark],
+      [RallosZek]    : [TaliosLowharbor, WestFreeport, GreaterFaydark],
+      [RodcetNife]   : [TaliosLowharbor],
+      [TheTribunal]  : [TaliosLowharbor, WestFreeport, GreaterFaydark],
       [Tunare]       : [GreaterFaydark],
     },
     [HALFLING]: {
@@ -509,14 +523,14 @@ export const startingCityMap = {
       [RallosZek]   : [Rivervale],
     },
     [HUMAN]: {
-      [Agnostic]     : [SouthQeynos, WestFreeport],
-      [Bertoxxulous] : [SouthQeynos],
+      [Agnostic]     : [TaliosLowharbor, WestFreeport],
+      [Bertoxxulous] : [TaliosLowharbor],
       [ErollisiMarr] : [WestFreeport],
       [Innoruuk]     : [WestFreeport],
-      [Karana]       : [SouthQeynos],
+      [Karana]       : [TaliosLowharbor],
       [MithanielMarr]: [WestFreeport],
-      [RallosZek]    : [SouthQeynos, WestFreeport],
-      [RodcetNife]   : [SouthQeynos],
+      [RallosZek]    : [TaliosLowharbor, WestFreeport],
+      [RodcetNife]   : [TaliosLowharbor],
     },
     [OGRE]: {
       [Agnostic]  : [Oggok],
@@ -563,14 +577,14 @@ export const startingCityMap = {
       [Tunare]       : [SouthernFelwithe],
     },
     [HUMAN]: {
-      [Agnostic]     : [SouthQeynos, WestFreeport],
-      [Bertoxxulous] : [QeynosAqueducts],
+      [Agnostic]     : [TaliosLowharbor, WestFreeport],
+      [Bertoxxulous] : [TaliosUndervault],
       [ErollisiMarr] : [WestFreeport],
       [Innoruuk]     : [EastFreeport],
-      [Karana]       : [SouthQeynos],
+      [Karana]       : [TaliosLowharbor],
       [MithanielMarr]: [WestFreeport],
-      [RodcetNife]   : [SouthQeynos],
-      [SolusekRo]    : [SouthQeynos, WestFreeport],
+      [RodcetNife]   : [TaliosLowharbor],
+      [SolusekRo]    : [TaliosLowharbor, WestFreeport],
     },
   },
 } as const;

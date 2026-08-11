@@ -6,7 +6,10 @@ import type {
   CombatEvent,
   DeathEvent,
   ExperienceUpdate,
+  AbilityResult,
+  ProgressionState,
   JournalUpdate,
+  PreparedAbility,
   LootWindow,
   MerchantWindow,
   NpcDebugState,
@@ -38,6 +41,12 @@ export type Events = {
   experienceUpdate: ExperienceUpdate;
   /** The character's discovered leads. The client never receives undiscovered ones. */
   journalUpdate: JournalUpdate;
+  /** The techniques on the bar, sent at zone entry. */
+  abilityLoadout: readonly PreparedAbility[];
+  /** What the server made of the last activation, including why it refused. */
+  abilityResult: AbilityResult;
+  /** The whole progression picture: known techniques, loadout and Aspect points. */
+  progressionState: ProgressionState;
 
   // Items/inventory
   updateInventory: void;
@@ -54,6 +63,12 @@ export type Events = {
   setPlayer: PlayerProfile;
   target: Entity | null;
   autoAttack: boolean;
+  /**
+   * One of the player's own auto-attack swings resolved. The HUD pulses on this
+   * rather than on a free-running timer, so what the player sees is the real
+   * attack cadence — including the gap when a swing is eaten by range or death.
+   */
+  playerSwing: { hit: boolean };
   combatEvent: CombatEvent;
   playerDeath: DeathEvent;
   lootWindow: LootWindow | null;
@@ -68,7 +83,12 @@ export type Events = {
   viewportChanged: number[];
   chatMessage: ChatMessage;
   toggleInventory: void;
+  toggleTechniques: void;
   toggleOptions: void;
+  /** Abilities & Spells grimoire. Also opened by `toggleTechniques`. */
+  toggleAbilitiesWindow: void;
+  /** Aspect tree. */
+  toggleAspectsWindow: void;
   /** Contextual prompt text for the nearest interactable subject, or null. */
   interactionPrompt: string | null;
   /** Bindable but not yet consumed: the client has no spellbook window. */

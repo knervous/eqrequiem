@@ -1,4 +1,4 @@
-export const qeynos2_spawns = [
+export const talioscrownward_spawns = [
   {
     gm          : 0,
     aaitle      : 0,

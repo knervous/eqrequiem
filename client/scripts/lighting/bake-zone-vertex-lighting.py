@@ -209,9 +209,15 @@ def bake_vertex(
         if unobstructed(bvh, origin, direction, 35.0):
             visible += sample_weight
     ao = visible / weight if weight else 1.0
-    # Preserve readable fill while allowing enclosed and contact regions to
-    # become visibly darker.
-    ambient_strength = 0.2 + 0.34 * ao
+    # `COLOR_0` is a multiplicative occlusion/local-light field in the live
+    # hybrid renderer; it is not the scene's final illumination.  Keeping its
+    # old 0.20--0.54 range therefore multiplied otherwise-valid PBR albedo
+    # into near-black, low-contrast blocks once the dynamic sun was applied.
+    # Start from readable ambient fill and use AO only as a restrained
+    # modulation.  The live hemisphere and directional sun still provide the
+    # day-cycle response, while creases and enclosed passages retain a clear
+    # occlusion cue.
+    ambient_strength = 0.60 + 0.30 * ao
     color = Vector(
         (
             ambient_strength * 0.92,

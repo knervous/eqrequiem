@@ -1,5 +1,6 @@
 import type * as BJS from "@babylonjs/core";
 import BABYLON from "@bjs";
+import { GROUND_FRICTION } from "@game/Physics/ground";
 import {
   chunkKey,
   collisionResidencyKeys,
@@ -140,8 +141,16 @@ export class ShadoWorldPhysicsStreamer {
     );
     const shape = new BABYLON.PhysicsShapeMesh(mesh, this.scene);
     body.shape = shape;
-    shape.material.friction = 1;
-    shape.material.restitution = 0;
+    // Assign the material whole: the getter hands back a detached copy of the
+    // Havok material, so writing `material.friction` never reaches the shape
+    // and every collision chunk keeps Havok's slippery 0.5 default.
+    shape.material = {
+      friction: GROUND_FRICTION,
+      staticFriction: GROUND_FRICTION,
+      restitution: 0,
+      frictionCombine: BABYLON.PhysicsMaterialCombineMode.MAXIMUM,
+      restitutionCombine: BABYLON.PhysicsMaterialCombineMode.MINIMUM,
+    };
     body.setMassProperties({ mass: 0 });
     mesh.physicsBody = body;
     return { mesh, body, shape };

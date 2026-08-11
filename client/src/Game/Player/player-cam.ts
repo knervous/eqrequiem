@@ -131,55 +131,6 @@ export class PlayerCamera {
     this.isLocked = !!document.pointerLockElement;
   };
 
-  private visualizeRay(ray: BJS.Ray, pickResult: BJS.PickingInfo | null) {
-    const scene = this.player.gameManager.scene!;
-    const rayLength = 100; // Adjust based on your scene scale
-    const origin = ray.origin.clone();
-    let endPoint: BJS.Vector3;
-    const hit = pickResult?.hit && pickResult.pickedPoint;
-
-    if (hit) {
-      // If there's a hit, end the ray at the hit point
-      endPoint = pickResult!.pickedPoint!.clone();
-    } else {
-      // Otherwise, extend the ray to the maximum length
-      endPoint = origin.add(ray.direction.scale(rayLength));
-    }
-    // Create a line to represent the ray
-    const points = [origin, endPoint];
-    const color = hit
-      ? new BABYLON.Color4(0, 1, 0, 0)
-      : new BABYLON.Color4(1, 0, 0, 0); // Green for hit, red for miss
-    const line = BABYLON.MeshBuilder.CreateLines(
-      `ray_${Date.now()}`, // Unique name
-      { points, colors: [color, color] },
-      scene,
-    );
-
-    if (hit) {
-      const sphere = BABYLON.MeshBuilder.CreateSphere(
-        `hit_${Date.now()}`,
-        { diameter: 0.5 * 2 }, // Scale with entity
-        scene,
-      );
-      sphere.position = pickResult!.pickedPoint!.clone();
-      sphere.material = new BABYLON.StandardMaterial(
-        `hitMat_${Date.now()}`,
-        scene,
-      );
-      (sphere.material as BJS.StandardMaterial).diffuseColor =
-        new BABYLON.Color3(0, 1, 0);
-      setTimeout(() => {
-        sphere.dispose();
-        (sphere.material as BJS.StandardMaterial).dispose();
-      }, 10000);
-    }
-
-    // Dispose of the line after 1 second
-    setTimeout(() => {
-      line.dispose();
-    }, 10000);
-  }
   leftButtonDown: boolean = false;
   rightButtonDown: boolean = false;
 

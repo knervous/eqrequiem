@@ -6,6 +6,8 @@ import React, {
   useState,
 } from 'react';
 import { UserConfig } from '@game/Config/config';
+import { CLASS_DATA_NAMES } from '@game/Constants/class-data';
+import { supportedZones } from '@game/Constants/supportedZones';
 import GameManager from '@game/Manager/game-manager';
 import { MusicPlayer } from '@game/Music/music-player';
 import { Int, String } from '@game/Net/messages';
@@ -30,7 +32,6 @@ import { VIEWS } from '../../../Game/Constants/constants';
 import { WorldSocket } from '../../net/instances';
 import {
   RequiemButton,
-  RequiemPanel,
 } from '../../requiem/primitives';
 import { useUIContext } from '../context';
 import { CharacterCreate } from './char-create';
@@ -192,49 +193,97 @@ export const CharacterSelectUIComponent: React.FC = () => {
 
   useEffect(debouncedLoad, [selectedChar, view, debouncedLoad]);
 
+  const selectedClass = selectedChar
+    ? CLASS_DATA_NAMES[selectedChar.charClass as keyof typeof CLASS_DATA_NAMES] ??
+      'Wayfarer'
+    : 'Wayfarer';
+  const selectedZone = selectedChar
+    ? supportedZones[(selectedChar.zone ?? '').toString()]?.longName ?? 'Eltania'
+    : 'Eltania';
+
   return !gotCharInfo.current ? null : (
     <Box className="char-select">
       {view === VIEWS.CHAR_SELECT ? (
-        <RequiemPanel
-          className="rq-character-roster"
-          eyebrow="Elrador // Characters"
-          title="Characters"
-        >
-          <div className="rq-character-roster__list">
-            {charInfo?.characters.map((c) => (
-              <button
-                aria-pressed={selectedChar?.name === c?.name}
-                className="rq-character-roster__entry"
-                key={`char-${c.name}`}
-                type="button"
-                onClick={() => {
-                  setSelectedChar(c);
-                }}
-              >
-                <span>{c.name}</span>
-                <span>
-                  Level {c.level}{' '}
-                  {c.callingId === 'calling:eltania-vanguard-v1'
-                    ? 'vanguard'
-                    : 'wayfarer'}
-                </span>
-              </button>
-            ))}
-            {Array.from({ length: charSelectNum }, (_, idx) => (
-              <button
-                className="rq-character-roster__entry rq-character-roster__entry--empty"
-                key={`char-create-${idx}`}
-                type="button"
-                onClick={() => {
-                  setView(VIEWS.CHAR_CREATE);
-                }}
-              >
-                <span>Create character</span>
-                <span>Empty slot</span>
-              </button>
-            ))}
-          </div>
-          <div className="rq-character-roster__actions">
+        <div className="rq-character-select-shell">
+          <header className="rq-character-select-brand">
+            <span className="rq-character-select-brand__mark" aria-hidden="true" />
+            <div>
+              <p>Shadows of Eltania</p>
+              <span>Wayfarer&apos;s Verge</span>
+            </div>
+          </header>
+
+          <aside className="rq-character-roster" aria-label="Character roster">
+            <header className="rq-character-roster__header">
+              <p>Choose your wayfarer</p>
+              <h1>Return to Eltania</h1>
+              <span>
+                {charInfo?.characterCount ?? 0} of 8 journeys bound
+              </span>
+            </header>
+
+            <div className="rq-character-roster__list">
+              {charInfo?.characters.map((character) => {
+                const className =
+                  CLASS_DATA_NAMES[
+                    character.charClass as keyof typeof CLASS_DATA_NAMES
+                  ] ?? 'Wayfarer';
+                const zoneName =
+                  supportedZones[(character.zone ?? '').toString()]?.longName ??
+                  'Eltania';
+                return (
+                  <button
+                    aria-pressed={selectedChar?.name === character.name}
+                    className="rq-character-roster__entry"
+                    key={`char-${character.name}`}
+                    type="button"
+                    onClick={() => setSelectedChar(character)}
+                  >
+                    <span className="rq-character-roster__sigil" aria-hidden="true">
+                      {character.name.slice(0, 1).toUpperCase()}
+                    </span>
+                    <span className="rq-character-roster__identity">
+                      <strong>{character.name}</strong>
+                      <small>Level {character.level} {className}</small>
+                    </span>
+                    <span className="rq-character-roster__place">{zoneName}</span>
+                  </button>
+                );
+              })}
+
+              {charSelectNum > 0 ? (
+                <button
+                  className="rq-character-roster__create"
+                  type="button"
+                  onClick={() => setView(VIEWS.CHAR_CREATE)}
+                >
+                  <span aria-hidden="true">+</span>
+                  <span>
+                    <strong>Create a new wayfarer</strong>
+                    <small>{charSelectNum} {charSelectNum === 1 ? 'slot' : 'slots'} available</small>
+                  </span>
+                </button>
+              ) : null}
+            </div>
+
+            <section className="rq-character-roster__selection" aria-live="polite">
+              <div>
+                <span>Selected</span>
+                <strong>{selectedChar?.name ?? 'No character'}</strong>
+              </div>
+              <dl>
+                <div>
+                  <dt>Calling</dt>
+                  <dd>{selectedClass}</dd>
+                </div>
+                <div>
+                  <dt>Last camp</dt>
+                  <dd>{selectedZone}</dd>
+                </div>
+              </dl>
+            </section>
+
+            <div className="rq-character-roster__actions">
               <RequiemButton
                 variant="quiet"
                 onClick={() => {
@@ -249,9 +298,7 @@ export const CharacterSelectUIComponent: React.FC = () => {
                 disabled={!selectedChar}
                 variant="quiet"
                 onClick={() => {
-                  if (!selectedChar) {
-                    return;
-                  }
+                  if (!selectedChar) return;
                   WorldSocket.sendMessage(OpCodes.DeleteCharacter, String, {
                     value: selectedChar.name,
                   });
@@ -259,15 +306,20 @@ export const CharacterSelectUIComponent: React.FC = () => {
               >
                 Delete
               </RequiemButton>
-            <RequiemButton
-              disabled={!selectedChar || charSelectNum === 8}
-              variant="primary"
-              onClick={enterWorld}
-            >
-              Enter Elrador
-            </RequiemButton>
-          </div>
-        </RequiemPanel>
+              <RequiemButton
+                disabled={!selectedChar || charSelectNum === 8}
+                variant="primary"
+                onClick={enterWorld}
+              >
+                Enter Eltania
+              </RequiemButton>
+            </div>
+
+            <p className="rq-character-roster__hint">
+              Enter to continue <span aria-hidden="true">·</span> Esc to return
+            </p>
+          </aside>
+        </div>
       ) : (
         <CharacterCreate setView={setView} />
       )}

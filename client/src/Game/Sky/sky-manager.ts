@@ -16,6 +16,7 @@ import {
   DEFAULT_SKY_MOTION_SETTINGS,
   normalizeSkyMotionSettings,
   type RequiemSkyMotionSettings,
+  worldClockHour,
   wrapSkyHour,
 } from "./sky-motion";
 
@@ -259,7 +260,13 @@ const findRoot = (
 
 export default class DayNightSkyManager {
   scale = 7000;
-  timeOfDay = 12;
+  timeOfDay = worldClockHour(Date.now());
+
+  /**
+   * Whether the sky is still the world's clock rather than a dev tool's. Scrubbing the
+   * time by hand detaches it; `resumeWorldClock()` puts it back.
+   */
+  #followsWorldClock = true;
 
   /** Last whole world-minute pushed to the UI, so the clock is not re-emitted every frame. */
   #publishedMinute = -1;
@@ -592,11 +599,12 @@ export default class DayNightSkyManager {
     if (!this.#domeRoot || !this.#camera || !this.#manifest) return;
     this.#domeRoot.position.copyFrom(this.#camera.position);
     const deltaSeconds = Math.max(0, delta) / 1000;
-    this.timeOfDay = advanceSkyHour(
-      this.timeOfDay,
-      delta,
-      this.#motionSettings,
-    );
+    // While the sky is following the world clock it is a function of wall time, not an
+    // accumulation of frame deltas: that is what keeps it in phase with the server's
+    // clock across a reload, a zone change or a slow frame. Dev scrubbing detaches it.
+    this.timeOfDay = this.#followsWorldClock
+      ? worldClockHour(Date.now(), this.#motionSettings.dayLengthSeconds)
+      : advanceSkyHour(this.timeOfDay, delta, this.#motionSettings);
     this.#publishTimeOfDay();
     this.#starElapsedSeconds +=
       deltaSeconds * this.#motionSettings.starTwinkleRate;
@@ -685,10 +693,24 @@ export default class DayNightSkyManager {
     }
   }
 
+  /** Detaches the sky from the world clock; the caller now owns the hour. */
   setTimeOfDay(time: number): void {
+    this.#followsWorldClock = false;
     this.timeOfDay = wrapSkyHour(time);
     this.#publishTimeOfDay(true);
     this.#updateAppearance();
+  }
+
+  /** Snaps back to the world's own time after a dev override. */
+  resumeWorldClock(): void {
+    this.#followsWorldClock = true;
+    this.timeOfDay = worldClockHour(Date.now(), this.#motionSettings.dayLengthSeconds);
+    this.#publishTimeOfDay(true);
+    this.#updateAppearance();
+  }
+
+  get followsWorldClock(): boolean {
+    return this.#followsWorldClock;
   }
 
   /**

@@ -316,7 +316,7 @@
     }
   },
   "zoneBiomes": {
-    "qrg": "forest",
+    "greenveil": "forest",
     "rivervale": "forest",
     "kithicor": "forest",
     "nektulos": "forest",
@@ -352,7 +352,7 @@
     "hateplane": "planar"
   },
   "zoneAtmosphereOverrides": {
-    "qeynos2": {
+    "talioscrownward": {
       "fogStartMultiplier": 1.35,
       "fogEndMultiplier": 2.25
     }

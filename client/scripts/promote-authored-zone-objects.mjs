@@ -73,6 +73,8 @@ export async function promoteAuthoredZoneObjects({
       `'${id}' is not a registered authored object`,
     );
   }
+  const priorManifest = JSON.parse(await fs.readFile(manifestFile, "utf8"));
+  const selectedIds = new Set(selected.map((entry) => entry.id));
 
   // Validate every payload before touching public output, so a late failure
   // cannot leave the runtime holding a half-promoted set.
@@ -150,28 +152,31 @@ export async function promoteAuthoredZoneObjects({
     await fs.writeFile(path.join(directory, "final.glb.gz"), object.compressed);
   }
 
+  const promotedRecords = processed.map(({ entry, runtime, compressed, report }) => ({
+    id: entry.id,
+    source: `/eqrequiem/objects/${entry.id}/final.glb.gz`,
+    authoredSource: entry.source,
+    sourceSha256: entry.sourceSha256,
+    conditionedSha256: report.outputSha256,
+    contentSha256: sha256(runtime),
+    compressedSha256: sha256(compressed),
+    bytes: runtime.byteLength,
+    compressedBytes: compressed.byteLength,
+    boundsRadius: entry.boundsRadius,
+    triangles: report.geometry.triangles,
+    dimensions: report.geometry.dimensions,
+    zones: entry.zones,
+  }));
   const manifest = {
     kind: "requiem.authored-object-assets",
     version: 1,
     coordinateSystem: "babylon-y-up",
     runtimeHandedness: "right",
     sourceTransform: "identity",
-    objects: processed
-      .map(({ entry, runtime, compressed, report }) => ({
-        id: entry.id,
-        source: `/eqrequiem/objects/${entry.id}/final.glb.gz`,
-        authoredSource: entry.source,
-        sourceSha256: entry.sourceSha256,
-        conditionedSha256: report.outputSha256,
-        contentSha256: sha256(runtime),
-        compressedSha256: sha256(compressed),
-        bytes: runtime.byteLength,
-        compressedBytes: compressed.byteLength,
-        boundsRadius: entry.boundsRadius,
-        triangles: report.geometry.triangles,
-        dimensions: report.geometry.dimensions,
-        zones: entry.zones,
-      }))
+    objects: [
+      ...priorManifest.objects.filter((object) => !selectedIds.has(object.id)),
+      ...promotedRecords,
+    ]
       .sort((a, b) => a.id.localeCompare(b.id)),
   };
   await fs.writeFile(manifestFile, `${JSON.stringify(manifest, null, 2)}\n`);

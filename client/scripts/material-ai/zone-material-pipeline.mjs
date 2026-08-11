@@ -24,7 +24,7 @@ import { preprocessZoneSceneGlb } from "../promote-zone-object-assets.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(here, "../../..");
-const DEFAULT_ZONE = "qeynos2";
+const DEFAULT_ZONE = "talioscrownward";
 const DEFAULT_SERVER = "http://127.0.0.1:7860";
 const RECIPE_VERSION = 1;
 const SAMPLER = "euler a";
@@ -687,7 +687,12 @@ function closeDataMapEdges(data, width, height, channels) {
 
 export async function derivePbrChannels(
   input,
-  { normalStrength = 2, roughness = 0.86, roughnessVariation = 0.08 } = {},
+  {
+    normalStrength = 2,
+    roughness = 0.86,
+    roughnessVariation = 0.08,
+    metallic = 0,
+  } = {},
 ) {
   const { data: height, info } = await sharp(input)
     .greyscale()
@@ -723,7 +728,9 @@ export async function derivePbrChannels(
       );
       metallicRoughness[target] = 255;
       metallicRoughness[target + 1] = byte(localRoughness * 255);
-      metallicRoughness[target + 2] = 0;
+      metallicRoughness[target + 2] = byte(
+        Math.max(0, Math.min(1, metallic)) * 255,
+      );
     }
   }
   closeDataMapEdges(normal, width, imageHeight, 3);

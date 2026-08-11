@@ -40,6 +40,7 @@ export class RegionManager {
   private teleportEffects: BJS.GPUParticleSystem[] = [];
   private active = false;
   private transitionPending = false;
+  private readonly teleportEffectsEnabled = false;
   private readonly beforeRender = (): void => this.update();
 
   constructor(private gameManager: GameManager) {
@@ -47,7 +48,7 @@ export class RegionManager {
   }
 
   private createTeleportEffect(region: ZoneMetadata['regions'][number], scene: BJS.Scene, index: number): BJS.GPUParticleSystem | undefined {
-    return undefined;
+    if (!this.teleportEffectsEnabled) return undefined;
     
     const { Vector3, GPUParticleSystem, Texture, Color4, BoxParticleEmitter } = BABYLON;
     // 1) Compute your AABB center & half‐size
@@ -261,6 +262,14 @@ export class RegionManager {
               console.log('[RegionManager] Absolute Zonepoint', region.zoneLineInfo);
             } else {
               console.warn(`[RegionManager] No zone line info for region ${i}`);
+              return;
+            }
+            if (
+              requestZone.x === undefined ||
+              requestZone.y === undefined ||
+              requestZone.z === undefined
+            ) {
+              console.warn(`[RegionManager] Zone line ${i} has no destination coordinates`);
               return;
             }
             const magicLoc = 999999;

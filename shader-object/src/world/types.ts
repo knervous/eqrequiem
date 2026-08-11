@@ -152,6 +152,15 @@ export type ShadoWorldGrassPackage = {
     resolution: number;
     wordsPerCell: number;
     words: number[];
+    /** Compact quantized terrain relief used to conform generated blade roots. */
+    heightField?: {
+      resolution: number;
+      wordsPerCell: number;
+      words: number[];
+      minimumY: number[];
+      heightRange: number[];
+      samples: number[];
+    };
   };
 };
 

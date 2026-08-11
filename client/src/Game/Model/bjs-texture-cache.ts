@@ -1,4 +1,3 @@
-import BABYLON from "@bjs";
 import type * as BJS from "@babylonjs/core";
 
 export class BabylonTextureCache {

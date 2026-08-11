@@ -38,7 +38,6 @@ export class BackendApp {
     this.zoneService = new ZoneService(
       this.env,
       this.logger,
-      this.persistService,
       this.dbService,
       this.navService,
     );

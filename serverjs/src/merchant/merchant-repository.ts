@@ -84,6 +84,25 @@ export interface MerchantTransactionResult {
   readonly mutation: MerchantInventoryMutation;
 }
 
+export interface MerchantBuyInput {
+  readonly characterId: number;
+  readonly npcArchetypeId: number;
+  readonly zoneId: number;
+  readonly instanceId: number;
+  readonly merchantSlot: number;
+  readonly quantity: number;
+}
+
+export interface MerchantSellInput {
+  readonly characterId: number;
+  readonly npcArchetypeId: number;
+  readonly zoneId: number;
+  readonly instanceId: number;
+  readonly slot: number;
+  readonly bag: number;
+  readonly quantity: number;
+}
+
 export class MerchantTransactionError extends Error {}
 
 /**
@@ -170,14 +189,17 @@ export class MerchantRepository {
     };
   }
 
-  async buy(input: {
-    characterId: number;
-    npcArchetypeId: number;
-    zoneId: number;
-    instanceId: number;
-    merchantSlot: number;
-    quantity: number;
-  }): Promise<MerchantTransactionResult> {
+  buy(input: MerchantBuyInput): Promise<MerchantTransactionResult> {
+    return this.runtime.transaction((database) =>
+      new MerchantRepository(this.content, database, this.contentPrefix)
+        .buyInTransaction(input)
+    );
+  }
+
+  /** Runs after the caller has acquired the character's critical transaction. */
+  async buyInTransaction(
+    input: MerchantBuyInput,
+  ): Promise<MerchantTransactionResult> {
     const quantity = positiveQuantity(input.quantity);
     const profile = await this.requireProfile(input.npcArchetypeId);
     const character = (
@@ -205,86 +227,87 @@ export class MerchantRepository {
     );
     const totalCopper = merchantSellPrice(itemPricing(item), count, pricingPolicy(profile));
     let mutation!: MerchantInventoryMutation;
-    await this.runtime.transaction(async (database) => {
-      await ensureCurrency(database, input.characterId);
-      const destination = await inventoryDestination(
-        database,
-        input.characterId,
-        item,
-        count,
+    const database = this.runtime;
+    await ensureCurrency(database, input.characterId);
+    const destination = await inventoryDestination(
+      database,
+      input.characterId,
+      item,
+      count,
+    );
+    if (!destination) {
+      throw new MerchantTransactionError("You do not have room for that item.");
+    }
+    if (dynamic) {
+      const reduced = await database.execute(
+        `UPDATE merchant_dynamic_stock SET quantity = quantity - ?,
+           updated_at = CURRENT_TIMESTAMP
+         WHERE npc_archetype_id = ? AND zone_id = ? AND instance_id = ?
+           AND item_id = ? AND quantity >= ?`,
+        [
+          count,
+          input.npcArchetypeId,
+          input.zoneId,
+          input.instanceId,
+          Number(item.id),
+          count,
+        ],
       );
-      if (!destination) {
-        throw new MerchantTransactionError("You do not have room for that item.");
+      if (reduced.affectedRows !== 1) {
+        throw new MerchantTransactionError("That item is no longer available.");
       }
-      if (dynamic) {
-        const reduced = await database.execute(
-          `UPDATE merchant_dynamic_stock SET quantity = quantity - ?,
-             updated_at = CURRENT_TIMESTAMP
-           WHERE npc_archetype_id = ? AND zone_id = ? AND instance_id = ?
-             AND item_id = ? AND quantity >= ?`,
-          [
-            count,
-            input.npcArchetypeId,
-            input.zoneId,
-            input.instanceId,
-            Number(item.id),
-            count,
-          ],
-        );
-        if (reduced.affectedRows !== 1) {
-          throw new MerchantTransactionError("That item is no longer available.");
-        }
-      }
-      const paid = await database.execute(
-        `UPDATE character_currency SET carried_copper = carried_copper - ?
-         WHERE character_id = ? AND carried_copper >= ?`,
-        [totalCopper, input.characterId, totalCopper],
+    }
+    const paid = await database.execute(
+      `UPDATE character_currency SET carried_copper = carried_copper - ?
+       WHERE character_id = ? AND carried_copper >= ?`,
+      [totalCopper, input.characterId, totalCopper],
+    );
+    if (paid.affectedRows !== 1) {
+      throw new MerchantTransactionError("You cannot afford that item.");
+    }
+    if (destination.existing) {
+      await database.execute(
+        `UPDATE player_inventory SET quantity = quantity + ?
+         WHERE character_id = ? AND bag = ? AND slot = ?`,
+        [count, input.characterId, destination.bag, destination.slot],
       );
-      if (paid.affectedRows !== 1) {
-        throw new MerchantTransactionError("You cannot afford that item.");
-      }
-      if (destination.existing) {
-        await database.execute(
-          `UPDATE player_inventory SET quantity = quantity + ?
-           WHERE character_id = ? AND bag = ? AND slot = ?`,
-          [count, input.characterId, destination.bag, destination.slot],
-        );
-      } else {
-        await database.execute(
-          `INSERT INTO player_inventory
-           (character_id, bag, slot, item_id, quantity, charges)
-           VALUES (?, ?, ?, ?, ?, ?)`,
-          [
-            input.characterId,
-            destination.bag,
-            destination.slot,
-            Number(item.id),
-            count,
-            Number(item.maxcharges) > 0 ? Number(item.maxcharges) : 0,
-          ],
-        );
-      }
-      const resultingQuantity = destination.quantity + count;
-      mutation = {
-        kind: "put",
-        slot: destination.slot,
-        bag: destination.bag,
-        item: toItemInstance(item, destination.slot, destination.bag, resultingQuantity),
-      };
-      await audit(database, input, "buy", Number(item.id), count, totalCopper);
-    });
+    } else {
+      await database.execute(
+        `INSERT INTO player_inventory
+         (character_id, bag, slot, item_id, quantity, charges)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [
+          input.characterId,
+          destination.bag,
+          destination.slot,
+          Number(item.id),
+          count,
+          Number(item.maxcharges) > 0 ? Number(item.maxcharges) : 0,
+        ],
+      );
+    }
+    const resultingQuantity = destination.quantity + count;
+    mutation = {
+      kind: "put",
+      slot: destination.slot,
+      bag: destination.bag,
+      item: toItemInstance(item, destination.slot, destination.bag, resultingQuantity),
+    };
+    await audit(database, input, "buy", Number(item.id), count, totalCopper);
     return { totalCopper, mutation };
   }
 
-  async sell(input: {
-    characterId: number;
-    npcArchetypeId: number;
-    zoneId: number;
-    instanceId: number;
-    slot: number;
-    bag: number;
-    quantity: number;
-  }): Promise<MerchantTransactionResult> {
+  sell(input: MerchantSellInput): Promise<MerchantTransactionResult> {
+    return this.runtime.transaction((database) =>
+      new MerchantRepository(this.content, database, this.contentPrefix)
+        .sellInTransaction(input)
+    );
+  }
+
+  /** Runs after the caller has acquired the character's critical transaction. */
+  async sellInTransaction(
+    input: MerchantSellInput,
+  ): Promise<MerchantTransactionResult> {
     const profile = await this.requireProfile(input.npcArchetypeId);
     const inventory = (
       await this.runtime.query<InventoryRow>(
@@ -309,73 +332,72 @@ export class MerchantRepository {
     const retained = Number(profile.keeps_sold_items) !== 0
       && !await this.catalogHasItem(Number(profile.catalog_id), Number(item.id));
     let mutation!: MerchantInventoryMutation;
-    await this.runtime.transaction(async (database) => {
-      const removed = remaining > 0
-        ? await database.execute(
-          `UPDATE player_inventory SET quantity = ?
-           WHERE character_id = ? AND bag = ? AND slot = ? AND item_id = ?
-             AND quantity = ?`,
-          [
-            remaining,
-            input.characterId,
-            input.bag,
-            input.slot,
-            Number(item.id),
-            available,
-          ],
-        )
-        : await database.execute(
-          `DELETE FROM player_inventory
-           WHERE character_id = ? AND bag = ? AND slot = ? AND item_id = ?`,
-          [input.characterId, input.bag, input.slot, Number(item.id)],
-        );
-      if (removed.affectedRows !== 1) {
-        throw new MerchantTransactionError("You no longer have that item.");
-      }
-      await ensureCurrency(database, input.characterId);
-      await database.execute(
-        "UPDATE character_currency SET carried_copper = carried_copper + ? WHERE character_id = ?",
-        [totalCopper, input.characterId],
+    const database = this.runtime;
+    const removed = remaining > 0
+      ? await database.execute(
+        `UPDATE player_inventory SET quantity = ?
+         WHERE character_id = ? AND bag = ? AND slot = ? AND item_id = ?
+           AND quantity = ?`,
+        [
+          remaining,
+          input.characterId,
+          input.bag,
+          input.slot,
+          Number(item.id),
+          available,
+        ],
+      )
+      : await database.execute(
+        `DELETE FROM player_inventory
+         WHERE character_id = ? AND bag = ? AND slot = ? AND item_id = ?`,
+        [input.characterId, input.bag, input.slot, Number(item.id)],
       );
-      if (retained) {
-        const updated = await database.execute(
-          `UPDATE merchant_dynamic_stock SET quantity = quantity + ?,
-             updated_at = CURRENT_TIMESTAMP
-           WHERE npc_archetype_id = ? AND zone_id = ? AND instance_id = ?
-             AND item_id = ?`,
+    if (removed.affectedRows !== 1) {
+      throw new MerchantTransactionError("You no longer have that item.");
+    }
+    await ensureCurrency(database, input.characterId);
+    await database.execute(
+      "UPDATE character_currency SET carried_copper = carried_copper + ? WHERE character_id = ?",
+      [totalCopper, input.characterId],
+    );
+    if (retained) {
+      const updated = await database.execute(
+        `UPDATE merchant_dynamic_stock SET quantity = quantity + ?,
+           updated_at = CURRENT_TIMESTAMP
+         WHERE npc_archetype_id = ? AND zone_id = ? AND instance_id = ?
+           AND item_id = ?`,
+        [
+          count,
+          input.npcArchetypeId,
+          input.zoneId,
+          input.instanceId,
+          Number(item.id),
+        ],
+      );
+      if (updated.affectedRows === 0) {
+        await database.execute(
+          `INSERT INTO merchant_dynamic_stock
+           (npc_archetype_id, zone_id, instance_id, item_id, quantity)
+           VALUES (?, ?, ?, ?, ?)`,
           [
-            count,
             input.npcArchetypeId,
             input.zoneId,
             input.instanceId,
             Number(item.id),
+            count,
           ],
         );
-        if (updated.affectedRows === 0) {
-          await database.execute(
-            `INSERT INTO merchant_dynamic_stock
-             (npc_archetype_id, zone_id, instance_id, item_id, quantity)
-             VALUES (?, ?, ?, ?, ?)`,
-            [
-              input.npcArchetypeId,
-              input.zoneId,
-              input.instanceId,
-              Number(item.id),
-              count,
-            ],
-          );
-        }
       }
-      mutation = remaining > 0
-        ? {
-          kind: "put",
-          slot: input.slot,
-          bag: input.bag,
-          item: toItemInstance(item, input.slot, input.bag, remaining),
-        }
-        : { kind: "delete", slot: input.slot, bag: input.bag };
-      await audit(database, input, "sell", Number(item.id), count, totalCopper);
-    });
+    }
+    mutation = remaining > 0
+      ? {
+        kind: "put",
+        slot: input.slot,
+        bag: input.bag,
+        item: toItemInstance(item, input.slot, input.bag, remaining),
+      }
+      : { kind: "delete", slot: input.slot, bag: input.bag };
+    await audit(database, input, "sell", Number(item.id), count, totalCopper);
     return { totalCopper, mutation };
   }
 

@@ -3,7 +3,7 @@ import { CommandParser } from '@game/ChatCommands/command-parser';
 
 const EXAMPLES = [
   '#help',
-  '#zone qeynos2',
+  '#zone talioscrownward',
   '#level 50',
   '#searchitem fine steel',
   '#summonitem 1001',
@@ -34,7 +34,7 @@ export const GmCommandDeveloper: React.FC = () => {
           aria-label="GM command"
           autoComplete="off"
           onChange={(event) => setCommand(event.target.value)}
-          placeholder="#help or #zone qeynos2"
+          placeholder="#help or #zone talioscrownward"
           spellCheck={false}
           value={command}
         />

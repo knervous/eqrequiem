@@ -16,7 +16,7 @@ function createUseButtonsHook<
         const cloned = structuredClone(raw) as ActionButtonRecord;
         if (addIndex) {
           for (const [k, v] of Object.entries(cloned)) {
-            v && (v.index = Number(k));
+            if (v) v.index = Number(k);
           }
         }
         setButtons(cloned);

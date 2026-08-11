@@ -16,6 +16,7 @@ import { ShadoWorldSceneLayer } from "./shado-world-scene-layer";
 import { ShadoWorldPhysicsStreamer } from "./shado-world-physics-streamer";
 import { Grid } from "./zone-grid";
 import { ZoneMetadata } from "./zone-types";
+import { eltaniaZoneName } from "../Content/eltania-zones";
 
 export class ZoneManager {
   get RegionManager(): RegionManager {
@@ -137,11 +138,7 @@ export class ZoneManager {
     const longName = Object.values(supportedZones).find(
       (z) => z.shortName.toLowerCase() === zoneName.toLowerCase(),
     )?.longName;
-    const normalizedZoneName = zoneName.toLowerCase();
-    const presentedName =
-      normalizedZoneName === "qeynos" || normalizedZoneName === "qeynos2"
-        ? "Southern Reach"
-        : (longName ?? "Unknown Reach");
+    const presentedName = eltaniaZoneName(zoneName) ?? longName ?? "Unknown Reach";
     const msg: ChatMessage = {
       message: `You have entered ${presentedName}`,
       chanNum: 0,

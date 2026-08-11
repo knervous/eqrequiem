@@ -1,5 +1,4 @@
 import type { AppEnv } from "../config/env.js";
-import type { DatabaseRow } from "../db/backend.js";
 import type { DbService } from "../db/index.js";
 import {
   decodeClientPositionRequest,
@@ -20,9 +19,24 @@ import type { InboundPacket } from "../protocol/index.js";
 import { OP } from "../protocol/opcodes.js";
 import { decodeRequest } from "../backend/packet-adapter.js";
 import { encodeSidecar, SIDECAR_SCHEMA } from "../protocol/sidecar-codec.js";
-import type { PersistService } from "../persist/index.js";
-import { GameDataRepository } from "../persist/game-data-repository.js";
+import { GameDatabase } from "../persist/game-database.js";
 import { ZoneSnapshotRepository } from "../persist/zone-snapshot-repository.js";
+import { ZoneWriteScheduler } from "../persist/zone-write-scheduler.js";
+import {
+  writeZoneCoalescedIntent,
+  writeZoneDeferredIntent,
+  type ZoneCoalesceKey,
+  type ZoneDeferredWrite,
+  type ZonePositionWrite,
+} from "../persist/zone-write-intents.js";
+import { WorldStateService } from "./world-state-service.js";
+import { DEFAULT_WORLD_FACTS } from "./world-facts.js";
+import {
+  runSituationDirector,
+  WorldSituationDirector,
+  type DirectorLoop,
+} from "./world-situation-director.js";
+import { WORLD_SITUATIONS } from "./situations/index.js";
 import type { Logger } from "../shared/logger.js";
 import type { GameMessenger } from "../transport/game-transport.js";
 import type { NavService } from "../nav/index.js";
@@ -49,17 +63,31 @@ import {
 } from "./quest-effect-applier.js";
 import type { QuestPersistenceBatch } from "./quest-manager.js";
 import { journalFromState, type QuestJournalEntry } from "./quest-state.js";
-import { applyJournalNote, grantedItemEvent } from "./quest-runtime.js";
-import {
-  MerchantRepository,
-  MerchantTransactionError,
-} from "../merchant/merchant-repository.js";
+import { grantedItemEvent } from "./quest-runtime.js";
 import { corpseName } from "../combat/corpse-loot.js";
 import type {
   ZoneSnapshot,
   ZoneSnapshotEntity,
 } from "./zone-snapshot.js";
 import { encodeZoneSnapshot } from "./zone-snapshot.js";
+import { CharacterApplicationService } from "./character-application-service.js";
+import { ZoneJoinService } from "./zone-join-service.js";
+import {
+  GmCommandService,
+  type GmCommandEffect,
+} from "./gm-command-service.js";
+import { GENERATED_GEAR_SETS } from "../content/gear-sets.js";
+import {
+  newZoneProjection,
+  npcSpawnProjection,
+  playerProfileProjection,
+  playerSpawnProjection,
+} from "./zone-client-projections.js";
+import { abilityLoadoutProjection } from "../progression/ability-loadout.js";
+import {
+  questNpcProjection,
+  zoneRuntimePlayerProjection,
+} from "./zone-runtime-projections.js";
 
 export {
   Entity,
@@ -91,23 +119,35 @@ export class ZoneService {
   private readonly shardSnapshots = new Map<string, ZoneSnapshot | null>();
   private readonly sessionEntities = new Map<
     number,
-    { shard: string; entityId: number; characterId: number }
+    {
+      shard: string;
+      entityId: number;
+      characterId: number;
+      characterName: string;
+    }
   >();
   private readonly nextEntityIdByShard = new Map<string, number>();
   private readonly reliableSends = new Map<number, Promise<void>>();
-  private readonly locationWrites = new Map<number, Promise<void>>();
-  private readonly lootWrites = new Map<number, Promise<void>>();
-  private readonly merchantWrites = new Map<number, Promise<void>>();
-  private merchantRepository: MerchantRepository | null = null;
   private zoneSnapshotRepository: ZoneSnapshotRepository | null = null;
   private progressRepository: CharacterProgressRepository | null = null;
+  private gameDatabase: GameDatabase | null = null;
+  private worldState: WorldStateService | null = null;
+  private unsubscribeWorldState: (() => void) | null = null;
+  private situationLoop: DirectorLoop | null = null;
   private questEffects: QuestEffectApplier | null = null;
   private readonly questWrites = new Map<string, Promise<void>>();
+  private writeScheduler: ZoneWriteScheduler<
+    ZoneDeferredWrite,
+    ZonePositionWrite,
+    ZoneCoalesceKey
+  > | null = null;
+  private characterApplication: CharacterApplicationService | null = null;
+  private zoneJoin: ZoneJoinService | null = null;
+  private gmCommands: GmCommandService | null = null;
 
   constructor(
     private readonly env: AppEnv,
     private readonly logger: Logger,
-    private readonly persist: PersistService,
     private readonly databases: DbService,
     private readonly navigation: NavService,
   ) {
@@ -287,6 +327,20 @@ export class ZoneService {
         if (!repository) throw new Error("Zone snapshot repository is not started");
         await repository.save(zoneId, instanceId, blobData, formatVersion);
       },
+      (message) => {
+        void this.messenger
+          ?.sendStream(
+            message.sessionId,
+            OP.ABILITY_RESULT,
+            encodeSidecar(SIDECAR_SCHEMA.ABILITY_RESULT, message.payload),
+          )
+          .catch((error: unknown) => {
+            this.logger.debug("Ability result send failed", {
+              sessionId: message.sessionId,
+              error: error instanceof Error ? error.message : String(error),
+            });
+          });
+      },
     );
     this.questCatalog = new QuestCatalog(
       env.zone.questDir,
@@ -338,25 +392,9 @@ export class ZoneService {
     if (packet.opcode === OP.MOVE_ITEM) {
       const move = decodeMoveItemRequest(packet.payload);
       if (move) {
-        void this.persist
-          .moveItem({
-            sessionId: packet.sessionId,
-            fromSlot: move.fromSlot,
-            toSlot: move.toSlot,
-            fromBag: move.fromBag,
-            toBag: move.toBag,
-          })
-          .then(async (result) => {
-            for (const movement of result.moves) {
-              await this.messenger?.sendStream(
-                packet.sessionId,
-                OP.MOVE_ITEM,
-                encodeMoveItemResponse(movement),
-              );
-            }
-          })
+        void this.handleInventoryMove(packet.sessionId, move)
           .catch((error: unknown) => {
-            this.logger.warn("Persist move item failed", {
+            this.logger.warn("Inventory move failed", {
               sessionId: packet.sessionId,
               error: error instanceof Error ? error.message : String(error),
             });
@@ -367,14 +405,9 @@ export class ZoneService {
     if (packet.opcode === OP.DELETE_ITEM) {
       const del = decodeDeleteItemRequest(packet.payload);
       if (del) {
-        void this.persist
-          .deleteItem({
-            sessionId: packet.sessionId,
-            slot: del.slot,
-            bag: del.bag,
-          })
+        void this.handleInventoryDelete(packet.sessionId, del)
           .catch((error: unknown) => {
-            this.logger.warn("Persist delete item failed", {
+            this.logger.warn("Inventory delete failed", {
               sessionId: packet.sessionId,
               error: error instanceof Error ? error.message : String(error),
             });
@@ -382,11 +415,37 @@ export class ZoneService {
       }
     }
 
+    if (packet.opcode === OP.PROGRESSION_REQUEST) {
+      // Learning and Aspect spending are pure persistence, like a journal note: the
+      // simulation is told the result through the loadout it already reads at join.
+      void this.handleProgressionRequest(packet.sessionId, packet.payload).catch(
+        (error: unknown) => {
+          this.logger.warn("Progression request failed", {
+            sessionId: packet.sessionId,
+            error: error instanceof Error ? error.message : String(error),
+          });
+        },
+      );
+      return;
+    }
+
     if (packet.opcode === OP.JOURNAL_NOTE) {
       // The player's own memory never reaches the simulation; it is pure persistence.
       void this.handleJournalNote(packet.sessionId, packet.payload).catch(
         (error: unknown) => {
           this.logger.warn("Journal note failed", {
+            sessionId: packet.sessionId,
+            error: error instanceof Error ? error.message : String(error),
+          });
+        },
+      );
+      return;
+    }
+
+    if (packet.opcode === OP.GM_COMMAND) {
+      void this.handleGmCommand(packet.sessionId, packet.payload).catch(
+        (error: unknown) => {
+          this.logger.warn("GM command failed", {
             sessionId: packet.sessionId,
             error: error instanceof Error ? error.message : String(error),
           });
@@ -407,6 +466,10 @@ export class ZoneService {
   onSessionDisconnected(sessionId: number): void {
     const route = this.sessionRoutes.get(sessionId);
     if (!route) return;
+    const owned = this.sessionEntities.get(sessionId);
+    if (owned) {
+      void this.flushCharacterWrites(owned.characterId, "disconnect");
+    }
     this.workerPool.enqueue(route.zoneId, route.instanceId, {
       type: "client_leave",
       sessionId,
@@ -417,17 +480,30 @@ export class ZoneService {
   }
 
   async start(): Promise<void> {
-    this.merchantRepository = new MerchantRepository(
-      this.databases.backend("content"),
-      this.databases.backend("runtime"),
-    );
-    this.zoneSnapshotRepository = new ZoneSnapshotRepository(
-      this.databases.backend("runtime"),
-    );
-    this.progressRepository = new CharacterProgressRepository(
+    this.gameDatabase = new GameDatabase(
       this.databases.backend("runtime"),
       this.databases.backend("content"),
     );
+    this.writeScheduler = new ZoneWriteScheduler(
+      this.databases.backend("runtime"),
+      {
+        writeDeferred: writeZoneDeferredIntent,
+        writeCoalesced: writeZoneCoalescedIntent,
+      },
+      { coalescedFlushMs: false },
+    );
+    this.characterApplication = new CharacterApplicationService(
+      this.gameDatabase,
+      this.writeScheduler,
+    );
+    this.zoneJoin = new ZoneJoinService(this.gameDatabase, this.writeScheduler);
+    this.gmCommands = new GmCommandService(
+      this.gameDatabase,
+      this.characterApplication,
+      GENERATED_GEAR_SETS,
+    );
+    this.zoneSnapshotRepository = this.gameDatabase.zoneSnapshots;
+    this.progressRepository = this.gameDatabase.progress;
     this.questEffects = new QuestEffectApplier(this.progressRepository, {
       onLog: (questId, message) => this.logger.info(message, { questId }),
       onCommitError: (batch, error) => {
@@ -437,8 +513,46 @@ export class ZoneService {
           error: error instanceof Error ? error.message : String(error),
         });
       },
+      deferWrite: (characterId, intent) => {
+        this.characterApplication?.defer(characterId, intent);
+      },
+      grantItem: (characterId, itemId, quantity) => {
+        return this.characterApplication
+          ?.grantQuestItem(characterId, itemId, quantity)
+          ?? Promise.resolve(null);
+      },
     });
     await this.questCatalog.start();
+    this.worldState = new WorldStateService(
+      this.gameDatabase.worldState,
+      { defaults: DEFAULT_WORLD_FACTS },
+    );
+    // Every published revision reaches every shard, including ones started later.
+    this.unsubscribeWorldState = this.worldState.subscribe((snapshot) => {
+      this.workerPool.updateWorldState(snapshot);
+    });
+    await this.worldState.start();
+
+    const director = new WorldSituationDirector(this.worldState, WORLD_SITUATIONS, {
+      seed: this.env.zone.worldSeed,
+    });
+    await director.start(this.gameDatabase.worldState);
+    this.situationLoop = runSituationDirector(director, {
+      onEvaluation: (evaluation) => {
+        for (const occurrence of evaluation.started) {
+          this.logger.info("World situation started", {
+            situationKey: occurrence.situationKey,
+            occurrenceId: occurrence.id,
+            data: occurrence.data,
+          });
+        }
+      },
+      onError: (error) => {
+        this.logger.error("World situation evaluation failed", {
+          error: error instanceof Error ? error.message : String(error),
+        });
+      },
+    });
     this.logger.info("Zone service started", {
       tickRateHz: this.env.zone.tickRateHz,
       workBudgetMs: this.env.zone.workBudgetMs,
@@ -447,12 +561,21 @@ export class ZoneService {
 
   async stop(): Promise<void> {
     this.questCatalog.stop();
+    await this.situationLoop?.stop();
+    this.situationLoop = null;
+    this.unsubscribeWorldState?.();
+    this.unsubscribeWorldState = null;
+    await this.worldState?.drain();
+    this.worldState = null;
     await this.workerPool.stopAll();
-    await Promise.allSettled(this.locationWrites.values());
-    await Promise.allSettled(this.merchantWrites.values());
-    this.merchantRepository = null;
+    await Promise.allSettled(this.questWrites.values());
+    await this.writeScheduler?.drain();
+    this.gmCommands = null;
+    this.zoneJoin = null;
+    this.characterApplication = null;
+    this.writeScheduler = null;
+    this.gameDatabase = null;
     this.zoneSnapshotRepository = null;
-    await Promise.allSettled(this.lootWrites.values());
     this.logger.info("Zone service stopped", this.dispatcher.metrics());
   }
 
@@ -464,13 +587,26 @@ export class ZoneService {
     return this.workerPool.ensureShard(zoneId, instanceId);
   }
 
-  stopShard(zoneId: number, instanceId = 0): Promise<boolean> {
+  async stopShard(zoneId: number, instanceId = 0): Promise<boolean> {
     const shard = shardKey(zoneId, instanceId);
+    const characterIds = new Set(
+      [...this.sessionEntities.values()]
+        .filter((entity) => entity.shard === shard)
+        .map((entity) => entity.characterId),
+    );
+    const stopped = await this.workerPool.stopShard(zoneId, instanceId);
+    await this.questWrites.get(shard)?.catch(() => {});
+    this.questWrites.delete(shard);
+    await Promise.all(
+      [...characterIds].map((characterId) =>
+        this.characterApplication?.flush(characterId)
+      ),
+    );
     this.shardSpawns.delete(shard);
     this.shardPlayers.delete(shard);
     this.shardSnapshots.delete(shard);
     this.nextEntityIdByShard.delete(shard);
-    return this.workerPool.stopShard(zoneId, instanceId);
+    return stopped;
   }
 
   questStatus(): ReturnType<QuestCatalog["status"]> {
@@ -494,7 +630,6 @@ export class ZoneService {
       heading?: number | undefined;
     },
   ): Promise<void> {
-    await this.locationWrites.get(sessionId)?.catch(() => {});
     const previous = this.sessionRoutes.get(sessionId);
     if (
       previous &&
@@ -505,83 +640,21 @@ export class ZoneService {
         sessionId,
       });
       this.removeSessionEntityDefinition(sessionId);
+      this.sessionRoutes.delete(sessionId);
     }
     if (!this.messenger) throw new Error("zone messenger is not attached");
-    const content = this.databases.backend("content");
-    const runtime = this.databases.backend("runtime");
-    const zone = (
-      await content.query<ZoneRow>(
-        "SELECT id, short_name AS key, name, safe_x, safe_y, safe_z FROM zones WHERE id = ? LIMIT 1",
-        [zoneId],
-      )
-    ).rows[0];
-    if (!zone) throw new Error(`zone ${zoneId} does not exist`);
-    const character = (
-      await runtime.query<CharacterProfileRow>(
-        `SELECT c.id, c.name, c.level, c.class_id, c.race_id, c.gender, c.deity_id, c.face,
-        c.str, c.sta, c.dex, c.agi, c.intelligence, c.wis, c.cha,
-        p.x, p.y, p.z, p.heading
-       FROM characters c LEFT JOIN character_positions p ON p.character_id = c.id
-       WHERE lower(c.name) = lower(?) LIMIT 1`,
-        [characterName],
-      )
-    ).rows[0];
-    const gameData = new GameDataRepository(content, runtime);
-    const inventoryItems = character
-      ? await gameData.inventoryItems(Number(character.id))
-      : [];
-    const playerCombat = character
-      ? await gameData.characterCombat(Number(character.id))
-      : null;
-    const bind = character
-      ? (
-          await runtime.query<CharacterBindRow>(
-            `SELECT zone_id, instance_id, x, y, z, heading
-           FROM character_binds WHERE character_id = ? AND slot = 0 LIMIT 1`,
-            [Number(character.id)],
-          )
-        ).rows[0]
-      : undefined;
-    const effectiveCombat = playerCombat ?? {
-      level: Number(character?.level ?? 1),
-      strength: Number(character?.str ?? 75),
-      stamina: Number(character?.sta ?? 75),
-      dexterity: Number(character?.dex ?? 75),
-      agility: Number(character?.agi ?? 75),
-      offense: 0,
-      defense: 0,
-      armorClass: 0,
-      maximumHp: 1,
-      weaponDamage: 2,
-      attackDelayMs: 2_500,
-      haste: 0,
-      meleeRange: 3,
-    };
-    const useSafeLocation = transition?.useSafeLocation === true;
-    const hasExplicitDestination = [transition?.x, transition?.y, transition?.z].every(
-      (value) => typeof value === "number" && Number.isFinite(value),
+    const join = await this.zoneJoinService().load(
+      characterName,
+      zoneId,
+      instanceId,
+      transition,
     );
-    const x = useSafeLocation
-      ? Number(zone.safe_x)
-      : hasExplicitDestination
-      ? Number(transition!.x)
-      : Number(character?.x ?? zone.safe_x);
-    const y = useSafeLocation
-      ? Number(zone.safe_y)
-      : hasExplicitDestination
-      ? Number(transition!.y)
-      : Number(character?.y ?? zone.safe_y);
-    const z = useSafeLocation
-      ? Number(zone.safe_z)
-      : hasExplicitDestination
-      ? Number(transition!.z)
-      : Number(character?.z ?? zone.safe_z);
-    const heading = useSafeLocation
-      ? 0
-      : transition?.heading === undefined
-        ? Number(character?.heading ?? 0)
-        : radiansToEqHeading(transition.heading);
-    const spawnRows = await gameData.zoneNpcSpawns(zoneId, instanceId);
+    const {
+      zone,
+      character,
+      npcs: spawnRows,
+      position: { x, y, z },
+    } = join;
     const shard = shardKey(zoneId, instanceId);
     if (!this.shardSnapshots.has(shard)) {
       const stored = await this.zoneSnapshotRepository
@@ -609,40 +682,19 @@ export class ZoneService {
       currentEntity?.shard === shard
         ? currentEntity.entityId
         : this.allocateEntityId(shard, spawnRows);
-    const playerSpawn: PlayerWorldSpawn = {
-      id: Number(character?.id ?? entityId),
-      spawnId: entityId,
-      name: character?.name ?? characterName,
-      level: Number(character?.level ?? 1),
-      race: Number(character?.race_id ?? 1),
-      gender: Number(character?.gender ?? 0),
-      charClass: Number(character?.class_id ?? 1),
-      face: Number(character?.face ?? 0),
-      isNpc: false,
-      size: -1,
-      x,
-      y,
-      z,
-      heading,
-      currentHp: effectiveCombat.maximumHp,
-      maximumHp: effectiveCombat.maximumHp,
-      equipment: { head: 0, chest: 0, primary: 0, secondary: 0 },
-    };
+    const playerSpawn: PlayerWorldSpawn = playerSpawnProjection(join, entityId);
     const existingPlayers = [
       ...(this.shardPlayers.get(shard)?.values() ?? []),
     ].filter((spawn) => spawn.spawnId !== entityId);
     this.sessionRoutes.set(sessionId, { zoneId, instanceId });
     const characterId = Number(character?.id ?? entityId);
-    this.sessionEntities.set(sessionId, { shard, entityId, characterId });
-    if (character && (useSafeLocation || hasExplicitDestination)) {
-      await runtime.execute(
-        `UPDATE character_positions
-         SET zone_id = ?, instance_id = ?, x = ?, y = ?, z = ?, heading = ?,
-             updated_at = CURRENT_TIMESTAMP
-         WHERE character_id = ?`,
-        [zoneId, instanceId, x, y, z, heading, characterId],
-      );
-    }
+    const runtimePlayer = zoneRuntimePlayerProjection(join, sessionId, entityId);
+    this.sessionEntities.set(sessionId, {
+      shard,
+      entityId,
+      characterId,
+      characterName: character.name,
+    });
     this.workerPool.enqueue(zoneId, instanceId, {
       type: "zone_hydrate",
       zoneKey: zone.key,
@@ -654,43 +706,12 @@ export class ZoneService {
     await this.sendReliable(
       sessionId,
       OP.NEW_ZONE,
-      encodeNewZone({
-        zoneId,
-        zoneIdNumber: zoneId,
-        instanceId,
-        shortName: zone.key,
-        longName: zone.name,
-        zonePoints: [],
-      }),
+      encodeNewZone(newZoneProjection(join, zoneId, instanceId)),
     );
     await this.sendReliable(
       sessionId,
       OP.PLAYER_PROFILE,
-      encodePlayerProfile({
-        name: character?.name ?? characterName,
-        level: Number(character?.level ?? 1),
-        charClass: Number(character?.class_id ?? 1),
-        race: Number(character?.race_id ?? 1),
-        gender: Number(character?.gender ?? 0),
-        deity: Number(character?.deity_id ?? 0),
-        face: Number(character?.face ?? 0),
-        zoneId,
-        zoneInstance: instanceId,
-        x,
-        y,
-        z,
-        heading,
-        str: Number(character?.str ?? 75),
-        sta: Number(character?.sta ?? 75),
-        dex: Number(character?.dex ?? 75),
-        agi: Number(character?.agi ?? 75),
-        intel: Number(character?.intelligence ?? 75),
-        wis: Number(character?.wis ?? 75),
-        cha: Number(character?.cha ?? 75),
-        curHp: effectiveCombat.maximumHp,
-        maxHp: effectiveCombat.maximumHp,
-        inventoryItems,
-      }),
+      encodePlayerProfile(playerProfileProjection(join, zoneId, instanceId)),
     );
     await this.sendReliable(
       sessionId,
@@ -718,50 +739,37 @@ export class ZoneService {
         const restored = candidate?.npcArchetypeId === spawn.npcArchetypeId
           ? candidate
           : undefined;
-        return {
-          kind: "npc",
-          id: spawn.spawnId,
-          npcId: spawn.npcArchetypeId,
-          npcIndex,
-          name: spawn.name,
-          level: spawn.level,
-          position: {
-            x: restored?.position.x ?? spawn.x,
-            y: restored?.position.y ?? spawn.y,
-            z: restored?.position.z ?? spawn.z,
-            heading: restored
-              ? radiansToEqHeading(restored.heading)
-              : spawn.heading,
-          },
-        };
+        return questNpcProjection({
+          ...spawn,
+          x: restored?.position.x ?? spawn.x,
+          y: restored?.position.y ?? spawn.y,
+          z: restored?.position.z ?? spawn.z,
+          heading: restored
+            ? radiansToEqHeading(restored.heading)
+            : spawn.heading,
+        }, npcIndex);
       }),
     });
     this.workerPool.enqueue(zoneId, instanceId, {
       type: "client_join",
-      sessionId,
-      entityId,
-      characterId,
-      x,
-      y,
-      z,
-      heading,
-      characterName: character?.name ?? characterName,
-      level: Number(character?.level ?? 1),
-      race: Number(character?.race_id ?? 1),
-      gender: Number(character?.gender ?? 0),
-      charClass: Number(character?.class_id ?? 1),
-      face: Number(character?.face ?? 0),
-      combat: effectiveCombat,
-      bind: {
-        zoneId: Number(bind?.zone_id ?? zoneId),
-        instanceId: Number(bind?.instance_id ?? 0),
-        x: Number(bind?.x ?? zone.safe_x),
-        y: Number(bind?.y ?? zone.safe_y),
-        z: Number(bind?.z ?? zone.safe_z),
-        heading: Number(bind?.heading ?? 0),
-      },
+      ...runtimePlayer,
     });
+    await this.sendReliable(
+      sessionId,
+      OP.ABILITY_LOADOUT,
+      encodeSidecar(
+        SIDECAR_SCHEMA.ABILITY_LOADOUT,
+        abilityLoadoutProjection(join.techniques),
+      ),
+    );
     void this.sendQuestCharacter(zoneId, instanceId, sessionId, characterId);
+    // The panels want the whole picture the moment the zone opens, not the first time
+    // the player spends something.
+    void this.sendProgressionState(
+      sessionId,
+      characterId,
+      null,
+    ).catch(() => {});
   }
 
   /**
@@ -820,17 +828,173 @@ export class ZoneService {
     sessionId: number,
     payload: Uint8Array,
   ): Promise<void> {
-    const repository = this.progressRepository;
     const entity = this.sessionEntities.get(sessionId);
     const request = decodeRequest(OP.JOURNAL_NOTE, payload);
-    if (!repository || !entity || request?.type !== "journal_note") return;
-    await applyJournalNote(repository, entity.characterId, request);
-    const snapshot = await repository.load(entity.characterId);
+    if (!entity || request?.type !== "journal_note") return;
+    const result = await this.characterApp().updateJournal(
+      entity.characterId,
+      request,
+    );
     await this.sendJournal(
       sessionId,
-      snapshot ? journalFromState(snapshot) : [],
-      await repository.notes(entity.characterId),
+      result.entries,
+      result.notes,
       null,
+    );
+  }
+
+  private async handleGmCommand(
+    sessionId: number,
+    payload: Uint8Array,
+  ): Promise<void> {
+    const entity = this.sessionEntities.get(sessionId);
+    const request = decodeRequest(OP.GM_COMMAND, payload);
+    if (!entity || request?.type !== "gm_command") return;
+    const effects = await this.gmCommandService().execute(
+      entity.characterId,
+      request.command,
+      request.args,
+    );
+    for (const effect of effects) await this.sendGmEffect(sessionId, effect);
+  }
+
+  private sendGmEffect(
+    sessionId: number,
+    effect: GmCommandEffect,
+  ): Promise<void> {
+    switch (effect.type) {
+      case "message":
+        return this.sendReliable(
+          sessionId,
+          OP.CHANNEL_MESSAGE,
+          encodeChannelMessage({
+            sender: "Server",
+            target: "",
+            message: effect.message,
+            chanNum: -1,
+          }),
+        );
+      case "level":
+        {
+          const route = this.sessionRoutes.get(sessionId);
+          if (route) {
+            this.workerPool.enqueue(route.zoneId, route.instanceId, {
+              type: "client_level",
+              sessionId,
+              level: effect.level,
+              combat: effect.combat,
+            });
+          }
+        }
+        return this.sendReliable(
+          sessionId,
+          OP.LEVEL_UPDATE,
+          encodeSidecar(SIDECAR_SCHEMA.LEVEL, {
+            level: effect.level,
+            exp: effect.experience,
+          }),
+        );
+      case "inventory_put":
+        return this.sendReliable(
+          sessionId,
+          OP.ADD_ITEM_PACKET,
+          encodeSidecar(SIDECAR_SCHEMA.ITEM, effect.item),
+        );
+      case "inventory_delete_many":
+        return this.sendReliable(
+          sessionId,
+          OP.BULK_DELETE_ITEMS,
+          encodeSidecar(SIDECAR_SCHEMA.BULK_DELETE_ITEMS, {
+            items: effect.items,
+          }),
+        );
+      case "inventory_replace":
+        return this.sendGmInventoryReplacement(sessionId, effect);
+    }
+  }
+
+  private async sendGmInventoryReplacement(
+    sessionId: number,
+    effect: Extract<GmCommandEffect, { type: "inventory_replace" }>,
+  ): Promise<void> {
+    const route = this.sessionRoutes.get(sessionId);
+    if (route) {
+      this.workerPool.enqueue(route.zoneId, route.instanceId, {
+        type: "client_level",
+        sessionId,
+        level: effect.level,
+        combat: effect.combat,
+      });
+    }
+    if (effect.removed.length) {
+      await this.sendReliable(
+        sessionId,
+        OP.BULK_DELETE_ITEMS,
+        encodeSidecar(SIDECAR_SCHEMA.BULK_DELETE_ITEMS, {
+          items: effect.removed,
+        }),
+      );
+    }
+    await this.sendReliable(
+      sessionId,
+      OP.ITEM_PACKET,
+      encodeSidecar(SIDECAR_SCHEMA.BULK_ITEMS, { items: effect.items }),
+    );
+  }
+
+  /**
+   * The live half of learning, preparing and Aspect spending.
+   *
+   * Shares every rule with the offline path through `progression-requests.ts`; only the
+   * transport and the database handle differ, which is the whole point of the split.
+   */
+  private async handleProgressionRequest(
+    sessionId: number,
+    payload: Uint8Array,
+  ): Promise<void> {
+    const entity = this.sessionEntities.get(sessionId);
+    const decoded = decodeRequest(OP.PROGRESSION_REQUEST, payload);
+    if (!entity || decoded?.type !== "progression_request") return;
+
+    const outcome = await this.characterApp().progression(
+      entity.characterId,
+      decoded.request,
+    );
+    if (!outcome) return;
+    const route = this.sessionRoutes.get(sessionId);
+    if (route) {
+      this.workerPool.enqueue(route.zoneId, route.instanceId, {
+        type: "client_loadout",
+        sessionId,
+        ...outcome.combatLoadout,
+      });
+    }
+    await this.sendReliable(
+      sessionId,
+      OP.PROGRESSION_STATE,
+      encodeSidecar(SIDECAR_SCHEMA.PROGRESSION_STATE, {
+        ...outcome.state,
+        refusal: outcome.refusal,
+      }),
+    );
+    await this.sendReliable(
+      sessionId,
+      OP.ABILITY_LOADOUT,
+      encodeSidecar(SIDECAR_SCHEMA.ABILITY_LOADOUT, outcome.abilityLoadout),
+    );
+  }
+
+  private async sendProgressionState(
+    sessionId: number,
+    characterId: number,
+    refusal: string | null,
+  ): Promise<void> {
+    const state = await this.characterApp().progressionState(characterId);
+    if (!state) return;
+    await this.sendReliable(
+      sessionId,
+      OP.PROGRESSION_STATE,
+      encodeSidecar(SIDECAR_SCHEMA.PROGRESSION_STATE, { ...state, refusal }),
     );
   }
 
@@ -858,6 +1022,9 @@ export class ZoneService {
       .catch(() => {})
       .then(() => this.applyQuestEffects(message));
     this.questWrites.set(key, next);
+    void next.finally(() => {
+      if (this.questWrites.get(key) === next) this.questWrites.delete(key);
+    }).catch(() => {});
     return next;
   }
 
@@ -877,7 +1044,13 @@ export class ZoneService {
       },
       character: (sessionId) => {
         const journal = journals.get(sessionId);
-        return journal ? { characterId: journal.characterId } : null;
+        return journal
+          ? {
+              characterId: journal.characterId,
+              experience: journal.experience,
+              level: journal.level,
+            }
+          : null;
       },
       setCharacterProgression: (sessionId, experience, level) => {
         this.workerPool.enqueue(message.zoneId, message.instanceId, {
@@ -968,23 +1141,24 @@ export class ZoneService {
   }
 
   private async handlePcDeath(message: ZonePcDeathMessage): Promise<void> {
-    await this.locationWrites.get(message.sessionId)?.catch(() => {});
-    const runtime = this.databases.backend("runtime");
-    await runtime.execute(
-      `UPDATE character_positions
-       SET zone_id = ?, instance_id = ?, x = ?, y = ?, z = ?, heading = ?,
-           updated_at = CURRENT_TIMESTAMP
-       WHERE character_id = ?`,
-      [
-        message.bind.zoneId,
-        message.bind.instanceId,
-        message.bind.x,
-        message.bind.y,
-        message.bind.z,
-        message.bind.heading,
-        message.characterId,
-      ],
-    );
+    const characterName = this.sessionEntities.get(message.sessionId)?.characterName;
+    const current = this.sessionRoutes.get(message.sessionId);
+    if (current) {
+      this.workerPool.enqueue(current.zoneId, current.instanceId, {
+        type: "client_leave",
+        sessionId: message.sessionId,
+      });
+    }
+    this.sessionRoutes.delete(message.sessionId);
+    this.removeSessionEntityDefinition(message.sessionId);
+    await this.characterApp().checkpointPosition(message.characterId, {
+      zoneId: message.bind.zoneId,
+      instanceId: message.bind.instanceId,
+      x: message.bind.x,
+      y: message.bind.y,
+      z: message.bind.z,
+      heading: message.bind.heading,
+    });
     await this.sendReliable(
       message.sessionId,
       OP.DEATH_EVENT,
@@ -1000,78 +1174,77 @@ export class ZoneService {
         heading: message.bind.heading,
       }),
     );
-    const character = (
-      await runtime.query<{ name: string }>(
-        "SELECT name FROM characters WHERE id = ? LIMIT 1",
-        [message.characterId],
-      )
-    ).rows[0];
-    if (character) {
-      const current = this.sessionRoutes.get(message.sessionId);
-      if (current) {
-        this.workerPool.enqueue(current.zoneId, current.instanceId, {
-          type: "client_leave",
-          sessionId: message.sessionId,
-        });
-      }
-      this.sessionRoutes.delete(message.sessionId);
-      this.removeSessionEntityDefinition(message.sessionId);
+    if (characterName) {
       await this.attachSession(
         message.sessionId,
         message.bind.zoneId,
         message.bind.instanceId,
-        character.name,
+        characterName,
       );
     }
   }
 
-  private async handleLootAward(message: ZoneLootAwardMessage): Promise<void> {
-    const runtime = this.databases.backend("runtime");
-    const occupied = (
-      await runtime.query<{ slot: number }>(
-        `SELECT slot FROM player_inventory
-       WHERE character_id = ? AND bag = -1 AND slot BETWEEN 22 AND 30`,
-        [message.characterId],
-      )
-    ).rows;
-    const used = new Set(occupied.map((row) => Number(row.slot)));
-    const destination = [22, 23, 24, 25, 26, 27, 28, 29, 30].find(
-      (slot) => !used.has(slot),
+  private async handleInventoryMove(
+    sessionId: number,
+    move: {
+      readonly fromSlot: number;
+      readonly toSlot: number;
+      readonly fromBag: number;
+      readonly toBag: number;
+    },
+  ): Promise<void> {
+    const entity = this.sessionEntities.get(sessionId);
+    if (!entity) return;
+    const moves = await this.characterApp().moveItem(
+      entity.characterId,
+      move,
     );
-    if (destination === undefined) {
+    for (const movement of moves) {
+      await this.sendReliable(
+        sessionId,
+        OP.MOVE_ITEM,
+        encodeMoveItemResponse(movement),
+      );
+    }
+  }
+
+  private async handleInventoryDelete(
+    sessionId: number,
+    deletion: { readonly slot: number; readonly bag: number },
+  ): Promise<void> {
+    const entity = this.sessionEntities.get(sessionId);
+    if (!entity) return;
+    await this.characterApp().deleteItem(
+      entity.characterId,
+      deletion.slot,
+      deletion.bag,
+    );
+  }
+
+  private async handleLootAward(message: ZoneLootAwardMessage): Promise<void> {
+    const destination = await this.characterApp().grantLoot(
+      message.characterId,
+      Number(message.item.itemId ?? message.item.id),
+      Math.max(1, Number(message.item.quantity ?? 1)),
+      Number(message.item.charges ?? 0),
+    );
+    if (destination === null) {
       this.restoreLoot(message, "Your inventory is full.");
       return;
     }
-    await runtime.execute(
-      `INSERT INTO player_inventory
-       (character_id, bag, slot, item_id, quantity, charges)
-       VALUES (?, -1, ?, ?, ?, ?)`,
-      [
-        message.characterId,
-        destination,
-        Number(message.item.itemId ?? message.item.id),
-        Math.max(1, Number(message.item.quantity ?? 1)),
-        Number(message.item.charges ?? 0),
-      ],
-    );
     await this.sendReliable(
       message.sessionId,
       OP.ADD_ITEM_PACKET,
       encodeSidecar(SIDECAR_SCHEMA.ITEM, {
         ...message.item,
-        slot: destination,
+        slot: destination.slot,
         bagSlot: -1,
       }),
     );
   }
 
   private queueLootAward(message: ZoneLootAwardMessage): void {
-    const previous = this.lootWrites.get(message.sessionId) ?? Promise.resolve();
-    const next = previous.catch(() => {}).then(() =>
-      this.handleLootAward(message)
-    );
-    this.lootWrites.set(message.sessionId, next);
-    void next
+    void this.handleLootAward(message)
       .catch((error: unknown) => {
         this.logger.error("Loot award failed", {
           sessionId: message.sessionId,
@@ -1079,75 +1252,58 @@ export class ZoneService {
           error: error instanceof Error ? error.message : String(error),
         });
         this.restoreLoot(message, "Unable to award that item.");
-      })
-      .finally(() => {
-        if (this.lootWrites.get(message.sessionId) === next) {
-          this.lootWrites.delete(message.sessionId);
-        }
       });
   }
 
   private queueMerchantIntent(message: ZoneMerchantIntentMessage): void {
-    const previous = this.merchantWrites.get(message.sessionId)
-      ?? Promise.resolve();
-    const next = previous.catch(() => {}).then(() =>
-      this.handleMerchantIntent(message)
-    );
-    this.merchantWrites.set(message.sessionId, next);
-    void next
+    void this.handleMerchantIntent(message)
       .catch((error: unknown) => this.sendMerchantError(
         message.sessionId,
         message.npcId,
-        error instanceof MerchantTransactionError
+        error instanceof Error
           ? error.message
           : "Unable to complete that merchant transaction.",
-      ))
-      .finally(() => {
-        if (this.merchantWrites.get(message.sessionId) === next) {
-          this.merchantWrites.delete(message.sessionId);
-        }
-      });
+      ));
   }
 
   private async handleMerchantIntent(
     message: ZoneMerchantIntentMessage,
   ): Promise<void> {
-    const merchant = this.merchantRepository;
-    if (!merchant) throw new Error("merchant repository is not initialized");
-    if (message.action === "buy") {
-      const result = await merchant.buy({
-        characterId: message.characterId,
-        npcArchetypeId: message.npcArchetypeId,
-        zoneId: message.zoneId,
-        instanceId: message.instanceId,
-        merchantSlot: Number(message.merchantSlot),
-        quantity: Number(message.quantity),
-      });
-      await this.sendMerchantMutation(message.sessionId, result.mutation);
-    } else if (message.action === "sell") {
-      const result = await merchant.sell({
-        characterId: message.characterId,
-        npcArchetypeId: message.npcArchetypeId,
-        zoneId: message.zoneId,
-        instanceId: message.instanceId,
-        slot: Number(message.slot),
-        bag: Number(message.bag),
-        quantity: Number(message.quantity),
-      });
+    const common = {
+      characterId: message.characterId,
+      npcArchetypeId: message.npcArchetypeId,
+      npcId: message.npcId,
+      merchantName: message.merchantName,
+      zoneId: message.zoneId,
+      instanceId: message.instanceId,
+    };
+    const result = message.action === "buy"
+      ? await this.characterApp().merchant({
+          ...common,
+          action: "buy",
+          merchantSlot: Number(message.merchantSlot),
+          quantity: Number(message.quantity),
+        })
+      : message.action === "sell"
+      ? await this.characterApp().merchant({
+          ...common,
+          action: "sell",
+          slot: Number(message.slot),
+          bag: Number(message.bag),
+          quantity: Number(message.quantity),
+        })
+      : await this.characterApp().merchant({ ...common, action: "open" });
+    if (!result.ok) {
+      await this.sendMerchantError(message.sessionId, message.npcId, result.message);
+      return;
+    }
+    if (result.mutation) {
       await this.sendMerchantMutation(message.sessionId, result.mutation);
     }
-    const window = await merchant.open(
-      message.characterId,
-      message.npcArchetypeId,
-      message.npcId,
-      message.merchantName,
-      message.zoneId,
-      message.instanceId,
-    );
     await this.sendReliable(
       message.sessionId,
       OP.MERCHANT_WINDOW,
-      encodeSidecar(SIDECAR_SCHEMA.MERCHANT_WINDOW, window),
+      encodeSidecar(SIDECAR_SCHEMA.MERCHANT_WINDOW, result.window),
     );
   }
 
@@ -1295,41 +1451,51 @@ export class ZoneService {
       });
     }
 
-    const previous = this.locationWrites.get(sessionId) ?? Promise.resolve();
-    const next = previous
-      .catch(() => {})
-      .then(() =>
-        this.databases.backend("runtime").execute(
-          `UPDATE character_positions
-           SET zone_id = ?, instance_id = ?, x = ?, y = ?, z = ?, heading = ?,
-               updated_at = CURRENT_TIMESTAMP
-           WHERE character_id = ?`,
-          [
-            route.zoneId,
-            route.instanceId,
-            location.x,
-            location.y,
-            location.z,
-            radiansToEqHeading(location.heading),
-            owned.characterId,
-          ],
-        ),
-      )
-      .then(() => undefined);
-    this.locationWrites.set(sessionId, next);
-    const removeSettledWrite = () => {
-      if (this.locationWrites.get(sessionId) === next) {
-        this.locationWrites.delete(sessionId);
-      }
-    };
-    void next.then(removeSettledWrite, removeSettledWrite);
-    void next.catch((error: unknown) => {
-      this.logger.warn("Player location persistence failed", {
-        sessionId,
-        characterId: owned.characterId,
+    this.characterApplication?.rememberPosition(owned.characterId, {
+      zoneId: route.zoneId,
+      instanceId: route.instanceId,
+      x: location.x,
+      y: location.y,
+      z: location.z,
+      heading: radiansToEqHeading(location.heading),
+    });
+  }
+
+  private async flushCharacterWrites(
+    characterId: number,
+    checkpoint: string,
+  ): Promise<void> {
+    try {
+      await this.characterApplication?.flush(characterId);
+    } catch (error) {
+      this.logger.warn("Character write checkpoint failed", {
+        characterId,
+        checkpoint,
         error: error instanceof Error ? error.message : String(error),
       });
-    });
+    }
+  }
+
+  private gameDb(): GameDatabase {
+    if (!this.gameDatabase) throw new Error("zone database is not started");
+    return this.gameDatabase;
+  }
+
+  private characterApp(): CharacterApplicationService {
+    if (!this.characterApplication) {
+      throw new Error("character application service is not started");
+    }
+    return this.characterApplication;
+  }
+
+  private zoneJoinService(): ZoneJoinService {
+    if (!this.zoneJoin) throw new Error("zone join service is not started");
+    return this.zoneJoin;
+  }
+
+  private gmCommandService(): GmCommandService {
+    if (!this.gmCommands) throw new Error("GM command service is not started");
+    return this.gmCommands;
   }
 
   private sendReliable(
@@ -1359,32 +1525,15 @@ function toClientSpawn(
   spawn: ZoneNpcSpawnDefinition,
   persisted?: ZoneSnapshotEntity,
 ): NpcWorldSpawn {
+  const base = npcSpawnProjection(spawn);
   const restored = persisted?.npcArchetypeId === spawn.npcArchetypeId
     ? persisted
     : undefined;
   const isCorpse = restored?.lifecycle === "corpse";
   return {
-    id: spawn.npcArchetypeId,
-    spawnId: spawn.spawnId,
+    ...base,
     name: isCorpse ? corpseName(spawn.name) : spawn.name,
     ...(isCorpse ? { kind: 3 } : {}),
-    level: spawn.level,
-    race: spawn.race,
-    gender: spawn.gender,
-    modelKey: spawn.modelKey,
-    isNpc: true,
-    size: spawn.size,
-    face: spawn.face,
-    helm: spawn.helm,
-    equipChest: spawn.equipChest,
-    equipment: {
-      head: spawn.helm,
-      chest: spawn.equipChest,
-      primary: spawn.primary,
-      secondary: spawn.secondary,
-    },
-    charClass: spawn.charClass,
-    bodytype: spawn.bodyType,
     x: restored?.position.x ?? spawn.x,
     y: restored?.position.y ?? spawn.y,
     z: restored?.position.z ?? spawn.z,
@@ -1423,43 +1572,3 @@ type NpcWorldSpawn = WorldSpawnInput & {
   readonly y: number;
   readonly z: number;
 };
-
-interface ZoneRow extends DatabaseRow {
-  id: number;
-  key: string;
-  name: string;
-  safe_x: number;
-  safe_y: number;
-  safe_z: number;
-}
-
-interface CharacterProfileRow extends DatabaseRow {
-  id: number;
-  name: string;
-  level: number;
-  class_id: number;
-  race_id: number;
-  gender: number;
-  deity_id: number;
-  face: number;
-  str: number;
-  sta: number;
-  dex: number;
-  agi: number;
-  intelligence: number;
-  wis: number;
-  cha: number;
-  x: number | null;
-  y: number | null;
-  z: number | null;
-  heading: number | null;
-}
-
-interface CharacterBindRow extends DatabaseRow {
-  zone_id: number;
-  instance_id: number;
-  x: number;
-  y: number;
-  z: number;
-  heading: number;
-}

@@ -5,11 +5,16 @@ import {
   type CombatantStats,
 } from "../combat/melee-combat.js";
 import { npcCombatantStats } from "../combat/npc-combat.js";
+import {
+  PlayerAbilitySystem,
+  type AbilityActivation,
+} from "../combat/player-abilities.js";
+import { ZoneAbilityPort } from "../combat/zone-ability-port.js";
+import { runZoneGameplayTick } from "./zone-tick.js";
 import { CorpseLootSystem, type CorpseLootWindow } from "../combat/corpse-loot.js";
 import { applyClientMovement } from "./client-movement.js";
 import { EntityKind, NPC } from "./entity-store.js";
 import {
-  advanceMovementRoute,
   type MovementRoute,
 } from "./movement-routes.js";
 import type { ZoneNpcSpawnDefinition } from "./zone-content.js";
@@ -29,29 +34,13 @@ import {
   restoreZoneSnapshot,
   type ZoneSnapshot,
 } from "./zone-snapshot.js";
+import {
+  merchantInteraction,
+  type MerchantInteractionResult,
+} from "./merchant-interaction.js";
+import type { ZoneRuntimePlayerDefinition } from "./zone-runtime-projections.js";
 
-export interface EmbeddedPlayerDefinition {
-  readonly sessionId: number;
-  readonly entityId: number;
-  readonly x: number;
-  readonly y: number;
-  readonly z: number;
-  readonly heading: number;
-  readonly level: number;
-  readonly race: number;
-  readonly gender: number;
-  readonly charClass: number;
-  readonly face: number;
-  readonly combat: CombatantStats;
-  readonly bind: {
-    zoneId: number;
-    instanceId: number;
-    x: number;
-    y: number;
-    z: number;
-    heading: number;
-  };
-}
+export type EmbeddedPlayerDefinition = ZoneRuntimePlayerDefinition;
 
 export type ZoneKernelFactory = () => Promise<ZoneSimulationKernel>;
 export interface EmbeddedDeathEvent {
@@ -101,6 +90,8 @@ export class EmbeddedZoneRuntime {
   private readonly playerDefinitions = new Map<number, EmbeddedPlayerDefinition>();
   private readonly npcDefinitions = new Map<number, ZoneNpcSpawnDefinition>();
   private readonly engagement: NpcEngagementSystem;
+  private readonly abilities = new PlayerAbilitySystem();
+  private readonly abilityPort: ZoneAbilityPort;
 
   private constructor(
     readonly kernel: ZoneSimulationKernel,
@@ -127,6 +118,17 @@ export class EmbeddedZoneRuntime {
       options.engagementRules ?? DEFAULT_NPC_ENGAGEMENT_RULES,
     );
     this.corpseLoot = new CorpseLootSystem(kernel.entities);
+    this.abilityPort = new ZoneAbilityPort({
+      entities: kernel.entities,
+      combat: this.combat,
+      threat: this.engagement,
+      currentTick: () => this.revision,
+      nowMs: () => this.simulationTimeMs,
+      onCombatEvent: (event) => {
+        this.updateHateFromCombatEvent(event);
+        this.publishCombat([...this.playerIndices.keys()], event);
+      },
+    });
   }
 
   static async create(
@@ -192,6 +194,7 @@ export class EmbeddedZoneRuntime {
     entity.heading = eqHeadingToRadians(player.heading);
     entity.markDirty();
     this.combat.register(entity, player.combat);
+    this.abilities.register(entity.id, player.level, player.combat.stamina);
     this.playerIndices.set(player.sessionId, index);
     this.playerPositions.set(player.sessionId, player);
     this.lastPlayerUpdateAt.set(player.sessionId, this.simulationTimeMs);
@@ -208,6 +211,8 @@ export class EmbeddedZoneRuntime {
     const entity = index === undefined ? undefined : this.kernel.entities.at(index);
     if (entity) {
       this.engagement.clearEntity(entity.id);
+      this.abilities.release(entity.id);
+      this.abilityPort.forget(entity.id);
       this.kernel.entities.remove(entity);
     }
     this.playerIndices.delete(sessionId);
@@ -248,6 +253,77 @@ export class EmbeddedZoneRuntime {
     this.publishCombat([sessionId], event);
   }
 
+  /**
+   * Activates a prepared technique.
+   *
+   * `learned` and `prepared` come from the caller because they are character record, not
+   * shard state — the backend already holds them and the runtime must not read the
+   * database mid-tick.
+   */
+  activateAbility(
+    sessionId: number,
+    abilityId: string,
+    targetId: number,
+  ): AbilityActivation {
+    const index = this.playerIndices.get(sessionId);
+    const entity = index === undefined ? undefined : this.kernel.entities.at(index);
+    const player = this.playerDefinitions.get(sessionId);
+    if (!entity || !player) {
+      return { ok: false, abilityId, reason: "actor_incapacitated" };
+    }
+    const control = this.abilityPort.statusesOf(entity.id).controlState();
+    return this.abilities.activate(
+      {
+        entityId: entity.id,
+        level: player.level,
+        classId: player.charClass,
+        learned: new Set(player.learned),
+        prepared: new Set(player.prepared),
+        strength: player.combat.strength,
+        stamina: player.combat.stamina,
+        agility: player.combat.agility,
+        dexterity: player.combat.dexterity,
+        weaponDamage: player.combat.weaponDamage,
+        skill: player.combat.offense,
+        // Equipment-derived requirements are not modelled offline yet; a Warrior who
+        // has learned Shield Bash is assumed to be carrying the shield they trained with.
+        hasShield: true,
+        hasBow: false,
+        incapacitated: !control.canAct,
+      },
+      abilityId,
+      targetId,
+      this.simulationTimeMs,
+      this.abilityPort,
+    );
+  }
+
+  updatePlayerLoadout(
+    sessionId: number,
+    loadout: { readonly learned: readonly string[]; readonly prepared: readonly string[] },
+  ): void {
+    const player = this.playerDefinitions.get(sessionId);
+    if (!player) return;
+    this.playerDefinitions.set(sessionId, { ...player, ...loadout });
+  }
+
+  updatePlayerLevel(
+    sessionId: number,
+    level: number,
+    combat: CombatantStats,
+  ): void {
+    const player = this.playerDefinitions.get(sessionId);
+    const index = this.playerIndices.get(sessionId);
+    const entity = index === undefined ? undefined : this.kernel.entities.at(index);
+    if (!player || !entity) return;
+    const updated = { ...player, level, combat };
+    this.playerDefinitions.set(sessionId, updated);
+    this.kernel.entities.publicState.stateLevel[index!] = level;
+    this.combat.register(entity, combat);
+    this.abilities.register(entity.id, level, combat.stamina);
+    entity.markDirty();
+  }
+
   lootWindow(sessionId: number, corpseId: number): CorpseLootWindow | null {
     const index = this.playerIndices.get(sessionId);
     const looter = index === undefined ? undefined : this.kernel.entities.at(index);
@@ -273,27 +349,19 @@ export class EmbeddedZoneRuntime {
   merchant(
     sessionId: number,
     npcId: number,
-  ): ZoneNpcSpawnDefinition | null {
+  ): MerchantInteractionResult {
     const playerIndex = this.playerIndices.get(sessionId);
     const player = playerIndex === undefined
       ? undefined
       : this.kernel.entities.at(playerIndex);
     const npc = this.kernel.entities.get(npcId);
     const definition = this.npcDefinitions.get(npcId);
-    if (
-      !player
-      || !npc
-      || !definition?.merchant
-      || npc.kind !== EntityKind.npc
-      || npc.currentHp <= 0
-      || this.engagement.isEngaged(npcId)
-    ) return null;
-    const distance = Math.hypot(
-      player.position.x - npc.position.x,
-      player.position.y - npc.position.y,
-      player.position.z - npc.position.z,
+    return merchantInteraction(
+      player,
+      npc,
+      definition,
+      this.engagement.isEngaged(npcId),
     );
-    return distance <= definition.merchant.interactionRange ? definition : null;
   }
 
   stop(): void {
@@ -410,7 +478,25 @@ export class EmbeddedZoneRuntime {
     this.simulationTimeMs += deltaMs;
     this.revision += 1;
 
-    for (const request of this.engagement.tick(this.revision)) {
+    // Every gameplay decision, in the order both runtimes must run them.
+    const gameplay = runZoneGameplayTick(
+      {
+        kernel: this.kernel,
+        combat: this.combat,
+        engagement: this.engagement,
+        abilities: this.abilities,
+        abilityPort: this.abilityPort,
+        movementRoutes: this.movementRoutes,
+        suspendedMovementRoutes: this.suspendedMovementRoutes,
+      },
+      {
+        deltaMs,
+        tick: this.revision,
+        simulationTimeMs: this.simulationTimeMs,
+      },
+    );
+
+    for (const request of gameplay.pathRequests) {
       const pathfinder = this.options.findPath;
       const zoneKey = this.options.zoneKey;
       if (!pathfinder || !zoneKey) {
@@ -444,7 +530,7 @@ export class EmbeddedZoneRuntime {
       );
     }
 
-    for (const event of this.combat.tick(this.revision)) {
+    for (const event of gameplay.combatEvents) {
       this.updateHateFromCombatEvent(event);
       const attacker = this.kernel.entities.get(event.attackerId);
       const owner = attacker
@@ -496,21 +582,6 @@ export class EmbeddedZoneRuntime {
       }
     }
 
-    for (const [index, route] of this.movementRoutes) {
-      const npc = this.kernel.entities.at(index);
-      if (npc instanceof NPC) {
-        if (this.engagement.isEngaged(npc.id)) {
-          this.suspendedMovementRoutes.add(index);
-          continue;
-        }
-        if (this.suspendedMovementRoutes.delete(index)) {
-          const target = route.points[route.targetIndex];
-          if (target) npc.target.set(target.x, target.y, target.z);
-        }
-        advanceMovementRoute(npc, route, this.simulationTimeMs);
-      }
-    }
-
     if (this.options.publishNpcDebug && this.revision % 2 === 0) {
       const sessionIds = [...this.playerIndices.keys()];
       for (let index = 0; index < this.kernel.entities.count; index++) {
@@ -537,7 +608,7 @@ export class EmbeddedZoneRuntime {
       }
     }
 
-    const snapshot = this.kernel.tick(deltaMs);
+    const snapshot = gameplay.snapshot;
     if (snapshot.dirtyIndices.length > 0 && this.playerIndices.size > 0) {
       for (const [sessionId, ownIndex] of this.playerIndices) {
         const indices = [...snapshot.dirtyIndices].filter(

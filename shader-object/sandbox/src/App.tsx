@@ -113,6 +113,12 @@ async function loadBabylonPlayground(routePath: string) {
   if (routePath === '/msdf') {
     return (await import('./MsdfReferencePlayground')).MsdfReferencePlayground;
   }
+  if (routePath === '/floating-text') {
+    return (await import('./FloatingCombatTextPlayground')).FloatingCombatTextPlayground;
+  }
+  if (routePath === '/floating-text-parity') {
+    return (await import('./FloatingTextParityPlayground')).FloatingTextParityPlayground;
+  }
   if (routePath === '/lean') {
     return (await import('./LeanPassPlayground')).LeanPassPlayground;
   }

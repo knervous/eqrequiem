@@ -58,5 +58,8 @@ test("render lifecycle owns initial and CSS-driven backing-buffer synchronizatio
   assert.match(wrapper, /GameManager\.instance\.resize\(\)/);
   assert.match(worldSceneLayer, /reduceWorld\(/);
   assert.doesNotMatch(worldSceneLayer, /chunk\.setIndices\(/);
-  assert.match(worldSceneLayer, /validateRenderChunks\(world, chunks\)/);
+  assert.match(
+    worldSceneLayer,
+    /validateRenderChunks\(world, chunks, chunkIndices\)/,
+  );
 });

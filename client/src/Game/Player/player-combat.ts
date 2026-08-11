@@ -76,11 +76,11 @@ export class PlayerCombat {
         addChatLine('Your target is too far away.');
         return;
       case 'miss':
-        this.playSwingAnimation();
+        this.playSwingAnimation(false);
         addChatLine(`You miss ${this.targetName(event.targetId)}.`);
         return;
       case 'hit':
-        this.playSwingAnimation();
+        this.playSwingAnimation(true);
         addChatLine(
           `You hit ${this.targetName(event.targetId)} for ${event.damage} point${event.damage === 1 ? '' : 's'} of damage.`,
         );
@@ -167,7 +167,8 @@ export class PlayerCombat {
     emitter.emit('autoAttack', value);
   }
 
-  private playSwingAnimation(): void {
+  private playSwingAnimation(hit: boolean): void {
+    emitter.emit('playerSwing', { hit });
     const weaponType =
       this.player.playerInventory.getTopLevel(InventorySlot.Primary)?.itemtype;
     const animation = (() => {

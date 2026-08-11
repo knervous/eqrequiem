@@ -6,7 +6,7 @@ import { describe, it } from "node:test";
 import { prepareDetourMeshSet } from "./detour-mesh-set.js";
 
 const meshPath = fileURLToPath(
-  new URL("../../../server/maps/qeynos2.bin", import.meta.url),
+  new URL("../../../server/maps/talioscrownward.bin", import.meta.url),
 );
 
 describe("Detour mesh-set preparation", () => {

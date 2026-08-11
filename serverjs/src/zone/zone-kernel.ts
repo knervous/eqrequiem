@@ -49,8 +49,13 @@ interface ZoneKernelExports {
   ): void;
   setEntityTarget(index: number, x: number, y: number, z: number): void;
   markDirty(index: number): void;
-  tickNpcs(count: number, deltaMs: number): void;
-  collectDirty(count: number): number;
+  /**
+   * Steering and dirty compaction in one arena traversal, returning the dirty count.
+   *
+   * This replaced a `tickNpcs` + `collectDirty` pair. Two exports meant two full walks
+   * of the same arena each tick, the second reading flags the first had just written.
+   */
+  tickAndCollect(count: number, deltaMs: number): number;
 }
 
 export interface ZoneKernelSnapshot {
@@ -187,8 +192,7 @@ export class ZoneSimulationKernel {
   tick(countOrDeltaMs: number, maybeDeltaMs?: number): ZoneKernelSnapshot {
     const count = maybeDeltaMs === undefined ? this.entities.count : countOrDeltaMs;
     const deltaMs = maybeDeltaMs ?? countOrDeltaMs;
-    this.wasm.tickNpcs(count, deltaMs);
-    const dirtyCount = this.wasm.collectDirty(count);
+    const dirtyCount = this.wasm.tickAndCollect(count, deltaMs);
     return {
       count,
       state: this.publicState,

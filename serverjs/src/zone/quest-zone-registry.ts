@@ -1,19 +1,29 @@
 import type { QuestBinding, QuestDefinition } from "./quest-types.js";
 import type { QuestManifestEntry, ZoneQuestRegistry } from "./quest-registry.js";
-import { registerZone as registerQeynos } from "./quests/zones/qeynos/index.js";
-import { registerZone as registerQeynos2 } from "./quests/zones/qeynos2/index.js";
+import { registerZone as registerLowharbor } from "./quests/zones/talios-lowharbor/index.js";
+import { registerZone as registerCrownward } from "./quests/zones/talioscrownward/index.js";
 
 type ZoneQuestConstructor = () => ZoneQuestRegistry;
 
-const constructors: readonly ZoneQuestConstructor[] = [registerQeynos, registerQeynos2];
+const constructors: readonly ZoneQuestConstructor[] = [registerLowharbor, registerCrownward];
 const registries = constructors.map((construct) => construct());
 const byId = new Map(registries.map((registry) => [registry.zone.id, registry]));
-const byName = new Map(registries.map((registry) => [registry.zone.shortName, registry]));
+const byName = new Map<string, ZoneQuestRegistry>();
+for (const registry of registries) {
+  // `shortName` and `key` are the same string for Eltania zones now that the assets are
+  // named after the canonical key; the pair is kept because `ZoneQuestRegistry` still
+  // allows a zone whose file name differs from its content key.
+  const keys = [registry.zone.shortName, registry.zone.key].filter(Boolean) as string[];
+  for (const k of keys) {
+    byName.set(k.toLowerCase(), registry);
+    byName.set(k.toLowerCase().replaceAll("-", ""), registry);
+  }
+}
 
 export function questRegistryForZone(zone: number | string): ZoneQuestRegistry | null {
   return typeof zone === "number"
     ? byId.get(zone) ?? null
-    : byName.get(zone.trim().toLowerCase()) ?? null;
+    : byName.get(zone.trim().toLowerCase().replaceAll("-", "")) ?? null;
 }
 
 export function questDefinitionsForZone(zone: number | string): readonly QuestDefinition[] {

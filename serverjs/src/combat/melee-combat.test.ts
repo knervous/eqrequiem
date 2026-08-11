@@ -92,11 +92,15 @@ describe("authoritative melee combat", () => {
   });
 
   it("uses the expanded horizontal reach without imposing a facing cone", async () => {
+    // Derived, not hardcoded: reach is a deliberate tuning dial, and a literal
+    // boundary here turns every adjustment of it into a spurious test failure.
+    const reach =
+      ATTACKER.meleeRange + DEFAULT_MELEE_COMBAT_RULES.meleeRangePadding;
     const kernel = await loadZoneSimulationKernel("debug");
     const player = kernel.entities.spawnPC({ id: 30, x: 0, y: 0, z: 0 });
     const npc = kernel.entities.spawnNPC({
       id: 40,
-      x: 5.9,
+      x: reach - 0.1,
       y: 0,
       z: 0,
       speed: 0,
@@ -106,8 +110,41 @@ describe("authoritative melee combat", () => {
     combat.register(npc, DEFENDER);
 
     assert.equal(combat.isWithinMeleeReach(player.id, npc.id), true);
-    npc.position.x = 6.1;
+    npc.position.x = reach + 0.1;
     assert.equal(combat.isWithinMeleeReach(player.id, npc.id), false);
+    // Behind the attacker, at the same gap: reach is a circle, not a cone.
+    npc.position.x = -(reach - 0.1);
+    assert.equal(combat.isWithinMeleeReach(player.id, npc.id), true);
+  });
+
+  /**
+   * The relaxed pad is the player's alone. An NPC given the same slack would hit from
+   * two body lengths away and, because the chase stops on reach, would halt there and
+   * swing at air — leniency meant to remove frustration would read as enemies cheating.
+   */
+  it("gives the relaxed reach to player characters and not to NPCs", async () => {
+    const kernel = await loadZoneSimulationKernel("debug");
+    const player = kernel.entities.spawnPC({ id: 50, x: 0, y: 0, z: 0 });
+    const npc = kernel.entities.spawnNPC({ id: 60, x: 0, y: 0, z: 0, speed: 0 });
+    const combat = new MeleeCombatSystem(kernel.entities, 20);
+    combat.register(player, ATTACKER);
+    combat.register(npc, DEFENDER);
+
+    const playerReach =
+      ATTACKER.meleeRange + DEFAULT_MELEE_COMBAT_RULES.meleeRangePadding;
+    const npcReach =
+      ATTACKER.meleeRange + DEFAULT_MELEE_COMBAT_RULES.npcMeleeRangePadding;
+    assert.ok(npcReach < playerReach, "the relaxed pad must not be symmetric");
+
+    // In the band between the two: the player connects, the NPC has to walk.
+    npc.position.x = playerReach - 0.1;
+    assert.equal(combat.isWithinMeleeReach(player.id, npc.id), true);
+    assert.equal(combat.isWithinMeleeReach(npc.id, player.id), false);
+
+    // Where an NPC can reach, so can the player.
+    npc.position.x = npcReach - 0.1;
+    assert.equal(combat.isWithinMeleeReach(npc.id, player.id), true);
+    assert.equal(combat.isWithinMeleeReach(player.id, npc.id), true);
   });
 
   it("retaliates, clears engagement on PC death, and restores full HP", async () => {

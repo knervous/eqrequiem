@@ -14,34 +14,70 @@
     "sky": "CharacterSelect.SkyDome"
   },
   "camera": {
-    "fov": 0.46,
+    "fov": 0.48,
     "near": 0.1,
-    "orbitDurationSeconds": 180,
-    "horizontalCompositionOffset": 1.15
+    "orbitDurationSeconds": 120,
+    "horizontalCompositionOffset": 0.65
   },
   "character": {
     "heading": 0,
     "gravity": false,
     "collision": false
   },
+  "terrain": {
+    "mesh": "CharacterSelect.Grove.BlendedTerrain",
+    "controlMap0": "/eltania/terrain/character-select/control0.png",
+    "worldMin": [
+      -92.0,
+      -92.0
+    ],
+    "worldMax": [
+      92.0,
+      92.0
+    ],
+    "layers": {
+      "grass": {
+        "albedo": "/eltania/terrain/character-select/grass-albedo.webp",
+        "metallicRoughness": "/eltania/terrain/character-select/grass-mr.webp"
+      },
+      "dirt": {
+        "albedo": "/eltania/terrain/character-select/dirt-albedo.webp",
+        "metallicRoughness": "/eltania/terrain/character-select/dirt-mr.webp"
+      },
+      "rock": {
+        "albedo": "/eltania/terrain/character-select/rock-albedo.webp",
+        "metallicRoughness": "/eltania/terrain/character-select/rock-mr.webp"
+      }
+    },
+    "scales": {
+      "grass": 0.14,
+      "dirt": 0.17,
+      "rock": 0.2,
+      "macro": 0.018
+    },
+    "rockSlopeStart": 0.18,
+    "rockSlopeEnd": 0.62,
+    "triplanarSlopeStart": 0.22,
+    "triplanarSlopeEnd": 0.58
+  },
   "atmosphere": {
     "clearColor": [
-      0.008,
-      0.014,
+      0.025,
       0.045,
+      0.075,
       1.0
     ],
     "fogColor": [
-      0.075,
-      0.13,
-      0.19
+      0.155,
+      0.215,
+      0.245
     ],
-    "fogStart": 46.0,
-    "fogEnd": 138.0,
+    "fogStart": 42.0,
+    "fogEnd": 132.0,
     "ambientColor": [
-      0.12,
-      0.18,
-      0.26
+      0.19,
+      0.235,
+      0.225
     ]
   },
   "lights": {
@@ -52,11 +88,11 @@
         0.42
       ],
       "color": [
-        0.58,
-        0.76,
+        0.74,
+        0.84,
         1.0
       ],
-      "intensity": 2.15
+      "intensity": 1.82
     },
     "fill": {
       "direction": [
@@ -66,10 +102,10 @@
       ],
       "color": [
         1.0,
-        0.39,
-        0.13
+        0.54,
+        0.24
       ],
-      "intensity": 1.15
+      "intensity": 0.86
     },
     "hemisphere": {
       "direction": [
@@ -78,16 +114,74 @@
         0.0
       ],
       "skyColor": [
-        0.2,
-        0.31,
-        0.48
+        0.28,
+        0.36,
+        0.45
       ],
       "groundColor": [
-        0.035,
         0.055,
-        0.07
+        0.075,
+        0.065
       ],
-      "intensity": 0.82
-    }
+      "intensity": 0.84
+    },
+    "settlement": [
+      {
+        "position": [
+          -21.2,
+          1.57050137891443,
+          31.8
+        ],
+        "color": [
+          1.0,
+          0.3,
+          0.07
+        ],
+        "intensity": 2.4,
+        "range": 19.0
+      },
+      {
+        "position": [
+          -28.0,
+          2.903048302732289,
+          38.0
+        ],
+        "color": [
+          1.0,
+          0.38,
+          0.1
+        ],
+        "intensity": 1.65,
+        "range": 16.0
+      },
+      {
+        "position": [
+          -10.2,
+          1.8659139659246222,
+          33.9
+        ],
+        "color": [
+          1.0,
+          0.28,
+          0.06
+        ],
+        "intensity": 2.15,
+        "range": 17.0
+      },
+      {
+        "position": [
+          -5.5,
+          3.387597641233693,
+          38.3
+        ],
+        "color": [
+          1.0,
+          0.42,
+          0.12
+        ],
+        "intensity": 1.45,
+        "range": 14.0
+      }
+    ]
   }
 }

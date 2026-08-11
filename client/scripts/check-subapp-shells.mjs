@@ -24,10 +24,6 @@ const requiredText = new Map([
     ],
   ],
   [
-    'src/UI/components/login/login-window.js',
-    ["from './login-window.tsx'"],
-  ],
-  [
     'src/Game/Constants/client-world-scenes.ts',
     ['export const requiredClientWorldScenes = [] as const'],
   ],
@@ -67,11 +63,11 @@ const requiredText = new Map([
   [
     'src/Game/Zone/shado-world-scene-layer.ts',
     [
-      'const WORLD_PACKAGE_REVISION = "babylon-rhs-y-up-v5-region-pvs-collision-v2"',
+      'const WORLD_PACKAGE_REVISION = "babylon-rhs-y-up-v7-canonical-zone-identity"',
       'applyWorldMaterialPolicy(',
       'material.backFaceCulling = false',
       'material.twoSidedLighting = true',
-      'validateRenderChunks(world, chunks)',
+      'validateRenderChunks(world, chunks, chunkIndices)',
       'clone.alwaysSelectAsActiveMesh = persistent',
       'shadoPersistentMesh: persistent',
     ],
@@ -162,6 +158,7 @@ assert.ok(
   'Promoted scene chunks must use world visibility without mutating source index buffers.',
 );
 for (const generatedTwin of [
+  'src/UI/components/login/login-window.js',
   'src/Game/Manager/game-manager.js',
   'src/Game/Model/entity-cache.js',
   'src/Game/Model/entity.js',

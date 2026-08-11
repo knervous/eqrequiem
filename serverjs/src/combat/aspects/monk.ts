@@ -1,0 +1,270 @@
+import { CLASS_IDS } from "../ability-types.js";
+import type { ClassAspects } from "./types.js";
+
+/**
+ * Monk Aspects: Stone and Wind.
+ *
+ * Stone is the Monk who does not fall over: counters, mitigation, and a Feign Death that
+ * survives contact with a bad pull. Wind is the Monk who is never where the blow lands:
+ * movement, combinations, and kicks that come back faster than they should.
+ *
+ * Neither track touches Feign Death's role as the group's pulling tool. That is the
+ * class's job in a party, and an Aspect may sharpen it but never sell it.
+ */
+export const MONK_ASPECTS: ClassAspects = {
+  classId: CLASS_IDS.monk,
+  neverLost: ["avoidance", "pulling", "feign death", "hand-to-hand"],
+  tracks: [
+    {
+      id: "monk.stone",
+      name: "Stone",
+      focus: "Resilience, counters, control, solo durability.",
+      nodes: [
+        {
+          id: "monk.stone.rooted_stance",
+          name: "Rooted Stance",
+          effect: "Crane Stance settles deeper and costs less to hold.",
+          kind: "modifier",
+          modifies: "monk.crane_stance",
+          requiresTrackDepth: 0,
+          cost: 1,
+          modifiers: [{ kind: "cost", abilityId: "monk.crane_stance", multiplier: 0.6 }],
+        },
+        {
+          id: "monk.stone.measured_breath",
+          name: "Measured Breath",
+          effect: "Mend returns far sooner.",
+          kind: "modifier",
+          modifies: "monk.mend",
+          requiresTrackDepth: 1,
+          cost: 1,
+          modifiers: [{ kind: "cooldown", abilityId: "monk.mend", multiplier: 0.7 }],
+        },
+        {
+          id: "monk.stone.counter_palm",
+          name: "Counter Palm",
+          effect: "Slipping a blow opens an immediate palm strike.",
+          kind: "reaction",
+          requiresTrackDepth: 2,
+          cost: 1,
+          modifiers: [
+            {
+              kind: "reaction",
+              trigger: "dodge",
+              grantsAbilityId: "monk.interrupting_palm",
+              windowMs: 3_000,
+            },
+          ],
+        },
+        {
+          id: "monk.stone.patient_defense",
+          name: "Patient Defence",
+          effect: "Pressure Point lingers, blunting whatever it touched.",
+          kind: "modifier",
+          modifies: "monk.pressure_point",
+          requiresTrackDepth: 3,
+          cost: 1,
+          modifiers: [{ kind: "status_duration", statusId: "monk.pressured", multiplier: 1.6 }],
+        },
+        {
+          id: "monk.stone.iron_body",
+          name: "Iron Body",
+          effect: "A short window of hardened mitigation.",
+          kind: "active",
+          unlocks: "monk.iron_body",
+          requiresTrackDepth: 4,
+          cost: 2,
+        },
+        {
+          id: "monk.stone.stillness",
+          name: "Stillness",
+          effect: "Feign Death recovers much faster after a careful pull.",
+          kind: "modifier",
+          modifies: "monk.feign_death",
+          requiresTrackDepth: 6,
+          cost: 1,
+          modifiers: [{ kind: "cooldown", abilityId: "monk.feign_death", multiplier: 0.6 }],
+        },
+        {
+          id: "monk.stone.unmoved",
+          name: "Unmoved",
+          effect: "Iron Fast cleanses more and mends more.",
+          kind: "modifier",
+          modifies: "monk.iron_fast",
+          requiresTrackDepth: 7,
+          cost: 1,
+          modifiers: [
+            { kind: "cooldown", abilityId: "monk.iron_fast", multiplier: 0.75 },
+            { kind: "healing", abilityId: "monk.iron_fast", multiplier: 1.3 },
+          ],
+        },
+        {
+          id: "monk.stone.granite_will",
+          name: "Granite Will",
+          effect: "Deeper reserves, and they return on their own.",
+          kind: "passive",
+          requiresTrackDepth: 8,
+          cost: 2,
+          modifiers: [
+            { kind: "resource_max", resource: "vigor", bonus: 25 },
+            { kind: "resource_regen", resource: "vigor", perSecond: 0.5 },
+          ],
+        },
+        {
+          id: "monk.stone.mountain_stands",
+          name: "The Mountain Stands",
+          effect: "Iron Body holds far longer once raised.",
+          kind: "modifier",
+          modifies: "monk.iron_body",
+          requiresTrackDepth: 10,
+          cost: 2,
+          modifiers: [{ kind: "status_duration", statusId: "monk.iron_body", multiplier: 1.6 }],
+        },
+        {
+          id: "monk.stone.stone_heart",
+          name: "Stone Heart",
+          effect: "At the edge of death, the body answers on its own.",
+          kind: "reaction",
+          requiresTrackDepth: 12,
+          cost: 3,
+          modifiers: [
+            {
+              kind: "reaction",
+              trigger: "low_health",
+              grantsAbilityId: "monk.mend",
+              windowMs: 6_000,
+            },
+            { kind: "cooldown", abilityId: "monk.mend", multiplier: 0.6 },
+          ],
+        },
+      ],
+    },
+    {
+      id: "monk.wind",
+      name: "Wind",
+      focus: "Mobility, combinations, aggressive kicks, repositioning.",
+      nodes: [
+        {
+          id: "monk.wind.light_step",
+          name: "Light Step",
+          effect: "Dodge Step comes back twice as often.",
+          kind: "modifier",
+          modifies: "monk.dodge_step",
+          requiresTrackDepth: 0,
+          cost: 1,
+          modifiers: [{ kind: "cooldown", abilityId: "monk.dodge_step", multiplier: 0.55 }],
+        },
+        {
+          id: "monk.wind.flowing_hands",
+          name: "Flowing Hands",
+          effect: "Jab flows faster into everything after it.",
+          kind: "modifier",
+          modifies: "monk.jab",
+          requiresTrackDepth: 1,
+          cost: 1,
+          modifiers: [{ kind: "cooldown", abilityId: "monk.jab", multiplier: 0.7 }],
+        },
+        {
+          id: "monk.wind.rising_combination",
+          name: "Rising Combination",
+          effect: "Kick strikes harder as the rhythm builds.",
+          kind: "modifier",
+          modifies: "monk.kick",
+          requiresTrackDepth: 2,
+          cost: 1,
+          modifiers: [{ kind: "damage", abilityId: "monk.kick", multiplier: 1.25 }],
+        },
+        {
+          id: "monk.wind.sweeping_kick",
+          name: "Sweeping Kick",
+          effect: "Round Kick knocks lighter enemies off their feet.",
+          kind: "modifier",
+          modifies: "monk.round_kick",
+          requiresTrackDepth: 3,
+          cost: 1,
+          modifiers: [
+            {
+              kind: "add_effect",
+              abilityId: "monk.round_kick",
+              effect: { type: "apply_status", statusId: "common.staggered" },
+            },
+          ],
+        },
+        {
+          id: "monk.wind.windwalk",
+          name: "Windwalk",
+          effect: "A burst of movement that shrugs off whatever was holding you.",
+          kind: "active",
+          unlocks: "monk.windwalk",
+          requiresTrackDepth: 4,
+          cost: 2,
+        },
+        {
+          id: "monk.wind.pursuit",
+          name: "Pursuit",
+          effect: "Leaping Palm crosses more ground, more often.",
+          kind: "modifier",
+          modifies: "monk.leaping_palm",
+          requiresTrackDepth: 6,
+          cost: 1,
+          modifiers: [
+            { kind: "range", abilityId: "monk.leaping_palm", bonusMetres: 8 },
+            { kind: "cooldown", abilityId: "monk.leaping_palm", multiplier: 0.75 },
+          ],
+        },
+        {
+          id: "monk.wind.whirlwind",
+          name: "Whirlwind",
+          effect: "Whirling Fists reaches every enemy in close.",
+          kind: "modifier",
+          modifies: "monk.whirling_fists",
+          requiresTrackDepth: 7,
+          cost: 1,
+          modifiers: [
+            { kind: "damage", abilityId: "monk.whirling_fists", multiplier: 1.2 },
+            { kind: "cooldown", abilityId: "monk.whirling_fists", multiplier: 0.8 },
+          ],
+        },
+        {
+          id: "monk.wind.mantis_flow",
+          name: "Mantis Flow",
+          effect: "Mantis Strike hits harder and staggers for longer.",
+          kind: "modifier",
+          modifies: "monk.mantis_strike",
+          requiresTrackDepth: 8,
+          cost: 2,
+          modifiers: [
+            { kind: "damage", abilityId: "monk.mantis_strike", multiplier: 1.25 },
+            { kind: "status_duration", statusId: "common.staggered", multiplier: 1.5 },
+          ],
+        },
+        {
+          id: "monk.wind.unburdened",
+          name: "Unburdened",
+          effect: "Every hand-to-hand technique lands a little harder.",
+          kind: "passive",
+          requiresTrackDepth: 10,
+          cost: 2,
+          modifiers: [{ kind: "damage", multiplier: 1.1 }],
+        },
+        {
+          id: "monk.wind.empty_sky",
+          name: "Empty Sky",
+          effect: "Flying Kick refreshes the Monk's footwork as it lands.",
+          kind: "reaction",
+          requiresTrackDepth: 12,
+          cost: 3,
+          modifiers: [
+            {
+              kind: "reaction",
+              trigger: "kill",
+              grantsAbilityId: "monk.flying_kick",
+              windowMs: 5_000,
+            },
+            { kind: "cooldown", abilityId: "monk.flying_kick", multiplier: 0.65 },
+          ],
+        },
+      ],
+    },
+  ],
+};

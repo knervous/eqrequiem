@@ -6,6 +6,15 @@ import { bindingToCode } from '@game/Config/key-bindings';
 import emitter from '@game/Events/events';
 import { ClientPositionUpdate } from '@game/Net/messages';
 import { OpCodes } from '@game/Net/opcodes';
+import {
+  GROUND_PROBE_EPSILON,
+  groundContactDistance,
+  groundRestDistance,
+  groundStickSpeed,
+  isWalkableSlope,
+  JUMP_GRACE_SECONDS,
+  projectVelocityOnGround,
+} from '@game/Physics/ground';
 import { WorldSocket } from '@ui/net/instances';
 import type { PlayerGamepad } from './player-gamepad';
 import type Player from './player';
@@ -19,11 +28,24 @@ type SimpleVector4 = {
   heading: number;
 };
 
+/** Result of the downward probe under the capsule for a single frame. */
+type GroundSample = {
+  /** The capsule is resting on static world geometry. */
+  grounded: boolean;
+  /** That geometry is shallow enough to stand on rather than slide down. */
+  walkable: boolean;
+  /** Surface normal of the hit, or world up when there is no contact. */
+  normal: BJS.Vector3;
+  /** How far the capsule floats above true contact, in world units. */
+  gap: number;
+};
+
 export class PlayerMovement {
   private player: Player;
   private scene: BJS.Scene;
   public moveSpeed: number = 20;
   public turnSpeed: number = 1.5;
+  /** Cleared by the dev gravity toggle; also suspends ground anchoring. */
   public gravity: boolean = true;
   public jumpImpulseStrength: number = 25; // Jump impulse strength
   public finalVelocity: BJS.Vector3 = BABYLON.Vector3.Zero(); // Add public property
@@ -34,9 +56,18 @@ export class PlayerMovement {
   private keyStates: { [key: string]: boolean } = {};
   private autoRun: boolean = false;
   public moveForward: boolean = false;
+  /** Mirrors the gravity factor written to Havok so it is only set on change. */
+  private gravityFactor: number = 1;
+  /** Blocks re-anchoring for a moment after a jump leaves the ground. */
+  private jumpGrace: number = 0;
+  private readonly groundNormal: BJS.Vector3 = new BABYLON.Vector3(0, 1, 0);
+  private readonly groundRayEnd: BJS.Vector3 = BABYLON.Vector3.Zero();
+  private readonly groundResult: BJS.PhysicsRaycastResult =
+    new BABYLON.PhysicsRaycastResult();
+  private readonly anchoredVelocity: BJS.Vector3 = BABYLON.Vector3.Zero();
 
   private get physicsBody(): BJS.PhysicsBody {
-    return this.player.playerEntity?.physicsBody!;
+    return this.player.playerEntity?.physicsBody as BJS.PhysicsBody;
   }
 
   constructor(player: Player, scene: BJS.Scene) {
@@ -121,58 +152,83 @@ export class PlayerMovement {
     );
   }
 
-  private isOnFloor(): boolean {
+  /**
+   * Casts straight down from the capsule centre and reports what is underneath.
+   *
+   * The controller needs the surface normal as well as the contact itself: the
+   * normal decides whether the ground is walkable and which plane movement runs
+   * along. Passing the player body as `ignoreBody` also picks the body's own
+   * floating-origin world region for the query, which matters far from origin.
+   */
+  private sampleGround(): GroundSample {
+    const normal = this.groundNormal.set(0, 1, 0);
+    const airborne: GroundSample = {
+      gap     : 0,
+      grounded: false,
+      normal,
+      walkable: false,
+    };
+
     const playerEntity = this.player.playerEntity;
-    if (!playerEntity || !this.physicsBody) {return false;}
+    if (!playerEntity || !this.physicsBody) {return airborne;}
 
-    const origin = this.player.getPlayerPosition()!;
-    if (!origin) {return false;}
+    const origin = this.player.getPlayerPosition();
+    if (!origin) {return airborne;}
 
-    // figure out your capsule height (Y‐extent)
+    // Capsule height (Y-extent); half of it is the flat-ground standing height.
     const shape = this.physicsBody.shape;
     let shapeHeight = 2.0;
+    let radius = 0;
     if (shape instanceof BABYLON.PhysicsShapeCapsule) {
       const bb = shape.getBoundingBox();
       shapeHeight = bb.maximum.y - bb.minimum.y;
+      radius = Math.min(
+        (bb.maximum.x - bb.minimum.x) * 0.5,
+        shapeHeight * 0.5,
+      );
     }
-
-    // we’ll use half‐height as our baseline "flat-ground" distance
     const halfHeight = shapeHeight * 0.5;
-    const baseline = halfHeight + 0.1; // + tiny epsilon
+    const baseline = halfHeight + GROUND_PROBE_EPSILON;
 
-    // cast straight down
-    const rayEnd = origin.add(new BABYLON.Vector3(0, -shapeHeight, 0));
-    const result = new BABYLON.PhysicsRaycastResult();
-    this.player.physicsPlugin.raycast(origin, rayEnd, result, {
+    this.groundRayEnd.copyFrom(origin);
+    this.groundRayEnd.y -= shapeHeight;
+    this.groundResult.reset();
+    this.player.physicsPlugin.raycast(origin, this.groundRayEnd, this.groundResult, {
       collideWith: 0x00000dad1,
+      ignoreBody : this.physicsBody,
     });
 
-    const hitBody = result.body;
+    const hitBody = this.groundResult.body;
     if (!hitBody || hitBody.motionType !== BABYLON.PhysicsMotionType.STATIC) {
-      return false;
+      return airborne;
     }
 
-    // pull the surface normal and the hit distance
-    const N = result.hitNormalWorld; // surface normal
-    const D = result.hitDistance; // how far down we hit
-
-    // compute cos(angle) = dot(N, up)
-    const up = new BABYLON.Vector3(0, 1, 0);
-    const cosTheta = BABYLON.Vector3.Dot(N, up);
-
-    // if it's basically a wall or ceiling, cosTheta→0 or negative → not floor
-    if (cosTheta <= 0) {
-      return false;
+    normal.copyFrom(this.groundResult.hitNormalWorld);
+    // A wall or ceiling is not something to stand on.
+    if (normal.y <= 0) {
+      return airborne;
+    }
+    const distance = this.groundResult.hitDistance;
+    if (distance > groundContactDistance(baseline, normal.y)) {
+      return airborne;
     }
 
-    // dynamic threshold:
-    // baseline / cos(theta)
-    //  • flat ground (θ=0, cosθ=1) → threshold = baseline
-    //  • slope of 45° (cosθ≈0.707) → threshold ≈ baseline/0.707 → ~1.4× baseline
-    //  • vertical wall (cosθ→0) → threshold→∞ (but cosTheta≤0 already filtered out)
-    const threshold = baseline / cosTheta;
+    return {
+      gap     : Math.max(
+        0,
+        distance - groundRestDistance(halfHeight, radius, normal.y),
+      ),
+      grounded: true,
+      normal,
+      walkable: isWalkableSlope(normal.y),
+    };
+  }
 
-    return D <= threshold;
+  /** Havok gravity is suspended while anchored, so only write on a change. */
+  private setGravityFactor(factor: number) {
+    if (this.gravityFactor === factor) {return;}
+    this.gravityFactor = factor;
+    this.physicsBody?.setGravityFactor(factor);
   }
 
   public movementTick(delta: number) {
@@ -186,7 +242,6 @@ export class PlayerMovement {
     }
 
     // Update player movement state
-    const prevPosition = { ...this.lastPlayerPosition };
     this.player.isPlayerMoving =
       currentPos.x !== this.lastPlayerPosition.x ||
       currentPos.y !== this.lastPlayerPosition.y ||
@@ -301,14 +356,19 @@ export class PlayerMovement {
       forwardXZ,
     ).normalize();
     // Handle jump
-    const onFloor = this.isOnFloor();
-    const notJumping = this.jumpState === 'idle' && onFloor;
+    const ground = this.sampleGround();
+    const onFloor = ground.grounded;
+    this.jumpGrace = Math.max(0, this.jumpGrace - delta);
     if (
       this.isActionPressed('move_up') &&
       // this.jumpState === "idle" &&
       true // onFloor
     ) {
       this.jumpState = 'leavingGround';
+      // Ground contact still reads true on the frame the jump starts, so the
+      // grace window is what keeps the anchor from eating the impulse.
+      this.jumpGrace = JUMP_GRACE_SECONDS;
+      this.setGravityFactor(1);
       const currentVelocity = this.physicsBody.getLinearVelocity();
       const jumpVelocity = new BABYLON.Vector3(0, this.jumpImpulseStrength, 0);
       this.physicsBody.setLinearVelocity(
@@ -374,50 +434,49 @@ export class PlayerMovement {
       this.player.playIdle();
     }
 
-    // Apply velocity
-    if (!this.isMovementKeysPressed()) {
-      // Stop horizontal movement when no keys are pressed
-      const currentVelocity = this.physicsBody.getLinearVelocity();
-      this.physicsBody.setLinearVelocity(
-        new BABYLON.Vector3(0, currentVelocity.y, 0),
-      );
-      // if (onFloor) {
-      //   this.physicsBody.setLinearVelocity(
-      //     new BABYLON.Vector3(0, 0, 0),
-      //   );
-      //   // calculate diff and move the other way
-      //   const diffX = currentPos.x - this.lastPlayerPosition.x;
-      //   const diffY = currentPos.y - this.lastPlayerPosition.y;
-      //   const diffZ = currentPos.z - this.lastPlayerPosition.z;
-      //   this.player.playerEntity?.setPosition(
-      //     diffX,
-      //     diffY,
-      //     diffZ,
-      //   );
-      // }
-      // return;
-    } else {
-      const currentVelocity = this.physicsBody.getLinearVelocity();
-      emitter.emit('playerMovement', currentPos);
+    // Apply velocity.
+    //
+    // Anchored means resting on ground shallow enough to stand on, with no
+    // jump in flight. Gravity is suspended for that state: leaving it on makes
+    // Havok re-accumulate a downward velocity every step, and the contact
+    // solver turns that into motion along the slope tangent, so the player
+    // creeps downhill for as long as they stand there.
+    const moving = this.isMovementKeysPressed();
+    const anchored =
+      this.gravity && onFloor && ground.walkable && this.jumpGrace <= 0;
 
-      this.physicsBody.setLinearVelocity(
-        new BABYLON.Vector3(
-          finalVelocity.x,
-          currentVelocity.y,
-          finalVelocity.z,
-        ),
-      );
+    if (moving) {
+      emitter.emit('playerMovement', currentPos);
     }
 
-    // Limit vertical velocity
-    const maxVerticalSpeed = onFloor ? 0 : 9.8 * 1.5;
-    const currentVelocity = this.physicsBody.getLinearVelocity();
-    if (currentVelocity.y < -maxVerticalSpeed) {
+    if (anchored) {
+      this.setGravityFactor(0);
+      // Gravity is off, so anything still floating above the surface has to be
+      // pulled down deliberately; at true contact the pull is zero and standing
+      // still on a slope holds exactly still.
+      const stick = groundStickSpeed(ground.gap, delta);
+      if (moving) {
+        projectVelocityOnGround(
+          { x: finalVelocity.x, y: 0, z: finalVelocity.z },
+          ground.normal,
+          stick,
+          this.anchoredVelocity,
+        );
+      } else {
+        this.anchoredVelocity.set(0, -stick, 0);
+      }
+      this.physicsBody.setLinearVelocity(this.anchoredVelocity);
+    } else {
+      // Airborne, or on ground too steep to stand on: keep the simulated
+      // vertical velocity, steer horizontally, and cap the fall.
+      this.setGravityFactor(this.gravity ? 1 : 0);
+      const currentVelocity = this.physicsBody.getLinearVelocity();
+      const maxVerticalSpeed = 9.8 * 1.5;
       this.physicsBody.setLinearVelocity(
         new BABYLON.Vector3(
-          currentVelocity.x,
-          -maxVerticalSpeed,
-          currentVelocity.z,
+          moving ? finalVelocity.x : 0,
+          Math.max(currentVelocity.y, -maxVerticalSpeed),
+          moving ? finalVelocity.z : 0,
         ),
       );
     }

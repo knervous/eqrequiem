@@ -19,6 +19,16 @@ interface InventoryItemRow extends DatabaseRow {
   slot: number;
   item_id: number;
   quantity: number;
+  charges: number;
+}
+
+export interface InventoryItemProjection {
+  readonly bag: number;
+  readonly slot: number;
+  readonly itemId: number;
+  readonly quantity: number;
+  readonly charges: number;
+  readonly item: GameItemRow;
 }
 
 interface ZoneSpawnCandidateRow extends DatabaseRow {
@@ -68,6 +78,75 @@ interface NpcLootProjectionRow extends NpcLootGraphRow {
   npc_archetype_id: number;
 }
 
+export interface ZoneProjection extends DatabaseRow {
+  readonly id: number;
+  readonly key: string;
+  readonly name: string;
+  readonly safe_x: number;
+  readonly safe_y: number;
+  readonly safe_z: number;
+}
+
+export interface CharacterProfileProjection extends DatabaseRow {
+  readonly id: number;
+  readonly name: string;
+  readonly level: number;
+  readonly class_id: number;
+  readonly race_id: number;
+  readonly gender: number;
+  readonly deity_id: number;
+  readonly face: number;
+  readonly last_login: string | number | null;
+  readonly zone_id: number | null;
+  readonly zone_instance: number | null;
+  readonly x: number | null;
+  readonly y: number | null;
+  readonly z: number | null;
+  readonly heading: number | null;
+  readonly str: number;
+  readonly sta: number;
+  readonly dex: number;
+  readonly agi: number;
+  readonly intelligence: number;
+  readonly wis: number;
+  readonly cha: number;
+  readonly appearance_schema_version: number | null;
+  readonly body_family_id: string | null;
+  readonly body_component_id: string | null;
+  readonly face_component_id: string | null;
+  readonly presentation_id: string | null;
+  readonly calling_id: string | null;
+  readonly origin_id: string | null;
+}
+
+export interface CharacterBindProjection extends DatabaseRow {
+  readonly zone_id: number;
+  readonly instance_id: number;
+  readonly x: number;
+  readonly y: number;
+  readonly z: number;
+  readonly heading: number;
+}
+
+export interface NpcDialogueProjection extends DatabaseRow {
+  readonly id: number;
+  readonly npc_id: number;
+  readonly name: string;
+  readonly level: number;
+  readonly race: number;
+  readonly gender: number;
+  readonly x: number;
+  readonly y: number;
+  readonly z: number;
+  readonly heading: number;
+}
+
+export interface CharacterProgressionProjection {
+  readonly level: number;
+  readonly classId: number;
+  readonly knowledge: Set<string>;
+}
+
 export interface CharacterCombatProjection extends CombatantStats {
   readonly baseStrength: number;
   readonly baseStamina: number;
@@ -89,9 +168,151 @@ export class GameDataRepository {
     this.runtime = new DrizzleDatabase(runtime);
   }
 
+  async zone(zoneId: number): Promise<ZoneProjection | null> {
+    return (await this.content.query<ZoneProjection>(sql`
+      SELECT id, short_name AS key, name, safe_x, safe_y, safe_z
+      FROM ${this.contentTable("zones")} WHERE id = ${zoneId} LIMIT 1
+    `)).rows[0] ?? null;
+  }
+
+  async resolveZoneId(value: number | string): Promise<number | null> {
+    const numeric = typeof value === "string" && /^\d+$/.test(value.trim())
+      ? Number(value)
+      : value;
+    const row = typeof numeric === "number"
+      ? (await this.content.query<{ id: number }>(sql`
+          SELECT id FROM ${this.contentTable("zones")}
+          WHERE id = ${numeric} LIMIT 1
+        `)).rows[0]
+      : (await this.content.query<{ id: number }>(sql`
+          SELECT id FROM ${this.contentTable("zones")}
+          WHERE lower(short_name) = lower(${numeric}) LIMIT 1
+        `)).rows[0];
+    return row ? Number(row.id) : null;
+  }
+
+  async characterByName(name: string): Promise<CharacterProfileProjection | null> {
+    return (await this.runtime.query<CharacterProfileProjection>(sql`
+      SELECT character.id, character.name, character.level,
+        character.class_id, character.race_id, character.gender,
+        character.deity_id, character.face,
+        character.last_login_at AS last_login,
+        character.appearance_schema_version, character.body_family_id,
+        character.body_component_id, character.face_component_id,
+        character.presentation_id, character.calling_id, character.origin_id,
+        character.str, character.sta, character.dex, character.agi,
+        character.intelligence, character.wis, character.cha,
+        position.zone_id, position.instance_id AS zone_instance,
+        position.x, position.y, position.z, position.heading
+      FROM characters character
+      LEFT JOIN character_positions position ON position.character_id = character.id
+      WHERE lower(character.name) = lower(${name}) LIMIT 1
+    `)).rows[0] ?? null;
+  }
+
+  async characterById(characterId: number): Promise<CharacterProfileProjection | null> {
+    return (await this.runtime.query<CharacterProfileProjection>(sql`
+      SELECT character.id, character.name, character.level,
+        character.class_id, character.race_id, character.gender,
+        character.deity_id, character.face,
+        character.last_login_at AS last_login,
+        character.appearance_schema_version, character.body_family_id,
+        character.body_component_id, character.face_component_id,
+        character.presentation_id, character.calling_id, character.origin_id,
+        character.str, character.sta, character.dex, character.agi,
+        character.intelligence, character.wis, character.cha,
+        position.zone_id, position.instance_id AS zone_instance,
+        position.x, position.y, position.z, position.heading
+      FROM characters character
+      LEFT JOIN character_positions position ON position.character_id = character.id
+      WHERE character.id = ${characterId} LIMIT 1
+    `)).rows[0] ?? null;
+  }
+
+  async mostRecentCharacter(): Promise<{ id: number; name: string } | null> {
+    return (await this.runtime.query<{ id: number; name: string }>(sql`
+      SELECT id, name FROM characters ORDER BY last_login_at DESC, id LIMIT 1
+    `)).rows[0] ?? null;
+  }
+
+  async characterBind(
+    characterId: number,
+    slot = 0,
+  ): Promise<CharacterBindProjection | null> {
+    return (await this.runtime.query<CharacterBindProjection>(sql`
+      SELECT zone_id, instance_id, x, y, z, heading FROM character_binds
+      WHERE character_id = ${characterId} AND slot = ${slot} LIMIT 1
+    `)).rows[0] ?? null;
+  }
+
+  async characterKnowledge(characterId: number): Promise<Set<string>> {
+    const rows = (await this.runtime.query<{ knowledge_key: string }>(sql`
+      SELECT knowledge_key FROM character_knowledge
+      WHERE character_id = ${characterId}
+    `)).rows;
+    return new Set(rows.map((row) => String(row.knowledge_key)));
+  }
+
+  async characterProgression(
+    characterId: number,
+  ): Promise<CharacterProgressionProjection | null> {
+    const character = (await this.runtime.query<{
+      level: number;
+      class_id: number;
+    }>(sql`
+      SELECT level, class_id FROM characters WHERE id = ${characterId} LIMIT 1
+    `)).rows[0];
+    if (!character) return null;
+    return {
+      level: Number(character.level),
+      classId: Number(character.class_id),
+      knowledge: await this.characterKnowledge(characterId),
+    };
+  }
+
+  async searchItems(
+    search: string,
+    limit = 20,
+  ): Promise<Array<{ id: number; name: string }>> {
+    const bounded = Math.max(1, Math.min(100, Math.trunc(limit)));
+    const rows = (await this.content.query<{ id: number; name: string }>(sql`
+      SELECT id, name FROM ${this.contentTable("items")}
+      WHERE name LIKE ${`%${search}%`} ORDER BY name LIMIT ${bounded}
+    `)).rows;
+    return rows.map((row) => ({ id: Number(row.id), name: String(row.name) }));
+  }
+
+  async npcDialogueTarget(
+    zoneId: number,
+    name: string,
+  ): Promise<NpcDialogueProjection | null> {
+    return (await this.content.query<NpcDialogueProjection>(sql`
+      SELECT sp.id, npc.id AS npc_id, npc.name, npc.level,
+        npc.race_id AS race, npc.gender, sp.x, sp.y, sp.z, sp.heading
+      FROM ${this.contentTable("spawn_points")} sp
+      JOIN ${this.contentTable("npc_archetypes")} npc ON npc.id = (
+        SELECT member.npc_archetype_id
+        FROM ${this.contentTable("spawn_group_members")} member
+        WHERE member.spawn_group_id = sp.spawn_group_id
+        ORDER BY member.weight DESC, member.npc_archetype_id LIMIT 1
+      )
+      WHERE sp.enabled = 1 AND sp.zone_id = ${zoneId}
+        AND lower(replace(npc.name, '_', ' ')) =
+            lower(replace(${name}, '_', ' '))
+      LIMIT 1
+    `)).rows[0] ?? null;
+  }
+
   async inventoryItems(characterId: number): Promise<Record<string, unknown>[]> {
+    const inventory = await this.inventoryEntries(characterId);
+    return inventory.map((row) =>
+      toItemInstance(row.item, row.slot, row.bag, row.quantity)
+    );
+  }
+
+  async inventoryEntries(characterId: number): Promise<InventoryItemProjection[]> {
     const inventory = (await this.runtime.query<InventoryItemRow>(
-      sql`SELECT bag, slot, item_id, quantity FROM player_inventory
+      sql`SELECT bag, slot, item_id, quantity, charges FROM player_inventory
           WHERE character_id = ${characterId} ORDER BY slot, bag`,
     )).rows;
     const itemIds = [...new Set(inventory.map((row) => Number(row.item_id)))];
@@ -105,12 +326,30 @@ export class GameDataRepository {
       FROM ${this.contentTable("items")} WHERE id IN (${identifiers})
     `)).rows;
     const byId = new Map(items.map((item) => [Number(item.id), item]));
-    return inventory.flatMap((row) => {
+    return inventory.flatMap((row): InventoryItemProjection[] => {
       const item = byId.get(Number(row.item_id));
       return item
-        ? [toItemInstance(item, Number(row.slot), Number(row.bag), Number(row.quantity))]
+        ? [{
+            bag: Number(row.bag),
+            slot: Number(row.slot),
+            itemId: Number(row.item_id),
+            quantity: Number(row.quantity),
+            charges: Number(row.charges),
+            item,
+          }]
         : [];
     });
+  }
+
+  async item(itemId: number): Promise<GameItemRow | null> {
+    if (!Number.isInteger(itemId)) return null;
+    return (await this.content.query<GameItemRow>(sql`
+      SELECT id, Name AS name, idfile, icon, material, color, itemtype, slots, ac,
+        bagslots, classes, races, stackable, stacksize, maxcharges, weight, damage,
+        delay, astr, asta, adex, aagi, aint, awis, acha, hp, mana, dr, mr, cr, fr,
+        pr, haste, magic, nodrop, base_price, sell_rate_permille
+      FROM ${this.contentTable("items")} WHERE id = ${itemId} LIMIT 1
+    `)).rows[0] ?? null;
   }
 
   async characterCombat(

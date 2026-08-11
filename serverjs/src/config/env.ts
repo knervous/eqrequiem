@@ -61,6 +61,9 @@ const EnvSchema = z.object({
   RUNTIME_DB_URL: z.string().min(1).optional(),
   ZONE_TICK_RATE_HZ: z.coerce.number().min(1).max(1000).default(20),
   ZONE_WORK_BUDGET_MS: z.coerce.number().min(1).max(250).default(8),
+  // Fixes what the world "rolls" for its own situations. Pinning it makes a live
+  // world reproducible for debugging; changing it gives a fresh world a fresh rhythm.
+  WORLD_SEED: z.coerce.number().int().default(1),
   NPC_DAMAGE_HATE_MULTIPLIER: z.coerce.number().min(0).default(1),
   NPC_MINIMUM_DAMAGE_HATE: z.coerce.number().min(0).default(1),
   NPC_REPATH_INTERVAL_MS: z.coerce.number().int().min(50).max(60000).default(500),
@@ -109,6 +112,7 @@ export type AppEnv = {
     tickRateHz: number;
     workBudgetMs: number;
     questDir: string;
+    worldSeed: number;
     npcEngagement: {
       damageHateMultiplier: number;
       minimumDamageHate: number;
@@ -174,6 +178,7 @@ export function readEnv(raw: NodeJS.ProcessEnv = process.env): AppEnv {
       tickRateHz: parsed.ZONE_TICK_RATE_HZ,
       workBudgetMs: parsed.ZONE_WORK_BUDGET_MS,
       questDir: parsed.QUEST_DIR,
+      worldSeed: parsed.WORLD_SEED,
       npcEngagement: {
         damageHateMultiplier: parsed.NPC_DAMAGE_HATE_MULTIPLIER,
         minimumDamageHate: parsed.NPC_MINIMUM_DAMAGE_HATE,

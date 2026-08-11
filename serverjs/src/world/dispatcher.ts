@@ -28,6 +28,8 @@ export class WorldDispatcher {
   private readonly registry = new HandlerRegistry<WorldHandlerContext>();
   private readonly sessionManager = new SessionManager();
   private messenger: GatewayMessenger | null = null;
+  /** Temporary demo hook — see `content/demo-start.ts`. Sessions awaiting placement. */
+  private readonly demoStartPending = new Set<number>();
 
   constructor(
     private readonly logger: Logger,
@@ -67,6 +69,7 @@ export class WorldDispatcher {
 
   onSessionDisconnected(sessionId: number): void {
     this.sessionManager.remove(sessionId);
+    this.demoStartPending.delete(sessionId);
   }
 
   handleInbound(packet: InboundPacket): {
@@ -256,27 +259,66 @@ export class WorldDispatcher {
         this.sendDatagram(session.sessionId, OP.POST_ENTER_WORLD, encodeIntValue(0));
         return false;
       }
-      this.sessionManager.selectCharacter(session.sessionId, characterName);
-      this.sendDatagram(
-        session.sessionId,
-        OP.POST_ENTER_WORLD,
-        encodeIntValue(1),
-      );
+      void this.persist
+        .enterWorld(characterName)
+        .then((result) => {
+          if (result.ok && result.name) {
+            this.sessionManager.selectCharacter(session.sessionId, result.name);
+            if (result.demoStartPending) {
+              this.demoStartPending.add(session.sessionId);
+            }
+          }
+          this.sendDatagram(
+            session.sessionId,
+            OP.POST_ENTER_WORLD,
+            encodeIntValue(result.ok ? 1 : 0),
+          );
+        })
+        .catch((error: unknown) => {
+          this.logger.warn("Enter-world failed", {
+            sessionId: session.sessionId,
+            error: error instanceof Error ? error.message : String(error),
+          });
+          this.sendDatagram(
+            session.sessionId,
+            OP.POST_ENTER_WORLD,
+            encodeIntValue(0),
+          );
+        });
       return false;
     });
 
     this.registry.register(OP.ZONE_SESSION, ({ packet, session }) => {
       const zoneRequest = decodeZoneRouteRequest(packet.payload);
-      this.sessionManager.updateZone(
-        session.sessionId,
+      const pending = this.demoStartPending.delete(session.sessionId);
+      void this.persist.resolveZoneSession(
         zoneRequest.zoneId,
         zoneRequest.instanceId,
-      );
-      this.sendDatagram(
-        session.sessionId,
-        OP.ZONE_SESSION_VALID,
-        encodeIntValue(1),
-      );
+        pending,
+      ).then((resolution) => {
+        if (resolution.zoneId !== null) {
+          this.sessionManager.updateZone(
+            session.sessionId,
+            resolution.zoneId,
+            resolution.instanceId,
+          );
+        }
+        this.sendDatagram(
+          session.sessionId,
+          OP.ZONE_SESSION_VALID,
+          encodeIntValue(resolution.valid ? 1 : 0),
+        );
+      }).catch((error: unknown) => {
+        this.logger.warn("Zone session resolution failed", {
+          sessionId: session.sessionId,
+          error: error instanceof Error ? error.message : String(error),
+        });
+        this.sendDatagram(
+          session.sessionId,
+          OP.ZONE_SESSION_VALID,
+          encodeIntValue(0),
+        );
+      });
       return false;
     });
 

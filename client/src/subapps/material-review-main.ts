@@ -38,8 +38,36 @@ const presets: Record<string, ReviewPreset> = {
     alpha: -2.05,
     beta: 0.72,
   },
+  grassWallSeams: {
+    label: "Talios Crownward // grass-to-brick seam audit",
+    target: [125, 0.6, -245],
+    radius: 34,
+    alpha: -2.2,
+    beta: 1.22,
+  },
+  authoredHouseSeams: {
+    label: "Talios Crownward // authored foundation seam audit",
+    target: [-338, 1.2, 112],
+    radius: 96,
+    alpha: -2.35,
+    beta: 1.15,
+  },
+  castlePoolSeams: {
+    label: "Talios Crownward // castle stair and wall seam audit",
+    target: [15, 5, -578],
+    radius: 66,
+    alpha: -2.15,
+    beta: 1.1,
+  },
+  gateWalkSeams: {
+    label: "Talios Crownward // gate walk-tile seam audit",
+    target: [-317, 91, 119],
+    radius: 38,
+    alpha: -2.0,
+    beta: 1.18,
+  },
   overview: {
-    label: "Qeynos2 // clean-room material runtime preview",
+    label: "Talios Crownward // authored runtime preview",
     target: [-180, 10, 90],
     radius: 650,
     alpha: -2.15,
@@ -76,7 +104,7 @@ camera.wheelDeltaPercentage = 0.01;
 camera.attachControl(canvas, true);
 
 const bytes = await fetchShadoBytes(
-  `${import.meta.env.BASE_URL}eqrequiem/worlds/qeynos2.material-preview.glb.gz`,
+  `${import.meta.env.BASE_URL}eqrequiem/worlds/talioscrownward.glb.gz`,
 );
 const blobUrl = URL.createObjectURL(
   new Blob([bytes], { type: "model/gltf-binary" }),

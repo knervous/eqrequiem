@@ -72,7 +72,7 @@ export function bindZoneShaderLighting(
   // Match the lighting response of a flat/upward grass terrain sample once
   // on the CPU. Grass materials consume this coarse color directly instead
   // of repeating directional-light work for every fragment.
-  const terrainDiffuse = 0.3 + Math.max(lightDirection.y, 0) * 0.7;
+  const terrainDiffuse = 0.28 + Math.max(lightDirection.y, 0) * 0.72;
   terrainLightColor.set(
     ambientColor.x + lightColor.x * terrainDiffuse,
     ambientColor.y + lightColor.y * terrainDiffuse,

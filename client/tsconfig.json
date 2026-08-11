@@ -3,7 +3,7 @@
     "inlineSourceMap": true,
     "inlineSources": true,
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
-    "composite": true,
+    "composite": false,
     "target": "ESNext",
     "useDefineForClassFields": true,
     "experimentalDecorators": true,
@@ -21,6 +21,7 @@
     "skipLibCheck": true,
     /* Bundler mode */
     "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
     "isolatedModules": true,
     "moduleDetection": "force",
     "jsx": "react-jsx",

@@ -2,6 +2,7 @@
 import type * as BJS from "@babylonjs/core";
 import BABYLON from "@bjs";
 import { FileSystem } from "@game/FileSystem/filesystem";
+import { GROUND_FRICTION } from "@game/Physics/ground";
 import { Transform } from "@game/Zone/zone-types";
 import { fetchShadoBytes } from "@knervous/shado/preprocess/runtime";
 import {
@@ -316,6 +317,16 @@ export default class ObjectCache {
           objectMesh as BJS.Mesh,
           scene!,
         );
+        // Placed objects are stood on like the rest of the world, so they get
+        // the same surface material. Assign it whole: writing through
+        // `shape.material.friction` only mutates a detached copy.
+        physicsShape.material = {
+          friction          : GROUND_FRICTION,
+          staticFriction    : GROUND_FRICTION,
+          restitution       : 0,
+          frictionCombine   : BABYLON.PhysicsMaterialCombineMode.MAXIMUM,
+          restitutionCombine: BABYLON.PhysicsMaterialCombineMode.MINIMUM,
+        };
         physicsShapes.push(physicsShape);
         // Create individual physics bodies for each instance
         for (let i = 0; i < count; i++) {

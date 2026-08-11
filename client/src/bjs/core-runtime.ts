@@ -11,6 +11,11 @@
 // `.fx` path (which a SPA dev server may otherwise answer with HTML).
 import "@babylonjs/core/Shaders/ShadersInclude/bonesDeclaration.js";
 import "@babylonjs/core/Shaders/ShadersInclude/bakedVertexAnimationDeclaration.js";
+// Crownward's inherited Qeynos2 materials store their base-color maps through
+// EXT_texture_webp. Register the glTF extension with the same Babylon runtime
+// that owns the scene before any promoted world is imported; otherwise Babylon
+// falls back to the material factor/vertex-lighting colours.
+import "@babylonjs/loaders/glTF/2.0/Extensions/EXT_texture_webp.js";
 
 export { Constants } from "@babylonjs/core/Engines/constants.js";
 export { AbstractEngine } from "@babylonjs/core/Engines/abstractEngine.js";
@@ -106,6 +111,7 @@ export { PointerEventTypes } from "@babylonjs/core/Events/pointerEvents.js";
 export { HavokPlugin } from "@babylonjs/core/Physics/v2/Plugins/havokPlugin.js";
 export { PhysicsBody } from "@babylonjs/core/Physics/v2/physicsBody.js";
 export { PhysicsMotionType } from "@babylonjs/core/Physics/v2/IPhysicsEnginePlugin.js";
+export { PhysicsMaterialCombineMode } from "@babylonjs/core/Physics/v2/physicsMaterial.js";
 export {
   PhysicsShapeCapsule,
   PhysicsShapeMesh,

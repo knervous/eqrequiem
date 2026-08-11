@@ -32,6 +32,8 @@ type CoverageCell = {
 };
 
 const COVERAGE_RESOLUTION = 32;
+const SURFACE_HEIGHT_RESOLUTION = 8;
+const SURFACE_HEIGHT_QUANTIZATION_MAX = 0xffff;
 const BLOCKER_BELOW_TOLERANCE = 0.12;
 const BLOCKER_MAXIMUM_CLEARANCE = 2;
 
@@ -348,6 +350,14 @@ function bucketPlacements(
       resolution: COVERAGE_RESOLUTION,
       wordsPerCell: COVERAGE_RESOLUTION,
       words: [],
+      heightField: {
+        resolution: SURFACE_HEIGHT_RESOLUTION,
+        wordsPerCell: Math.ceil((SURFACE_HEIGHT_RESOLUTION * SURFACE_HEIGHT_RESOLUTION) / 32),
+        words: [],
+        minimumY: [],
+        heightRange: [],
+        samples: [],
+      },
     },
   };
   for (const cell of cells) {
@@ -355,10 +365,13 @@ function bucketPlacements(
     output.cells.z.push(cell.z);
     output.cells.firstPlacement.push(output.placements.positionX.length);
     output.cells.placementCount.push(cell.values.length);
+    appendSurfaceHeightField(output.coverage!.heightField!, cell.heights);
     for (let word = 0; word < COVERAGE_RESOLUTION; word++) {
       let bits = 0;
       for (let bit = 0; bit < 32; bit++) {
-        if (Number.isFinite(cell.heights[word * 32 + bit])) bits = (bits | (1 << bit)) >>> 0;
+        if (Number.isFinite(cell.heights[word * 32 + bit])) {
+          bits = (bits | (1 << bit)) >>> 0;
+        }
       }
       output.coverage!.words.push(bits);
     }
@@ -375,6 +388,62 @@ function bucketPlacements(
     }
   }
   return output;
+}
+
+function appendSurfaceHeightField(
+  output: NonNullable<NonNullable<ShadoWorldGrassPackage['coverage']>['heightField']>,
+  coverageHeights: Float64Array
+): void {
+  const blockSize = COVERAGE_RESOLUTION / SURFACE_HEIGHT_RESOLUTION;
+  const samples: number[] = [];
+  let minimumY = Number.POSITIVE_INFINITY;
+  let maximumY = Number.NEGATIVE_INFINITY;
+  for (let row = 0; row < SURFACE_HEIGHT_RESOLUTION; row++) {
+    for (let column = 0; column < SURFACE_HEIGHT_RESOLUTION; column++) {
+      let totalY = 0;
+      let count = 0;
+      for (let dz = 0; dz < blockSize; dz++) {
+        for (let dx = 0; dx < blockSize; dx++) {
+          const x = column * blockSize + dx;
+          const z = row * blockSize + dz;
+          const value = coverageHeights[z * COVERAGE_RESOLUTION + x]!;
+          if (!Number.isFinite(value)) continue;
+          totalY += value;
+          count++;
+        }
+      }
+      const value = count ? totalY / count : Number.NaN;
+      samples.push(value);
+      if (Number.isFinite(value)) {
+        minimumY = Math.min(minimumY, value);
+        maximumY = Math.max(maximumY, value);
+      }
+    }
+  }
+  if (!Number.isFinite(minimumY)) {
+    minimumY = 0;
+    maximumY = 0;
+  }
+  const heightRange = maximumY - minimumY;
+  output.minimumY.push(minimumY);
+  output.heightRange.push(heightRange);
+  for (let word = 0; word < output.wordsPerCell; word++) {
+    let bits = 0;
+    for (let bit = 0; bit < 32; bit++) {
+      const sample = word * 32 + bit;
+      if (sample < samples.length && Number.isFinite(samples[sample])) {
+        bits = (bits | (1 << bit)) >>> 0;
+      }
+    }
+    output.words.push(bits);
+  }
+  for (const value of samples) {
+    output.samples.push(
+      Number.isFinite(value) && heightRange > 1e-9
+        ? Math.round(((value - minimumY) / heightRange) * SURFACE_HEIGHT_QUANTIZATION_MAX)
+        : 0
+    );
+  }
 }
 
 function randomGenerator(seed: number): () => number {

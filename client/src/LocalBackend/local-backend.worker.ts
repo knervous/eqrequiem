@@ -4,7 +4,7 @@ import { supportedZones } from "@game/Constants/supportedZones";
 import sqliteWasmUrl from "@sqlite.org/sqlite-wasm/sqlite3.wasm?url";
 import contentDatabaseUrl from "../../../serverjs/data/content-db.sqlite.gz?url";
 import zoneSimulationWasmUrl from "../../../serverjs/src/zone/wasm/zone-simulation.release.wasm?url";
-import qeynos2NavMeshUrl from "../../../server/maps/qeynos2.bin?url";
+import taliosCrownwardNavMeshUrl from "../../../server/maps/talioscrownward.bin?url";
 import {
   createOfflineGameBackend,
   GameBackendPacketAdapter,
@@ -76,7 +76,7 @@ async function initialize(
         devDiagnostics: import.meta.env.DEV,
         findPath: (() => {
           const navigation = new BrowserNavService({
-            qeynos2: qeynos2NavMeshUrl,
+            talioscrownward: taliosCrownwardNavMeshUrl,
           });
           return (request) => navigation.findPath(request);
         })(),

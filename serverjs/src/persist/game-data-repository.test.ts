@@ -17,6 +17,19 @@ describe("game data repository", () => {
       ["Sol"],
     );
     await runtime.execute(
+      `INSERT INTO character_positions
+       (character_id, zone_id, instance_id, x, y, z, heading)
+       VALUES (1, 7, 2, 10, 20, 30, 40)`,
+    );
+    await runtime.execute(
+      `INSERT INTO character_binds
+       (character_id, slot, zone_id, instance_id, x, y, z, heading)
+       VALUES (1, 0, 7, 0, 1, 2, 3, 4)`,
+    );
+    await runtime.execute(
+      "INSERT INTO character_knowledge (character_id, knowledge_key) VALUES (1, 'known:test')",
+    );
+    await runtime.execute(
       "INSERT INTO player_inventory (character_id, bag, slot, item_id, quantity) VALUES (1, -1, 13, ?, 1)",
       [1001],
     );
@@ -25,6 +38,9 @@ describe("game data repository", () => {
        (id, name, idfile, itemtype, slots, damage, delay, weight, astr, hp, haste, magic, nodrop)
        VALUES (1001, ?, 'IT42', 0, 8192, 12, 20, 35, 5, 10, 15, 1, 1)`,
       ["Test Sword"],
+    );
+    await content.execute(
+      "INSERT INTO zones (id, short_name, name, safe_x, safe_y, safe_z) VALUES (7, 'shared', 'Shared Zone', 1, 2, 3)",
     );
     const repository = new GameDataRepository(content, runtime);
     const items = await repository.inventoryItems(1);
@@ -56,6 +72,25 @@ describe("game data repository", () => {
       haste: 15,
       meleeRange: 3,
     });
+    assert.equal((await repository.zone(7))?.key, "shared");
+    assert.equal(await repository.resolveZoneId("SHARED"), 7);
+    assert.equal((await repository.characterByName("sol"))?.zone_instance, 2);
+    assert.deepEqual(await repository.mostRecentCharacter(), { id: 1, name: "Sol" });
+    assert.deepEqual(await repository.characterBind(1), {
+      zone_id: 7,
+      instance_id: 0,
+      x: 1,
+      y: 2,
+      z: 3,
+      heading: 4,
+    });
+    assert.deepEqual(
+      [...await repository.characterKnowledge(1)],
+      ["known:test"],
+    );
+    assert.deepEqual(await repository.searchItems("sword"), [
+      { id: 1001, name: "Test Sword" },
+    ]);
     await Promise.all([content.close(), runtime.close()]);
   });
 
@@ -64,7 +99,7 @@ describe("game data repository", () => {
     const runtime = createNodeDatabase("sqlite::memory:");
     await applyCanonicalContentSchema(content);
     await applyCanonicalRuntimeSchema(runtime);
-    await content.execute("INSERT INTO zones (id, short_name, name) VALUES (1, 'qeynos2', 'South Qeynos')");
+    await content.execute("INSERT INTO zones (id, short_name, name) VALUES (1, 'talioscrownward', 'Talios Lowharbor')");
     await content.execute("INSERT INTO spawn_groups (id, spawn_group_key) VALUES (10, 'guards')");
     await content.execute(
       `INSERT INTO npc_archetypes
@@ -118,6 +153,9 @@ describe("game data repository", () => {
     );
 
     const spawns = await new GameDataRepository(content, runtime).zoneNpcSpawns(1);
+    const dialogue = await new GameDataRepository(content, runtime)
+      .npcDialogueTarget(1, "guard gehnus");
+    assert.equal(dialogue?.npc_id, 20);
     assert.deepEqual(
       spawns[0]?.lootItems.map((item) => ({
         itemId: item.itemId,

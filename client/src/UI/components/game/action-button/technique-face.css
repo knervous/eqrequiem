@@ -1,0 +1,58 @@
+/* A hotbar slot holding a technique: art, a cooldown sweep, and the seconds left. */
+
+.rq-technique-face {
+  display: block;
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+}
+
+.rq-technique-face img,
+.rq-technique-face__initials {
+  height: 100%;
+  object-fit: cover;
+  width: 100%;
+}
+
+.rq-technique-face__initials {
+  align-items: center;
+  display: flex;
+  font-size: 15px;
+  font-weight: 700;
+  justify-content: center;
+  text-shadow: 0 1px 2px rgb(0 0 0 / 70%);
+}
+
+/* Fills from the bottom as the cooldown burns down, so readiness reads at a glance. */
+.rq-technique-face__sweep {
+  background: rgb(6 8 12 / 68%);
+  bottom: 0;
+  left: 0;
+  pointer-events: none;
+  position: absolute;
+  right: 0;
+  transition: height 80ms linear;
+}
+
+.rq-technique-face__timer {
+  align-items: center;
+  bottom: 0;
+  display: flex;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  justify-content: center;
+  left: 0;
+  pointer-events: none;
+  position: absolute;
+  right: 0;
+  text-shadow: 0 1px 3px rgb(0 0 0 / 90%);
+  top: 0;
+}
+
+.rq-technique-face__empty {
+  display: block;
+  height: 100%;
+  width: 100%;
+}

@@ -114,10 +114,10 @@ export const eltaniaCharacterContract = {
   origins: [
     {
       id: 'origin:elrador-test-world-v1',
-      label: 'Elrador',
+      label: 'Eltania',
       status: 'Test-world adapter',
       description:
-        'Begins in the current test world while the first original Elrador zone package is authored.',
+        'Begins in the current test world while the first original Eltania zone package is authored.',
     },
   ],
 } as const;
@@ -126,7 +126,7 @@ const legacyProjectionByOrigin: Readonly<Record<string, LegacyTransportProjectio
   'origin:elrador-test-world-v1': {
     charClass: 1,
     deity   : 207,
-    startZone: 1,
+    startZone: 2, // Talios Crownward
     race    : 1,
     gender  : 0,
     face    : 0,

@@ -27,6 +27,195 @@
       ]
     },
     {
+      "id": "greymarch-campfire",
+      "source": "/eqrequiem/objects/greymarch-campfire/final.glb.gz",
+      "authoredSource": "assets/src/world/objects/authored/greymarch-campfire/source.glb",
+      "sourceSha256": "eb8fdae1024c106bb37ecaa16ff669f4ab28dd446131af6fb009292aebfa21f7",
+      "conditionedSha256": "d4d003ba676cc7d11e4bfc77defea4b98e6855e5dbc59097ac3386a9296c38d0",
+      "contentSha256": "2b31a5724f19541ec127e951f259602f7ebb288c83c330bfc5218e1424372f60",
+      "compressedSha256": "42ecdb157e6555df8b0b16f6daaa2d96f8cdb06e5271112986a1a7e0c6c41776",
+      "bytes": 110804,
+      "compressedBytes": 84811,
+      "boundsRadius": 7,
+      "triangles": 320,
+      "dimensions": [
+        6,
+        4.46906,
+        5.26639
+      ],
+      "zones": [
+        "greymarch"
+      ]
+    },
+    {
+      "id": "greymarch-deciduous-tree",
+      "source": "/eqrequiem/objects/greymarch-deciduous-tree/final.glb.gz",
+      "authoredSource": "assets/src/world/objects/authored/greymarch-deciduous-tree/source.glb",
+      "sourceSha256": "0ef0b1a89e6f046eec035de38b70639b48bea7a7396a33a7502a2ec25edefea5",
+      "conditionedSha256": "4855bdb3bceb88338f1bd294aecd43fbae6ee1e246f5a9883bf82d7d991e609b",
+      "contentSha256": "0ad6ea823b356f94bc5408e175ec4e352ad3eb6ad529df992a5e3564b7e86af4",
+      "compressedSha256": "6dcce4a4cffdfc9432508e448cdbfcbd47e77f08e4fe7b8afaf1e41b864ba34f",
+      "bytes": 9911268,
+      "compressedBytes": 9804964,
+      "boundsRadius": 66,
+      "triangles": 1308,
+      "dimensions": [
+        36,
+        49.30989,
+        30.96443
+      ],
+      "zones": [
+        "greymarch"
+      ]
+    },
+    {
+      "id": "greymarch-farmhouse",
+      "source": "/eqrequiem/objects/greymarch-farmhouse/final.glb.gz",
+      "authoredSource": "assets/src/world/objects/authored/greymarch-farmhouse/source.glb",
+      "sourceSha256": "2884c30ccc867afc3ce807538cf235d39506dda6e18e3e64c755dd8b49460023",
+      "conditionedSha256": "51a4a38613f1e4ff08dc223e0abfdfa174c6856412b8483d8038489c3518c473",
+      "contentSha256": "c2c5152e796a2ad94f3da2a1139e14b644c6015c2e5ac7f430076ed3b3c8b02c",
+      "compressedSha256": "a8a0b222e8938ad3392f44efd3d6ef1e3a1b069f6b5577c4c7afe2afcafb878a",
+      "bytes": 90964,
+      "compressedBytes": 80428,
+      "boundsRadius": 72,
+      "triangles": 92,
+      "dimensions": [
+        70,
+        49,
+        57
+      ],
+      "zones": [
+        "greymarch"
+      ]
+    },
+    {
+      "id": "greymarch-field-shed",
+      "source": "/eqrequiem/objects/greymarch-field-shed/final.glb.gz",
+      "authoredSource": "assets/src/world/objects/authored/greymarch-field-shed/source.glb",
+      "sourceSha256": "9a77c0948588f245eea6a51c34bad9e29106370a64b0f3c10cdd97749eff97be",
+      "conditionedSha256": "71fa18d44c5e84f1f902db9b661afaaee799910d3964717aec8dcf856ed562f2",
+      "contentSha256": "67fb1a239361cd1196537b758eedd16a9b2e71fdd1cd4b84bbb32ea5576574de",
+      "compressedSha256": "723a04d72795f39b901f204f8d6d8ebf3c8e8d85af7b29aed4181b3236d40b18",
+      "bytes": 87604,
+      "compressedBytes": 79510,
+      "boundsRadius": 32,
+      "triangles": 44,
+      "dimensions": [
+        23,
+        20.2,
+        22
+      ],
+      "zones": [
+        "greymarch"
+      ]
+    },
+    {
+      "id": "greymarch-guard-outpost",
+      "source": "/eqrequiem/objects/greymarch-guard-outpost/final.glb.gz",
+      "authoredSource": "assets/src/world/objects/authored/greymarch-guard-outpost/source.glb",
+      "sourceSha256": "147c6f2376fe9b6289df8e85409570d75881801b53c426952a02d511ae17a870",
+      "conditionedSha256": "dffc59372198c72f3a317f6a66a7ab69d86de970270a4ba09c28958736a94dd7",
+      "contentSha256": "41e06f7020810372e3c102804353e2f26000dd43d17cf0ef8945f2e12edf17fb",
+      "compressedSha256": "a688a8a2ff7c97329e0a85f8d10589d4b3c3f27b136b720890c1e9bc85e3a376",
+      "bytes": 94504,
+      "compressedBytes": 82138,
+      "boundsRadius": 76,
+      "triangles": 154,
+      "dimensions": [
+        50,
+        64.53488,
+        39.46642
+      ],
+      "zones": [
+        "greymarch"
+      ]
+    },
+    {
+      "id": "greymarch-pine",
+      "source": "/eqrequiem/objects/greymarch-pine/final.glb.gz",
+      "authoredSource": "assets/src/world/objects/authored/greymarch-pine/source.glb",
+      "sourceSha256": "10e4e5c9e119fe6a94cdc98a05ee01d0db0b4cc0af09fa8b393ceaa73fffb3bc",
+      "conditionedSha256": "26766dfeed3762411c011de4d8aef3e291f50d16a7a839381eb42f8331528876",
+      "contentSha256": "0243a83a4f0f9e8f0687bc13e0c15533f61e97738047fa6483653b571cdf64e1",
+      "compressedSha256": "300ef2a164764aee16e772a33085f075cefceaa665bb0a8f1dc1710190d71a21",
+      "bytes": 10135808,
+      "compressedBytes": 9850919,
+      "boundsRadius": 152,
+      "triangles": 4168,
+      "dimensions": [
+        66,
+        134.46584,
+        66.71332
+      ],
+      "zones": [
+        "greymarch"
+      ]
+    },
+    {
+      "id": "greymarch-wall-torch",
+      "source": "/eqrequiem/objects/greymarch-wall-torch/final.glb.gz",
+      "authoredSource": "assets/src/world/objects/authored/greymarch-wall-torch/source.glb",
+      "sourceSha256": "602abfce03cd395ee85134182485d3a8c977112a5e2f6757732e6efaba2b5d0c",
+      "conditionedSha256": "3e1e3a663c63f60f017f30a0a3c9b1bfa1034db165039f4e1d16e2ca3b30f58d",
+      "contentSha256": "bdf5ef0bd26622fa2fdee219fb4169dd0d8d1aaf15efdd0e697018c6eecedf46",
+      "compressedSha256": "f69033b5e0fcb908f6071402582254b08b744688afe0f834c58aa13d81f83b7e",
+      "bytes": 59884,
+      "compressedBytes": 52257,
+      "boundsRadius": 14,
+      "triangles": 104,
+      "dimensions": [
+        4,
+        11.42857,
+        8.34286
+      ],
+      "zones": [
+        "greymarch"
+      ]
+    },
+    {
+      "id": "greymarch-waystone",
+      "source": "/eqrequiem/objects/greymarch-waystone/final.glb.gz",
+      "authoredSource": "assets/src/world/objects/authored/greymarch-waystone/source.glb",
+      "sourceSha256": "604ad75fe91e3d16e32ac724e2da4745517d8f095abf6210f60040701abbc311",
+      "conditionedSha256": "400b035ce719e15fdaf3500b0c9098bbd6c57c04919f8f507ff07301d9fa0270",
+      "contentSha256": "76fd2699e2615b5e2a6abcd5b4b406005dd7493aff870ad070c3501ebc2a41f2",
+      "compressedSha256": "28e1517e61b598c80c6a6976d0d6748d336ac0731016b848a1fcbae2ce8100f3",
+      "bytes": 59936,
+      "compressedBytes": 53666,
+      "boundsRadius": 27,
+      "triangles": 56,
+      "dimensions": [
+        10,
+        24,
+        10
+      ],
+      "zones": [
+        "greymarch"
+      ]
+    },
+    {
+      "id": "greymarch-wind-oak",
+      "source": "/eqrequiem/objects/greymarch-wind-oak/final.glb.gz",
+      "authoredSource": "assets/src/world/objects/authored/greymarch-wind-oak/source.glb",
+      "sourceSha256": "4fa16a0406132b13737448e1a3d66a6e2544c98d2406e5a722b37fde85743df6",
+      "conditionedSha256": "b39e4e334a64c728e0f4faf64b75212e1f01359abe7dce10e26cb82a5680b3b6",
+      "contentSha256": "3c7273045b956aaf3dce8205d587901c9e4fe30a9959f63b9f6de9a6ae526548",
+      "compressedSha256": "14c921952a7524a00a745764c2273f6045266a027cd82a234aebead167dae260",
+      "bytes": 9909812,
+      "compressedBytes": 9802755,
+      "boundsRadius": 70,
+      "triangles": 1308,
+      "dimensions": [
+        40,
+        52.39227,
+        31.50402
+      ],
+      "zones": [
+        "greymarch"
+      ]
+    },
+    {
       "id": "stone_church",
       "source": "/eqrequiem/objects/stone_church/final.glb.gz",
       "authoredSource": "assets/src/world/objects/authored/stone_church/source.glb",

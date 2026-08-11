@@ -1,8 +1,12 @@
-interface Window {
-	setSplash?: (visible: boolean) => void;
-}
+export {};
 
-declare namespace globalThis {
+declare global {
+	interface Window {
+		setSplash?: (visible: boolean) => void;
+		BJSTextureCache: typeof import('../Game/Model/bjs-texture-cache').BabylonTextureCache;
+		ImageCache: typeof import('../UI/util/image-cache').ImageCache;
+		musicPlayer: typeof import('../Game/Music/music-player').MusicPlayer;
+	}
 
 	function sendJSBuffer(packet: ArrayBuffer) : void;
 	function callUnityMethod(type: number, payload: string) : string;

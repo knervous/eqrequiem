@@ -119,73 +119,88 @@ export function markDirty(index: i32): void {
   }
 }
 
-/** Dense deterministic steering/integration pass over the authoritative arena. */
-export function tickNpcs(entityCount: i32, deltaMs: f32): void {
+/**
+ * Integration and dirty compaction in one traversal.
+ *
+ * These were two separate exports, each walking every live index: one to steer, one to
+ * scan the dirty flags the first had just written. On an idle zone — which is most of a
+ * zone, most of the time — the second pass was the larger half of the tick and touched
+ * nothing but flags. Fusing them halves the arena traversal and consumes each flag while
+ * the cache line is still hot from the movement that set it.
+ *
+ * This is only sound because the steering half marks *its own* index and no other. A
+ * reducer that dirtied a neighbour would have to go back to two passes, because the
+ * neighbour may already have been compacted.
+ *
+ * Flags set from TypeScript between ticks are collected here too: this remains the one
+ * compaction point, which is what keeps a host write and a reducer write indistinguishable
+ * to the snapshot.
+ */
+export function tickAndCollect(entityCount: i32, deltaMs: f32): i32 {
   const count = min<i32>(max<i32>(entityCount, 0), MAX_ENTITIES);
   const dt: f32 = deltaMs * <f32>0.001;
-  if (dt <= 0) return;
-  for (let i = 0; i < count; i++) {
-    if (load<u8>(kinds + <usize>i) != 2) continue;
-    const scalarOffset = <usize>i << 2;
-    const vectorOffset = <usize>i * 12;
-    const dx: f32 = load<f32>(targetX + scalarOffset) - load<f32>(positionX + vectorOffset);
-    const dy: f32 = load<f32>(targetY + scalarOffset) - load<f32>(positionY + vectorOffset);
-    const dz: f32 = load<f32>(targetZ + scalarOffset) - load<f32>(positionZ + vectorOffset);
-    const distanceSq: f32 = dx * dx + dy * dy + dz * dz;
-    if (distanceSq < <f32>0.0001) {
-      const wasMoving = load<u16>(movementState + (<usize>i << 1)) != 0;
-      store<f32>(velocityX + vectorOffset, 0);
-      store<f32>(velocityY + vectorOffset, 0);
-      store<f32>(velocityZ + vectorOffset, 0);
-      store<u32>(animation + scalarOffset, 0);
-      store<u16>(movementState + (<usize>i << 1), 0);
-      if (wasMoving) markDirty(i);
-      continue;
-    }
-    const inverseDistance: f32 = <f32>1.0 / Mathf.sqrt(distanceSq);
-    const moveSpeed = load<f32>(speed + scalarOffset);
-    if (moveSpeed <= 0) {
-      const wasMoving = load<u16>(movementState + (<usize>i << 1)) != 0;
-      store<f32>(velocityX + vectorOffset, 0);
-      store<f32>(velocityY + vectorOffset, 0);
-      store<f32>(velocityZ + vectorOffset, 0);
-      store<u32>(animation + scalarOffset, 0);
-      store<u16>(movementState + (<usize>i << 1), 0);
-      if (wasMoving) markDirty(i);
-      continue;
-    }
-    const step: f32 = min<f32>(moveSpeed * dt, <f32>1.0 / inverseDistance);
-    store<f32>(velocityX + vectorOffset, dx * inverseDistance * moveSpeed);
-    store<f32>(velocityY + vectorOffset, dy * inverseDistance * moveSpeed);
-    store<f32>(velocityZ + vectorOffset, dz * inverseDistance * moveSpeed);
-    store<f32>(positionX + vectorOffset, load<f32>(positionX + vectorOffset) + dx * inverseDistance * step);
-    store<f32>(positionY + vectorOffset, load<f32>(positionY + vectorOffset) + dy * inverseDistance * step);
-    store<f32>(positionZ + vectorOffset, load<f32>(positionZ + vectorOffset) + dz * inverseDistance * step);
-    // Requiem runtime models face local +X. Babylon positive yaw turns +X
-    // toward -Z, so world-space motion (dx, dz) maps to atan2(-dz, dx).
-    const yaw = Mathf.atan2(-dz * inverseDistance, dx * inverseDistance);
-    const halfYaw = yaw * <f32>0.5;
-    const orientationOffset = <usize>i * 16;
-    store<f32>(heading + scalarOffset, yaw);
-    store<f32>(orientationX + orientationOffset, 0);
-    store<f32>(orientationY + orientationOffset, Mathf.sin(halfYaw));
-    store<f32>(orientationZ + orientationOffset, 0);
-    store<f32>(orientationW + orientationOffset, Mathf.cos(halfYaw));
-    store<u32>(animation + scalarOffset, 1);
-    store<u16>(movementState + (<usize>i << 1), 1);
-    markDirty(i);
-  }
-}
-
-/** Stable compaction point shared by TypeScript writes and WASM reducer writes. */
-export function collectDirty(entityCount: i32): i32 {
   dirtyCount = 0;
-  const count = min<i32>(max<i32>(entityCount, 0), MAX_ENTITIES);
   for (let i = 0; i < count; i++) {
+    if (dt > 0) stepEntity(i, dt);
     if (load<u8>(dirtyFlags + <usize>i) == 0) continue;
     store<u32>(dirtyIndices + (<usize>dirtyCount << 2), <u32>i);
     store<u8>(dirtyFlags + <usize>i, 0);
     dirtyCount++;
   }
   return dirtyCount;
+}
+
+/** One entity's steering step. Marks only `index`; see `tickAndCollect`. */
+// @ts-ignore: AssemblyScript decorator
+@inline
+function stepEntity(i: i32, dt: f32): void {
+  if (load<u8>(kinds + <usize>i) != 2) return;
+  const scalarOffset = <usize>i << 2;
+  const vectorOffset = <usize>i * 12;
+  const dx: f32 = load<f32>(targetX + scalarOffset) - load<f32>(positionX + vectorOffset);
+  const dy: f32 = load<f32>(targetY + scalarOffset) - load<f32>(positionY + vectorOffset);
+  const dz: f32 = load<f32>(targetZ + scalarOffset) - load<f32>(positionZ + vectorOffset);
+  const distanceSq: f32 = dx * dx + dy * dy + dz * dz;
+  if (distanceSq < <f32>0.0001) {
+    const wasMoving = load<u16>(movementState + (<usize>i << 1)) != 0;
+    store<f32>(velocityX + vectorOffset, 0);
+    store<f32>(velocityY + vectorOffset, 0);
+    store<f32>(velocityZ + vectorOffset, 0);
+    store<u32>(animation + scalarOffset, 0);
+    store<u16>(movementState + (<usize>i << 1), 0);
+    if (wasMoving) markDirty(i);
+    return;
+  }
+  const inverseDistance: f32 = <f32>1.0 / Mathf.sqrt(distanceSq);
+  const moveSpeed = load<f32>(speed + scalarOffset);
+  if (moveSpeed <= 0) {
+    const wasMoving = load<u16>(movementState + (<usize>i << 1)) != 0;
+    store<f32>(velocityX + vectorOffset, 0);
+    store<f32>(velocityY + vectorOffset, 0);
+    store<f32>(velocityZ + vectorOffset, 0);
+    store<u32>(animation + scalarOffset, 0);
+    store<u16>(movementState + (<usize>i << 1), 0);
+    if (wasMoving) markDirty(i);
+    return;
+  }
+  const step: f32 = min<f32>(moveSpeed * dt, <f32>1.0 / inverseDistance);
+  store<f32>(velocityX + vectorOffset, dx * inverseDistance * moveSpeed);
+  store<f32>(velocityY + vectorOffset, dy * inverseDistance * moveSpeed);
+  store<f32>(velocityZ + vectorOffset, dz * inverseDistance * moveSpeed);
+  store<f32>(positionX + vectorOffset, load<f32>(positionX + vectorOffset) + dx * inverseDistance * step);
+  store<f32>(positionY + vectorOffset, load<f32>(positionY + vectorOffset) + dy * inverseDistance * step);
+  store<f32>(positionZ + vectorOffset, load<f32>(positionZ + vectorOffset) + dz * inverseDistance * step);
+  // Requiem runtime models face local +X. Babylon positive yaw turns +X
+  // toward -Z, so world-space motion (dx, dz) maps to atan2(-dz, dx).
+  const yaw = Mathf.atan2(-dz * inverseDistance, dx * inverseDistance);
+  const halfYaw = yaw * <f32>0.5;
+  const orientationOffset = <usize>i * 16;
+  store<f32>(heading + scalarOffset, yaw);
+  store<f32>(orientationX + orientationOffset, 0);
+  store<f32>(orientationY + orientationOffset, Mathf.sin(halfYaw));
+  store<f32>(orientationZ + orientationOffset, 0);
+  store<f32>(orientationW + orientationOffset, Mathf.cos(halfYaw));
+  store<u32>(animation + scalarOffset, 1);
+  store<u16>(movementState + (<usize>i << 1), 1);
+  markDirty(i);
 }

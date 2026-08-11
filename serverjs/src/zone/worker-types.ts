@@ -15,30 +15,8 @@ export interface ZoneShutdownCommitMessage {
   persisted: boolean;
 }
 
-export interface ZoneClientJoinMessage {
+export interface ZoneClientJoinMessage extends ZoneRuntimePlayerDefinition {
   type: "client_join";
-  sessionId: number;
-  entityId: number;
-  characterId: number;
-  x: number;
-  y: number;
-  z: number;
-  heading: number;
-  characterName: string;
-  level: number;
-  race: number;
-  gender: number;
-  charClass: number;
-  face: number;
-  combat: CombatantStats;
-  bind: {
-    zoneId: number;
-    instanceId: number;
-    x: number;
-    y: number;
-    z: number;
-    heading: number;
-  };
 }
 
 export interface ZoneClientLeaveMessage {
@@ -46,10 +24,30 @@ export interface ZoneClientLeaveMessage {
   sessionId: number;
 }
 
+export interface ZoneClientLoadoutMessage {
+  type: "client_loadout";
+  sessionId: number;
+  learned: readonly string[];
+  prepared: readonly string[];
+}
+
+export interface ZoneClientLevelMessage {
+  type: "client_level";
+  sessionId: number;
+  level: number;
+  combat: CombatantStats;
+}
+
 export interface ZoneQuestUpdateMessage {
   type: "quest_update";
   definitions: QuestDefinition[];
   revision: number;
+}
+
+/** Global world state published by the world-state service above the shards. */
+export interface ZoneWorldStateMessage {
+  type: "world_state";
+  snapshot: WorldStateSnapshot;
 }
 
 export interface ZoneQuestHydrateMessage {
@@ -101,12 +99,15 @@ export type ZoneWorkerInboundMessage =
   | ZoneShutdownMessage
   | ZoneShutdownCommitMessage
   | ZoneQuestUpdateMessage
+  | ZoneWorldStateMessage
   | ZoneQuestHydrateMessage
   | ZoneQuestCharacterMessage
   | ZoneQuestProgressionMessage
   | ZoneContentHydrateMessage
   | ZoneNavPathResultMessage
   | ZoneClientJoinMessage
+  | ZoneClientLoadoutMessage
+  | ZoneClientLevelMessage
   | ZoneClientLeaveMessage
   | ZoneLootRestoreMessage;
 
@@ -161,6 +162,8 @@ export interface ZoneQuestEffectsMessage {
   journals: Array<{
     sessionId: number;
     characterId: number | null;
+    experience: number;
+    level: number;
     entries: QuestJournalEntry[];
   }>;
 }
@@ -180,6 +183,15 @@ export interface ZoneCombatEventMessage {
   instanceId: number;
   sessionIds: number[];
   event: CombatEvent;
+}
+
+/** The outcome of a technique activation, addressed to the player who pressed it. */
+export interface ZoneAbilityResultMessage {
+  type: "ability_result";
+  zoneId: number;
+  instanceId: number;
+  sessionId: number;
+  payload: Record<string, unknown>;
 }
 
 export interface ZonePcDeathMessage {
@@ -273,6 +285,7 @@ export type ZoneWorkerOutboundMessage =
   | ZoneQuestEffectsMessage
   | ZoneCombatEventMessage
   | ZonePcDeathMessage
+  | ZoneAbilityResultMessage
   | ZoneLootWindowMessage
   | ZoneLootAwardMessage
   | ZoneNavPathRequestMessage
@@ -286,6 +299,7 @@ import type {
   QuestPersistentEffect,
 } from "./quest-types.js";
 import type { QuestPersistenceBatch } from "./quest-manager.js";
+import type { WorldStateSnapshot } from "./world-state-types.js";
 import type {
   QuestCharacterSnapshot,
   QuestJournalEntry,
@@ -300,3 +314,4 @@ import type {
   NpcPathPoint,
   NpcPathRequest,
 } from "../ai/npc-engagement.js";
+import type { ZoneRuntimePlayerDefinition } from "./zone-runtime-projections.js";

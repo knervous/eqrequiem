@@ -1,6 +1,5 @@
 import React, { lazy, Suspense } from 'react';
 import { Box } from '@mui/material';
-import { inEditor } from '../../util/constants';
 import { ItemCursor } from './action-button/item-cursor';
 import { ReliquaryHUD } from './reliquary';
 import { useUIContext } from '../context';
@@ -20,7 +19,7 @@ export const GameUIComponent: React.FC = () => {
     <Box id="ui-base" sx={{ height: '100vh', width: '100vw' }}>
       <ReliquaryHUD />
       <ItemCursor />
-      {!inEditor && devWindowVisible ? (
+      {devWindowVisible ? (
         <Suspense fallback={null}>
           <DevWindowComponent />
         </Suspense>

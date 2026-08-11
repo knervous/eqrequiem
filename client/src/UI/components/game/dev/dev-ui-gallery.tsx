@@ -9,8 +9,22 @@ import {
   TextField,
 } from "@mui/material";
 
+type AtlasEntry = {
+  texture: string;
+  width?: number;
+  height?: number;
+};
+
+type AtlasGalleryProps = {
+  atlasData: Record<string, AtlasEntry>;
+  useImageHook: (
+    path: string,
+    load: boolean,
+  ) => { image?: string; entry?: AtlasEntry };
+};
+
 // Main Gallery Component
-export const AtlasGallery = ({ atlasData, useImageHook }) => {
+export const AtlasGallery = ({ atlasData, useImageHook }: AtlasGalleryProps) => {
   const entries = Object.entries(atlasData);
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -21,7 +35,7 @@ export const AtlasGallery = ({ atlasData, useImageHook }) => {
       entry.texture.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
-  const handleSearchChange = (event) => {
+  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(event.target.value);
   };
 
@@ -55,7 +69,7 @@ export const AtlasGallery = ({ atlasData, useImageHook }) => {
         ) : (
           <Grid container spacing={2}>
             {filteredEntries.map(([path]) => (
-              <Grid item key={path} >
+              <Grid key={path}>
                 <AtlasImageItem path={path} useImageHook={useImageHook} />
               </Grid>
             ))}
@@ -67,7 +81,10 @@ export const AtlasGallery = ({ atlasData, useImageHook }) => {
 };
 
 // Individual Image Item (unchanged)
-const AtlasImageItem = ({ path, useImageHook }) => {
+const AtlasImageItem = ({
+  path,
+  useImageHook,
+}: Pick<AtlasGalleryProps, "useImageHook"> & { path: string }) => {
   const {
     image,
     entry: { width = 10, height = 10, texture } = {

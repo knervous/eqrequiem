@@ -102,7 +102,9 @@ export type HudWindowId =
   | 'compass'
   | 'minimap'
   | 'chat'
-  | 'commands';
+  | 'commands'
+  | 'hotbarLeft'
+  | 'hotbarRight';
 
 export interface HudWindowPlacement {
   /** Viewport-relative origin; dimensions are unscaled logical CSS pixels. */
@@ -119,6 +121,8 @@ export interface UISettings {
   showTooltips: boolean;
   uiScale: number;
   hudLocked: boolean;
+  showLeftHotbar: boolean;
+  showRightHotbar: boolean;
   hudWindows: Record<HudWindowId, HudWindowPlacement>;
   /** Show floating interaction prompts over nearby NPCs and objects. */
   interactionPrompts: boolean;

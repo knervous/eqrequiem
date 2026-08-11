@@ -66,14 +66,16 @@ describe("merchant repository", () => {
       [[22, -1, "Old Sword", 20]],
     );
 
-    const purchase = await merchant.buy({
-      characterId: 1,
-      npcArchetypeId: 10,
-      zoneId: 1,
-      instanceId: 0,
-      merchantSlot: 1,
-      quantity: 2,
-    });
+    const purchase = await runtime.transaction((transaction) =>
+      new MerchantRepository(content, transaction).buyInTransaction({
+        characterId: 1,
+        npcArchetypeId: 10,
+        zoneId: 1,
+        instanceId: 0,
+        merchantSlot: 1,
+        quantity: 2,
+      })
+    );
     assert.equal(purchase.totalCopper, 240);
     assert.equal(purchase.mutation.kind, "put");
     assert.deepEqual(

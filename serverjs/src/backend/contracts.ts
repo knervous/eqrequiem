@@ -67,6 +67,25 @@ export type BackendRequest =
       enabled: boolean;
       targetId: number;
     }
+  | {
+      /** Fire a prepared technique. The server decides whether it may happen. */
+      type: "activate_ability";
+      abilityId: string;
+      targetId: number;
+    }
+  | {
+      /**
+       * Learn, prepare, or spend an Aspect point. One request type rather than five
+       * opcodes: they share a validation path, a persistence boundary and a reply.
+       */
+      type: "progression_request";
+      request:
+        | { type: "learn_ability"; abilityId: string }
+        | { type: "prepare_ability"; abilityId: string; slot: number }
+        | { type: "clear_slot"; slot: number }
+        | { type: "spend_aspect_point"; nodeId: string }
+        | { type: "respec_aspects" };
+    }
   | { type: "loot_request"; corpseId: number }
   | { type: "loot_item"; corpseId: number; lootSlot: number }
   | { type: "merchant_open"; npcId: number }
@@ -114,6 +133,9 @@ export type BackendEventKind =
   | "bulk_delete_items"
   | "move_item"
   | "combat_event"
+  | "ability_result"
+  | "ability_loadout"
+  | "progression_state"
   | "death_event"
   | "loot_window"
   | "loot_error"

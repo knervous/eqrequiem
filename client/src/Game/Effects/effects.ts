@@ -1,4 +1,5 @@
 import BABYLON from '@bjs';
+import type * as BJS from '@babylonjs/core';
 
 // Somewhere in your code before creating the PostProcess:
 BABYLON.Effect.ShadersStore['gaussianBlurFragmentShader'] = `
@@ -67,7 +68,10 @@ BABYLON.Effect.ShadersStore['vignetteFragmentShader'] = `
  * @param {import('@babylonjs/core').Scene} scene 
  */
 export const animateVignette = (camera, scene) => {
-  const vignetteParams = { strength: 0.0 };
+  const vignetteParams: {
+    strength: number;
+    animations: BJS.Animation[];
+  } = { strength: 0.0, animations: [] };
   const vignetteEffect = new BABYLON.PostProcess(
     'vignette',
     'vignette',
@@ -96,7 +100,6 @@ export const animateVignette = (camera, scene) => {
 
   pulseAnimation.setKeys(keys);
 
-  vignetteParams.animations = [];
   vignetteParams.animations.push(pulseAnimation);
 
   /**
@@ -117,8 +120,12 @@ export const animateVignette = (camera, scene) => {
  */
 export function gaussianBlurTeleport(camera, scene) {
   // We'll animate blurParams.blurSize from 0 to some larger value
-  const blurParams = {
+  const blurParams: {
+    blurSize: number;
+    animations: BJS.Animation[];
+  } = {
     blurSize: 0, // start with no blur
+    animations: [],
   };
 
   // Get the current screen resolution.

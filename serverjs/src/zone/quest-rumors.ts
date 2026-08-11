@@ -1,6 +1,7 @@
 import { isHail, mentions } from "./quest-dialogue.js";
 import { onQuest } from "./quest-types.js";
 import type {
+  QuestBeatWeight,
   QuestHandlerDefinition,
   QuestLeadKind,
   QuestLeadPlace,
@@ -40,8 +41,15 @@ export interface RumorDefinition {
   readonly tier?: RumorTier;
   /** Relative likelihood of being the one told. Higher travels further. */
   readonly weight?: number;
-  /** The fact the character learns by hearing it; defaults to `rumor:<key>`. */
-  readonly knowledge?: string;
+  /**
+   * The fact the character learns by hearing it; defaults to `rumor:<key>`.
+   *
+   * A function when the fact is tied to one concrete appearance of something — a rumor
+   * about an ambush that is happening *now* should be tellable again the next time an
+   * ambush happens, and the only thing distinguishing the two is the occurrence id. A
+   * static key would make the world's recurring events a one-time announcement.
+   */
+  readonly knowledge?: string | ((world: QuestWorldContext) => string);
   readonly lead?: RumorLead;
   /** The world condition that makes this rumor true. Absent means always. */
   readonly when?: (world: QuestWorldContext) => boolean;
@@ -49,8 +57,11 @@ export interface RumorDefinition {
   readonly expiresWhen?: (world: QuestWorldContext) => boolean;
   /** Per-source phrasing, keyed by NPC name. */
   readonly variants?: Readonly<Record<string, string>>;
-  /** One-time experience for learning something genuinely new. */
-  readonly experience?: number;
+  /**
+   * One-time award for learning something genuinely new, as a share of the level the
+   * character hears it at. A rumor is a `hint` unless it is a real lead.
+   */
+  readonly experience?: QuestBeatWeight;
 }
 
 export interface RumorSourceOptions {
@@ -99,7 +110,7 @@ export class RumorNetwork {
       if (!tiers.includes(rumor.tier ?? "local")) return false;
       if (rumor.when && !rumor.when(world)) return false;
       if (rumor.expiresWhen?.(world)) return false;
-      return !player.knowledge.has(knowledgeKey(rumor));
+      return !player.knowledge.has(knowledgeKey(rumor, world));
     });
   }
 
@@ -144,7 +155,8 @@ export class RumorNetwork {
         return;
       }
       npc.say(rumor.variants?.[npcName] ?? rumor.text);
-      player.knowledge.learn(knowledgeKey(rumor));
+      const learned = knowledgeKey(rumor, zone.world);
+      player.knowledge.learn(learned);
       if (rumor.lead) {
         player.journal.discover(rumor.lead.leadKey, {
           kind: rumor.lead.kind ?? "rumor",
@@ -155,7 +167,9 @@ export class RumorNetwork {
         });
       }
       if (rumor.experience) {
-        player.progression.awardXpOnce(`rumor:${rumor.key}`, rumor.experience, {
+        // Anchored to the same key the knowledge uses, so a genuinely new occurrence
+        // pays again and a re-tell of the same one does not.
+        player.progression.awardBeatOnce(learned, rumor.experience, {
           source: "discovery",
         });
       }
@@ -163,11 +177,19 @@ export class RumorNetwork {
   }
 }
 
-export function rumorKnowledgeKey(rumor: RumorDefinition | string): string {
-  return typeof rumor === "string" ? `rumor:${rumor}` : knowledgeKey(rumor);
+export function rumorKnowledgeKey(
+  rumor: RumorDefinition | string,
+  world?: QuestWorldContext,
+): string {
+  return typeof rumor === "string"
+    ? `rumor:${rumor}`
+    : knowledgeKey(rumor, world ?? EMPTY_WORLD);
 }
 
-function knowledgeKey(rumor: RumorDefinition): string {
+const EMPTY_WORLD: QuestWorldContext = { timeOfDay: null, weather: null, flags: {} };
+
+function knowledgeKey(rumor: RumorDefinition, world: QuestWorldContext): string {
+  if (typeof rumor.knowledge === "function") return rumor.knowledge(world);
   return rumor.knowledge ?? `rumor:${rumor.key}`;
 }
 

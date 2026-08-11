@@ -45,6 +45,7 @@ export async function loadWorldSpatialContract(
     };
   };
   const zoneKey = expectedZoneKey.trim().toLowerCase();
+  const collision = world.collision;
   if (
     world.kind !== "shado.world.spatial"
     || world.version !== 5
@@ -52,13 +53,13 @@ export async function loadWorldSpatialContract(
     || world.coordinateSystem !== "babylon-y-up"
     || world.sourceTransform !== "mirror-x"
     || world.navigation?.runtimeToRecast !== "z-y-negative-x"
-    || world.collision?.format !== "shado-collision-v1"
-    || !world.collision.source
-    || !Number.isInteger(world.collision.vertexCount)
-    || (world.collision.vertexCount ?? 0) <= 0
-    || !Number.isInteger(world.collision.triangleCount)
-    || (world.collision.triangleCount ?? 0) <= 0
-    || !/^[0-9a-f]{8}$/.test(world.collision.contentHash ?? "")
+    || !["shado-collision-v1", "shado-collision-v2"].includes(collision?.format ?? "")
+    || !collision?.source
+    || !Number.isInteger(collision.vertexCount)
+    || (collision.vertexCount ?? 0) <= 0
+    || !Number.isInteger(collision.triangleCount)
+    || (collision.triangleCount ?? 0) <= 0
+    || !/^[0-9a-f]{8}$/.test(collision.contentHash ?? "")
     || world.integrity?.algorithm !== "fnv1a32-layout"
     || !/^[0-9a-f]{8}$/.test(world.integrity.layoutHash ?? "")
     || !validBounds(world.bounds)

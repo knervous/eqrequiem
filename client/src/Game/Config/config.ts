@@ -28,6 +28,8 @@ export const DEFAULT_HUD_WINDOWS: UISettings["hudWindows"] = {
   minimap: { x: 0.81, y: 0.025, width: 230, height: 310, z: 4 },
   chat: { x: 0.014, y: 0.73, width: 440, height: 190, z: 5 },
   commands: { x: 0.445, y: 0.79, width: 690, height: 142, z: 6 },
+  hotbarLeft: { x: 0.014, y: 0.22, width: 58, height: 530, z: 8 },
+  hotbarRight: { x: 0.942, y: 0.22, width: 58, height: 530, z: 9 },
 };
 
 /**
@@ -168,6 +170,8 @@ export const DEFAULT_CONFIG: Config = {
     showTooltips: true,
     uiScale: 1,
     hudLocked: false,
+    showLeftHotbar: true,
+    showRightHotbar: true,
     hudWindows: structuredClone(DEFAULT_HUD_WINDOWS),
     interactionPrompts: true,
     controllerHud: true,
@@ -180,7 +184,22 @@ export const DEFAULT_CONFIG: Config = {
       label: "Melee Attack",
       index: 0,
     },
+    // Prepared-loadout slots 0 and 1. A level 1 Warrior starts with Taunt and Kick on
+    // the bar, so the first thing on screen after Melee is something their class can do.
+    // The label is replaced at runtime by the name the server sent.
     "1": {
+      type: ActionButtonType.TECHNIQUE,
+      action: ActionType.ABILITY,
+      label: "Technique",
+      index: 0,
+    },
+    "2": {
+      type: ActionButtonType.TECHNIQUE,
+      action: ActionType.ABILITY,
+      label: "Technique",
+      index: 1,
+    },
+    "3": {
       type: ActionButtonType.SOCIALS,
       action: ActionType.SOCIAL,
       label: "Hail",
@@ -188,19 +207,13 @@ export const DEFAULT_CONFIG: Config = {
       data: ["/hail"],
       index: 0,
     },
-    "2": {
-      type: 12,
-    },
-    "3": {
+    "4": {
       type: ActionButtonType.SOCIALS,
       action: ActionType.SOCIAL,
       label: "Consider",
       color: "#FFFF00",
       data: ["/consider"],
       index: 1,
-    },
-    "4": {
-      type: 8,
     },
     "5": {
       type: 13,

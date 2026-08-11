@@ -5,26 +5,30 @@ export class MusicPlayer {
   private static audio: HTMLAudioElement | null = null;
   private static volume: number = 0.25; // Volume range: 0.0 to 1.0
   private static isPlaying: boolean = false;
+  private static enabled = false;
 
   // Initialize the audio element
   public static initialize(): void {
     if (!MusicPlayer.audio) {
-      MusicPlayer.audio = new Audio();
-      MusicPlayer.audio.crossOrigin = 'anonymous'; // Set CORS for src
-      MusicPlayer.audio.volume = MusicPlayer.volume;
-      MusicPlayer.audio.addEventListener('ended', () => {
+      const audio = new Audio();
+      audio.crossOrigin = 'anonymous'; // Set CORS for src
+      audio.volume = MusicPlayer.volume;
+      audio.addEventListener('ended', () => {
         MusicPlayer.isPlaying = false;
       });
+      MusicPlayer.audio = audio;
     }
   }
 
   // Play music from an MP3 URL
   public static play(file: string): void {
     console.log('%c Playing music file:', 'color: green', file);
+    if (!MusicPlayer.enabled) return;
     MusicPlayer.initialize();
-    if (MusicPlayer.audio) {
-      MusicPlayer.audio.src = `${baseUrl}/${file}.mp3`;
-      MusicPlayer.audio.play().then(() => {
+    const audio = MusicPlayer.audio;
+    if (audio) {
+      audio.src = `${baseUrl}/${file}.mp3`;
+      audio.play().then(() => {
         MusicPlayer.isPlaying = true;
       }).catch((error) => {
         console.log('%c Playback failed for music file:', 'color: red', file);

@@ -55,7 +55,7 @@ const babylonRuntimeSource = await readFile(
 
 const supportedZoneNames = new Set(
   [...supportedZonesSource.matchAll(
-    /(?:["']shortName["']|shortName)\s*:\s*["']([^"']+)["']/g,
+    /(?:["'](?:shortName|assetKey)["']|shortName|assetKey)\s*:\s*["']([^"']+)["']/g,
   )].map((match) => match[1]),
 );
 
@@ -213,7 +213,7 @@ test("biome controls are bounded and every mapped zone and preset exists", () =>
     assert.ok(atmosphere.fogStartMultiplier > 0, zoneName);
     assert.ok(atmosphere.fogEndMultiplier > atmosphere.fogStartMultiplier, zoneName);
   }
-  assert.deepEqual(manifest.zoneAtmosphereOverrides.qeynos2, {
+  assert.deepEqual(manifest.zoneAtmosphereOverrides.talioscrownward, {
     fogStartMultiplier: 1.35,
     fogEndMultiplier: 2.25,
   });

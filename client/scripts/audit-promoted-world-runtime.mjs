@@ -6,6 +6,8 @@ import path from "node:path";
 import { gunzipSync } from "node:zlib";
 
 import { NullEngine } from "@babylonjs/core/Engines/nullEngine.js";
+import "@babylonjs/core/Meshes/instancedMesh.js";
+import { Mesh } from "@babylonjs/core/Meshes/mesh.js";
 import { LoadAssetContainerAsync } from "@babylonjs/core/Loading/sceneLoader.js";
 import { Scene } from "@babylonjs/core/scene.js";
 import "@babylonjs/loaders/glTF/index.js";
@@ -22,12 +24,25 @@ const baselinePath = path.join(
   "client/public/eqrequiem/worlds/legacy-baseline.manifest.json",
 );
 const baseline = JSON.parse(await fs.readFile(baselinePath, "utf8"));
+const requestedWorlds = new Set(
+  process.argv.slice(2).map((value) => value.trim().toLowerCase()).filter(Boolean),
+);
 const worlds = [...baseline.zones, ...baseline.clientScenes].filter(
-  (world) => world.status === "ready",
+  (world) =>
+    world.status === "ready" &&
+    (!requestedWorlds.size || requestedWorlds.has(world.shortName.toLowerCase())),
 );
 
 assert.equal(baseline.sourceTransform, "mirror-x");
 assert.ok(worlds.length > 0, "The promoted runtime world set is empty");
+if (requestedWorlds.size) {
+  const selected = new Set(worlds.map((world) => world.shortName.toLowerCase()));
+  assert.deepEqual(
+    [...requestedWorlds].filter((world) => !selected.has(world)),
+    [],
+    "Requested promoted runtime world is missing or not ready",
+  );
+}
 
 const engine = new NullEngine({
   renderWidth: 64,
@@ -71,6 +86,26 @@ for (const world of worlds) {
     const renderMeshes = container.meshes.filter(
       (mesh) => (mesh.getIndices()?.length ?? 0) > 0,
     );
+    // The streaming renderer compacts primitives from concrete Babylon Mesh
+    // instances. A GLTF mesh shared by multiple named nodes produces an
+    // InstancedMesh for one of them, which cannot supply the independently
+    // named primitive expected by the spatial package. Promotion must
+    // de-instance those descriptors first.
+    const concreteSourceNames = new Set(
+      container.meshes
+        .filter((mesh) => mesh instanceof Mesh)
+        .map((mesh) => mesh.name),
+    );
+    for (const primitive of spatial.primitives) {
+      const separator = primitive.name.lastIndexOf("#");
+      const sourceName = separator >= 0
+        ? primitive.name.slice(0, separator)
+        : primitive.name;
+      assert.ok(
+        concreteSourceNames.has(sourceName),
+        `${world.shortName}: spatial primitive '${sourceName}' has no concrete Babylon Mesh source`,
+      );
+    }
     assert.equal(
       renderMeshes.length,
       world.stats.primitives,
@@ -157,7 +192,7 @@ for (const world of worlds) {
         );
       }
     }
-    if (world.shortName === "qeynos2") {
+    if (world.shortName === "talioscrownward") {
       assert.deepEqual(
         spatial.lighting,
         { mode: "hybrid", vertexColors: "baked-irradiance" },

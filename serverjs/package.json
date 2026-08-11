@@ -33,6 +33,7 @@
     "db:content:export": "tsx scripts/export-content-sqlite.ts",
     "db:content:inflate": "tsx scripts/inflate-content-sqlite.ts",
     "db:content:inflate:force": "tsx scripts/inflate-content-sqlite.ts --force",
+    "db:talios:prune-gate-specialists": "tsx scripts/prune-talioscrownward-gate-spawns.ts",
     "db:offline:seed": "npm run db:content:export",
     "wt:smoke": "tsx scripts/webtransport-smoke.ts",
     "wt:smoke:login-char": "tsx scripts/webtransport-smoke-login-char.ts",
@@ -43,7 +44,17 @@
     "net:generate": "tsx scripts/generate-net-structs.ts",
     "net:check": "tsx scripts/check-net-structs-sync.ts",
     "offline:gear:generate": "tsx scripts/generate-offline-gear-catalog.ts",
-    "wasm:build": "shado asc build --config ./shado.config.mjs"
+    "wasm:build": "shado asc build --config ./shado.config.mjs",
+    "content-ai:extract": "tsx scripts/content-ai/extract.ts",
+    "content-ai:propose": "tsx scripts/content-ai/propose.ts",
+    "content-ai:gate": "tsx scripts/content-ai/gate.ts",
+    "content-ai:promote": "tsx scripts/content-ai/promote.ts",
+    "content-ai:audit": "tsx scripts/content-ai/audit.ts",
+    "content-ai:rename": "tsx scripts/content-ai/rename-npcs.ts",
+    "content-ai:tokens": "tsx scripts/content-ai/check-tokens.ts",
+    "load:quests": "tsx scripts/quest-load.ts",
+    "content-ai:rename-items": "tsx scripts/content-ai/rename-items.ts",
+    "combat:load": "tsx scripts/combat-load-harness.ts"
   },
   "dependencies": {
     "@fails-components/webtransport": "^1.6.6",

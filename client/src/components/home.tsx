@@ -63,7 +63,7 @@ export const Home = () => {
       </header>
 
       <section aria-labelledby="eltania-title" className={styles.hero}>
-        <p className={styles.eyebrow}>Elrador</p>
+        <p className={styles.eyebrow}>Eltania</p>
         <h1 className={styles.title} id="eltania-title">
           <span>Shadows of</span>
           Eltania

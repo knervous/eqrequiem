@@ -1,0 +1,199 @@
+{
+  "kind": "shado.world.authoring",
+  "version": 1,
+  "world": "greymarch",
+  "coordinateSystem": "babylon-y-up",
+  "revision": 4,
+  "regions": [
+    {
+      "id": "greymarch-zone-line-talios-crownward",
+      "name": "Talios Crownward road",
+      "kind": "zone-line",
+      "enabled": true,
+      "center": [
+        952,
+        -3.5,
+        -5
+      ],
+      "size": [
+        24,
+        18,
+        30
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "greymarch",
+        "authored",
+        "zone-line"
+      ],
+      "metadata": {
+        "legacyRegionType": 4,
+        "zoneLineInfo": {
+          "zoneIndex": 2,
+          "x": 312,
+          "y": 130,
+          "z": 3.15,
+          "rot": 999
+        },
+        "landmarks": [
+          "Oakhaven",
+          "Talios Crownward"
+        ],
+        "sourceCoordinateSystem": "babylon-y-up",
+        "transformContract": "requiem-y-up-v2",
+        "authority": "greymarch-authored-navigation-v1"
+      }
+    },
+    {
+      "id": "greymarch-zone-line-blackroot-warrens",
+      "name": "Blackroot Warrens tunnel",
+      "kind": "zone-line",
+      "enabled": true,
+      "center": [
+        -3400,
+        2,
+        -1004
+      ],
+      "size": [
+        34,
+        18,
+        20
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "greymarch",
+        "authored",
+        "zone-line"
+      ],
+      "metadata": {
+        "legacyRegionType": 4,
+        "zoneLineInfo": {
+          "zoneIndex": 17,
+          "x": -159,
+          "y": 39,
+          "z": 3,
+          "rot": 999
+        },
+        "landmarks": [
+          "Watchpost 4",
+          "Blackroot Warrens"
+        ],
+        "sourceCoordinateSystem": "babylon-y-up",
+        "transformContract": "requiem-y-up-v2",
+        "authority": "greymarch-authored-navigation-v1"
+      }
+    },
+    {
+      "id": "greymarch-zone-line-mournvault",
+      "name": "Mournvault threshold",
+      "kind": "zone-line",
+      "enabled": true,
+      "center": [
+        -4650,
+        43,
+        -904
+      ],
+      "size": [
+        22,
+        16,
+        14
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "greymarch",
+        "authored",
+        "zone-line"
+      ],
+      "metadata": {
+        "legacyRegionType": 4,
+        "zoneLineInfo": {
+          "zoneIndex": 36,
+          "x": -82,
+          "y": 35,
+          "z": 3,
+          "rot": 999
+        },
+        "landmarks": [
+          "Watchpost 4",
+          "Mournvault"
+        ],
+        "sourceCoordinateSystem": "babylon-y-up",
+        "transformContract": "requiem-y-up-v2",
+        "authority": "greymarch-authored-navigation-v1"
+      }
+    },
+    {
+      "id": "greymarch-zone-line-greenveil",
+      "name": "Greenveil boundary arch",
+      "kind": "zone-line",
+      "enabled": true,
+      "center": [
+        -5105,
+        -1,
+        205
+      ],
+      "size": [
+        22,
+        18,
+        30
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "greymarch",
+        "authored",
+        "zone-line"
+      ],
+      "metadata": {
+        "legacyRegionType": 4,
+        "zoneLineInfo": {
+          "zoneIndex": 3,
+          "x": -650,
+          "y": 115,
+          "z": 8.3,
+          "rot": 999
+        },
+        "landmarks": [
+          "Barrow Hill",
+          "Greenveil"
+        ],
+        "sourceCoordinateSystem": "babylon-y-up",
+        "transformContract": "requiem-y-up-v2",
+        "authority": "greymarch-authored-navigation-v1"
+      }
+    },
+    {
+      "id": "greymarch-stream-water-region",
+      "name": "Greymarch stream water",
+      "kind": "water",
+      "enabled": true,
+      "center": [
+        -4152.0625,
+        -53.609375,
+        863.296875
+      ],
+      "size": [
+        1274,
+        57.28125,
+        487.59375
+      ],
+      "phaseMask": 4294967295,
+      "tags": [
+        "greymarch",
+        "water",
+        "spatial-reference"
+      ],
+      "metadata": {
+        "legacyRegionType": 1,
+        "zoneLineInfo": null,
+        "sourceCoordinateSystem": "requiem-y-up",
+        "transformContract": "requiem-y-up-v2",
+        "eltaniaZone": "greymarch",
+        "legacySpatialReference": "qeytoqrg"
+      }
+    }
+  ],
+  "objects": {
+    "prototypes": [],
+    "stamps": []
+  }
+}

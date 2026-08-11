@@ -47,7 +47,7 @@ export const Overlay: React.FC<Props> = (props: Props) => {
 
   useEffect(() => {
     if (mode === 'game') {
-      emitter.emit('chatMessage', { chanNum: 0, type: 0, message: 'Welcome to Elrador.' });
+      emitter.emit('chatMessage', { chanNum: 0, type: 0, message: 'Welcome to Eltania.' });
       emitter.emit('chatMessage', { chanNum: 0, type: 0, message: 'This realm is an active development preview.' });
       emitter.emit('chatMessage', { chanNum: 0, type: 0, message: 'Type /help to get started with basic commands.' });
       emitter.emit('chatMessage', { chanNum: 0, type: 0, message: 'And #help to list GM commands.' });
@@ -99,7 +99,7 @@ export const Overlay: React.FC<Props> = (props: Props) => {
           sx={{
             width : '100%',
             height: '100%',
-            ...(props.sx ?? {}),
+            ...props.sx,
           }}
         >
           {component}

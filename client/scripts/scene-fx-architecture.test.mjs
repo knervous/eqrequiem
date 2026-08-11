@@ -109,8 +109,14 @@ test("client batches geometry and FX through Shado spatial visibility", async ()
   assert.match(worldLayer, /coordinator\.reduceWorld/);
   assert.match(worldLayer, /ShadoVisibilityBits\.Visible/);
   assert.match(worldLayer, /world\.lighting\?\.mode === "baked"/);
+  assert.match(worldLayer, /material\.unlit = materialPreview;/);
+  assert.doesNotMatch(
+    worldLayer,
+    /material\.unlit = materialPreview \|\| usesBakedWorldLighting;/,
+  );
   assert.match(worldLayer, /extras\?\.boundary === true/);
-  assert.match(worldLayer, /shadoAlwaysDisabled === true/);
-  assert.match(worldLayer, /renderMesh\.setEnabled\(false\)/);
+  assert.doesNotMatch(worldLayer, /shadoAlwaysDisabled/);
+  assert.match(worldLayer, /meshName === "CLOUD_MDF"/);
+  assert.match(worldLayer, /renderMesh\.setEnabled\(visible\)/);
   assert.doesNotMatch(worldLayer, /worldSources\.every/);
 });

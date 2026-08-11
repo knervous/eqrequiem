@@ -9,9 +9,8 @@
     "airplane",
     "akanon",
     "arena",
-    "befallen",
     "beholder",
-    "blackburrow",
+    "blackrootwarrens",
     "butcher",
     "cauldron",
     "cazicthule",
@@ -32,6 +31,8 @@
     "freportn",
     "freportw",
     "gfaydark",
+    "greenveil",
+    "greymarch",
     "grobb",
     "gukbottom",
     "guktop",
@@ -48,6 +49,7 @@
     "lavastorm",
     "lfaydark",
     "mistmoore",
+    "mournvault",
     "najena",
     "nektulos",
     "neriaka",
@@ -63,10 +65,6 @@
     "permafrost",
     "qcat",
     "qey2hh1",
-    "qeynos",
-    "qeynos2",
-    "qeytoqrg",
-    "qrg",
     "rathemtn",
     "rivervale",
     "runnyeye",
@@ -74,6 +72,8 @@
     "soldungb",
     "southkarana",
     "stonebrunt",
+    "talioscrownward",
+    "talioslowharbor",
     "unrest",
     "warrens"
   ],
@@ -351,29 +351,32 @@
     {
       "id": "barrel3",
       "source": "/eqrequiem/objects/barrel3/final.glb.gz",
-      "sourceSha256": "9483b16b0441c16a3dd1e0f9108c00559425569a6a6ee6b253114a65b4a983a6",
-      "contentSha256": "90522b68ec9337b3b97250b234ca20db25521d05761f268eee2a91f712a41b27",
-      "compressedSha256": "0068d2ebb1283a972ad1e02d8db3129b7da613f42377588904a6bc5f31e7b1ea",
-      "bytes": 27560,
-      "compressedBytes": 24090
+      "sourceSha256": "2cdda773553744c786abb03f2bca09dbd26f2537e4b02f316213b6470792c10e",
+      "contentSha256": "95198c375d8adfad31040d17ae75ab0c4ca800968ed5af7e9d92a4ce90805fdb",
+      "compressedSha256": "f7f0dfe25deab0c2f432632dd481aa0924a3fd666a47a03dd544ab71f21c6d83",
+      "bytes": 5059692,
+      "compressedBytes": 4659384,
+      "authoring": "talioscrownward-approved-transform-v1"
     },
     {
       "id": "barrel4",
       "source": "/eqrequiem/objects/barrel4/final.glb.gz",
-      "sourceSha256": "345f72a5e75fd54572182f0a7e04fd23c919eee1bc807a036b42deed868a860b",
-      "contentSha256": "dc3c6addbc1ade7e5fa0b09ef673d81b995551b04d3c60f57216a59ae1305753",
-      "compressedSha256": "41e354d5d30560e7a22555d4da2116efb17f0bf31fee01c10ff308288708e897",
-      "bytes": 20112,
-      "compressedBytes": 16669
+      "sourceSha256": "b9c10d1d67a8e0680d33fb643119f1f698e7f2f62cf4d705bb6662f961ab6ae3",
+      "contentSha256": "ee939f1327b5201a4c4fd761e20e9e789e118eaa8e8e3e906b9a4b579c245a21",
+      "compressedSha256": "fa0aec114fd82e94e416cc4d86a0ba1a82599731a58b6360d39d93d062818a86",
+      "bytes": 5061208,
+      "compressedBytes": 4661884,
+      "authoring": "talioscrownward-approved-transform-v1"
     },
     {
       "id": "barrelonside",
       "source": "/eqrequiem/objects/barrelonside/final.glb.gz",
-      "sourceSha256": "d8b2acd0725e510f2ddd72f26565b59e94053942d27b05706ddcd93e131ded5a",
-      "contentSha256": "738b66c76e7656e8de7fc0c31829ea2cbc570ba4d1cf9724379c47e0df791fb5",
-      "compressedSha256": "90c3e2a53fafad1e8cbee2af5ca6eff252b1ce734f3118fccb08a6120e316626",
-      "bytes": 21940,
-      "compressedBytes": 18611
+      "sourceSha256": "ed2246e4a68755b1e3dcd75cd7ca7588ee96ac92a4926bc9c89ca7b95437e087",
+      "contentSha256": "bbb6fabbe59a787cbf1c7396144b884029f89cefef21ddb074e742d43074034d",
+      "compressedSha256": "73e495490c85e9b5ad8d271e9ab6a730e99735702564d1eedacd9095bf4b009b",
+      "bytes": 5039864,
+      "compressedBytes": 4656263,
+      "authoring": "talioscrownward-approved-transform-v1"
     },
     {
       "id": "barstool",
@@ -396,11 +399,12 @@
     {
       "id": "barstool2",
       "source": "/eqrequiem/objects/barstool2/final.glb.gz",
-      "sourceSha256": "c697662e1fe45aa5d13e736b663c6a8be0ac1f0ee0475e01f9b1a1b103d440ad",
-      "contentSha256": "7f137fdc1b58f7e014f27c4e4e9818e06a00ccf5dc392208da8f853394989ba1",
-      "compressedSha256": "5b365afc68fe459444f9a64ee282f8d09d8baaaf8c9a68db60401424f31dda5f",
-      "bytes": 18040,
-      "compressedBytes": 14915
+      "sourceSha256": "642ccd77be9c3159ec4371bd8003c45af38ad00059cfdc6103f3b01f85dd8f3f",
+      "contentSha256": "58c46daca39d5cad535ca9cc90c1868cb405aa94bc4939effa1c44fbf7035477",
+      "compressedSha256": "024973279ab106306b78fea6b4e97f3aa375e26b8714491bf7a0dd02f0839390",
+      "bytes": 5054644,
+      "compressedBytes": 4663537,
+      "authoring": "talioscrownward-construction-correction-v2"
     },
     {
       "id": "bbcart",
@@ -567,29 +571,32 @@
     {
       "id": "bed2",
       "source": "/eqrequiem/objects/bed2/final.glb.gz",
-      "sourceSha256": "3ede641d4a9c404d6734e5f9888dd1dceaeefd7ac0f96d15dd6be77a5a7d7984",
-      "contentSha256": "3d1f6a61c6c59616a566202f5763bc9a91d86c7710398bdad38211f81101cec1",
-      "compressedSha256": "1126376800d12975d4473591c9da032b14081b27995e9815f18d4e57a0000747",
-      "bytes": 42936,
-      "compressedBytes": 35030
+      "sourceSha256": "ae7f54f34887738c03b5b24eed175cbd6d5ed56cbfa9043beaea0b4d2e87faf3",
+      "contentSha256": "541c584f41f86f9f22fdf0e6fda87062bde2fe45f18f90b458c52436223af232",
+      "compressedSha256": "5dd2576525c56f946490c80fac6ac117ecc00b69dff31057127d0f025055cee4",
+      "bytes": 6153200,
+      "compressedBytes": 5876674,
+      "authoring": "talioscrownward-construction-correction-v2"
     },
     {
       "id": "bed3",
       "source": "/eqrequiem/objects/bed3/final.glb.gz",
-      "sourceSha256": "954b80f2660623d15aafd26831155474e99c44fcc8b26823deef2c4b8752621c",
-      "contentSha256": "df808820996c2af49b98284efde2ae75e76830083370e611e0271d2c6dd4be33",
-      "compressedSha256": "938d6a8c382e01c39714b1142699f8ff6df9712c6db1f218dde943e34fbf5306",
-      "bytes": 49264,
-      "compressedBytes": 39326
+      "sourceSha256": "bd7792e9d8caa47be707688ef43f91d899e6efa8114efe3265e7e995161acaac",
+      "contentSha256": "64fb46ad6cf3e651ad76aaea73315e3ff95a19e4733e496b4c7237873f34e8bb",
+      "compressedSha256": "434000a9367d125e73670bee929e94f0f14759b260e1de6f8e4f592541db2ee4",
+      "bytes": 6153000,
+      "compressedBytes": 5875977,
+      "authoring": "talioscrownward-construction-correction-v2"
     },
     {
       "id": "bed4",
       "source": "/eqrequiem/objects/bed4/final.glb.gz",
-      "sourceSha256": "b246e9b96e226915175e60f094023062d562bc33413a2951399ebfe726c7b61c",
-      "contentSha256": "14a7e9055a9a6f79c079996d3d4998a9acf3374bb2473b79277db27932e0a8f7",
-      "compressedSha256": "fc018ce3f52529fb88580db914e76f8b2df9a3139cf0bfbcda5c96db933d4fb4",
-      "bytes": 56952,
-      "compressedBytes": 47878
+      "sourceSha256": "8a700741fd01f45f8da9e8ca94ddbee48b44c76bbdc259a41e4c8648c0e67923",
+      "contentSha256": "fd44c3091843805dc2dc5f210604b42ef796ccdea1e7b7329b6038a4e18336c1",
+      "compressedSha256": "6a2d1493f8b03f238509f0f6f3b05fe0dc07aedea6a2a0ce0eb4d105e54827d5",
+      "bytes": 6153116,
+      "compressedBytes": 5877945,
+      "authoring": "talioscrownward-construction-correction-v2"
     },
     {
       "id": "bed5",
@@ -657,11 +664,12 @@
     {
       "id": "bench",
       "source": "/eqrequiem/objects/bench/final.glb.gz",
-      "sourceSha256": "a4735cebfb52b99862d6cee5dfa515ad53ba85428812d93816a58f83811ab2f4",
-      "contentSha256": "197117a09391a2f142aa25e1acfc5a1d45995da57be342d0fc66d78f64392a17",
-      "compressedSha256": "f2e95f3937265d80c3aaf9668c312d27951caba7f81ac5c5b0665555a2c13a5b",
-      "bytes": 39676,
-      "compressedBytes": 34754
+      "sourceSha256": "894a26a8ccf699d67a06c84b2879d6b891569401f323b3af35af7d531019dd20",
+      "contentSha256": "aaa9599fa5e8de15214b5254b9b72c997ed88dcb90c12d9569c1c8c1c28eb8d9",
+      "compressedSha256": "69101c7682d2aac549b6a2195c7e0f4308bb0818c43fc6e5270a3b6ba276b891",
+      "bytes": 5036944,
+      "compressedBytes": 4654182,
+      "authoring": "talioscrownward-approved-transform-v1"
     },
     {
       "id": "bench2",
@@ -1026,11 +1034,12 @@
     {
       "id": "bunk1",
       "source": "/eqrequiem/objects/bunk1/final.glb.gz",
-      "sourceSha256": "43f6911e2fe85f992d14039fb8b6a8cbc7f485e25d80351e75ace46d92ce2334",
-      "contentSha256": "e4f6c0d0a12474edfa7011542d81caf9edcd2976075fefe439b94cb563c6cdf2",
-      "compressedSha256": "a8ea8d41bd3ac01b9655bd65cca9738d47f02aa356650b6070b900515ec89b71",
-      "bytes": 35128,
-      "compressedBytes": 28119
+      "sourceSha256": "377c52c3bdbfd745e14cd7ff2c018cbd6d7d264e1b1bb5504fc811fea6a9e6bc",
+      "contentSha256": "7a5d8440f35884b6438d52d8b1940d5b6d97f74357cbc08d4ac0271f77386ea2",
+      "compressedSha256": "989ed0996c2a6a50cce8edd87af4f23baf0ab192c87e7a7c1207df6411aba05d",
+      "bytes": 8486344,
+      "compressedBytes": 8054938,
+      "authoring": "talioscrownward-construction-correction-v2"
     },
     {
       "id": "burial",
@@ -1188,11 +1197,12 @@
     {
       "id": "cart",
       "source": "/eqrequiem/objects/cart/final.glb.gz",
-      "sourceSha256": "9d54d8e1bc889681ddedb4a0e0f07ce2453fef7464550dc60fe7586a79811d04",
-      "contentSha256": "f0d8e90c079f14c17bd99f9e189c1d0e2d722b67199723bbc0a90f604432c2fa",
-      "compressedSha256": "6ac3cda3bb830e54ff373609b7d3622e10cd886b192ca496a2fcf266b1c668c0",
-      "bytes": 44776,
-      "compressedBytes": 34485
+      "sourceSha256": "3fada018d870080361500e0391ecb754e3f090a9f081ce15ab262211e814b393",
+      "contentSha256": "51b2bf211b2a89f0bc0a94c8d700fd33b30eb0141f98b39771948a853e911e06",
+      "compressedSha256": "34490e17cc82b5c7095ab6642b89bc28c0e07e40fa514e4fe3ccbdd6a60edb1f",
+      "bytes": 5699396,
+      "compressedBytes": 4882757,
+      "authoring": "talioscrownward-approved-transform-v1"
     },
     {
       "id": "caulcol1",
@@ -1449,38 +1459,42 @@
     {
       "id": "chair",
       "source": "/eqrequiem/objects/chair/final.glb.gz",
-      "sourceSha256": "b815e9ec78f9cb29f55db8cbc5125ce55c76e2f823f3a326652c8fcf5af3208d",
-      "contentSha256": "acaee9f4e8ac64e374d9d2dcc2246bc44c2b38941893d4d6e372dab8eb2dcaca",
-      "compressedSha256": "f0353652e99d0248b04b23ced048db4d43db1d83b29fce722ea53951f0fdb13d",
-      "bytes": 28712,
-      "compressedBytes": 22704
+      "sourceSha256": "199b0ed7b3058a2088d9ed3c02187cb8a918ce70023977e7976ff4f940614451",
+      "contentSha256": "2fc44a1c2f7bf6d82e9047a1f7b7e05bbd9df03bcbcca2260b25e4197056f896",
+      "compressedSha256": "299d6bcfca2e544c2b4c62787fd1c3fd2909e09ba7b75a66dd2b13531d07282c",
+      "bytes": 5060084,
+      "compressedBytes": 4666850,
+      "authoring": "talioscrownward-construction-correction-v2"
     },
     {
       "id": "chair2",
       "source": "/eqrequiem/objects/chair2/final.glb.gz",
-      "sourceSha256": "a7114802b212bb4de57d089c2cd0c9bf7ad4f9a754fcfe434312c9415b15cca1",
-      "contentSha256": "6d24724f98aa7a3901dfd86d58c0512ac6a4492e0aa98cb2c9a9519e63de5e9f",
-      "compressedSha256": "5ea69c288c7f576cceb40a110de3a5fa742f3fd43c0366264f531104af7348f8",
-      "bytes": 13392,
-      "compressedBytes": 9735
+      "sourceSha256": "f4292214be5e12ba1ed2e427631cc07fddc1ec9fda8d35c256741c4f289d0021",
+      "contentSha256": "e254db5debe574fe26e1e59f04cfc7f898e9a8bab017351d4e5d694cdc9d7911",
+      "compressedSha256": "148eee7f54e76a4599b59d32938b60c8df7bd3379672b87abb2132ed4acb6ffe",
+      "bytes": 5060156,
+      "compressedBytes": 4662362,
+      "authoring": "talioscrownward-construction-correction-v2"
     },
     {
       "id": "chair2d",
       "source": "/eqrequiem/objects/chair2d/final.glb.gz",
-      "sourceSha256": "ab95c9e445a79279919364f727442f37b59f38ed0e1db28eb5b430d00feed37b",
-      "contentSha256": "159536cb8f881eda0618911e259eb5d31da16cf89350eb3ad5fd169cb83fecfc",
-      "compressedSha256": "97abca0f1877651d8bc4760c08df9d6e7c63099be54c5a77ef28267a9cb9d2eb",
-      "bytes": 17324,
-      "compressedBytes": 13700
+      "sourceSha256": "7124601fee2d70c144c6888ead4477a97f0c01dc83cfb38e9056516859a08cb5",
+      "contentSha256": "cd237d0244dc3a7860529a71e0f925104587498c73d8da61284c3867d88ecce8",
+      "compressedSha256": "ec815c30819f6460a08194472bec60733682169be9a1f24ccdc63c6ec0e5d624",
+      "bytes": 5063576,
+      "compressedBytes": 4663041,
+      "authoring": "talioscrownward-construction-correction-v2"
     },
     {
       "id": "chair3",
       "source": "/eqrequiem/objects/chair3/final.glb.gz",
-      "sourceSha256": "17a987c0085c5864812402e16411886080c627627a8b88a389dca4f26435642b",
-      "contentSha256": "775a427099ecd4cc53f905e2e39d82c70e382c0a0890b09cc7e1c1ff61c00915",
-      "compressedSha256": "00c80b41f6015d2c5f9738a4eb5f5228e01e58762ef3b32d801ce2339b7383d6",
-      "bytes": 15656,
-      "compressedBytes": 10892
+      "sourceSha256": "5db72d18f8d8f194447d0681b771756bc6e87ceb0f021af74efcfd65148131fc",
+      "contentSha256": "1d7bac83fccd9f02637f654e4d7d4225de8360856e0966df5051b1a0897bd27c",
+      "compressedSha256": "d4625a50bfd95d94481ce39df8af40b8256eef7b2c69880a2357b09673471db3",
+      "bytes": 5046708,
+      "compressedBytes": 4661856,
+      "authoring": "talioscrownward-construction-correction-v2"
     },
     {
       "id": "chair3a",
@@ -1530,11 +1544,12 @@
     {
       "id": "chest1",
       "source": "/eqrequiem/objects/chest1/final.glb.gz",
-      "sourceSha256": "0e50f867f37b1069a24ff7870436a485a759eb89b2ae8777a3eb410d4ce778fb",
-      "contentSha256": "83e48df77e72504fb8ed69e51665295be2ebd5dab31ef1549fcbb5bdc800ebdd",
-      "compressedSha256": "b9cb17c9d7459fc80a571fb775562ff3e90c1954595559f9a0825135af0f1a40",
-      "bytes": 17664,
-      "compressedBytes": 13060
+      "sourceSha256": "cd850b3a170d3a6fd4d23de88bc2a7a836b1b5071b035af8a77bc59b8df611a6",
+      "contentSha256": "4c049d48fafb1eb7e9761ff20fef311b4ec03672d74ffcb7021d9511f232d87a",
+      "compressedSha256": "f257fed2458272260f92dcaa7e997071397f8721fc9304fb882196a6590695a2",
+      "bytes": 5054348,
+      "compressedBytes": 4655868,
+      "authoring": "talioscrownward-approved-transform-v1"
     },
     {
       "id": "chest2",
@@ -1692,11 +1707,12 @@
     {
       "id": "conftable",
       "source": "/eqrequiem/objects/conftable/final.glb.gz",
-      "sourceSha256": "89cd36a5e29e824114b7c9ca92fd3eaa2ece644b39f44f922e62c19443e11143",
-      "contentSha256": "caef09301569bf3a9e24973ef6c2deea7f1bff5a42068f11473d505d5f8377a4",
-      "compressedSha256": "d4c5b2048949adce91d77b23f1600820af77e3124920f3c8a5f358ac8fdbd7dd",
-      "bytes": 21748,
-      "compressedBytes": 18022
+      "sourceSha256": "ebb01b0377bff094cfab52098ae6802676dccdf8e9873b1613340e93fb8c17ff",
+      "contentSha256": "c32643bf98d7cbc6301f707223be0043096861f69e90010c13337e11b11137f7",
+      "compressedSha256": "6529552b84039ee002de13b75495c8e16a6a541675a20c6e6859cb2090702379",
+      "bytes": 5046148,
+      "compressedBytes": 4659254,
+      "authoring": "talioscrownward-approved-transform-v1"
     },
     {
       "id": "corrall",
@@ -1710,65 +1726,72 @@
     {
       "id": "cratea",
       "source": "/eqrequiem/objects/cratea/final.glb.gz",
-      "sourceSha256": "87b5e5cf2020049b25837cca7bd223000c8007a50a10dbc57740b8f57a31d94b",
-      "contentSha256": "de17157f4df1f7068a042a6faa38adbf5c1bed108ac46eb5de67bc7b9ddac8ee",
-      "compressedSha256": "efec3c5a8104807a1662ce30939c069182c6c111aa92dbc5e950248be3e71638",
-      "bytes": 10740,
-      "compressedBytes": 4649
+      "sourceSha256": "5b35bc6963bdf29a99db399fe5eae06e7d5efcc53b12364561961af6186b4867",
+      "contentSha256": "53a3125c498c506e718a156079c14978cc90cf405d67bfc85b212a5280184e13",
+      "compressedSha256": "9545e0efc4e5f59ae65faf2c1e24d86213e9f5fbf54983840b797956a696d443",
+      "bytes": 5047392,
+      "compressedBytes": 4651294,
+      "authoring": "talioscrownward-approved-transform-v1"
     },
     {
       "id": "crateb",
       "source": "/eqrequiem/objects/crateb/final.glb.gz",
-      "sourceSha256": "bfba9b1a317a6f7436f6ee763b0a173a9ecd890962f4fd451db15c27334bed7b",
-      "contentSha256": "dfcaa697e40607a490335572b6a409adfc2506168b2bddaa034f60a286be514e",
-      "compressedSha256": "41060b8d911c531771967aede64f9977220b123f589faca1abd31c8891db4239",
-      "bytes": 11288,
-      "compressedBytes": 8258
+      "sourceSha256": "faade3500fe61e0d4f29e1fd3f6cfb17d7a433b532218bf4cd78243de95cbb5d",
+      "contentSha256": "92c6e7a22437415cce8492cfd798708cb8ae6bc5f1b88d961cd2886193142577",
+      "compressedSha256": "fd83285bb69408c3bf366b9d2d8deae0af2f0933ccb1ec438c97ce70c478cbe2",
+      "bytes": 5044420,
+      "compressedBytes": 4650898,
+      "authoring": "talioscrownward-approved-transform-v1"
     },
     {
       "id": "cratec",
       "source": "/eqrequiem/objects/cratec/final.glb.gz",
-      "sourceSha256": "3bf42352a0338a70473abf05771ad2ff82b8bcabdafd3b5ec67fe5c39aaaf118",
-      "contentSha256": "ad5f30e8b31b6fbcc0d3d5535888c2737c89938559cc1614ebc463df7cad6872",
-      "compressedSha256": "b74122dad43b7f6ae23ceb4066077070efae2c635357678ced10cf030e6d3a76",
-      "bytes": 12724,
-      "compressedBytes": 5686
+      "sourceSha256": "6dc90ef7ea476264b6999dcb12f9bdecccea0b02927f4ce960d073f90e4e8193",
+      "contentSha256": "983a5db168aee3cc1a1dac1c9a14f12bf13b96cdbdf72e5148798f9cb3139d96",
+      "compressedSha256": "b913a989fae9f537008a23b4f001bd493341c7f5ffa522fce029ff26ebf18f8c",
+      "bytes": 5043876,
+      "compressedBytes": 4651733,
+      "authoring": "talioscrownward-approved-transform-v1"
     },
     {
       "id": "crated",
       "source": "/eqrequiem/objects/crated/final.glb.gz",
-      "sourceSha256": "bbe80e28ac1800e3bb5134993db9af46c3c758255af7ac3a982570760bd7e3a8",
-      "contentSha256": "32b9231be55437e8e0ff6ec0c867da101f3a057c648b87b8cd3cfd06d99f77d6",
-      "compressedSha256": "eafb111553188bb4c689fdeb8e5530a59dd417cbcc45b87753847b4eb30da355",
-      "bytes": 13024,
-      "compressedBytes": 10007
+      "sourceSha256": "26b15c1f89dd70bd4e6ecde3f98615e3fc66e1640a16e8ab8e0184d83097709a",
+      "contentSha256": "89d305bc667a546929a3f7b3d4fb2552c29c34e52e79dade129f34ec412a0a98",
+      "compressedSha256": "a42f5340d27320a5da30a64fa514b9ec5f139f3f1b48c71be81288b8e9b39177",
+      "bytes": 5044612,
+      "compressedBytes": 4652570,
+      "authoring": "talioscrownward-approved-transform-v1"
     },
     {
       "id": "cratee",
       "source": "/eqrequiem/objects/cratee/final.glb.gz",
-      "sourceSha256": "bdb679e5017c1098c467ec6f2c44d949de93635b53573c7f805be6878bb7e083",
-      "contentSha256": "733c294bac66cc9a4e1d440edaf7043f5fb05df6fa6d7dc01772032d81bd0bb6",
-      "compressedSha256": "f827fc4063a877bec0dc0a27f2825acd344b0c605a3b693146dbe09df1eb7f2b",
-      "bytes": 11620,
-      "compressedBytes": 5114
+      "sourceSha256": "4a5f1b92a53f2be6a6135e964cc7eb4d47c3304ae0c45491da295e42dc5272ae",
+      "contentSha256": "1693189b7b523b141ef162d40fb6cb4f476893f38f1626bb7b0a8b6bad0f0bd0",
+      "compressedSha256": "98732109b220ab7cf93d76ac029081d5d7644082002002132e4580789b16b140",
+      "bytes": 5046036,
+      "compressedBytes": 4654941,
+      "authoring": "talioscrownward-approved-transform-v1"
     },
     {
       "id": "cratef",
       "source": "/eqrequiem/objects/cratef/final.glb.gz",
-      "sourceSha256": "7091e96f75f1f3ccf86aa6846ce4d4c187764cd4e83abbab9cb5dddfea88c221",
-      "contentSha256": "4cbab98e2dd6e7572d650db45ddacbeedd90c376d677d8df0fc90634148a4310",
-      "compressedSha256": "e3f6712261e119035d63ed8ada6ab3068c3903e96e954cced1f343a3f119816d",
-      "bytes": 14652,
-      "compressedBytes": 11689
+      "sourceSha256": "fbb0e989cd8a965be29ba59b29d48252dac68c656d873042878252d185f8dd86",
+      "contentSha256": "cb137d981c79d34ec68fe5cdb6ad4fb1784c1dac36543c4c4dd46fb486ae420f",
+      "compressedSha256": "e7cd7ca4dff18718a520eab357f116e7aa3645190a650730f9e39a1409098aae",
+      "bytes": 5042916,
+      "compressedBytes": 4650107,
+      "authoring": "talioscrownward-approved-transform-v1"
     },
     {
       "id": "crateg",
       "source": "/eqrequiem/objects/crateg/final.glb.gz",
-      "sourceSha256": "850d346ba9a53bcae7d4f2af0b77463534f6566e8b805e82fdbd5887beeea175",
-      "contentSha256": "0843afbdb537ea93aa77946021481398028430cb6cd2fc55991ed8bf7c62bd48",
-      "compressedSha256": "c852d81f2c529bde4a1741fc7e54b893b6755803a0af24b0d6dd06e0db824df5",
-      "bytes": 6280,
-      "compressedBytes": 3040
+      "sourceSha256": "1cf8fca0e0ba1c45173302a686c64307b0f3f3fb86e51d699a039266499ab8bd",
+      "contentSha256": "a04af26e19302a652cec4a4b14f2f53d6ff64f59f4eeced44ab8f4a0fbb7f338",
+      "compressedSha256": "1e82dfe7751a63170af55f9c5e7e335246e996839815f7f110bdc0040d0a4759",
+      "bytes": 5041352,
+      "compressedBytes": 4648848,
+      "authoring": "talioscrownward-approved-transform-v1"
     },
     {
       "id": "crateh",
@@ -1881,11 +1904,12 @@
     {
       "id": "crystal3",
       "source": "/eqrequiem/objects/crystal3/final.glb.gz",
-      "sourceSha256": "aed143aa3a53dba5367552d36badd5bb6f98a58663ed54fa3911cdec244076aa",
-      "contentSha256": "7b9e0a287c36a60d1a05a1102c865a50afaf84de2d73c80ea55f1769d1783d7a",
-      "compressedSha256": "83705721b7d4f48a159e24b73ee97a32635db2d082bce9f4ef79269b858cfec5",
-      "bytes": 25228,
-      "compressedBytes": 23485
+      "sourceSha256": "e7f24371fcc43e92a5ed324040fcdebd9c4715e3c211288de26580ed0bdd3a58",
+      "contentSha256": "3d96012e44fd005d7153b3da7191496517e50a2924208cb5fd3f53a366fa16c0",
+      "compressedSha256": "294f727b4dba0093a3923caa7b828802e315a6fa5c827d49d7167103f8af500a",
+      "bytes": 5157760,
+      "compressedBytes": 4767191,
+      "authoring": "talioscrownward-construction-correction-v2"
     },
     {
       "id": "crystal4",
@@ -2160,11 +2184,12 @@
     {
       "id": "drawer1",
       "source": "/eqrequiem/objects/drawer1/final.glb.gz",
-      "sourceSha256": "6ff0e2a1891815a36e1415d4695bf5d61b02e617a943ada47821505851b4f234",
-      "contentSha256": "8b8f238d3772a08254cf7c850b6bc60ce33f4b7a79a5204a28816c8345203dc4",
-      "compressedSha256": "36911fb288b8e769c0619f99cc7ae7435397e17074b6b2a224188d5b3eb4afb5",
-      "bytes": 19572,
-      "compressedBytes": 14730
+      "sourceSha256": "665148e2068f571d0b3b6a536f1f6ceb132c01a9bf95b6bb12748ae26a4d2e6f",
+      "contentSha256": "5315072cb48bac79305df91a1d7016878cb135a6bddf0a0e3da51d2a43f55e1f",
+      "compressedSha256": "f4bd7a8a5e1090006eb83e3e6705c1a79de12b34fb0f2f255ba9f0edc0d880ef",
+      "bytes": 5045916,
+      "compressedBytes": 4652381,
+      "authoring": "talioscrownward-approved-transform-v1"
     },
     {
       "id": "drawersd",
@@ -2178,11 +2203,12 @@
     {
       "id": "dresser",
       "source": "/eqrequiem/objects/dresser/final.glb.gz",
-      "sourceSha256": "5e7ec57a148425e6d3dd748061c3c8f5bc73659a0aca75f5b5a52437c7c96e4d",
-      "contentSha256": "3a88fe022235fd16eb48cab44ddd804c525d0333e853140c1f223d39508b0f80",
-      "compressedSha256": "d4e3380dcc9c60de2e6cf46010ea80bbb19894fc3cf03118a6f55ad0609cc421",
-      "bytes": 22812,
-      "compressedBytes": 18013
+      "sourceSha256": "ccad1c56ad493929a582bc48e4fa0483aed8bdf2ac6ae55cf50f89dfae47a9ae",
+      "contentSha256": "1e6c0bbca52201dc985262652b1828d765f25e137292e3d85ab663ba98f58d03",
+      "compressedSha256": "7782c3f3a7cc37c499bd6bd23462e6fdcc7f02abfaaaf078af65d68bc55e92e5",
+      "bytes": 5046792,
+      "compressedBytes": 4653786,
+      "authoring": "talioscrownward-approved-transform-v1"
     },
     {
       "id": "dtow1",
@@ -3852,11 +3878,12 @@
     {
       "id": "hlamp",
       "source": "/eqrequiem/objects/hlamp/final.glb.gz",
-      "sourceSha256": "54022cdc25567db2ce6ab0dedd63c4ee80aa2c5470180f11bfc3e83d56f6ea66",
-      "contentSha256": "157fe846ddea6438b174b538818d93f83932527430d4d5c486cc219cc6f7b908",
-      "compressedSha256": "f1b322187040ab7246dbe9594200f1c8ce280cdc8f4afd563a03717c524c1c6b",
-      "bytes": 26484,
-      "compressedBytes": 21411
+      "sourceSha256": "f5059be7fa98ba0a87ad5bd6c2763f18c46501960cfd91203eab20cff8c2c6b8",
+      "contentSha256": "d8297d35bc7e629974a0624c939efd5d71c593e7628f9f5c34e1a8bd17e1147c",
+      "compressedSha256": "ba1ca4f74f09e83ae8e7b59b997c59b044de048aa2b558e15e00d938b5e83436",
+      "bytes": 2576560,
+      "compressedBytes": 2252317,
+      "authoring": "talioscrownward-construction-correction-v2"
     },
     {
       "id": "hloom",
@@ -4932,11 +4959,12 @@
     {
       "id": "lightpole",
       "source": "/eqrequiem/objects/lightpole/final.glb.gz",
-      "sourceSha256": "ea1788cdf463e302f818d27669f84aec2eb1e481c50bb0d54cef34a111198823",
-      "contentSha256": "24f2cc9ed90ab522a2b86cf8f880ffa232b7319c60e4ad4c1fc017ed28144e39",
-      "compressedSha256": "258ad9ccb0434fe5a1956ceb21ac66c101a876383b2b39b3ff546fec8c29c2d4",
-      "bytes": 69648,
-      "compressedBytes": 53035
+      "sourceSha256": "75522d067a0a2ee56eaca7c5e0e92cf9ba0f7135a4a6c676e65ba8a966ae5fbd",
+      "contentSha256": "fda0dff8c27a0230dc106dcefb8e3315a3f705faf09ebe416de38e88c6a21186",
+      "compressedSha256": "3899f7ac14822c5e7c1e91dc0dbefe1cdbb0e587c74a622d61cdd79ab19e5265",
+      "bytes": 5035408,
+      "compressedBytes": 4657581,
+      "authoring": "talioscrownward-approved-transform-v1"
     },
     {
       "id": "liztent",
@@ -6174,11 +6202,12 @@
     {
       "id": "pawhook",
       "source": "/eqrequiem/objects/pawhook/final.glb.gz",
-      "sourceSha256": "1189fbb267201d64b907598e5f7a717630ceb133809be11b14edd6629034c5d1",
-      "contentSha256": "17c8c843ea13d0181ee99f21c737d497d71d56bef899d4eb2aae0ddf70c84459",
-      "compressedSha256": "b93a841fa48aca8d1934444091b91da997e1ed0ffde8d55b7901b4b6a6660751",
-      "bytes": 30216,
-      "compressedBytes": 27135
+      "sourceSha256": "9fbf52ecb13400a3106162b6601315b28a1aad6c0d51b9772106f863e89a8e04",
+      "contentSha256": "a636979a888cd301bec7eebc82bf09f0f9fe7dd16c7bf78ed96d726cb8f2d90a",
+      "compressedSha256": "3ea3db3eac87051f461624d96a0456267a777b7acc470b99649c02702e13ed17",
+      "bytes": 5033328,
+      "compressedBytes": 4657848,
+      "authoring": "talioscrownward-approved-transform-v1"
     },
     {
       "id": "pawpal",
@@ -6462,11 +6491,12 @@
     {
       "id": "post",
       "source": "/eqrequiem/objects/post/final.glb.gz",
-      "sourceSha256": "b4ff456192bac179f46377c119dc55b9f701bd03b54a15c92e87e7073f968141",
-      "contentSha256": "67d3c25259fc909a2b247a8edd2402c9783b4108878545043b01c8b9d67c916e",
-      "compressedSha256": "10fe5c8f6681555137f92919701a22633f97aa97f9d369b24a1d5e0ee6c82a1e",
-      "bytes": 6252,
-      "compressedBytes": 5148
+      "sourceSha256": "b5c78c6fa79a25f0fac7ddbb7430ae0378643526fe8b47faa0e9739d69e1fc43",
+      "contentSha256": "ef52059be6c6e4a46ba10136dd7320944998a514cf69fcc65d6118b8270b8dcd",
+      "compressedSha256": "7be9573bc08284a4b5def39e16a52332267c87ea09934fb709f47b370b1a59a1",
+      "bytes": 5032252,
+      "compressedBytes": 4651117,
+      "authoring": "talioscrownward-approved-transform-v1"
     },
     {
       "id": "pot1",
@@ -6498,11 +6528,12 @@
     {
       "id": "qeyflag",
       "source": "/eqrequiem/objects/qeyflag/final.glb.gz",
-      "sourceSha256": "e082325ac95dbb25aabce354eff99ac320910c0c82ed55ad860d48e5b36e9042",
-      "contentSha256": "c77823ae03ed074ce1b03a707919cdeaea1dd7fceb51afa20887849a288f90e7",
-      "compressedSha256": "9961a8598f0a83859c20fd11a76cc1b76db56a0d1376a9e2a98eaaa94e379373",
-      "bytes": 62364,
-      "compressedBytes": 23424
+      "sourceSha256": "157062e12cd41df505acc86ff4ef6750b5e66d41b799d96cb415a3b65208c71c",
+      "contentSha256": "7c8ba6d5562a17c9235ae38f4962ed14d4c9c644043252ace792d1c25ca8a0e0",
+      "compressedSha256": "8258cb36b4c65dae7aa3bbf7267f196d5f40d23dbc6e7949f894cf918b94c7d3",
+      "bytes": 5970640,
+      "compressedBytes": 5647605,
+      "authoring": "talioscrownward-approved-transform-v1"
     },
     {
       "id": "qoutpost",
@@ -6579,11 +6610,12 @@
     {
       "id": "recttable",
       "source": "/eqrequiem/objects/recttable/final.glb.gz",
-      "sourceSha256": "635e1674fee281a18e8d74eb1247c6f5d71ba80a8c037693ea30179a9e883c2f",
-      "contentSha256": "69935e94d11cc6926f2a18f0d278466a3c68548fb12565da85417cf3d9f7b39c",
-      "compressedSha256": "8b3312e0b16fa3c9914d568b212f75c940cca2c984190f13d824ca946b33a3dd",
-      "bytes": 18940,
-      "compressedBytes": 16172
+      "sourceSha256": "d272feb9b058d8ab131c2de1510ba2d80dd3071d97cdf553d65268949702999a",
+      "contentSha256": "33fb0d50716f5217213b22ea2df28c9dcb023215d6628b38c445a3c44dc39a1f",
+      "compressedSha256": "7411da2764942512528856d5b29cb23e55b46e27b98ea4a3ea0aeaf9a3aa37fe",
+      "bytes": 5046604,
+      "compressedBytes": 4660813,
+      "authoring": "talioscrownward-approved-transform-v1"
     },
     {
       "id": "redwood",
@@ -6651,20 +6683,22 @@
     {
       "id": "roundtable",
       "source": "/eqrequiem/objects/roundtable/final.glb.gz",
-      "sourceSha256": "1dfb655a1370c824a0f62107ba71e0254c0313df1da93718dc88d1fdaf8e359e",
-      "contentSha256": "a64f8ea26c01203556974fd640dac96c956d96050f2f9895fee29eacb8929f24",
-      "compressedSha256": "a34b788ed9a96bcfef5f06a89f886a7b0933b064e09d600f67073e3dabd4aa54",
-      "bytes": 15056,
-      "compressedBytes": 12604
+      "sourceSha256": "d9955f219e270d0976dbf5a26f71a67d17625356255da38cc45ae87254dfe2f8",
+      "contentSha256": "bd3b056e00589fffe0c93a0ec5818ce319fadbbde9996c3d6c95b54457958b72",
+      "compressedSha256": "1ad4b97822f866731a96128ad6feba5709c82e2f62e4ed6d53fea96e80fa86cf",
+      "bytes": 5059120,
+      "compressedBytes": 4661318,
+      "authoring": "talioscrownward-construction-correction-v2"
     },
     {
       "id": "roundtabled",
       "source": "/eqrequiem/objects/roundtabled/final.glb.gz",
-      "sourceSha256": "20419399e9d3f83cd1214e630b0700c74b8d62adbf363421fdce78eda6470c4e",
-      "contentSha256": "00d3a55ad48dff1b59d11707e8fbba808e5fb907ca42f3b1369ac7a336364173",
-      "compressedSha256": "8bc5b94969c899afa206fb62550da84d30b7b56a77fc703ae6fe06f07fddc4b5",
-      "bytes": 12004,
-      "compressedBytes": 9517
+      "sourceSha256": "59ea6d3973eef8f906a52a2c4adba3ca3083ffc58fcd380215ef761e3a0a4f33",
+      "contentSha256": "bf9201151746666d624fb035ece5771f9685e883d761e0b0b5c9625797d94c60",
+      "compressedSha256": "22a2e532b31ce92671fdb623e11374d66c6b7a1fd01ba9fbb032a440de4c9b19",
+      "bytes": 5058820,
+      "compressedBytes": 4661802,
+      "authoring": "talioscrownward-construction-correction-v2"
     },
     {
       "id": "rpine1",
@@ -6705,29 +6739,32 @@
     {
       "id": "rug2",
       "source": "/eqrequiem/objects/rug2/final.glb.gz",
-      "sourceSha256": "67b49396d6f7d0d16fc66ed020972e3c6bc65dd268d6fefe7f836da6425852ae",
-      "contentSha256": "483c6d495f865bae1def6ce32d4418ffc2a0793be2fc93cc76cfb65c0f673a0b",
-      "compressedSha256": "0ec98a2ccaeb9aa382d5968c3a3c7a4ad848928e1014037b6b3a08e1c0183ad1",
-      "bytes": 89712,
-      "compressedBytes": 88769
+      "sourceSha256": "243c845fc50bc3deb2369fdd2c48203ff16f08fa59b7668dd1a1c10f0b43f2d5",
+      "contentSha256": "1a1a467b6c5ae78f83a76d19d5bcefd2ed57bb20fb46027a7b6f492df78058da",
+      "compressedSha256": "30d28257ac2909b4266cecb6b5afc5ae52f3fe01d9726da68ba5a680a0274831",
+      "bytes": 3614636,
+      "compressedBytes": 3477426,
+      "authoring": "talioscrownward-approved-transform-v1"
     },
     {
       "id": "rug3",
       "source": "/eqrequiem/objects/rug3/final.glb.gz",
-      "sourceSha256": "6e09c7ec26c061c12809d6e8cc4ca4800ab4b8042046a3bc523ff971573dfb35",
-      "contentSha256": "ebfcc24f841a1242b820e30b3879d76eec0dd1c0908a91337a5753cecf4ef049",
-      "compressedSha256": "057177a997efbcd6d0df7b5d58359833e2624aef02a9055eb794b331c80e7bae",
-      "bytes": 86596,
-      "compressedBytes": 85165
+      "sourceSha256": "d14b4ab799dc41c610f1b04886ccc34efecccf610aa489740f5fc63c80d6f4ae",
+      "contentSha256": "3e390a571f1fa2e423571583e51ec48e746a7dd1423298efb01cf5c90be7a859",
+      "compressedSha256": "d7b7a971a024cb371236a3cf8a9747f013340afbca32d49e2c7384d7bd7c4827",
+      "bytes": 3435240,
+      "compressedBytes": 3398656,
+      "authoring": "talioscrownward-approved-transform-v1"
     },
     {
       "id": "rug4",
       "source": "/eqrequiem/objects/rug4/final.glb.gz",
-      "sourceSha256": "c6bbda86a41a0957680a05cd41ae81bdb496d9645f22aabe78d0751b3a83542e",
-      "contentSha256": "0626a990a76a7b857b8aa849909e5f106a26f63522e7cdf7b3e4e4aa27d832c3",
-      "compressedSha256": "414ee667bb8f0d31f7bd9853bb038ef122265c5090e5235074213b5815150267",
-      "bytes": 109596,
-      "compressedBytes": 108643
+      "sourceSha256": "63fd3defc8a848739f954390a08f77f07fbf87b9cadbe9e0e12f48d1c45f9a2d",
+      "contentSha256": "c93ecbbdd930481ff17b0a4d0092579dfbe7c3f51b989dfbc5920c80cfebfa27",
+      "compressedSha256": "5cd65eead087b695d2c2167ea491a5e61188ba06fdcbe5746e4062fc0912aac3",
+      "bytes": 3430124,
+      "compressedBytes": 3396702,
+      "authoring": "talioscrownward-construction-correction-v2"
     },
     {
       "id": "rug5",
@@ -6957,11 +6994,12 @@
     {
       "id": "smalltable",
       "source": "/eqrequiem/objects/smalltable/final.glb.gz",
-      "sourceSha256": "60a1e3a8d8007d22f768d47c281adfebe59acccc9f063bc3ed5869d88f4a3fdb",
-      "contentSha256": "2703e858711a4ba740f4d4c339f1977286ccaefedd5bc0ffc4d9cbaf6865bdb5",
-      "compressedSha256": "ffbb261f14d6dc24482d6319ab701e7938957ae79cb2f61469bac3b1b59389bb",
-      "bytes": 19556,
-      "compressedBytes": 16297
+      "sourceSha256": "bd5d824e99232a24330eaac6670386fa9986ba1e42ed45255ab0f4790eee8181",
+      "contentSha256": "68ed81e7c9c83642313d9a02aa1705533f38b88c6f9b9850569ae8764315e1f3",
+      "compressedSha256": "f2aee1b7d20b0d7a8cb1f174eb86a36e51dc66af1558662856a304caf32d235f",
+      "bytes": 5045668,
+      "compressedBytes": 4656996,
+      "authoring": "talioscrownward-approved-transform-v1"
     },
     {
       "id": "snakehead",
@@ -7065,11 +7103,12 @@
     {
       "id": "squaretable",
       "source": "/eqrequiem/objects/squaretable/final.glb.gz",
-      "sourceSha256": "c6ada1cd403753b94e9758c8bebebd8cbdf7631f435c1dac779e9bbf614e1e36",
-      "contentSha256": "cf17a9d3e30310a19dfea91eedd57bc73ba8be3cc49cc2a0eb54d5a55dc4393c",
-      "compressedSha256": "f4ae478f069ea231f144801c8c6cf2af9bb3d8b4c984177abb8976107a032e97",
-      "bytes": 18636,
-      "compressedBytes": 16094
+      "sourceSha256": "ae7d05912bfd955f691f2871208e46fe745fd5aaab49ba50f6c1d7ef961ebd4b",
+      "contentSha256": "9ded823cce9f560ee157519449f143246ab566b6c984e44e6b4939ec4e47aaac",
+      "compressedSha256": "57fa9f70d0ed85716fa41d653d3c2f6986f51433a28c33245da07e525e9f5251",
+      "bytes": 4835812,
+      "compressedBytes": 4589520,
+      "authoring": "talioscrownward-construction-correction-v2"
     },
     {
       "id": "squaretabled",
@@ -7461,20 +7500,22 @@
     {
       "id": "torch2",
       "source": "/eqrequiem/objects/torch2/final.glb.gz",
-      "sourceSha256": "4829da93e0f7c7525e3477140f2a50aac73b4f24e3c6df70586f659dcd4047ef",
-      "contentSha256": "8fc03f0d2805c108e3ba667d7ff80e6698ecf7a604e6461d7cca452d66f001d6",
-      "compressedSha256": "fb35c07f06df96e6da5a30a43c48028005d562bb66ca99f8066d57ec1a0fa78b",
-      "bytes": 41968,
-      "compressedBytes": 34878
+      "sourceSha256": "5c987e74e29e7b57b8fdfe91128b65a104d3c2775fb6319e53ebcbcab5295d0c",
+      "contentSha256": "5e0138c074c22d1d674e057a2db666e418729c64b5da9950a44723bc8677de3c",
+      "compressedSha256": "eba9eafa43575b2aabfe64634cf76eea44be4aa0b1e0c070a7d303ad17bd7cd0",
+      "bytes": 2577228,
+      "compressedBytes": 2265796,
+      "authoring": "talioscrownward-construction-correction-v2"
     },
     {
       "id": "torchpoint",
       "source": "/eqrequiem/objects/torchpoint/final.glb.gz",
-      "sourceSha256": "6a73c57bb3629685aea5f31fa3e418e642111033632ef4e55ddc9fee96c34812",
-      "contentSha256": "e771e25175cbb1d6736c5a6ed3894bf10e8c3b9846aaf3d2c0c50976503ce61e",
-      "compressedSha256": "50abccbea56b0b9941120116eacfb07ac9e1cd6a02b6d455add6ce265e0ba733",
-      "bytes": 43456,
-      "compressedBytes": 35828
+      "sourceSha256": "95a6f89ab812b8df731856db5cf1db4c25edd99cda0c4b958495e78cd8376e71",
+      "contentSha256": "293419902ac829452b024204003d4b2d4a563d47b05a8daf474bd006721be790",
+      "compressedSha256": "696e5335ffc4aa9f806db668ae076f82e64965de93c930d111b53cfd0d4c7130",
+      "bytes": 2578352,
+      "compressedBytes": 2259199,
+      "authoring": "talioscrownward-construction-correction-v2"
     },
     {
       "id": "tothe",
@@ -7524,11 +7565,12 @@
     {
       "id": "tree1",
       "source": "/eqrequiem/objects/tree1/final.glb.gz",
-      "sourceSha256": "9b5eb25d8a3c651fc1dd40cc37fa9f6044ed310c1b9f080895c690d08c8b6d83",
-      "contentSha256": "6f4ec3b21a80d1e29ea985d4177a8771c5230e9596850e248cc0d317a0639718",
-      "compressedSha256": "3bbe56fcc3a60c2097a5ff4bdf95a29f437ef0c1affb34e4029db6165914afcf",
-      "bytes": 27784,
-      "compressedBytes": 25122
+      "sourceSha256": "950a49ea3a53c73a2b3b0228a6bf6653abbd61b0289f4e79df4b3e8d77258d88",
+      "contentSha256": "ddb720525f331c6378a07fb4f08b155a15efba9dbd193fda42c06c126039e16e",
+      "compressedSha256": "590f0d993e9bb807b25bbfd9ea603399d69007f77adaa18c7e611eefae90bc32",
+      "bytes": 14679752,
+      "compressedBytes": 14414812,
+      "authoring": "talios-pine-supported-boughs-v3"
     },
     {
       "id": "tree10",
@@ -7632,11 +7674,12 @@
     {
       "id": "tree6",
       "source": "/eqrequiem/objects/tree6/final.glb.gz",
-      "sourceSha256": "7dc121a8bc46591a23eafba9fb349bcb3a8b2a9b66a9e22521df405055d37495",
-      "contentSha256": "ca7b45dfd490b496b97743d75c17edbf6a3f00dd6b2459430607afc1bfb36983",
-      "compressedSha256": "cc8b35600dcfdb8ac6869ede727e3d27316f0be0994abdb18a483d3fd5b9c8c9",
-      "bytes": 36292,
-      "compressedBytes": 33578
+      "sourceSha256": "92c1996d776d9fce15a20b6111cb4cf70f46bf0021323589aa16f015697b46f9",
+      "contentSha256": "bc6c0a763f3e0ec1f1e4f7f8c3729d3a67c9e8528f21b9a7adf7d90736a47bc2",
+      "compressedSha256": "5475f9ea621102d848500d8a96e182c9c8d7ad74858cf31af5abadad0e34f949",
+      "bytes": 14497188,
+      "compressedBytes": 14451258,
+      "authoring": "talios-tree-species-pbr-v2"
     },
     {
       "id": "tree7",
@@ -7776,29 +7819,32 @@
     {
       "id": "urn1",
       "source": "/eqrequiem/objects/urn1/final.glb.gz",
-      "sourceSha256": "5db87fa3ba10c9e6fd7fdfb078c4dfcd84536be48d076c73a1c4935128e4aa87",
-      "contentSha256": "32f2e1a38692b5031498d1b230a0ffa1cc02cf48a7662af2ef3f9fa8524bab24",
-      "compressedSha256": "f43b721e456388c4a5d9ace4211067ff537ed9a11b2a01529680b92979df9300",
-      "bytes": 22252,
-      "compressedBytes": 18653
+      "sourceSha256": "6ab7e142dd447ba187c67efb7d950bfdf9bafc3bc19b0ab9cd146ee44a0a53f6",
+      "contentSha256": "527ffe199cdb0cd4d7cbc82e26a4c4ce0a3526c637e18f12aba040a327ae1f8a",
+      "compressedSha256": "65a1deba8c07bb65e966d333aa9b71c9710c78450aad18419e6a0b76d8eee378",
+      "bytes": 5045384,
+      "compressedBytes": 4659007,
+      "authoring": "talioscrownward-approved-transform-v1"
     },
     {
       "id": "urn2",
       "source": "/eqrequiem/objects/urn2/final.glb.gz",
-      "sourceSha256": "b2cd9fd9cc6df1055a3d0f1f7a749cd807079eb40d8a847a7606848a0ebdd5ed",
-      "contentSha256": "b72f1f736a45e4863cb27b402311de60bad1f8c77f589e4a550308d452cb5b01",
-      "compressedSha256": "2fe2d9c5454c734cce37077af5b877eed4ce7ab44a643c53cea07b5f273e381f",
-      "bytes": 23200,
-      "compressedBytes": 19713
+      "sourceSha256": "a72cb51cd79cf935e8658e8e6897c88e8238c6b86c9771cd2ede20d511bffa24",
+      "contentSha256": "73651164d7006ff180ff709223d8252a8039949426305c02425a3fdbc6e3bbbc",
+      "compressedSha256": "53dbb6daa55d195ab0febbaa83d1eb89b91bff2b57d131c94c41c7fc585031d1",
+      "bytes": 5045384,
+      "compressedBytes": 4659287,
+      "authoring": "talioscrownward-approved-transform-v1"
     },
     {
       "id": "urn3",
       "source": "/eqrequiem/objects/urn3/final.glb.gz",
-      "sourceSha256": "f3e76b59245ad7562c98c41b51742d2a4a3560ffb01bcae42a708c3c1e9e8643",
-      "contentSha256": "f414456b336b37106b9caf136815a1ea19f873b1d4280ad5c05408e4f6dec9b3",
-      "compressedSha256": "89f91cfc9164f92769b4668d7f39782bfc23d5c6b84ae9e824a8bdfb4c80dd10",
-      "bytes": 25024,
-      "compressedBytes": 21533
+      "sourceSha256": "f89e4094317d7af297a96b696bdb95f57aad53ca5918afe1a7f658d355b292b2",
+      "contentSha256": "b3dfc34ebe6428fed46a4c41d901043c3a5c2ef2bf6e8815b08654fc2e38910a",
+      "compressedSha256": "be29fc3a6705abc2a0c3f12333928cec805682ee992452f8b9f93528eb563526",
+      "bytes": 5045268,
+      "compressedBytes": 4658262,
+      "authoring": "talioscrownward-approved-transform-v1"
     },
     {
       "id": "urn5",

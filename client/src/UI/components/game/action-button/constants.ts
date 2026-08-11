@@ -16,6 +16,14 @@ export enum ActionButtonType {
   WALK = 13,
   MELEE_ATTACK = 14,
   RANGED_ATTACK = 15,
+  /**
+   * An Eltania combat technique — Kick, Taunt, Brace.
+   *
+   * The types above are the inherited action set, none of which can hold one: the
+   * substrate had abilities, the character record had them prepared, and there was no
+   * slot kind on the bar that could fire one.
+   */
+  TECHNIQUE = 16,
 }
 
 export const UIActions = {

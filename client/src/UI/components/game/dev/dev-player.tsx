@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import Player from '@game/Player/player';
 import {
   Box,
@@ -14,7 +14,6 @@ import {
   Typography,
   Slider,
 } from '@mui/material';
-import emitter from '@game/Events/events';
 import { useEvent } from '@game/Events/event-hooks';
 
 const speedKey = 'dev-player-speed';
@@ -31,8 +30,8 @@ export const DevPlayer: React.FC = () => {
     y: '8',
     z: '392',
   });
-  const onSpeed = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const v = +e.target.value;
+  const onSpeed = (_event: Event, value: number | number[]) => {
+    const v = Array.isArray(value) ? value[0]! : value;
     setSpeed(v);
     if (player?.playerMovement) {
       localStorage.setItem(speedKey, v.toString());
@@ -53,10 +52,6 @@ export const DevPlayer: React.FC = () => {
   }, []);
   useEvent('playerLoaded', restoreSpeed);
 
-
-  const onAnim = (e: React.ChangeEvent<{ value: unknown }>) => {
-    setAnim(e.target.value as string);
-  };
 
   const toggleCollision = (e: React.ChangeEvent<HTMLInputElement>) => {
     const checked = e.target.checked;
@@ -138,13 +133,19 @@ export const DevPlayer: React.FC = () => {
         <Stack direction="row" spacing={1} alignItems="center">
           <FormControl size="small" sx={{ minWidth: 200 }}>
             <InputLabel>Animation</InputLabel>
-            <Select value={anim} label="Animation" onChange={onAnim}>
-              {Object.keys(player?.animations ?? {}).map((a) => (
-                <MenuItem key={a} value={a}>{a}</MenuItem>
+            <Select
+              value={anim}
+              label="Animation"
+              onChange={(event) => setAnim(event.target.value)}
+            >
+              {(player.playerEntity?.entityContainer.animations ?? []).map((animation) => (
+                <MenuItem key={animation.name} value={animation.name}>
+                  {animation.name}
+                </MenuItem>
               ))}
             </Select>
           </FormControl>
-          <Button size="small" variant="contained" onClick={() => player.playAnimation(anim, 0, true)}>
+          <Button size="small" variant="contained" onClick={() => player.playAnimation(anim, true)}>
             Play
           </Button>
         </Stack>

@@ -39,6 +39,11 @@ import {
 import ItemCache, { ItemContainer } from "./item-cache";
 import { RequiemEntityVisibility } from "./requiem-entity-visibility";
 import { ShadoEntityPool } from "./shado-entity-pool";
+import {
+  FloatingTextPool,
+  formatCombatText,
+  type FloatingTextKind,
+} from "@knervous/shado/msdf";
 
 type ModelKey = string;
 type SubmeshRange = {
@@ -173,11 +178,14 @@ export class EntityCache {
     if (!EntityCache.containers[model]) {
       const generation = EntityCache.generation;
       EntityCache.containers[model] = (async () => {
-        // Load .babylon
-        const bytes = await FileSystem.getFileBytes(
+        let bytes = await FileSystem.getFileBytes(
           "eqrequiem/babylon",
           `${model}.babylon.gz`,
         );
+        if (!bytes) {
+          console.warn(`[EntityCache] Model ${model} missing locally, falling back to hum`);
+          bytes = await FileSystem.getFileBytes("eqrequiem/babylon", "hum.babylon.gz");
+        }
         if (!bytes) {
           console.log(`[EntityCache] Failed to load model ${model}`);
           return null;
@@ -652,12 +660,49 @@ export class EntityCache {
   private static observerScene: BJS.Scene | null = null;
   private static nameplateLayer: ShadoDynamicEntityNameplateLayer | null = null;
 
+  /**
+   * Floating combat numbers ride the nameplate layer rather than a second text
+   * pipeline: same font atlas, same shader, same glyph buffer. Appending to the sync
+   * array is the whole integration.
+   */
+  private static readonly floatingText = new FloatingTextPool();
+
+  private static floatingTextSlot = 0;
+
+  /**
+   * Shows a combat result above an entity.
+   *
+   * Takes a world position rather than an entity so a value still appears for something
+   * that died on the same frame — the killing blow is the number players most want to
+   * see, and it is exactly the one a despawn would otherwise swallow.
+   */
+  public static showCombatText(
+    kind: FloatingTextKind,
+    position: { x: number; y: number; z: number },
+    amount?: number,
+    scale = 1,
+  ): void {
+    EntityCache.floatingTextSlot += 1;
+    EntityCache.floatingText.spawn(
+      {
+        kind,
+        text: formatCombatText(kind, amount),
+        x: position.x,
+        y: position.z,
+        z: position.y + 4.5 * scale,
+        slot: EntityCache.floatingTextSlot,
+      },
+      performance.now(),
+    );
+  }
+
   public static initialize(
     scene: BJS.Scene,
     worldVisibility?: {
       world?: ShadoWorldSpatialPackage;
       coordinator?: ShadoWorldVisibilityCoordinator;
       disableCulling?: boolean;
+      nameplateDepthTest?: boolean;
     },
   ): void {
     const visibilityGeneration = ++EntityCache.entityVisibilityGeneration;
@@ -675,14 +720,18 @@ export class EntityCache {
     }
     EntityCache.observerScene = scene;
     EntityCache.nameplateLayer?.dispose();
-    EntityCache.nameplateLayer = new ShadoDynamicEntityNameplateLayer(scene, {
+    EntityCache.floatingText.clear();
+    EntityCache.nameplateLayer = new ShadoDynamicEntityNameplateLayer(
+      scene as unknown as ConstructorParameters<typeof ShadoDynamicEntityNameplateLayer>[0],
+      {
       color: "#00ffff",
-      depthTest: true,
+      depthTest: worldVisibility?.nameplateDepthTest ?? true,
       // Alpha-blended nameplates render after opaque geometry in group 0 and
       // retain that group's depth buffer. Later groups clear depth by default.
       renderingGroupId: 0,
       worldScale: 1 / 32,
-    });
+      },
+    );
     if (!worldVisibility?.disableCulling) {
       void RequiemEntityVisibility.create(
         worldVisibility?.world,
@@ -778,7 +827,7 @@ export class EntityCache {
             selected ? 0.5 + Math.sin(now / 260) * 0.5 : 0;
           const spawnId = (entity.spawn as Spawn).spawnId;
           const nameplateZ =
-            entity.spawnPosition.y +
+            entity.presentationY +
             (4 + entity.nameplateLines.length * 1.5) * entity.spawnScale;
           const entityVisible =
             !entity.hidden &&
@@ -812,7 +861,7 @@ export class EntityCache {
               : undefined,
             fontSize: selected ? 14.25 + selectionPulse * 0.55 : undefined,
           };
-        }).concat(prompts),
+        }).concat(prompts, EntityCache.floatingText.advance(now)),
       );
       const delta = performance.now() - now;
       (window as any).perf = delta;

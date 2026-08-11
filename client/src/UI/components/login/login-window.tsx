@@ -126,7 +126,7 @@ export const LoginWindowComponent: React.FC = () => {
   return (
     <RequiemPanel
       className="rq-gateway"
-      eyebrow="Elrador // Gateway"
+      eyebrow="Eltania // Gateway"
       title="Worlds"
     >
       <div className="rq-gateway__intro">

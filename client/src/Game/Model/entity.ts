@@ -11,6 +11,7 @@ import {
 import { RaceEntry } from "@game/Constants/race-data";
 import type GameManager from "@game/Manager/game-manager";
 import { PlayerProfile, Spawn } from "@game/Net/messages";
+import { GROUND_FRICTION } from "@game/Physics/ground";
 import {
   InventorySlot,
   InventorySlotTextures,
@@ -18,8 +19,14 @@ import {
 } from "@game/Player/player-constants";
 import EntityCache, { type EntityContainer } from "./entity-cache";
 import {
+  floorAnchoredModelOffset,
+  physicsCenteredModelOffset,
+} from "./entity-grounding";
+import {
   createTargetRingMaterial,
   type TargetRingVisual,
+  createAttackConeMaterial,
+  type AttackConeVisual,
 } from "./entity-select-ring";
 import { heldItemLocalYOffset } from "./held-item-attachment";
 import type { RequiemEntityActor } from "./shado-entity-pool";
@@ -71,6 +78,29 @@ type InstanceContainer = {
   actor: RequiemEntityActor;
 };
 
+/**
+ * Attack cone geometry.
+ *
+ * The decal is the server's reach rule made visible, so these have to track
+ * `DEFAULT_REACH_RULES` in `serverjs/src/combat/reach.ts`: weapon reach 3 plus a body
+ * pad of 9. If the decal claims a reach the server will not honour, it stops being an
+ * aid and becomes a lie the player plans around.
+ */
+const ATTACK_CONE_REACH_UNITS = 12;
+/**
+ * The wedge projects half again as far ahead as it reaches to the side. Only the arc
+ * marks where a swing lands; the extension is what makes the decal read as a direction
+ * rather than a puddle.
+ */
+const ATTACK_CONE_FORWARD_SCALE = 1.5;
+/** The reach arc sits at this fraction of the decal's lateral half-extent. */
+const ATTACK_CONE_ARC_FRACTION = 0.9;
+
+const ATTACK_CONE_HALF_WIDTH =
+  ATTACK_CONE_REACH_UNITS / ATTACK_CONE_ARC_FRACTION;
+const ATTACK_CONE_HALF_DEPTH =
+  ATTACK_CONE_HALF_WIDTH * ATTACK_CONE_FORWARD_SCALE;
+
 export type EntityInstanceOptions = {
   /**
    * Render-only entities are presentation previews, not participants in the
@@ -86,11 +116,21 @@ export type EntityInstanceOptions = {
 };
 
 export class Entity extends BABYLON.TransformNode {
+  private readonly vatParticleEffectsEnabled = false;
   public spawn: Spawn | PlayerProfile;
   public entityContainer: EntityContainer;
   public entityCache: typeof EntityCache;
   public spawnPosition: BJS.Vector3 = new BABYLON.Vector3(0, 0, 0);
   public spawnScale: number = 1.5;
+  /**
+   * Render-only correction between the coordinate owned by gameplay and the
+   * model's authored origin. NPC coordinates are floor anchors. The local
+   * player's coordinate is the center of its physics capsule, so a foot-origin
+   * model must be lowered within that capsule while legacy centered models stay
+   * where they are.
+   */
+  public readonly presentationGroundOffset: number;
+  private readonly presentationPosition = new BABYLON.Vector3(0, 0, 0);
   public hidden: boolean = true;
   public raceDataEntry: RaceEntry | null = null;
 
@@ -99,16 +139,24 @@ export class Entity extends BABYLON.TransformNode {
   }
 
   private static targetRing: BJS.Mesh;
+  private static attackCone: BJS.Mesh;
   private static currentlySelected: Entity | null = null;
   private static targetVisual: TargetRingVisual | null = null;
+  private static attackConeVisual: AttackConeVisual | null = null;
 
   public static disposeStatics() {
     if (Entity.targetRing) {
       Entity.targetRing.dispose(false, false);
       Entity.targetRing = null as unknown as BJS.Mesh;
     }
+    if (Entity.attackCone) {
+      Entity.attackCone.dispose(false, false);
+      Entity.attackCone = null as unknown as BJS.Mesh;
+    }
     Entity.targetVisual?.material.dispose(true, true);
     Entity.targetVisual = null;
+    Entity.attackConeVisual?.material.dispose(true, true);
+    Entity.attackConeVisual = null;
     Entity.currentlySelected = null;
   }
 
@@ -137,6 +185,49 @@ export class Entity extends BABYLON.TransformNode {
       targetRing.setEnabled(false);
       Entity.targetRing = targetRing;
     }
+
+    if (!Entity.attackCone) {
+      // Longer than it is wide: the forward stretch is geometry, not shader work.
+      // The shader divides it back out so the arc stays a true circle at reach.
+      const attackCone = BABYLON.MeshBuilder.CreateGround(
+        "attackCone",
+        {
+          width: ATTACK_CONE_HALF_WIDTH * 2,
+          height: ATTACK_CONE_HALF_DEPTH * 2,
+        },
+        scene,
+      );
+      Entity.attackConeVisual = createAttackConeMaterial(
+        scene,
+        ATTACK_CONE_FORWARD_SCALE,
+      );
+      attackCone.material = Entity.attackConeVisual.material;
+      attackCone.isPickable = false;
+      attackCone.alwaysSelectAsActiveMesh = true;
+      attackCone.setEnabled(false);
+      Entity.attackCone = attackCone;
+    }
+  }
+
+  public updateAttackConePosition(heading: number, visible: boolean = true) {
+    if (!Entity.attackCone) return;
+    if (!visible) {
+      Entity.attackCone.setEnabled(false);
+      return;
+    }
+    Entity.attackCone.setEnabled(true);
+    // Entities face their local -X: the follow camera rides local +X, behind the
+    // shoulder, and forward input drives -rightXZ.  The decal is authored opening
+    // along its own +Z, so a quarter turn back is what puts the wedge in front of
+    // the character instead of ninety degrees off it.
+    Entity.attackCone.rotation.y = heading - Math.PI / 2;
+    // The wedge apex is the decal's centre, so the decal sits on the character.
+    // Offsetting it forward detached the cone from the feet it belongs to.
+    Entity.attackCone.position.set(
+      this.spawnPosition.x,
+      this.spawnPosition.y + 0.15,
+      this.spawnPosition.z,
+    );
   }
 
   private gameManager: GameManager;
@@ -226,6 +317,17 @@ export class Entity extends BABYLON.TransformNode {
     const finalScale = (spawnScale / height) * presentationScale;
 
     this.spawnScale = finalScale; // Use spawn scale if available, otherwise default to 1.5
+    if (this.isPlayer && !this.renderOnly) {
+      this.presentationGroundOffset = physicsCenteredModelOffset(
+        entityContainer.boundingBox,
+        finalScale,
+      );
+    } else {
+      this.presentationGroundOffset =
+        this.renderOnly || (spawn as Spawn).isNpc
+          ? floorAnchoredModelOffset(entityContainer.boundingBox, finalScale)
+          : 0;
+    }
     // Body rendering, attachments, and physics each consume spawnScale
     // explicitly. Scaling this shared parent as well would apply it twice to
     // attached weapons and to physics implementations that honor node scale.
@@ -329,6 +431,18 @@ export class Entity extends BABYLON.TransformNode {
       y,
       z,
     ]);
+  }
+
+  public get presentationY(): number {
+    return this.spawnPosition.y + this.presentationGroundOffset;
+  }
+
+  private getPresentationPosition(): BJS.Vector3 {
+    return this.presentationPosition.set(
+      this.spawnPosition.x,
+      this.presentationY,
+      this.spawnPosition.z,
+    );
   }
 
   public getClosestSpawns(
@@ -524,6 +638,7 @@ export class Entity extends BABYLON.TransformNode {
   }
 
   private instantiateMeshes() {
+    const presentationPosition = this.getPresentationPosition();
     const worldMat = BABYLON.Matrix.Scaling(
       this.spawnScale,
       this.spawnScale,
@@ -532,9 +647,9 @@ export class Entity extends BABYLON.TransformNode {
       .multiply(BABYLON.Matrix.RotationYawPitchRoll(0, 0, 0))
       .multiply(
         BABYLON.Matrix.Translation(
-          this.spawnPosition.x,
-          this.spawnPosition.y,
-          this.spawnPosition.z,
+          presentationPosition.x,
+          presentationPosition.y,
+          presentationPosition.z,
         ),
       );
     const { mesh, addThinInstance } = this.entityContainer;
@@ -547,7 +662,7 @@ export class Entity extends BABYLON.TransformNode {
     };
     this.entityContainer.shadoPool.setTransform(
       this.meshInstance.actor,
-      this.spawnPosition,
+      presentationPosition,
       this.rotationQuaternion ?? BABYLON.Quaternion.Identity(),
       this.spawnScale,
     );
@@ -642,12 +757,13 @@ export class Entity extends BABYLON.TransformNode {
         itemInst.setParent(this);
         itemInst.position = new BABYLON.Vector3(
           0,
-          heldItemLocalYOffset(
-            Boolean(
-              this.entityContainer.attachmentGeometryTransforms.r_point,
+          this.presentationGroundOffset +
+            heldItemLocalYOffset(
+              Boolean(
+                this.entityContainer.attachmentGeometryTransforms.r_point,
+              ),
+              this.spawnScale,
             ),
-            this.spawnScale,
-          ),
           0,
         );
         itemInst.scaling.setAll(this.spawnScale);
@@ -664,7 +780,7 @@ export class Entity extends BABYLON.TransformNode {
     }
     // Particle system to be implemented later. For now leave as boilerplate.
     // Reference for future code https://playground.babylonjs.com/?BabylonToolkit#T3QKRV#32
-    if (false && this.primaryMeshes.length > 0) {
+    if (this.vatParticleEffectsEnabled && this.primaryMeshes.length > 0) {
       const { Vector3, GPUParticleSystem, Texture } = BABYLON;
       const particleSystem = new GPUParticleSystem(
         "vatParticle",
@@ -813,12 +929,15 @@ export class Entity extends BABYLON.TransformNode {
           itemInst.setParent(this);
           itemInst.position = new BABYLON.Vector3(
             0,
-            heldItemLocalYOffset(
-              Boolean(
-                this.entityContainer.attachmentGeometryTransforms[defaultPoint],
+            this.presentationGroundOffset +
+              heldItemLocalYOffset(
+                Boolean(
+                  this.entityContainer.attachmentGeometryTransforms[
+                    defaultPoint
+                  ],
+                ),
+                this.spawnScale,
               ),
-              this.spawnScale,
-            ),
             0,
           );
           itemInst.rotation = this.rotation;
@@ -978,8 +1097,6 @@ export class Entity extends BABYLON.TransformNode {
         }
 
         idx = this.getTextureIndex(name, material, atlasArray);
-      } else if (!idxSet) {
-        idx = this.getTextureIndex(name, 1, atlasArray);
       }
 
       const x = submeshIndex;
@@ -1058,8 +1175,15 @@ export class Entity extends BABYLON.TransformNode {
       capsuleRadius,
       this.scene,
     );
-    this.capsuleShape.material.friction = 1.0;
-    this.capsuleShape.material.restitution = 0;
+    // Assign the material whole: the getter hands back a detached copy of the
+    // Havok material, so writing `material.friction` never reaches the shape.
+    this.capsuleShape.material = {
+      friction          : GROUND_FRICTION,
+      staticFriction    : GROUND_FRICTION,
+      restitution       : 0,
+      frictionCombine   : BABYLON.PhysicsMaterialCombineMode.MAXIMUM,
+      restitutionCombine: BABYLON.PhysicsMaterialCombineMode.MINIMUM,
+    };
     // this.nodeContainer = new BABYLON.TransformNode(
     //   `${this.spawn.name}`,
     //   this.scene,
@@ -1116,7 +1240,7 @@ export class Entity extends BABYLON.TransformNode {
     this.lastRotationQuaternion.copyFrom(this.rotationQuaternion!);
     this.entityContainer.shadoPool.setTransform(
       this.meshInstance.actor,
-      this.spawnPosition,
+      this.getPresentationPosition(),
       this.rotationQuaternion,
       this.spawnScale,
     );

@@ -4,11 +4,10 @@
  (type $2 (func (param i32)))
  (type $3 (func))
  (type $4 (func (param f32 f32) (result f32)))
- (type $5 (func (param i32 f32)))
+ (type $5 (func (param i32 f32) (result i32)))
  (type $6 (func (param i32 i32 i32 f32 f32 f32 f32)))
  (type $7 (func (param i32 f32 f32 f32)))
- (type $8 (func (param i32) (result i32)))
- (type $9 (func (param i32 i32 i32 i32 i32 i32 i32 i32 i32 i32 i32 i32 i32 i32 i32 i32 i32 i32 i32 i32 i32)))
+ (type $8 (func (param i32 i32 i32 i32 i32 i32 i32 i32 i32 i32 i32 i32 i32 i32 i32 i32 i32 i32 i32 i32 i32)))
  (global $assembly/zone-simulation/arena (mut i32) (i32.const 0))
  (global $assembly/zone-simulation/ids (mut i32) (i32.const 0))
  (global $assembly/zone-simulation/kinds (mut i32) (i32.const 0))
@@ -50,8 +49,7 @@
  (export "spawnEntity" (func $assembly/zone-simulation/spawnEntity))
  (export "setEntityTarget" (func $assembly/zone-simulation/setEntityTarget))
  (export "markDirty" (func $assembly/zone-simulation/markDirty))
- (export "tickNpcs" (func $assembly/zone-simulation/tickNpcs))
- (export "collectDirty" (func $assembly/zone-simulation/collectDirty))
+ (export "tickAndCollect" (func $assembly/zone-simulation/tickAndCollect))
  (export "memory" (memory $0))
  (start $~start)
  (func $assembly/zone-simulation/markDirty (param $0 i32)
@@ -1029,7 +1027,7 @@
   i32.and
   select
  )
- (func $assembly/zone-simulation/tickNpcs (param $0 i32) (param $1 f32)
+ (func $assembly/zone-simulation/tickAndCollect (param $0 i32) (param $1 f32) (result i32)
   (local $2 i32)
   (local $3 f32)
   (local $4 i32)
@@ -1053,297 +1051,323 @@
   i32.const 16384
   i32.ge_s
   select
-  local.set $0
+  local.set $2
   local.get $1
   f32.const 1.0000000474974513e-03
   f32.mul
-  local.tee $1
-  f32.const 0
-  f32.le
-  if
-   return
-  end
+  local.set $1
+  i32.const 0
+  global.set $assembly/zone-simulation/dirtyCount
+  i32.const 0
+  local.set $0
   loop $for-loop|0
    local.get $0
    local.get $2
-   i32.gt_s
+   i32.lt_s
    if
-    block $for-continue|0
-     global.get $assembly/zone-simulation/kinds
-     local.get $2
-     i32.add
-     i32.load8_u
-     i32.const 2
-     i32.ne
-     br_if $for-continue|0
-     local.get $2
-     i32.const 2
-     i32.shl
-     local.tee $4
-     global.get $assembly/zone-simulation/targetX
-     i32.add
-     f32.load
-     local.get $2
-     i32.const 12
-     i32.mul
-     local.tee $5
-     global.get $assembly/zone-simulation/positionX
-     i32.add
-     f32.load
-     f32.sub
-     local.tee $3
-     local.get $3
-     f32.mul
-     global.get $assembly/zone-simulation/targetY
-     local.get $4
-     i32.add
-     f32.load
-     global.get $assembly/zone-simulation/positionY
-     local.get $5
-     i32.add
-     f32.load
-     f32.sub
-     local.tee $6
-     local.get $6
-     f32.mul
-     f32.add
-     global.get $assembly/zone-simulation/targetZ
-     local.get $4
-     i32.add
-     f32.load
-     global.get $assembly/zone-simulation/positionZ
-     local.get $5
-     i32.add
-     f32.load
-     f32.sub
-     local.tee $7
-     local.get $7
-     f32.mul
-     f32.add
-     local.tee $8
-     f32.const 9.999999747378752e-05
-     f32.lt
-     if
-      global.get $assembly/zone-simulation/movementState
-      local.get $2
-      i32.const 1
-      i32.shl
+    local.get $1
+    f32.const 0
+    f32.gt
+    if
+     block $assembly/zone-simulation/stepEntity|inlined.0
+      global.get $assembly/zone-simulation/kinds
+      local.get $0
       i32.add
-      local.tee $9
-      i32.load16_u
-      i32.const 0
+      i32.load8_u
+      i32.const 2
       i32.ne
+      br_if $assembly/zone-simulation/stepEntity|inlined.0
+      local.get $0
+      i32.const 2
+      i32.shl
+      local.tee $4
+      global.get $assembly/zone-simulation/targetX
+      i32.add
+      f32.load
+      local.get $0
+      i32.const 12
+      i32.mul
+      local.tee $5
+      global.get $assembly/zone-simulation/positionX
+      i32.add
+      f32.load
+      f32.sub
+      local.tee $3
+      local.get $3
+      f32.mul
+      global.get $assembly/zone-simulation/targetY
+      local.get $4
+      i32.add
+      f32.load
+      global.get $assembly/zone-simulation/positionY
+      local.get $5
+      i32.add
+      f32.load
+      f32.sub
+      local.tee $6
+      local.get $6
+      f32.mul
+      f32.add
+      global.get $assembly/zone-simulation/targetZ
+      local.get $4
+      i32.add
+      f32.load
+      global.get $assembly/zone-simulation/positionZ
+      local.get $5
+      i32.add
+      f32.load
+      f32.sub
+      local.tee $7
+      local.get $7
+      f32.mul
+      f32.add
+      local.tee $8
+      f32.const 9.999999747378752e-05
+      f32.lt
+      if
+       global.get $assembly/zone-simulation/movementState
+       local.get $0
+       i32.const 1
+       i32.shl
+       i32.add
+       local.tee $9
+       i32.load16_u
+       i32.const 0
+       i32.ne
+       global.get $assembly/zone-simulation/velocityX
+       local.get $5
+       i32.add
+       f32.const 0
+       f32.store
+       global.get $assembly/zone-simulation/velocityY
+       local.get $5
+       i32.add
+       f32.const 0
+       f32.store
+       global.get $assembly/zone-simulation/velocityZ
+       local.get $5
+       i32.add
+       f32.const 0
+       f32.store
+       global.get $assembly/zone-simulation/animation
+       local.get $4
+       i32.add
+       i32.const 0
+       i32.store
+       local.get $9
+       i32.const 0
+       i32.store16
+       if
+        local.get $0
+        call $assembly/zone-simulation/markDirty
+       end
+       br $assembly/zone-simulation/stepEntity|inlined.0
+      end
+      global.get $assembly/zone-simulation/speed
+      local.get $4
+      i32.add
+      f32.load
+      local.tee $11
+      f32.const 0
+      f32.le
+      if
+       global.get $assembly/zone-simulation/movementState
+       local.get $0
+       i32.const 1
+       i32.shl
+       i32.add
+       local.tee $9
+       i32.load16_u
+       i32.const 0
+       i32.ne
+       global.get $assembly/zone-simulation/velocityX
+       local.get $5
+       i32.add
+       f32.const 0
+       f32.store
+       global.get $assembly/zone-simulation/velocityY
+       local.get $5
+       i32.add
+       f32.const 0
+       f32.store
+       global.get $assembly/zone-simulation/velocityZ
+       local.get $5
+       i32.add
+       f32.const 0
+       f32.store
+       global.get $assembly/zone-simulation/animation
+       local.get $4
+       i32.add
+       i32.const 0
+       i32.store
+       local.get $9
+       i32.const 0
+       i32.store16
+       if
+        local.get $0
+        call $assembly/zone-simulation/markDirty
+       end
+       br $assembly/zone-simulation/stepEntity|inlined.0
+      end
       global.get $assembly/zone-simulation/velocityX
       local.get $5
       i32.add
-      f32.const 0
+      local.get $3
+      f32.const 1
+      local.get $8
+      f32.sqrt
+      f32.div
+      local.tee $8
+      f32.mul
+      local.tee $3
+      local.get $11
+      f32.mul
       f32.store
       global.get $assembly/zone-simulation/velocityY
       local.get $5
       i32.add
-      f32.const 0
+      local.get $6
+      local.get $8
+      f32.mul
+      local.tee $6
+      local.get $11
+      f32.mul
       f32.store
       global.get $assembly/zone-simulation/velocityZ
       local.get $5
       i32.add
+      local.get $7
+      local.get $8
+      f32.mul
+      local.tee $12
+      local.get $11
+      f32.mul
+      f32.store
+      global.get $assembly/zone-simulation/positionX
+      local.get $5
+      i32.add
+      local.tee $9
+      local.get $9
+      f32.load
+      local.get $3
+      local.get $11
+      local.get $1
+      f32.mul
+      f32.const 1
+      local.get $8
+      f32.div
+      f32.min
+      local.tee $11
+      f32.mul
+      f32.add
+      f32.store
+      global.get $assembly/zone-simulation/positionY
+      local.get $5
+      i32.add
+      local.tee $9
+      local.get $9
+      f32.load
+      local.get $6
+      local.get $11
+      f32.mul
+      f32.add
+      f32.store
+      global.get $assembly/zone-simulation/positionZ
+      local.get $5
+      i32.add
+      local.tee $5
+      local.get $5
+      f32.load
+      local.get $12
+      local.get $11
+      f32.mul
+      f32.add
+      f32.store
+      local.get $7
+      f32.neg
+      local.get $8
+      f32.mul
+      local.get $3
+      call $~lib/math/NativeMathf.atan2
+      local.tee $3
+      f32.const 0.5
+      f32.mul
+      local.set $6
+      global.get $assembly/zone-simulation/heading
+      local.get $4
+      i32.add
+      local.get $3
+      f32.store
+      local.get $0
+      i32.const 4
+      i32.shl
+      local.tee $5
+      global.get $assembly/zone-simulation/orientationX
+      i32.add
       f32.const 0
+      f32.store
+      global.get $assembly/zone-simulation/orientationY
+      local.get $5
+      i32.add
+      local.get $6
+      call $~lib/math/NativeMathf.sin
+      f32.store
+      global.get $assembly/zone-simulation/orientationZ
+      local.get $5
+      i32.add
+      f32.const 0
+      f32.store
+      global.get $assembly/zone-simulation/orientationW
+      local.get $5
+      i32.add
+      local.get $6
+      call $~lib/math/NativeMathf.cos
       f32.store
       global.get $assembly/zone-simulation/animation
       local.get $4
       i32.add
-      i32.const 0
+      i32.const 1
       i32.store
-      local.get $9
-      i32.const 0
-      i32.store16
-      if
-       local.get $2
-       call $assembly/zone-simulation/markDirty
-      end
-      br $for-continue|0
-     end
-     global.get $assembly/zone-simulation/speed
-     local.get $4
-     i32.add
-     f32.load
-     local.tee $11
-     f32.const 0
-     f32.le
-     if
       global.get $assembly/zone-simulation/movementState
-      local.get $2
+      local.get $0
       i32.const 1
       i32.shl
       i32.add
-      local.tee $9
-      i32.load16_u
-      i32.const 0
-      i32.ne
-      global.get $assembly/zone-simulation/velocityX
-      local.get $5
-      i32.add
-      f32.const 0
-      f32.store
-      global.get $assembly/zone-simulation/velocityY
-      local.get $5
-      i32.add
-      f32.const 0
-      f32.store
-      global.get $assembly/zone-simulation/velocityZ
-      local.get $5
-      i32.add
-      f32.const 0
-      f32.store
-      global.get $assembly/zone-simulation/animation
-      local.get $4
-      i32.add
-      i32.const 0
-      i32.store
-      local.get $9
-      i32.const 0
+      i32.const 1
       i32.store16
-      if
-       local.get $2
-       call $assembly/zone-simulation/markDirty
-      end
-      br $for-continue|0
+      local.get $0
+      call $assembly/zone-simulation/markDirty
      end
-     global.get $assembly/zone-simulation/velocityX
-     local.get $5
-     i32.add
-     local.get $3
-     f32.const 1
-     local.get $8
-     f32.sqrt
-     f32.div
-     local.tee $8
-     f32.mul
-     local.tee $3
-     local.get $11
-     f32.mul
-     f32.store
-     global.get $assembly/zone-simulation/velocityY
-     local.get $5
-     i32.add
-     local.get $6
-     local.get $8
-     f32.mul
-     local.tee $6
-     local.get $11
-     f32.mul
-     f32.store
-     global.get $assembly/zone-simulation/velocityZ
-     local.get $5
-     i32.add
-     local.get $7
-     local.get $8
-     f32.mul
-     local.tee $12
-     local.get $11
-     f32.mul
-     f32.store
-     global.get $assembly/zone-simulation/positionX
-     local.get $5
-     i32.add
-     local.tee $9
-     local.get $9
-     f32.load
-     local.get $3
-     local.get $11
-     local.get $1
-     f32.mul
-     f32.const 1
-     local.get $8
-     f32.div
-     f32.min
-     local.tee $11
-     f32.mul
-     f32.add
-     f32.store
-     global.get $assembly/zone-simulation/positionY
-     local.get $5
-     i32.add
-     local.tee $9
-     local.get $9
-     f32.load
-     local.get $6
-     local.get $11
-     f32.mul
-     f32.add
-     f32.store
-     global.get $assembly/zone-simulation/positionZ
-     local.get $5
-     i32.add
-     local.tee $5
-     local.get $5
-     f32.load
-     local.get $12
-     local.get $11
-     f32.mul
-     f32.add
-     f32.store
-     local.get $7
-     f32.neg
-     local.get $8
-     f32.mul
-     local.get $3
-     call $~lib/math/NativeMathf.atan2
-     local.tee $3
-     f32.const 0.5
-     f32.mul
-     local.set $6
-     global.get $assembly/zone-simulation/heading
-     local.get $4
-     i32.add
-     local.get $3
-     f32.store
-     local.get $2
-     i32.const 4
-     i32.shl
-     local.tee $5
-     global.get $assembly/zone-simulation/orientationX
-     i32.add
-     f32.const 0
-     f32.store
-     global.get $assembly/zone-simulation/orientationY
-     local.get $5
-     i32.add
-     local.get $6
-     call $~lib/math/NativeMathf.sin
-     f32.store
-     global.get $assembly/zone-simulation/orientationZ
-     local.get $5
-     i32.add
-     f32.const 0
-     f32.store
-     global.get $assembly/zone-simulation/orientationW
-     local.get $5
-     i32.add
-     local.get $6
-     call $~lib/math/NativeMathf.cos
-     f32.store
-     global.get $assembly/zone-simulation/animation
-     local.get $4
-     i32.add
-     i32.const 1
-     i32.store
-     global.get $assembly/zone-simulation/movementState
-     local.get $2
-     i32.const 1
-     i32.shl
-     i32.add
-     i32.const 1
-     i32.store16
-     local.get $2
-     call $assembly/zone-simulation/markDirty
     end
-    local.get $2
+    global.get $assembly/zone-simulation/dirtyFlags
+    local.get $0
+    i32.add
+    local.tee $4
+    i32.load8_u
+    if
+     global.get $assembly/zone-simulation/dirtyIndices
+     global.get $assembly/zone-simulation/dirtyCount
+     i32.const 2
+     i32.shl
+     i32.add
+     local.get $0
+     i32.store
+     local.get $4
+     i32.const 0
+     i32.store8
+     global.get $assembly/zone-simulation/dirtyCount
+     i32.const 1
+     i32.add
+     global.set $assembly/zone-simulation/dirtyCount
+    end
+    local.get $0
     i32.const 1
     i32.add
-    local.set $2
+    local.set $0
     br $for-loop|0
    end
   end
+  global.get $assembly/zone-simulation/dirtyCount
  )
  (func $assembly/zone-simulation/spawnEntity (param $0 i32) (param $1 i32) (param $2 i32) (param $3 f32) (param $4 f32) (param $5 f32) (param $6 f32)
   (local $7 i32)
@@ -1452,61 +1476,6 @@
   i32.add
   local.get $3
   f32.store
- )
- (func $assembly/zone-simulation/collectDirty (param $0 i32) (result i32)
-  (local $1 i32)
-  (local $2 i32)
-  i32.const 0
-  global.set $assembly/zone-simulation/dirtyCount
-  i32.const 16384
-  local.get $0
-  i32.const 0
-  local.get $0
-  i32.const 0
-  i32.gt_s
-  select
-  local.tee $0
-  local.get $0
-  i32.const 16384
-  i32.ge_s
-  select
-  local.set $1
-  i32.const 0
-  local.set $0
-  loop $for-loop|0
-   local.get $0
-   local.get $1
-   i32.lt_s
-   if
-    global.get $assembly/zone-simulation/dirtyFlags
-    local.get $0
-    i32.add
-    local.tee $2
-    i32.load8_u
-    if
-     global.get $assembly/zone-simulation/dirtyIndices
-     global.get $assembly/zone-simulation/dirtyCount
-     i32.const 2
-     i32.shl
-     i32.add
-     local.get $0
-     i32.store
-     local.get $2
-     i32.const 0
-     i32.store8
-     global.get $assembly/zone-simulation/dirtyCount
-     i32.const 1
-     i32.add
-     global.set $assembly/zone-simulation/dirtyCount
-    end
-    local.get $0
-    i32.const 1
-    i32.add
-    local.set $0
-    br $for-loop|0
-   end
-  end
-  global.get $assembly/zone-simulation/dirtyCount
  )
  (func $assembly/zone-simulation/capacity (result i32)
   i32.const 16384

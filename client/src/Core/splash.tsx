@@ -19,7 +19,7 @@ export const SplashScreen: React.FC<SplashProps> = ({ files = [] }) => (
         src="/eltania/mark.svg"
       />
       <h1>Shadows of Eltania</h1>
-      <p className="eltania-splash__eyebrow">Elrador</p>
+      <p className="eltania-splash__eyebrow">Eltania</p>
       <div aria-hidden="true" className="eltania-splash__progress">
         <span />
       </div>

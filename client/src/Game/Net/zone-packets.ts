@@ -1,4 +1,9 @@
 import { addChatLine } from "@game/ChatCommands/chat-message";
+import { AbilityStore, REFUSAL_TEXT } from "@game/Combat/ability-store";
+import {
+  PROGRESSION_REFUSAL_TEXT,
+  ProgressionStore,
+} from "@game/Combat/progression-store";
 import { AnimationDefinitions } from "@game/Animation/animation-constants";
 import emitter from "@game/Events/events";
 import type GameManager from "@game/Manager/game-manager";
@@ -6,6 +11,9 @@ import Player from "@game/Player/player";
 import { InventorySlot } from "@game/Player/player-constants";
 import { WorldSocket } from "@ui/net/instances";
 import {
+  AbilityLoadout,
+  AbilityResult,
+  ProgressionState,
   BulkDeleteItem,
   BulkItemPacket,
   ChannelMessage,
@@ -30,6 +38,7 @@ import {
 } from "./messages";
 import { OpCodes } from "./opcodes";
 import { viewWorldStatePacket } from "./world-state";
+import { EntityCache } from "@game/Model/entity-cache";
 
 export function opCodeHandler(opCode: OpCodes, type: any): MethodDecorator {
   return (target: object, propertyKey: string | symbol) => {
@@ -203,6 +212,31 @@ export class ZonePacketHandler {
     emitter.emit("chatMessage", msg);
   }
 
+  @opCodeHandler(OpCodes.AbilityLoadout, AbilityLoadout)
+  processAbilityLoadout(loadout: AbilityLoadout) {
+    // Sent at zone entry. Until this arrived the client had no way to know the character
+    // owned a technique at all, which is why the hotbar only ever held the legacy verbs.
+    AbilityStore.applyLoadout(loadout);
+  }
+
+  @opCodeHandler(OpCodes.ProgressionState, ProgressionState)
+  processProgressionState(state: ProgressionState) {
+    ProgressionStore.apply(state);
+    if (state.refusal) {
+      addChatLine(
+        PROGRESSION_REFUSAL_TEXT[state.refusal] ?? "That is not possible right now.",
+      );
+    }
+  }
+
+  @opCodeHandler(OpCodes.AbilityResult, AbilityResult)
+  processAbilityResult(result: AbilityResult) {
+    AbilityStore.applyResult(result);
+    if (!result.ok) {
+      addChatLine(REFUSAL_TEXT[result.reason ?? ""] ?? "You cannot do that yet.");
+    }
+  }
+
   @opCodeHandler(OpCodes.CombatEvent, CombatEvent)
   processCombatEvent(event: CombatEvent) {
     const entity =
@@ -220,6 +254,16 @@ export class ZonePacketHandler {
           entity.playAnimation(AnimationDefinitions.MinorDamage, true);
         }
       }
+      // Combat numbers are spawned from the authoritative event, not from a local
+      // prediction: the value a player reads has to be the value the server applied.
+      if (event.outcome === "hit" || event.outcome === "miss") {
+        EntityCache.showCombatText(
+          event.outcome === "miss" ? "miss" : "damage",
+          entity.spawnPosition,
+          event.damage,
+          entity.spawnScale,
+        );
+      }
       if (event.killed && entity.spawn.isNpc) {
         entity.spawn.kind = 3;
         entity.spawn.isCorpse = true;
@@ -227,6 +271,17 @@ export class ZonePacketHandler {
       }
     }
     if (!entity && event.outcome === "hit" && Player.instance?.player) {
+      // Damage taken reads at the player's own position, so incoming and outgoing
+      // numbers occupy the same visual language.
+      const self = Player.instance.playerEntity;
+      if (self) {
+        EntityCache.showCombatText(
+          "damage",
+          self.spawnPosition,
+          event.damage,
+          self.spawnScale,
+        );
+      }
       Player.instance.player.curHp = event.targetCurrentHp;
       emitter.emit("setPlayer", Player.instance.player);
       Player.instance.playAnimation(

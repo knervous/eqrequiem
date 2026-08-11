@@ -761,3 +761,14 @@ export function createMSDFNameplateLayer(
 }
 
 export const createMsdfNameplateLayer = createMSDFNameplateLayer;
+
+export {
+  DEFAULT_FLOATING_TEXT_STYLES,
+  FloatingTextPool,
+  formatCombatText,
+  type FloatingTextInstance,
+  type FloatingTextKind,
+  type FloatingTextOptions,
+  type FloatingTextSpawn,
+  type FloatingTextStyle,
+} from "./floatingText.js";

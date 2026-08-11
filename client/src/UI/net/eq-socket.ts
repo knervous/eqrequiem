@@ -126,7 +126,7 @@ export class EqSocket {
   // Reconnect
   private url: string | null = null;
   private port: number | string | null = null;
-  private sessionId: number | null = null;
+  public sessionId: number | null = null;
   private allowReconnect: boolean;
   private maxRetries: number;
   private retryCount = 0;

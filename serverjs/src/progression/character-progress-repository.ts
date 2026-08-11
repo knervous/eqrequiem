@@ -133,36 +133,45 @@ export class CharacterProgressRepository {
       && batch.knowledgeLearned.length === 0
       && batch.knowledgeForgotten.length === 0
     ) return;
-    await this.runtime.transaction(async (transaction) => {
-      for (const quest of batch.quests) {
-        const stateJson = JSON.stringify(quest.state);
-        const updated = await transaction.execute(
-          `UPDATE character_quest_state
-           SET revision = ?, state_json = ?, updated_at = CURRENT_TIMESTAMP
-           WHERE character_id = ? AND quest_key = ?`,
-          [quest.revision, stateJson, batch.characterId, quest.questKey],
-        );
-        if (Number(updated.affectedRows ?? 0) > 0) continue;
-        await transaction.execute(
-          `INSERT INTO character_quest_state (character_id, quest_key, revision, state_json)
-           VALUES (?, ?, ?, ?)`,
-          [batch.characterId, quest.questKey, quest.revision, stateJson],
-        );
-      }
-      for (const fact of batch.knowledgeLearned) {
-        await transaction.execute(
-          `INSERT INTO character_knowledge (character_id, knowledge_key, data_json)
-           VALUES (?, ?, ?) ON CONFLICT DO NOTHING`,
-          [batch.characterId, fact.key, JSON.stringify(fact.data ?? {})],
-        );
-      }
-      for (const key of batch.knowledgeForgotten) {
-        await transaction.execute(
-          "DELETE FROM character_knowledge WHERE character_id = ? AND knowledge_key = ?",
-          [batch.characterId, key],
-        );
-      }
-    });
+    await this.runtime.transaction((transaction) =>
+      new CharacterProgressRepository(
+        transaction,
+        this.content,
+        this.contentPrefix,
+      ).commitInTransaction(batch)
+    );
+  }
+
+  /** Applies a drained quest batch inside the caller's scheduler transaction. */
+  async commitInTransaction(batch: QuestPersistenceBatch): Promise<void> {
+    for (const quest of batch.quests) {
+      const stateJson = JSON.stringify(quest.state);
+      const updated = await this.runtime.execute(
+        `UPDATE character_quest_state
+         SET revision = ?, state_json = ?, updated_at = CURRENT_TIMESTAMP
+         WHERE character_id = ? AND quest_key = ?`,
+        [quest.revision, stateJson, batch.characterId, quest.questKey],
+      );
+      if (Number(updated.affectedRows ?? 0) > 0) continue;
+      await this.runtime.execute(
+        `INSERT INTO character_quest_state (character_id, quest_key, revision, state_json)
+         VALUES (?, ?, ?, ?)`,
+        [batch.characterId, quest.questKey, quest.revision, stateJson],
+      );
+    }
+    for (const fact of batch.knowledgeLearned) {
+      await this.runtime.execute(
+        `INSERT INTO character_knowledge (character_id, knowledge_key, data_json)
+         VALUES (?, ?, ?) ON CONFLICT DO NOTHING`,
+        [batch.characterId, fact.key, JSON.stringify(fact.data ?? {})],
+      );
+    }
+    for (const key of batch.knowledgeForgotten) {
+      await this.runtime.execute(
+        "DELETE FROM character_knowledge WHERE character_id = ? AND knowledge_key = ?",
+        [batch.characterId, key],
+      );
+    }
   }
 
   /**

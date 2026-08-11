@@ -1,12 +1,13 @@
 export function getCookie(name: string) {
   const value = `; ${document.cookie}`;
   const parts = value.split(`; ${name}=`);
-  if (parts.length === 2) return parts.pop().split(';').shift();
+  if (parts.length === 2) return parts.pop()?.split(';').shift();
 }
   
 export function parseJwt(token: string) : object | undefined {
   try {
     const base64Url = token.split('.')[1]; // Get the payload (second part)
+    if (!base64Url) return undefined;
     const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/'); // Convert base64url to base64
     const jsonPayload = decodeURIComponent(
       atob(base64)

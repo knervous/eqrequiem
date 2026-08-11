@@ -14,7 +14,19 @@ import type {
 
 export interface ZoneQuestIdentity {
   readonly id: number;
+  /** The short name the runtime, nav meshes and asset pipeline use. */
   readonly shortName: string;
+  /**
+   * The canonical content key authored quest keys are scoped by.
+   *
+   * Kept separate from `shortName` so a quest key — which is persisted in every
+   * character's state and must stay stable forever — belongs to the *place in the
+   * fiction* rather than to whichever zone file currently renders it. Defaults to
+   * `shortName` for zones that have not been given a canonical identity yet.
+   */
+  readonly contentKey?: string;
+  /** Canonical Eltania zone key, when the zone has one. Alias of `contentKey`. */
+  readonly key?: string;
 }
 
 export interface QuestScopeOptions extends QuestMetadata {
@@ -217,7 +229,11 @@ export class ZoneQuestRegistry {
   readonly #rumors = new RumorNetwork();
 
   constructor(readonly zone: ZoneQuestIdentity) {
-    this.#ambient = new QuestScope(`zone:${zone.shortName}`, zone, { journal: "none" });
+    this.#ambient = new QuestScope(
+      `zone:${zone.contentKey ?? zone.shortName}`,
+      zone,
+      { journal: "none" },
+    );
   }
 
   /** The zone's rumor network: what is currently worth talking about here. */
@@ -303,7 +319,9 @@ export class ZoneQuestRegistry {
 
   private qualify(key: string): string {
     const trimmed = key.trim();
-    return trimmed.includes(":") ? trimmed : `${this.zone.shortName}:${trimmed}`;
+    return trimmed.includes(":")
+      ? trimmed
+      : `${this.zone.contentKey ?? this.zone.shortName}:${trimmed}`;
   }
 }
 

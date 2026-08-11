@@ -15,6 +15,10 @@ import {
 } from "./grass-cell-streamer";
 import { createGrassMaterial } from "./grass-shader";
 import { createGrassSurfaceMaterial } from "./grass-surface-shader";
+import {
+  createTerrainSurfaceMaterial,
+  type EltaniaTerrainLayer,
+} from "./terrain-surface-shader";
 import { ShadoSceneFxVisibility } from "./scene-fx-visibility";
 import { createWaterMaterial } from "./water-shader";
 import { bindZoneShaderLighting } from "./zone-shader-lighting";
@@ -41,6 +45,53 @@ function baseColorTexture(
     return material.diffuseTexture;
   }
   return null;
+}
+
+type TerrainMetadata = {
+  schema: "eltania.terrain";
+  version: 1;
+  prototype: "grass-dirt-rock";
+  controlMap0: string;
+  worldMin: [number, number];
+  worldMax: [number, number];
+  layers: { grass: string; dirt: string; rock: string };
+  scales: { grass: number; dirt: number; rock: number; macro: number };
+  rockSlopeStart: number;
+  rockSlopeEnd: number;
+  triplanarSlopeStart: number;
+  triplanarSlopeEnd: number;
+};
+
+function materialExtras(material: BJS.Material | null): Record<string, unknown> | null {
+  const extras = material?.metadata?.gltf?.extras;
+  return extras && typeof extras === "object" && !Array.isArray(extras)
+    ? (extras as Record<string, unknown>)
+    : null;
+}
+
+function paletteId(material: BJS.Material | null): string | null {
+  const value = materialExtras(material)?.eltania_palette_id;
+  return typeof value === "string" ? value : null;
+}
+
+function terrainMetadata(material: BJS.Material | null): TerrainMetadata | null {
+  const eltania = materialExtras(material)?.eltania;
+  if (!eltania || typeof eltania !== "object" || Array.isArray(eltania)) return null;
+  const terrain = (eltania as Record<string, unknown>).terrain;
+  if (!terrain || typeof terrain !== "object" || Array.isArray(terrain)) return null;
+  const candidate = terrain as Partial<TerrainMetadata>;
+  return candidate.schema === "eltania.terrain" &&
+    candidate.version === 1 &&
+    candidate.prototype === "grass-dirt-rock" &&
+    typeof candidate.controlMap0 === "string"
+    ? (candidate as TerrainMetadata)
+    : null;
+}
+
+function terrainLayer(material: BJS.Material | null): EltaniaTerrainLayer | null {
+  if (!(material instanceof BABYLON.PBRMaterial)) return null;
+  if (!material.albedoTexture || !material.metallicTexture) return null;
+  return { albedo: material.albedoTexture, metallicRoughness: material.metallicTexture };
 }
 
 type GrassSpatialSegment = {
@@ -170,6 +221,11 @@ export class ZoneGeometryFx {
       }
     }
     for (const material of staticMaterials) material.freeze();
+    const materialsByPalette = new Map<string, BJS.Material>();
+    for (const mesh of meshes) {
+      const id = paletteId(mesh.material);
+      if (id && mesh.material) materialsByPalette.set(id, mesh.material);
+    }
 
     const grassSurfaces = meshes.filter(
       (mesh) => shaderRole(mesh.material) === "grass",
@@ -200,7 +256,7 @@ export class ZoneGeometryFx {
             name: "RequiemGrassMaterial:far",
             windStrength: 0.12,
             baseColor: BABYLON.Color3.FromHexString("#52743B"),
-            colorVariance: 0.1,
+            colorVariance: 0.2,
             fadeInStart: 90,
             fadeInEnd: 118,
             fadeStart: 205,
@@ -236,12 +292,48 @@ export class ZoneGeometryFx {
     for (const surface of grassSurfaces) {
       const baseTexture = baseColorTexture(surface.material);
       if (!baseTexture) continue;
-      const surfaceMaterial = createGrassSurfaceMaterial(
-        scene,
-        baseTexture,
-        world.lighting?.vertexColors === "material-tint" ||
-          world.lighting?.vertexColors === "baked-irradiance",
-      );
+      const terrain = terrainMetadata(surface.material);
+      const layers = terrain
+        ? {
+            grass: terrainLayer(materialsByPalette.get(terrain.layers.grass) ?? null),
+            dirt: terrainLayer(materialsByPalette.get(terrain.layers.dirt) ?? null),
+            rock: terrainLayer(materialsByPalette.get(terrain.layers.rock) ?? null),
+          }
+        : null;
+      let surfaceMaterial: BJS.ShaderMaterial;
+      if (terrain && layers?.grass && layers.dirt && layers.rock) {
+        const controlMap = new BABYLON.Texture(
+          terrain.controlMap0,
+          scene,
+          false,
+          false,
+          BABYLON.Texture.TRILINEAR_SAMPLINGMODE,
+        );
+        controlMap.gammaSpace = false;
+        surfaceMaterial = createTerrainSurfaceMaterial(scene, {
+          grass: layers.grass,
+          dirt: layers.dirt,
+          rock: layers.rock,
+          controlMap0: controlMap,
+          worldMin: terrain.worldMin,
+          worldMax: terrain.worldMax,
+          scales: terrain.scales,
+          rockSlopeStart: terrain.rockSlopeStart,
+          rockSlopeEnd: terrain.rockSlopeEnd,
+          triplanarSlopeStart: terrain.triplanarSlopeStart,
+          triplanarSlopeEnd: terrain.triplanarSlopeEnd,
+          useVertexTint:
+            world.lighting?.vertexColors === "material-tint" ||
+            world.lighting?.vertexColors === "baked-irradiance",
+        });
+      } else {
+        surfaceMaterial = createGrassSurfaceMaterial(
+          scene,
+          baseTexture,
+          world.lighting?.vertexColors === "material-tint" ||
+            world.lighting?.vertexColors === "baked-irradiance",
+        );
+      }
       grassSurfaceMaterials.push(surfaceMaterial);
       surface.material = surfaceMaterial;
     }

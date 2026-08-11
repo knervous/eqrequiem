@@ -13,6 +13,7 @@ import {
   SIDECAR_SCHEMA,
 } from "./sidecar-codec.js";
 import type { PersistCharacter } from "../persist/types.js";
+import { characterSelectProjection } from "../persist/character-select-projection.js";
 
 export interface ZoneRouteRequest extends ZoneSessionNet {
   useSafeLocation?: boolean | undefined;
@@ -185,34 +186,10 @@ export function encodeIntValue(value: number): Uint8Array {
 export function encodeCharacterSelect(
   characters: PersistCharacter[],
 ): Uint8Array {
-  return encodeSidecar(SIDECAR_SCHEMA.CHARACTER_SELECT, {
-    characterCount: characters.length,
-    characters: characters.map((character) => ({
-      name: character.name,
-      level: character.level,
-      charClass: character.class ?? 0,
-      race: character.race ?? 0,
-      gender: character.gender ?? 0,
-      deity: character.deity ?? 0,
-      zone: character.zoneId ?? 0,
-      instance: character.zoneInstance ?? 0,
-      lastLogin: character.lastLogin ?? 0,
-      face: character.face ?? 0,
-      enabled: 1,
-      items: character.items ?? [],
-      ...(character.appearanceSchemaVersion === undefined
-        ? {}
-        : {
-            appearanceSchemaVersion: character.appearanceSchemaVersion,
-            bodyFamilyId: character.bodyFamilyId,
-            bodyComponentId: character.bodyComponentId,
-            faceComponentId: character.faceComponentId,
-            presentationId: character.presentationId,
-            callingId: character.callingId,
-            originId: character.originId,
-          }),
-    })),
-  });
+  return encodeSidecar(
+    SIDECAR_SCHEMA.CHARACTER_SELECT,
+    characterSelectProjection(characters),
+  );
 }
 
 export function encodeInteger(value: number): Uint8Array {

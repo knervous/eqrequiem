@@ -210,6 +210,32 @@ export function decodeRequest(
         ? { type: "auto_attack", enabled: value.enabled, targetId }
         : null;
     }
+    case OP.PROGRESSION_REQUEST: {
+      const value = decodeSidecar<{ request?: unknown }>(
+        SIDECAR_SCHEMA.PROGRESSION_REQUEST,
+        payload,
+      );
+      const request = decodeProgressionRequest(value?.request);
+      return request ? { type: "progression_request", request } : null;
+    }
+    case OP.ACTIVATE_ABILITY: {
+      const value = decodeSidecar<{
+        abilityId?: unknown;
+        targetId?: unknown;
+      }>(SIDECAR_SCHEMA.ACTIVATE_ABILITY, payload);
+      const targetId = Number(value?.targetId ?? 0);
+      // An ability id is authored data, not free text: bounding the length here keeps a
+      // malformed packet from reaching the registry lookup as an enormous string.
+      return value
+        && typeof value.abilityId === "string"
+        && value.abilityId.length > 0
+        && value.abilityId.length <= 64
+        && Number.isSafeInteger(targetId)
+        && targetId >= 0
+        && targetId <= 0xffff_ffff
+        ? { type: "activate_ability", abilityId: value.abilityId, targetId }
+        : null;
+    }
     case OP.LOOT_REQUEST: {
       const value = decodeSidecar<{ corpseId?: unknown }>(
         SIDECAR_SCHEMA.LOOT_REQUEST,
@@ -375,7 +401,61 @@ const eventEncoding: Record<BackendEvent["type"], readonly [number, number]> = {
   npc_debug_state: [OP.NPC_DEBUG_STATE, SIDECAR_SCHEMA.NPC_DEBUG_STATE],
   journal_update: [OP.JOURNAL_UPDATE, SIDECAR_SCHEMA.JOURNAL_UPDATE],
   experience_update: [OP.EXPERIENCE_UPDATE, SIDECAR_SCHEMA.EXPERIENCE_UPDATE],
+  ability_result: [OP.ABILITY_RESULT, SIDECAR_SCHEMA.ABILITY_RESULT],
+  ability_loadout: [OP.ABILITY_LOADOUT, SIDECAR_SCHEMA.ABILITY_LOADOUT],
+  progression_state: [OP.PROGRESSION_STATE, SIDECAR_SCHEMA.PROGRESSION_STATE],
 };
+
+/**
+ * Validates a progression request off the wire.
+ *
+ * Ids are authored content, not free text, so length is bounded here rather than at the
+ * registry lookup; a slot is a small integer or the request is not a request.
+ */
+function decodeProgressionRequest(
+  value: unknown,
+): Extract<BackendRequest, { type: "progression_request" }>["request"] | null {
+  if (!value || typeof value !== "object") return null;
+  const request = value as Record<string, unknown>;
+  const id = (key: string): string | null => {
+    const candidate = request[key];
+    return typeof candidate === "string" && candidate.length > 0 && candidate.length <= 64
+      ? candidate
+      : null;
+  };
+  const slot = (): number | null => {
+    const candidate = Number(request.slot);
+    return Number.isSafeInteger(candidate) && candidate >= 0 && candidate < 32
+      ? candidate
+      : null;
+  };
+
+  switch (request.type) {
+    case "learn_ability": {
+      const abilityId = id("abilityId");
+      return abilityId ? { type: "learn_ability", abilityId } : null;
+    }
+    case "prepare_ability": {
+      const abilityId = id("abilityId");
+      const target = slot();
+      return abilityId && target !== null
+        ? { type: "prepare_ability", abilityId, slot: target }
+        : null;
+    }
+    case "clear_slot": {
+      const target = slot();
+      return target === null ? null : { type: "clear_slot", slot: target };
+    }
+    case "spend_aspect_point": {
+      const nodeId = id("nodeId");
+      return nodeId ? { type: "spend_aspect_point", nodeId } : null;
+    }
+    case "respec_aspects":
+      return { type: "respec_aspects" };
+    default:
+      return null;
+  }
+}
 
 function decodeZone(
   payload: Uint8Array,

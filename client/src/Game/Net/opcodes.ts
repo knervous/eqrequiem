@@ -619,5 +619,10 @@ export enum OpCodes {
     MerchantError = 620,
     JournalUpdate = 621,
     ExperienceUpdate = 622,
-    JournalNote = 623
+    JournalNote = 623,
+    ActivateAbility = 624,
+    AbilityResult = 625,
+    AbilityLoadout = 626,
+    ProgressionRequest = 627,
+    ProgressionState = 628
 }

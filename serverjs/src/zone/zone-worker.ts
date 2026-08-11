@@ -4,6 +4,10 @@ import { OP } from "../protocol/opcodes.js";
 import { MeleeCombatSystem, type CombatEvent } from "../combat/melee-combat.js";
 import { npcCombatantStats } from "../combat/npc-combat.js";
 import { CorpseLootSystem } from "../combat/corpse-loot.js";
+import { PlayerAbilitySystem } from "../combat/player-abilities.js";
+import { abilityResultProjection } from "../combat/ability-result.js";
+import { ZoneAbilityPort } from "../combat/zone-ability-port.js";
+import { runZoneGameplayTick } from "./zone-tick.js";
 import {
   NpcEngagementSystem,
   type NpcEngagementRules,
@@ -27,18 +31,17 @@ import {
   type QuestPersistentEffect,
 } from "./quest-types.js";
 import {
-  combatExperienceEffects,
   createZoneQuestManager,
-  creditableSessions,
+  dispatchPlayerEnter,
+  dispatchPlayerSay,
+  npcDeathQuestEffects,
   mergeQuestDefinitions,
   refreshWorldContext,
 } from "./quest-runtime.js";
+import { EMPTY_WORLD_STATE, type WorldStateSnapshot } from "./world-state-types.js";
 import { ZoneSpatialIndex } from "./spatial-index.js";
 import type { ZoneNpcSpawnDefinition } from "./zone-content.js";
-import {
-  advanceMovementRoute,
-  type MovementRoute,
-} from "./movement-routes.js";
+import type { MovementRoute } from "./movement-routes.js";
 import { applyClientMovement } from "./client-movement.js";
 import { eqHeadingToRadians } from "./heading.js";
 import {
@@ -48,6 +51,8 @@ import {
   restoreZoneSnapshot,
   ZONE_SNAPSHOT_FORMAT_VERSION,
 } from "./zone-snapshot.js";
+import { merchantInteraction } from "./merchant-interaction.js";
+import { questPlayerProjection } from "./zone-runtime-projections.js";
 
 interface WorkerBootstrap {
   zoneId: number;
@@ -58,6 +63,7 @@ interface WorkerBootstrap {
   questRevision: number;
   engagementRules: NpcEngagementRules;
   devDiagnostics: boolean;
+  worldState?: WorldStateSnapshot;
 }
 
 const port = parentPort;
@@ -75,7 +81,10 @@ const {
   questRevision,
   engagementRules,
   devDiagnostics,
+  worldState: initialWorldState,
 } = workerData as WorkerBootstrap;
+/** Consumed, never authored here: global state is owned above the shard. */
+let worldState: WorldStateSnapshot = initialWorldState ?? EMPTY_WORLD_STATE;
 type QueuedZoneWorkerMessage = Exclude<
   ZoneWorkerInboundMessage,
   { type: "shutdown_commit" }
@@ -106,6 +115,8 @@ let kernel: ZoneSimulationKernel | null = null;
 let combat: MeleeCombatSystem | null = null;
 let corpseLoot: CorpseLootSystem | null = null;
 let engagement: NpcEngagementSystem | null = null;
+const abilities = new PlayerAbilitySystem();
+let abilityPort: ZoneAbilityPort | null = null;
 let pendingNpcs: readonly ZoneNpcSpawnDefinition[] | null = null;
 let pendingSnapshotBlob: Uint8Array | undefined;
 let zoneKey = "";
@@ -120,6 +131,7 @@ const quests = createZoneQuestManager({
   tickRateHz,
   extraDefinitions: questDefinitions,
   revision: questRevision,
+  world: worldState,
 });
 
 void loadZoneSimulationKernel()
@@ -128,6 +140,20 @@ void loadZoneSimulationKernel()
     combat = new MeleeCombatSystem(loaded.entities, tickRateHz);
     engagement = new NpcEngagementSystem(loaded.entities, combat, engagementRules);
     corpseLoot = new CorpseLootSystem(loaded.entities);
+    abilityPort = new ZoneAbilityPort({
+      entities: loaded.entities,
+      combat,
+      threat: engagement,
+      currentTick: () => tick,
+      nowMs: () => simulationTimeMs,
+      onCombatEvent: (event: CombatEvent) => {
+        updateHateFromCombatEvent(event);
+        // `publishCombatEvent` resolves the attacker's and target's owners itself, and
+        // is also where a kill turns into a corpse, loot and credit — so ability damage
+        // reaches the same place a swing does.
+        publishCombatEvent(event);
+      },
+    });
     if (pendingNpcs) hydrateNpcs(pendingNpcs, pendingSnapshotBlob);
     ensureClientEntities();
     applyQuestEffects(quests.dispatch({ type: "zone_start", tick }));
@@ -205,6 +231,12 @@ function runZoneTick(): void {
       continue;
     }
 
+    if (item.type === "world_state") {
+      worldState = item.snapshot;
+      refreshWorldContext(quests, Date.now(), worldState);
+      continue;
+    }
+
     if (item.type === "quest_hydrate") {
       quests.hydrate({ npcs: item.npcs });
       continue;
@@ -265,18 +297,49 @@ function runZoneTick(): void {
       const visibleEntities = new Set(spatial.entitiesForSession(item.sessionId));
       visibleEntitiesBySession.set(item.sessionId, visibleEntities);
       ensureClientEntity(item.sessionId);
-      applyQuestEffects(quests.dispatch({
-        type: "player_enter",
+      applyQuestEffects(dispatchPlayerEnter(
+        quests,
         tick,
-        sessionId: item.sessionId,
-        actorName: item.characterName,
-        actor: {
-          kind: "player",
-          sessionId: item.sessionId,
-          name: item.characterName,
-          position: { x: item.x, y: item.y, z: item.z, heading: item.heading },
-        },
-      }));
+        questPlayerProjection(item),
+      ));
+      continue;
+    }
+
+    if (item.type === "client_loadout") {
+      const join = clientJoins.get(item.sessionId);
+      if (join) {
+        clientJoins.set(item.sessionId, {
+          ...join,
+          learned: item.learned,
+          prepared: item.prepared,
+        });
+      }
+      continue;
+    }
+
+    if (item.type === "client_level") {
+      const join = clientJoins.get(item.sessionId);
+      const entityIndex = clientEntityIndices.get(item.sessionId);
+      const entity = entityIndex === undefined ? undefined : kernel?.entities.at(entityIndex);
+      if (join) {
+        clientJoins.set(item.sessionId, {
+          ...join,
+          level: item.level,
+          combat: item.combat,
+        });
+      }
+      if (entity && kernel) {
+        kernel.entities.publicState.stateLevel[entity.index] = item.level;
+        combat?.register(entity, item.combat);
+        abilities.register(entity.id, item.level, item.combat.stamina);
+        entity.markDirty();
+      }
+      const character = quests.character(item.sessionId);
+      quests.setCharacterProgression(
+        item.sessionId,
+        character?.experience ?? 0,
+        item.level,
+      );
       continue;
     }
 
@@ -299,11 +362,28 @@ function runZoneTick(): void {
   lastTickAtMs = nowMs;
   simulationTimeMs += deltaMs;
 
-  refreshWorldContext(quests);
+  refreshWorldContext(quests, Date.now(), worldState);
   streamWatchedNpcPositions();
   applyQuestEffects(quests.dispatch({ type: "npc_tick", tick }));
   applyQuestEffects(quests.advanceTimers(tick));
-  for (const request of engagement?.tick(tick) ?? []) {
+  // Every gameplay decision, in the order both runtimes must run them. This shard is
+  // still hydrating until the kernel resolves, so there is nothing to tick before then.
+  const gameplay = kernel && combat && engagement && abilityPort
+    ? runZoneGameplayTick(
+        {
+          kernel,
+          combat,
+          engagement,
+          abilities,
+          abilityPort,
+          movementRoutes,
+          suspendedMovementRoutes,
+        },
+        { deltaMs, tick, simulationTimeMs },
+      )
+    : null;
+
+  for (const request of gameplay?.pathRequests ?? []) {
     if (!zoneKey) continue;
     post({
       type: "nav_path_request",
@@ -313,8 +393,7 @@ function runZoneTick(): void {
       request,
     });
   }
-  advanceMovementRoutes();
-  for (const event of combat?.tick(tick) ?? []) {
+  for (const event of gameplay?.combatEvents ?? []) {
     updateHateFromCombatEvent(event);
     publishCombatEvent(event);
   }
@@ -322,7 +401,7 @@ function runZoneTick(): void {
     publishNpcDiagnostics();
   }
 
-  const snapshot = kernel?.tick(deltaMs);
+  const snapshot = gameplay?.snapshot;
   if (snapshot && snapshot.dirtyIndices.length > 0) {
     const state = snapshot.state;
     const indicesBySession = new Map<number, number[]>();
@@ -460,6 +539,9 @@ function handleZoneOpcode(
     case OP.CLIENT_UPDATE:
       handleClientUpdate(sessionId, payload);
       return;
+    case OP.ACTIVATE_ABILITY:
+      handleActivateAbility(sessionId, payload);
+      break;
     case OP.AUTO_ATTACK:
       handleAutoAttack(sessionId, payload);
       return;
@@ -510,7 +592,6 @@ function handleMerchantIntent(
   const player = playerIndex === undefined ? undefined : kernel?.entities.at(playerIndex);
   const npc = Number.isSafeInteger(npcId) ? kernel?.entities.get(npcId) : undefined;
   const definition = pendingNpcs?.find((spawn) => spawn.spawnId === npcId);
-  const merchant = definition?.merchant;
   const reject = (message: string) => post({
     type: "merchant_error",
     zoneId,
@@ -519,27 +600,21 @@ function handleMerchantIntent(
     npcId: Number.isSafeInteger(npcId) ? npcId : 0,
     message,
   });
-  if (!value || !join || !player || !npc || !definition || !merchant) {
+  if (!value || !join) {
     reject("That NPC is not available as a merchant.");
     return;
   }
-  if (
-    npc.kind !== EntityKind.npc
-    || npc.currentHp <= 0
-    || engagement?.isEngaged(npc.id)
-  ) {
-    reject("That merchant is busy right now.");
-    return;
-  }
-  const distance = Math.hypot(
-    player.position.x - npc.position.x,
-    player.position.y - npc.position.y,
-    player.position.z - npc.position.z,
+  const interaction = merchantInteraction(
+    player,
+    npc,
+    definition,
+    npc ? engagement?.isEngaged(npc.id) === true : false,
   );
-  if (distance > merchant.interactionRange) {
-    reject("You are too far away from that merchant.");
+  if (!interaction.ok) {
+    reject(interaction.message);
     return;
   }
+  const available = interaction.definition;
   const message = {
     type: "merchant_intent" as const,
     zoneId,
@@ -547,8 +622,8 @@ function handleMerchantIntent(
     sessionId,
     characterId: join.characterId,
     npcId,
-    npcArchetypeId: definition.npcArchetypeId,
-    merchantName: definition.name,
+    npcArchetypeId: available.npcArchetypeId,
+    merchantName: available.name,
     action,
   };
   if (action === "buy") {
@@ -672,6 +747,63 @@ function handleAutoAttack(sessionId: number, payload: Uint8Array): void {
   }
 }
 
+/**
+ * The worker-hosted half of the ability path. Both modes use the shared ability runtime;
+ * this adapter only supplies its in-memory actor and committed loadout.
+ */
+function handleActivateAbility(sessionId: number, payload: Uint8Array): void {
+  const value = decodeSidecar<{
+    abilityId?: unknown;
+    targetId?: unknown;
+  }>(SIDECAR_SCHEMA.ACTIVATE_ABILITY, payload);
+  const join = clientJoins.get(sessionId);
+  const entityIndex = clientEntityIndices.get(sessionId);
+  const actor = entityIndex === undefined ? undefined : kernel?.entities.at(entityIndex);
+  if (
+    !value
+    || typeof value.abilityId !== "string"
+    || !join
+    || !actor
+    || !abilityPort
+  ) {
+    return;
+  }
+  const targetId = Number(value.targetId ?? 0);
+  if (!Number.isSafeInteger(targetId) || targetId < 0) return;
+
+  const control = abilityPort.statusesOf(actor.id).controlState();
+  const result = abilities.activate(
+    {
+      entityId: actor.id,
+      level: join.level,
+      classId: join.charClass,
+      learned: new Set(join.learned),
+      prepared: new Set(join.prepared),
+      strength: join.combat.strength,
+      stamina: join.combat.stamina,
+      agility: join.combat.agility,
+      dexterity: join.combat.dexterity,
+      weaponDamage: join.combat.weaponDamage,
+      skill: join.combat.offense,
+      hasShield: true,
+      hasBow: false,
+      incapacitated: !control.canAct,
+    },
+    value.abilityId,
+    targetId,
+    simulationTimeMs,
+    abilityPort,
+  );
+
+  post({
+    type: "ability_result",
+    zoneId,
+    instanceId,
+    sessionId,
+    payload: abilityResultProjection(value.abilityId, targetId, result),
+  });
+}
+
 function updateHateFromCombatEvent(event: CombatEvent): void {
   const loaded = kernel;
   if (!loaded || !engagement) return;
@@ -709,16 +841,9 @@ function publishCombatEvent(
         corpseLoot?.createCorpse(target);
         const spawn = npcSpawnsByIndex.get(target.index);
         if (spawn) {
-          const killerSessionIds = creditableSessions(quests, ownerSessionIds);
-          publishQuestPersistence(combatExperienceEffects(
-            quests,
-            { id: spawn.spawnId, name: spawn.name, level: spawn.level },
-            killerSessionIds,
-          ));
-          applyQuestEffects(quests.dispatchNpcDeath({
+          const death = npcDeathQuestEffects(quests, {
             tick,
             npc: {
-              kind: "npc",
               id: spawn.spawnId,
               name: spawn.name,
               level: spawn.level,
@@ -729,8 +854,9 @@ function publishCombatEvent(
                 z: target.position.z,
               },
             },
-            creditSessionIds: killerSessionIds,
-          }));
+            creditSessionIds: ownerSessionIds,
+          });
+          applyQuestEffects(death.effects);
         }
       } else if (target.kind === EntityKind.pc && targetOwner !== undefined) {
         const join = clientJoins.get(targetOwner);
@@ -806,13 +932,13 @@ function handleChannelMessage(sessionId: number, payload: Uint8Array): void {
   if (chatRing.length > 50) {
     chatRing.shift();
   }
-  applyQuestEffects(quests.dispatch({
-    type: "say",
+  applyQuestEffects(dispatchPlayerSay(quests, {
     tick,
     sessionId,
     actorName: clientNames.get(sessionId) ?? String(decoded?.sender ?? "Player"),
     npcName,
     message: text,
+    channel,
   }));
 }
 
@@ -897,6 +1023,8 @@ function publishQuestPersistence(effects: readonly QuestPersistentEffect[]): voi
     journals: [...sessionIds].map((sessionId) => ({
       sessionId,
       characterId: quests.character(sessionId)?.characterId ?? null,
+      experience: quests.character(sessionId)?.experience ?? 0,
+      level: quests.character(sessionId)?.level ?? 1,
       entries: [...quests.journalFor(sessionId)],
     })),
   });
@@ -1039,6 +1167,7 @@ function ensureClientEntity(sessionId: number): void {
     pc.heading = eqHeadingToRadians(join.heading);
     pc.markDirty();
     combat?.register(pc, join.combat);
+    abilities.register(pc.id, join.level, join.combat.stamina);
     clientEntityIndices.set(sessionId, index);
     entityOwnerSessions.set(index, sessionId);
     lastClientUpdateAt.set(sessionId, simulationTimeMs);
@@ -1075,6 +1204,8 @@ function removeClient(sessionId: number): void {
     const entity = loaded.entities.at(entityIndex);
     if (entity) {
       engagement?.clearEntity(entity.id);
+      abilities.release(entity.id);
+      abilityPort?.forget(entity.id);
       for (const recipientSessionId of spatial.recipientsForEntity(entityIndex)) {
         if (recipientSessionId === sessionId) continue;
         visibleEntitiesBySession.get(recipientSessionId)?.delete(entityIndex);
@@ -1162,24 +1293,6 @@ function flushAoiChanges(): void {
     });
   }
   pendingAoiChanges.clear();
-}
-
-function advanceMovementRoutes(): void {
-  const loaded = kernel;
-  if (!loaded) return;
-  for (const [entityIndex, route] of movementRoutes) {
-    const npc = loaded.entities.at(entityIndex);
-    if (!(npc instanceof NPC)) continue;
-    if (engagement?.isEngaged(npc.id)) {
-      suspendedMovementRoutes.add(entityIndex);
-      continue;
-    }
-    if (suspendedMovementRoutes.delete(entityIndex)) {
-      const target = route.points[route.targetIndex];
-      if (target) npc.target.set(target.x, target.y, target.z);
-    }
-    advanceMovementRoute(npc, route, simulationTimeMs);
-  }
 }
 
 function publishNpcDiagnostics(): void {

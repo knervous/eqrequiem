@@ -19,7 +19,7 @@ const PRIMARY_TEXTURE_SIZE = 512;
 const BULK_TEXTURE_SIZE = 256;
 
 const repoRoot = path.resolve(import.meta.dirname, "../../..");
-const zone = (process.argv[2] ?? "qeynos2").toLowerCase();
+const zone = (process.argv[2] ?? "talioscrownward").toLowerCase();
 if (!/^[a-z0-9_]+$/.test(zone)) throw new Error(`Invalid zone '${zone}'`);
 
 const loaded = await readPaletteManifest(repoRoot, zone);

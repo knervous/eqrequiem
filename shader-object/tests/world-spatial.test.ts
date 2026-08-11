@@ -54,6 +54,16 @@ function grassGround(size = 32) {
   };
 }
 
+function rollingGrassGround(size = 24) {
+  return {
+    name: 'rolling-grass-ground',
+    material: 'grass1',
+    extraShader: 'grass',
+    positions: new Float32Array([0, 0, 0, size, 4, 0, size, -2, size, 0, 3, size]),
+    indices: new Uint32Array([0, 2, 1, 0, 3, 2]),
+  };
+}
+
 describe('Shado world spatial compiler', () => {
   it('builds bounded clusters, tile/material packets, and a quantized BVH4', () => {
     const world = compileShadoWorld([quad(0, 'stone'), quad(20, 'wood')], {
@@ -143,8 +153,27 @@ describe('Shado world spatial compiler', () => {
     expect(first.grass?.coverage?.words).toHaveLength(
       first.grass!.cells.x.length * first.grass!.coverage!.wordsPerCell
     );
+    expect(first.grass?.coverage?.heightField).toMatchObject({
+      resolution: 8,
+      wordsPerCell: 2,
+    });
+    expect(first.grass?.coverage?.heightField?.samples).toHaveLength(
+      first.grass!.cells.x.length * 64
+    );
     expect(second.grass).toEqual(first.grass);
     expect(() => validateShadoWorldPackage(first)).not.toThrow();
+  });
+
+  it('retains sparse authored surface heights for grass-root conformity', () => {
+    const world = compileShadoWorld([rollingGrassGround()], {
+      name: 'rolling-grass-world',
+      grass: { cellSize: 24, density: 0.02, maxPlacements: 32 },
+    });
+    const heightField = world.grass!.coverage!.heightField!;
+
+    expect(Math.max(...heightField.heightRange)).toBeGreaterThan(3);
+    expect(heightField.samples.some(sample => sample > 0)).toBe(true);
+    expect(() => validateShadoWorldPackage(world)).not.toThrow();
   });
 
   it('preserves an explicitly requested empty grass package contract', () => {
@@ -168,7 +197,19 @@ describe('Shado world spatial compiler', () => {
         stiffness: [],
         colorVariation: [],
       },
-      coverage: { resolution: 32, wordsPerCell: 32, words: [] },
+      coverage: {
+        resolution: 32,
+        wordsPerCell: 32,
+        words: [],
+        heightField: {
+          resolution: 8,
+          wordsPerCell: 2,
+          words: [],
+          minimumY: [],
+          heightRange: [],
+          samples: [],
+        },
+      },
     });
     expect(() => validateShadoWorldPackage(world)).not.toThrow();
   });
@@ -683,24 +724,18 @@ describe('Shado world spatial compiler', () => {
   });
 
   it('floods local visibility and overlaps adjacent camera rows conservatively', async () => {
-    const world = compileShadoWorld(
-      [quad(0, 'stone'), quad(48, 'stone'), quad(64, 'stone')],
-      {
-        name: 'local-visibility-flood',
-        tileSize: 16,
-        visibilityRegionSize: 16,
-        visibilityMaxDistance: 1,
-        maxClusterTriangles: 2,
-      }
-    );
+    const world = compileShadoWorld([quad(0, 'stone'), quad(48, 'stone'), quad(64, 'stone')], {
+      name: 'local-visibility-flood',
+      tileSize: 16,
+      visibilityRegionSize: 16,
+      visibilityMaxDistance: 1,
+      maxClusterTriangles: 2,
+    });
     const visibility = world.visibility!;
     expect(visibility.mode).toBe('distance-flood');
     expect(visibility.occluderCount).toBe(0);
     const regionVisible = (from: number, to: number) => {
-      const word =
-        visibility.pvs.words[
-          from * visibility.pvs.wordsPerRow + (to >>> 5)
-        ] >>> 0;
+      const word = visibility.pvs.words[from * visibility.pvs.wordsPerRow + (to >>> 5)] >>> 0;
       return (word & (1 << (to & 31))) !== 0;
     };
 

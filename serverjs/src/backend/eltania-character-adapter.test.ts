@@ -11,7 +11,7 @@ const character = (): BackendCharacterCreate => ({
   charClass              : 1,
   gender                 : 0,
   deity                  : 207,
-  startZone              : 1,
+  startZone              : 2,
   face                   : 0,
   appearanceSchemaVersion: 1,
   bodyFamilyId           : "body-family:eltania-wayfarer-v1",

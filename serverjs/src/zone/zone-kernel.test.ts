@@ -108,4 +108,31 @@ describe("precompiled zone simulation kernel", () => {
     assert.deepEqual(Array.from(kernel.tick(2, 50).dirtyIndices), [1]);
     assert.equal(kernel.tick(2, 50).dirtyIndices.length, 0);
   });
+
+  it("collects host writes and reducer writes in the same pass", async () => {
+    // Steering and compaction are one traversal now. That is only sound while the
+    // integration half marks its own index and nothing else, and while a flag set from
+    // TypeScript *between* ticks is still picked up — the arena has one compaction
+    // point, and a host write must be indistinguishable from a reducer write.
+    const kernel = await loadZoneSimulationKernel("debug");
+    kernel.spawnNpc(0, 4001, 0, 0, 0, 0);
+    kernel.spawnNpc(1, 4002, 50, 0, 0, 4);
+    kernel.tick(2, 50);
+    assert.equal(kernel.tick(2, 50).dirtyIndices.length, 0, "settled arena is clean");
+
+    // A host write to a stationary entity, and a reducer write to a moving one, in the
+    // same tick: both must be reported, in index order.
+    kernel.entities.at(0)!.markDirty();
+    kernel.setNpcTarget(1, 90, 0, 0);
+    assert.deepEqual(
+      Array.from(kernel.tick(2, 100).dirtyIndices),
+      [0, 1],
+      "one pass must not drop the host's flag or the reducer's",
+    );
+
+    // And the pass clears what it reported, or every later tick would resend it.
+    kernel.setNpcTarget(1, kernel.entities.at(1)!.position.x, 0, 0);
+    kernel.tick(2, 100);
+    assert.equal(kernel.tick(2, 100).dirtyIndices.length, 0);
+  });
 });

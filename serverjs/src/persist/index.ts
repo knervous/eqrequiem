@@ -9,11 +9,9 @@ import type {
   PersistCommand,
   PersistCreateCharacterResult,
   PersistDeleteCharacterResult,
-  PersistDeleteItemInput,
-  PersistDeleteItemResult,
+  PersistEnterWorldResult,
+  PersistZoneSessionResult,
   PersistLoginResult,
-  PersistMoveItemInput,
-  PersistMoveItemResult,
   PersistRequestEnvelope,
   PersistResponseEnvelope,
   PersistResult,
@@ -104,18 +102,29 @@ export class PersistService {
     });
   }
 
-  moveItem(input: PersistMoveItemInput): Promise<PersistMoveItemResult> {
-    return this.sendCommand({ type: 'inventory_move', ...input }).then((result) => {
-      if (result.type !== 'inventory_move') {
-        throw new Error(`unexpected persist result ${result.type}`);
-      }
-      return result.data;
-    });
+  enterWorld(name: string): Promise<PersistEnterWorldResult> {
+    return this.sendCommand({ type: "character_enter_world", name }).then(
+      (result) => {
+        if (result.type !== "character_enter_world") {
+          throw new Error(`unexpected persist result ${result.type}`);
+        }
+        return result.data;
+      },
+    );
   }
 
-  deleteItem(input: PersistDeleteItemInput): Promise<PersistDeleteItemResult> {
-    return this.sendCommand({ type: 'inventory_delete', ...input }).then((result) => {
-      if (result.type !== 'inventory_delete') {
+  resolveZoneSession(
+    zoneId: number | string,
+    instanceId: number,
+    demoStartPending: boolean,
+  ): Promise<PersistZoneSessionResult> {
+    return this.sendCommand({
+      type: "zone_session_resolve",
+      zoneId,
+      instanceId,
+      demoStartPending,
+    }).then((result) => {
+      if (result.type !== "zone_session_resolve") {
         throw new Error(`unexpected persist result ${result.type}`);
       }
       return result.data;

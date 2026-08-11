@@ -1,23 +1,23 @@
 export const zoneData = [
   {
     zone: 1,
-    shortName: "qeynos",
-    longName: "South Qeynos",
+    shortName: "talioslowharbor",
+    longName: "Talios Lowharbor",
   },
   {
     zone: 2,
-    shortName: "qeynos2",
-    longName: "North Qeynos",
+    shortName: "talioscrownward",
+    longName: "Talios Crownward",
   },
   {
     zone: 3,
-    shortName: "qrg",
-    longName: "Surefall Glade",
+    shortName: "greenveil",
+    longName: "The Greenveil",
   },
   {
     zone: 4,
-    shortName: "qeytoqrg",
-    longName: "Qeynos Hills",
+    shortName: "greymarch",
+    longName: "The Greymarch",
   },
   {
     zone: 5,
@@ -76,8 +76,8 @@ export const zoneData = [
   },
   {
     zone: 17,
-    shortName: "blackburrow",
-    longName: "BlackBurrow",
+    shortName: "blackrootwarrens",
+    longName: "Blackroot Warrens",
   },
   {
     zone: 18,
@@ -171,8 +171,8 @@ export const zoneData = [
   },
   {
     zone: 36,
-    shortName: "befallen",
-    longName: "Befallen (A)",
+    shortName: "mournvault",
+    longName: "Mournvault: The First Descent",
   },
   {
     zone: 37,
@@ -217,7 +217,7 @@ export const zoneData = [
   {
     zone: 45,
     shortName: "qcat",
-    longName: "Qeynos Catacombs",
+    longName: "The Talios Undervault",
   },
   {
     zone: 46,

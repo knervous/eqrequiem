@@ -18,12 +18,12 @@ describe("Libra visual zone content editing", () => {
     await database.execute(
       `INSERT INTO zones
        (id, short_name, name, safe_x, safe_y, safe_z)
-       VALUES (2, 'qeynos2', 'North Qeynos', 0, 3, 0)`,
+       VALUES (2, 'talioscrownward', 'Talios Crownward', 0, 3, 0)`,
     );
     await database.execute(
       `INSERT INTO npc_archetypes
        (id, npc_key, name, properties_json)
-       VALUES (101, 'qeynos2:garden-keeper', 'a garden keeper', '{}')`,
+       VALUES (101, 'talioscrownward:garden-keeper', 'a garden keeper', '{}')`,
     );
   });
 
@@ -39,7 +39,7 @@ describe("Libra visual zone content editing", () => {
       heading: 128,
       npcArchetypeId: 101,
       respawnSeconds: 420,
-      spawnGroupKey: "libra:qeynos2:garden-keeper",
+      spawnGroupKey: "libra:talioscrownward:garden-keeper",
     });
 
     assert.equal(spawn.npcName, "a garden keeper");
@@ -67,7 +67,7 @@ describe("Libra visual zone content editing", () => {
       y: 2,
       z: -305,
       npcArchetypeId: 101,
-      spawnGroupKey: "libra:qeynos2:garden-marker",
+      spawnGroupKey: "libra:talioscrownward:garden-marker",
     });
     const workspace = await loadZoneWorkspace(database, 2);
 
@@ -75,7 +75,7 @@ describe("Libra visual zone content editing", () => {
     assert.equal(workspace.asset.coordinateContract, "babylon-runtime-identity");
     assert.equal(
       workspace.asset.authoringPreview,
-      "/eqrequiem/worlds/qeynos2.authoring-preview.glb",
+      "/eqrequiem/worlds/talioscrownward.authoring-preview.glb",
     );
   });
 
@@ -86,7 +86,7 @@ describe("Libra visual zone content editing", () => {
         y: 2,
         z: 3,
         npcArchetypeId: 999,
-        spawnGroupKey: "libra:qeynos2:invalid",
+        spawnGroupKey: "libra:talioscrownward:invalid",
       }),
       /was not found/,
     );

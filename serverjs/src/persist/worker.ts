@@ -1,7 +1,9 @@
 import { parentPort, workerData } from "node:worker_threads";
 
 import { createNodeDatabase } from "../db/node/factory.js";
-import { GameRepository } from "./repository.js";
+import { GameDatabase } from "./game-database.js";
+import { CharacterRosterService } from "./character-roster-service.js";
+import { ZoneSessionService } from "./zone-session-service.js";
 import type {
   PersistCommand,
   PersistRequestEnvelope,
@@ -19,76 +21,114 @@ const contentUrl =
   (workerData as { contentUrl?: string } | null)?.contentUrl ??
   process.env.CONTENT_DATABASE_URL ??
   "sqlite:./data/content-db.sqlite";
-const repositoryPromise = initializeRepository(runtimeUrl, contentUrl);
+const servicesPromise = initializeServices(runtimeUrl, contentUrl);
+let commandQueue: Promise<void> = Promise.resolve();
 
-workerPort.on("message", async (envelope: PersistRequestEnvelope) => {
-  try {
-    const response = await handleCommand(
-      envelope.requestId,
-      envelope.command,
-      await repositoryPromise,
-    );
-    workerPort.postMessage(response);
-  } catch (error) {
-    workerPort.postMessage({
-      requestId: envelope.requestId,
-      ok: false,
-      error: error instanceof Error ? error.message : String(error),
-    } satisfies PersistResponseEnvelope);
-  }
+workerPort.on("message", (envelope: PersistRequestEnvelope) => {
+  const command = commandQueue.then(async () => {
+    try {
+      const response = await handleCommand(
+        envelope.requestId,
+        envelope.command,
+        await servicesPromise,
+      );
+      workerPort.postMessage(response);
+    } catch (error) {
+      workerPort.postMessage({
+        requestId: envelope.requestId,
+        ok: false,
+        error: error instanceof Error ? error.message : String(error),
+      } satisfies PersistResponseEnvelope);
+    }
+  });
+  commandQueue = command.then(() => undefined, () => undefined);
 });
 
-async function initializeRepository(runtimeUrl: string, contentUrl: string): Promise<GameRepository> {
-  const repository = new GameRepository(createNodeDatabase(runtimeUrl), createNodeDatabase(contentUrl));
-  await repository.initialize();
-  return repository;
+interface PersistWorkerServices {
+  readonly roster: CharacterRosterService;
+  readonly zones: ZoneSessionService;
+}
+
+async function initializeServices(
+  runtimeUrl: string,
+  contentUrl: string,
+): Promise<PersistWorkerServices> {
+  const database = new GameDatabase(
+    createNodeDatabase(runtimeUrl),
+    createNodeDatabase(contentUrl),
+  );
+  const roster = new CharacterRosterService(database);
+  await roster.initialize();
+  return { roster, zones: new ZoneSessionService(database) };
 }
 
 async function handleCommand(
   requestId: number,
   command: PersistCommand,
-  repository: GameRepository,
+  services: PersistWorkerServices,
 ): Promise<PersistResponseEnvelope> {
+  const { roster, zones } = services;
   switch (command.type) {
     case "login_load": {
-      const accountId = await repository.getOrCreateAccount(command.token.trim() || "guest");
+      const data = await roster.login(command.token);
       return {
         requestId,
         ok: true,
         result: {
           type: "login_load",
-          data: { accountId, characters: await repository.listCharacters(accountId) },
+          data,
         },
       };
     }
     case "character_create": {
-      const ok = await repository.createCharacter(command.accountId, command.character);
+      const data = await roster.createCharacter(command.accountId, command.character);
       return {
         requestId,
         ok: true,
         result: {
           type: "character_create",
-          data: { ok, characters: await repository.listCharacters(command.accountId) },
+          data,
         },
       };
     }
     case "character_delete": {
-      const ok = await repository.deleteCharacter(command.accountId, command.name);
+      const data = await roster.deleteCharacter(command.accountId, command.name);
       return {
         requestId,
         ok: true,
         result: {
           type: "character_delete",
-          data: { ok, characters: await repository.listCharacters(command.accountId) },
+          data,
         },
       };
     }
-    case "inventory_move": {
-      const moves = await repository.moveItem(command);
-      return { requestId, ok: true, result: { type: "inventory_move", data: { ok: true, moves } } };
+    case "character_enter_world": {
+      const entered = await roster.enterWorld(command.name);
+      return {
+        requestId,
+        ok: true,
+        result: {
+          type: "character_enter_world",
+          data: {
+            ok: entered.character !== null,
+            characterId: entered.character ? Number(entered.character.id) : null,
+            name: entered.character?.name ?? null,
+            demoStartPending: entered.demoStartPending,
+          },
+        },
+      };
     }
-    case "inventory_delete":
-      await repository.deleteItem(command);
-      return { requestId, ok: true, result: { type: "inventory_delete", data: { ok: true } } };
+    case "zone_session_resolve": {
+      const data = await zones.resolve(
+        command.zoneId,
+        command.instanceId,
+        command.demoStartPending,
+      );
+      return {
+        requestId,
+        ok: true,
+        result: { type: "zone_session_resolve", data },
+      };
+    }
   }
 }

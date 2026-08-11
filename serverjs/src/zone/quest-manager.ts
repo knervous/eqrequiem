@@ -7,6 +7,7 @@ import {
 import {
   isPersistentQuestEffect,
   type QuestAction,
+  type QuestBeatWeight,
   type QuestDefinition,
   type QuestEffect,
   type QuestEntity,
@@ -34,6 +35,7 @@ import {
   type QuestXpOptions,
   type QuestZone,
 } from "./quest-types.js";
+import { LevelCurve, questExperience } from "./quest-progression.js";
 
 export interface QuestManagerOptions {
   readonly tickRateHz?: number;
@@ -190,6 +192,14 @@ export class QuestManager {
   /** NPC names any proximity watcher cares about, so the zone streams only those. */
   watchedNpcNames(): readonly string[] {
     return [...new Set(this.proximityWatchers.map((watcher) => watcher.npcName))];
+  }
+
+  hasNpc(name: string): boolean {
+    return this.npcSnapshots.has(normalizeNpcName(name));
+  }
+
+  hasPlayer(sessionId: number): boolean {
+    return this.playerSnapshots.has(sessionId);
   }
 
   /**
@@ -868,8 +878,25 @@ class ZoneFacade implements QuestZone {
   readonly #emit: (effect: QuestEffect) => void;
   readonly #variables: Map<string, unknown>;
   readonly #regions: ReadonlyMap<string, QuestRegionDefinition>;
-  readonly #npcs: readonly QuestNpc[];
-  readonly #players: readonly QuestPlayer[];
+  /**
+   * Facades are built on first access, not in the constructor.
+   *
+   * A `QuestWorld` is constructed once per *matched handler per event*, and building
+   * these eagerly meant allocating one object per known NPC and one per connected player
+   * every time — whether or not the handler looked at either. Because the number of
+   * events also rises with population, that made position updates scale as the square of
+   * the player count: measured at 10 µs per update with 10 players and 631 µs with 200.
+   * Almost no handler touches `world.players`, so almost all of that was waste.
+   */
+  #npcsCache: readonly QuestNpc[] | null = null;
+  #playersCache: readonly QuestPlayer[] | null = null;
+  readonly #npcSnapshots: ReadonlyMap<string, QuestNpcSnapshot>;
+  readonly #playerSnapshots: ReadonlyMap<number, QuestPlayerSnapshot>;
+  readonly #replySessionId: number | undefined;
+  readonly #playerFacade: (
+    snapshot: QuestPlayerSnapshot,
+    replySessionId: number | undefined,
+  ) => QuestPlayer;
   readonly #emitCustomEvent: (name: string, data: unknown) => void;
 
   constructor(
@@ -896,33 +923,42 @@ class ZoneFacade implements QuestZone {
     this.#variables = variables;
     this.#regions = regions;
     this.#emitCustomEvent = emitCustomEvent;
-    this.#npcs = [...npcSnapshots.values()].map(
-      (snapshot) => new NpcFacade(snapshot, questId, replySessionId, emit),
-    );
-    this.#players = [...playerSnapshots.values()].map(
-      (snapshot) => playerFacade(snapshot, snapshot.sessionId),
-    );
+    this.#npcSnapshots = npcSnapshots;
+    this.#playerSnapshots = playerSnapshots;
+    this.#replySessionId = replySessionId;
+    this.#playerFacade = playerFacade;
   }
 
-  get npcs(): readonly QuestNpc[] { return this.#npcs; }
-  get players(): readonly QuestPlayer[] { return this.#players; }
+  get npcs(): readonly QuestNpc[] {
+    this.#npcsCache ??= [...this.#npcSnapshots.values()].map(
+      (snapshot) => new NpcFacade(snapshot, this.#questId, this.#replySessionId, this.#emit),
+    );
+    return this.#npcsCache;
+  }
+
+  get players(): readonly QuestPlayer[] {
+    this.#playersCache ??= [...this.#playerSnapshots.values()].map(
+      (snapshot) => this.#playerFacade(snapshot, snapshot.sessionId),
+    );
+    return this.#playersCache;
+  }
 
   npcByName(name: string): QuestNpc | null {
     const normalized = normalizeNpcName(name);
-    return this.#npcs.find((npc) => normalizeNpcName(npc.name) === normalized) ?? null;
+    return this.npcs.find((npc) => normalizeNpcName(npc.name) === normalized) ?? null;
   }
 
   playerByName(name: string): QuestPlayer | null {
     const normalized = name.trim().toLowerCase();
-    return this.#players.find((player) => player.name.trim().toLowerCase() === normalized) ?? null;
+    return this.players.find((player) => player.name.trim().toLowerCase() === normalized) ?? null;
   }
 
   playerBySession(sessionId: number): QuestPlayer | null {
-    return this.#players.find((player) => player.sessionId === sessionId) ?? null;
+    return this.players.find((player) => player.sessionId === sessionId) ?? null;
   }
 
   playersWithin(position: QuestVector3, radius: number): readonly QuestPlayer[] {
-    return this.#players.filter((player) => {
+    return this.players.filter((player) => {
       const at = player.position;
       if (!at) return false;
       return Math.hypot(at.x - position.x, at.y - position.y, at.z - position.z) <= radius;
@@ -1151,6 +1187,44 @@ class PlayerFacade extends EntityFacade implements QuestPlayer {
         });
         return true;
       },
+      awardBeat: (weight, options) => {
+        const amount = optimisticBeatExperience(state.level, weight);
+        state.addExperience(amount);
+        emit({
+          type: "award_xp",
+          sessionId,
+          characterId,
+          questKey: questId,
+          amount,
+          source: options?.source ?? "quest",
+          sourceKey: options?.sourceKey ?? questId,
+          awardKey: null,
+          weight,
+          atLevel: state.level,
+        });
+      },
+      awardBeatOnce: (
+        awardKey: string,
+        weight: QuestBeatWeight,
+        options?: QuestXpOptions,
+      ) => {
+        if (!state.grant(questId, awardKey)) return false;
+        const amount = optimisticBeatExperience(state.level, weight);
+        state.addExperience(amount);
+        emit({
+          type: "award_xp",
+          sessionId,
+          characterId,
+          questKey: questId,
+          amount,
+          source: options?.source ?? "discovery",
+          sourceKey: options?.sourceKey ?? `${questId}:${awardKey}`,
+          awardKey,
+          weight,
+          atLevel: state.level,
+        });
+        return true;
+      },
       granted: (awardKey, questKey) => state.granted(scope(questKey), awardKey),
     };
 
@@ -1295,6 +1369,17 @@ function regionCenter(region: QuestRegionDefinition): QuestVector3 {
     y: (shape.minY + shape.maxY) / 2,
     z: (shape.minZ + shape.maxZ) / 2,
   };
+}
+
+/**
+ * The shard's local estimate of a beat's value.
+ *
+ * A shard does not hold the content-authored curve — the applier does, and it is what
+ * commits — so this uses the built-in default purely to keep the in-memory character
+ * view moving in the right direction until the authoritative result is echoed back.
+ */
+function optimisticBeatExperience(level: number, weight: QuestBeatWeight): number {
+  return questExperience(LevelCurve.default(), level, weight);
 }
 
 function normalizeNpcName(value: string | undefined): string {

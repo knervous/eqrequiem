@@ -136,11 +136,19 @@ function verifyExistingStreams(before, after) {
     for (const [primitiveIndex, primitive] of mesh.primitives.entries()) {
       const bakedPrimitive = bakedMesh.primitives?.[primitiveIndex];
       for (const semantic of ["POSITION", "NORMAL", "TEXCOORD_0"]) {
-        const expected = accessorValues(before, primitive.attributes[semantic]);
-        const actual = accessorValues(
-          after,
-          bakedPrimitive.attributes[semantic],
-        );
+        const sourceAccessor = primitive.attributes?.[semantic];
+        const bakedAccessor = bakedPrimitive?.attributes?.[semantic];
+        // Some authored architectural pieces intentionally have no UVs. The
+        // lighting bake must preserve that fact instead of inventing a stream
+        // or failing a geometry-preservation audit.
+        if (sourceAccessor === undefined || bakedAccessor === undefined) {
+          if (sourceAccessor !== bakedAccessor) {
+            failures.push(`${mesh.name}/${semantic} presence changed`);
+          }
+          continue;
+        }
+        const expected = accessorValues(before, sourceAccessor);
+        const actual = accessorValues(after, bakedAccessor);
         if (
           expected.length !== actual.length ||
           expected.some((row, rowIndex) =>
@@ -149,6 +157,10 @@ function verifyExistingStreams(before, after) {
         ) {
           failures.push(`${mesh.name}/${semantic} changed`);
         }
+      }
+      if (!bakedPrimitive) {
+        failures.push(`${mesh.name}/primitive ${primitiveIndex} disappeared`);
+        continue;
       }
       const expectedIndices = accessorValues(before, primitive.indices);
       const actualIndices = accessorValues(after, bakedPrimitive.indices);
@@ -188,7 +200,7 @@ function verifyExistingStreams(before, after) {
 
 async function main() {
   const options = argumentsFor(process.argv.slice(2));
-  const zone = String(options.zone ?? "qeynos2").toLowerCase();
+  const zone = String(options.zone ?? "talioscrownward").toLowerCase();
   const blender =
     process.env.BLENDER_BIN ??
     "/Users/Paul/Downloads/Blender.app/Contents/MacOS/Blender";
@@ -216,6 +228,7 @@ async function main() {
     "lighting",
   );
   const field = path.join(lightingRoot, `${zone}.vertex-lighting.json`);
+  const authoring = path.join(sandboxWorldRoot, `${zone}.authoring.json`);
   await fs.mkdir(lightingRoot, { recursive: true });
   if (options["authority-only"]) {
     const [lighting, sceneBytes] = await Promise.all([
@@ -238,6 +251,8 @@ async function main() {
       scene,
       "--metadata",
       metadata,
+      "--authoring",
+      authoring,
       "--output",
       field,
       "--ao-rays",
@@ -268,10 +283,36 @@ async function main() {
   const stored = await fs.readFile(scene);
   const before = parseGlb(gunzipSync(stored));
   const colorsByMesh = new Map(Object.entries(lighting.meshes));
-  const baked = appendVertexColorOverrides(before, colorsByMesh);
+  // Promotion de-instances authored GLTF nodes so every spatial primitive has
+  // a concrete Babylon Mesh. Those node-specific mesh descriptors reuse the
+  // original buffer views, so they also reuse the original lighting field.
+  const runtimeColorsByMesh = new Map(colorsByMesh);
+  for (const mesh of before.json.meshes ?? []) {
+    if (runtimeColorsByMesh.has(mesh.name)) continue;
+    const sourceName = mesh.extras?.requiemLightingSourceMesh;
+    const sourceColors =
+      typeof sourceName === "string" ? colorsByMesh.get(sourceName) : undefined;
+    if (sourceColors) {
+      runtimeColorsByMesh.set(mesh.name, sourceColors);
+      continue;
+    }
+    // Blender's glTF importer adds a numeric suffix when its imported mesh
+    // name collides with an already-present datablock.  The promotion scene
+    // can legitimately contain those suffixed descriptors while the
+    // lighting field retains the canonical pre-import name.  Resolve that
+    // one-way importer spelling only after the exact/runtime-source names
+    // above, so authored names which genuinely end in `.003` remain exact.
+    const canonicalName = mesh.name?.replace(/\.\d{3,}$/, "");
+    const canonicalColors =
+      canonicalName && canonicalName !== mesh.name
+        ? colorsByMesh.get(canonicalName)
+        : undefined;
+    if (canonicalColors) runtimeColorsByMesh.set(mesh.name, canonicalColors);
+  }
+  const baked = appendVertexColorOverrides(before, runtimeColorsByMesh);
   if (baked.applied !== before.json.meshes.length) {
     const missing = before.json.meshes
-      .filter((mesh) => !colorsByMesh.has(mesh.name))
+      .filter((mesh) => !runtimeColorsByMesh.has(mesh.name))
       .map((mesh) => mesh.name);
     throw new Error(
       `Applied lighting to ${baked.applied}/${before.json.meshes.length} meshes; ` +

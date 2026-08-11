@@ -24,7 +24,7 @@ const end: NavPoint = {
 };
 
 describe("zone-shared navigation workers", () => {
-  it("uses one Qeynos mesh worker for path requests from multiple instances", async () => {
+  it("uses one Crownward mesh worker for path requests from multiple instances", async () => {
     const service = new NavService(
       readEnv({
         NAV_MESH_DIR: meshDir,
@@ -36,14 +36,14 @@ describe("zone-shared navigation workers", () => {
     try {
       const [first, second] = await Promise.all([
         service.findPath({
-          zoneKey: "qeynos2",
+          zoneKey: "talioscrownward",
           zoneId: 1,
           instanceId: 0,
           start,
           end,
         }),
         service.findPath({
-          zoneKey: "QEYNOS2",
+          zoneKey: "TALIOSCROWNWARD",
           zoneId: 1,
           instanceId: 9,
           start,
@@ -57,7 +57,7 @@ describe("zone-shared navigation workers", () => {
       assert.ok(Math.abs(first.path[0]!.x - start.x) < 1e-4);
       const [status] = service.listZones();
       assert.deepEqual(status, {
-        zoneKey: "qeynos2",
+        zoneKey: "talioscrownward",
         tileCount: 32,
         pendingQueries: 0,
         layoutHash: status!.layoutHash,
@@ -80,7 +80,7 @@ describe("zone-shared navigation workers", () => {
     try {
       await assert.rejects(
         service.findPath({
-          zoneKey: "../qeynos2",
+          zoneKey: "../talioscrownward",
           zoneId: 1,
           instanceId: 0,
           start,

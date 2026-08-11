@@ -429,12 +429,19 @@ function worldGlbPrimitivePolicies(
         visuallyPassthrough ||
         extras.some(value => value?.passThrough === true) ||
         extras.some(value => value?.collision === false) ||
-        extras.some(value => value?.clientPhysics === false);
+        extras.some(value => value?.clientPhysics === false) ||
+        extras.some(value => value?.requiem_client_physics === false) ||
+        extras.some(value => {
+          const collision = stringFromExtras(value, 'requiem_collision')?.toLowerCase();
+          return collision === 'visual-only' || collision === 'none' || collision === 'pass-through';
+        });
       const explicitlySolid = extras.some(
         value =>
           value?.blocksPlayer === true ||
           value?.collision === true ||
           value?.clientPhysics === true ||
+          value?.requiem_client_physics === true ||
+          stringFromExtras(value, 'requiem_collision')?.toLowerCase() === 'solid' ||
           value?.physicsMode === 'static'
       );
       const collision =

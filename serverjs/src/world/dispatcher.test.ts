@@ -53,8 +53,14 @@ function createPersistMock(): PersistService {
     createCharacter: (_accountId: number, name: string) =>
       Promise.resolve({ ok: true, characters: [{ name, level: 1 }] }),
     deleteCharacter: () => Promise.resolve({ ok: true, characters: [] }),
-    moveItem: () => Promise.resolve({ ok: true }),
-    deleteItem: () => Promise.resolve({ ok: true }),
+    enterWorld: (name: string) => Promise.resolve({
+      ok: true,
+      characterId: 1,
+      name,
+      demoStartPending: true,
+    }),
+    resolveZoneSession: (zoneId: number | string, instanceId: number) =>
+      Promise.resolve({ valid: true, zoneId: Number(zoneId), instanceId }),
     start: () => Promise.resolve(),
     stop: () => Promise.resolve(),
   } as unknown as PersistService;
@@ -109,6 +115,7 @@ void test("world dispatcher enforces auth gate and forwards only after zoning", 
       instanceId: 7,
     }),
   });
+  await new Promise((resolve) => setTimeout(resolve, 0));
 
   dispatcher.handleInbound({
     sessionId: 1,
@@ -116,6 +123,7 @@ void test("world dispatcher enforces auth gate and forwards only after zoning", 
     opcode: OP.ENTER_WORLD,
     payload: encodeSidecar(SIDECAR_SCHEMA.ENTER_WORLD, { name: "Kjeldor" }),
   });
+  await new Promise((resolve) => setTimeout(resolve, 0));
 
   const routed = dispatcher.handleInbound({
     sessionId: 1,

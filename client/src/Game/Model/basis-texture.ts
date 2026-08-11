@@ -1,5 +1,3 @@
-import type * as BJS from "@babylonjs/core";
-
 import BABYLON from "@bjs";
 
 type CompressionFormats = {
@@ -145,7 +143,7 @@ export async function loadBasisTexture(
  */
 function _makeUpdateRawTextureFunction(is3D) {
   return function (
-    this: BJS.WebGPUEngine | BJS.ThinEngine,
+    this: any,
     texture,
     data,
     format,
@@ -258,7 +256,7 @@ function _makeUpdateRawTextureFunction(is3D) {
 // NOTE: This will upload each slice (or whole‐depth buffer) into the GPUTexture’s array layers.
 //       Because WebGPU cannot generate compressed mipmaps on the fly, this code does not call generateMipmaps.
 //------------------------------------------------------------------------------
-BABYLON.WebGPUEngine.prototype.updateRawTexture2DArrayCompressed = function (
+(BABYLON.WebGPUEngine.prototype as any).updateRawTexture2DArrayCompressed = function (
   texture,
   bufferOrArr,
   format,
@@ -347,4 +345,4 @@ BABYLON.WebGPUEngine.prototype.updateRawTexture2DArrayCompressed = function (
   texture.isReady = true;
 };
 
-BABYLON.ThinEngine.prototype.updateRawTexture2DArrayCompressed = _makeUpdateRawTextureFunction(false);  
+(BABYLON.ThinEngine.prototype as any).updateRawTexture2DArrayCompressed = _makeUpdateRawTextureFunction(false);

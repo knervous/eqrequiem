@@ -8,6 +8,10 @@ import {
   resolveDeadReckonedYaw,
   yawFromHorizontalMotion,
 } from "../src/Game/Zone/entity-motion.ts";
+import {
+  floorAnchoredModelOffset,
+  physicsCenteredModelOffset,
+} from "../src/Game/Model/entity-grounding.ts";
 
 function angularDifference(actual, expected) {
   return Math.atan2(Math.sin(actual - expected), Math.cos(actual - expected));
@@ -76,5 +80,33 @@ describe("remote entity presentation", () => {
     const snap = correctRemotePosition(current, { x: 20, y: 0, z: 0 }, 16);
     assert.equal(snap.snapped, true);
     assert.equal(snap.position.x, 20);
+  });
+});
+
+describe("local player model grounding", () => {
+  it("lowers a foot-origin model to the center of its physics capsule", () => {
+    const bounds = {
+      min: [0, -0.68, 0],
+      max: [0, 5.32, 0],
+      center: [0, 2.32, 0],
+    };
+    assert.equal(physicsCenteredModelOffset(bounds, 1), -2.32);
+  });
+
+  it("does not move a legacy model already centered on its origin", () => {
+    assert.equal(
+      physicsCenteredModelOffset({ min: [0, -3, 0], max: [0, 3, 0] }, 1),
+      -0,
+    );
+  });
+});
+
+describe("floor-anchored model grounding", () => {
+  it("raises both foot-origin and centered models by their lower bound", () => {
+    assert.equal(
+      floorAnchoredModelOffset({ min: [0, -0.68, 0] }, 0.9),
+      0.6120000000000001,
+    );
+    assert.equal(floorAnchoredModelOffset({ min: [0, -3, 0] }, 0.9), 2.7);
   });
 });

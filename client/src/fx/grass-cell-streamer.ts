@@ -63,6 +63,39 @@ export class PromotedGrassCellStreamer {
     return this.resident.size;
   }
 
+  private sampleTerrainTint(
+    worldX: number,
+    worldZ: number,
+  ): readonly [number, number, number] | undefined {
+    const sampleX = worldX / this.grass.cellSize - 0.5;
+    const sampleZ = worldZ / this.grass.cellSize - 0.5;
+    const x0 = Math.floor(sampleX);
+    const z0 = Math.floor(sampleZ);
+    const fractionX = sampleX - x0;
+    const fractionZ = sampleZ - z0;
+    const corners = [
+      [x0, z0, (1 - fractionX) * (1 - fractionZ)],
+      [x0 + 1, z0, fractionX * (1 - fractionZ)],
+      [x0, z0 + 1, (1 - fractionX) * fractionZ],
+      [x0 + 1, z0 + 1, fractionX * fractionZ],
+    ] as const;
+    let red = 0;
+    let green = 0;
+    let blue = 0;
+    let totalWeight = 0;
+    for (const [x, z, weight] of corners) {
+      const tint = this.terrainTintByCell.get(`${x}:${z}`);
+      if (!tint || weight <= 0) continue;
+      red += tint[0] * weight;
+      green += tint[1] * weight;
+      blue += tint[2] * weight;
+      totalWeight += weight;
+    }
+    return totalWeight > 1e-6
+      ? [red / totalWeight, green / totalWeight, blue / totalWeight]
+      : undefined;
+  }
+
   update(focusPosition: BJS.Vector3): void {
     const size = this.grass.cellSize;
     const focusCellX = Math.floor(focusPosition.x / size);
@@ -105,6 +138,8 @@ export class PromotedGrassCellStreamer {
               heightScale: 0.58,
               seedSalt: 0x4f1b_bcdc,
               terrainTint,
+              terrainTintAt: (worldX, worldZ) =>
+                this.sampleTerrainTint(worldX, worldZ),
             },
           );
           const unregister = this.visibility.registerMesh(far.mesh, {
@@ -128,7 +163,12 @@ export class PromotedGrassCellStreamer {
             this.grass,
             cellIndex,
             0.65,
-            { lod: "near", terrainTint },
+            {
+              lod: "near",
+              terrainTint,
+              terrainTintAt: (worldX, worldZ) =>
+                this.sampleTerrainTint(worldX, worldZ),
+            },
           );
           const unregister = this.visibility.registerMesh(near.mesh, {
             id: near.mesh.name,

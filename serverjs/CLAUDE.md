@@ -28,13 +28,40 @@ Concretely, when you add server logic, ask which of the two it is:
   (shard construction and gameplay rules), `zone/quest-effect-applier.ts` (committing
   persistent effects), `progression/character-progress-repository.ts` (every write a
   character owns), and `zone/quest-*.ts` (the engine itself). Add to these or create a
-  sibling; do not add it to a backend.
+  sibling; do not add it to a backend. Shared application/runtime entry points now also
+  include `zone/character-application-service.ts`, `zone/gm-command-service.ts`,
+  `zone/zone-join-service.ts`, `zone/zone-runtime-projections.ts`,
+  `persist/character-roster-service.ts`, and `persist/zone-session-service.ts`.
 - **A delivery concern** — encoding a packet, posting to a worker, serializing writes per
   shard, routing an opcode. This belongs to the runtime and may differ.
 
 If you find yourself writing the same SQL, the same formula, or the same validation in
 both `backend/` and `zone/`, stop and extract it first. Duplicated gameplay logic does not
 stay identical; it drifts silently and the offline path is where the drift is found last.
+
+### Database boundary
+
+`persist/game-database.ts` is the repository composition root for both runtimes. It owns
+the runtime/content backend topology and attached-content prefix, and it rebinds every
+repository consistently when the write scheduler supplies a transaction.
+
+- `backend/embedded-game-backend.ts` and `zone/index.ts` must not issue SQL directly.
+  They are transport/threading harnesses and call repositories from `GameDatabase`.
+- Runtime adapters call `zone/character-application-service.ts` for character mutations,
+  `zone/zone-join-service.ts` for zone-entry projections/checkpoints, and
+  `persist/character-roster-service.ts` for account/character-select workflows. Do not
+  rebuild those workflows in an adapter.
+- GM parsing/effects, merchant eligibility, quest ingress/death credit, client/runtime
+  projections, ability results/loadouts, and zone-session resolution also have shared
+  owners. Backend switches only translate their returned effects into packets/events.
+- Put shared read projections in `persist/game-data-repository.ts` and character-owned
+  mutations in `persist/repository.ts` or the existing focused progression/merchant
+  repositories.
+- `backend/embedded-database-harness.ts` is the narrow exception: it owns SQLite schema
+  compatibility, content attachment, and fixture seeding, not gameplay data access.
+- New repository statements should use the shared Drizzle compilation boundary so
+  SQLite, MySQL, Postgres, and browser OPFS do not grow separate query implementations;
+  migrate older raw repository statements mechanically when touching them.
 
 ### Checklist for a new server feature
 

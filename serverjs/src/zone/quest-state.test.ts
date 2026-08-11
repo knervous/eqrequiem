@@ -13,9 +13,9 @@ const CHARACTER = 42;
 let nowMs = 1_000_000;
 
 function shard(build: (registry: ZoneQuestRegistry) => void): QuestManager {
-  const registry = new ZoneQuestRegistry({ id: 2, shortName: "qeynos2" });
+  const registry = new ZoneQuestRegistry({ id: 2, shortName: "talioscrownward" });
   build(registry);
-  const manager = new QuestManager(2, 0, "qeynos2", {
+  const manager = new QuestManager(2, 0, "talioscrownward", {
     tickRateHz: 10,
     now: () => nowMs,
   });
@@ -50,7 +50,7 @@ describe("persistent character quest state", () => {
         onQuest("say", {}, ({ initiator }) => {
           if (!isQuestPlayer(initiator)) return;
           const player = initiator;
-          player.knowledge.learn("qeynos2.patrol_missing");
+          player.knowledge.learn("talioscrownward.patrol_missing");
           player.journal.discover("heard-rumor", { kind: "rumor", text: "A patrol is late." });
           player.progression.awardXpOnce("heard-rumor", 25);
         }),
@@ -77,7 +77,7 @@ describe("persistent character quest state", () => {
         onQuest("say", {}, ({ initiator }) => {
           if (!isQuestPlayer(initiator)) return;
           initiator.quest.patch({ heardRumor: true });
-          initiator.knowledge.learn("qeynos2.patrol_missing");
+          initiator.knowledge.learn("talioscrownward.patrol_missing");
         }),
       );
     });
@@ -87,18 +87,18 @@ describe("persistent character quest state", () => {
     assert.equal(batches.length, 1);
     assert.equal(batches[0]?.characterId, CHARACTER);
     assert.deepEqual(batches[0]?.quests, [{
-      questKey: "qeynos2:rumors",
+      questKey: "talioscrownward:rumors",
       revision: 1,
       state: { heardRumor: true },
     }]);
     assert.deepEqual(batches[0]?.knowledgeLearned, [
-      { key: "qeynos2.patrol_missing", data: {} },
+      { key: "talioscrownward.patrol_missing", data: {} },
     ]);
     assert.deepEqual(manager.drainPersistence(), []);
   });
 
   it("migrates persisted state before a handler can observe it", () => {
-    const registry = new ZoneQuestRegistry({ id: 2, shortName: "qeynos2" });
+    const registry = new ZoneQuestRegistry({ id: 2, shortName: "talioscrownward" });
     const seen: unknown[] = [];
     registry
       .quest("missing-patrol", {
@@ -114,12 +114,12 @@ describe("persistent character quest state", () => {
         if (!isQuestPlayer(initiator)) return;
         seen.push(initiator.quest.state());
       }));
-    const manager = new QuestManager(2, 0, "qeynos2");
+    const manager = new QuestManager(2, 0, "talioscrownward");
     manager.replace(registry.definitions(), 1);
     manager.attachCharacter(SESSION, emptyCharacterSnapshot({
       characterId: CHARACTER,
       quests: {
-        "qeynos2:missing-patrol": { revision: 1, state: { completed: true } },
+        "talioscrownward:missing-patrol": { revision: 1, state: { completed: true } },
       },
     }));
 

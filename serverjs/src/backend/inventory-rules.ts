@@ -14,6 +14,42 @@ export interface PlannedInventoryMove extends InventoryPosition {
   fromBag: number;
 }
 
+export interface EquippableInventoryItem {
+  readonly slots: number;
+  readonly classes: number;
+  readonly races: number;
+}
+
+export interface InventoryCharacterIdentity {
+  readonly classId: number;
+  readonly raceId: number;
+}
+
+export function itemAllowedInSlot(
+  item: EquippableInventoryItem | undefined,
+  slot: number,
+): boolean {
+  return (
+    !item ||
+    slot === 30 ||
+    slot < 0 ||
+    slot > 21 ||
+    (Number(item.slots) & (1 << slot)) !== 0
+  );
+}
+
+export function characterCanEquipItem(
+  character: InventoryCharacterIdentity,
+  item: EquippableInventoryItem | undefined,
+  slot: number,
+): boolean {
+  if (!item || slot < 0 || slot > 21) return true;
+  return (
+    (Number(item.classes) & (1 << (character.classId - 1))) !== 0 &&
+    (Number(item.races) & (1 << (character.raceId - 1))) !== 0
+  );
+}
+
 export function planInventorySwap(
   inventory: readonly InventoryRecord[],
   from: InventoryPosition,

@@ -44,7 +44,7 @@ describe("Shado game codec", () => {
     assert.deepEqual(
       decodeZoneRouteRequest(
         encodeSidecar(SIDECAR_SCHEMA.ZONE_CHANGE, {
-          zoneId: "qeynos2",
+          zoneId: "talioscrownward",
           instanceId: 0,
         }),
       ),

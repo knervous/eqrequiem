@@ -5,6 +5,7 @@ import { QuestManager } from "./quest-manager.js";
 import { emptyCharacterSnapshot } from "./quest-state.js";
 import { ZoneQuestRegistry } from "./quest-registry.js";
 import type { QuestEffect } from "./quest-types.js";
+import { LevelCurve, questExperience } from "./quest-progression.js";
 
 const SESSION = 5;
 
@@ -13,14 +14,14 @@ function shard(options: {
   timeOfDay?: number | null;
   flags?: Record<string, unknown>;
 } = {}): QuestManager {
-  const registry = new ZoneQuestRegistry({ id: 2, shortName: "qeynos2" });
+  const registry = new ZoneQuestRegistry({ id: 2, shortName: "talioscrownward" });
   registry.rumors.define(
     {
       key: "patrol",
       text: "A patrol never came back from the north road.",
       weight: 9,
-      experience: 15,
-      lead: { leadKey: "heard-rumor", questKey: "qeynos2:missing-patrol" },
+      experience: "hint",
+      lead: { leadKey: "heard-rumor", questKey: "talioscrownward:missing-patrol" },
       expiresWhen: (world) => world.flags["patrol_resolved"] === true,
     },
     {
@@ -37,7 +38,7 @@ function shard(options: {
   );
   registry.rumorSource("Guard_Gehnus", { quiet: "The road has been quiet." });
 
-  const manager = new QuestManager(2, 0, "qeynos2");
+  const manager = new QuestManager(2, 0, "talioscrownward");
   manager.replace(registry.definitions(), 1);
   manager.hydrate({
     players: [{ kind: "player", sessionId: SESSION, name: "Ezaltarem", level: 5 }],
@@ -139,10 +140,16 @@ describe("rumor network", () => {
     assert.equal(manager.character(SESSION)?.knows("rumor:patrol"), true);
     assert.deepEqual(
       manager.journalFor(SESSION).map((entry) => [entry.questKey, entry.leadKey]),
-      [["qeynos2:missing-patrol", "heard-rumor"]],
+      [["talioscrownward:missing-patrol", "heard-rumor"]],
     );
     const award = effects.find((effect) => effect.type === "award_xp");
-    assert.equal(award?.type === "award_xp" && award.amount, 15);
+    // Hearing something new is a hint: a share of the level, not a flat number that
+    // would be generous at level 1 and meaningless at level 10.
+    assert.equal(award?.type === "award_xp" && award.weight, "hint");
+    assert.equal(
+      award?.type === "award_xp" && award.amount,
+      questExperience(LevelCurve.default(), manager.character(SESSION)?.level ?? 1, "hint"),
+    );
   });
 
   it("is deterministic per character but varies between them", () => {

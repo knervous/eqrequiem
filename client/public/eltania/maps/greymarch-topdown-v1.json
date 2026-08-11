@@ -1,0 +1,21 @@
+{
+  "kind": "eltania.zone-minimap",
+  "version": 1,
+  "zone": "greymarch",
+  "image": "/eltania/maps/greymarch-topdown-v1.webp",
+  "north": "+x",
+  "rotationDegrees": -90,
+  "size": 1024,
+  "bounds": {
+    "minX": -5265,
+    "maxX": 1000,
+    "minZ": -4355.703125,
+    "maxZ": 1909.296875
+  },
+  "source": {
+    "spatial": "/eqrequiem/worlds/greymarch.spatial.json.gz",
+    "collision": "/eqrequiem/worlds/greymarch.collision.bin.gz",
+    "collisionHash": "ab9d4238",
+    "layoutHash": "a84566d9"
+  }
+}

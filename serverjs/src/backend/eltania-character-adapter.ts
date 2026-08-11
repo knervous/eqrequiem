@@ -1,4 +1,5 @@
 import type { BackendCharacterCreate } from "./contracts.js";
+import { ARRIVAL } from "../content/eltania.js";
 
 const CALLING_ID = "calling:eltania-vanguard-v1";
 const ORIGIN_ID = "origin:elrador-test-world-v1";
@@ -70,7 +71,7 @@ export function validEltaniaCharacterProjection(
     character.race !== bodyFamily.race ||
     character.charClass !== 1 ||
     character.deity !== 207 ||
-    character.startZone !== 1
+    character.startZone !== ARRIVAL.zone.id
   ) return false;
 
   const bodyIndex = bodyFamily.components.findIndex(
