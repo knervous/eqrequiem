@@ -1,6 +1,7 @@
 {
   "name": "eqrequiem",
   "version": "1.0.0",
+  "private": true,
   "type": "module",
   "description": "EQ Requiem",
   "scripts": {
@@ -29,7 +30,7 @@
     "url": "git+https://github.com/knervous/eqrequiem.git"
   },
   "author": "temp0",
-  "license": "MIT",
+  "license": "UNLICENSED",
   "bugs": {
     "url": "https://github.com/knervous/eqrequiem/issues"
   },

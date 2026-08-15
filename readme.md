@@ -1,65 +1,115 @@
 # EQ: Requiem
 
-EQ: Requiem is a project that brings EverQuest to the browser using the BabylonJS Engine and go. Contributors are welcome, please reach out in discord:
+> [!IMPORTANT]
+> **This repository is a read-only historical archive.** Active development no longer happens here, and issues, pull requests, releases, and support are not being accepted. It remains public to preserve provenance and a technical record—not as permission to reuse or republish the project. Because public visibility had been mistaken for permission to reuse the work, the current repository-level material is now provided under the restricted reference license in [LICENSE](LICENSE).
 
-Discord: https://discord.gg/ptJxyejwXt
+EQ: Requiem was an experiment in bringing an EverQuest-style multiplayer world to the browser with Babylon.js, React, WebTransport, WebAssembly, and Go/TypeScript services. This snapshot captures several generations of that work, including both the later TypeScript server and the earlier Go backend.
 
+The instructions below are retained for historical study. They are best-effort notes for this final public snapshot; external services and archived assets may disappear, and no maintenance or setup support is provided.
 
-# Local Development and Contributing
+## License
 
-EQ Requiem will always remain open source and welcomes contributions of all kinds. Here are steps to get local development set up:
+Copyright © 2026 Paul Johnson. All rights reserved.
 
-## Requirements
+You may clone and run an unmodified copy locally only for personal, non-commercial evaluation and historical study. Modification, redistribution, public deployment, commercial use, incorporation into another project, and use for training or improving machine-learning models are not permitted without prior written permission. See [LICENSE](LICENSE) for the complete terms.
 
-- Go version 1.24 https://go.dev/doc/install
-- MySQL
-  - Windows: https://dev.mysql.com/doc/mysql-installation-excerpt/5.7/en/windows-installation.html
-  - Linux: https://dev.mysql.com/doc/mysql-installation-excerpt/5.7/en/linux-installation.html
-  - Mac: https://dev.mysql.com/doc/mysql-installation-excerpt/5.7/en/macos-installation.html
-- NodeJS + npm https://nodejs.org/en/download
-- Local port 443 available (This could be worked around but we're not there yet)
+This change does not retroactively alter rights already granted with earlier revisions. Third-party material and components carrying their own license remain governed by those terms; in particular, `shader-object/` retains its separate historical MIT license.
 
-## Nice to have
+## Repository structure
 
-- VSCode https://code.visualstudio.com/download
-- Make (Windows users can just use CLI commands instead but Make makes things easy)
+| Path | Historical purpose |
+| --- | --- |
+| `client/` | React and TypeScript browser client, Babylon.js renderer, Vite applications, offline/local simulation worker, content assets, and asset-processing scripts. |
+| `serverjs/` | Later TypeScript backend: WebTransport gateway, gameplay simulation, SQLite/MySQL/PostgreSQL adapters, quests, and the Libra content tools. |
+| `server/` | Earlier Go backend, daemon/import utilities, MySQL-era configuration, maps, and quest runtime. |
+| `common/` | Shared AssemblyScript kernels and checked-in WebAssembly artifacts used by the browser and server paths. |
+| `shader-object/` | Shado packed GPU-data library, preprocessors, AssemblyScript tooling, tests, benchmarks, playgrounds, and Babylon.js sandboxes. |
+| `docs/` | Renderer and Shado design notes. Additional architectural notes remain at the repository root. |
+| `.github/workflows/` | CI configuration from the active-development period; it is retained as history and is not maintained. |
 
-# Setting up Local Development
+The snapshot is not a clean monorepo release. Some scripts describe migration or content-production workflows, some generated artifacts are checked in, and the Go and TypeScript servers represent different eras rather than two required halves of one deployment.
 
-## Client
+## Historical local development
 
-- From the root directory, run `cd client && npm install`
-- Run the client development server with different options
-  - `npm run start:prod` - This allows you to do client-side code changes without a server spun up and depends on the live server to be up
-  - `npm start` - This will try to connect to your locally running go backend on port 443
+### Prerequisites
 
-## Server
+- Node.js `24.18.0` (recorded in `.node-version`) and npm.
+- A recent Chromium-based browser for WebGPU/WebTransport paths.
+- OpenSSL when regenerating local WebTransport certificates.
+- Go 1.24 and MySQL only when studying the legacy `server/` implementation.
 
-In order to start the server, you must first install MySQL and seed the database from the latest template db `eqgo`
+Install only the package trees needed for the path you are studying:
 
-### MySQL
+```sh
+npm ci --prefix shader-object
+npm ci --prefix serverjs
+npm ci --prefix client
+```
 
-- Download the dump file: https://eqrequiem.blob.core.windows.net/dev/eqgo.sql.zip
-- Extract it anywhere
-- CD to the directory the `dumpfile.sql` lives in and run 
-  - `mysql -u [username] -p[password] -e "CREATE DATABASE IF NOT EXISTS eqgo"`
-  - `mysql -u[username] -p[password] eqgo < dumpfile.sql`
-- Verify the database is populated and running
-  
+The root package contains repository-level tooling. Install it separately with `npm ci` if you need those scripts.
 
-### Config
-- Under the directory `server/internal/config` there's a template called `eqgo_config_template.json`, copy that and rename it `eqgo_config.json`
-- Fill out all the necessary credentials to connect to your MySQL DB
-- Go to `server/internal/config` and generate `key.pem` with
-  - `openssl genpkey -algorithm RSA -out key.pem -pkeyopt rsa_keygen_bits:2048`
-- To avoid error when using `make` or `go run`, create a [Discord application](https://discord.com/developers/docs/quick-start/getting-started#step-1-creating-an-app), get your bot token, and paste it into `discord.txt` inside `server/internal/config`
+### Browser client with the local/offline simulation
 
-### Ready to launch
-- For the rest of the commands you should be cd into `server` in the root directory
-- If you have Make, you can run `make s` to run the server, see the Makefile for the rest of the commands
-- If you *don't* have Make (on Windows) then you can run `go run ./cmd/server` to start the server
-- If you want to debug in VSCode, there are launch options to start normally and with local quests. Local quests allow you to hot swap quests out every time you save.
+The smallest reproducible path does not require either server. From the repository root:
 
-You are now ready to connect and should be able to visit the local webpack development server and connect to your local backend
+```sh
+cd client
+npm ci
+VITE_LOCAL_BACKEND=true npm start
+```
 
-https://eqrequiem.blob.core.windows.net/dev/eqgo.sql.zip
+Open `https://localhost:3500/`. The snapshot includes a development certificate, so the browser may require a one-time trust exception. `?backend=local` selects the browser worker explicitly, while `?offline=true` enters Offline Mode immediately.
+
+Useful checks retained in the snapshot include:
+
+```sh
+npm run typecheck
+npm run validate
+npm run build
+```
+
+### TypeScript server and browser client
+
+The later full-stack path uses SQLite by default. In separate terminals from the repository root:
+
+```sh
+cd serverjs
+npm ci
+WT_PORT=4443 npm run dev
+```
+
+```sh
+cd client
+npm ci
+VITE_WT_PORT=4443 VITE_HASH_PROVIDER_URL=http://localhost:8080/hash npm start
+```
+
+Using port `4443` avoids requiring elevated privileges for the default WebTransport port `443`. Server settings are documented in `serverjs/.env.example`; the process reads environment variables directly rather than loading that file automatically. To regenerate and trust the development certificate on macOS:
+
+```sh
+cd serverjs
+npm run cert:dev:generate
+npm run cert:dev:trust:mac
+```
+
+The standalone Libra content editor can be started with `npm --prefix serverjs run libra:dev`.
+
+### Legacy Go server
+
+The earlier implementation lives in `server/` and depended on Go 1.24, MySQL, local TLS keys, and Discord application credentials. Its historical bootstrap was:
+
+1. Import the archived `eqgo` MySQL dump from `https://eqrequiem.blob.core.windows.net/dev/eqgo.sql.zip`.
+2. Copy `server/internal/config/eqgo_config_template.json` to `eqgo_config.json` and fill in the local database settings.
+3. Generate `server/internal/config/key.pem` and provide the expected `discord.txt` credential file.
+4. Run `make s` or `go run ./cmd/server` from `server/`.
+
+Those external inputs are not guaranteed to remain available. Do not use real production credentials with this archived code.
+
+## Historical documentation
+
+- `requiem-wasm-simulation-architecture.md` describes the shared simulation direction.
+- `backend.md` and `backend-checklist.md` record backend migration decisions.
+- `common/README.md` explains the shared runtime kernels.
+- `shader-object/README.md` documents the separately licensed Shado package.
+
+The commit history is the authoritative record of how the project evolved.

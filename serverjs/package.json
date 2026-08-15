@@ -2,7 +2,7 @@
   "name": "requiem-server",
   "version": "1.0.0",
   "description": "Node.js backend scaffold for Shadows of Eltania",
-  "license": "ISC",
+  "license": "UNLICENSED",
   "author": "temp0",
   "type": "module",
   "private": true,
